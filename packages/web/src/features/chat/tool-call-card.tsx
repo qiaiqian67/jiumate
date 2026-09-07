@@ -1,0 +1,414 @@
+/**
+ * Tool call card: collapses to a single line by
+ * default — status icon + tool name + duration (a live-ticking timer while running) + a plain
+ * `[stop reason]` marker when the step did not finish cleanly; clicking expands full arguments
+ * and output; a bound subagent renders as a full-width shortcut row below them regardless of
+ * collapsed state (the child conversation itself lives in the subagents side panel; the row
+ * carries its own pending-approval dot, so the card no longer needs to auto-expand for nested
+ * approvals).
+ *
+ * Duration accounting = **argument-generation segment + execution segment** (excludes time
+ * spent waiting on human approval): the model streaming out arguments token by token is often
+ * slower than the tool call itself, so reporting only the execution segment would badly
+ * understate this step's cost. While waiting on approval, the already-settled generation
+ * segment is shown; the wait itself is marked by the amber hourglass icon alone, since the
+ * approval block below the row is always on screen and names the tool and its arguments.
+ */
+import { useMemo, useRef, useState } from "react";
+import { S } from "../../lib/strings";
+import { humanizeDuration } from "../../lib/format";
+import { stripAnsi } from "../../lib/strip-ansi";
+import { approvalKey } from "../../lib/omni/stream-model";
+import type { ToolCallItem } from "../../lib/omni/stream-model";
+import { Chevron } from "../../components/ui/chevron";
+import {
+  DISCLOSURE_OUTPUT_PRE_CLASS,
+  DISCLOSURE_ROW_CLASS,
+  DISCLOSURE_ROW_STICKY_CLASS,
+} from "./disclosure-row";
+import { ZoomableImage } from "../../components/ui/image-zoom";
+import { StatusIcon } from "../../components/ui/status-icon";
+import type { RunState } from "../../components/ui/status-icon";
+import { ApprovalButtons } from "./approval-buttons";
+import { LiveDuration } from "./live-duration";
+import { agentIdFromRunSubagentArgs } from "./agent-topology";
+import { SubagentChip } from "./subagent-chip";
+import type { StreamRenderContext } from "./message-stream";
+
+/** Tools that accept the optional model-written `description` argument. */
+const DESCRIBED_TOOLS = new Set([
+  "exec_command",
+  "input_command",
+  "run_subagent",
+  "input_subagent",
+]);
+
+/** The three file tools: previewed by their `file_path` argument. */
+const FILE_TOOLS = new Set(["read_file", "edit_file", "write_file"]);
+
+/**
+ * Shortens a path for one-line display: at most one parent directory plus the filename
+ * (`…/parent/file.ts`); paths already within that shape are shown as-is (same rule as the
+ * CLI's tool-render). The full path stays in the expanded arguments block.
+ */
+export function shortenPath(p: string): string {
+  const segments = p.split("/").filter((s) => s.length > 0);
+  if (segments.length <= 2) return p;
+  return `…/${segments[segments.length - 2]}/${segments[segments.length - 1]}`;
+}
+
+/**
+ * Argument preview (same approach as the CLI's tool-render): exec_command shows `$ <cmd>`,
+ * the file tools show their shortened file path, other tools show a single-line
+ * `name(args)` prefix. Arguments may be incomplete JSON (mid-stream), so extraction is done
+ * leniently. The preview deliberately keeps the real arguments (not the model-written
+ * description): it heads the approval row, and the user must approve the actual command,
+ * not the model's summary of it.
+ */
+export function previewArguments(name: string, argsJson: string): string {
+  if (name === "exec_command") {
+    const cmd = extractStringField(argsJson, "cmd");
+    if (cmd !== null) return `$ ${cmd.value.replace(/\s+/g, " ").trim()}`;
+  }
+  if (FILE_TOOLS.has(name)) {
+    const filePath = extractStringField(argsJson, "file_path");
+    if (filePath !== null) return shortenPath(filePath.value.replace(/\s+/g, " ").trim());
+  }
+  return argsJson.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Collapsed-header subtitle: the human-readable line next to the tool name — the
+ * model-written `description` argument when the call carries one (declared in the tool's
+ * config schema; per-tool `call_description: false` removes it, in which case the model
+ * never sends it), or the shortened file path for the file tools. Null when there is
+ * nothing beyond the raw arguments.
+ *
+ * The subtitle appears once, fully formed, never mid-stream (#137): a growing description
+ * re-solves the header's flex line every frame, and `shortenPath` on a still-growing path
+ * rewrites non-monotonically (`/ho` → `…/cc/dev` → `…/dev/x`) — so a field renders only
+ * after its closing quote. `settled` (arguments finished streaming) lifts that gate: the
+ * text cannot change anymore, which also covers a call that never closed the string
+ * (aborted / malformed). Same rule as the CLI's tool-render. The wait is short by
+ * construction — `description` is required first in schema order, and `file_path` is the
+ * first file-tool argument — while `write_file`'s `content` may stream long after.
+ */
+export function headerSubtitle(name: string, argsJson: string, settled = true): string | null {
+  // The description wins whenever the call carries one: schemas are user-editable, so a
+  // file tool may have `description` enabled even though the default schema leaves it out
+  // (the CLI derives the same rule from the session's schemas).
+  if (DESCRIBED_TOOLS.has(name) || FILE_TOOLS.has(name)) {
+    const desc = extractStringField(argsJson, "description");
+    if (desc !== null) {
+      if (!desc.complete && !settled) return null;
+      const line = desc.value.replace(/\s+/g, " ").trim();
+      if (line) return line;
+    }
+    if (DESCRIBED_TOOLS.has(name)) return null;
+  }
+  if (FILE_TOOLS.has(name)) {
+    const filePath = extractStringField(argsJson, "file_path");
+    if (filePath !== null) {
+      if (!filePath.complete && !settled) return null;
+      const line = filePath.value.replace(/\s+/g, " ").trim();
+      if (line) return shortenPath(line);
+    }
+  }
+  return null;
+}
+
+/**
+ * Decoded file-tool payload for the pending-approval block: the user is approving a
+ * concrete rewrite (old_string/new_string/content), so the bare path is not enough — the
+ * actual arguments are rendered in the scrollable expanded style while the call is PENDING.
+ * Null for other tools or unparseable arguments (arguments are complete by approval time).
+ */
+export function pendingFilePayload(name: string, argsJson: string): string | null {
+  if (!FILE_TOOLS.has(name)) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(argsJson);
+  } catch {
+    return null;
+  }
+  if (parsed === null || typeof parsed !== "object") return null;
+  const args = parsed as Record<string, unknown>;
+  const sections: string[] = [];
+  const push = (label: string, value: unknown): void => {
+    if (value === undefined) return;
+    if (typeof value === "string" && value.includes("\n")) {
+      sections.push(`${label}:\n${value}`);
+    } else {
+      sections.push(`${label}: ${typeof value === "string" ? value : JSON.stringify(value)}`);
+    }
+  };
+  push("file_path", args["file_path"]);
+  if (name === "read_file") {
+    push("offset", args["offset"]);
+    push("limit", args["limit"]);
+  } else if (name === "edit_file") {
+    push("old_string", args["old_string"]);
+    push("new_string", args["new_string"]);
+    if (args["replace_all"] === true) push("replace_all", true);
+  } else if (name === "write_file") {
+    push("content", args["content"]);
+  }
+  return sections.join("\n");
+}
+
+/** A string field read from possibly-incomplete JSON: the value seen so far, and whether its closing quote has arrived (mirrors the CLI's PartialField). */
+interface PartialField {
+  value: string;
+  complete: boolean;
+}
+
+/** Extracts the current value of a string field from a possibly-incomplete JSON object string (a simplified version, good enough for preview purposes). */
+function extractStringField(argsJson: string, field: string): PartialField | null {
+  const key = `"${field}"`;
+  const keyIndex = argsJson.indexOf(key);
+  if (keyIndex === -1) return null;
+  let i = keyIndex + key.length;
+  while (/\s/.test(argsJson[i] ?? "")) i += 1;
+  if (argsJson[i] !== ":") return null;
+  i += 1;
+  while (/\s/.test(argsJson[i] ?? "")) i += 1;
+  if (argsJson[i] !== '"') return null;
+  i += 1;
+  let out = "";
+  let escaped = false;
+  for (; i < argsJson.length; i += 1) {
+    const ch = argsJson[i]!;
+    if (escaped) {
+      out += ch === "n" ? "\n" : ch === "t" ? "\t" : ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') return { value: out, complete: true };
+    out += ch;
+  }
+  return { value: out, complete: false };
+}
+
+export function ToolCallCard({ item, ctx }: { item: ToolCallItem; ctx: StreamRenderContext }) {
+  const [open, setOpen] = useState(false);
+  const userToggled = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Matched by the current origin chain + toolCallId: prevents parent/child session tool_call_id collisions from lighting each other up.
+  const pending = ctx.pendingApprovals.get(approvalKey(ctx.origin, item.toolCallId));
+
+  const preview = previewArguments(item.name, item.argumentsText);
+  // Escape sequences are stripped at render time only (the stored stream/trace data keeps its
+  // raw bytes): hardened child envs should no longer produce any, but historical traces and
+  // force-color programs still can (#102). Memoized — the aggregated output can be large and
+  // grows on every streamed delta.
+  const output = useMemo(() => stripAnsi(item.output), [item.output]);
+  // Settled once argument streaming stopped (or the complete call arrived): the subtitle's
+  // completeness gate is lifted — whatever is there is final.
+  const subtitle = headerSubtitle(item.name, item.argumentsText, !item.callStreaming);
+  // Executing = the call has finished streaming, output hasn't arrived yet, and it's not waiting on approval (approval wait time doesn't count toward execution).
+  const executing = item.callComplete && !item.outputComplete && !pending;
+  // Argument-generation segment (settled): the live execution timer accumulates on top of this as a baseline, so the displayed duration doesn't shrink back once output arrives.
+  const genMs =
+    item.argStartedAtMs !== undefined && item.callStartedAtMs !== undefined
+      ? Math.max(0, item.callStartedAtMs - item.argStartedAtMs)
+      : 0;
+  const failed =
+    (item.callStopReason !== undefined && item.callStopReason !== "completed") ||
+    (item.outputStopReason !== undefined && item.outputStopReason !== "completed");
+  const state: RunState = pending
+    ? "waiting"
+    : executing || item.callStreaming
+      ? "running"
+      : failed
+        ? "failed"
+        : "done";
+  // Decision wording ("Approved · manual", "Denied · manual", …): carried ONLY by the left status
+  // icon's title/aria-label — per review the row shows no visible decision text at any
+  // breakpoint; the icon is the single source of truth for how the call was decided.
+  const decisionText = item.decision
+    ? `${item.decision === "allow" ? S.chat.decisionAllow : S.chat.decisionDeny} · ${
+        item.decision === "forbidden"
+          ? S.chat.decisionPolicy
+          : item.decisionSource === "manual"
+            ? S.chat.decisionManual
+            : S.chat.decisionAuto
+      }`
+    : null;
+  // A denial reports stop_reason "aborted" on the output it feeds back — a person's "deny"
+  // and the command policy's "forbidden" alike; that abort IS the decision, so the icon
+  // reads "Denied · …" (the label's second half names the decider) rather than falling
+  // through to the raw stop reason. A user-abort of a RUNNING tool carries no deny
+  // decision, so the label falls through to its stop reason below.
+  const denied =
+    (item.decision === "deny" || item.decision === "forbidden") &&
+    item.outputStopReason === "aborted";
+  const stateLabel = pending
+    ? S.chat.approvalWaiting
+    : state === "running"
+      ? S.chat.workRunning
+      : state === "done"
+        ? (decisionText ?? S.chat.workDone)
+        : denied
+          ? (decisionText ?? undefined)
+          : (item.outputStopReason ?? item.callStopReason);
+
+  return (
+    <div ref={rootRef}>
+      {/* Collapsed row: status icon + tool name + total duration (generation + execution,
+          excluding approval wait) + the stop reason when the step did not finish cleanly.
+          Expand chevron on the right.
+
+          Stacked sticky, second level (same as the thinking row): while this card's expanded
+          output scrolls, the row pins right BELOW the stuck group header (top-4 = the
+          header's -top-4 offset + its 2rem height) — the bar directly above the content is
+          always the section the reader is in, never a skipped level. Opaque background for
+          the stuck state; collapsing from stuck lands the view back on the row.
+
+          The row spells out NO stop reason: it rendered `[reason]` markers (and before that,
+          Badge pills) until per-user-feedback review removed them — the red text read as
+          alarming repetition of what the left StatusIcon already signals. The icon plus its
+          title/aria stateLabel (which still names the raw reason) is the single carrier of
+          the outcome, same rule the decision wording above already follows. The known cost,
+          accepted deliberately: at a glance an aborted, timed-out, malformed or auth-failed
+          call all read as the icon's one failure tone, and on touch the distinction lives
+          only in the expanded output (when one exists) — the tooltip/aria and the Trace
+          viewer, which shows the raw stop reason per event, remain where the literal value
+          belongs.
+
+          A pending call gets no "awaiting approval" text either: the approval block below is
+          always on screen while one is pending — it names the tool, shows the arguments and
+          carries the Allow/Deny buttons — so the row would only repeat it. The amber hourglass
+          StatusIcon (labeled) marks the wait, at every breakpoint. */}
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => {
+          userToggled.current = true;
+          const willClose = open;
+          setOpen((v) => !v);
+          if (willClose) {
+            requestAnimationFrame(() => rootRef.current?.scrollIntoView({ block: "nearest" }));
+          }
+        }}
+        className={`${DISCLOSURE_ROW_STICKY_CLASS} ${DISCLOSURE_ROW_CLASS}`}
+      >
+        <StatusIcon state={state} label={stateLabel} />
+        <span className="shrink-0 truncate font-mono text-xs font-semibold text-gray-700 dark:text-gray-300">
+          {item.name || S.chat.unknownTool}
+        </span>
+        {/* Human-readable subtitle: the model-written call description (command/subagent tools) or the file path (file tools). */}
+        {subtitle && (
+          <span className="min-w-0 shrink truncate text-xs text-gray-500 dark:text-gray-400">
+            {subtitle}
+          </span>
+        )}
+        <span className="shrink-0 font-mono text-xs text-gray-500 dark:text-gray-400">
+          {item.durationMs !== undefined ? (
+            humanizeDuration(item.durationMs)
+          ) : executing ? (
+            // Execution timer: argument-generation baseline + a live segment starting from approval grant (or from call completion if no approval was needed).
+            <LiveDuration sinceMs={item.approvalAtMs ?? item.callStartedAtMs} offsetMs={genMs} />
+          ) : pending ? (
+            // No ticking while waiting on approval: frozen at the settled argument-generation segment.
+            genMs > 0 ? (
+              humanizeDuration(genMs)
+            ) : null
+          ) : item.callStreaming ? (
+            // Generating arguments: live-ticking timer (falls back to a pulsing ellipsis when no start time is known).
+            item.argStartedAtMs !== undefined ? (
+              <LiveDuration sinceMs={item.argStartedAtMs} />
+            ) : (
+              <span className="animate-pulse">…</span>
+            )
+          ) : null}
+        </span>
+        <span className="min-w-0 flex-1" />
+        {/* Expand indicator on the right */}
+        <Chevron open={open} className="text-gray-400" />
+      </button>
+
+      {/* Pending approval: always visible regardless of collapsed state — shows the tool name and arguments so the user knows what they're approving. */}
+      {pending && (
+        <div className="border-t border-gray-100 bg-amber-50 px-3 py-2 dark:border-gray-800 dark:bg-amber-950/30">
+          {/* The user must be able to read the FULL command before deciding: below sm the
+              preview wraps in whole (expanded-args style: pre-wrap + break-all, no inner
+              scroll, the block may grow) — the one-line treatment resumes once decided, since
+              this pending block unmounts and only the truncating header subtitle remains. At
+              ≥sm the row stays one line (the desktop column is wide enough in practice). */}
+          <div className="mb-2 flex items-start gap-2 sm:items-center">
+            <span className="shrink-0 rounded-md bg-white px-1.5 py-0.5 font-mono text-xs font-semibold text-gray-700 dark:bg-gray-900 dark:text-gray-300">
+              {item.name || S.chat.unknownTool}
+            </span>
+            <span className="min-w-0 flex-1 whitespace-pre-wrap break-all font-mono text-xs text-gray-600 sm:truncate dark:text-gray-400">
+              {preview}
+            </span>
+          </div>
+          {/* File tools: the one-line preview shows only the (shortened) path, but the user is
+              approving a concrete rewrite — render the decoded payload (old_string/new_string/
+              content) in the scrollable expanded style while pending. */}
+          {(() => {
+            const payload = pendingFilePayload(item.name, item.argumentsText);
+            return payload !== null ? (
+              <pre className="mb-2 max-h-72 overflow-auto whitespace-pre-wrap break-all rounded-md bg-white/70 px-2 py-1.5 text-xs leading-5 text-gray-700 dark:bg-gray-950/40 dark:text-gray-300">
+                {payload}
+              </pre>
+            ) : null;
+          })()}
+          <ApprovalButtons
+            onDecide={(decision) => ctx.onApprove(item.toolCallId, decision, ctx.origin)}
+          />
+        </div>
+      )}
+
+      {/* Expanded details: full arguments / output */}
+      {open && (
+        <div className="anim-fade">
+          {item.argumentsText && (
+            // Arguments are shown as a fully wrapped block (no height cap, no scrollbar): the
+            // arguments are key to understanding this call, and tucking them into an inner
+            // scroll area would make them hard to read and fight with the message stream's own scroll.
+            <pre className="whitespace-pre-wrap break-all border-t border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-950/60 dark:text-gray-400">
+              {item.argumentsText}
+            </pre>
+          )}
+          {(item.output || item.outputStreaming) && (
+            <pre className={DISCLOSURE_OUTPUT_PRE_CLASS}>
+              {output}
+              {item.outputStreaming && <span className="animate-pulse">▌</span>}
+            </pre>
+          )}
+          {/* Tool output images (e.g. read_image): shown as thumbnails, click to zoom (ZoomableImage). */}
+          {item.images && item.images.length > 0 && (
+            <div className="flex flex-wrap gap-2 border-t border-gray-100 px-3 py-2 dark:border-gray-800">
+              {item.images.map((src, i) => (
+                <ZoomableImage
+                  key={i}
+                  src={src}
+                  alt={S.chat.toolImageAlt}
+                  className="max-h-40 max-w-full rounded-md border border-gray-200 dark:border-gray-700"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Subagent row: always visible (unaffected by the tool card's collapsed state) below the expanded arguments/output — a full-width shortcut bar into the subagents panel; the nested conversation no longer renders inline. */}
+      {item.subagent && (
+        <div className="px-3 pb-2 pt-2">
+          <SubagentChip
+            sessionId={item.subagentSessionId ?? ""}
+            model={item.subagent}
+            running={!item.outputComplete}
+            agentId={agentIdFromRunSubagentArgs(item.argumentsText)}
+            ctx={ctx}
+          />
+        </div>
+      )}
+    </div>
+  );
+}

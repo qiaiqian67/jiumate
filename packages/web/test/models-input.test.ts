@@ -1,0 +1,515 @@
+/**
+ * Pure logic for the model config dialog:
+ * - Numeric input filtering: the context window field accepts digits only;
+ *   the price field accepts digits and at most one decimal point (any other
+ *   characters from paste/IME input are stripped and never reach the form);
+ * - DTO -> row edit state (toRow): provider and modelId are both plain entry
+ *   fields with no prefix parsing; the loaded identity (original) is a paired
+ *   reference;
+ * - Ownership of the default/vision-agent model pointers after save
+ *   (nextPointers): always compared as pairs; renaming (either provider or
+ *   model_id changes) moves the pointer along.
+ * - Which env fallback variables a key hint may promise (detectedEnvKeys):
+ *   only those the server reported a value for.
+ * - Whether a row has a key (hasKey) and what the card prints for it
+ *   (keyStatusText): the shared hasConfiguredKey rule (stored key or a masked
+ *   env fallback) plus the dialog's unsaved-edit notions.
+ */
+import { describe, expect, it } from "vitest";
+import {
+  capabilityRow,
+  clientTypeAfterProviderChange,
+  decimalOnly,
+  detectedEnvKeys,
+  digitsOnly,
+  fastModeState,
+  modelLabelOf,
+  priceToSubmit,
+  hasKey,
+  keyStatusText,
+  nextPointers,
+  rowRef,
+  toRow,
+} from "../src/features/models/models-page";
+import { S } from "../src/lib/strings";
+
+describe("priceToSubmit", () => {
+  // The catalog bills this row at CNY 0.05 per million, i.e. $0.00714285714... The form can
+  // only show four decimals, so the loaded field reads 0.0071.
+  const STORED = "0.007142857";
+
+  it("returns the stored number untouched when the field still holds what was loaded", () => {
+    expect(priceToSubmit("0.0071", STORED, "USD")).toBe(STORED);
+    // Same in CNY, where the round trip also passes through the x7 conversion.
+    expect(priceToSubmit("0.05", STORED, "CNY")).toBe(STORED);
+  });
+
+  it("takes the typed value once the field has actually been edited", () => {
+    expect(priceToSubmit("0.9", STORED, "USD")).toBe("0.9");
+    expect(priceToSubmit("7", STORED, "CNY")).toBe("1");
+  });
+
+  it("encodes normally when there is nothing stored to preserve", () => {
+    expect(priceToSubmit("0.0071", undefined, "USD")).toBe("0.0071");
+    expect(priceToSubmit("0.0071", "", "USD")).toBe("0.0071");
+  });
+
+  it("passes an emptied field through as empty, which clears the price", () => {
+    expect(priceToSubmit("", STORED, "USD")).toBe("");
+  });
+});
+
+describe("modelLabelOf", () => {
+  it("prefers the display name", () => {
+    expect(modelLabelOf("My GPT", "gpt-5.5")).toBe("My GPT");
+  });
+
+  it("falls back to the id when the name was cleared, not just when it was never set", () => {
+    // The dialog clears the field to "", so `?? modelId` would hand back an empty label — which
+    // is how a save confirmation came to quote an empty name.
+    expect(modelLabelOf(undefined, "gpt-5.5")).toBe("gpt-5.5");
+    expect(modelLabelOf("", "gpt-5.5")).toBe("gpt-5.5");
+    expect(modelLabelOf("   ", "gpt-5.5")).toBe("gpt-5.5");
+  });
+
+  it("keeps a name that merely has padding around it", () => {
+    expect(modelLabelOf("  My GPT  ", "gpt-5.5")).toBe("My GPT");
+  });
+});
+
+describe("digitsOnly (context window)", () => {
+  it("keeps digits only", () => {
+    expect(digitsOnly("200000")).toBe("200000");
+    expect(digitsOnly("20e5")).toBe("205");
+    expect(digitsOnly("200,000 tokens")).toBe("200000");
+    expect(digitsOnly("-3.5")).toBe("35");
+    expect(digitsOnly("abc")).toBe("");
+  });
+});
+
+describe("decimalOnly (price)", () => {
+  it("keeps digits and at most one decimal point", () => {
+    expect(decimalOnly("3.75")).toBe("3.75");
+    expect(decimalOnly("$3.75")).toBe("3.75");
+    expect(decimalOnly("3.7.5")).toBe("3.75");
+    expect(decimalOnly("1..2.3")).toBe("1.23");
+    expect(decimalOnly(".5")).toBe(".5");
+    expect(decimalOnly("-1e3")).toBe("13");
+    expect(decimalOnly("abc")).toBe("");
+  });
+});
+
+describe("detectedEnvKeys (variables a key hint may promise)", () => {
+  it("collects the variables the server reported a value for, and only those", () => {
+    const rows = [
+      toRow({
+        provider: "anthropic",
+        modelId: "claude-sonnet-4-6",
+        envKey: "ANTHROPIC_API_KEY",
+        envKeyMasked: "sk-a…3456",
+        isDefault: false,
+      }),
+      // Variable name known, no value reported: nothing here proves it is set, so a hint
+      // must not tell the user that leaving the key empty is covered.
+      toRow({
+        provider: "deepseek",
+        modelId: "deepseek-v4-pro",
+        envKey: "DEEPSEEK_API_KEY",
+        isDefault: false,
+      }),
+      toRow({ provider: "custom", modelId: "my-model", isDefault: false }),
+    ];
+    expect(detectedEnvKeys(rows)).toEqual(new Set(["ANTHROPIC_API_KEY"]));
+    expect(detectedEnvKeys([])).toEqual(new Set());
+  });
+});
+
+describe("hasKey / keyStatusText (the model card's key judgement)", () => {
+  const stored = toRow({
+    provider: "moonshot",
+    modelId: "kimi-k2.6",
+    credential: { apiKeyMasked: "sk-o\u20261111" },
+    isDefault: false,
+  });
+  const envBacked = toRow({
+    provider: "anthropic",
+    modelId: "claude-sonnet-4-6",
+    envKey: "ANTHROPIC_API_KEY",
+    envKeyMasked: "sk-a\u20263456",
+    isDefault: false,
+  });
+  const bare = toRow({ provider: "custom", modelId: "my-model", isDefault: false });
+
+  it("a stored key or a masked env fallback both count; a bare row does not", () => {
+    expect(hasKey(stored)).toBe(true);
+    expect(hasKey(envBacked)).toBe(true);
+    expect(hasKey(bare)).toBe(false);
+    // Variable name only: nothing proves it is set, so it is still key-less.
+    const nameOnly = toRow({
+      provider: "deepseek",
+      modelId: "deepseek-v4-pro",
+      envKey: "DEEPSEEK_API_KEY",
+      isDefault: false,
+    });
+    expect(hasKey(nameOnly)).toBe(false);
+  });
+
+  it("a key typed in the dialog counts before it is saved", () => {
+    expect(hasKey({ ...bare, apiKeyInput: "  sk-new  " })).toBe(true);
+    expect(hasKey({ ...bare, apiKeyInput: "   " })).toBe(false);
+  });
+
+  it("clearApiKey drops the stored key only: an env-backed row keeps its key", () => {
+    expect(hasKey({ ...stored, clearApiKey: true })).toBe(false);
+    // The environment cannot be cleared from the dialog, so clearing leaves it behind.
+    expect(
+      hasKey({ ...envBacked, credential: { apiKeyMasked: "sk-a\u20269999" }, clearApiKey: true }),
+    ).toBe(true);
+  });
+
+  it("the status line shows the most specific source it has", () => {
+    expect(keyStatusText(stored)).toBe("sk-o\u20261111");
+    expect(keyStatusText(envBacked)).toBe("sk-a\u20263456");
+    expect(keyStatusText(bare)).toBe(S.models.noKey);
+    // A key typed but not yet saved has no mask of its own.
+    expect(keyStatusText({ ...bare, apiKeyInput: "sk-new" })).toBe(S.models.keyConfigured);
+    // Clearing a stored key falls back to the environment's mask rather than "no key".
+    expect(
+      keyStatusText({
+        ...envBacked,
+        credential: { apiKeyMasked: "sk-a\u20269999" },
+        clearApiKey: true,
+      }),
+    ).toBe("sk-a\u20263456");
+  });
+});
+
+describe("clientTypeAfterProviderChange", () => {
+  it("uses openai-chat when moving to Custom and otherwise preserves the current client", () => {
+    expect(clientTypeAfterProviderChange("custom", "")).toBe("openai-chat");
+    expect(clientTypeAfterProviderChange("custom", "claude-5")).toBe("openai-chat");
+    expect(clientTypeAfterProviderChange("google", "openai-chat")).toBe("openai-chat");
+  });
+});
+
+describe("toRow (DTO → row edit state)", () => {
+  it("provider and modelId are both plain entry fields (zero parsing); the loaded identity is a paired reference", () => {
+    const row = toRow({
+      provider: "anthropic",
+      modelId: "claude-sonnet-4-6",
+      displayName: "Claude Sonnet 4.6",
+      isDefault: false,
+    });
+    expect(row.provider).toBe("anthropic");
+    expect(row.modelId).toBe("claude-sonnet-4-6");
+    expect(row.original).toEqual({ provider: "anthropic", modelId: "claude-sonnet-4-6" });
+    expect(rowRef(row)).toEqual({ provider: "anthropic", modelId: "claude-sonnet-4-6" });
+  });
+
+  it("carries the env-fallback name and its masked preview through to the row", () => {
+    const row = toRow({
+      provider: "anthropic",
+      modelId: "claude-sonnet-4-6",
+      envKey: "ANTHROPIC_API_KEY",
+      envKeyMasked: "sk-a…3456",
+      isDefault: false,
+    });
+    expect(row.envKey).toBe("ANTHROPIC_API_KEY");
+    expect(row.envKeyMasked).toBe("sk-a…3456");
+    expect(toRow({ provider: "custom", modelId: "m", isDefault: false }).envKeyMasked).toBe(
+      undefined,
+    );
+  });
+
+  it("providers outside the catalog list are kept as-is (only the display layer buckets them under custom)", () => {
+    const row = toRow({ provider: "myproxy", modelId: "claude-sonnet-4-6", isDefault: false });
+    expect(row.provider).toBe("myproxy");
+    expect(row.modelId).toBe("claude-sonnet-4-6");
+    expect(row.original).toEqual({ provider: "myproxy", modelId: "claude-sonnet-4-6" });
+  });
+
+  it("an upstream id may itself contain `/` (gateway models): still the full model_id, not mistaken for a group", () => {
+    const row = toRow({ provider: "openrouter", modelId: "xiaomi/mimo-v2.5", isDefault: false });
+    expect(row.provider).toBe("openrouter");
+    expect(row.modelId).toBe("xiaomi/mimo-v2.5");
+  });
+
+  it("carries the per-model max output tokens through; absent = '' (inherit the Agent setting)", () => {
+    const capped = toRow({
+      provider: "custom",
+      modelId: "local-qwen",
+      maxTokens: 8000,
+      isDefault: false,
+    });
+    expect(capped.maxTokens).toBe("8000");
+    const plain = toRow({ provider: "custom", modelId: "local-qwen", isDefault: false });
+    expect(plain.maxTokens).toBe("");
+  });
+
+  it("carries the per-model fast mode through; absent = off (the toggle's default)", () => {
+    const fast = toRow({
+      provider: "custom",
+      modelId: "local-qwen",
+      fastMode: true,
+      isDefault: false,
+    });
+    expect(fast.fastMode).toBe(true);
+    const plain = toRow({ provider: "custom", modelId: "local-qwen", isDefault: false });
+    expect(plain.fastMode).toBe(false);
+  });
+});
+
+describe("nextPointers (where the default/vision-agent model pointers land after save; always paired)", () => {
+  const mA = { provider: "custom", modelId: "m-a" };
+  const mANew = { provider: "custom", modelId: "m-a-new" };
+  const mB = { provider: "custom", modelId: "m-b" };
+  const base = { action: "save" as const, defaultModel: mA, visionModel: mB };
+
+  it("renames carry the pointer along (otherwise the submitted stale reference is no longer in models and the server 400s)", () => {
+    // Renaming the current default model.
+    expect(nextPointers({ ...base, editing: mA, ref: mANew })).toEqual({
+      defaultModel: mANew,
+      visionModel: mB,
+    });
+    // Renaming the current vision-agent model.
+    const mBNew = { provider: "custom", modelId: "m-b-new" };
+    expect(nextPointers({ ...base, editing: mB, ref: mBNew })).toEqual({
+      defaultModel: mA,
+      visionModel: mBNew,
+    });
+    // Same model is both default and vision agent: both pointers move together.
+    expect(nextPointers({ ...base, editing: mA, ref: mANew, visionModel: mA })).toEqual({
+      defaultModel: mANew,
+      visionModel: mANew,
+    });
+  });
+
+  it("changing only the group (model_id unchanged) is also a rename: the pointer follows the new provider", () => {
+    const moved = { provider: "openai", modelId: "m-a" };
+    expect(nextPointers({ ...base, editing: mA, ref: moved })).toEqual({
+      defaultModel: moved,
+      visionModel: mB,
+    });
+  });
+
+  it("no rename, or editing another model: pointers stay put", () => {
+    expect(nextPointers({ ...base, editing: mA, ref: mA })).toEqual({
+      defaultModel: mA,
+      visionModel: mB,
+    });
+    const mC = { provider: "custom", modelId: "m-c" };
+    const mCNew = { provider: "custom", modelId: "m-c-new" };
+    expect(nextPointers({ ...base, editing: mC, ref: mCNew })).toEqual({
+      defaultModel: mA,
+      visionModel: mB,
+    });
+  });
+
+  it("the same model_id under two providers: only a pointer equal as a pair follows", () => {
+    // Default pointer points to openai/m-a, but the edit renames custom/m-a:
+    // same modelId, different provider — the pointer must not be changed.
+    const openaiA = { provider: "openai", modelId: "m-a" };
+    expect(
+      nextPointers({
+        action: "save",
+        editing: mA,
+        ref: mANew,
+        defaultModel: openaiA,
+        visionModel: undefined,
+      }),
+    ).toEqual({ defaultModel: openaiA, visionModel: undefined });
+  });
+
+  it("set as default / set as vision agent: the pointer points at this model", () => {
+    const mC = { provider: "custom", modelId: "m-c" };
+    expect(nextPointers({ ...base, editing: mC, ref: mC, action: "setDefault" })).toEqual({
+      defaultModel: mC,
+      visionModel: mB,
+    });
+    expect(nextPointers({ ...base, editing: mC, ref: mC, action: "setVisionModel" })).toEqual({
+      defaultModel: mA,
+      visionModel: mC,
+    });
+  });
+
+  it("the first model added (no default before) automatically becomes the default model", () => {
+    const first = { provider: "custom", modelId: "m-first" };
+    expect(
+      nextPointers({
+        editing: null,
+        ref: first,
+        action: "save",
+        defaultModel: undefined,
+        visionModel: undefined,
+      }),
+    ).toEqual({ defaultModel: first, visionModel: undefined });
+    // When a default already exists, a newly added model does not take it over.
+    const mNew = { provider: "custom", modelId: "m-new" };
+    expect(nextPointers({ ...base, editing: null, ref: mNew })).toEqual({
+      defaultModel: mA,
+      visionModel: mB,
+    });
+  });
+});
+
+describe("fastModeState (whether the dialog offers the fast-mode switch, and on which protocol)", () => {
+  // The provider defaults to a real vendor group, whose entries are auto-routed by a
+  // catalog-known model id — the custom-like groups, which resolve to a protocol instead,
+  // are exercised explicitly below.
+  const draft = (partial: {
+    modelId: string;
+    provider?: string;
+    clientType?: string;
+    baseUrl?: string;
+    fastMode?: boolean;
+  }) => ({
+    provider: partial.provider ?? "anthropic",
+    modelId: partial.modelId,
+    clientType: partial.clientType ?? "",
+    baseUrl: partial.baseUrl ?? "",
+    fastMode: partial.fastMode ?? false,
+  });
+
+  it("offers it where AgentHub's routed client carries the parameter, with the protocol", () => {
+    // Gateway / custom rows pin the OpenAI protocol; first-party Claude ids take the
+    // Anthropic one, which is what selects the research-preview paragraph in the warning.
+    expect(fastModeState(draft({ modelId: "z-ai/glm-5.2", clientType: "openai" }))).toEqual({
+      protocol: "openai",
+      show: true,
+    });
+    expect(fastModeState(draft({ modelId: "claude-fable-5" }))).toEqual({
+      protocol: "anthropic",
+      show: true,
+    });
+    expect(fastModeState(draft({ modelId: "gpt-5.5" })).protocol).toBe("openai");
+  });
+
+  it("withholds it where the client would reject the parameter", () => {
+    // The whole point of the gate: these ids would fail the next turn with fast mode on.
+    for (const modelId of ["gemini-3.5-flash", "glm-5.2", "kimi-k3", "deepseek-v4-pro"]) {
+      expect(fastModeState(draft({ modelId })), modelId).toEqual({
+        protocol: undefined,
+        show: false,
+      });
+    }
+    // Claude 4.6 is refused by name even though the client serves the family, and Bedrock
+    // has no fast tier at all — the base URL is read from the draft, not the saved row.
+    expect(fastModeState(draft({ modelId: "claude-sonnet-4-6" })).show).toBe(false);
+    expect(
+      fastModeState(draft({ modelId: "claude-fable-5", baseUrl: "bedrock://us-east-1" })).show,
+    ).toBe(false);
+  });
+
+  it("keeps the switch on a row that already stores fast mode, so it can always be turned off", () => {
+    // A value that arrived by hand-edited TOML or `--fast-mode` must stay switchable off:
+    // the runtime rejection tells the user to turn it off in the model settings.
+    const stranded = fastModeState(draft({ modelId: "kimi-k3", fastMode: true }));
+    expect(stranded.show).toBe(true);
+    // ...but the protocol stays undefined, which is what raises the "not supported" warning
+    // line instead of pretending the model can serve it.
+    expect(stranded.protocol).toBeUndefined();
+  });
+
+  it("follows the draft as it is typed: an unsaved protocol change flips the answer", () => {
+    // Same upstream id, different client: routed to Kimi it is rejected, pinned to the
+    // OpenAI protocol (a gateway reselling it) it is served.
+    expect(fastModeState(draft({ modelId: "moonshotai/kimi-k3" })).show).toBe(false);
+    expect(fastModeState(draft({ modelId: "moonshotai/kimi-k3", clientType: "openai" }))).toEqual({
+      protocol: "openai",
+      show: true,
+    });
+    // Whitespace-only fields are treated as absent, matching what the form submits.
+    expect(fastModeState(draft({ modelId: "claude-fable-5", clientType: "  " })).protocol).toBe(
+      "anthropic",
+    );
+  });
+
+  it("resolves a custom-like group through the protocol it will be saved with, not its model id", () => {
+    // A custom / user-defined group starts with no protocol and is persisted on the
+    // compatible client (protocolForPersist -> DEFAULT_CUSTOM_CLIENT_TYPE), which carries
+    // fast mode. Routing those ids by name instead would withhold the switch from an entry
+    // that can serve it — nothing about such a group routes by model id.
+    for (const provider of ["custom", "my-group"]) {
+      expect(fastModeState(draft({ provider, modelId: "my-model" })), provider).toEqual({
+        protocol: "openai",
+        show: true,
+      });
+      // Ids that WOULD route to a client with no fast tier if they were read by name: the
+      // group still saves them on the compatible client, so the switch stays offered.
+      for (const modelId of ["kimi-k3", "gemini-3.5-flash", "deepseek-v4-pro"]) {
+        expect(fastModeState(draft({ provider, modelId })), `${provider}/${modelId}`).toEqual({
+          protocol: "openai",
+          show: true,
+        });
+      }
+    }
+    // An explicitly picked protocol still wins over the fallback, on either family.
+    expect(
+      fastModeState(draft({ provider: "custom", modelId: "my-model", clientType: "ant-messages" }))
+        .protocol,
+    ).toBe("anthropic");
+    expect(
+      fastModeState(
+        draft({ provider: "custom", modelId: "my-model", clientType: "openai-responses" }),
+      ).protocol,
+    ).toBe("openai");
+    // The Bedrock carve-out belongs to the claude5 client, so it applies where routing
+    // actually reaches that client: a vendor group withholds the switch, while the same id
+    // and base URL under a custom group is pinned to the compatible client and keeps it.
+    // The gate mirrors AutoLLMClient's routing; it does not promise the endpoint honours
+    // the parameter, which no dialog-side rule can know.
+    expect(
+      fastModeState(
+        draft({ provider: "anthropic", modelId: "claude-fable-5", baseUrl: "bedrock://us-east-1" }),
+      ).show,
+    ).toBe(false);
+    expect(
+      fastModeState(
+        draft({ provider: "custom", modelId: "claude-fable-5", baseUrl: "bedrock://us-east-1" }),
+      ).protocol,
+    ).toBe("openai");
+  });
+
+  it("leaves preset and vendor groups on id-based routing when no protocol is set", () => {
+    // The fallback is scoped to custom-like groups: a vendor group with an empty protocol
+    // must keep deferring to AgentHub's id routing, so a no-fast-tier id stays withheld.
+    expect(fastModeState(draft({ provider: "moonshot", modelId: "kimi-k3" }))).toEqual({
+      protocol: undefined,
+      show: false,
+    });
+    expect(
+      fastModeState(draft({ provider: "anthropic", modelId: "claude-fable-5" })).protocol,
+    ).toBe("anthropic");
+  });
+});
+
+describe("capabilityRow (vision support + fast mode sharing one row)", () => {
+  it("splits the row into two half-width cells when both switches are there", () => {
+    expect(capabilityRow({ vision: true, fastMode: true })).toEqual({
+      show: true,
+      cellClass: undefined,
+    });
+  });
+
+  it("gives a lone switch the full width, in either direction", () => {
+    // The pair is a coincidence, not an invariant. Fast mode is withheld for every model
+    // whose routed client rejects the parameter (the common case), and the vision switch has
+    // to keep rendering on its own — full width, not squeezed into half a row beside a hole.
+    expect(capabilityRow({ vision: true, fastMode: false })).toEqual({
+      show: true,
+      cellClass: "col-span-2",
+    });
+    // The mirror image: a preset model annotated by the catalog shows no vision switch, so
+    // fast mode is alone.
+    expect(capabilityRow({ vision: false, fastMode: true })).toEqual({
+      show: true,
+      cellClass: "col-span-2",
+    });
+  });
+
+  it("drops the row entirely when neither switch is there", () => {
+    // A preset model whose client rejects fast mode has no capability switches at all: the
+    // grid must not render, or the dialog's space-y would draw a gap around an empty box.
+    expect(capabilityRow({ vision: false, fastMode: false }).show).toBe(false);
+  });
+});

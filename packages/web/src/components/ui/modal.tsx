@@ -1,0 +1,123 @@
+/**
+ * Modal dialog component: overlay fades in, panel rises into place; closes on
+ * Esc or clicking the overlay. Docked to the bottom on narrow screens (bottom
+ * sheet style), centered card at >=sm.
+ *
+ * **Rendered via portal to body**: the panel has its own transform entrance
+ * animation (anim-pop), which makes it a containing block for descendant `fixed`
+ * elements — if a nested modal (e.g. a delete confirmation inside a settings
+ * modal) rendered in place, its overlay would be confined to the parent panel's
+ * rectangle, leaving a misaligned edge (a white sliver showing through). After
+ * portaling, every modal is a sibling child of body and stacks naturally in DOM
+ * order.
+ */
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import type { ReactNode } from "react";
+import { CloseButton } from "./icons";
+
+export interface ModalProps {
+  open: boolean;
+  /** Dialog name: rendered as the header bar, or (headerless) exposed as the panel's aria-label only. */
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  /** Panel width class (defaults to sm:max-w-md). */
+  widthClass?: string;
+  /** No header bar (no visible title, no close button): compact dialogs like confirmations — the title still names the dialog for assistive tech. */
+  headerless?: boolean;
+  /** Render children full-bleed: no built-in padding or 70vh scroller. For dialogs that own their inner layout and scroll regions (PagedDialog); the caller then also owns a close control. */
+  bare?: boolean;
+}
+
+/**
+ * Stack of currently open Escape-consuming layers: Escape only acts on the **topmost**
+ * one. Modals AND popup menus (Dropdown) join the same stack. When dialogs are nested
+ * (e.g. a confirmation popped inside a settings modal), each Modal registers its own
+ * window keydown->onClose; without checking the top of the stack, a single Escape would
+ * close both layers at once and discard unsaved edits in the outer modal. The same rule
+ * gives menus-inside-dialogs the right order: a Dropdown opened inside a Modal pushes
+ * above it, so the first Escape closes only the menu (the Modal's handler sees itself
+ * not on top and stays), and the next one closes the dialog. Pushed in mount order, so
+ * the top of the stack is the visually topmost layer.
+ */
+const escLayers: symbol[] = [];
+
+/** Register an Escape-consuming layer (called when a modal/menu opens); pair with popEscLayer. */
+export function pushEscLayer(): symbol {
+  const id = Symbol("esc-layer");
+  escLayers.push(id);
+  return id;
+}
+
+export function popEscLayer(id: symbol): void {
+  const i = escLayers.lastIndexOf(id);
+  if (i !== -1) escLayers.splice(i, 1);
+}
+
+/** Whether this layer is the topmost one — the only layer an Escape press may act on. */
+export function isTopEscLayer(id: symbol): boolean {
+  return escLayers[escLayers.length - 1] === id;
+}
+
+export function Modal({
+  open,
+  title,
+  onClose,
+  children,
+  footer,
+  widthClass,
+  headerless,
+  bare,
+}: ModalProps) {
+  // Latest-callback ref, so the effect below re-runs ONLY on open/close: call sites pass an
+  // inline arrow for onClose, and re-running on its identity would pop and re-push this
+  // dialog's esc-layer on every render — jumping it back above a menu opened inside it, so
+  // Escape would close the whole dialog instead of just the menu. Dropdown keeps the same
+  // guard for the same reason.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!open) return;
+    const id = pushEscLayer();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isTopEscLayer(id)) onCloseRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      popEscLayer(id);
+    };
+  }, [open]);
+
+  if (!open) return null;
+  return createPortal(
+    <div
+      className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        {...(headerless ? { role: "dialog", "aria-label": title } : {})}
+        className={`anim-pop w-full ${widthClass ?? "sm:max-w-md"} rounded-t-lg border border-gray-200 bg-white pb-[env(safe-area-inset-bottom)] shadow-xl sm:rounded-lg sm:pb-0 dark:border-gray-800 dark:bg-gray-900`}
+      >
+        {!headerless && (
+          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
+            <h2 className="text-base font-semibold">{title}</h2>
+            <CloseButton onClose={onClose} />
+          </div>
+        )}
+        {bare ? children : <div className="max-h-[70vh] overflow-y-auto px-4 py-4">{children}</div>}
+        {footer && (
+          <div className="flex justify-end gap-2 border-t border-gray-200 px-4 py-3 dark:border-gray-800">
+            {footer}
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+}

@@ -1,0 +1,449 @@
+/**
+ * model-grouping.ts unit tests: search filtering (id / display name / provider name,
+ * case-insensitive) and grouping by provider — grouping reads the row's **provider field**
+ * directly ((provider, model_id) are stored as separate columns; id is never concatenated
+ * or split anywhere); built-in group order follows MODEL_PROVIDERS with custom last, and any
+ * provider not in the catalog becomes a custom-built group — each forms its own
+ * group, sorted by name and appended after custom; empty groups are hidden, except the
+ * custom group, which is always shown when there's no search query, hosting the generic
+ * "add model" entry point. Also covers the chat dropdown's visibility rule (visibleChatModels):
+ * models with a key only by default (a stored masked key or a masked env fallback, judged by
+ * hasConfiguredKey), selected/default always visible, everything listed when nothing is
+ * configured or on showAll.
+ */
+import { describe, expect, it } from "vitest";
+import {
+  MODEL_PROVIDERS,
+  catalogEntryFor,
+  effectivePricing,
+} from "@prismshadow/linsight-core/model-catalog";
+import {
+  discountedPrice,
+  groupModelRows,
+  hasConfiguredKey,
+  isFreeModel,
+  matchesQuery,
+  orderModelsLikeLibrary,
+  visibleChatModels,
+} from "../src/features/models/model-grouping";
+import type { ModelCredentialRowLike, ModelRowLike } from "../src/features/models/model-grouping";
+
+const rows: ModelRowLike[] = [
+  { provider: "anthropic", modelId: "claude-sonnet-4-6", displayName: "Claude Sonnet 4.6" },
+  { provider: "anthropic", modelId: "claude-opus-4-8", displayName: "Claude Opus 4.8" },
+  { provider: "moonshot", modelId: "kimi-k2.6", displayName: "Kimi K2.6" },
+  { provider: "minimax", modelId: "MiniMax-M3", displayName: "MiniMax M3" },
+  { provider: "custom", modelId: "my-proxy-model" },
+  { provider: "unknown-vendor", modelId: "weird-model" }, // provider not in the catalog → custom-built group
+];
+
+describe("matchesQuery", () => {
+  it("an empty query is always true", () => {
+    expect(matchesQuery(rows[0]!, "")).toBe(true);
+    expect(matchesQuery(rows[0]!, "   ")).toBe(true);
+  });
+
+  it("matches by model_id / display name / provider name, case-insensitive", () => {
+    expect(matchesQuery(rows[0]!, "SONNET")).toBe(true); // display name
+    expect(matchesQuery(rows[0]!, "claude-sonnet")).toBe(true); // upstream id
+    expect(matchesQuery(rows[0]!, "anthropic")).toBe(true); // provider
+    expect(matchesQuery(rows[2]!, "moonshot")).toBe(true); // provider label includes Moonshot (Kimi)
+    expect(matchesQuery(rows[0]!, "gemini")).toBe(false);
+  });
+
+  it("custom models without a display name match by id and the Custom group name", () => {
+    const customRow = rows.find((row) => row.provider === "custom")!;
+    const customBuiltRow = rows.find((row) => row.provider === "unknown-vendor")!;
+    expect(matchesQuery(customRow, "proxy")).toBe(true);
+    expect(matchesQuery(customRow, "custom")).toBe(true);
+    // Custom-built groups are searchable by their group name (raw provider value); no longer folded into the Custom bucket.
+    expect(matchesQuery(customBuiltRow, "unknown-vendor")).toBe(true);
+    expect(matchesQuery(customBuiltRow, "custom")).toBe(false);
+  });
+});
+
+describe("groupModelRows", () => {
+  it("groups by the row's provider (order follows MODEL_PROVIDERS), custom last, custom-built groups appended after", () => {
+    const groups = groupModelRows(rows, "");
+    expect(groups.map((g) => g.provider.id)).toEqual([
+      "anthropic",
+      "moonshot",
+      "minimax",
+      "custom",
+      "unknown-vendor",
+    ]);
+    expect(groups[0]!.rows.map((r) => r.modelId)).toEqual(["claude-sonnet-4-6", "claude-opus-4-8"]);
+    expect(groups[2]!.provider.label).toBe("MiniMax");
+    expect(groups[2]!.rows.map((r) => r.modelId)).toEqual(["MiniMax-M3"]);
+    expect(groups[3]!.rows.map((r) => r.modelId)).toEqual(["my-proxy-model"]);
+    // Custom-built group: synthesized provider info — label is the group name, OpenAI-protocol semantics (env falls back to OPENAI_*).
+    expect(groups[4]!.provider.label).toBe("unknown-vendor");
+    expect(groups[4]!.provider.envKey).toBe("OPENAI_API_KEY");
+    expect(groups[4]!.rows.map((r) => r.modelId)).toEqual(["weird-model"]);
+    // Group order matches MODEL_PROVIDERS, whose sequence is hand-curated (gateways and
+    // first-party vendors interleaved): TokenDance first as the recommended group, DeepSeek
+    // next as the default model's provider, custom last. This is the page's DEFAULT — the
+    // stored per-Project order applied below overrides it.
+    expect(MODEL_PROVIDERS.map((p) => p.id)).toEqual([
+      "tokendance",
+      "deepseek",
+      "openrouter",
+      "fireworks",
+      "google",
+      "openai",
+      "anthropic",
+      "siliconflow",
+      "zhipu",
+      "moonshot",
+      "minimax",
+      "qwen-pay-as-you-go",
+      "qwen-token-plan",
+      "custom",
+    ]);
+    expect(MODEL_PROVIDERS.find((p) => p.id === "siliconflow")!.label).toBe("SiliconFlow");
+    expect(MODEL_PROVIDERS.find((p) => p.id === "minimax")!.label).toBe("MiniMax");
+  });
+
+  it("the custom group always shows without a search query (returned even when empty, hosting the add entry point)", () => {
+    const vendorOnly: ModelRowLike[] = [{ provider: "moonshot", modelId: "kimi-k2.6" }];
+    const groups = groupModelRows(vendorOnly, "");
+    expect(groups.map((g) => g.provider.id)).toEqual(["moonshot", "custom"]);
+    expect(groups[1]!.rows).toEqual([]);
+    // Empty groups for other providers stay hidden (only moonshot and custom appear above).
+    // With a search query, the empty custom group no longer appears.
+    expect(groupModelRows(vendorOnly, "kimi").map((g) => g.provider.id)).toEqual(["moonshot"]);
+  });
+
+  it("searching keeps only matching rows; empty groups are not returned", () => {
+    const groups = groupModelRows(rows, "kimi");
+    expect(groups).toHaveLength(1);
+    expect(groups[0]!.provider.id).toBe("moonshot");
+    expect(groups[0]!.rows.map((r) => r.modelId)).toEqual(["kimi-k2.6"]);
+    expect(groupModelRows(rows, "no-such-model")).toEqual([]);
+  });
+
+  it("a `/` inside the upstream id (gateway models) is just a character: grouping reads only the provider field", () => {
+    const gateway: ModelRowLike[] = [{ provider: "openrouter", modelId: "xiaomi/mimo-v2.5" }];
+    const groups = groupModelRows(gateway, "");
+    expect(groups.map((g) => g.provider.id)).toEqual(["openrouter", "custom"]);
+    expect(groups[0]!.rows[0]!.modelId).toBe("xiaomi/mimo-v2.5");
+    expect(matchesQuery(gateway[0]!, "mimo")).toBe(true);
+  });
+
+  it("the same model_id under different providers coexists: each in its own group, never merged", () => {
+    const dup: ModelRowLike[] = [
+      { provider: "moonshot", modelId: "kimi-k2.6" },
+      { provider: "siliconflow", modelId: "kimi-k2.6" },
+    ];
+    const groups = groupModelRows(dup, "");
+    expect(groups.map((g) => g.provider.id)).toEqual(["siliconflow", "moonshot", "custom"]);
+    expect(groups[0]!.rows).toHaveLength(1);
+    expect(groups[1]!.rows).toHaveLength(1);
+  });
+
+  it("multiple custom-built groups sort by name and append after custom", () => {
+    const mixed: ModelRowLike[] = [
+      { provider: "zeta-lab", modelId: "z-1" },
+      { provider: "alpha-proxy", modelId: "a-1" },
+    ];
+    const groups = groupModelRows(mixed, "");
+    expect(groups.map((g) => g.provider.id)).toEqual(["custom", "alpha-proxy", "zeta-lab"]);
+    // Search matches a custom-built group's name: only that group is kept.
+    expect(groupModelRows(mixed, "zeta").map((g) => g.provider.id)).toEqual(["zeta-lab"]);
+  });
+});
+
+describe("hasConfiguredKey", () => {
+  it("a stored (masked) key counts as configured", () => {
+    expect(
+      hasConfiguredKey({
+        provider: "anthropic",
+        modelId: "m",
+        credential: { apiKeyMasked: "sk-a***xyz" },
+      }),
+    ).toBe(true);
+    expect(hasConfiguredKey({ provider: "anthropic", modelId: "m" })).toBe(false);
+    expect(hasConfiguredKey({ provider: "anthropic", modelId: "m", credential: {} })).toBe(false);
+  });
+
+  it("a masked env fallback counts too: the server reports it only for a variable that holds a value", () => {
+    expect(
+      hasConfiguredKey({ provider: "anthropic", modelId: "m", envKeyMasked: "sk-a\u20263456" }),
+    ).toBe(true);
+    // Stored key absent but the environment behind it: still configured, same as the model card shows.
+    expect(
+      hasConfiguredKey({
+        provider: "anthropic",
+        modelId: "m",
+        credential: {},
+        envKeyMasked: "sk-a\u20263456",
+      }),
+    ).toBe(true);
+  });
+
+  it("envKey alone is merely the NAME of a fallback var (nothing says it is set): never counts", () => {
+    const envOnly = { provider: "anthropic", modelId: "m", envKey: "ANTHROPIC_API_KEY" };
+    expect(hasConfiguredKey(envOnly)).toBe(false);
+  });
+});
+
+describe("visibleChatModels", () => {
+  const configured = (provider: string, modelId: string): ModelCredentialRowLike => ({
+    provider,
+    modelId,
+    credential: { apiKeyMasked: "sk-***" },
+  });
+  const keyless = (provider: string, modelId: string): ModelCredentialRowLike => ({
+    provider,
+    modelId,
+  });
+  const pool: ModelCredentialRowLike[] = [
+    keyless("deepseek", "deepseek-v4"),
+    configured("anthropic", "claude-sonnet-4-6"),
+    keyless("anthropic", "claude-opus-4-8"),
+    configured("moonshot", "kimi-k2.6"),
+    keyless("custom", "my-proxy"),
+  ];
+
+  it("by default lists only key-configured models, in library order", () => {
+    expect(visibleChatModels(pool, { showAll: false, query: "" }).map((m) => m.modelId)).toEqual([
+      "claude-sonnet-4-6",
+      "kimi-k2.6",
+    ]);
+  });
+
+  it("an env-backed model is listed like a stored-key one, not hidden behind show-all", () => {
+    const envBacked: ModelCredentialRowLike = {
+      provider: "anthropic",
+      modelId: "claude-opus-4-8",
+      envKeyMasked: "sk-a\u20263456",
+    };
+    const withEnv = [...pool.filter((m) => m.modelId !== "claude-opus-4-8"), envBacked];
+    expect(visibleChatModels(withEnv, { showAll: false, query: "" }).map((m) => m.modelId)).toEqual(
+      [
+        "claude-sonnet-4-6",
+        "claude-opus-4-8", // env fallback only — still counts as having a key
+        "kimi-k2.6",
+      ],
+    );
+    // The "show models without key" expander counts only the two genuinely key-less rows.
+    expect(
+      visibleChatModels(withEnv, { showAll: true, query: "" }).length -
+        visibleChatModels(withEnv, { showAll: false, query: "" }).length,
+    ).toBe(2);
+    // Knowing the variable's NAME is not knowing it is set: such a row stays hidden.
+    const nameOnly = {
+      provider: "anthropic",
+      modelId: "claude-opus-4-8",
+      envKey: "ANTHROPIC_API_KEY",
+    };
+    const withNameOnly = [...pool.filter((m) => m.modelId !== "claude-opus-4-8"), nameOnly];
+    expect(
+      visibleChatModels(withNameOnly, { showAll: false, query: "" }).map((m) => m.modelId),
+    ).toEqual(["claude-sonnet-4-6", "kimi-k2.6"]);
+  });
+
+  it("showAll lists everything, still in library order", () => {
+    expect(visibleChatModels(pool, { showAll: true, query: "" }).map((m) => m.modelId)).toEqual([
+      "deepseek-v4",
+      "claude-sonnet-4-6",
+      "claude-opus-4-8",
+      "kimi-k2.6",
+      "my-proxy",
+    ]);
+  });
+
+  it("the selected and the default model stay visible even without a key", () => {
+    const visible = visibleChatModels(pool, {
+      showAll: false,
+      query: "",
+      selected: { provider: "anthropic", modelId: "claude-opus-4-8" },
+      defaultModel: { provider: "deepseek", modelId: "deepseek-v4" },
+    });
+    expect(visible.map((m) => m.modelId)).toEqual([
+      "deepseek-v4", // default, key-less — kept
+      "claude-sonnet-4-6",
+      "claude-opus-4-8", // selected, key-less — kept
+      "kimi-k2.6",
+    ]);
+  });
+
+  it("when no model has a configured key, everything is listed (never an empty dropdown)", () => {
+    const none = [keyless("anthropic", "a"), keyless("moonshot", "b")];
+    expect(visibleChatModels(none, { showAll: false, query: "" }).map((m) => m.modelId)).toEqual([
+      "a",
+      "b",
+    ]);
+  });
+
+  it("the query filters what's visible: hidden key-less models only match once showAll", () => {
+    expect(visibleChatModels(pool, { showAll: false, query: "opus" })).toEqual([]);
+    expect(visibleChatModels(pool, { showAll: true, query: "opus" }).map((m) => m.modelId)).toEqual(
+      ["claude-opus-4-8"],
+    );
+    // The query also narrows the configured-only view.
+    expect(
+      visibleChatModels(pool, { showAll: false, query: "kimi" }).map((m) => m.modelId),
+    ).toEqual(["kimi-k2.6"]);
+    // ...and a key-less selected model kept by the exception is still searchable.
+    expect(
+      visibleChatModels(pool, {
+        showAll: false,
+        query: "opus",
+        selected: { provider: "anthropic", modelId: "claude-opus-4-8" },
+      }).map((m) => m.modelId),
+    ).toEqual(["claude-opus-4-8"]);
+  });
+});
+
+describe("orderModelsLikeLibrary", () => {
+  it("flattens to the library page's order: built-in provider order, user groups after, custom last", () => {
+    const rows: ModelRowLike[] = [
+      { provider: "custom", modelId: "my-proxy" },
+      { provider: "my-gateway", modelId: "own-1" },
+      { provider: "moonshot", modelId: "kimi-k3" },
+      { provider: "deepseek", modelId: "deepseek-v4-flash" },
+      { provider: "openrouter", modelId: "anthropic/claude-fable-5" },
+      { provider: "deepseek", modelId: "deepseek-v4-pro" },
+    ];
+    expect(orderModelsLikeLibrary(rows).map((r) => `${r.provider} ${r.modelId}`)).toEqual([
+      // deepseek first (in-group order preserved), then the openrouter gateway, then moonshot,
+      // then custom, then the user-defined group appended after the built-ins.
+      "deepseek deepseek-v4-flash",
+      "deepseek deepseek-v4-pro",
+      "openrouter anthropic/claude-fable-5",
+      "moonshot kimi-k3",
+      "custom my-proxy",
+      "my-gateway own-1",
+    ]);
+  });
+});
+
+describe("isFreeModel", () => {
+  it("numeric buckets (the DTO shape): free ⇔ pricing exists and all three buckets are 0", () => {
+    expect(isFreeModel({ cacheRead: 0, cacheWrite: 0, output: 0 })).toBe(true);
+    expect(isFreeModel({ cacheRead: 0, cacheWrite: 0, output: 1.2 })).toBe(false);
+    expect(isFreeModel({ cacheRead: 0.5, cacheWrite: 6.25, output: 25 })).toBe(false);
+    // No pricing at all = costs merely unknown, not free.
+    expect(isFreeModel(undefined)).toBe(false);
+  });
+
+  it('string-typed edit fields (the model page\'s RowState shape): "" means unpriced, not $0', () => {
+    expect(isFreeModel({ cacheRead: "0", cacheWrite: "0", output: "0" })).toBe(true);
+    expect(isFreeModel({ cacheRead: "", cacheWrite: "", output: "" })).toBe(false);
+    // Partially filled pricing never counts as free.
+    expect(isFreeModel({ cacheRead: "0", cacheWrite: "", output: "0" })).toBe(false);
+    expect(isFreeModel({ cacheRead: "0", cacheWrite: "0", output: "3" })).toBe(false);
+  });
+});
+describe("discountedPrice", () => {
+  /**
+   * A row carrying exactly what "sync presets" would write for a catalog entry: the discounted
+   * price for a flat promotion, the peak price for a scheduled one (which is never baked in).
+   */
+  const syncedRow = (provider: string, modelId: string) => {
+    const entry = catalogEntryFor(provider, modelId)!;
+    const billed = (entry.offPeakDiscount !== undefined ? entry.pricing : effectivePricing(entry))!;
+    return {
+      provider,
+      modelId,
+      cacheRead: String(billed.cache_read),
+      cacheWrite: String(billed.cache_write),
+      output: String(billed.output),
+    };
+  };
+
+  it("a synced row on a flat promotion reports the rate, and bills at the stored price", () => {
+    const row = syncedRow("tokendance", "glm-5.3-flash");
+    const found = discountedPrice(row)!;
+    expect(found.percent).toBe(50);
+    expect(found.scheduled).toBe(false);
+    // A flat promotion is baked in at sync time, so what is billed is what is stored.
+    expect(found.billed).toEqual({
+      cacheRead: Number(row.cacheRead),
+      cacheWrite: Number(row.cacheWrite),
+      output: Number(row.output),
+    });
+    // And it really is below the catalog's list price.
+    const entry = catalogEntryFor("tokendance", "glm-5.3-flash")!;
+    expect(entry.pricing!.cache_write).toBeGreaterThan(found.billed.cacheWrite);
+  });
+
+  // Beijing is UTC+8, so 01:00Z is 09:00 there. 2026-08-31 is a Monday.
+  const PEAK = new Date("2026-08-31T01:30:00Z");
+  const OFF_PEAK = new Date("2026-08-31T05:00:00Z");
+
+  it("a scheduled row is marked and halved off-peak, and left at list price at peak", () => {
+    const row = syncedRow("deepseek", "deepseek-v4-flash");
+    const entry = catalogEntryFor("deepseek", "deepseek-v4-flash")!;
+
+    const off = discountedPrice(row, OFF_PEAK)!;
+    expect(off.percent).toBe(50);
+    expect(off.scheduled).toBe(true);
+    expect(off.billed.output).toBeCloseTo(entry.pricing!.output / 2, 6);
+
+    // At peak the row carries no mark at all: the stored price is the price.
+    expect(discountedPrice(row, PEAK)).toBeUndefined();
+  });
+
+  it("a scheduled row whose price was edited is never halved, at either hour", () => {
+    const row = { ...syncedRow("deepseek", "deepseek-v4-pro"), output: "1.234" };
+    expect(discountedPrice(row, OFF_PEAK)).toBeUndefined();
+    expect(discountedPrice(row, PEAK)).toBeUndefined();
+  });
+
+  it("undiscounted catalog rows, off-catalog rows and unpriced rows report nothing", () => {
+    expect(discountedPrice(syncedRow("tokendance", "qwen3.8-flash"))).toBeUndefined();
+    expect(discountedPrice(syncedRow("tokendance", "hy4-preview"))).toBeUndefined();
+    expect(
+      discountedPrice({
+        provider: "custom",
+        modelId: "my-proxy",
+        cacheRead: "1",
+        cacheWrite: "2",
+        output: "3",
+      }),
+    ).toBeUndefined();
+    expect(discountedPrice({ provider: "tokendance", modelId: "kimi-k3" })).toBeUndefined();
+    expect(
+      discountedPrice({
+        provider: "tokendance",
+        modelId: "kimi-k3",
+        cacheRead: "",
+        cacheWrite: "",
+        output: "",
+      }),
+    ).toBeUndefined();
+  });
+
+  it("an edited price drops the decoration: a hand-typed number is not a discount off list", () => {
+    const row = syncedRow("tokendance", "kimi-k3");
+    expect(discountedPrice(row)).toBeDefined();
+    expect(discountedPrice({ ...row, output: "9.99" })).toBeUndefined();
+    // A row still holding the LIST price (a Project that has not synced presets) is not
+    // being billed the promotional rate, so it gets no badge either.
+    const entry = catalogEntryFor("tokendance", "kimi-k3")!;
+    expect(
+      discountedPrice({
+        ...row,
+        cacheRead: String(entry.pricing!.cache_read),
+        cacheWrite: String(entry.pricing!.cache_write),
+        output: String(entry.pricing!.output),
+      }),
+    ).toBeUndefined();
+  });
+
+  it("accepts the DTO's numeric buckets as well as the edit form's strings", () => {
+    const row = syncedRow("tokendance", "qwen3.8-max");
+    expect(discountedPrice(row)?.percent).toBe(10);
+    expect(
+      discountedPrice({
+        provider: row.provider,
+        modelId: row.modelId,
+        cacheRead: Number(row.cacheRead),
+        cacheWrite: Number(row.cacheWrite),
+        output: Number(row.output),
+      })?.percent,
+    ).toBe(10);
+  });
+});

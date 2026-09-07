@@ -1,0 +1,172 @@
+---
+title: Web App Guide
+description: A page-by-page guide to the Web App — login, chat, Agent management, models, usage, and traces.
+---
+
+Linsight ships with a ready-to-use Web App: multi-user login, streaming chat, Agent configuration, model and usage management all happen in the browser. This guide walks through the app page by page. For installation and first launch, see the [Quickstart](/quickstart).
+
+## Source layout
+
+```text
+packages/web/src
+├── api/          # fetch wrapper · one function per API (DTOs type-only from @prismshadow/linsight-server/api) · SSE wrapper
+├── state/        # auth / project / sessions / theme / locale contexts
+├── lib/omni/     # OmniMessage stream → view-model reducer; connect-first + dedup stream controller
+├── components/   # ui primitives (modal / drawer / select …) and the app layout
+└── features/     # chat / agents / skills / models / usage / traces / benchmark / admin pages
+```
+
+## Startup and Login
+
+```bash
+linsight web
+# open http://127.0.0.1:7364
+```
+
+The initial account is `admin`, and it starts with no password of its own: the server prints a first-login link in a framed notice on every start until one is set, and opening that link signs the browser in to set it. The link stays usable — and identical — until the password exists. There is no self-registration: accounts are created by an admin on the user-management page, and every new user automatically gets an independent initial Project named `<userId>-default_project`. While the initial password is still in use, a banner prompts the user to change it. A forgotten password is reset by the admin on the user-management page; a forgotten **admin** password is reset offline with `linsight server reset-admin-password` (server stopped), which returns the account to the unclaimed state and brings the first-login link back.
+
+Logins persist for 30 days with sliding renewal; an admin password reset invalidates all of that user's login sessions.
+
+The interface language (中文 / English / system) and theme (light / dark / system) can be switched at any time.
+
+## Chat (/chat)
+
+### Creating a Conversation
+
+A new conversation starts as a draft: pick the Agent, the Workspace (via a server-side directory browser), the approval mode, the model, and the thinking level before sending the first message. The Session is created on first send, and from then on its model and Workspace are locked. Switching the thinking level or the model in the draft makes the switched-to value the new default: the level is written back to the selected Agent's `model.thinking_level` immediately, and the picked model carries over as the next conversation's default. Inside an active session the thinking level belongs to the session: the composer's picker starts out showing the Agent config's level and auto-follows it until touched (sends omit the level, so config edits keep taking effect); a pick is **stored on the Session itself**, so it survives a page reload and shows up in another tab, applies to every later run of that conversation — a later Agent-config edit no longer moves it — and is still never written back to the Agent config. Changing the level mid-chat asks first, because switching mid-conversation lowers the prompt-cache hit rate and raises cost — the dialog offers three choices: **Compact, then switch** (recommended — it compacts the context exactly like `/compact` and applies the level once that compaction ends; a compaction that fails or is aborted still applies the level, with a notice that it did not finish), **Switch anyway** (applies immediately), and Cancel (keeps the current level). A compaction can only start on an idle conversation, so while a task is running the first choice is disabled with a note explaining why, and the other two stay available. A conversation with no messages yet, a re-pick of the displayed level, or a switch right after a successful compaction applies directly without asking; the model stays locked per session — the `/model` command switches models the way the `/agent` handoff does: picking a model stages it as a chip in the composer, and **sending** opens a new session for the same Agent on the picked model, keeping the current Workspace, whose first message carries a `[model_switch_from]` source block (source session id, Trace file path, previous model) followed by whatever the composer held (an interface-language auto-line when empty). In the new session that block collapses into a "switched model" banner linking back to the source conversation, and the model reads the source Trace file itself when it needs the earlier history.
+
+There are four approval modes: `allow-all`, `deny-all`, `read-only` (only read-only tools pass), and `always-ask`. See [Tools and Approvals](/tools).
+
+Below the composer the draft page files example prompts into folders, exactly one of them open at a time; clicking a row fills the composer with that prompt and sends nothing, so it can be read and edited before Send. The last folder, **My shortcuts**, is your own: **New shortcut** opens an editor already holding whatever is in the composer, with its first line suggested as the name, and saving files it under that folder — a saved shortcut is a name plus a prompt, pins no Skills, and is stored per user on the server, so it follows you to another browser or machine. Rows carry edit and delete, the folder header counts `used/limit`, and the **New shortcut** row disappears once 3 are saved (a name is at most 40 characters, a prompt at most 4000) — the cap is what keeps this folder the same height as a built-in one, with no scrollbar of its own.
+
+### The Conversation List
+
+The sidebar's conversation list groups by Workspace or by Agent. Grouping and sort order are switched in the **List options** menu (the sliders icon in the section header), where each option carries its own icon: a folder for Workspace grouping, the Agent glyph for Agent grouping, a clock for most-recent order, and up/down arrows for the drag-reordered manual order.
+
+A row's actions come at two levels:
+
+- **Hovering** a row replaces the trailing last-active time with two icon buttons — archive and delete. They are reachable from the keyboard too: tabbing onto either one reveals it;
+- **Right-clicking** a row opens the full menu at the pointer: pin, rename, archive, delete. A **long press** on touch and **Shift+F10** on the keyboard open the same menu, since neither hover nor a secondary click exists there. Escape, a click elsewhere, or scrolling the list dismisses it; the browser's own context menu is taken over on conversation rows only, and stays as usual everywhere else on the page.
+
+Pinning is offered only in the active list — the archived, subagent and scheduled folders leave it out — and a pinned conversation sorts to the top of its group. The choice is remembered per Project in the browser.
+
+### Streaming Rendering
+
+- Model text renders token by token; thinking blocks are collapsible;
+- Tool cards expand to show arguments and output, with a live timer while running;
+- Subagents leave a full-width row in the stream, styled like the other collapsed step rows (agent avatar, name, short session id, running spinner, and an amber dot while one of their tool calls awaits approval); clicking it opens the agents side panel — a call graph of that row's Task on top (each node shows its elapsed time; click a node to switch) and the selected child's live conversation below — the child's own user prompts included — where nested tool cards and approvals work exactly as in the main chat. Panel visibility is task-scoped: sending a message that starts a new task closes it by default (entering a session starts closed too), and it comes back when you open it yourself or — on desktop — when the current task spawns a subagent (one auto-open per task; a manual close holds until the next task; never over an open files panel). Opening the panel from the toolbar, or switching sessions, shows the latest Task's graph; a row on an older turn brings back that turn's graph. The agents panel and the Workspace files panel never show together — opening one closes the other. Context compaction and the first-run MCP connect show a unified step row (the work-group header shell, sticky title bar included — running/success/failure only swap the icon and the one-line detail, with the wall time on the result; the MCP row leads with the discovered-tool count and names unavailable servers, and expands into one group per server — status, tool count and that server's connect time — each opening into its tool list or the failure detail);
+- After each Task, a stats line shows tokens, TPS, elapsed time, cost, copy, and a **Fork** action to the right of copy. Fork asks for confirmation first — it duplicates the conversation into a new chat — and only then opens a new Session at that completed assistant reply with the same Agent, model, Workspace, approval mode, and retained transcript. Forks from different replies in one source chat share an increasing, language-neutral title sequence (`Source title (1)`, `Source title (2)`). Its Trace and scratchpad are independent snapshots: local images/files keep rendering even after the source chat is deleted;
+
+### Header Stats and the Details Card
+
+The toolbar's right edge shows the Session's cumulative stats (tokens, cost, elapsed time); clicking them opens the details card — model, Session id (with a copy button beside it), Workspace, creation time and per-line statistics. Below those:
+
+- **Processes** — background processes the conversation started (`exec_command`s promoted past their yield window), one row each with the command, start time and pid — plus, on running rows, a link to the service the process serves when one was detected (the last local URL its output printed, else a listen-port probe of its process group). Running rows carry a **Stop** button (kills the whole process group and drops the row) — the conversation is told the process is down, as **stopped** rather than failed, so the model knows the dev server is gone without reading it as a crash to restart; exited rows keep their "exited" label and carry a **Remove** button that deletes the entry from the list. Removal is immediate and final: the entry leaves the runtime registry together with the output captured from that process, so afterwards the model can no longer be asked to read it — keep the row until you are done with its output.
+
+Copy buttons across the app confirm at the button itself: the copy icon flips to a check mark for a moment (no "Copied" text label).
+
+### Input and Shortcuts
+
+- Enter sends, Shift+Enter inserts a newline, and images can be pasted — an image placed inline in the conversation is capped at 20MB, separately from file attachments and not raised along with them: an inline image enters the conversation and the Trace, where its size is paid again on every history page and every session resume, whereas an attachment is only ever read from disk by path;
+- The "+" menu holds the input add-ons: **image upload**, **file attachment** and goal mode. An attachment can be any type (up to 20 at a time, and by default ≤ 100MB each and 120MB in total — an admin can change both sizes under **System settings → Upload limits**, see below; an oversize pick is refused before it is read, so nothing is uploaded to earn the rejection, and the message names the limit actually in force); selected files show as removable chips above the text body in the order they were picked, and a message with attachments and no text is sendable. On send the files are written into the Session's scratchpad — deleted with the Session — and the message gains an `[attached file: <path>]` line per file, which the conversation renders as an "Attached files" notice: the bytes never enter the conversation, the model opens each file by path with its ordinary file tools;
+- Files can also be **dragged onto the chat area** — the conversation and the composer, on the chat page and the draft page alike: while a file drag is over that region a "Drop files to attach" overlay covers it (it hides as soon as the drag moves off; dragging text or anything that isn't a file is ignored), and releasing attaches the whole batch to the composer — images join the pasted-image pipeline, everything else becomes file attachments, with the same type and size validation and the same errors as the "+" menu. Dropping works while a Task is running too (the attachments then send per the mid-run send mode below); goal mode takes dropped images but refuses files with a notice. Only the chat area reacts: dropping a file on the sidebar, the top bar, the docked panels or any page without a composer attaches nothing and shows nothing — it is simply ignored, instead of the browser navigating away to the dropped file;
+- Typing `/` opens the slash menu: trigger context compaction (`/compact`), hand the conversation over to another Agent (`/agent`), switch the model (`/model`) — both switch commands appear in an active session only, since a draft has nothing to switch and picks its Agent and model up front — or toggle installed Skills — chosen Skills are sent along with the message in a `[use_skills]` block;
+- While a Task is running the input stays live and the toolbar keeps a single action button: an empty composer shows **Stop**, and typing turns it into **Send**, whose behavior follows the **mid-run send mode** from the toolbar's More-settings popover (a compact extensible settings panel, also available in draft state; the choice is remembered): **Steer** (default) delivers the text **and any attached images** mid-run as a `[user_steering]` user message with the next turn (an image with no caption sends on its own, and the delivered message renders as a steering chip with its images inside it), **Queue** holds the whole message server-side as a follow-up and auto-sends it as an ordinary new message when the run finishes (an "N queued" hint shows near the input until then; the queue survives page reloads). A draft steering cannot carry — selected skills, file attachments, or a staged `/agent` or `/model` pick, with no text and no image — falls back to the queue for that one send, so the button never sits disabled with Stop displaced. Each queued hint line — an undelivered steering message or a queued follow-up — ends in a **recall** control (a curved-back arrow, "Recall") that withdraws the message back into the input box (attachments included) for editing and resending; a steering message that already reached the model can no longer be recalled;
+- **Goal mode** (the "+" menu, or `/goal`) turns the draft into an objective the system loops Tasks against. Attached images ride along and are always sent as scratchpad paths (a goal objective is re-injected as text every round — see [Goal mode](/goal-mode)); text is still required, since a picture alone states no objective, and file attachments are refused. Round 1's bubble shows the attachments in full, later rounds collapse them into a chip that expands on click;
+- `/agent` and `/model` stage their pick instead of acting on it: the chosen Agent or model becomes a chip above the text body and nothing is sent yet, so you keep typing — Enter/Send is what hands the conversation over (a new chat for that Agent) or forks it onto the chosen model, carrying the text along; with an empty composer a default message is filled in, and the chip's × cancels. Both chips are cached with the draft, so they survive a reload or a trip to another conversation together with the text. A model fork additionally waits for the Session to be idle — it continues from the Session's Trace, which a running turn or a compaction is still writing — and a line above the composer says so while it waits;
+- When human approval is required, tool calls show inline allow/deny buttons in the message stream; the approval mode can be changed mid-Session;
+- While the engine waits out a reconnect backoff (≥2s), the retry line shows a live countdown to the next attempt with inline **Retry now** (skips the remaining wait) and **Give up** (the ordinary abort) controls;
+- When the model API rejects the Session's credentials (an authentication failure), the composer grays out and disables — recoverably: the Session pins only the model reference, and credentials come from the current Project config. The notice's primary button opens the Models page; saving a new API key there unlocks the composer by itself (open tabs unlock live via a `credentials_updated` event, and after a reload the composer stays unlocked because the credential update is newer than the recorded auth failure). A "Retry" button clears the state manually for another attempt (it re-arms if the key is still bad), a completed request always clears it, and "New Session" remains as the escape to a fresh draft. The disabled composer keeps its draft selectable, so a long message that failed to send can still be copied out.
+
+### Files Panel
+
+The files panel browses the Workspace tree, previews files (Markdown / HTML rendered), uploads files (≤ 14MB each), and downloads them.
+
+## Agent Management (/agents)
+
+The list page creates and deletes Agents — the create dialog can initialize the new agent from an exported Agent State snapshot package (name and description left empty keep the package's values, and plugin picking is unavailable then, since the package carries its own skills and hooks) — and clicking through opens the `/agents/:agentId` settings page, organized into tabs:
+
+| Tab | Contents |
+| --- | --- |
+| Overview | Basic info, export / import of Agent State snapshots, and restoring the default configuration (overwrites customizations, keeping only name/description) |
+| Prompt | AGENTS.md and system_prompt |
+| Memory | The Agent-level switch, then every memory grouped by scope — user memory first, then one group per Workspace, each group collapsible with add, export and import entries — with view / delete / edit-via-chat actions per row |
+| Runtime | Runtime parameters such as max_turns, model.*, compaction.* |
+| Tools | Built-in tool table (incl. per-tool call_description switches) and MCP Server management: a table plus an add/edit form whose fields follow the transport (http by default; changes save immediately; full transport validation server-side; a permission control fixes the approval level of that server's tools at `auto` / `r` / `rw`, and the table shows each server's effective level); connectivity testing mirrors the models page — a standalone button in the form probes the current entry (toast with tool count and latency), and a section-level button tests every server in turn with a result badge on each row |
+| Hooks | Installed hook packages (agent_state/hooks/): name, description, version and the hook points each answers at; uninstall. Installing happens on the plugin library page |
+| Vault | Environment-variable entries with masked values |
+| Schedule | Scheduled tasks (TOML-defined): create, edit, toggle, delete |
+
+The Memory tab's switch writes immediately rather than joining the tab-level Save, so turning Memory off never drags an unrelated half-finished edit along with it. Turning it off keeps every file and the tab fully usable: it only stops Memory from entering the agent's context and from preparing directories for new Sessions. Scope groups collapse on header click, with the collapse state remembered in the browser per user × Project × Agent; each group header carries an **Add** text entry to its collapse arrow's left (the models page's group convention) — like editing, it goes through a bridge modal (a required content-or-source field plus a live prompt preview) into a new chat, where the agent organizes the content into that scope; the drafts stay deliberately minimal, since the save mechanics live in the Memory prompt. Rows are read-only on purpose, their actions icon-only like the skills tab's — **View** renders the body in a right drawer on desktop and a bottom sheet on narrow screens (the chat page panels' interaction, with half / full snap points), **Delete** confirms and also removes the file's `MEMORY.md` index lines, and **Edit** opens a bridge modal first (what to change plus a prompt preview), then jumps to a new chat with this agent; a Workspace scope's chat also pins that Workspace, so the Session reads the very index it is changing. A whole group also moves in one piece: **Export** downloads it as a JSON document (every memory plus the group's `MEMORY.md`) whose file name carries the export date and time, so repeated exports stay apart, and **Import** — owner only, mirroring the Agent State snapshot's split — reads one back. Import asks what to do with a name the group already has: keep the one that is here (the default, which loses nothing), take the file's version, or replace the whole group; either of the latter two confirms first, naming the memories that would be overwritten or deleted. Below the groups the two memory prompts (`memory.prompt` / `memory.workspace_prompt`) are edited in place, and when the prompt template carries no `{{MEMORY}}` placeholder (an agent created before Memory) it shows a hint with a one-click insert — an explicit, idempotent config write. The agent list cards' stat line also shows the memory count, deep-linking to this tab. For the storage model, see [Configuration](/configuration#memory).
+
+Scheduled tasks fire on a fixed period (minimum 5 minutes) and run only while the service is running.
+
+## Plugin Library (/plugins)
+
+Browse the plugin library by category — skills and session hooks alike — install a plugin onto an Agent (its skills and hook package together), update installs the library has moved past, or quick-invoke a skill into a chat draft. Each card carries a semantic metadata line (`v<version> · updated N days ago · used by N agents`) and opens a detail Modal: the plugin's full description and the hook points its hook package answers at, then a file browser over everything it ships — a tree on the left with one collapsible group per skill (its SKILL.md and reference files) and one for the hook scripts, any number open at once, and a preview on the right that renders the selected file without leaving the summary or the tree.
+
+## Model Configuration (/models)
+
+A per-Project model table grouped by provider. Models can be added and edited: identity is the `(provider, model_id)` pair, credentials are masked, and context window, max output tokens (a per-model cap overriding the Agent's `model.max_tokens` — lower it for small-context models), pricing, the vision flag, and fast mode (off by default: faster output at the provider's premium tier — the toggle is shown only for models whose AgentHub client can serve it, and switching it on confirms the premium billing first) are configurable. A model with fast mode on is badged in the list. You can set the default model and the vision model (which reads images on behalf of session models without image input), and run a connectivity test on any entry — the test carries the dialog's current fast-mode toggle, so a rejection surfaces before saving. Only Project owners can edit. For concepts, see [Models and Providers](/models).
+
+## Usage (/usage)
+
+- Filters: Agent, model, and date range (trailing last hour / last 24 hours, last 7 / 30 / 90 days, or a custom pair). The range decides the precision the charts are drawn at — per minute for the last hour, hourly for the last 24 hours, daily for the calendar presets, week or month for a long custom range — so there is no separate precision control;
+- Summary cards: today / last 7 days / cumulative;
+- Charts, all time series over the selected range: requests + success rate broken down by Agent and, beside it, the same by Model (a bucket's requests stacked one segment per entity on the left axis, each entity's success rate as its own dashed line on a right 0–100% axis, drawn above the bars; the top few entities are named and the rest fold into a neutral series labelled with how many), Token trend (three-segment stacked bars with a dashed cache-hit-rate line in front), and cost trend (line + points + area). Every chart takes the same hovers: a column for its bubble, one bar segment to single that segment out, a line to single the line out. Lines are straight segments, never smoothed, all at the same stroke width. Charts fit their card and never scroll;
+- Two things a chart cannot draw. A bucket with **no rate** — an entity that made no request in it, or a bucket with no cache traffic — has its line carried across at the top of the axis so the stroke stays continuous; the hover table prints a dash there, never a percentage, and a real 0% (requests were made and all of them failed) still prints 0%. A bucket that recorded **nothing at all** is not plotted: every chart drops it and packs the rest left to right, so all four share one x axis that skips the quiet intervals and carries a break mark at each skip. Emptiness is judged per bucket, never per entity — an interval anything ran in stays, with the entities that were idle in it showing their zeros and dashes;
+- A server error panel: summary stats plus an errors table paged at a fixed page size (no scrolling).
+
+## Benchmark (/benchmark)
+
+Read-only scoreboards per Benchmark: switch the metric (score / cost / duration), drill into each Case's runs, and jump to the linked Session and Trace. Works together with the [Self-Improvement](/self-improvement) workflow.
+
+## System Settings
+
+One dialog for the settings that belong to neither a Project nor an Agent, opened from the sidebar user menu's **System settings** row: a left rail of pages, each page a list of rows — title and a one-line explanation on the left, the control on the right.
+
+The rail is grouped. **Personal** holds preferences that belong to the signed-in account and apply the moment they are touched — no Save button, nothing to lose by closing the dialog. **Server** holds the server-global surfaces: the settings written through `GET|PUT /api/admin/settings` and user management are admin-only — a non-admin gets neither those entries nor any hint they exist, and the APIs answer a non-admin with 403 whatever the browser rendered. A non-admin is therefore left with the Personal pages alone, and the rail draws no group headings at all. In the desktop app the user-management page is absent (the server runs single-user), and the shell's own window also has no Account page — it signs in through the shell's token and holds no password to change, while a browser signed into the same server with a password keeps it. Checking for updates is not a page here — see [Version and Updates](#version-and-updates).
+
+### General
+
+Personal. **Language** (Chinese / English / follow the browser) and the **display currency** for prices (USD / CNY; storage is always USD — conversion happens only at the edge of the screen). **Show CLI sessions** (default off): off, the conversation list holds only Sessions created in the Web App and is served straight from the database; on, the Trace directories are scanned too and CLI-created Sessions are listed alongside them. Stored per user. **Import Trace**: choose the destination Project and Agent, upload a `.jsonl` Trace exported from another install, and it becomes a conversation of that Agent. Both halves are asked for: the endpoint is per-Agent because a Trace file cannot name a local Agent of its own, and the Project because this dialog does not show which one is open — which also means a Trace can go to a Project other than the open one. Exporting is the other direction of the same road and lives with the file it downloads, in a conversation's Trace panel.
+
+### Appearance
+
+Personal. The app **theme** (light / dark / follow the system), the **terminal theme** — the terminal panel keeps its own light/dark and by default follows the app theme; pin it light or dark to decouple the two, for prompts and TUIs tuned to one screen — the interface **font size**, and the **accent color**.
+
+### Account
+
+The **Change password** action. The page exists only where a password exists to change: the desktop shell's own window signs in through the shell's one-shot token and never sees one.
+
+### Users
+
+Admin only, outside the desktop app: list and create users, reset passwords, and delete users (the built-in admin cannot be deleted).
+
+### Proxy Options
+
+Admin only, server-global. Two switches — **Application uses the proxy** (the server's own outbound traffic: LLM requests, the update check, image fetches) and **Agent environment uses the proxy** (agent command subprocess environments) — share one optional **proxy address**; empty means follow the proxy environment variables. The address accepts any proxy URL undici's dispatcher takes (`http://`, `https://`, `socks5://`, credentials allowed) or a bare `host[:port]`, which is stored normalized to `http://…`; anything else is refused with the reason under the input. Nothing is written until Save, which applies the whole form in one PUT, so a rejected address writes none of it. A save rebuilds the outbound dispatcher and takes effect on new connections with no restart; loopback always goes direct.
+
+### Upload Limits
+
+Admin only, server-global: two sizes — the **per-file attachment cap** and the **per-message total** — both whole MB, defaulting to 100MB and 120MB. Each may be set between 1 and 200MB, and the total may not sit below the per-file cap (that combination would make a legal single attachment unsendable). A value outside the range — "100GB" typed into a MB field as 102400, say — is refused with the reason shown under the input rather than accepted. Validation precedes every write: one bad field in a PUT leaves the other fields untouched too.
+
+Saving takes effect immediately, with no restart: the attachment validators and the request body cap both read the setting per request. The body cap is not configured separately but derived from the total — attachments ride the request as base64 `data:` URLs, which inflates them by 4/3, so it has to rise with them or a request whose every attachment was individually legal would die at the HTTP layer instead.
+
+Two numbers are deliberately not exposed. The per-message file **count** stays at 20: it bounds how usable the composer's chip row is, not what the server can survive — the byte budgets do that. And an inline **image** stays capped at 20MB rather than following the attachment limit up, because an image placed inline enters the conversation and the Trace, where its size is paid again on every history page and every session resume; the model side is lower still (providers commonly cap around 5MB, and the `read_image` tool at 5MB), so raising it to 100MB would only trade a clear refusal for a later, more confusing failure.
+
+## Version and Updates
+
+Updating works the way an app updater does, from one dialog. Two entries open it: the row directly under **System settings** in the sidebar user menu, and the small "New version available" superscript on the new-chat page's version line (`vX.Y.Z · Last updated Jul 26` — the date is stamped into the build by the release workflow and shown without any network access; dev builds and releases predating the stamping, v0.1.2 and earlier, have no date). The row names where things stand — "Check for updates", "Checking…", "New version vX available", "Downloading vX 42%", "Restart to update to vX" — with the running version muted on its right, and every state opens the dialog.
+
+The dialog walks the update through: opening it with nothing known runs a check (the app also checks GitHub once per load, and the manual check bypasses the cached result); a newer release is offered with its release-notes link and a **Download and update** button, and nothing is fetched until you press it; a progress bar follows the download, and **Continue in background** closes the dialog without cancelling anything — the row keeps showing the percentage, a dot on the user button appears once the release is ready, and a toast announces it; then **Restart and update** finishes the job. On a server the download is `linsight update` running in the background (the data directory is untouched), the bar reads the installer's own progress, and the restart is real when the service runs under `linsight web` or `linsight server`, which supervise it: the service comes back on the new release and the page reloads by itself. A service started some other way is told to restart by hand instead. Non-admins can read the release notes but cannot run the update. A failed download shows the update command's own output and offers a retry; an install that cannot update itself (a source checkout, an unrecognized layout, Windows) says why. Set `LINSIGHT_UPDATE_CHECK=off` to disable the update check entirely — see the [Configuration Reference](/configuration).
+
+**In the desktop app** the same dialog drives the app's own updater — in the shell's own window only, where the server release never appears. The shell checks on its own schedule but never downloads on its own: a found release shows up as the dot and the row, the download starts from the dialog, its percentage is the updater's real progress, and **Restart and update** restarts into the downloaded build (the shell's native "Check for Updates…" menu item offers the same download-then-restart steps in native dialogs). A browser signed into the same desktop-mode server with a password gets no update entry at all: it can neither read that machine's updater state nor restart its window, and it cannot run the CLI self-update on that server either. Forms that cannot replace themselves — a Linux install owned by the system package manager (`.deb`), and a development run — say so in the dialog; the [Desktop app guide](/quickstart-desktop) covers the installers.
+
+## Projects and Members
+
+The sidebar provides a Project switcher and supports creating new Projects. Members have two roles, owner and member: owners manage membership and exclusively edit models, Vault, and Schedules, as well as perform deletions.
+
+## Production Deployment
+
+The server hosts the built SPA itself (same origin, SPA fallback), so a single `linsight web` or `linsight server` process is all production needs. The npm package bundles the frontend build; to serve a custom static directory, override it with `LINSIGHT_WEB_DIST` — see the [Configuration Reference](/configuration).

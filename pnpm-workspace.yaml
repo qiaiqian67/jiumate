@@ -1,0 +1,40 @@
+packages:
+  - "packages/*"
+  - "plugins/*"
+# Dependency pins. pnpm 11 reads overrides ONLY from here — the package.json
+# "pnpm.overrides" block it used to honour is silently ignored, which resolved a second
+# copy of each of these.
+overrides:
+  "@anthropic-ai/sdk": "^0.91.1"
+  esbuild: "^0.28.1"
+  # GHSA-frvp-7c67-39w9: @hono/node-server < 2.0.5 path traversal (serve-static on
+  # Windows). Our direct dep is already ^2.0.5; this forces the transitive copy pulled
+  # by @modelcontextprotocol/node (which pins ^1.19.9, no fixed upstream release yet).
+  # Remove once @modelcontextprotocol/node depends on @hono/node-server >= 2.0.5.
+  "@hono/node-server": ">=2.0.5"
+  # nanoid < 3.3.17 high (custom generators can loop indefinitely on size 0); only
+  # 3.x copies exist here (transitive). Remove once no dependent resolves < 3.3.17.
+  nanoid: "^3.3.17"
+injectWorkspacePackages: true
+syncInjectedDepsAfterScripts:
+  - build
+allowBuilds:
+  "@google/genai": true
+  esbuild: true
+  # node-pty compiles its native pty binding (node-gyp) on install; without this the
+  # terminal server has no pty and every session fails to spawn.
+  node-pty: true
+  protobufjs: true
+  # electron's postinstall downloads the platform runtime binary; without this allow
+  # entry pnpm skips it and `electron .` has nothing to launch.
+  electron: true
+  # electron-winstaller's script fetches Squirrel.Windows binaries; the desktop package
+  # targets NSIS only, so the script is deliberately not run.
+  electron-winstaller: false
+# pnpm 11 withholds freshly published versions by default (supply-chain gate), which
+# would resolve agenthub back to the previous release and lose the fix the bump is for.
+# This package is first-party, so the exemption carries no third-party risk.
+# Every bump lands inside the age gate, so the entry names the pinned version and moves
+# with each bump rather than being removed.
+minimumReleaseAgeExclude:
+  - "@prismshadow/agenthub@0.4.9"

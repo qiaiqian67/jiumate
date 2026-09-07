@@ -1,0 +1,161 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { getMessages, maskApiKey, resolveLanguage } from "../src/i18n.js";
+
+describe("resolveLanguage (env LINSIGHT_LANG, default en)", () => {
+  let prev: string | undefined;
+  beforeEach(() => {
+    prev = process.env.LINSIGHT_LANG;
+  });
+  afterEach(() => {
+    if (prev === undefined) delete process.env.LINSIGHT_LANG;
+    else process.env.LINSIGHT_LANG = prev;
+  });
+
+  it("defaults to en when unset", () => {
+    delete process.env.LINSIGHT_LANG;
+    expect(resolveLanguage()).toBe("en");
+  });
+  it("matches zh exactly (case-insensitive, trimmed)", () => {
+    process.env.LINSIGHT_LANG = "zh";
+    expect(resolveLanguage()).toBe("zh");
+    process.env.LINSIGHT_LANG = "  ZH  ";
+    expect(resolveLanguage()).toBe("zh");
+  });
+  it("falls back to en for non-exact zh prefixes and anything else", () => {
+    process.env.LINSIGHT_LANG = "zh-CN"; // no longer prefix-matched -> en
+    expect(resolveLanguage()).toBe("en");
+    process.env.LINSIGHT_LANG = "fr";
+    expect(resolveLanguage()).toBe("en");
+    process.env.LINSIGHT_LANG = "en";
+    expect(resolveLanguage()).toBe("en");
+  });
+});
+
+describe("getMessages", () => {
+  it("provides zh and en runtime + help strings", () => {
+    expect(getMessages("zh").modelAdded("m", "m")).toContain("已添加");
+    expect(getMessages("en").modelAdded("m", "m")).toContain("Added");
+    expect(getMessages("zh").modelUpdated("m", "m")).toContain("已更新");
+    expect(getMessages("en").modelUpdated("m", "m")).toContain("Updated");
+    // Command/option descriptions are also localized.
+    expect(getMessages("zh").config.addDesc).toContain("模型");
+    expect(getMessages("en").config.addDesc).toContain("model");
+    expect(getMessages("en").run.desc).toContain("Task");
+    // config lang copy.
+    expect(getMessages("zh").config.langDesc).toContain("语言");
+    expect(getMessages("en").config.langDesc).toContain("language");
+    expect(getMessages("en").langSet("zh", "/x/.zshrc")).toContain("/x/.zshrc");
+    expect(getMessages("zh").langInvalid("fr")).toContain("fr");
+    // Thinking-level control and tool-output collapsing (issue #305).
+    expect(getMessages("en").thinkingCurrent("medium")).toContain("medium");
+    expect(getMessages("zh").thinkingCurrent("medium")).toContain("medium");
+    expect(getMessages("en").thinkingSet("high")).toContain("high");
+    expect(getMessages("zh").thinkingSet("high")).toContain("high");
+    // The soft limit's reminder: both locales advise compacting first when re-pinning.
+    expect(getMessages("en").thinkingSet("high")).toContain("/compact");
+    expect(getMessages("zh").thinkingSet("high")).toContain("/compact");
+    expect(getMessages("en").thinkingInvalid("none")).toContain('"none"');
+    expect(getMessages("zh").thinkingInvalid("none")).toContain('"none"');
+    expect(getMessages("en").toolOutputElided(42)).toContain("42");
+    expect(getMessages("zh").toolOutputElided(42)).toContain("42");
+    // The hints line teaches the two new commands in both languages.
+    expect(getMessages("en").chatHints()).toContain("/thinking");
+    expect(getMessages("en").chatHints()).toContain("/verbose");
+    expect(getMessages("zh").chatHints()).toContain("/thinking");
+    expect(getMessages("zh").chatHints()).toContain("/verbose");
+  });
+
+  it("server-backed command families exist in both languages (spot checks)", () => {
+    for (const lang of ["en", "zh"] as const) {
+      const m = getMessages(lang);
+      // Every listing command names its subject in its description.
+      expect(m.ls.desc.length).toBeGreaterThan(0);
+      expect(m.input.desc.length).toBeGreaterThan(0);
+      expect(m.logs.desc.length).toBeGreaterThan(0);
+      expect(m.agent.lsDesc.length).toBeGreaterThan(0);
+      expect(m.project.lsDesc.length).toBeGreaterThan(0);
+      expect(m.cost.desc.length).toBeGreaterThan(0);
+      expect(m.schedule.lsDesc.length).toBeGreaterThan(0);
+      // Interpolating messages carry their arguments in both languages.
+      expect(m.ls.empty("proj-x")).toContain("proj-x");
+      expect(m.agent.created("helper", "proj-x")).toContain("helper");
+      expect(m.client.autoStarted("http://localhost:1", "/log")).toContain("http://localhost:1");
+      expect(m.client.remoteNeedsToken("https://r")).toContain("LINSIGHT_API_TOKEN");
+      expect(m.client.noToken("http://l", "/root/api-token")).toContain("/root/api-token");
+      expect(m.client.httpError(500, "boom", "detail")).toContain("500");
+      expect(m.client.sessionAmbiguous("ab", ["s1", "s2"])).toContain("s1");
+      expect(m.client.sessionNotFound("zz", "proj-x")).toContain("zz");
+      expect(m.logs.tailInvalid("x")).toContain("x");
+      expect(m.cost.byInvalid("bogus")).toContain("bogus");
+      expect(m.run.sessionNoOverride()).toContain("--session");
+      // The soft-yield / poll / caller-context family.
+      expect(m.common.timeout.length).toBeGreaterThan(0);
+      expect(m.client.timeoutInvalid("5d")).toContain("5d");
+      expect(m.client.stillRunning("abcd1234")).toContain("abcd1234");
+      expect(m.client.callerDefaultsFailed("session-x")).toContain("session-x");
+      expect(m.input.noReplyYet().length).toBeGreaterThan(0);
+      expect(m.logs.timeoutNeedsFollow().length).toBeGreaterThan(0);
+      expect(m.run.timeoutWithBackground()).toContain("--background");
+      // ls --days and the schedule writer family.
+      expect(m.ls.daysInvalid("x")).toContain("x");
+      expect(m.schedule.targetConflict()).toContain("--session-id");
+      expect(m.schedule.enableDisableConflict()).toContain("--enable");
+      expect(
+        m.schedule.written("daily", m.schedule.enabled(), "2026-08-27T09:00:00.000Z"),
+      ).toContain("daily");
+      expect(m.schedule.written("daily", m.schedule.enabled(), undefined)).toContain("daily");
+      expect(m.schedule.removed("daily")).toContain("daily");
+      // The latest-session default and its empty state.
+      expect(m.common.latestAgentId.length).toBeGreaterThan(0);
+      expect(m.client.latestSession("session-x")).toContain("session-x");
+      expect(m.client.noSessionsYet("ag", "proj-x")).toContain("ag");
+      expect(m.client.noSessionsYet("ag", "proj-x")).toContain("proj-x");
+      expect(m.client.noSessionsYet("ag", "proj-x")).toContain("linsight chat");
+      // Argument errors: each shape keeps the identifier commander quoted.
+      expect(m.usage.missingArgument("sessionId")).toContain("sessionId");
+      expect(m.usage.missingOption("--prompt <text>")).toContain("--prompt <text>");
+      expect(m.usage.optionMissingArgument("--tail <n>")).toContain("--tail <n>");
+      expect(m.usage.unknownOption("--nope")).toContain("--nope");
+      expect(m.usage.unknownCommand("nosuch")).toContain("nosuch");
+      expect(m.usage.other("too many arguments.")).toContain("too many arguments.");
+      const hint = m.usage.hint("linsight schedule add", "[options] <name>");
+      expect(hint).toContain("linsight schedule add [options] <name>");
+      expect(hint).toContain("linsight schedule add --help");
+    }
+    // Argument errors really are translated, not the English text twice.
+    expect(getMessages("zh").usage.missingArgument("sessionId")).not.toBe(
+      getMessages("en").usage.missingArgument("sessionId"),
+    );
+    expect(getMessages("zh").client.noSessionsYet("ag", "p")).not.toBe(
+      getMessages("en").client.noSessionsYet("ag", "p"),
+    );
+    // The dictionaries are genuinely two languages, not one copied twice.
+    expect(getMessages("zh").ls.desc).not.toBe(getMessages("en").ls.desc);
+    expect(getMessages("zh").client.noServer()).not.toBe(getMessages("en").client.noServer());
+  });
+
+  it("header shows the version and Agent / Workspace / Model on their own lines", () => {
+    for (const lang of ["en", "zh"] as const) {
+      const lines = getMessages(lang).header("run", "1.2.3", "ag", "/ws", "mod").split("\n");
+      expect(lines).toHaveLength(4);
+      expect(lines[0]).toContain("run");
+      expect(lines[0]).toContain("v1.2.3");
+      expect(lines[1]).toContain("ag");
+      expect(lines[2]).toContain("/ws");
+      expect(lines[3]).toContain("mod");
+    }
+  });
+});
+
+describe("maskApiKey", () => {
+  it("masks all but the last 4 chars", () => {
+    expect(maskApiKey("sk-1234567890")).toBe("****7890");
+  });
+  it("fully masks short keys (≤12 chars would leak most of the secret)", () => {
+    expect(maskApiKey("sk-test-1234")).toBe("***");
+    expect(maskApiKey("short")).toBe("***");
+  });
+  it("returns - when absent", () => {
+    expect(maskApiKey(undefined)).toBe("-");
+  });
+});

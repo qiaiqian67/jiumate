@@ -1,0 +1,540 @@
+/**
+ * Session resume: `agent.resumeSession` and setHistory injection.
+ *
+ * - Resume source is the Trace file with the latest index; config carries over from session_meta
+ *   (Workspace / Model cannot be swapped).
+ * - Pairing-fallback placeholders, once constructed, are written into the original trace file;
+ *   session_meta is never written twice.
+ * - Errors when the session doesn't exist / the workspace is missing / the model is no longer in the project config.
+ * - `groupHistoryToUniMessages` groups by adjacent same role; `GenerativeModel.setHistory` injects into AgentHub.
+ */
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createAgent } from "../src/index.js";
+import {
+  abortEvent,
+  assistantText,
+  compactionBegin,
+  compactionEnd,
+  requestBegin,
+  requestEnd,
+  sessionMeta,
+  tokenUsage,
+  toolCall,
+  userText,
+} from "../src/omnimessage/index.js";
+import type { OmniMessage, TokenCounts } from "../src/omnimessage/index.js";
+import { GenerativeModel, groupHistoryToUniMessages } from "../src/llm/index.js";
+import { readTrace } from "../src/trace/index.js";
+import { agentsMdPath, tracesDir } from "../src/state/paths.js";
+import { stubProviderKeys } from "./provider-keys.js";
+
+// The default project config ships with this model ((provider, model_id) pair reference; model_id is the upstream id).
+const MODEL = { provider: "anthropic", model_id: "claude-sonnet-4-6" };
+
+let tmpRoot: string;
+let workspace: string;
+let prevHome: string | undefined;
+let restoreKeys: () => void;
+
+beforeEach(async () => {
+  prevHome = process.env.LINSIGHT_HOME;
+  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-resume-"));
+  workspace = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-resume-ws-"));
+  process.env.LINSIGHT_HOME = tmpRoot;
+  restoreKeys = stubProviderKeys();
+});
+
+afterEach(async () => {
+  if (prevHome === undefined) delete process.env.LINSIGHT_HOME;
+  else process.env.LINSIGHT_HOME = prevHome;
+  restoreKeys();
+  await fs.rm(tmpRoot, { recursive: true, force: true });
+  await fs.rm(workspace, { recursive: true, force: true });
+});
+
+const usage = (total: number): TokenCounts => ({
+  cache_read: 0,
+  cache_write: 0,
+  output: 1,
+  total,
+});
+
+/** Manually constructs a session's trace file (simulating a record left behind by a previous process). */
+async function writeTraceFile(
+  root: string,
+  sessionId: string,
+  messages: OmniMessage[],
+  opts?: { dateDir?: string; index?: string },
+): Promise<string> {
+  const dir = path.join(
+    tracesDir(root, "default_project", "default_agent"),
+    opts?.dateDir ?? "2026-07-06",
+  );
+  await fs.mkdir(dir, { recursive: true });
+  const file = path.join(dir, `${sessionId}_${opts?.index ?? "001"}.jsonl`);
+  await fs.writeFile(file, messages.map((m) => JSON.stringify(m)).join("\n") + "\n", "utf8");
+  return file;
+}
+
+function metaFor(
+  sessionId: string,
+  workspaceDir: string,
+  model = MODEL,
+  source?: "subagent" | "schedule",
+): OmniMessage {
+  return sessionMeta({
+    session_id: sessionId,
+    provider: model.provider,
+    model_id: model.model_id,
+    model_context_window: 1000000,
+    system_prompt: "ORIGINAL SYSTEM PROMPT",
+    agent_state: "/agent/state",
+    workspace: workspaceDir,
+    ...(source !== undefined ? { source } : {}),
+  });
+}
+
+describe("agent.resumeSession", () => {
+  const SID = "session-2026-07-06-10-00-00-abcdef01";
+
+  it("resumes from the latest trace file and exposes render history", async () => {
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("hello"),
+      requestBegin(),
+      assistantText("hi there"),
+      requestEnd("completed"),
+      tokenUsage(usage(42), usage(42)),
+    ]);
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    expect(session.sessionId).toBe(SID);
+    expect(session.provider).toBe(MODEL.provider);
+    expect(session.modelId).toBe(MODEL.model_id);
+    expect(session.workspaceDir).toBe(workspace);
+    const texts = (session.resumedHistory ?? []).map(
+      (m) => (m.payload as { text?: string }).text ?? "",
+    );
+    expect(texts).toEqual(["hello", "hi there"]);
+  });
+
+  it("preserves the stored session source across resume (and its absence for user sessions)", async () => {
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace, MODEL, "subagent"),
+      userText("child task"),
+      requestBegin(),
+      assistantText("done"),
+      requestEnd("completed"),
+    ]);
+    const session = await agent.resumeSession({ sessionId: SID });
+    // The rebuilt session_meta carries the origin over (a rotated Trace file must re-record it).
+    expect((session.metaMessage.payload as { source?: string }).source).toBe("subagent");
+    session.dispose();
+
+    // A user-created session's meta has no source key, and resume must not invent one.
+    const SID2 = "session-2026-07-06-11-00-00-abcdef02";
+    await writeTraceFile(tmpRoot, SID2, [metaFor(SID2, workspace), userText("hi")]);
+    const plain = await agent.resumeSession({ sessionId: SID2 });
+    expect("source" in (plain.metaMessage.payload as unknown as Record<string, unknown>)).toBe(
+      false,
+    );
+    plain.dispose();
+
+    // On-disk values are untrusted: a junk source written by a third party is dropped on
+    // resume (only the exact known origins pass), not cast through into the rebuilt meta.
+    const SID3 = "session-2026-07-06-12-00-00-abcdef03";
+    await writeTraceFile(tmpRoot, SID3, [
+      metaFor(SID3, workspace, MODEL, "weird-origin" as unknown as "subagent"),
+      userText("hi"),
+    ]);
+    const junk = await agent.resumeSession({ sessionId: SID3 });
+    expect("source" in (junk.metaMessage.payload as unknown as Record<string, unknown>)).toBe(
+      false,
+    );
+    junk.dispose();
+  });
+
+  it("keeps abort events in resumed render history", async () => {
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("long task"),
+      requestBegin(),
+      assistantText("partial answer", "aborted"),
+      requestEnd("aborted"),
+      abortEvent(),
+    ]);
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    expect(
+      (session.resumedHistory ?? []).map((m) => (m.payload as { type?: string }).type),
+    ).toEqual(["text", "text", "abort"]);
+  });
+
+  it("closes a compaction the user quit out of as failed, discarding its draft (issue #288)", async () => {
+    // The process died while a compaction ran: the shard ends inside the span (begin +
+    // prompt + an unfinished request that had started writing a summary). That compaction
+    // simply failed — resume closes the span before appending anything else, so the
+    // conversation that follows is not hidden as compaction-internal, and the half-written
+    // draft is discarded rather than adopted as a summary.
+    const agent = await createAgent({});
+    const file = await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("q1"),
+      requestBegin(),
+      assistantText("a1"),
+      tokenUsage(usage(150), usage(150)),
+      requestEnd("completed"),
+      compactionBegin({ reason: "context", mode: "summarize", context: 150, turns: 1 }),
+      userText("COMPACT NOW"),
+      requestBegin(),
+      assistantText("[summary]half-writ"),
+    ]);
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    const closed = await readTrace(file);
+    const last = closed[closed.length - 1]!;
+    expect(last.payload).toMatchObject({
+      type: "compaction_end",
+      reason: "context",
+      mode: "summarize",
+      status: "retryable",
+    });
+    // Nothing was reconstructed from the interrupted compaction: the original context is
+    // resumed as it stood before it, with no `[context_summary]` injected.
+    const injected = (session.resumedHistory ?? []).some((m) =>
+      ((m.payload as { text?: string }).text ?? "").includes("[context_summary]"),
+    );
+    expect(injected).toBe(false);
+    session.dispose();
+
+    // Idempotent: a second resume sees the matched pair and appends nothing.
+    const again = await agent.resumeSession({ sessionId: SID });
+    again.dispose();
+    expect((await readTrace(file)).length).toBe(closed.length);
+  });
+
+  it("does not write pairing placeholders to the trace file (resume is side-effect free)", async () => {
+    const agent = await createAgent({});
+    const file = await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("go"),
+      requestBegin(),
+      toolCall({ name: "exec_command", arguments: "{}", toolCallId: "tc1" }),
+      requestEnd("completed"),
+      tokenUsage(usage(10), usage(10)),
+      // tc1's output was lost along with the process: the pairing placeholder is synthesized in memory and sent out with the next run, never persisted.
+    ]);
+    const before = await readTrace(file);
+
+    await agent.resumeSession({ sessionId: SID });
+    await agent.resumeSession({ sessionId: SID }); // resuming again has no side effects either
+    const after = await readTrace(file);
+    expect(after).toHaveLength(before.length);
+    expect(
+      after.filter((m) =>
+        ((m.payload as { output?: string }).output ?? "").includes("interrupted"),
+      ),
+    ).toHaveLength(0);
+    // session_meta is never written twice.
+    expect(after.filter((m) => m.type === "session_meta")).toHaveLength(1);
+  });
+
+  it("picks the latest index when the context was compacted into multiple files", async () => {
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [metaFor(SID, workspace), userText("old context")], {
+      index: "001",
+    });
+    await writeTraceFile(
+      tmpRoot,
+      SID,
+      [
+        metaFor(SID, workspace),
+        userText("[context_summary]gist[/context_summary]"),
+        requestBegin(),
+        assistantText("resumed context"),
+        requestEnd("completed"),
+        tokenUsage(usage(5), usage(5)),
+      ],
+      { index: "002" },
+    );
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    const texts = (session.resumedHistory ?? []).map(
+      (m) => (m.payload as { text?: string }).text ?? "",
+    );
+    expect(texts).toEqual(["[context_summary]gist[/context_summary]", "resumed context"]);
+  });
+
+  it("errors when the session does not exist", async () => {
+    const agent = await createAgent({});
+    await expect(agent.resumeSession({ sessionId: "session-none" })).rejects.toThrow(
+      /Session does not exist/,
+    );
+  });
+
+  it("errors when the recorded workspace no longer exists (PRN-004: no auto-create)", async () => {
+    const agent = await createAgent({});
+    const gone = path.join(workspace, "gone");
+    await writeTraceFile(tmpRoot, SID, [metaFor(SID, gone), userText("x")]);
+    await expect(agent.resumeSession({ sessionId: SID })).rejects.toThrow(
+      /Workspace no longer exists/,
+    );
+  });
+
+  it("errors when the recorded model is no longer in the project config", async () => {
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace, { provider: "custom", model_id: "vanished-model" }),
+      userText("x"),
+    ]);
+    await expect(agent.resumeSession({ sessionId: SID })).rejects.toThrow(
+      /is not in the Project config/,
+    );
+  });
+
+  it("errors clearly when session_meta lacks provider (old-format trace, no migration)", async () => {
+    // An old-format trace's session_meta only has model_id (from the composite-id era): no backward compat, just a clear error.
+    const agent = await createAgent({});
+    const legacy = metaFor(SID, workspace);
+    delete (legacy.payload as { provider?: string }).provider;
+    await writeTraceFile(tmpRoot, SID, [legacy, userText("x")]);
+    await expect(agent.resumeSession({ sessionId: SID })).rejects.toThrow(/legacy data/);
+  });
+
+  it("latestSessionId returns the newest session by embedded timestamp", async () => {
+    const agent = await createAgent({});
+    expect(await agent.latestSessionId()).toBeNull();
+    const older = "session-2026-07-05-09-00-00-aaaaaaaa";
+    const newer = "session-2026-07-06-11-00-00-bbbbbbbb";
+    await writeTraceFile(tmpRoot, older, [metaFor(older, workspace), userText("older")], {
+      dateDir: "2026-07-05",
+    });
+    await writeTraceFile(tmpRoot, newer, [metaFor(newer, workspace), userText("newer")], {
+      dateDir: "2026-07-06",
+    });
+    expect(await agent.latestSessionId()).toBe(newer);
+  });
+
+  it("latestSessionId ignores empty traces that only contain session_meta", async () => {
+    const agent = await createAgent({});
+    const older = "session-2026-07-05-09-00-00-aaaaaaaa";
+    const emptyNewer = "session-2026-07-06-11-00-00-bbbbbbbb";
+    await writeTraceFile(tmpRoot, older, [metaFor(older, workspace), userText("older")], {
+      dateDir: "2026-07-05",
+    });
+    await writeTraceFile(tmpRoot, emptyNewer, [metaFor(emptyNewer, workspace)], {
+      dateDir: "2026-07-06",
+    });
+    expect(await agent.latestSessionId()).toBe(older);
+  });
+
+  it("manual compact on a new empty session does not create a resumable trace", async () => {
+    const agent = await createAgent({});
+    const session = await agent.createSession({ workspaceDir: workspace });
+    const messages = [];
+    for await (const msg of session.compact()) messages.push(msg);
+    expect(messages).toHaveLength(0);
+    expect(await agent.latestSessionId()).toBeNull();
+  });
+
+  it("compactability reflects the replayed turn count before the first run", async () => {
+    // A process restart resumes a Session but does not run it, and the engine that holds
+    // `sessionTurns` is built lazily by the first run. Availability therefore has to be
+    // answered from the state the replay recovered, not from a not-yet-built engine —
+    // otherwise a user with a full conversation is told there is nothing to compact
+    // (the server turns this reason into a 409 `nothing_to_compact`).
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("q1"),
+      requestBegin(),
+      assistantText("a1"),
+      requestEnd("completed"),
+      tokenUsage(usage(42), usage(42)),
+    ]);
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    expect(session.compactability()).toBe("ok");
+    session.dispose();
+  });
+
+  it("compactability keeps the just-compacted reason across a restart", async () => {
+    // The trace ends on a completed compaction: the resumed context is empty because it was
+    // *just compacted*, not because the user has never spoken. Both have zero turns and they
+    // must not collapse into the same explanation.
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("q1"),
+      requestBegin(),
+      assistantText("a1"),
+      requestEnd("completed"),
+      tokenUsage(usage(150), usage(150)),
+      compactionBegin({ reason: "context", mode: "summarize", context: 150, turns: 1 }),
+      userText("COMPACT NOW"),
+      requestBegin(),
+      assistantText("[summary]the story so far[/summary]"),
+      requestEnd("completed"),
+      compactionEnd({ reason: "context", mode: "summarize", status: "completed" }),
+    ]);
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    expect(session.compactability()).toBe("just_compacted");
+    session.dispose();
+  });
+
+  it("compactability stays empty for a resumed session whose context has no completed turn", async () => {
+    // The genuine `empty` case survives the fix: the only request in the trace was interrupted,
+    // so no turn ever completed and there is truly nothing to fold.
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("q1"),
+      requestBegin(),
+      assistantText("half-writ"),
+      abortEvent(),
+    ]);
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    expect(session.compactability()).toBe("empty");
+    session.dispose();
+  });
+
+  it("compactability is empty on a brand-new session that has never run", async () => {
+    const agent = await createAgent({});
+    const session = await agent.createSession({ workspaceDir: workspace });
+    expect(session.compactability()).toBe("empty");
+    session.dispose();
+  });
+});
+
+describe("setHistory injection", () => {
+  it("groupHistoryToUniMessages groups adjacent same-role messages into UniMessages", () => {
+    const uni = groupHistoryToUniMessages([
+      userText("hello"),
+      assistantText("hi"),
+      toolCall({ name: "exec_command", arguments: '{"cmd":"ls"}', toolCallId: "tc1" }),
+      {
+        ...userText("ignored-shape"),
+        payload: {
+          type: "tool_call_output",
+          role: "user",
+          output: "out",
+          tool_call_id: "tc1",
+          stop_reason: "completed",
+        },
+      } as OmniMessage,
+      userText("next"),
+      assistantText("done"),
+    ]);
+    expect(uni.map((m) => m.role)).toEqual(["user", "assistant", "user", "assistant"]);
+    expect(uni[1]!.content_items.map((c) => c.type)).toEqual(["text", "tool_call"]);
+    expect(uni[2]!.content_items.map((c) => c.type)).toEqual(["tool_result", "text"]);
+  });
+
+  it("GenerativeModel.setHistory seeds the AgentHub client history", () => {
+    // GenerativeModel takes the request id sent to AgentHub (the upstream id), not the storage id.
+    const model = new GenerativeModel({ modelId: "claude-sonnet-4-6", tools: [] });
+    model.setHistory([userText("hello"), assistantText("hi")]);
+    const client = (model as unknown as { client: { getHistory(): unknown[] } }).client;
+    expect(client.getHistory()).toHaveLength(2);
+  });
+});
+
+describe("agent.resumeSession system prompt per context", () => {
+  const SID = "session-2026-07-06-13-00-00-abcdef11";
+  const promptOf = (session: { metaMessage: OmniMessage }): string =>
+    (session.metaMessage.payload as { system_prompt: string }).system_prompt;
+
+  it("opens a context closed by a completed compaction with the current AGENTS.md, not the closed file's recorded prompt", async () => {
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("q1"),
+      requestBegin(),
+      assistantText("a1"),
+      tokenUsage(usage(150), usage(150)),
+      requestEnd("completed"),
+      compactionBegin({ reason: "context", mode: "summarize", context: 150, turns: 1 }),
+      userText("COMPACT NOW"),
+      requestBegin(),
+      assistantText("[summary]carry on[/summary]"),
+      requestEnd("completed"),
+      compactionEnd({ reason: "context", mode: "summarize", status: "completed" }),
+    ]);
+    await fs.writeFile(
+      agentsMdPath(tmpRoot, "default_project", "default_agent"),
+      "EDITED BEFORE RESUME",
+      "utf8",
+    );
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    try {
+      // The closed context is opened here for the first time — nothing was produced under any
+      // prompt yet — so it gets the prompt assembled now, as the compaction would have opened it.
+      expect(promptOf(session)).toContain("EDITED BEFORE RESUME");
+      expect(promptOf(session)).not.toBe("ORIGINAL SYSTEM PROMPT");
+    } finally {
+      session.dispose();
+    }
+  });
+
+  it("ignores a legacy recorded thinking level on resume: the level is a per-request parameter", async () => {
+    const withLevel = (level: string): OmniMessage => {
+      const meta = metaFor(SID, workspace);
+      return {
+        ...meta,
+        payload: { ...meta.payload, thinking_level: level },
+      } as unknown as OmniMessage;
+    };
+    const traceRecords = (meta: OmniMessage): OmniMessage[] => [
+      meta,
+      userText("hello"),
+      requestBegin(),
+      assistantText("hi there"),
+      requestEnd("completed"),
+    ];
+    const agent = await createAgent({});
+    // A legacy file recording "xhigh" does not shape the resumed context: the meta assembled
+    // for it records no level at all — the level resolves per request from the pin and the
+    // Agent config, exactly as on any other open.
+    await writeTraceFile(tmpRoot, SID, traceRecords(withLevel("xhigh")));
+    const session = await agent.resumeSession({ sessionId: SID });
+    try {
+      expect(
+        (session.metaMessage.payload as { thinking_level?: string }).thinking_level,
+      ).toBeUndefined();
+    } finally {
+      session.dispose();
+    }
+  });
+
+  it("keeps the recorded prompt for an open context: its replayed history was produced under it", async () => {
+    const agent = await createAgent({});
+    await writeTraceFile(tmpRoot, SID, [
+      metaFor(SID, workspace),
+      userText("hello"),
+      requestBegin(),
+      assistantText("hi there"),
+      requestEnd("completed"),
+    ]);
+    await fs.writeFile(
+      agentsMdPath(tmpRoot, "default_project", "default_agent"),
+      "EDITED BEFORE RESUME",
+      "utf8",
+    );
+
+    const session = await agent.resumeSession({ sessionId: SID });
+    try {
+      expect(promptOf(session)).toBe("ORIGINAL SYSTEM PROMPT");
+    } finally {
+      session.dispose();
+    }
+  });
+});

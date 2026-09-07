@@ -1,0 +1,61 @@
+{
+  "name": "@prismshadow/linsight-cli",
+  "version": "0.2.9",
+  "type": "module",
+  "description": "Linsight CLI: interactive REPL and single-task runner over @prismshadow/linsight-core.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Prism-Shadow/linsight.git",
+    "directory": "packages/cli"
+  },
+  "bin": {
+    "linsight": "./dist/linsight.js",
+    "linsight-hmr": "./dist/linsight-hmr.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "build": "tsup",
+    "linsight": "node ../../scripts/run-with-env.mjs LINSIGHT_HOME=~/.linsight/dev-data-cli PORT=7369 -- tsx src/linsight.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@linsight/agent-development": "workspace:*",
+    "@linsight/agent-tuning": "workspace:*",
+    "@linsight/continual-learning": "workspace:*",
+    "@linsight/data-analysis": "workspace:*",
+    "@linsight/goal": "workspace:*",
+    "@linsight/humanizer": "workspace:*",
+    "@linsight/model-development": "workspace:*",
+    "@linsight/skill-porting": "workspace:*",
+    "@linsight/software-development": "workspace:*",
+    "@linsight/use-bento-slides": "workspace:*",
+    "@linsight/use-firecrawl": "workspace:*",
+    "@linsight/use-claude-code": "workspace:*",
+    "@prismshadow/agenthub": "^0.4.9",
+    "@prismshadow/linsight-core": "workspace:*",
+    "@prismshadow/linsight-server": "workspace:*",
+    "commander": "^13.0.0",
+    "dotenv": "^17.0.0",
+    "smol-toml": "^1.3.0",
+    "yaml": "^2.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.6"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

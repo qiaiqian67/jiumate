@@ -1,0 +1,44 @@
+{
+  "name": "@prismshadow/linsight-desktop",
+  "version": "0.2.9",
+  "private": true,
+  "type": "module",
+  "description": "Linsight desktop app: Electron shell running @prismshadow/linsight-server as a utilityProcess, window on http://localhost (same-origin HTTP/SSE, no private IPC).",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsup && node scripts/build-assets.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "start": "node scripts/preflight.mjs && electron .",
+    "pack": "node scripts/preflight.mjs && electron-builder",
+    "pack:linux": "node scripts/preflight.mjs && electron-builder --linux",
+    "pack:mac": "node scripts/preflight.mjs && electron-builder --mac",
+    "pack:win": "node scripts/preflight.mjs && electron-builder --win"
+  },
+  "dependencies": {
+    "@linsight/agent-development": "workspace:*",
+    "@linsight/agent-tuning": "workspace:*",
+    "@linsight/continual-learning": "workspace:*",
+    "@linsight/data-analysis": "workspace:*",
+    "@linsight/goal": "workspace:*",
+    "@linsight/humanizer": "workspace:*",
+    "@linsight/model-development": "workspace:*",
+    "@linsight/skill-porting": "workspace:*",
+    "@linsight/software-development": "workspace:*",
+    "@linsight/use-bento-slides": "workspace:*",
+    "@linsight/use-firecrawl": "workspace:*",
+    "@linsight/use-claude-code": "workspace:*"
+  },
+  "devDependencies": {
+    "@prismshadow/linsight-cli": "workspace:*",
+    "@prismshadow/linsight-core": "workspace:*",
+    "@prismshadow/linsight-server": "workspace:*",
+    "@types/node": "^24.0.0",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.0.12",
+    "electron-updater": "^6.8.9",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.6"
+  }
+}

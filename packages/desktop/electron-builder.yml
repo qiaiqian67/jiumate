@@ -1,0 +1,159 @@
+# electron-builder config for the desktop shell installers.
+#
+# The app directory is this package itself: `pnpm build` emits self-contained bundles of
+# the shell, the server and the CLI into dist/ (see tsup.config.ts). The one dependency tree
+# electron-builder collects is the @linsight/* plugin packages this package.json
+# declares — data-only directories the bundled server's plugin loader resolves by name from
+# the app's node_modules (never imported, so bundling has nothing to absorb). Everything
+# else inside an installer is described by `files` below.
+#
+# asar is off on purpose: the shell forks the server as a child process, the skill
+# library reads its .md files from disk, and agent commands spawn real shells — plain
+# files sidestep every asar edge (fork-from-archive, unpacked-tree resolution splits)
+# at the cost of some inodes.
+#
+# macOS release artifacts are Developer ID signed and notarized in CI when the signing
+# secrets are present. Windows release artifacts are Authenticode-signed through EVSign
+# during packaging so update metadata is generated from the final signed bytes. Unsigned
+# dry-run builds remain possible outside the release path.
+appId: com.prismshadow.linsight
+productName: Linsight
+# Declaring the publish target is what makes electron-builder emit the update metadata
+# (latest.yml / latest-mac.yml / latest-linux.yml and the .blockmap files) next to the
+# installers; nothing is uploaded from here — the release workflow attaches the artifacts
+# it collected. electron-updater reads the same metadata from the Release.
+publish:
+  provider: github
+  owner: Prism-Shadow
+  repo: linsight
+directories:
+  output: out
+# Everything the app runs, and nothing else. The mapped entry is the web build, which the
+# bundled server looks up relative to its own location and which comes straight from the web
+# package. No build order between the two packages guarantees it exists before this one
+# builds, and electron-builder skips an absent `from:` source in silence, so the pack scripts
+# run scripts/preflight.mjs first and verify-packed-cli.mjs checks the packed tree for it —
+# and for the collected plugin packages, whose absence would fail nothing else either.
+files:
+  - dist/**/*
+  - "!dist/**/*.map"
+  # The staged node-pty package (scripts/build-assets.mjs, src/pty-payload.ts). electron-builder
+  # adds a `!**/node_modules/**` of its own: at the head of this list when no non-negated
+  # pattern names node_modules, or immediately BEFORE the first one that does. Naming it here
+  # is what moves that exclusion behind `dist/**/*` — last match wins, so this one node_modules
+  # ships and any other that appears under dist/ does not. The plugin packages are not listed:
+  # they arrive as collected dependencies, at the app root's node_modules.
+  - dist/node_modules/**/*
+  - bin/**/*
+  - package.json
+  - from: ../web/dist
+    to: web-dist
+# The app's own metadata, which the workspace package.json cannot carry: deb and AppImage
+# derive package and executable names from `name`, where "@prismshadow/…" is invalid, and
+# fpm refuses to build without a homepage. It does NOT decide the app data directory: the
+# shell calls app.setName() before anything reads userData, so that keeps the name
+# src/app-identity.ts chooses per form.
+extraMetadata:
+  name: linsight-desktop
+  homepage: https://github.com/Prism-Shadow/linsight
+asar: false
+# Nothing to rebuild: the only native module is node-pty, staged into dist/node_modules as
+# the binaries its npm tarball prebuilds (darwin, win32) or as the binding pnpm's install
+# already compiled on this host (Linux). Both are N-API, so Electron's Node loads them as
+# published — scripts/terminal-smoke.mjs is what proves it.
+npmRebuild: false
+nodeGypRebuild: false
+
+mac:
+  category: public.app-category.developer-tools
+  # macOS-specific 1024px master: scripts/render-icon.mjs centres the brand artwork in
+  # Apple's 824px safe area so it has the same optical size as neighbouring Dock and
+  # Launchpad icons. electron-builder converts the committed PNG to icns.
+  icon: build/icon-mac.png
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  notarize: true
+  # Version-less artifact names, following the CLI bundles (linsight-darwin-arm64.tar.gz):
+  # the version lives in the Release tag and SHA256SUMS.desktop, so the download page and
+  # the OSS mirror manifest can address every installer by a stable name — and GitHub's
+  # `releases/latest/download/<name>` stays a working static link across releases.
+  artifactName: linsight-desktop-darwin-${arch}.${ext}
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+
+win:
+  # Same source PNG; electron-builder converts it to the multi-size ico embedded in the
+  # exe (>=256px required).
+  icon: build/icon.png
+  artifactName: linsight-desktop-win32-${arch}.${ext}
+  verifyUpdateCodeSignature: true
+  signExts:
+    - Linsight.exe
+    - elevate.exe
+    - linsight-desktop-win32-x64.exe
+    - .__uninstaller.exe
+    - "!.exe"
+  signtoolOptions:
+    sign: build/evsign.cjs
+    signingHashAlgorithms:
+      - sha256
+    # electron-updater checks a downloaded update against the publisherName the
+    # *installed* client recorded, so this list is forward policy rather than a
+    # description of today's certificate: the current identity, then the previous
+    # one, each in both the full-DN and bare-CN forms the verifier compares. A
+    # client shipped by this release therefore still accepts the next rotation's
+    # builds. Removing the key is not the way to stop pinning a name — a missing
+    # publisherName reads as "nothing to verify" and installs whatever was fetched.
+    # Drop an identity only once no supported client was installed by a release
+    # that signed with it.
+    publisherName:
+      - "CN=NaisNet Technology Co., Ltd., O=NaisNet Technology Co., Ltd."
+      - "NaisNet Technology Co., Ltd."
+      - CN=RushRush Network Technology Ltd, O=RushRush Network Technology Ltd
+      - RushRush Network Technology Ltd
+  target:
+    - target: nsis
+      arch: [x64]
+  # MinGit, downloaded by the CI job into build/minigit (empty for local non-Windows
+  # builds, hence the committed .gitkeep — an extraResources source must always exist):
+  # lands under resources/git, and the shell advertises git/usr/bin/sh.exe as
+  # LINSIGHT_BUNDLED_SHELL so the agent shell behaves like the npm-installed package.
+  extraResources:
+    - from: build/minigit
+      to: git
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+
+linux:
+  # Pre-rendered freedesktop icon set (scripts/render-icon.mjs): a directory of NxN.png
+  # files is used as-is for AppImage/deb, no conversion step.
+  icon: build/icons
+  # Pinned rather than derived from the app name, which the deb postinst templates also
+  # interpolate (build/linux/*.tpl).
+  executableName: linsight
+  # ${arch} expands to each Linux target's own convention — x86_64 for AppImage, amd64
+  # for deb — so the published names are linsight-desktop-linux-x86_64.AppImage and
+  # linsight-desktop-linux-amd64.deb; the OSS mirror manifest and the landing download
+  # page name them accordingly.
+  artifactName: linsight-desktop-linux-${arch}.${ext}
+  category: Development
+  maintainer: Prism Shadow <zheng@prismshadow.com>
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+
+deb:
+  # Extended copies of electron-builder's default scripts (overriding REPLACES them):
+  # they additionally create/remove the /usr/bin/linsight symlink to the bundled CLI
+  # launcher (resources/app/bin/linsight), so a deb install gets the `linsight` command
+  # on PATH without the in-app install flow the other formats use.
+  afterInstall: build/linux/after-install.tpl
+  afterRemove: build/linux/after-remove.tpl

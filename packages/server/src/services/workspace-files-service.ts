@@ -1,0 +1,350 @@
+/**
+ * Workspace file browsing: list directory / read
+ * file (preview & download) / write file (upload). Security: a relative path, once
+ * resolved, must stay inside the Workspace — a logical prefix check plus a realpath
+ * check against the nearest existing ancestor (guards against `..` and symlink escapes).
+ */
+import fs from "node:fs/promises";
+import { constants as fsc } from "node:fs";
+import path from "node:path";
+import type { WorkspaceFileEntry, WorkspaceFilesResponse } from "../api/types.js";
+import { HttpError } from "../http/errors.js";
+import { badRequest } from "../http/validate.js";
+
+/** Per-file read cap (a safety limit since preview/download reads the whole file into memory). */
+const MAX_READ_BYTES = 50 * 1024 * 1024;
+/** Upload cap (stays within the 20MB request body limit even after base64 encoding). */
+export const MAX_UPLOAD_BYTES = 14 * 1024 * 1024;
+
+const CONTENT_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".htm": "text/html; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  ".json": "application/json",
+  ".js": "text/javascript; charset=utf-8",
+  ".ts": "text/plain; charset=utf-8",
+  ".tsx": "text/plain; charset=utf-8",
+  ".py": "text/plain; charset=utf-8",
+  ".sh": "text/plain; charset=utf-8",
+  ".yaml": "text/plain; charset=utf-8",
+  ".yml": "text/plain; charset=utf-8",
+  ".toml": "text/plain; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".csv": "text/plain; charset=utf-8",
+  ".log": "text/plain; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".pdf": "application/pdf",
+};
+
+export interface WorkspaceFileContent {
+  data: Buffer;
+  fileName: string;
+  contentType: string;
+  /**
+   * Which kind of scriptable document this is, or false. Both kinds would execute scripts if
+   * a browser rendered them as a same-origin document, but they need different inline
+   * handling: `"html"` falls back to plain text, while `"svg"` keeps its real type so an
+   * `<img>` can render it (an image never runs the SVG's scripts) and is served with a
+   * sandbox CSP so a direct navigation to it stays inert. See the file-content routes.
+   */
+  scriptable: "html" | "svg" | false;
+  /** True when a bounded preview returned only the beginning of the file. */
+  truncated?: boolean;
+}
+
+export interface WorkspaceFileReadOptions {
+  /** Return at most this many bytes. Used for bounded text previews. */
+  maxBytes?: number;
+}
+
+/** One existing file from a batch existence check, with the time it was last written. */
+export interface WorkspaceFileStat {
+  /** The path as it was asked for, not its canonical form. */
+  rel: string;
+  mtimeMs: number;
+}
+
+export class WorkspaceFilesService {
+  /** Canonical path (realpath) of the Workspace root; 404 if it doesn't exist. */
+  private async realBase(workspace: string): Promise<string> {
+    try {
+      return await fs.realpath(path.resolve(workspace));
+    } catch {
+      throw new HttpError(404, "workspace_missing", "This Session's Workspace no longer exists.");
+    }
+  }
+
+  /**
+   * Lexical containment check: whether target is inside base (including equal to
+   * base). Uses path.relative rather than prefix concatenation, so it works when
+   * base is the filesystem root ("/" concatenated with sep would produce a "//"
+   * prefix that no subpath could ever match); only a full ".." segment is
+   * compared, so a legitimate name like "..foo" isn't mistakenly rejected.
+   */
+  private isInside(target: string, base: string): boolean {
+    const rel = path.relative(base, target);
+    return rel !== ".." && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel);
+  }
+
+  /** Lexical prefix check (a relative path, once resolved, must still be inside the Workspace); returns the absolute target path. */
+  private lexicalTarget(base: string, rel: string): string {
+    if (rel.includes("\0")) throw badRequest("path is invalid.");
+    const target = path.resolve(base, rel === "" ? "." : rel);
+    if (!this.isInside(target, base)) {
+      throw badRequest("path must be inside the Workspace.");
+    }
+    return target;
+  }
+
+  private assertInside(real: string, realBase: string): void {
+    if (!this.isInside(real, realBase)) {
+      throw badRequest("path must be inside the Workspace.");
+    }
+  }
+
+  /**
+   * Read-path resolution: realpath the entire path (following all symlinks to get
+   * a link-free canonical path), then check containment and **perform IO on the
+   * canonical path** — since the canonical path contains no symlink segments at
+   * all, this eliminates check-then-use TOCTOU escapes (an out-of-bounds symlink
+   * is already resolved and rejected at the realpath step).
+   */
+  private async resolveRead(workspace: string, rel: string): Promise<string> {
+    const realBase = await this.realBase(workspace);
+    const target = this.lexicalTarget(path.resolve(workspace), rel);
+    let canonical: string;
+    try {
+      canonical = await fs.realpath(target);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new HttpError(404, "path_not_found", "File does not exist.");
+      }
+      throw err;
+    }
+    this.assertInside(canonical, realBase);
+    return canonical;
+  }
+
+  /**
+   * Write-path resolution: realpaths the parent directory (whose canonical path
+   * has no symlink segments) and checks containment, then appends the final
+   * segment as the file name. When the parent directory is missing, it is safely
+   * created (uploading a folder needs to preserve directory structure): first the
+   * nearest **existing** ancestor is found and its canonical path checked against
+   * the Workspace — this exposes it if a middle segment was preset as a symlink
+   * pointing outside; the missing segments are then created recursively beneath it
+   * (a brand-new directory can never be a symlink), followed by a second realpath
+   * check after creation. The actual write opens with O_NOFOLLOW (refusing to
+   * follow a symlink at the final segment), blocking the sandbox-escape pattern of
+   * "Agent presets a symlink -> an upload is used as leverage to overwrite a file
+   * outside the sandbox". Returns the canonical parent directory + file name.
+   */
+  private async resolveWriteParent(
+    workspace: string,
+    rel: string,
+  ): Promise<{ dir: string; name: string }> {
+    const realBase = await this.realBase(workspace);
+    const target = this.lexicalTarget(path.resolve(workspace), rel);
+    const name = path.basename(target);
+    if (name === "" || name === "." || name === "..") throw badRequest("path must be a file path.");
+    const parent = path.dirname(target);
+    let canonicalParent: string;
+    try {
+      canonicalParent = await fs.realpath(parent);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+      let probe = parent;
+      while (true) {
+        try {
+          this.assertInside(await fs.realpath(probe), realBase);
+          break;
+        } catch (probeErr) {
+          if ((probeErr as NodeJS.ErrnoException).code !== "ENOENT") throw probeErr;
+          const up = path.dirname(probe);
+          if (up === probe) throw badRequest("path is invalid.");
+          probe = up;
+        }
+      }
+      await fs.mkdir(parent, { recursive: true });
+      canonicalParent = await fs.realpath(parent);
+    }
+    this.assertInside(canonicalParent, realBase);
+    return { dir: canonicalParent, name };
+  }
+
+  /**
+   * Batch existence check (a message's file card lists only files that actually
+   * exist): each item goes through the same containment resolution as reading
+   * (resolveRead); out-of-bounds, resolution failure, missing Workspace, or an
+   * irregular file are all treated as non-existent — the card scenario only asks
+   * "can this be opened", and throwing a 4xx would only add frontend branches while
+   * leaking containment details. Returns the deduplicated existing items in input order.
+   */
+  async statExisting(workspace: string, rels: string[]): Promise<string[]> {
+    return (await this.statExistingWithMtime(workspace, rels)).map((f) => f.rel);
+  }
+
+  /**
+   * The same check, with each file's modification time — for the caller that has to tell a
+   * file this run wrote from one that was already sitting in the Workspace (the messaging
+   * bridge sends only the former). Statting is what the check already does, so the time
+   * costs nothing extra.
+   */
+  async statExistingWithMtime(workspace: string, rels: string[]): Promise<WorkspaceFileStat[]> {
+    const unique = [...new Set(rels)];
+    const stats = await Promise.all(
+      unique.map(async (rel): Promise<WorkspaceFileStat | null> => {
+        try {
+          const stat = await fs.stat(await this.resolveRead(workspace, rel));
+          return stat.isFile() ? { rel, mtimeMs: stat.mtimeMs } : null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    return stats.filter((s): s is WorkspaceFileStat => s !== null);
+  }
+
+  /**
+   * List a directory: dirs come first, each group sorted by name. Entries whose
+   * canonical target leaves the Workspace are omitted, so listing cannot expose
+   * metadata for an out-of-bounds symlink.
+   */
+  async list(workspace: string, rel: string): Promise<WorkspaceFilesResponse> {
+    const dir = await this.resolveRead(workspace, rel);
+    const realBase = await this.realBase(workspace);
+    let dirents;
+    try {
+      dirents = await fs.readdir(dir, { withFileTypes: true });
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new HttpError(404, "path_not_found", "Directory does not exist.");
+      }
+      if ((err as NodeJS.ErrnoException).code === "ENOTDIR") {
+        throw badRequest("path is not a directory.");
+      }
+      throw err;
+    }
+    const listed = await Promise.all(
+      dirents.map(async (d): Promise<WorkspaceFileEntry | null> => {
+        try {
+          const canonical = await fs.realpath(path.join(dir, d.name));
+          this.assertInside(canonical, realBase);
+          const stat = await fs.stat(canonical);
+          return {
+            name: d.name,
+            kind: stat.isDirectory() ? "dir" : "file",
+            sizeBytes: stat.size,
+            mtime: stat.mtime.toISOString(),
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+    const entries = listed.filter((entry): entry is WorkspaceFileEntry => entry !== null);
+    entries.sort((a, b) =>
+      a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "dir" ? -1 : 1,
+    );
+    return { path: rel, entries };
+  }
+
+  /** Read a file (preview/download): IO on the canonical path (resolveRead has already eliminated symlink escapes). */
+  async read(
+    workspace: string,
+    rel: string,
+    options?: WorkspaceFileReadOptions,
+  ): Promise<WorkspaceFileContent> {
+    const file = await this.resolveRead(workspace, rel);
+    let stat;
+    try {
+      stat = await fs.stat(file);
+    } catch {
+      throw new HttpError(404, "path_not_found", "File does not exist.");
+    }
+    if (stat.isDirectory()) throw badRequest("path is a directory.");
+    const maxBytes = options?.maxBytes;
+    if (
+      maxBytes !== undefined &&
+      (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > MAX_READ_BYTES)
+    ) {
+      throw badRequest("maxBytes must be a positive integer within the read limit.");
+    }
+    if (maxBytes === undefined && stat.size > MAX_READ_BYTES) {
+      throw new HttpError(413, "file_too_large", "File exceeds the 50MB read limit.");
+    }
+    let data: Buffer;
+    let truncated = false;
+    if (maxBytes !== undefined && stat.size > maxBytes) {
+      const handle = await fs.open(file, "r");
+      try {
+        const buffer = Buffer.alloc(maxBytes);
+        const { bytesRead } = await handle.read(buffer, 0, maxBytes, 0);
+        data = buffer.subarray(0, bytesRead);
+        truncated = true;
+      } finally {
+        await handle.close();
+      }
+    } else {
+      data = await fs.readFile(file);
+    }
+    const ext = path.extname(file).toLowerCase();
+    return {
+      data,
+      fileName: path.basename(file),
+      contentType: CONTENT_TYPES[ext] ?? "application/octet-stream",
+      scriptable: ext === ".html" || ext === ".htm" ? "html" : ext === ".svg" ? "svg" : false,
+      ...(truncated ? { truncated: true } : {}),
+    };
+  }
+
+  /**
+   * Write a file (upload, overwriting a same-named one). If the parent directory
+   * is missing, it's automatically created under sandbox checks (preserving
+   * directory structure for folder uploads); the final segment is opened with
+   * O_NOFOLLOW, refusing to follow a symlink to write outside the Workspace
+   * (together with resolveWriteParent's canonical-parent check, this blocks
+   * sandbox escapes).
+   */
+  async write(workspace: string, rel: string, data: Buffer): Promise<void> {
+    if (rel === "" || rel.endsWith("/")) throw badRequest("path must be a file path.");
+    if (data.length > MAX_UPLOAD_BYTES) {
+      throw new HttpError(413, "file_too_large", "Uploaded file exceeds the 14MB limit.");
+    }
+    const { dir, name } = await this.resolveWriteParent(workspace, rel);
+    const file = path.join(dir, name);
+    // Windows has no O_NOFOLLOW (the `?? 0` below erases it), so the atomic ELOOP guard never
+    // fires there — refuse a final-segment symlink via lstat instead. Best effort (a link
+    // created between this check and the open wins the race), but it closes the practical
+    // "preset a symlink, overwrite an outside file by upload" escape; POSIX keeps the atomic
+    // open-time guarantee.
+    if (process.platform === "win32") {
+      const st = await fs.lstat(file).catch(() => null);
+      if (st?.isSymbolicLink()) throw badRequest("path must not be a symlink.");
+    }
+    // O_NOFOLLOW: open reports ELOOP if the final segment is a symlink, refusing to use it as leverage to overwrite a file outside the sandbox.
+    const flags = fsc.O_WRONLY | fsc.O_CREAT | fsc.O_TRUNC | (fsc.O_NOFOLLOW ?? 0);
+    let handle;
+    try {
+      handle = await fs.open(file, flags, 0o644);
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === "ELOOP") throw badRequest("path must not be a symlink.");
+      if (code === "ENOENT")
+        throw new HttpError(404, "path_not_found", "Parent directory does not exist.");
+      if (code === "EISDIR") throw badRequest("path is a directory.");
+      throw err;
+    }
+    try {
+      await handle.writeFile(data);
+    } finally {
+      await handle.close();
+    }
+  }
+}

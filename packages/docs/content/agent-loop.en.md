@@ -1,0 +1,214 @@
+---
+title: The Agent Loop
+description: The context_engine's master flow diagram and a stage-by-stage breakdown — approvals, concurrent tool execution, interrupt carry-over, automatic reconnect and compaction.
+---
+
+The SDK's single execution entry point is `session.run(newMessages, opts?)`: input is the list of new OmniMessages (the Prompt); the return value is an async generator that streams [OmniMessage](/omni-message). One `run` drives one complete Task, until the model produces a final answer with no tool calls — or several Tasks in a row, when a [stop hook](#stop-hooks) asks for more.
+
+This page shows the context_engine's overall flow first, then breaks down each stage; the message-level observable timeline and ordering guarantees are on [Message Flow & Ordering](/message-flow). Source: `packages/core/src/engine/context-engine.ts`.
+
+## The loop at a glance
+
+```text
+session.run(newMessages, { approve, signal })
+  │  carry-over from a previous interrupt? → prepend to this run's input
+  ▼
+┌── turn loop (≤ max_turns; default -1 = no cap) ───────────────┐
+│                                                               │
+│  request_begin                                                │
+│  LLM.streamGenerate(newMessages)                              │
+│    ├─ streams partial_* fragments + complete msgs             │
+│    ├─ for each complete tool_call:                            │
+│    │     approve(toolCall) ──deny──► synthetic aborted output │
+│    │          │allow           (approvals sequential;         │
+│    │          ▼                 decision audited)             │
+│    │     Environment.executeTool ──► runs concurrently,       │
+│    │                                 output streams back      │
+│    └─ LLMOutcome:                                             │
+│    failed/timeout/malformed ──► reconnect within the turn     │
+│          (≤5 fruitless, with [turn_retried]; tools not rerun) │
+│  token_usage + request_end (at LLM-stream end; not waiting   │
+│                              for tools)                       │
+│                                                               │
+│  tool outputs reordered to original call order ──► next turn  │
+│  no tool_call this turn? ──► Task ends                        │
+│  compaction trigger (context/turns)? ──► summarize/discard    │
+│                                          + Trace rotation     │
+└───────────────────────────────────────────────────────────────┘
+  │
+  ▼
+stop hooks (each answer → a `hook` event; the first `continue` ──► its input
+becomes the next Task's user message, same run) ── no continue? ──► run returns
+
+signal fires (any point) ──► emit abort + build carry-over ──► run returns
+```
+
+Every message and event flows to two destinations at once: streamed live to the Human, and written to the [Trace](/sessions-and-traces).
+
+## Inputs and outputs
+
+```ts
+const agent = await createAgent({ agentId: "default_agent" });
+const session = await agent.createSession({ workspaceDir: process.cwd() });
+
+for await (const output of session.run([userText("Clean up the CSV files under data/")], {
+  approve: async (toolCall) => "allow",
+  signal: abortController.signal,
+})) {
+  // output: partial_* fragments, complete model_msg, event_msg
+}
+```
+
+```ts
+interface RunOptions {
+  signal?: AbortSignal;    // interrupt (e.g. Ctrl-C)
+  approve?: ApproveFn;     // per-tool approval; denies everything when omitted (conservative default)
+}
+```
+
+## Lifecycle of a turn
+
+A Task consists of consecutive Requests (turns). Each turn:
+
+1. emits `request_begin`;
+2. the LLM streams back: `partial_*` fragments followed by complete messages;
+3. every complete `tool_call` triggers exactly one `approve` callback; the decision is recorded as an `approval_decision` event;
+4. approved calls run **concurrently** in the Environment (approvals themselves are one at a time); outputs stream out in completion order;
+5. when the LLM stream ends, its final `token_usage` is emitted and `request_end(status)` follows at once — **without waiting for tools**: still-running tools may emit output after `request_end`;
+6. once the whole batch is terminal, tool results are **reordered to the original call order** and become the next turn's input — the next Request never fires before that.
+
+The Task ends when a turn produces no `tool_call`. A denial produces a synthetic `aborted` tool output the model reacts to — "Tool call denied by user.", or "Tool call denied by policy." when the decision is the [command policy](/configuration#command-policy)'s `forbidden` (see [ApproveFn](/interfaces#approvefn)).
+
+## Interruption and carry-over
+
+When `signal` fires, the engine emits an `abort` event and returns immediately, while constructing carry-over content for the next `run`:
+
+- **Case A — the model's output had completed** (the turn's `tool_call`s were committed): finished tool results are re-sent as structured `tool_call_output`s; unfinished calls get an `[interrupted: tool aborted by user]` placeholder, keeping `tool_call`/output pairing strictly intact;
+- **Case B — the model's output was incomplete**: the whole turn is flattened into one `[turn_aborted]` user text carrying whatever partial output existed.
+
+Carry-over enters the model context only — it is never written to the Trace, which records only what actually happened.
+
+## Stop hooks
+
+A hook is a function the Session runs at a fixed point of the loop. Three points exist today: **stop** — the moment a Task ends (the model's final reply with no tool call, or a cutoff: user abort, LLM failure, the `max_turns` cap) — **`pre_tool_use`**, before each tool call's approval, and **`user_prompt`**, when a prompt is submitted (their own sections below). The hooks a Session consults are the **hook packages installed in the Agent's `agent_state/hooks/`** — what a [plugin](/skills#hook-packages) ships — read fresh per Session like skills; SDK embedders can also register in-process functions through `SessionConfig.hooks.stop` / `.preToolUse`.
+
+An installed hook is a plain Node script, run as a subprocess the way Claude Code runs its command hooks: it is told only where to look, and derives everything else — token usage, turn counts, how the Task ended, its own state file — from the Trace.
+
+```text
+stdin   { "hook": "stop", "session_id": "…", "trace_path": "/abs/…/<session>_001.jsonl" }
+stdout  nothing = no opinion; otherwise
+        { "decision": "continue" | "stop",   // continue: `input` becomes the next Task's user message
+          "input": "…",
+          "reason": "one line for people",
+          "output": { "…": scalars },        // the hook's own record
+          "subagent": { "prompt": "…", "agent_id": "…" } }   // ask for a detached background subagent
+exit    non-zero = failure (stderr's tail becomes the reason); a timeout (default 60 s) kills it
+```
+
+`trace_path` is the Trace file being written — the current context segment; a compaction rotates to a new file — and is absent for a Trace-less Session. The rules:
+
+- hooks run in registration order after every Task; every non-empty answer is recorded as one [`hook` event](/omni-message#event_msg) — `hook`, `name` (the package name), `decision`, `reason`, `output` — streamed and written to the Trace; the injected input is not in the event, it is the user message that follows it;
+- the first `continue` wins: its input is stamped [`sender: "harness"`](/omni-message#model_msg) and yielded onto the stream (a plain run never yields its own input; hosts render the injected one from the stream — the stamp, not the text, is what says the harness sent it) and drives the next Task inside the same `run` call; no `continue` means the call returns;
+- after a cutoff, or once the signal is aborted, a `continue` is recorded but never run — a user's interruption outranks every hook;
+- a `subagent` answer makes the Session spawn a detached background child Session (the same Agent, or `agent_id`) whose first user message is the prompt; it inherits the run's approval callback, its stream is dropped (its own Trace is the record), and its session id is recorded on the event as `output.session_id`;
+- a hook that fails — crashes, prints something that is not JSON, or times out — is recorded with the error as its `reason` and treated as having no opinion; it never takes the run down.
+
+Two hook packages ship in the plugin library. [Goal mode](/goal-mode) is one: its stop hook reads the goal file, decides, and hands back the next round's protocol message. The **`continual-learning`** plugin is the other (not preinstalled): when the Task that just ended ran more than 30 completed turns, it condenses that Task — user and assistant text, tool calls with their arguments, tool outputs, each clipped, no thinking or images — into an excerpt and answers with a `subagent` request whose prompt names the skills directory and the skills the task invoked and asks the child to fold the durable findings into the relevant `SKILL.md` files, or change nothing. The window is the Task itself (its records in the Trace, from its input message; a compaction rotates the file mid-Task and the window is then what the new file holds), so a Task triggers at most once — at its end — and short Tasks never do. An Agent with no installed skill never fires it.
+
+### Pre-tool-use hooks
+
+A hook package can also name `pre_tool_use` commands (`hooks.json`, from the plugin's `hooks.pre_tool_use`). The engine consults them once per complete tool call, **before** the approval callback — the same subprocess contract, with the call inline:
+
+```text
+stdin   { "hook": "pre_tool_use", "session_id", "trace_path",
+          "tool_name": "exec_command", "tool_call_id": "…", "arguments": "<raw argument JSON>" }
+stdout  nothing = no opinion; otherwise
+        { "decision": "allow" | "deny",   // deny: refuse the call; allow: approve it without asking
+          "reason": "one line for people",
+          "output": { "…": scalars } }    // the hook's own record
+```
+
+The rules mirror the stop point's — every non-empty answer is one `hook` event, the first decision wins, a crash / non-JSON / timeout is recorded and treated as no opinion — plus three of its own:
+
+- a **deny** refuses the call without consulting the approval callback; the model reads the refusal as the tool's output, the hook's name and `reason` included;
+- an **allow** approves without asking the host — except that the [command policy](/configuration#command-policy) still outranks it: hook packages live in agent-writable state, the policy is Project-owned security config, so a policy-vetoed call stays `forbidden` no matter what a hook answers. A deny can only ever narrow what would have run;
+- the scripts run **on the hot path** — one consult per tool call, before anything executes — so keep them fast and set a tight `timeout` in the manifest.
+
+No built-in plugin ships one; the point is there for custom guards — a project-specific sandbox rule, an audit log, an allowlist that skips the approval prompt for known-safe calls.
+
+### User-prompt hooks
+
+The third point, `user_prompt`, expands a submitted prompt. Hooks run in core and nowhere else: the host triggers this one through `Session.runUserPromptHook(name, prompt, extras)` when it accepts a user prompt for the flow the package owns — the Session supplies its own id and scratchpad directory — and the answer's `context` is sent right behind the user's own message as a harness-stamped message (rendered as a compact collapsed card). [Goal mode's start](/goal-mode) is the one shipped use: the goal plugin's `start.mjs` is its `user_prompt` command — the server asks the Session to run it for `goal: { budget }`, it writes `GOAL.json` and answers with round 1's protocol message.
+
+```text
+stdin   { "hook": "user_prompt", "session_id", "scratchpad_dir", "prompt", …host extras (goal: "budget") }
+stdout  { "context": "<text appended after the user's message>" }
+```
+
+## Mid-run steering
+
+While a Task is running, the host can queue a user message with `session.steer(input)` — an OmniMessage list, the same shape `run` takes a Prompt in — without interrupting the loop: at the next input assembly the engine delivers it as a **standalone user text message** wrapped in `[user_steering]…[/user_steering]`, sent alongside that turn's tool outputs (or alone as the continuation input when the turn produced no tool calls — the Task keeps going instead of ending). The input's user text becomes the block's body; its images follow it as ordinary user image messages, so an image with no caption is a complete steering message; on a model without vision they fold into `[attached image: <path>]` lines **inside** the block instead, exactly as a Prompt's images do (the block must stay the whole text, or the message would lose its steering identity and read as a new Task). Steering is real user input: written to Trace like any Prompt, yielded to the output stream, and replayed as ordinary turn input on resume; tool outputs are never rewritten. The queue is drained at **every** input assembly — including right after a mid-run compaction, so steering that arrives during the compaction request is delivered, never swallowed. `steer` returns `false` when no Task is running (hosts then submit a normal task); the queue is discarded only when the run exits (abort included).
+
+## Input images
+
+An input image either rides the request as an image message or becomes an `[attached image: <path>]` line pointing at a file in the session scratchpad — the model then views it with `read_image` / `describe_image`, and the Web restores the thumbnail from the path. The conversion is one function bound once per Session (it is the only layer that knows both the scratchpad and the model's capability), and **each input path decides for itself whether to apply it**:
+
+| Input | Folds when | Applied at |
+| --- | --- | --- |
+| Prompt (`run`) | the model has no vision | run entry, before Trace and title material |
+| Steering (`steer`) | the model has no vision | delivery, at the turn boundary — queuing must stay synchronous, and a queue discarded on abort would otherwise leave orphan files |
+| Goal objective | **always** | before the objective is extracted, so the path lines survive every round's re-injection |
+
+Goal mode is the exception because its objective is re-injected as text every round: see [Goal mode](/goal-mode).
+
+## Automatic reconnect
+
+Every LLM-side failure except `auth` triggers an in-run reconnect — `timeout` (transport-shaped errors: network timeouts, transport disconnects, rate limits, 5xx), `malformed` (truncated streams, JSON parse failures), and **`failed` as well** — every provider rejection that isn't an explicit credential failure, bare 403s and quota/subscription errors included. The statuses are taxonomy, not policy: the classifier only picks the label, and a gateway phrasing a transient fault its own way (`Upstream HTTP/2 stream failed`, say) or a quota that refills mid-ladder retries exactly like a network drop. Retrying a genuinely permanent error costs the ladder and ends the same way; aborting a transient one destroys the turn. Note this changes the *policy*, not the *taxonomy*: a `failed` request is still recorded as `failed` on its `request_end` and in the Cost center, rather than being relabelled a timeout. On a reconnect the engine re-sends the original input plus a `[turn_retried]` block carrying the previous partial output, so tools are never re-executed. Default limit is 5 **consecutive fruitless** reconnects with exponential backoff under a ceiling (base 2s, cap 30s: 2s, 4s, 8s, 16s, 30s ≈ 60s of total patience — one shared schedule for every retryable class, sized so transient provider failures such as restarts and rate limits get a real recovery window instead of five retries burning out in about a second, and so every planned wait clears the Web App's 2s countdown floor and stays visible); beyond that the turn settles as `failed`. An attempt that **received content** before dropping (a `terminated: other side closed (UND_ERR_SOCKET)` mid-response, say) had a working connection and a model writing into it, so its failure restarts the ladder at 2s instead of climbing it — two socket drops in one turn shouldn't add up to a reason to give up while `[turn_retried]` carries the accumulated output into every retry. The bound on that reset is a separate absolute ceiling of 20 attempts per turn, which only an endpoint that streams a little and drops every time ever reaches. `attempt` keeps counting every attempt and never rewinds when the ladder resets. Each failure's `request_end` announces the planned wait as `retry_in_ms` (same formula as the sleep) and stamps `attempt`, the authoritative 1-based ordinal of the request within its retry run (the CLI and Web App display it verbatim); the Web App renders the wait as a live countdown with "retry now" (skips the remaining wait via `Session.skipReconnectWait` — the attempt counter is unchanged) and "give up" (the ordinary abort; the engine's abort-during-backoff path ends the turn) controls; the CLI prints its own `[retry]` line. All three retryable statuses render identically — a retry the user cannot see is a stalled session with no explanation and no way out. A compaction request is an ordinary LLM request and by default retries on the same cap and ladder (an unusable summary draws on the same budget — see "Context compaction"); a compaction that gives up keeps the original context and tries again at the next trigger. Authentication errors are classified before any retry heuristic and never retry: the request ends with its own terminal status `auth` (only the model reference is fixed at Session creation — credentials are read from the current Project config when the Session loads), and the Web App disables that Session's composer until the model's credential is updated (which auto-unlocks it) or the notice is dismissed for a retry. Tool errors are never retried — they are fed back to the model as `tool_call_output` and the model decides what to do next.
+
+## Compaction
+
+Compaction does more than shorten the history: **every compaction rotates in a brand-new model context**. Once it completes, the Agent's entire runtime configuration is reassembled from the Agent State as it is at that moment — exactly like a new Session's first context — and the Trace starts a new file (one Trace file always equals one model context). An edit you (or the model itself) make to the Agent's configuration mid-conversation therefore takes effect after the next compaction.
+
+Compaction settings are filled in from `system_config.yaml` by the composition layer:
+
+```ts
+interface CompactionSettings {
+  maxContextLength: number;   // context-token threshold (last token_usage's request.total); <=0 disables
+  maxSessionTurns: number;    // cumulative Session turn threshold (counted across Tasks); <=0 = unlimited
+  mode: "summarize" | "discard";
+  prompt: string;             // the Prompt used by summarize compaction
+}
+```
+
+Three triggers (`compaction_begin.reason`):
+
+| reason | Condition |
+| --- | --- |
+| `context` | last turn's `token_usage.request.total` ≥ `maxContextLength` (default 256000; the effective threshold is the smaller of that and the model's `context_window` − 2048, so a 32k local vLLM compacts at ~30.7k instead of overflowing the window first while a 1M-window model fires at the configured 256000; an entry without `context_window` derives from an assumed 128000 window, i.e. ~126k) |
+| `turns` | Session turn count ≥ `maxSessionTurns` (default -1 = unlimited) |
+| `manual` | the user runs `/compact` or calls `session.compact()` |
+
+Two modes: `summarize` (default) appends the compaction Prompt to the old context, extracts the `[summary]`, wraps it as a `[context_summary]` user text and continues in a **fresh model context**; `discard` simply drops the old context. System markers are written as `[tag]…[/tag]`; the earlier angle-bracket form (`<summary>`, `<context_summary>`, …) is still recognized when reading old Traces and old persisted compaction prompts. Summary extraction applies a tolerance ladder: the first non-empty `[summary]` tag pair wins; when every pair is empty, the text left after stripping the tags is used instead (rescuing models that write the body after the closing tag); with no tags at all, the whole output is used verbatim. Compaction rotates the [Trace file](/sessions-and-traces) (`_002`, `_003`, …) — one Trace file always equals one complete model context. `compactability()` probes feasibility before `session.compact()` (`ok | unsupported | empty | just_compacted`).
+
+The new context is **assembled from the Agent State as it is at that moment**, exactly as a new Session's first context is: `system_config.yaml` in full (the prompt template with its section prompts and toggles, the builtin tool entries and MCP Servers, the compaction settings, `max_turns`, the model defaults), `AGENTS.md`, the vault, the installed Skills' metadata, the Memory indexes, the schedule roster and the Environment's date. So an edit made during the old context — by the model working on its own configuration, or by hand in the Agent settings — takes effect at the next compaction rather than the next Session. Runtime parameters fall into three tiers. **Strict** — the system prompt, the toolset (MCP included), the compaction settings and the model reference never change inside a running context: they shape the request prefix, and a context's prefix is fixed from open to close, so the provider's prompt cache stays valid across the whole Trace file (the vault, a tool's `r`/`rw` permission and the Project's command policy never reach the model, but are read once per context on the same rotation schedule). **Soft** — the thinking level: a purely per-request parameter — every LLM request takes the Session's pinned level (the Web App's in-chat picker, the CLI's `--thinking` / `/thinking`) or, unpinned, the Agent config default read when the context opened; changeable mid-context and never recorded in the Trace, at the cost of the provider's cached messages, which is why the pickers advise compacting first. **Unrestricted** — the approval mode: re-read from the database per decision, never touching the request, so an edit applies immediately. The Environment is re-equipped: the vault's values go straight into the command environment of every command spawned from then on (processes already running keep the environment they were started with); MCP Servers are cached by config — an entry that did not change keeps its live connection and discovered tools, a removed or changed one is closed, and only new, changed or previously failed ones connect, the wait streaming as the same `mcp_connect_begin` / `mcp_connect_end` pair the first run brackets it with — followed by the new `tool_list_ready`. The rotated Trace file opens with the `session_meta` recording the prompt this context runs with, then the connect pair (if any) and the toolset record. What stays fixed for the Session's lifetime is the Session itself: its id, Workspace, model entry (credentials, window and per-model annotations included) and origin. An Agent State that cannot be assembled (a config that no longer parses) fails the run with that error and the engine stays on the old context — the same error a new Session would hit. The same rule opens a context that resume finds closed by a completed compaction (see [Sessions & Traces](/sessions-and-traces)).
+
+The compaction request keeps the session's toolset **unchanged** — the request prefix (tool list included) stays byte-identical to ordinary turns, so the provider's prompt cache remains valid at the moment the context is largest. Compaction still succeeds only with a valid summary: a response that calls a tool or whose extracted summary is empty counts as one more failed attempt — any tool calls are answered with synthesized failed outputs (keeping `tool_use`/`tool_result` pairing intact), and the resent request carries a corrective note ahead of the compaction Prompt (committed history can only be appended to; rewriting it would invalidate the prompt cache). Every failure — unusable summaries and the `failed`/`timeout`/`malformed` transport statuses alike — draws on the one reconnect budget and backoff ladder described under "Automatic reconnect" above; only `auth` stops the compaction at once. Once the budget is exhausted the compaction ends `failed`, keeping the original context and Trace file until the next trigger; `compaction_end` reuses the unified retry detail block — `attempt` (the final attempt's ordinal, failed attempts included) and, on failure, the last `error_message` detail (shown on the chat banner and the CLI line) — and a failed compaction also lands in the cost center as a `compaction_failed` error record. The first **committed** attempt — adopted or rejected — also absorbs whatever turn input was folded into the compaction request (mid-Task tool results, or the carry-over a manual `/compact` folds in) into the old context's history: retries resend only the repairs and the Prompt, and nothing resends the absorbed input afterwards.
+
+An abandoned compaction is **made up later**, never patched over. Mid-Task the run ends the way any interruption does: the turn's still-pending state is held as carry-over under the same committed/not-committed rule, an `abort` event closes the run, and the next message resends that carry-over merged with the user's input — where the still-standing threshold triggers the compaction again. At a Task boundary the run simply ends with the original context kept. Either way nothing synthetic is invented to keep the loop running on a context that was supposed to shrink.
+
+Compaction triggered **mid-Task** never preempts the tools: `runTurn` returns only once every tool call of the turn has completed, so the results are ready and paired before the checkpoint is even reached. They then ride the compaction request itself, ahead of the compaction Prompt, in their original call order — whatever a tool produced (a normal result, a `[tool error]`, a denial) is what the summary is written from. A tool that waits on approval or runs for minutes simply delays the compaction; no clock is running on it, because the compaction request has not been issued yet. Nothing synthetic is inserted to close the exchange.
+
+While the summary is being generated it rides the output stream as ordinary `partial_text` (or the complete `text`, for LLM implementations that stream nothing), positioned between the paired compaction events — no separate event type, and the compaction request's other raw messages stay Trace-only as before. The Web App renders the compaction row **collapsed by default, exactly like a thinking block**: the chevron is there from the start of a summarize compaction and the summary streams inside the collapsed body, which the reader expands to watch it being written or to read it afterwards. A history rebuild reads the same text back from the compaction span's recorded output, so a reload shows exactly what the live viewer saw. Consumers that render a transcript already treat model messages inside the span as compaction-internal, so nothing leaks into the conversation.
+
+A compaction the user quit out of — the process died mid-request, leaving a `compaction_begin` with no matching end — is simply a **failed compaction**. When the session next loads, resume closes the span with a `failed` `compaction_end` before appending anything else and **discards the half-written summary**: nothing is reconstructed from it, the original context stands, and the standing threshold makes the compaction up at the next trigger. Closing the span is what keeps the conversation that follows visible — every reader treats messages between the paired events as compaction-internal — and the Web App drops the partial draft from the row rather than showing a truncated summary as if it had been adopted.
+
+## Concurrency model
+
+- Within a turn: approvals are sequential, execution is concurrent, and the next turn's input keeps the original order;
+- within a Session: only one Task or one compaction runs at a time (the Server rejects concurrent requests with 409);
+- a [Subagent](/tools) is an independent Session with its own Trace and loop; its messages are forwarded to the parent tagged with `origin`.
+
+## Side channels
+
+- **Session titles**: `session.generateTitle()` is a one-shot out-of-band LLM call (no tools, no system Prompt) that never enters history or Trace;
+- **Usage accounting**: each turn's `token_usage` events are persisted row by row by the Server — the raw data behind the cost statistics.

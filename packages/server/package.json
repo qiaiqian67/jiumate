@@ -1,0 +1,105 @@
+{
+  "name": "@prismshadow/linsight-server",
+  "version": "0.2.9",
+  "type": "module",
+  "description": "Linsight web server: multi-user authentication and authorization, Session execution with SSE streaming, and usage accounting, built on @prismshadow/linsight-core.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Prism-Shadow/linsight.git",
+    "directory": "packages/server"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./api": {
+      "types": "./dist/api/types.d.ts",
+      "import": "./dist/api/types.js"
+    },
+    "./machine-status": {
+      "types": "./dist/machine-status.d.ts",
+      "import": "./dist/machine-status.js"
+    },
+    "./lock": {
+      "types": "./dist/lock.d.ts",
+      "import": "./dist/lock.js"
+    },
+    "./initial-password": {
+      "types": "./dist/initial-password.d.ts",
+      "import": "./dist/initial-password.js"
+    },
+    "./reset-admin-password": {
+      "types": "./dist/reset-admin-password.d.ts",
+      "import": "./dist/reset-admin-password.js"
+    },
+    "./hmr/manifest": {
+      "types": "./dist/hmr/manifest.d.ts",
+      "import": "./dist/hmr/manifest.js"
+    },
+    "./version-report": {
+      "types": "./dist/version-report.d.ts",
+      "import": "./dist/version-report.js"
+    },
+    "./auth-token": {
+      "types": "./dist/auth-token.d.ts",
+      "import": "./dist/auth-token.js"
+    },
+    "./secret-file": {
+      "types": "./dist/secret-file.d.ts",
+      "import": "./dist/secret-file.js"
+    },
+    "./extension": {
+      "types": "./dist/extension/index.d.ts",
+      "import": "./dist/extension/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node ../../scripts/dev-prebuild.mjs && node ../../scripts/run-with-env.mjs LINSIGHT_HOME=~/.linsight/dev-data PORT=7368 -- tsx watch src/index.ts",
+    "start": "node --disable-warning=ExperimentalWarning dist/index.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.0.5",
+    "@larksuiteoapi/node-sdk": "^1.73.0",
+    "@prismshadow/linsight-core": "workspace:*",
+    "@xterm/headless": "^5.5.0",
+    "dotenv": "^17.0.0",
+    "fflate": "^0.8.3",
+    "hono": "^4.12.34",
+    "node-pty": "^1.1.0",
+    "remark-gfm": "^4.0.0",
+    "remark-parse": "^11.0.0",
+    "smol-toml": "^1.3.0",
+    "tar": "^7.5.21",
+    "undici": "^7.29.0",
+    "unified": "^11.0.5",
+    "ws": "^8.18.3",
+    "yaml": "^2.5.0"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.1",
+    "tsup": "^8.3.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.6"
+  },
+  "files": [
+    "dist",
+    "web-dist",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
