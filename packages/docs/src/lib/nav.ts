@@ -54,6 +54,7 @@ export const DOCS_NAV: DocsSectionDef[] = [
       "skills",
       "models",
       "sessions-and-traces",
+      "capability-matrix",
     ),
   },
   { id: "reference", pages: pages("cli", "server-api", "configuration", "security") },
