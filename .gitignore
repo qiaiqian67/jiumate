@@ -29,6 +29,10 @@ cache/
 .agents/settings.local.json
 .agents/**/*.local.*
 
+# Per-package Claude Code session state (auto-handoff observation logs).
+# These are emitted by a session and are not shareable across machines.
+packages/*/.claude/
+
 # playwright e2e artifacts
 packages/web/test-results/
 packages/web/playwright-report/
