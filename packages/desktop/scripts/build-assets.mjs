@@ -96,6 +96,22 @@ fs.writeFileSync(path.join(binDir, "linsight"), posixLauncherScript(), { mode: 0
 fs.chmodSync(path.join(binDir, "linsight"), 0o755);
 fs.writeFileSync(path.join(binDir, "linsight.cmd"), windowsLauncherScript());
 
+// Pandoc binary for dev runs: when CI is not involved (local `pnpm desktop`), this
+// directory is empty (only the committed .gitkeep), and the resolver falls through to
+// PATH. CI stages the per-platform binary into build/pandoc/<platform>/, which we
+// mirror into dist/bin/pandoc/<platform>/ so the dev resolver (pandoc-path.ts,
+// appPath-relative) finds it without touching resourcesPath.
+const pandocPlatformDir = path.join(
+  pkgDir,
+  "build",
+  "pandoc",
+  `${process.platform}-${process.arch}`,
+);
+const pandocDest = path.join(distDir, "bin", "pandoc", `${process.platform}-${process.arch}`);
+if (fs.existsSync(pandocPlatformDir)) {
+  fs.cpSync(pandocPlatformDir, pandocDest, { recursive: true });
+}
+
 console.log(
   `[build-assets] done: dist/icon.png, dist/install.{sh,ps1}, bin/, ${NODE_PTY_RELDIR.join("/")} (${ptyFiles.length} files, bindings: ${bindings.join(", ")})`,
 );

@@ -2203,6 +2203,32 @@ Benchmark：
     upload: "上传",
     download: "下载",
     openInNewTab: "新页面打开",
+    /** Edit-mode toggle pill on the .md preview toolbar (visible only when editable-doc plugin ships). */
+    edit: "编辑",
+    /** Edit-mode save action (the inline submit). */
+    editSave: "保存",
+    /** Edit-mode discard action. */
+    editCancel: "取消",
+    /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */
+    editConflictBanner: "文件已被外部修改，保存将覆盖远端内容",
+    /** Confirm-modal copy for the discard path when the user has unsaved edits. */
+    editDiscardConfirm: "放弃当前未保存的修改?",
+    /** Dropdown label on the file preview toolbar — opens the multi-format export menu. */
+    export: "导出",
+    exportMd: "Markdown",
+    exportHtml: "HTML",
+    exportPdf: "PDF",
+    exportDocx: "Word (.docx)",
+    exportEpub: "EPUB",
+    exportRtf: "RTF",
+    exportTxt: "纯文本 (.txt)",
+    /** Shown on the dropdown trigger while a conversion is in flight (mermaid pre-render + server-side format). */
+    /** Shown on the dropdown trigger while a conversion is in flight (mermaid pre-render + server-side format). */
+    exportPreparing: (label: string): string => `正在准备 ${label}…`,
+    /** Tooltip on any greyed-out menu item: the dropdown disables items whose backing service is missing.
+     *  Parameterised by the server-supplied reason (e.g. "Pandoc is not installed." / "PDF export requires the desktop app.")
+     *  so the dropdown can echo the exact capability string rather than a generic "unavailable" copy. */
+    exportUnavailableReason: (reason: string): string => reason,
     previewNotIsolatedHint:
       "当前访问地址无法提供独立预览源，页面将以沙箱模式打开：localStorage、Cookie 与第三方 embed 不可用。经 127.0.0.1 或 localhost 访问，或配置 LINSIGHT_PREVIEW_ORIGIN 即可解除。",
     refresh: "刷新",

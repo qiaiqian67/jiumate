@@ -22,7 +22,12 @@
 import { versionReport } from "../../version-report.js";
 import { Hono } from "hono";
 import type { Context } from "hono";
-import type { RestartResponse, UpdateJobStatus, VersionResponse } from "../../api/types.js";
+import type {
+  RestartResponse,
+  ServerCapabilities,
+  UpdateJobStatus,
+  VersionResponse,
+} from "../../api/types.js";
 import { HttpError } from "../errors.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";
@@ -80,6 +85,29 @@ export function versionRoutes(deps: AppDeps): Hono<AppEnv> {
       }
     }, RESTART_DELAY_MS).unref();
     return c.json({ restarting: true } satisfies RestartResponse);
+  });
+
+  /**
+   * Workspace-file export capabilities. Drives the menu's disabled state: a missing
+   * Pandoc binary greys out DOCX/EPUB/RTF/TXT (with the "Pandoc is not installed."
+   * tooltip); a non-desktop runtime greys PDF. MD/HTML are always available.
+   *
+   * Reads are fail-soft — the route swallows `version()` errors and reports the binary
+   * as missing rather than 503'ing the whole capabilities call (the menu is a UX hint,
+   * not a hard precondition).
+   */
+  app.get("/capabilities", async (c) => {
+    const version = await deps.pandoc.version().catch(() => null);
+    return c.json({
+      pandoc: {
+        available: deps.pandoc.available,
+        version,
+      },
+      pdf: {
+        available: deps.desktopExportPort !== null,
+        reason: deps.desktopExportPort === null ? "PDF export requires the desktop app." : null,
+      },
+    } satisfies ServerCapabilities);
   });
 
   return app;

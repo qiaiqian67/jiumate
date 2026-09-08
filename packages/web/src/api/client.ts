@@ -113,3 +113,39 @@ export async function apiFetchWithMeta<T>(
   if (!text) return { data: undefined as T, serverNowMs };
   return { data: JSON.parse(text) as T, serverNowMs };
 }
+
+/**
+ * Posts a JSON body and reads the response as a Blob. Used for binary downloads
+ * (`/api/sessions/:id/files/export` — PDF/DOCX/EPUB/RTF/TXT) where JSON parsing would
+ * garble the bytes. Errors keep the same shape as {@link apiFetch}: non-2xx reads the
+ * body's `{error:{code,message}}` if present and throws `ApiError`; a fetch rejection
+ * (network) maps to `ApiError(0, "network_error")`. Same-origin credentials so a
+ * session cookie rides along, same as {@link apiFetch}.
+ */
+export async function postBinary(path: string, body: unknown): Promise<Blob> {
+  let response: Response;
+  try {
+    response = await fetch(path, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(0, "network_error", S.errors.networkError);
+  }
+  if (!response.ok) {
+    let code = "http_error";
+    let message: string = S.common.unknownError;
+    try {
+      const errBody = (await response.json()) as { error?: { code?: string; message?: string } };
+      if (errBody.error?.code) code = errBody.error.code;
+      if (errBody.error?.message) message = errBody.error.message;
+    } catch {
+      // Body wasn't JSON — keep the defaults.
+    }
+    if (response.status === 401 && !isAuthEndpoint(path)) onUnauthorized?.();
+    throw new ApiError(response.status, code, message);
+  }
+  return response.blob();
+}

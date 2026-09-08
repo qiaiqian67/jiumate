@@ -152,6 +152,28 @@ jobs:
             "https://github.com/git-for-windows/git/releases/download/$MINGIT_TAG/$mingit"
           unzip -q "$mingit" -d packages/desktop/build/minigit
 
+      # Pandoc binary for the workspace file-export feature (DOCX / EPUB / RTF / TXT).
+      # Picked per platform so the bundled resource is the same arch electron-builder
+      # packages; the download-pandoc.mjs script writes to the path electron-builder.yml's
+      # `from:` points at. The .gitkeep in build/pandoc/<platform>/ keeps local non-CI
+      # builds from tripping electron-builder's "missing source" check.
+      - name: Bundle Pandoc
+        shell: bash
+        run: |
+          case "$RUNNER_OS" in
+            Windows) platform="win32-x64" ;;
+            macOS)    platform="darwin-$RUNNER_ARCH" ;;
+            Linux)    platform="linux-x64" ;;
+            *) echo "Unsupported runner OS: $RUNNER_OS"; exit 1 ;;
+          esac
+          # Normalize arm64/x64 to the asset suffixes the script expects.
+          case "$RUNNER_ARCH" in
+            X64) arch="x64" ;;
+            ARM64) arch="arm64" ;;
+          esac
+          if [ "$RUNNER_OS" = "macOS" ]; then platform="darwin-$arch"; fi
+          node packages/desktop/scripts/download-pandoc.mjs "$platform"
+
       - name: Prepare macOS signing credentials
         if: runner.os == 'macOS'
         shell: bash

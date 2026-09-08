@@ -29,6 +29,7 @@ import type {
   MessagesResponse,
   RecalledMessageResponse,
   ServerEvent,
+  ServerExportFormat,
   SessionCategory,
   SessionContextResponse,
   SessionCreateResponse,
@@ -98,6 +99,18 @@ export const APPROVAL_MODES: readonly ApprovalMode[] = [
 /** Unit-count bounds for windowed history reads (`tailLimit` / `limit`), and the `before` page's default. */
 const MESSAGES_PAGE_LIMIT_MAX = 1000;
 const MESSAGES_PAGE_LIMIT_DEFAULT = 200;
+
+/** Max bytes accepted by POST /files/export. The web pre-serializes MD to HTML here; a 50MB cap matches
+ *  the workspace-files read limit and keeps a runaway client from pinning the server. */
+const EXPORT_MAX_HTML_BYTES = 50 * 1024 * 1024;
+const EXPORT_FORMATS: readonly ServerExportFormat[] = ["pdf", "docx", "epub", "rtf", "txt"];
+const EXPORT_MIME: Record<ServerExportFormat, string> = {
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  epub: "application/epub+zip",
+  rtf: "application/rtf",
+  txt: "text/plain; charset=utf-8",
+};
 
 /** Parse one windowed-read unit-count param (positive integer, capped). */
 function pageLimit(raw: string, name: string): number {
@@ -1340,6 +1353,65 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     }
     await deps.workspaceFiles.write(row.workspace, rel, data);
     return c.body(null, 204);
+  });
+
+  /**
+   * POST /api/sessions/:sessionId/files/export — render an HTML body (which the web has
+   * already pre-rendered from Markdown + mermaid + KaTeX) to one of PDF / DOCX / EPUB /
+   * RTF / TXT and stream the bytes back as a download.
+   *
+   * MD and HTML never come through this route — the web handles those locally because
+   * the renderer, the Mermaid engine, and KaTeX are web-only. DOCX/EPUB/RTF/TXT go via
+   * PandocService; PDF goes via the desktop shell's hidden BrowserWindow + printToPDF
+   * (cli runs return 503 because they have no shell to drive).
+   *
+   * The path param is the workspace-relative source: the route uses it only to (a) gate
+   * the request on a real file (so a typo'd `format=pdf` doesn't dump bytes from a
+   * non-existent path) and (b) derive the output filename's stem. The exported bytes
+   * themselves are NOT written to the workspace — the browser saves them.
+   */
+  app.post("/:sessionId/files/export", async (c) => {
+    const row = resolveSession(c);
+    const body = await readJson(c);
+    const rel = typeof body.path === "string" ? body.path : "";
+    const format = typeof body.format === "string" ? body.format : "";
+    const html = typeof body.html === "string" ? body.html : "";
+    if (!(EXPORT_FORMATS as readonly string[]).includes(format)) {
+      throw badRequest(`Unknown export format: ${format}`);
+    }
+    if (Buffer.byteLength(html, "utf8") > EXPORT_MAX_HTML_BYTES) {
+      throw new HttpError(413, "html_too_large", "HTML body exceeds the 50MB limit.");
+    }
+    const fmt = format as ServerExportFormat;
+    // Gate on a real source file: a typo'd path otherwise becomes a silent 200 with
+    // download-attached bytes from a non-existent file.
+    const existing = await deps.workspaceFiles.statExisting(row.workspace, [rel]);
+    if (existing.length === 0) {
+      throw new HttpError(404, "path_not_found", "File does not exist.");
+    }
+    // Derive `<stem>.<format>`. `path.basename(rel, ext)` is too eager when the stem
+    // itself contains dots (e.g. "report.v2.md"), so we strip only the last extension.
+    const stem = rel.includes("/") ? rel.slice(rel.lastIndexOf("/") + 1) : rel;
+    const dot = stem.lastIndexOf(".");
+    const fileStem = dot > 0 ? stem.slice(0, dot) : stem;
+    const filename = fileStem ? `${fileStem}.${fmt}` : `export.${fmt}`;
+    const bytes =
+      fmt === "pdf"
+        ? deps.desktopExportPort
+          ? await deps.desktopExportPort.printHtmlToPdf(html, filename)
+          : await Promise.reject(
+              new HttpError(503, "pdf_unavailable_in_cli", "PDF export requires the desktop app."),
+            )
+        : await deps.pandoc.exportHtmlTo(html, fmt);
+    return new Response(new Uint8Array(bytes), {
+      status: 200,
+      headers: {
+        "Content-Type": EXPORT_MIME[fmt],
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "no-store",
+      },
+    });
   });
 
   /**

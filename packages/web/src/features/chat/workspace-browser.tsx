@@ -32,6 +32,7 @@ import { HiddenFileInput } from "../../components/ui/hidden-file-input";
 import { SkeletonList } from "../../components/ui/skeleton";
 import { CodeBlock } from "./code-block";
 import { languageForExtension } from "./code-languages";
+import { ExportMenu } from "./workspace-export";
 import { toneInk } from "../../lib/tone";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { ICON_SIZE } from "../../lib/icon-scale";
@@ -531,6 +532,16 @@ export function WorkspaceBrowser({
                 </span>
               )}
             </a>
+          )}
+          {/* Multi-format export menu (MD / HTML / PDF / DOCX / EPUB / RTF / TXT). PDF and
+              Pandoc-backed items gate themselves on capabilities; MD and HTML always run. */}
+          {(preview.kind === "md" || preview.kind === "html") && (
+            <ExportMenu
+              sessionId={session.sessionId}
+              filePath={preview.path}
+              fileName={preview.name}
+              markdown={preview.content ?? ""}
+            />
           )}
           <a
             href={api.workspaceFileUrl(session.sessionId, preview.path, true)}

@@ -31,6 +31,11 @@ export default defineConfig({
     "secret-file": "src/secret-file.ts",
     "hmr/manifest": "src/hmr/manifest.ts",
     "version-report": "src/version-report.ts",
+    // "./desktop-export": the shell↔server wire types for the workspace-file PDF export
+    // inbox on the utilityProcess message port (the same port the updater uses).
+    // Exported as a subpath so the desktop shell can import just the types without
+    // pulling the full server bundle.
+    "api/desktop-export": "src/api/desktop-export.ts",
     // "./extension": the surface extension PACKAGES compile against. Extensions live outside
     // this bundle entirely — they are configuration resolved from the installation,
     // not platform capability.

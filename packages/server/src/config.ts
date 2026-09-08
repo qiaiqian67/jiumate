@@ -84,6 +84,14 @@ export interface ServerConfig {
    * cookies WITHOUT the `Secure` flag (auth/middleware.ts cookieOptions).
    */
   trustProxy: boolean;
+  /**
+   * Absolute path to the Pandoc binary, or null when none was found. Resolution
+   * honours LINSIGHT_PANDOC (absolute path or a name resolvable on PATH) and falls
+   * back to scanning PATH for `pandoc`. Null means DOCX/EPUB/RTF/TXT exports are
+   * disabled — the capabilities endpoint reports it as `pandoc.available = false`
+   * and the menu greys those entries out.
+   */
+  pandocPath: string | null;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -152,5 +160,41 @@ export function resolveServerConfig(env: NodeJS.ProcessEnv = process.env): Serve
     portFile: env.LINSIGHT_PORT_FILE?.trim() || null,
     trustProxy: env.LINSIGHT_TRUST_PROXY === "1",
     supervised: env.LINSIGHT_SUPERVISED === "1",
+    pandocPath: resolvePandocPath(env),
   };
+}
+
+/**
+ * Locate the Pandoc binary. Resolution order:
+ *   1. `LINSIGHT_PANDOC` — if absolute and exists, used as-is; otherwise treated as a name
+ *      and resolved against PATH.
+ *   2. PATH scan for the literal name `pandoc` (with `.exe` on Windows).
+ *
+ * Returns null on any miss. The caller treats null as "exports disabled" rather than a
+ * hard failure: the server still starts, and the capabilities endpoint tells the UI so.
+ */
+function resolvePandocPath(env: NodeJS.ProcessEnv): string | null {
+  const override = env.LINSIGHT_PANDOC?.trim();
+  if (override) {
+    if (path.isAbsolute(override) && fs.existsSync(override)) return override;
+    const resolved = whichOnPath(override, env.PATH);
+    if (resolved !== null) return resolved;
+  }
+  return whichOnPath("pandoc", env.PATH);
+}
+
+function whichOnPath(bin: string, pathEnv: string | undefined): string | null {
+  if (!pathEnv) return null;
+  const sep = process.platform === "win32" ? ";" : ":";
+  for (const dir of pathEnv.split(sep)) {
+    if (!dir) continue;
+    const exe = process.platform === "win32" && !/\.[a-z0-9]+$/i.test(bin) ? `${bin}.exe` : bin;
+    const full = path.join(dir, exe);
+    try {
+      if (fs.statSync(full).isFile()) return full;
+    } catch {
+      // ENOENT / EACCES — try the next entry.
+    }
+  }
+  return null;
 }

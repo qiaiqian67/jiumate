@@ -115,6 +115,8 @@ import { UpdateCheckService } from "./services/update-check-service.js";
 import { UpdateJobService } from "./services/update-job.js";
 import { UsageService } from "./services/usage-service.js";
 import { WorkspaceFilesService } from "./services/workspace-files-service.js";
+import { PandocService } from "./services/pandoc-service.js";
+import { DesktopExportPort } from "./services/desktop-export-port.js";
 import { HmrHost } from "./hmr/host.js";
 import { hmrRoutes } from "./hmr/routes.js";
 import { platformHttpSeam } from "./hmr/http-seam.js";
@@ -238,6 +240,13 @@ export interface AppDeps {
   proxyControl: ProxyControl;
   /** Request log output (minimal one-liner); tests inject a noop. */
   log: (line: string) => void;
+  /** Workspace-file export: DOCX / EPUB / RTF / TXT via Pandoc. Always wired; `available` reflects config.pandocPath. */
+  pandoc: PandocService;
+  /**
+   * Workspace-file export: PDF via the desktop shell's hidden BrowserWindow + printToPDF.
+   * Null outside desktop mode (CLI/web runs); the route returns 503 when null.
+   */
+  desktopExportPort: DesktopExportPort | null;
 }
 
 export interface BuildDepsOverrides {
@@ -280,6 +289,10 @@ export interface BuildDepsOverrides {
   passwordHashCost?: number;
   log?: (line: string) => void;
   now?: () => Date;
+  /** Test double: PandocService with a scripted runner (avoids spawning a real binary). */
+  pandoc?: PandocService;
+  /** Test double: PDF export port; null in tests that don't exercise the PDF path. */
+  desktopExportPort?: DesktopExportPort | null;
 }
 
 /**
@@ -1110,6 +1123,19 @@ export function buildAppDeps(
     hmr,
     proxyControl: caps.proxyControl,
     log,
+    // DOCX/EPUB/RTF/TXT: wired even when the binary is missing — PandocService reports
+    // `available = false` and the route returns 503. Keeps the route's contract stable
+    // across deployments where Pandoc is or isn't installed.
+    pandoc: overrides.pandoc ?? new PandocService({ pandocPath: config.pandocPath }),
+    // PDF: only the desktop shell can render HTML to PDF (hidden BrowserWindow +
+    // printToPDF), so the port is null in CLI/web mode. The override hook lets tests
+    // inject a fake even outside desktop mode.
+    desktopExportPort:
+      overrides.desktopExportPort !== undefined
+        ? overrides.desktopExportPort
+        : caps.desktop
+          ? new DesktopExportPort((msg) => caps.desktop?.sendExport(msg))
+          : null,
   };
 }
 
