@@ -1,0 +1,8 @@
+{
+  "description": "Format generated Markdown documents so a human can edit them in place afterwards — atomic sections, semantic headings, fenced diagrams and code, no mega paragraphs.",
+  "short_description": "Editable-doc formatting.",
+  "short_description_zh": "可编辑文档格式约束。",
+  "version": "2026-09-08.1",
+  "category": "office-productivity",
+  "preinstall": true
+}

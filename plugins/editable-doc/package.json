@@ -1,0 +1,20 @@
+{
+  "name": "@linsight/editable-doc",
+  "version": "0.2.9",
+  "description": "Format generated Markdown documents so a human can edit them in place afterwards — atomic sections, semantic headings, fenced diagrams and code, no mega paragraphs.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Prism-Shadow/linsight.git",
+    "directory": "plugins/editable-doc"
+  },
+  "files": [
+    "plugin.json",
+    "icon.svg",
+    "skills",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
