@@ -73,10 +73,20 @@ export async function runHookScript(
     const fail = (message: string): void => finish(() => reject(new Error(message)));
     const timer = setTimeout(() => {
       child.kill("SIGKILL");
+      // Windows holds the stdio pipe handles open through a SIGKILL'd grandchild until the
+      // Node parent process actively destroys them — without this, a hook script that
+      // opens its own setInterval leaves its temp dir EBUSY for the rest of the test.
+      // Closing the pipes is a no-op on POSIX.
+      child.stdout?.destroy();
+      child.stderr?.destroy();
+      child.stdin?.destroy();
       fail(`timed out after ${timeoutMs / 1000}s`);
     }, timeoutMs);
     const onAbort = (): void => {
       child.kill("SIGKILL");
+      child.stdout?.destroy();
+      child.stderr?.destroy();
+      child.stdin?.destroy();
       fail("aborted");
     };
     opts.signal?.addEventListener("abort", onAbort, { once: true });
@@ -84,6 +94,11 @@ export async function runHookScript(
     child.stderr.setEncoding("utf8").on("data", (chunk: string) => (stderr += chunk));
     child.on("error", (err) => fail(err.message));
     child.on("close", (code) => {
+      // Windows holds stdio pipe handles open after the child exits; the rmdir on the
+      // script's temp directory (the test's `cwd`) returns EBUSY until we close them.
+      child.stdout?.destroy();
+      child.stderr?.destroy();
+      child.stdin?.destroy();
       if (code !== 0) {
         const tail = stderr.trim().slice(-STDERR_TAIL);
         fail(`exit ${code}${tail ? `: ${tail}` : ""}`);

@@ -135,7 +135,20 @@ describe("script hooks", () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-script-hook-"));
   });
   afterEach(async () => {
-    await fs.rm(dir, { recursive: true, force: true });
+    // Windows holds a directory handle to the script's cwd (its temp dir) inside the
+    // child process for a tick or two after the child exits — even after we destroy
+    // stdio and the child reports 'close'. A SIGKILL'd `setInterval` script makes
+    // that a hard race. Retry until the OS lets us clean up; `force: true` skips
+    // the recursive error so a genuine rmdir failure still surfaces eventually.
+    for (let i = 0; i < 10; i++) {
+      try {
+        await fs.rm(dir, { recursive: true, force: true });
+        return;
+      } catch (e) {
+        if (i === 9) throw e;
+        await new Promise((r) => setTimeout(r, 20));
+      }
+    }
   });
 
   const write = async (name: string, body: string): Promise<string> => {
