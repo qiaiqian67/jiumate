@@ -43,6 +43,7 @@ import { startEmbeddedServer, stopEmbeddedServer } from "./server-process.js";
 import type { EmbeddedServer } from "./server-process.js";
 import { getUpdaterStatus, handleUpdaterCommand, initUpdater, onUpdaterStatus } from "./updater.js";
 import { parseUpdaterCommand, updaterStatusMessage } from "./updater-status.js";
+import { wireExportPdf } from "./export-pdf.js";
 import {
   desktopLoginUrl,
   isAppUrl,
@@ -191,6 +192,10 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
   server = started;
   appOrigin = started.origin;
   wireUpdaterRelay(started.child);
+  // The PDF-export inbox sits on the same utilityProcess port the updater uses. Both
+  // relays filter by `type` discriminator before acting, so they coexist on one channel
+  // and a crash in one does not affect the other.
+  wireExportPdf(started.child);
   // A run that stays up for a minute is healthy: reset the restart budget so a crash
   // days later starts a fresh 1s/2s/4s ladder instead of hitting the cap immediately.
   const healthyTimer = setTimeout(() => {

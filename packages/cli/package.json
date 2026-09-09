@@ -1,6 +1,6 @@
 {
   "name": "@prismshadow/linsight-cli",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "type": "module",
   "description": "Linsight CLI: interactive REPL and single-task runner over @prismshadow/linsight-core.",
   "license": "Apache-2.0",

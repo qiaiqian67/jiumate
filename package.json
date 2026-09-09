@@ -1,9 +1,9 @@
 {
   "name": "linsight",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "Linsight \u2014 TypeScript AI Agent (SDK + CLI).",
+  "description": "Linsight — TypeScript AI Agent (SDK + CLI).",
   "engines": {
     "node": ">=24"
   },

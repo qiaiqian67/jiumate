@@ -58,6 +58,9 @@ export function testConfig(root: string): ServerConfig {
     portFile: null,
     trustProxy: false,
     supervised: false,
+    // Tests inject PandocService via BuildDepsOverrides.pandoc — config resolution
+    // never tries PATH here, which on a developer box may or may not have one.
+    pandocPath: null,
   };
 }
 

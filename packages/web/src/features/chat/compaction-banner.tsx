@@ -35,7 +35,7 @@ import { StepBanner } from "./step-banner";
 function SummaryBody({ text, streaming }: { text: string; streaming: boolean }) {
   return (
     <div className="md-body px-3 py-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-      <Md text={text} streaming={streaming} />
+      <Md text={text} streaming={streaming} id="compaction" />
     </div>
   );
 }

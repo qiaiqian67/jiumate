@@ -241,7 +241,7 @@ export function PluginDetailModal({
               <p className="text-sm text-gray-400">{error ?? S.common.none}</p>
             ) : current.endsWith(".md") ? (
               <div className="md-body text-sm text-gray-800 dark:text-gray-100">
-                <Md text={stripFrontmatter(text)} />
+                <Md text={stripFrontmatter(text)} id="plugin-detail" />
               </div>
             ) : (
               <CodeBlock language={languageFor(current)} code={text} />

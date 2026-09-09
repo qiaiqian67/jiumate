@@ -5,7 +5,8 @@
  * state/locale.tsx, which calls `setActiveStrings` to switch and remounts the whole
  * tree keyed by locale, so `S.x` reads in components always reflect the current
  * language (module-level constants do not update on switch — keep reads inside components).
- * Keep domain terms capitalized in English — Workspace, Token, Task, Session, Project, Trace.
+ * Only Token and Agent stay as untranslated English domain terms; translate all other
+ * surface labels (Session, Requests, Workspace, Task, Project, Trace) to Chinese in zh.
  * "agent" is a common noun: lowercase mid-sentence, capitalized only at the start of a
  * label/sentence or in a proper name (Agent State, AgentHub). zh names the SURFACE
  * 「智能体」 — the nav entry, the grouping option, the panel — and keeps "Agent" as-is
@@ -406,7 +407,7 @@ export const zh = {
   },
 
   project: {
-    switcher: "Project",
+    switcher: "项目",
     create: "新建 Project",
     createTitle: "新建 Project",
     id: "Project id",
@@ -1102,13 +1103,13 @@ export const zh = {
     target: "目标",
     targetNew: "每次新建会话",
     targetSession: "绑定 Session",
-    sessionId: "Session",
+    sessionId: "会话",
     /** Bind-Session picker (searchable dropdown): trigger placeholder, search box, and empty states. */
     chooseSession: "选择要绑定的 Session",
     sessionSearch: "搜索标题或 Session id…",
     sessionNoMatch: "无匹配的 Session",
     sessionEmpty: "该 Agent 暂无 Session",
-    workspace: "Workspace",
+    workspace: "工作区",
     model: "Model",
     modelDefault: "Project 默认",
     deleteTitle: "删除定时任务",
@@ -1513,11 +1514,11 @@ Benchmark：
           "先看已有记忆索引避免重复，再逐条问我该记什么、要不要改已有的，我确认后你写进 Memory。",
       },
     },
-    sessionList: "Session",
+    sessionList: "会话",
     defaultSessionTitle: "新对话",
     agent: "Agent",
     model: "Model",
-    workspace: "Workspace",
+    workspace: "工作区",
     workspaceHint: "留空自动创建临时工作区；指定时必须是服务器上已存在的目录",
     /** The same rule as `workspaceHint`, short enough to sit under a form field. */
     workspaceHintShort: "留空自动创建临时工作区",
@@ -2203,6 +2204,35 @@ Benchmark：
     upload: "上传",
     download: "下载",
     openInNewTab: "新页面打开",
+    /** Edit-mode toggle pill on the .md preview toolbar (visible only when editable-doc plugin ships). */
+    edit: "编辑",
+    /** Edit-mode save action (the inline submit). */
+    editSave: "保存",
+    /** Edit-mode discard action. */
+    editCancel: "取消",
+    /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */
+    editConflictBanner: "文件已被外部修改，保存将覆盖远端内容",
+    /** Confirm-modal copy for the discard path when the user has unsaved edits. */
+    editDiscardConfirm: "放弃当前未保存的修改?",
+    /** Dropdown label on the file preview toolbar — opens the multi-format export menu. */
+    export: "导出",
+    exportMd: "Markdown",
+    exportHtml: "HTML",
+    exportPdf: "PDF",
+    exportDocx: "Word (.docx)",
+    exportEpub: "EPUB",
+    exportRtf: "RTF",
+    exportTxt: "纯文本 (.txt)",
+    /** Shown on the dropdown trigger while a conversion is in flight (mermaid pre-render + server-side format). */
+    /** Shown on the dropdown trigger while a conversion is in flight (mermaid pre-render + server-side format). */
+    exportPreparing: (label: string): string => `正在准备 ${label}…`,
+    /** Toast when the user picks "Markdown" on an empty file — a 0-byte .md download is a silent no-op
+     *  in the browser, so we surface the real reason instead of letting the click click nothing. */
+    exportEmptyMarkdown: "文件为空，没有可导出的内容",
+    /** Tooltip on any greyed-out menu item: the dropdown disables items whose backing service is missing.
+     *  Parameterised by the server-supplied reason (e.g. "Pandoc is not installed." / "PDF export requires the desktop app.")
+     *  so the dropdown can echo the exact capability string rather than a generic "unavailable" copy. */
+    exportUnavailableReason: (reason: string): string => reason,
     previewNotIsolatedHint:
       "当前访问地址无法提供独立预览源，页面将以沙箱模式打开：localStorage、Cookie 与第三方 embed 不可用。经 127.0.0.1 或 localhost 访问，或配置 LINSIGHT_PREVIEW_ORIGIN 即可解除。",
     refresh: "刷新",
@@ -2228,7 +2258,7 @@ Benchmark：
     last7d: "近 7 天",
     total: "累计",
     tokens: "Token",
-    requests: "Requests",
+    requests: "请求",
     from: "起始日期",
     to: "结束日期",
     colCacheRead: "缓存命中",
@@ -2342,7 +2372,7 @@ Benchmark：
     colDuration: "耗时",
     colCase: "题目",
     colRun: "运行",
-    colSession: "Session",
+    colSession: "会话",
   },
 
   // Server error code → localized copy (the server's message is hardcoded Chinese; this is only a fallback for unknown codes).

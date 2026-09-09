@@ -557,7 +557,7 @@ export function MemoryTab({
         <p className="text-xs text-gray-500 dark:text-gray-400">{viewing.file.description}</p>
       )}
       <div className="md-body border-t border-gray-100 pt-3 text-sm dark:border-gray-800">
-        <Md text={bodyWithoutFrontmatter(viewing.content)} />
+        <Md text={bodyWithoutFrontmatter(viewing.content)} id={`mem-${viewing.file.name}`} />
       </div>
     </>
   );

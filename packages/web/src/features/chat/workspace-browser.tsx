@@ -12,8 +12,8 @@
  * got a wide allotment of space) — so the list and preview are shown mutually exclusively,
  * routed by whether the existing `preview` is null, without introducing extra state.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChangeEvent } from "react";
+import { isValidElement, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import { REHYPE_PLUGINS, REMARK_PLUGINS } from "../../lib/markdown-plugins";
 import type { SessionInfo, WorkspaceFilesResponse } from "@prismshadow/linsight-server/api";
@@ -31,7 +31,10 @@ import { Dropdown } from "../../components/ui/dropdown";
 import { HiddenFileInput } from "../../components/ui/hidden-file-input";
 import { SkeletonList } from "../../components/ui/skeleton";
 import { CodeBlock } from "./code-block";
+import { MermaidBlock } from "./mermaid-block";
 import { languageForExtension } from "./code-languages";
+import { ExportMenu } from "./workspace-export";
+import { MarkdownEditor } from "./markdown-editor";
 import { toneInk } from "../../lib/tone";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { ICON_SIZE } from "../../lib/icon-scale";
@@ -85,6 +88,142 @@ function extOf(name: string): string {
   return i >= 0 ? name.slice(i + 1).toLowerCase() : name.toLowerCase();
 }
 
+/** Flatten a react-markdown code element's children to plain text. */
+function extractCodeText(children: unknown): string {
+  if (typeof children === "string") return children;
+  if (Array.isArray(children)) return children.filter((c) => typeof c === "string").join("");
+  return "";
+}
+
+/** Stable 32-bit hash of a string (FNV-1a). Used to derive a Mermaid nonce from the source
+ *  body so two diagrams with identical code on the same page don't collide on Mermaid's
+ *  required-unique DOM id, and a code edit reliably flips the nonce (re-render Mermaid). */
+function hash32(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+}
+
+/**
+ * ReactMarkdown's components map, isolated as a memoized child so that *its* component-type
+ * identities for `pre` / `img` / `a` stay stable across the parent's renders. Without this
+ * memo, every WorkspaceBrowser commit produces a fresh object literal — and every fresh `pre`
+ * function is a *new* component type to react-markdown, so React unmounts and remounts every
+ * fenced block on every parent render. The visible cost is exactly what the user reported:
+ * MermaidBlock's useEffect clears the container, async-imports mermaid, calls render(), and
+ * the cycle repeats in a visible flicker until something in the parent settles. Memoizing the
+ * child means the components map only changes when one of its captured inputs (the file path,
+ * the file nonce, the body length, the session id, the preview-path callback) actually
+ * changes — none of which churn during reading.
+ */
+const RenderedMd = memo(function RenderedMd({
+  body,
+  fileNonce,
+  filePath,
+  sessionId,
+  highlight,
+  onLinkClick,
+}: {
+  body: string;
+  /** The file's read nonce — also feeds the Mermaid id and the image cache-buster. */
+  fileNonce: number;
+  filePath: string;
+  sessionId: string;
+  /** Below this size Shiki tokenizes the source; above it the source view falls back to plain text. */
+  highlight: boolean;
+  onLinkClick: (target: string) => void;
+}) {
+  // useMemo so the components object is stable across renders of this memoized child; a fresh
+  // object literal would be a new identity on every commit and react-markdown would still
+  // consider `pre` a new component type. (React.memo already gates the parent, but the inline
+  // object would still flip the components prop identity *inside* an unmemoized child.)
+  const components = useMemo(
+    () => ({
+      // Fenced code block adapter: mermaid blocks route through MermaidBlock (heavy lazy-import
+      // SVG renderer); everything else falls through to the message stream's CodeBlock.
+      // Mermaid's required-unique id is `ws-<fileNonce>-<hash32(code)>` so a re-read (which
+      // bumps nonce) and a code edit both get a fresh container.
+      pre: ({ children }: { children?: ReactNode }) => {
+        if (!isValidElement(children)) return <pre>{children as ReactNode}</pre>;
+        const codeProps = children.props as { className?: string; children?: unknown };
+        const language = /language-([\w+-]+)/.exec(codeProps.className ?? "")?.[1] ?? "";
+        if (language === "mermaid") {
+          const raw = codeProps.children;
+          const code = (
+            typeof raw === "string"
+              ? raw
+              : Array.isArray(raw)
+                ? raw.filter((c) => typeof c === "string").join("")
+                : ""
+          ).replace(/\n$/, "");
+          return <MermaidBlock code={code} nonce={`ws-${fileNonce}-${hash32(code)}`} />;
+        }
+        return (
+          <CodeBlock
+            language={language}
+            code={extractCodeText(codeProps.children)}
+            highlight={highlight}
+          />
+        );
+      },
+      // Relative images are resolved against the md file's directory into the file API.
+      // `v=<fileNonce>` is the read nonce — a Workspace image rewritten under the same path
+      // would otherwise keep painting the previous bytes from the browser's image cache.
+      img: ({ src, alt }: { src?: unknown; alt?: unknown }) => (
+        <img
+          src={
+            typeof src === "string" && !EXTERNAL_REF_RE.test(src)
+              ? `${api.workspaceFileUrl(sessionId, resolveRelative(dirOf(filePath), src))}&v=${fileNonce}`
+              : (src as string | undefined)
+          }
+          alt={typeof alt === "string" ? alt : ""}
+          loading="lazy"
+          className="max-w-full"
+        />
+      ),
+      // External links open in a new tab; relative links point to a Workspace file (clicking
+      // switches the preview directly via onLinkClick); in-page anchors keep default behavior.
+      a: ({ href, children }: { href?: unknown; children?: ReactNode }) => {
+        if (typeof href !== "string" || href.startsWith("#")) {
+          return <a href={href as string | undefined}>{children}</a>;
+        }
+        if (EXTERNAL_REF_RE.test(href)) {
+          return (
+            <a href={href} target="_blank" rel="noreferrer">
+              {children}
+            </a>
+          );
+        }
+        const target = resolveRelative(dirOf(filePath), href);
+        return (
+          <a
+            href={api.workspaceFileUrl(sessionId, target)}
+            onClick={(e) => {
+              e.preventDefault();
+              onLinkClick(target);
+            }}
+          >
+            {children}
+          </a>
+        );
+      },
+    }),
+    [fileNonce, filePath, sessionId, highlight, onLinkClick],
+  );
+  return (
+    <ReactMarkdown
+      remarkPlugins={REMARK_PLUGINS}
+      rehypePlugins={REHYPE_PLUGINS}
+      components={components}
+    >
+      {body}
+    </ReactMarkdown>
+  );
+});
+
 function dirOf(filePath: string): string {
   return filePath.includes("/") ? filePath.slice(0, filePath.lastIndexOf("/")) : "";
 }
@@ -136,6 +275,13 @@ interface Preview {
   /** Bumped on every previewPath call; keys the isolated HTML iframe so re-opening the
    *  same path remounts it and refetches fresh content (its src alone would not change). */
   nonce: number;
+  /**
+   * Weak ETag from the read response (`W/"<mtimeMs>"`). Round-tripped as `If-Match` on save
+   * so a concurrent write to the file (most commonly: the Agent rewriting it during a turn)
+   * is reported as 409 instead of silently clobbered. Absent when the server didn't return
+   * one — in which case the save proceeds unconditionally.
+   */
+  etag?: string;
 }
 
 /** Monotonic counter behind Preview.nonce. Doubles as the staleness guard: previewPath
@@ -194,11 +340,29 @@ export function WorkspaceBrowser({
   );
   const [reloadTick, setReloadTick] = useState(0);
   const [showPath, setShowPath] = useState(false);
-  /** HTML / Markdown preview: rendered view (HTML via sandboxed iframe, Markdown via md-body) / source toggle. */
-  const [richView, setRichView] = useState<"rendered" | "source">("rendered");
+  /** HTML / Markdown preview: rendered view (HTML via sandboxed iframe, Markdown via md-body),
+   *  source toggle, and (Markdown only) the in-place editor view. The "edit" view is only
+   *  reachable through the toolbar pill that also mounts the editor; choosing "edit" from
+   *  outside of an active draft just enters the editor with the file's current content. */
+  const [richView, setRichView] = useState<"rendered" | "source" | "edit">("rendered");
   /** Error from the lazy source fetch of an isolated HTML preview: scoped to the source
    *  view — the rendered iframe keeps working no matter what happens to this fetch. */
   const [sourceError, setSourceError] = useState<string | null>(null);
+  /** True while the user has an unsaved .md draft (MarkdownEditor mounted). Independent of
+   *  `richView`: with editingMd=true the user can pick rendered/source/edit and the body routes
+   *  through draftMd in all three — switching view never loses keystrokes. Cleared on cancel,
+   *  on navigating away from the file, or when the user picks "Reload" in the conflict modal. */
+  const [editingMd, setEditingMd] = useState(false);
+  /** Current editor content, kept in sync with MarkdownEditor's onChange. The editor only
+   *  takes the initial `value` on mount and reports every keystroke through `onChange`; we
+   *  own the draft so the toolbar's Save button (and the Cmd/Ctrl-S keymap that ultimately
+   *  fires MarkdownEditor's onSave) both save the same bytes. */
+  const [draftMd, setDraftMd] = useState("");
+  /** Save in flight (disables Save button, shows busy state in the editor). */
+  const [savingMd, setSavingMd] = useState(false);
+  /** Conflict modal: non-null when the server rejected save with 409 file_conflict. Carries the
+   *  two user-facing resolutions (reload = discard edits; overwrite = re-send without If-Match). */
+  const [mdConflict, setMdConflict] = useState<null | { path: string }>(null);
   /** Mirror for previewPath: reading previewIsolated through a ref keeps the callback's
    *  identity stable when /api/me refreshes it (previewPath drives the openRequest locate
    *  effect, which must not replay on an auth-context change). */
@@ -276,6 +440,8 @@ export function WorkspaceBrowser({
       if (!refresh) {
         setRichView("rendered");
         setSourceError(null);
+        setEditingMd(false);
+        setDraftMd("");
       }
       if (IMAGE_EXTS.has(ext)) {
         present({ path: filePath, name, kind: "image", nonce });
@@ -309,6 +475,8 @@ export function WorkspaceBrowser({
           credentials: "same-origin",
         });
         if (!res.ok) throw new Error(String(res.status));
+        // Capture ETag for the edit-mode save round-trip (see Preview.etag).
+        const etag = res.headers.get("etag");
         const full = await res.text();
         const truncated = full.length > TEXT_PREVIEW_LIMIT;
         // Oversized Markdown defaults to the source view (benefiting from the unhighlighted
@@ -324,6 +492,7 @@ export function WorkspaceBrowser({
           content: truncated ? full.slice(0, TEXT_PREVIEW_LIMIT) : full,
           truncated,
           nonce,
+          etag: etag ?? undefined,
         });
       } catch {
         // A re-read that fails (the Agent deleted the file mid-turn, a blip) keeps the
@@ -385,6 +554,75 @@ export function WorkspaceBrowser({
     const open = previewPathRef.current;
     if (open !== null) void previewPath(open, { refresh: true });
   }, [reloadSignal, previewPath]);
+
+  /**
+   * Save the current .md edit. Outcomes:
+   * - Success: stay in edit mode (the user is still working — saving is a milestone, not
+   *   an exit), patch `preview.etag` from the response so the next save has a fresh
+   *   If-Match, and refresh the preview in the background so the saved bytes (which equal
+   *   `content`, since that's what we just PUT) flow into `preview.content`. When the user
+   *   later toggles to "rendered" / "source" they see the just-saved content; toggling back
+   *   to "edit" remounts the editor with `value={draftMd}` (their latest keystrokes).
+   * - 409 file_conflict: open the conflict modal — the user picks "reload" (discard edits,
+   *   re-fetch the current file from disk) or "overwrite" (force-save by retrying without
+   *   If-Match, accepting the clobber). Other errors surface as toasts.
+   *
+   * `force` skips the If-Match header, used after the user explicitly chose overwrite.
+   */
+  const saveMdEdit = useCallback(
+    async (content: string, opts?: { force?: boolean }): Promise<void> => {
+      if (!preview || preview.kind !== "md") return;
+      setSavingMd(true);
+      try {
+        const dataBase64 = btoa(unescape(encodeURIComponent(content)));
+        const newEtag = await api.uploadWorkspaceFile(
+          session.sessionId,
+          preview.path,
+          dataBase64,
+          !opts?.force ? preview.etag : undefined,
+        );
+        // Patch the ETag immediately so the next save carries the current version — previewPath's
+        // refresh will overwrite preview.etag with the same value once it lands, so this is
+        // belt-and-braces against a slow refresh.
+        if (newEtag !== null) {
+          setPreview((p) => (p && p.path === preview.path ? { ...p, etag: newEtag } : p));
+        }
+        toastSuccess(S.files.uploaded);
+        // Re-fetch the file in the background so the rendered/source views reflect what we
+        // just wrote. The editor stays mounted with `value={draftMd}` (still = `content`),
+        // so the user can keep typing. A new preview.nonce remounts the editor on a future
+        // view toggle; the remount re-snapshots draftMd, not preview.content, so no keystroke
+        // is lost.
+        void previewPath(preview.path, { refresh: true });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 409 && err.code === "file_conflict") {
+          setMdConflict({ path: preview.path });
+        } else {
+          toastError(apiErrorText(err));
+        }
+      } finally {
+        setSavingMd(false);
+      }
+    },
+    [preview, session.sessionId, previewPath],
+  );
+
+  /** Discard edits: clear the editor mount (the editor's own onChange buffer goes with it)
+   *  and exit edit mode. The Preview.content is left untouched on purpose — it is the
+   *  source of truth for the rendered view, and a stray edit would re-mount MarkdownEditor
+   *  on a stale value. */
+  const cancelMdEdit = useCallback((): void => {
+    setEditingMd(false);
+    setDraftMd("");
+  }, []);
+
+  /** Enter edit mode: prime the draft with the current rendered content and mount the
+   *  editor. The key on MarkdownEditor below uses `preview.nonce` so navigating to a
+   *  different file (or saving + reloading) remounts the editor and reseeds CodeMirror. */
+  const enterMdEdit = useCallback((): void => {
+    setDraftMd(preview?.content ?? "");
+    setEditingMd(true);
+  }, [preview?.content]);
 
   // External navigation command (clicking a file chip in a message / a file card): navigates to
   // the directory and previews the target path. Also refreshes the list: the target is most
@@ -488,8 +726,71 @@ export function WorkspaceBrowser({
           >
             {preview.name}
           </span>
-          {/* HTML / Markdown: rendered view / source toggle */}
-          {(preview.kind === "html" || preview.kind === "md") && (
+          {/* Markdown edit-mode toolbar: Save commits the pending edits via
+              uploadWorkspaceFile (with If-Match for conflict detection); Cancel drops the
+              draft and returns to the rendered view of the saved file. The view-mode pills
+              (rendered / source / edit) stay available while editing so the user can preview
+              their in-progress draft without losing keystrokes — switching between the three
+              views routes the body through `draftMd` (their current text) instead of
+              `preview.content` (the last-saved bytes). */}
+          {preview.kind === "md" ? (
+            <>
+              <div className="flex shrink-0 rounded-md bg-gray-100 p-0.5 dark:bg-gray-800">
+                {(
+                  [
+                    ["rendered", S.files.htmlRendered],
+                    ["source", S.files.htmlSource],
+                    ["edit", S.files.edit],
+                  ] as const
+                ).map(([key, label]) => {
+                  const active =
+                    key === "edit" ? editingMd && richView === "edit" : richView === key;
+                  const onClick = () => {
+                    if (key === "edit") {
+                      if (!editingMd) enterMdEdit();
+                      setRichView("edit");
+                    } else {
+                      setRichView(key);
+                    }
+                  };
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={onClick}
+                      className={`rounded px-2 py-0.5 text-xs transition-colors duration-150 ${
+                        active
+                          ? "bg-white font-medium text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100"
+                          : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {editingMd && (
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={cancelMdEdit}
+                    disabled={savingMd}
+                    className="inline-flex shrink-0 items-center rounded-md border border-transparent bg-transparent px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                  >
+                    {S.files.editCancel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void saveMdEdit(draftMd)}
+                    disabled={savingMd}
+                    className="inline-flex shrink-0 items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    {S.files.editSave}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : preview.kind === "html" ? (
             <div className="flex shrink-0 rounded-md bg-gray-100 p-0.5 dark:bg-gray-800">
               {(
                 [
@@ -511,7 +812,7 @@ export function WorkspaceBrowser({
                 </button>
               ))}
             </div>
-          )}
+          ) : null}
           {/* Ghost style, matching the toolbar's upload label (text-xs, transparent until hover) — the bordered secondary look stood out from every neighbor. */}
           {/* rel="noopener noreferrer" is load-bearing, not boilerplate: the preview must
               not keep a handle back to this window, which is the whole point of serving
@@ -531,6 +832,16 @@ export function WorkspaceBrowser({
                 </span>
               )}
             </a>
+          )}
+          {/* Multi-format export menu (MD / HTML / PDF / DOCX / EPUB / RTF / TXT). PDF and
+              Pandoc-backed items gate themselves on capabilities; MD and HTML always run. */}
+          {(preview.kind === "md" || preview.kind === "html") && (
+            <ExportMenu
+              sessionId={session.sessionId}
+              filePath={preview.path}
+              fileName={preview.name}
+              markdown={preview.content ?? ""}
+            />
           )}
           <a
             href={api.workspaceFileUrl(session.sessionId, preview.path, true)}
@@ -608,70 +919,53 @@ export function WorkspaceBrowser({
                 className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800"
               />
             )
+          ) : preview.kind === "md" && richView === "edit" && editingMd ? (
+            // Edit view: MarkdownEditor owns the body. The `key` re-mounts the editor on
+            // every new edit (different preview.nonce), which is how CodeMirror picks up the
+            // latest preview.content as its initial state — MarkdownEditor snapshots
+            // `value` on mount and ignores later changes by design (its comment). No
+            // surrounding `h-full` wrapper: the editor self-sizes (CodeMirror's own scroller
+            // caps at 60vh), so a 1-line document isn't padded out to the panel's full height
+            // and the outer panel doesn't grow a nested scrollbar (the bug behind #41.2).
+            <MarkdownEditor
+              key={`md-edit-${preview.nonce}`}
+              value={draftMd}
+              onChange={setDraftMd}
+              onSave={() => void saveMdEdit(draftMd)}
+              onCancel={cancelMdEdit}
+              saving={savingMd}
+            />
           ) : preview.kind === "md" && richView === "rendered" ? (
-            // Markdown's default rendered view: uses the same md-body layout as message bodies
-            // (ReactMarkdown outputs pure static HTML with no script execution surface, so no iframe sandbox is needed).
-            <>
-              <div className="md-body text-base leading-relaxed text-gray-800 dark:text-gray-100">
-                <ReactMarkdown
-                  remarkPlugins={REMARK_PLUGINS}
-                  rehypePlugins={REHYPE_PLUGINS}
-                  components={{
-                    // Relative images are resolved against the md file's directory into the file API (otherwise resolving against the app's origin would always 404).
-                    // `v` is the read nonce, not a cache-buster for its own sake: a
-                    // Workspace image is rewritten under the same path, and without it a
-                    // re-read of the Markdown would keep painting the previous bytes from
-                    // the browser's image cache.
-                    img: ({ src, alt }) => (
-                      <img
-                        src={
-                          typeof src === "string" && !EXTERNAL_REF_RE.test(src)
-                            ? `${api.workspaceFileUrl(
-                                session.sessionId,
-                                resolveRelative(dirOf(preview.path), src),
-                              )}&v=${preview.nonce}`
-                            : src
-                        }
-                        alt={alt ?? ""}
-                        loading="lazy"
-                        className="max-w-full"
-                      />
-                    ),
-                    // External links open in a new tab; relative links point to a Workspace
-                    // file, clicking switches the preview directly; in-page anchors keep default behavior.
-                    a: ({ href, children }) => {
-                      if (typeof href !== "string" || href.startsWith("#")) {
-                        return <a href={href}>{children}</a>;
-                      }
-                      if (EXTERNAL_REF_RE.test(href)) {
-                        return (
-                          <a href={href} target="_blank" rel="noreferrer">
-                            {children}
-                          </a>
-                        );
-                      }
-                      const target = resolveRelative(dirOf(preview.path), href);
-                      return (
-                        <a
-                          href={api.workspaceFileUrl(session.sessionId, target)}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            void previewPath(target);
-                          }}
-                        >
-                          {children}
-                        </a>
-                      );
-                    },
-                  }}
-                >
-                  {preview.content ?? ""}
-                </ReactMarkdown>
-              </div>
-              {preview.truncated && (
-                <p className="mt-1 text-xs text-gray-400">… {S.files.previewTruncated}</p>
-              )}
-            </>
+            // Markdown rendered view: prefer the in-flight draft over the on-disk content
+            // so toggling to "rendered" while editing shows the user's latest keystrokes.
+            // Falling back to preview.content covers the non-editing path.
+            (() => {
+              const body = editingMd ? draftMd : (preview.content ?? "");
+              return (
+                <>
+                  <div className="md-body text-base leading-relaxed text-gray-800 dark:text-gray-100">
+                    <RenderedMd
+                      body={body}
+                      fileNonce={preview.nonce}
+                      filePath={preview.path}
+                      sessionId={session.sessionId}
+                      highlight={body.length <= HIGHLIGHT_LIMIT}
+                      // previewPath is itself stable (useCallback with [session.sessionId] —
+                      // see previewPathRef comment); pass it directly so the memoized child
+                      // never sees a new onLinkClick identity on parent re-renders. An inline
+                      // `(t) => void previewPath(t)` would defeat this whole memoization: every
+                      // WorkspaceBrowser commit would flip the prop, the useMemo inside would
+                      // rebuild the components map, every fenced block would be a new component
+                      // type, and MermaidBlock would unmount/remount on each frame.
+                      onLinkClick={previewPath}
+                    />
+                  </div>
+                  {preview.truncated && (
+                    <p className="mt-1 text-xs text-gray-400">… {S.files.previewTruncated}</p>
+                  )}
+                </>
+              );
+            })()
           ) : preview.kind === "text" || preview.kind === "html" || preview.kind === "md" ? (
             preview.content === undefined ? (
               // Isolated HTML reaches the Source view before its lazy fetch lands: show a
@@ -686,16 +980,25 @@ export function WorkspaceBrowser({
               // The source view reuses the message stream's CodeBlock: Shiki dual-theme
               // highlighting + language label + copy button, no line wrapping, horizontal scroll
               // instead (wrapping code is a disaster for readability, see the old mobile styling).
-              <>
-                <CodeBlock
-                  language={languageForExtension(extOf(preview.name))}
-                  code={preview.content}
-                  highlight={preview.content.length <= HIGHLIGHT_LIMIT}
-                />
-                {preview.truncated && (
-                  <p className="mt-1 text-xs text-gray-400">… {S.files.previewTruncated}</p>
-                )}
-              </>
+              // While editing, prefer the in-flight draft over the on-disk content so the
+              // user sees the bytes they just typed (a preview.content re-read happens on save
+              // and lands in the background; the user toggling to source right now should not
+              // see yesterday's bytes).
+              (() => {
+                const sourceBody = editingMd ? draftMd : preview.content;
+                return (
+                  <>
+                    <CodeBlock
+                      language={languageForExtension(extOf(preview.name))}
+                      code={sourceBody}
+                      highlight={sourceBody.length <= HIGHLIGHT_LIMIT}
+                    />
+                    {preview.truncated && !editingMd && (
+                      <p className="mt-1 text-xs text-gray-400">… {S.files.previewTruncated}</p>
+                    )}
+                  </>
+                );
+              })()
             )
           ) : (
             <p className="text-sm text-gray-500 dark:text-gray-400">{S.files.previewUnsupported}</p>
@@ -885,6 +1188,37 @@ export function WorkspaceBrowser({
             ))}
           </ul>
         </div>
+      </ConfirmModal>
+
+      {/* Save-conflict resolution: server rejected save with 409 file_conflict. The user picks
+          Reload (discard edits, re-fetch the latest file from disk; the standard advice) or
+          Overwrite (force-save by re-sending without If-Match — only safe if the user has
+          confirmed the latest remote content is no longer relevant to them). */}
+      <ConfirmModal
+        open={mdConflict !== null}
+        title={S.files.editConflictBanner}
+        tone="danger"
+        confirmLabel={S.files.edit}
+        secondaryLabel={S.files.editSave}
+        onClose={() => setMdConflict(null)}
+        onConfirm={() => {
+          // Reload: discard the in-memory draft, drop the editor mount, refetch the file.
+          const path = mdConflict?.path;
+          setMdConflict(null);
+          setEditingMd(false);
+          setDraftMd("");
+          if (path) void previewPath(path, { refresh: true });
+        }}
+        onSecondary={() => {
+          // Overwrite: re-send the same draft without If-Match. Force flag bypasses the
+          // server's conflict check — once it's done the local ETag is no longer current
+          // anyway, so a future If-Match would fail; that's why we drop the modal here.
+          const draft = draftMd;
+          setMdConflict(null);
+          void saveMdEdit(draft, { force: true });
+        }}
+      >
+        <p className="text-sm text-gray-600 dark:text-gray-300">{S.files.editConflictBanner}</p>
       </ConfirmModal>
     </div>
   );

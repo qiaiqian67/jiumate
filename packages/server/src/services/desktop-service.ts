@@ -21,6 +21,7 @@
  */
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { DesktopUpdateStatus, DesktopUpdaterCommandMessage } from "../api/types.js";
+import type { DesktopExportRequest } from "../api/desktop-export.js";
 
 /** What the page may ask the shell's updater to do (the relayed command's `action`). */
 export type UpdaterCommand = DesktopUpdaterCommandMessage["action"];
@@ -33,6 +34,7 @@ export class DesktopService {
   private readonly tokenDigest: Buffer;
   private loginConsumed = false;
   private shutdownHandler: (() => void) | null = null;
+  private exportCommandSender: ((req: DesktopExportRequest) => void) | null = null;
 
   constructor(token: string) {
     this.tokenDigest = digest(token);
@@ -87,5 +89,19 @@ export class DesktopService {
     if (!this.updateCommandSender) return false;
     this.updateCommandSender(action);
     return true;
+  }
+
+  /**
+   * Same shape as the updater relay: index.ts wires the shell's message-port sender, the
+   * workspace-file export route asks us to forward PDF render requests. The port relays
+   * the result back over the same channel; DesktopExportPort owns the requestId dance.
+   */
+  onExportCommand(sender: (req: DesktopExportRequest) => void): void {
+    this.exportCommandSender = sender;
+  }
+
+  /** Relayed by buildAppDeps when constructing DesktopExportPort (server in desktop mode). */
+  sendExport(req: DesktopExportRequest): void {
+    this.exportCommandSender?.(req);
   }
 }

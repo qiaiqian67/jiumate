@@ -130,6 +130,8 @@ import type {
   UpdateCheckResponse,
   UpdateJobStatus,
   RestartResponse,
+  ServerCapabilities,
+  ServerExportFormat,
   DesktopUpdateStatusResponse,
   UsageErrorKind,
   UsageErrorsClearResponse,
@@ -144,7 +146,7 @@ import type {
   WorkspaceFilesResponse,
 } from "@prismshadow/linsight-server/api";
 import type { MCPServerConfig } from "@prismshadow/linsight-core/interfaces";
-import { apiFetch, apiFetchWithMeta } from "./client";
+import { apiFetch, apiFetchWithMeta, postBinary } from "./client";
 
 // Auth & user -----------------------------------------------------------------
 
@@ -984,12 +986,28 @@ export const workspaceFileUrl = (sessionId: string, path: string, download = fal
 export const workspaceFilePreviewUrl = (sessionId: string, path: string): string =>
   `/api/sessions/${sessionId}/files/preview-redirect?path=${encodeURIComponent(path)}`;
 
-export const uploadWorkspaceFile = (sessionId: string, path: string, dataBase64: string) =>
-  apiFetch<void>(`/api/sessions/${sessionId}/files/content`, {
+/**
+ * Save a workspace file. When `ifMatch` is supplied, the write is rejected with 409 if
+ * the file's mtime on disk no longer matches — the caller's read was on a stale version
+ * (most commonly: the Agent wrote to the same file while the user was editing). The
+ * caller is expected to read the file again (or accept the loss) before retrying. The
+ * returned ETag is the file's new mtime as a weak ETag (`W/"<mtimeMs>"`); pass it as
+ * `ifMatch` on the next save.
+ */
+export const uploadWorkspaceFile = async (
+  sessionId: string,
+  path: string,
+  dataBase64: string,
+  ifMatch?: string,
+): Promise<string | null> => {
+  const { etag } = await apiFetchWithMeta<void>(`/api/sessions/${sessionId}/files/content`, {
     method: "PUT",
     body: { dataBase64 },
     query: { path },
+    ...(ifMatch !== undefined ? { headers: { "If-Match": ifMatch } } : {}),
   });
+  return etag;
+};
 
 /** Batch file-existence check (message file cards): both out-of-bounds and missing paths simply don't appear in `existing`; always returns 200. */
 export const statSessionFiles = (sessionId: string, paths: string[]) =>
@@ -1219,3 +1237,35 @@ export const desktopUpdateDownload = () =>
 
 export const desktopUpdateInstall = () =>
   apiFetch<void>("/api/desktop/update/install", { method: "POST", body: {} });
+
+// Workspace-file export ----------------------------------------------------------------
+
+/**
+ * Capability snapshot read from `GET /api/version/capabilities`. Drives the Export
+ * menu's disabled state: a missing Pandoc binary greys out DOCX/EPUB/RTF/TXT; a CLI
+ * (non-desktop) runtime greys out PDF. The web fetches this once per dropdown open —
+ * a session that never opens the menu pays no round-trip.
+ */
+export const getServerCapabilities = () =>
+  apiFetch<ServerCapabilities>("/api/version/capabilities");
+
+/**
+ * Render an already-serialized HTML body to one of PDF / DOCX / EPUB / RTF / TXT.
+ * The web pre-renders Markdown → HTML (with Mermaid → SVG and KaTeX CSS) before
+ * calling; the server picks the format-specific path (Pandoc sub-process or the
+ * desktop shell's printToPDF). MD and HTML never go through this — they are handled
+ * client-side.
+ */
+export const exportWorkspaceFile = (
+  sessionId: string,
+  path: string,
+  format: ServerExportFormat,
+  html: string,
+): Promise<Blob> =>
+  postBinary(`/api/sessions/${encodeURIComponent(sessionId)}/files/export`, {
+    path,
+    format,
+    html,
+  });
+
+export type { ServerCapabilities, ServerExportFormat };

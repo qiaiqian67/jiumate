@@ -84,6 +84,15 @@ mac:
       arch: [arm64, x64]
     - target: zip
       arch: [arm64, x64]
+  # Pandoc binary, one entry per macOS arch. Lands under resources/pandoc/pandoc on
+  # both arm64 and x64; pandoc-path.ts picks the right one for the running arch.
+  extraResources:
+    - from: build/pandoc/darwin-arm64
+      to: pandoc
+      filter: ["**/*"]
+    - from: build/pandoc/darwin-x64
+      to: pandoc
+      filter: ["**/*"]
 
 win:
   # Same source PNG; electron-builder converts it to the multi-size ico embedded in the
@@ -125,6 +134,13 @@ win:
   extraResources:
     - from: build/minigit
       to: git
+    # Pandoc binary, downloaded by CI into build/pandoc (empty for local non-CI builds,
+    # hence the committed .gitkeep — an extraResources source must always exist). The
+    # shell resolves it via pandoc-path.ts; the unpacked folder lands under
+    # resources/pandoc and is what LINSIGHT_BUNDLED_PANDOC points at.
+    - from: build/pandoc/win32-x64
+      to: pandoc
+      filter: ["**/*"]
 
 nsis:
   oneClick: false
@@ -144,6 +160,12 @@ linux:
   artifactName: linsight-desktop-linux-${arch}.${ext}
   category: Development
   maintainer: Prism Shadow <zheng@prismshadow.com>
+  # Pandoc binary for Linux (x64): same shape as the Windows entry, lands under
+  # resources/pandoc/pandoc and is resolved by pandoc-path.ts.
+  extraResources:
+    - from: build/pandoc/linux-x64
+      to: pandoc
+      filter: ["**/*"]
   target:
     - target: AppImage
       arch: [x64]

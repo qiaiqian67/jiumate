@@ -54,8 +54,23 @@ export const DOCS_NAV: DocsSectionDef[] = [
       "skills",
       "models",
       "sessions-and-traces",
-      "capability-matrix",
-    ),
+    ).concat([
+      {
+        slug: "capability-matrix",
+        children: [
+          "capability-inventory",
+          "capability-gaps",
+          "capability-decisions",
+          "draft-g-collaboration",
+          "draft-h-editable-docs",
+          "draft-i-app-center",
+          "draft-j-knowledge-base",
+          "draft-k-companion",
+          "draft-l-project-bridge",
+          "draft-m-reminders",
+        ],
+      },
+    ]),
   },
   { id: "reference", pages: pages("cli", "server-api", "configuration", "security") },
 ];

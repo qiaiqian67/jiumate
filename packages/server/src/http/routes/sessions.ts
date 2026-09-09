@@ -29,6 +29,7 @@ import type {
   MessagesResponse,
   RecalledMessageResponse,
   ServerEvent,
+  ServerExportFormat,
   SessionCategory,
   SessionContextResponse,
   SessionCreateResponse,
@@ -87,6 +88,34 @@ const SESSION_TITLE_MAX = 120;
 const STAT_MAX_PATHS = 100;
 const STAT_MAX_PATH_LEN = 512;
 
+/**
+ * Weak ETag for a file based on its mtimeMs (changes whenever the file is written on disk).
+ * Weak on purpose: byte-for-byte equality is not the contract — only "did anything touch this
+ * file?" is, and a strong hash would cost an extra full-file read on every GET. A weak ETag
+ * also lets us not bother hashing the bytes the client just sent (the write just succeeded,
+ * so by definition mtimeMs now reflects the new state).
+ *
+ * mtimeMs on NTFS can carry sub-millisecond precision (100ns), which makes the float we
+ * read back through fs.stat not exactly equal to what toFixed(0) wrote into the ETag.
+ * `Math.round` collapses both sides to the same integer ms so a GET→PUT round-trip with no
+ * intervening write actually compares equal — without it, every legitimate save 409s.
+ */
+function weakEtag(mtimeMs: number): string {
+  return `W/"${Math.round(mtimeMs)}"`;
+}
+
+/**
+ * Parse a weak ETag header value (e.g. `W/"12345.678"`) back to its mtimeMs. Returns null on
+ * anything that does not match the exact shape — the caller rejects with 400, since honoring
+ * a malformed If-Match would silently turn the conflict check off.
+ */
+function parseWeakEtag(header: string): number | null {
+  const m = /^W\/"(-?\d+(?:\.\d+)?)"$/.exec(header.trim());
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
+}
+
 /** The four approval modes (shared with the chat-defaults route's validation). */
 export const APPROVAL_MODES: readonly ApprovalMode[] = [
   "allow-all",
@@ -98,6 +127,18 @@ export const APPROVAL_MODES: readonly ApprovalMode[] = [
 /** Unit-count bounds for windowed history reads (`tailLimit` / `limit`), and the `before` page's default. */
 const MESSAGES_PAGE_LIMIT_MAX = 1000;
 const MESSAGES_PAGE_LIMIT_DEFAULT = 200;
+
+/** Max bytes accepted by POST /files/export. The web pre-serializes MD to HTML here; a 50MB cap matches
+ *  the workspace-files read limit and keeps a runaway client from pinning the server. */
+const EXPORT_MAX_HTML_BYTES = 50 * 1024 * 1024;
+const EXPORT_FORMATS: readonly ServerExportFormat[] = ["pdf", "docx", "epub", "rtf", "txt"];
+const EXPORT_MIME: Record<ServerExportFormat, string> = {
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  epub: "application/epub+zip",
+  rtf: "application/rtf",
+  txt: "text/plain; charset=utf-8",
+};
 
 /** Parse one windowed-read unit-count param (positive integer, capped). */
 function pageLimit(raw: string, name: string): number {
@@ -1221,6 +1262,10 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
       row.workspace,
       rel,
     );
+    // Stat once for the ETag: read() doesn't surface mtimeMs (no caller needed it), and the
+    // editor's If-Match round-trip is the only consumer of this header.
+    const stats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
+    const mtimeMs = stats[0]?.mtimeMs;
     const disposition = download ? "attachment" : "inline";
     // Same-origin XSS defense: an inline HTML preview is always returned as plain text
     // (Workspace files may be Agent-generated and untrusted); downloads (attachment) keep
@@ -1245,6 +1290,7 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
         // A Workspace file is whatever the Agent last wrote to that path. Letting a browser
         // cache it by URL is how a re-read after a settled turn paints the previous version.
         "Cache-Control": "no-store",
+        ...(mtimeMs !== undefined ? { ETag: weakEtag(mtimeMs) } : {}),
         ...(preview && scriptable
           ? {
               "Content-Security-Policy":
@@ -1338,8 +1384,102 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     if (data.length > MAX_UPLOAD_BYTES) {
       throw new HttpError(413, "file_too_large", "Uploaded file exceeds the 14MB limit.");
     }
+    // ETag-based conflict detection: the in-place Markdown editor reads the file, captures
+    // its ETag, and sends it back as If-Match on save. If the file's mtime has moved (e.g.
+    // the Agent wrote to it during the user's edit), we reject so the user can choose
+    // "reload" (discard their edits) or "overwrite" (force-save without the check).
+    //
+    // A miss is reported as 409 even when the file no longer exists — the client's expectation
+    // was a known version; that version is gone, and the right move is for the user to reload
+    // and see the current state of the Workspace. Without this guard, a force-save would
+    // silently resurrect a deleted file.
+    const ifMatch = c.req.header("if-match");
+    if (ifMatch !== undefined) {
+      const expected = parseWeakEtag(ifMatch);
+      if (expected === null) {
+        throw badRequest('If-Match header must be a weak ETag like W/"<mtimeMs>".');
+      }
+      const stats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
+      const current = stats[0];
+      if (!current) {
+        throw new HttpError(409, "file_conflict", "File no longer exists; reload to retry.");
+      }
+      if (Math.round(current.mtimeMs) !== expected) {
+        throw new HttpError(
+          409,
+          "file_conflict",
+          "File changed on disk since you opened it. Reload to see the latest version.",
+        );
+      }
+    }
     await deps.workspaceFiles.write(row.workspace, rel, data);
-    return c.body(null, 204);
+    // Return the new mtime so subsequent saves can keep using If-Match without a separate
+    // GET round-trip (saves an entire file read on every save).
+    const newStats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
+    const newMtime = newStats[0]?.mtimeMs;
+    return new Response(null, {
+      status: 204,
+      headers: newMtime !== undefined ? { ETag: weakEtag(newMtime) } : {},
+    });
+  });
+
+  /**
+   * POST /api/sessions/:sessionId/files/export — render an HTML body (which the web has
+   * already pre-rendered from Markdown + mermaid + KaTeX) to one of PDF / DOCX / EPUB /
+   * RTF / TXT and stream the bytes back as a download.
+   *
+   * MD and HTML never come through this route — the web handles those locally because
+   * the renderer, the Mermaid engine, and KaTeX are web-only. DOCX/EPUB/RTF/TXT go via
+   * PandocService; PDF goes via the desktop shell's hidden BrowserWindow + printToPDF
+   * (cli runs return 503 because they have no shell to drive).
+   *
+   * The path param is the workspace-relative source: the route uses it only to (a) gate
+   * the request on a real file (so a typo'd `format=pdf` doesn't dump bytes from a
+   * non-existent path) and (b) derive the output filename's stem. The exported bytes
+   * themselves are NOT written to the workspace — the browser saves them.
+   */
+  app.post("/:sessionId/files/export", async (c) => {
+    const row = resolveSession(c);
+    const body = await readJson(c);
+    const rel = typeof body.path === "string" ? body.path : "";
+    const format = typeof body.format === "string" ? body.format : "";
+    const html = typeof body.html === "string" ? body.html : "";
+    if (!(EXPORT_FORMATS as readonly string[]).includes(format)) {
+      throw badRequest(`Unknown export format: ${format}`);
+    }
+    if (Buffer.byteLength(html, "utf8") > EXPORT_MAX_HTML_BYTES) {
+      throw new HttpError(413, "html_too_large", "HTML body exceeds the 50MB limit.");
+    }
+    const fmt = format as ServerExportFormat;
+    // Gate on a real source file: a typo'd path otherwise becomes a silent 200 with
+    // download-attached bytes from a non-existent file.
+    const existing = await deps.workspaceFiles.statExisting(row.workspace, [rel]);
+    if (existing.length === 0) {
+      throw new HttpError(404, "path_not_found", "File does not exist.");
+    }
+    // Derive `<stem>.<format>`. `path.basename(rel, ext)` is too eager when the stem
+    // itself contains dots (e.g. "report.v2.md"), so we strip only the last extension.
+    const stem = rel.includes("/") ? rel.slice(rel.lastIndexOf("/") + 1) : rel;
+    const dot = stem.lastIndexOf(".");
+    const fileStem = dot > 0 ? stem.slice(0, dot) : stem;
+    const filename = fileStem ? `${fileStem}.${fmt}` : `export.${fmt}`;
+    const bytes =
+      fmt === "pdf"
+        ? deps.desktopExportPort
+          ? await deps.desktopExportPort.printHtmlToPdf(html, filename)
+          : await Promise.reject(
+              new HttpError(503, "pdf_unavailable_in_cli", "PDF export requires the desktop app."),
+            )
+        : await deps.pandoc.exportHtmlTo(html, fmt);
+    return new Response(new Uint8Array(bytes), {
+      status: 200,
+      headers: {
+        "Content-Type": EXPORT_MIME[fmt],
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "no-store",
+      },
+    });
   });
 
   /**

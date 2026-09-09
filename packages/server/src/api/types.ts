@@ -3433,3 +3433,25 @@ export interface MachinesResponse {
   imageVersion: string | null;
   job: MachineJob | null;
 }
+
+// ---------------------------------------------------------------------------
+// Workspace-file export
+// ---------------------------------------------------------------------------
+
+/**
+ * Server-side export formats: anything that goes through POST /files/export. MD and
+ * HTML never reach the server (the web renders them locally), so they are not in this
+ * list. The route validates `body.format` against this exact set.
+ */
+export type ServerExportFormat = "pdf" | "docx" | "epub" | "rtf" | "txt";
+
+/**
+ * GET /api/version/capabilities — the menu's "which formats are live right now?" snapshot.
+ * Both halves are fail-soft: pandoc.version() may throw on a broken binary, and the
+ * desktop-export port is null outside desktop mode, so the route reports the unavailability
+ * rather than 503'ing the whole call.
+ */
+export interface ServerCapabilities {
+  pandoc: { available: boolean; version: string | null };
+  pdf: { available: boolean; reason: string | null };
+}

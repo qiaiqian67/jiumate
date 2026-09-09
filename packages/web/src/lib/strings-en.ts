@@ -2254,6 +2254,35 @@ Scenarios:
     upload: "Upload",
     download: "Download",
     openInNewTab: "Open in new tab",
+    /** Edit-mode toggle pill on the .md preview toolbar (visible only when editable-doc plugin ships). */
+    edit: "Edit",
+    /** Edit-mode save action (the inline submit). */
+    editSave: "Save",
+    /** Edit-mode discard action. */
+    editCancel: "Cancel",
+    /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */
+    editConflictBanner: "The file was modified elsewhere. Saving will overwrite the remote copy.",
+    /** Confirm-modal copy for the discard path when the user has unsaved edits. */
+    editDiscardConfirm: "Discard unsaved changes?",
+    /** Dropdown label on the file preview toolbar — opens the multi-format export menu. */
+    export: "Export",
+    exportMd: "Markdown",
+    exportHtml: "HTML",
+    exportPdf: "PDF",
+    exportDocx: "Word (.docx)",
+    exportEpub: "EPUB",
+    exportRtf: "RTF",
+    exportTxt: "Plain text (.txt)",
+    /** Shown on the dropdown trigger while a conversion is in flight (mermaid pre-render + server-side format). */
+    /** Shown on the dropdown trigger while a conversion is in flight (mermaid pre-render + server-side format). */
+    exportPreparing: (label: string): string => `Preparing ${label}…`,
+    /** Toast when the user picks "Markdown" on an empty file — a 0-byte .md download is a silent no-op
+     *  in the browser, so we surface the real reason instead of letting the click click nothing. */
+    exportEmptyMarkdown: "This file is empty — there is nothing to export.",
+    /** Tooltip on any greyed-out menu item: the dropdown disables items whose backing service is missing.
+     *  Parameterised by the server-supplied reason (e.g. "Pandoc is not installed." / "PDF export requires the desktop app.")
+     *  so the dropdown can echo the exact capability string rather than a generic "unavailable" copy. */
+    exportUnavailableReason: (reason: string): string => reason,
     previewNotIsolatedHint:
       "This address has no separate preview origin, so the page opens sandboxed: localStorage, cookies and third-party embeds will not work. Reach the app over 127.0.0.1 or localhost, or set LINSIGHT_PREVIEW_ORIGIN.",
     refresh: "Refresh",
