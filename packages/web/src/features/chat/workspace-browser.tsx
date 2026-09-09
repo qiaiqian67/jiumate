@@ -12,8 +12,8 @@
  * got a wide allotment of space) — so the list and preview are shown mutually exclusively,
  * routed by whether the existing `preview` is null, without introducing extra state.
  */
-import { isValidElement, useCallback, useEffect, useRef, useState } from "react";
-import type { ChangeEvent } from "react";
+import { isValidElement, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import { REHYPE_PLUGINS, REMARK_PLUGINS } from "../../lib/markdown-plugins";
 import type { SessionInfo, WorkspaceFilesResponse } from "@prismshadow/linsight-server/api";
@@ -106,6 +106,123 @@ function hash32(s: string): string {
   }
   return (h >>> 0).toString(36);
 }
+
+/**
+ * ReactMarkdown's components map, isolated as a memoized child so that *its* component-type
+ * identities for `pre` / `img` / `a` stay stable across the parent's renders. Without this
+ * memo, every WorkspaceBrowser commit produces a fresh object literal — and every fresh `pre`
+ * function is a *new* component type to react-markdown, so React unmounts and remounts every
+ * fenced block on every parent render. The visible cost is exactly what the user reported:
+ * MermaidBlock's useEffect clears the container, async-imports mermaid, calls render(), and
+ * the cycle repeats in a visible flicker until something in the parent settles. Memoizing the
+ * child means the components map only changes when one of its captured inputs (the file path,
+ * the file nonce, the body length, the session id, the preview-path callback) actually
+ * changes — none of which churn during reading.
+ */
+const RenderedMd = memo(function RenderedMd({
+  body,
+  fileNonce,
+  filePath,
+  sessionId,
+  highlight,
+  onLinkClick,
+}: {
+  body: string;
+  /** The file's read nonce — also feeds the Mermaid id and the image cache-buster. */
+  fileNonce: number;
+  filePath: string;
+  sessionId: string;
+  /** Below this size Shiki tokenizes the source; above it the source view falls back to plain text. */
+  highlight: boolean;
+  onLinkClick: (target: string) => void;
+}) {
+  // useMemo so the components object is stable across renders of this memoized child; a fresh
+  // object literal would be a new identity on every commit and react-markdown would still
+  // consider `pre` a new component type. (React.memo already gates the parent, but the inline
+  // object would still flip the components prop identity *inside* an unmemoized child.)
+  const components = useMemo(
+    () => ({
+      // Fenced code block adapter: mermaid blocks route through MermaidBlock (heavy lazy-import
+      // SVG renderer); everything else falls through to the message stream's CodeBlock.
+      // Mermaid's required-unique id is `ws-<fileNonce>-<hash32(code)>` so a re-read (which
+      // bumps nonce) and a code edit both get a fresh container.
+      pre: ({ children }: { children?: ReactNode }) => {
+        if (!isValidElement(children)) return <pre>{children as ReactNode}</pre>;
+        const codeProps = children.props as { className?: string; children?: unknown };
+        const language = /language-([\w+-]+)/.exec(codeProps.className ?? "")?.[1] ?? "";
+        if (language === "mermaid") {
+          const raw = codeProps.children;
+          const code = (
+            typeof raw === "string"
+              ? raw
+              : Array.isArray(raw)
+                ? raw.filter((c) => typeof c === "string").join("")
+                : ""
+          ).replace(/\n$/, "");
+          return <MermaidBlock code={code} nonce={`ws-${fileNonce}-${hash32(code)}`} />;
+        }
+        return (
+          <CodeBlock
+            language={language}
+            code={extractCodeText(codeProps.children)}
+            highlight={highlight}
+          />
+        );
+      },
+      // Relative images are resolved against the md file's directory into the file API.
+      // `v=<fileNonce>` is the read nonce — a Workspace image rewritten under the same path
+      // would otherwise keep painting the previous bytes from the browser's image cache.
+      img: ({ src, alt }: { src?: unknown; alt?: unknown }) => (
+        <img
+          src={
+            typeof src === "string" && !EXTERNAL_REF_RE.test(src)
+              ? `${api.workspaceFileUrl(sessionId, resolveRelative(dirOf(filePath), src))}&v=${fileNonce}`
+              : (src as string | undefined)
+          }
+          alt={typeof alt === "string" ? alt : ""}
+          loading="lazy"
+          className="max-w-full"
+        />
+      ),
+      // External links open in a new tab; relative links point to a Workspace file (clicking
+      // switches the preview directly via onLinkClick); in-page anchors keep default behavior.
+      a: ({ href, children }: { href?: unknown; children?: ReactNode }) => {
+        if (typeof href !== "string" || href.startsWith("#")) {
+          return <a href={href as string | undefined}>{children}</a>;
+        }
+        if (EXTERNAL_REF_RE.test(href)) {
+          return (
+            <a href={href} target="_blank" rel="noreferrer">
+              {children}
+            </a>
+          );
+        }
+        const target = resolveRelative(dirOf(filePath), href);
+        return (
+          <a
+            href={api.workspaceFileUrl(sessionId, target)}
+            onClick={(e) => {
+              e.preventDefault();
+              onLinkClick(target);
+            }}
+          >
+            {children}
+          </a>
+        );
+      },
+    }),
+    [fileNonce, filePath, sessionId, highlight, onLinkClick],
+  );
+  return (
+    <ReactMarkdown
+      remarkPlugins={REMARK_PLUGINS}
+      rehypePlugins={REHYPE_PLUGINS}
+      components={components}
+    >
+      {body}
+    </ReactMarkdown>
+  );
+});
 
 function dirOf(filePath: string): string {
   return filePath.includes("/") ? filePath.slice(0, filePath.lastIndexOf("/")) : "";
@@ -827,95 +944,14 @@ export function WorkspaceBrowser({
               return (
                 <>
                   <div className="md-body text-base leading-relaxed text-gray-800 dark:text-gray-100">
-                    <ReactMarkdown
-                      remarkPlugins={REMARK_PLUGINS}
-                      rehypePlugins={REHYPE_PLUGINS}
-                      components={{
-                        // Fenced code block adapter: mermaid blocks route through MermaidBlock
-                        // (heavy lazy-import SVG renderer); everything else falls through to
-                        // the message stream's CodeBlock. Mermaid's required-unique id is
-                        // derived from the file's preview.nonce and a hash of the source, so a
-                        // re-read (which bumps nonce) and a code edit both get a fresh
-                        // container.
-                        pre: ({ children }) => {
-                          if (!isValidElement(children)) return <pre>{children}</pre>;
-                          const codeProps = children.props as {
-                            className?: string;
-                            children?: unknown;
-                          };
-                          const language =
-                            /language-([\w+-]+)/.exec(codeProps.className ?? "")?.[1] ?? "";
-                          if (language === "mermaid") {
-                            const code = String(
-                              Array.isArray(codeProps.children)
-                                ? codeProps.children.filter((c) => typeof c === "string").join("")
-                                : (codeProps.children ?? ""),
-                            ).replace(/\n$/, "");
-                            return (
-                              <MermaidBlock
-                                code={code}
-                                nonce={`ws-${preview.nonce}-${hash32(code)}`}
-                              />
-                            );
-                          }
-                          return (
-                            <CodeBlock
-                              language={language}
-                              code={extractCodeText(codeProps.children)}
-                              highlight={body.length <= HIGHLIGHT_LIMIT}
-                            />
-                          );
-                        },
-                        // Relative images are resolved against the md file's directory into the file API (otherwise resolving against the app's origin would always 404).
-                        // `v` is the read nonce, not a cache-buster for its own sake: a
-                        // Workspace image is rewritten under the same path, and without it a
-                        // re-read of the Markdown would keep painting the previous bytes from
-                        // the browser's image cache.
-                        img: ({ src, alt }) => (
-                          <img
-                            src={
-                              typeof src === "string" && !EXTERNAL_REF_RE.test(src)
-                                ? `${api.workspaceFileUrl(
-                                    session.sessionId,
-                                    resolveRelative(dirOf(preview.path), src),
-                                  )}&v=${preview.nonce}`
-                                : src
-                            }
-                            alt={alt ?? ""}
-                            loading="lazy"
-                            className="max-w-full"
-                          />
-                        ),
-                        // External links open in a new tab; relative links point to a Workspace
-                        // file, clicking switches the preview directly; in-page anchors keep default behavior.
-                        a: ({ href, children }) => {
-                          if (typeof href !== "string" || href.startsWith("#")) {
-                            return <a href={href}>{children}</a>;
-                          }
-                          if (EXTERNAL_REF_RE.test(href)) {
-                            return (
-                              <a href={href} target="_blank" rel="noreferrer">
-                                {children}
-                              </a>
-                            );
-                          }
-                          const target = resolveRelative(dirOf(preview.path), href);
-                          return (
-                            <a
-                              href={api.workspaceFileUrl(session.sessionId, target)}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                void previewPath(target);
-                              }}
-                            >
-                              {children}
-                            </a>
-                          );
-                        },
-                      }}
-                    >
-                      {body}
-                    </ReactMarkdown>
+                    <RenderedMd
+                      body={body}
+                      fileNonce={preview.nonce}
+                      filePath={preview.path}
+                      sessionId={session.sessionId}
+                      highlight={body.length <= HIGHLIGHT_LIMIT}
+                      onLinkClick={(t) => void previewPath(t)}
+                    />
                   </div>
                   {preview.truncated && (
                     <p className="mt-1 text-xs text-gray-400">… {S.files.previewTruncated}</p>
