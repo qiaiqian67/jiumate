@@ -40,6 +40,8 @@ export interface ApiFetchOptions {
   body?: unknown;
   /** Query parameters (undefined values are skipped). */
   query?: Record<string, string | number | undefined>;
+  /** Extra request headers (e.g. `If-Match` for ETag-based conflict detection). */
+  headers?: Record<string, string>;
 }
 
 /** Response metadata a caller may need alongside the parsed body. */
@@ -53,6 +55,12 @@ export interface ApiFetchMeta {
    * is readable cross-origin too.
    */
   serverNowMs: number | null;
+  /**
+   * Weak ETag from the response, if the server sent one. Null when absent. Used by the
+   * in-place Markdown editor to round-trip a file's mtime through `If-Match` on save, so
+   * a concurrent write by the Agent is reported as 409 instead of silently overwritten.
+   */
+  etag: string | null;
 }
 
 /** Makes an API request; non-2xx responses uniformly throw ApiError; 204/empty body returns undefined. */
@@ -82,10 +90,10 @@ export async function apiFetchWithMeta<T>(
       credentials: "same-origin",
       ...(options.body !== undefined
         ? {
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
             body: JSON.stringify(options.body),
           }
-        : {}),
+        : { ...(options.headers ? { headers: options.headers } : {}) }),
     });
   } catch {
     throw new ApiError(0, "network_error", S.errors.networkError);
@@ -107,11 +115,12 @@ export async function apiFetchWithMeta<T>(
 
   const headerDate = Date.parse(response.headers.get("date") ?? "");
   const serverNowMs = Number.isFinite(headerDate) ? headerDate : null;
+  const etag = response.headers.get("etag");
 
-  if (response.status === 204) return { data: undefined as T, serverNowMs };
+  if (response.status === 204) return { data: undefined as T, serverNowMs, etag };
   const text = await response.text();
-  if (!text) return { data: undefined as T, serverNowMs };
-  return { data: JSON.parse(text) as T, serverNowMs };
+  if (!text) return { data: undefined as T, serverNowMs, etag };
+  return { data: JSON.parse(text) as T, serverNowMs, etag };
 }
 
 /**

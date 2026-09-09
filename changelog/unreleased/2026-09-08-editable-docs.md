@@ -15,7 +15,7 @@ The Files panel's `.md` preview gained an **Edit** toggle alongside Rendered and
 
 ## Conflict banner
 
-- If the Agent rewrites the same `.md` file while the user has a dirty draft, a yellow banner appears with **Reload** (replaces the editor draft with the latest server bytes) and **Save anyway** (drops the banner; the actual save still goes through the Save button). The server is last-write-wins; the banner is the warning, not a lock.
+- If the Agent rewrites the same `.md` file while the user has a dirty draft, a yellow banner appears with **Reload** (replaces the editor draft with the latest server bytes) and **Save anyway** (drops the banner; the actual save still goes through the Save button). Server-side enforcement of the same check — `If-Match` / `ETag` round-trip that turns a banner bypass into a `409 file_conflict` — landed the next day in [2026-09-09-editable-docs-server-conflict](./2026-09-09-editable-docs-server-conflict.md); this entry covers the UI surface only.
 
 ## Discard-confirm on Cancel / back-to-list
 

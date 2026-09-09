@@ -5,7 +5,8 @@
  * state/locale.tsx, which calls `setActiveStrings` to switch and remounts the whole
  * tree keyed by locale, so `S.x` reads in components always reflect the current
  * language (module-level constants do not update on switch — keep reads inside components).
- * Keep domain terms capitalized in English — Workspace, Token, Task, Session, Project, Trace.
+ * Only Token and Agent stay as untranslated English domain terms; translate all other
+ * surface labels (Session, Requests, Workspace, Task, Project, Trace) to Chinese in zh.
  * "agent" is a common noun: lowercase mid-sentence, capitalized only at the start of a
  * label/sentence or in a proper name (Agent State, AgentHub). zh names the SURFACE
  * 「智能体」 — the nav entry, the grouping option, the panel — and keeps "Agent" as-is
@@ -406,7 +407,7 @@ export const zh = {
   },
 
   project: {
-    switcher: "Project",
+    switcher: "项目",
     create: "新建 Project",
     createTitle: "新建 Project",
     id: "Project id",
@@ -1102,13 +1103,13 @@ export const zh = {
     target: "目标",
     targetNew: "每次新建会话",
     targetSession: "绑定 Session",
-    sessionId: "Session",
+    sessionId: "会话",
     /** Bind-Session picker (searchable dropdown): trigger placeholder, search box, and empty states. */
     chooseSession: "选择要绑定的 Session",
     sessionSearch: "搜索标题或 Session id…",
     sessionNoMatch: "无匹配的 Session",
     sessionEmpty: "该 Agent 暂无 Session",
-    workspace: "Workspace",
+    workspace: "工作区",
     model: "Model",
     modelDefault: "Project 默认",
     deleteTitle: "删除定时任务",
@@ -1513,11 +1514,11 @@ Benchmark：
           "先看已有记忆索引避免重复，再逐条问我该记什么、要不要改已有的，我确认后你写进 Memory。",
       },
     },
-    sessionList: "Session",
+    sessionList: "会话",
     defaultSessionTitle: "新对话",
     agent: "Agent",
     model: "Model",
-    workspace: "Workspace",
+    workspace: "工作区",
     workspaceHint: "留空自动创建临时工作区；指定时必须是服务器上已存在的目录",
     /** The same rule as `workspaceHint`, short enough to sit under a form field. */
     workspaceHintShort: "留空自动创建临时工作区",
@@ -2254,7 +2255,7 @@ Benchmark：
     last7d: "近 7 天",
     total: "累计",
     tokens: "Token",
-    requests: "Requests",
+    requests: "请求",
     from: "起始日期",
     to: "结束日期",
     colCacheRead: "缓存命中",
@@ -2368,7 +2369,7 @@ Benchmark：
     colDuration: "耗时",
     colCase: "题目",
     colRun: "运行",
-    colSession: "Session",
+    colSession: "会话",
   },
 
   // Server error code → localized copy (the server's message is hardcoded Chinese; this is only a fallback for unknown codes).

@@ -123,3 +123,97 @@ test("Mod-S saves the draft through the same path as the Save button", async ({ 
   expect(fetched.ok(), "re-fetch file").toBeTruthy();
   expect(await fetched.text()).toBe(CTRL_S_CONTENT);
 });
+
+/**
+ * Conflict detection: the Agent rewrites the same .md file after the user opened the editor
+ * but before they hit Save. PUT carries an If-Match derived from the GET's ETag, which is
+ * stale, so the server returns 409 file_conflict. The modal must surface; picking "Reload"
+ * discards the draft and shows the Agent's new bytes; picking "Save anyway" re-PUTs without
+ * If-Match and overwrites. The two outcomes are asserted end-to-end against the file URL.
+ */
+test("concurrent Agent write: editor's save is rejected with 409 and the modal resolves correctly", async ({
+  page,
+}) => {
+  const sid = await seedSessionAndOpen(page, SEED_CONTENT);
+
+  await page.getByTestId("dock-toggle-right").click();
+  await page.getByTestId("dock-pick-workspace").click();
+  await page.getByRole("button", { name: "notes.md" }).click();
+  await page.getByRole("button", { name: "编辑", exact: true }).click();
+
+  const editor = page.locator(".cm-content");
+  await editor.waitFor();
+  await editor.click();
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("# User's edit in progress\n");
+
+  // Simulate the Agent landing a new write to the same path while the user is still editing:
+  // bumping the file's mtime means the If-Match the editor captured at read time is now stale,
+  // and the server will reject the save. Goes through the same API the Agent's exec tools use,
+  // so the spec exercises the real 409 path, not a mocked stub.
+  const AGENT_CONTENT = "# Agent's new content\n";
+  const agentPut = await page.request.put(
+    `${BASE}/api/sessions/${sid}/files/content?path=notes.md`,
+    { data: { dataBase64: Buffer.from(AGENT_CONTENT, "utf8").toString("base64") } },
+  );
+  expect(agentPut.ok(), "agent PUT").toBeTruthy();
+
+  // The editor's Save click should now surface the conflict modal — the modal's primary and
+  // secondary buttons (Edit / Save) reuse the same Chinese strings as the toolbar pills, so
+  // scope locators to the dialog via its aria-label (set by Modal from `title` = the i18n
+  // string `S.files.editConflictBanner` from strings.ts).
+  await page.getByRole("button", { name: "保存", exact: true }).click();
+  const conflictDialog = page.locator('[role="dialog"][aria-label*="修改"]');
+  await expect(conflictDialog).toBeVisible();
+
+  // First branch: Reload (primary). Drops the draft, exits edit mode, re-fetches the file,
+  // renders the Agent's bytes. The file on disk matches the Agent's PUT, NOT the user's draft.
+  await conflictDialog.getByRole("button", { name: "编辑", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Agent's new content" })).toBeVisible();
+  // Draft is gone: re-opening Edit starts from the on-disk content, not the typed string.
+  await page.getByRole("button", { name: "编辑", exact: true }).click();
+  await editor.waitFor();
+  await expect(editor).toContainText("Agent's new content");
+  await expect(editor).not.toContainText("User's edit in progress");
+
+  const fetched = await page.request.get(`${BASE}/api/sessions/${sid}/files/content?path=notes.md`);
+  expect(await fetched.text()).toBe(AGENT_CONTENT);
+});
+
+test("concurrent Agent write + Save anyway: force-save overwrites the Agent's bytes", async ({
+  page,
+}) => {
+  const sid = await seedSessionAndOpen(page, SEED_CONTENT);
+
+  await page.getByTestId("dock-toggle-right").click();
+  await page.getByTestId("dock-pick-workspace").click();
+  await page.getByRole("button", { name: "notes.md" }).click();
+  await page.getByRole("button", { name: "编辑", exact: true }).click();
+
+  const editor = page.locator(".cm-content");
+  await editor.waitFor();
+  await editor.click();
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("# Force-saved user content\n");
+
+  const AGENT_CONTENT = "# Agent wrote this first\n";
+  await page.request.put(`${BASE}/api/sessions/${sid}/files/content?path=notes.md`, {
+    data: { dataBase64: Buffer.from(AGENT_CONTENT, "utf8").toString("base64") },
+  });
+
+  await page.getByRole("button", { name: "保存", exact: true }).click();
+  const conflictDialog = page.locator('[role="dialog"][aria-label*="修改"]');
+  await expect(conflictDialog).toBeVisible();
+
+  // Secondary branch: "Save anyway" — secondaryLabel is S.files.editSave ("保存"). Re-PUTs
+  // without If-Match so the server lets the write through. The user's draft must end up on disk.
+  await conflictDialog.getByRole("button", { name: "保存", exact: true }).click();
+
+  await expect(page.getByText("已上传")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Force-saved user content" })).toBeVisible();
+
+  const fetched = await page.request.get(`${BASE}/api/sessions/${sid}/files/content?path=notes.md`);
+  expect(await fetched.text()).toBe("# Force-saved user content\n");
+});

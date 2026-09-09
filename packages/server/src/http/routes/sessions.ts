@@ -88,6 +88,34 @@ const SESSION_TITLE_MAX = 120;
 const STAT_MAX_PATHS = 100;
 const STAT_MAX_PATH_LEN = 512;
 
+/**
+ * Weak ETag for a file based on its mtimeMs (changes whenever the file is written on disk).
+ * Weak on purpose: byte-for-byte equality is not the contract — only "did anything touch this
+ * file?" is, and a strong hash would cost an extra full-file read on every GET. A weak ETag
+ * also lets us not bother hashing the bytes the client just sent (the write just succeeded,
+ * so by definition mtimeMs now reflects the new state).
+ *
+ * mtimeMs on NTFS can carry sub-millisecond precision (100ns), which makes the float we
+ * read back through fs.stat not exactly equal to what toFixed(0) wrote into the ETag.
+ * `Math.round` collapses both sides to the same integer ms so a GET→PUT round-trip with no
+ * intervening write actually compares equal — without it, every legitimate save 409s.
+ */
+function weakEtag(mtimeMs: number): string {
+  return `W/"${Math.round(mtimeMs)}"`;
+}
+
+/**
+ * Parse a weak ETag header value (e.g. `W/"12345.678"`) back to its mtimeMs. Returns null on
+ * anything that does not match the exact shape — the caller rejects with 400, since honoring
+ * a malformed If-Match would silently turn the conflict check off.
+ */
+function parseWeakEtag(header: string): number | null {
+  const m = /^W\/"(-?\d+(?:\.\d+)?)"$/.exec(header.trim());
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
+}
+
 /** The four approval modes (shared with the chat-defaults route's validation). */
 export const APPROVAL_MODES: readonly ApprovalMode[] = [
   "allow-all",
@@ -1234,6 +1262,10 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
       row.workspace,
       rel,
     );
+    // Stat once for the ETag: read() doesn't surface mtimeMs (no caller needed it), and the
+    // editor's If-Match round-trip is the only consumer of this header.
+    const stats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
+    const mtimeMs = stats[0]?.mtimeMs;
     const disposition = download ? "attachment" : "inline";
     // Same-origin XSS defense: an inline HTML preview is always returned as plain text
     // (Workspace files may be Agent-generated and untrusted); downloads (attachment) keep
@@ -1258,6 +1290,7 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
         // A Workspace file is whatever the Agent last wrote to that path. Letting a browser
         // cache it by URL is how a re-read after a settled turn paints the previous version.
         "Cache-Control": "no-store",
+        ...(mtimeMs !== undefined ? { ETag: weakEtag(mtimeMs) } : {}),
         ...(preview && scriptable
           ? {
               "Content-Security-Policy":
@@ -1351,8 +1384,43 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     if (data.length > MAX_UPLOAD_BYTES) {
       throw new HttpError(413, "file_too_large", "Uploaded file exceeds the 14MB limit.");
     }
+    // ETag-based conflict detection: the in-place Markdown editor reads the file, captures
+    // its ETag, and sends it back as If-Match on save. If the file's mtime has moved (e.g.
+    // the Agent wrote to it during the user's edit), we reject so the user can choose
+    // "reload" (discard their edits) or "overwrite" (force-save without the check).
+    //
+    // A miss is reported as 409 even when the file no longer exists — the client's expectation
+    // was a known version; that version is gone, and the right move is for the user to reload
+    // and see the current state of the Workspace. Without this guard, a force-save would
+    // silently resurrect a deleted file.
+    const ifMatch = c.req.header("if-match");
+    if (ifMatch !== undefined) {
+      const expected = parseWeakEtag(ifMatch);
+      if (expected === null) {
+        throw badRequest('If-Match header must be a weak ETag like W/"<mtimeMs>".');
+      }
+      const stats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
+      const current = stats[0];
+      if (!current) {
+        throw new HttpError(409, "file_conflict", "File no longer exists; reload to retry.");
+      }
+      if (Math.round(current.mtimeMs) !== expected) {
+        throw new HttpError(
+          409,
+          "file_conflict",
+          "File changed on disk since you opened it. Reload to see the latest version.",
+        );
+      }
+    }
     await deps.workspaceFiles.write(row.workspace, rel, data);
-    return c.body(null, 204);
+    // Return the new mtime so subsequent saves can keep using If-Match without a separate
+    // GET round-trip (saves an entire file read on every save).
+    const newStats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
+    const newMtime = newStats[0]?.mtimeMs;
+    return new Response(null, {
+      status: 204,
+      headers: newMtime !== undefined ? { ETag: weakEtag(newMtime) } : {},
+    });
   });
 
   /**

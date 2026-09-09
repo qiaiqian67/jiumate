@@ -986,12 +986,28 @@ export const workspaceFileUrl = (sessionId: string, path: string, download = fal
 export const workspaceFilePreviewUrl = (sessionId: string, path: string): string =>
   `/api/sessions/${sessionId}/files/preview-redirect?path=${encodeURIComponent(path)}`;
 
-export const uploadWorkspaceFile = (sessionId: string, path: string, dataBase64: string) =>
-  apiFetch<void>(`/api/sessions/${sessionId}/files/content`, {
+/**
+ * Save a workspace file. When `ifMatch` is supplied, the write is rejected with 409 if
+ * the file's mtime on disk no longer matches — the caller's read was on a stale version
+ * (most commonly: the Agent wrote to the same file while the user was editing). The
+ * caller is expected to read the file again (or accept the loss) before retrying. The
+ * returned ETag is the file's new mtime as a weak ETag (`W/"<mtimeMs>"`); pass it as
+ * `ifMatch` on the next save.
+ */
+export const uploadWorkspaceFile = async (
+  sessionId: string,
+  path: string,
+  dataBase64: string,
+  ifMatch?: string,
+): Promise<string | null> => {
+  const { etag } = await apiFetchWithMeta<void>(`/api/sessions/${sessionId}/files/content`, {
     method: "PUT",
     body: { dataBase64 },
     query: { path },
+    ...(ifMatch !== undefined ? { headers: { "If-Match": ifMatch } } : {}),
   });
+  return etag;
+};
 
 /** Batch file-existence check (message file cards): both out-of-bounds and missing paths simply don't appear in `existing`; always returns 200. */
 export const statSessionFiles = (sessionId: string, paths: string[]) =>
