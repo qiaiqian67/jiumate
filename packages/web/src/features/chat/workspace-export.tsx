@@ -116,6 +116,12 @@ export async function performExport(
   ctx: { sessionId: string; filePath: string; fileName: string; markdown: string },
   onDownload: (blob: Blob, filename: string) => void,
 ): Promise<void> {
+  // MD is the only purely client-side path that turns the bytes into a Blob without going through
+  // the server. A 0-byte Blob is a silent no-op for `<a>.click()` in browsers — the user sees
+  // the click register and nothing else happens. Surface that as a toast instead.
+  if (fmt.kind === "md" && ctx.markdown === "") {
+    throw new Error(S.files.exportEmptyMarkdown);
+  }
   if (fmt.kind === "md") {
     onDownload(
       new Blob([ctx.markdown], { type: "text/markdown;charset=utf-8" }),
@@ -215,6 +221,9 @@ export function ExportMenu({
         <button
           type="button"
           disabled={busy}
+          onClick={() => setOpen((v) => !v)}
+          aria-haspopup="menu"
+          aria-expanded={open}
           title={busy && busyFormat !== null ? S.files.exportPreparing(busyFormat) : S.files.export}
           className="inline-flex shrink-0 items-center gap-1 rounded-md border border-transparent bg-transparent px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
         >

@@ -2276,6 +2276,9 @@ Scenarios:
     /** Shown on the dropdown trigger while a conversion is in flight (mermaid pre-render + server-side format). */
     /** Shown on the dropdown trigger while a conversion is in flight (mermaid pre-render + server-side format). */
     exportPreparing: (label: string): string => `Preparing ${label}…`,
+    /** Toast when the user picks "Markdown" on an empty file — a 0-byte .md download is a silent no-op
+     *  in the browser, so we surface the real reason instead of letting the click click nothing. */
+    exportEmptyMarkdown: "This file is empty — there is nothing to export.",
     /** Tooltip on any greyed-out menu item: the dropdown disables items whose backing service is missing.
      *  Parameterised by the server-supplied reason (e.g. "Pandoc is not installed." / "PDF export requires the desktop app.")
      *  so the dropdown can echo the exact capability string rather than a generic "unavailable" copy. */
