@@ -88,7 +88,10 @@ test("edit + save in the Files panel persists the bytes and re-renders the new c
   // The toast confirms the upload (reusing S.files.uploaded: "已上传").
   await expect(page.getByText("已上传")).toBeVisible();
 
-  // The view flips back to Rendered and shows the new heading.
+  // #40: save keeps the user in edit mode — the saved bytes are visible only after they
+  // explicitly switch to the rendered view. Manual toggle must show just-saved content in
+  // real time (#40 second half) — so the same bytes the user typed are what they get.
+  await page.getByRole("button", { name: "渲染", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Edited heading" })).toBeVisible();
 
   // The new bytes are durably on disk: re-fetch via the file URL and decode.
@@ -117,6 +120,10 @@ test("Mod-S saves the draft through the same path as the Save button", async ({ 
   // page is consumed by CodeMirror's keymap (preventDefault: true), which calls onSave.
   await page.keyboard.press("ControlOrMeta+S");
   await expect(page.getByText("已上传")).toBeVisible();
+
+  // #40: Mod-S keeps the user in edit mode. The user toggles to rendered to see the bytes
+  // they just saved — same expectation as the toolbar Save branch.
+  await page.getByRole("button", { name: "渲染", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Ctrl-S heading" })).toBeVisible();
 
   const fetched = await page.request.get(`${BASE}/api/sessions/${sid}/files/content?path=notes.md`);
@@ -212,6 +219,8 @@ test("concurrent Agent write + Save anyway: force-save overwrites the Agent's by
   await conflictDialog.getByRole("button", { name: "保存", exact: true }).click();
 
   await expect(page.getByText("已上传")).toBeVisible();
+  // #40: force-save keeps the user in edit mode; switch to rendered to inspect.
+  await page.getByRole("button", { name: "渲染", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Force-saved user content" })).toBeVisible();
 
   const fetched = await page.request.get(`${BASE}/api/sessions/${sid}/files/content?path=notes.md`);

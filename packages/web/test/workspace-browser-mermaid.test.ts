@@ -5,10 +5,9 @@
  * the async lazy import only fires in a real browser env).
  */
 import { describe, expect, it } from "vitest";
-import { createElement } from "react";
+import { createElement, isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
-import { isValidElement } from "react";
 
 const source = `\`\`\`mermaid
 graph TD

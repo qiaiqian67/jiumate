@@ -76,12 +76,17 @@ export function MarkdownEditor({ value, onChange, onSave, onCancel, saving }: Ma
             {
               "&": {
                 fontSize: "13px",
-                height: "100%",
               },
               ".cm-scroller": {
                 fontFamily:
                   "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
                 lineHeight: "1.55",
+                /* Long documents scroll inside the editor's own scroller instead of growing
+                   the surrounding panel — same intent as the message body's `.md-body pre`
+                   rule, applied here so a single 5000-line .md can't blow out the Files panel
+                   (the outer panel's overflow-auto would otherwise produce nested scrollbars
+                   and a feedback-loop that shakes the layout as described in #41.2). */
+                maxHeight: "60vh",
               },
               ".cm-content": {
                 padding: "12px 8px",
@@ -127,5 +132,9 @@ export function MarkdownEditor({ value, onChange, onSave, onCancel, saving }: Ma
       </div>
     );
   }
-  return <div ref={containerRef} className="h-full min-h-[200px] overflow-auto" />;
+  return (
+    <div className="rounded-md border border-gray-200 dark:border-gray-800">
+      <div ref={containerRef} />
+    </div>
+  );
 }

@@ -23,8 +23,7 @@
  *    print-friendly stylesheet. The result is a single string the caller can drop into
  *    a `<a download>` (HTML export) or POST to the server (PDF/DOCX/... export).
  */
-import { createElement } from "react";
-import { isValidElement } from "react";
+import { createElement, isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
 import { REHYPE_PLUGINS, REMARK_PLUGINS } from "./markdown-plugins";

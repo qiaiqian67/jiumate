@@ -172,7 +172,7 @@ export function ChatMemoryView({
             </p>
           ) : (
             <div className="md-body text-sm">
-              <Md text={bodyWithoutFrontmatter(detail.content ?? "")} />
+              <Md text={bodyWithoutFrontmatter(detail.content ?? "")} id={`memv-${detail.key}`} />
             </div>
           )}
         </div>
