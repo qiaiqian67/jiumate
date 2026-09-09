@@ -1,6 +1,6 @@
 {
   "name": "@prismshadow/linsight-desktop",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Linsight desktop app: Electron shell running @prismshadow/linsight-server as a utilityProcess, window on http://localhost (same-origin HTTP/SSE, no private IPC).",

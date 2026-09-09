@@ -1,6 +1,6 @@
 {
   "name": "@linsight/editable-doc",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "description": "Format generated Markdown documents so a human can edit them in place afterwards — atomic sections, semantic headings, fenced diagrams and code, no mega paragraphs.",
   "license": "Apache-2.0",
   "repository": {

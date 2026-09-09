@@ -1,6 +1,6 @@
 {
   "name": "@linsight/software-development",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "description": "Software development end to end — disciplined software-engineering practice for real tasks, plus the Linsight visual language for every generated web page and app UI.",
   "license": "Apache-2.0",
   "repository": {
