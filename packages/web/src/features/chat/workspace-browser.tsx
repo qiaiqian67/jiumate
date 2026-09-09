@@ -950,7 +950,14 @@ export function WorkspaceBrowser({
                       filePath={preview.path}
                       sessionId={session.sessionId}
                       highlight={body.length <= HIGHLIGHT_LIMIT}
-                      onLinkClick={(t) => void previewPath(t)}
+                      // previewPath is itself stable (useCallback with [session.sessionId] —
+                      // see previewPathRef comment); pass it directly so the memoized child
+                      // never sees a new onLinkClick identity on parent re-renders. An inline
+                      // `(t) => void previewPath(t)` would defeat this whole memoization: every
+                      // WorkspaceBrowser commit would flip the prop, the useMemo inside would
+                      // rebuild the components map, every fenced block would be a new component
+                      // type, and MermaidBlock would unmount/remount on each frame.
+                      onLinkClick={previewPath}
                     />
                   </div>
                   {preview.truncated && (
