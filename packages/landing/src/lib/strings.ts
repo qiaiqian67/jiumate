@@ -442,7 +442,10 @@ linsight run --message "分析 data.csv，输出季度销售额"`,
     title: "内置 Skill 库一览",
     subtitle: "三组 Skill 开箱即用，Agent 也能编写并优化自己的 Skill。",
     groups: [
-      { title: "办公效率", skills: ["data-analysis", "firecrawl", "bento-slides", "humanizer"] },
+      {
+        title: "办公效率",
+        skills: ["data-analysis", "firecrawl", "bento-slides", "humanizer", "format"],
+      },
       {
         title: "软件开发",
         skills: ["web-design", "software-engineering", "remote-claude-code"],

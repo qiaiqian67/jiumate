@@ -463,7 +463,7 @@ linsight run --message "Analyze data.csv and summarize quarterly sales"`,
     groups: [
       {
         title: "Office Productivity",
-        skills: ["data-analysis", "firecrawl", "bento-slides", "humanizer"],
+        skills: ["data-analysis", "firecrawl", "bento-slides", "humanizer", "format"],
       },
       {
         title: "Software Development",

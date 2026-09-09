@@ -29,7 +29,8 @@ describe("electron-builder.yml pandoc extraResources", () => {
 
   it("stages both darwin-arm64 and darwin-x64 from the matching build dir", () => {
     const src = loadConfig();
-    expect(src).toMatch(/mac:[\s\S]*?extraResources:[\s\S]*?build\/pandoc\/darwin-\$\{arch\}/);
+    expect(src).toMatch(/mac:[\s\S]*?extraResources:[\s\S]*?build\/pandoc\/darwin-arm64/);
+    expect(src).toMatch(/build\/pandoc\/darwin-x64/);
     expect(src).toMatch(/to:\s*pandoc/);
   });
 
@@ -50,13 +51,10 @@ describe("electron-builder.yml pandoc extraResources", () => {
     );
     for (const plat of ["win32-x64", "darwin-arm64", "darwin-x64", "linux-x64"]) {
       expect(downloadScript).toContain(plat);
-      // electron-builder.yml only references the win/linux x64 arch literally; the mac
-      // entry uses ${arch} so the script's two archs collapse into one regex.
-      if (plat === "darwin-arm64" || plat === "darwin-x64") {
-        expect(yml).toContain("darwin-${arch}");
-      } else {
-        expect(yml).toContain(plat);
-      }
+      // electron-builder.yml references every platform's staging dir literally:
+      // darwin-arm64 and darwin-x64 are two separate extraResources entries so each
+      // pandoc binary lands under resources/pandoc/pandoc on its own arch.
+      expect(yml).toContain(`build/pandoc/${plat}`);
     }
   });
 });
