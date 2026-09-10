@@ -87,6 +87,7 @@ function CollapsedRail({ onExpand }: { onExpand: () => void }) {
       Traces is not among them: reading a Trace happens in the chat toolbar's panel
       switcher, which is the only place it happens. */
   const pages: ReadonlyArray<{ to: string; label: string; icon: string }> = [
+    { to: "/app-center", label: S.nav.appCenter, icon: NAV_ICONS.appCenter },
     { to: "/agents", label: S.nav.agents, icon: NAV_ICONS.agents },
     { to: "/plugins", label: S.nav.plugins, icon: NAV_ICONS.plugins },
     { to: "/models", label: S.nav.models, icon: NAV_ICONS.models },

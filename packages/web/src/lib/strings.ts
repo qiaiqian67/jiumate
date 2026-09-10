@@ -18,6 +18,7 @@ export const zh = {
   nav: {
     chat: "对话",
     newChat: "新对话",
+    appCenter: "应用中心",
     agents: "智能体",
     plugins: "插件库",
     models: "模型库",
@@ -1356,6 +1357,22 @@ export const zh = {
       promptTooLong: (max: number) => `提示词最多 ${max} 个字符`,
       deleteTitle: "删除快捷指令",
       deleteConfirm: (title: string) => `确定删除「${title}」？该快捷指令会从你的所有设备上消失。`,
+    },
+    /**
+     * /app-center 页：与新建对话页相同的示例清单，但一次性铺开，方便回访用户按分类浏览而非逐个折叠。
+     * 与新建对话的 tab 共用同一份数据形态，点击即「先存草稿 → 跳到新对话页」，行为与新建对话里的 tab 一致。
+     */
+    appCenter: {
+      pageTitle: "应用中心",
+      pageDesc:
+        "可浏览的应用示例全集——内置示例加上你自己保存的快捷指令。点一张卡片即可在新建对话中预填好提示词。",
+      /** 没有自定义 cover 时的回退占位（极老的条目可能没设 cover）。 */
+      coverFallback: "✨",
+      /** 当前 tab 是「我的快捷指令」时的加载中 / 空态文案。 */
+      shortcutsLoading: "正在加载你的快捷指令…",
+      shortcutsEmpty: "你还没有保存快捷指令——选一张内置卡片开始，把输入框的内容存为快捷指令即可。",
+      /** 点击后的行为提示，与新建对话页一行提示保持一致。 */
+      fillHint: "点击填入输入框，可修改后自行发送",
     },
     /**
      * Example task cards on the draft screen: one click fills the composer with the canned

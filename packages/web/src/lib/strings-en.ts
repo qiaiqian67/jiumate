@@ -13,6 +13,7 @@ export const en: Strings = {
   nav: {
     chat: "Chat",
     newChat: "New chat",
+    appCenter: "App Center",
     agents: "Agents",
     plugins: "Plugin library",
     models: "Models",
@@ -1382,6 +1383,26 @@ export const en: Strings = {
       deleteTitle: "Delete shortcut",
       deleteConfirm: (title: string) =>
         `Delete "${title}"? The shortcut disappears from every device you use.`,
+    },
+    /**
+     * The /app-center page: the same examples the draft screen shows, but the whole catalog
+     * at once so a returning user can browse by category instead of opening one folder at a
+     * time. Sharing the same data shape as the draft tabs means a click here is the same fill
+     * the draft folder does — a parked draft conversation is created and the chat opens on
+     * the new-chat route with the canned prompt pre-filled.
+     */
+    appCenter: {
+      pageTitle: "App Center",
+      pageDesc:
+        "A browsable catalog of starter apps — built-in examples plus the shortcuts you saved. Clicking a card opens a new chat with the prompt already filled in.",
+      /** Cover glyph fallback for an example row without one of its own (older entries). */
+      coverFallback: "✨",
+      /** Loading + empty states for the user's shortcuts tab on this page. */
+      shortcutsLoading: "Loading your shortcuts…",
+      shortcutsEmpty:
+        "You haven't saved any shortcuts yet — pick one of the built-in cards to start, then save the composer text as a shortcut.",
+      /** Click affordance: the same line the draft screen uses (the row tooltip already carries it). */
+      fillHint: "Click to fill the composer — edit it if you like, then send",
     },
     exampleTasks: {
       game: {

@@ -57,9 +57,10 @@ import { agentDisplayName, useProject } from "../../state/project";
 import { useSessions } from "../../state/sessions";
 import { AgentAvatar } from "../../components/ui/agent-avatar";
 import { Chevron } from "../../components/ui/chevron";
-import { AGENT_GROUP_ICON } from "../../components/ui/group-list";
 import { Dropdown } from "../../components/ui/dropdown";
 import { LinsightLogo } from "../../components/ui/linsight-logo";
+import { Tabs } from "../../components/ui/tabs";
+import type { TabItem } from "../../components/ui/tabs";
 import { toastError } from "../../components/ui/toast";
 import { useVersionInfo } from "../../lib/use-version-info";
 import { versionBadgeFor } from "../../lib/update-flow";
@@ -69,8 +70,8 @@ import type { ComposerControl } from "./chat-input";
 import { adoptDockScope } from "../dock/dock-state";
 import { setDockCwd } from "../dock/dock-terminal";
 import { EXAMPLE_FOLDERS } from "./example-tasks";
-import type { ExampleFolderId, ExampleTask } from "./example-tasks";
-import { ExampleFolderRow, exampleRowClass } from "./example-folder-row";
+import type { ExampleFolder, ExampleTask } from "./example-tasks";
+import { exampleRowClass } from "./example-folder-row";
 import { SHORTCUTS_FOLDER_ID, ShortcutsFolder } from "./shortcuts-folder";
 import { clearDraft, draftKey, loadDraft, saveDraft } from "./draft-cache";
 import type { DraftCache } from "./draft-cache";
@@ -120,25 +121,11 @@ function saveAppliedRouteKey(field: RouteStateField, key: string): void {
 }
 
 /**
- * One glyph per example folder, 16×16. Icons live on the folder rather than on each example:
- * with the examples reduced to single-line titles, a column of per-row icons was noise
- * competing with the titles, while the folder row is exactly where a glyph earns its place —
- * it is what you scan to pick a category.
- *
- * webapps: a browser window (chrome bar + two dots). agents: AGENT_GROUP_ICON itself — the one
- * glyph in the app that means "agent", worn by the sidebar's Agents entry and its grouping
- * option — imported rather than copied, because a hand-copied duplicate is what silently drifts
- * the day that glyph is redrawn. (`components/ui/group-list.tsx` pulls in nothing from
- * `features/`, so there is no cycle to avoid here.) schedules: a clock face with hands — the
- * plainest mark for "fires on a timer", and distinct from the hourglass that already means a
- * Session is waiting.
+ * The active example tab — exactly one at a time, mirroring the bookmark behaviour the folder
+ * rows used to enforce. The shortcuts folder sits alongside the built-ins as a fourth tab rather
+ * than a sibling block: same visual treatment, same fillExample handoff, no extra chrome.
  */
-const FOLDER_GLYPHS: Record<ExampleFolderId, string> = {
-  webapps:
-    "M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6zM3 9h18M6 6.5h.01M9 6.5h.01",
-  agents: AGENT_GROUP_ICON,
-  schedules: "M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20M12 6.5V12l3.5 2",
-};
+type ActiveTab = (typeof EXAMPLE_FOLDERS)[number]["id"] | typeof SHORTCUTS_FOLDER_ID;
 
 export function DraftView({
   projectId,
@@ -685,16 +672,24 @@ export function DraftView({
   }, []);
 
   /**
-   * The open example folder — bookmark-style, and ALWAYS exactly one: selecting another closes
-   * the previous, and clicking the open one is a no-op rather than collapsing it. Never
-   * nullable on purpose. With the folders kept within one row of each other, "one open" is
-   * what keeps the block's height near-constant: the examples area can neither collapse to
-   * bare folder rows nor grow to the whole catalog, so switching folders moves what sits
-   * below it by at most one row.
+   * The active example tab — always exactly one. Same single-open contract the folder rows
+   * used to enforce, just surfaced as a top tab strip. Defaults to the first built-in folder;
+   * a saved-shortcut tab is appended after the built-ins.
    */
-  const [openFolder, setOpenFolder] = useState<ExampleFolderId | typeof SHORTCUTS_FOLDER_ID>(
-    EXAMPLE_FOLDERS[0].id,
-  );
+  const [activeTab, setActiveTab] = useState<ActiveTab>(EXAMPLE_FOLDERS[0].id);
+
+  const tabItems: TabItem<ActiveTab>[] = [
+    ...EXAMPLE_FOLDERS.map<TabItem<ActiveTab>>((folder) => ({
+      key: folder.id,
+      label: S.chat.exampleFolders[folder.id],
+    })),
+    { key: SHORTCUTS_FOLDER_ID, label: S.chat.shortcuts.folder },
+  ];
+
+  const activeFolder: ExampleFolder | null =
+    activeTab === SHORTCUTS_FOLDER_ID
+      ? null
+      : (EXAMPLE_FOLDERS.find((f) => f.id === activeTab) ?? null);
 
   const selectedAgent = agents.find((a) => a.agentId === agentId) ?? null;
 
@@ -766,61 +761,52 @@ export function DraftView({
         </div>
 
         {/* Example tasks: canned builds showing off the one-sentence → app flow; a click fills
-            the composer with the prompt and the user sends it (see fillExample). The last folder
+            the composer with the prompt and the user sends it (see fillExample). The last tab
             is the user's own saved prompts (see shortcuts-folder.tsx).
-            Bookmark-style folders with ALWAYS exactly one open — selecting another closes the
-            previous, and the open one cannot be collapsed. The block is therefore four folder
-            rows plus one folder's rows, with every folder kept within one row of the others
-            (3–4 examples each; the user folder is capped so its shortcuts plus its add row come
-            to the same), so switching folders moves what sits below by at most one row and no
-            folder needs a scroll container — a scrollbar inside a short showcase reads as a
-            defect. Each example is a single-line title; its one-sentence description rides in
-            the row tooltip rather than a second line. Rows stay disabled until the Agent's
-            installed skills are known — that is all a fill still waits for, and without it the
-            preselect would silently drop the example's skills (a saved shortcut pins none, so
-            it never waits). */}
-        <div className="mt-6 space-y-1">
-          {EXAMPLE_FOLDERS.map((folder) => {
-            const open = folder.id === openFolder;
-            return (
-              <div key={folder.id}>
-                <ExampleFolderRow
-                  open={open}
-                  glyph={FOLDER_GLYPHS[folder.id]}
-                  label={S.chat.exampleFolders[folder.id]}
-                  count={folder.tasks.length}
-                  onOpen={() => setOpenFolder(folder.id)}
-                />
-
-                {open && (
-                  <ul className="mt-0.5 space-y-0.5 pl-4">
-                    {folder.tasks.map((task) => {
-                      const copy = S.chat.exampleTasks[task.id];
-                      return (
-                        <li key={task.id}>
-                          <button
-                            type="button"
-                            title={`${copy.desc}\n${S.chat.exampleFillHint}`}
-                            disabled={!skillsLoaded}
-                            onClick={() => fillExample(task)}
-                            className={`flex w-full items-center gap-2 ${exampleRowClass}`}
-                          >
-                            <span className="min-w-0 flex-1 truncate">{copy.label}</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
-          <ShortcutsFolder
-            open={openFolder === SHORTCUTS_FOLDER_ID}
-            onOpen={() => setOpenFolder(SHORTCUTS_FOLDER_ID)}
-            readComposerText={() => textRef.current}
-            onFill={fillShortcut}
-          />
+            Tabbed — exactly one tab body is on screen at a time, mirroring the bookmark-style
+            contract the previous folder rows enforced. Body content is the same single-line
+            row per example, with each row's per-task glyph (cover) sitting at the left so a
+            one-line label can still be picked from a thumbnail the way the App Center page
+            shows them. Rows stay disabled until the Agent's installed skills are known — that
+            is all a fill still waits for, and without it the preselect would silently drop the
+            example's skills (a saved shortcut pins none, so it never waits). */}
+        <div className="mt-6">
+          <Tabs items={tabItems} active={activeTab} onChange={setActiveTab} />
+          <div className="mt-2">
+            {activeFolder !== null ? (
+              <ul className="space-y-0.5">
+                {activeFolder.tasks.map((task) => {
+                  const copy = S.chat.exampleTasks[task.id];
+                  return (
+                    <li key={task.id}>
+                      <button
+                        type="button"
+                        title={`${copy.desc}\n${S.chat.exampleFillHint}`}
+                        disabled={!skillsLoaded}
+                        onClick={() => fillExample(task)}
+                        className={`flex w-full items-center gap-2 ${exampleRowClass}`}
+                      >
+                        <span
+                          aria-hidden
+                          className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none"
+                        >
+                          {task.cover ?? ""}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">{copy.label}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <ShortcutsFolder
+                open
+                onOpen={() => undefined}
+                readComposerText={() => textRef.current}
+                onFill={fillShortcut}
+              />
+            )}
+          </div>
         </div>
       </div>
 

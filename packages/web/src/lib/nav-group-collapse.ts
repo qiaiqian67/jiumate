@@ -23,6 +23,7 @@
  * place it happens.
  */
 export const NAV_GROUP_KEYS = [
+  "appCenter",
   "agents",
   "plugins",
   "models",

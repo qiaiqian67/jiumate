@@ -17,32 +17,37 @@
  * `S.chat.exampleTasks[id]`, which is also where the rule for how long a prompt may get is
  * stated. Skills listed here are preselected in the composer only when the selected Agent has
  * them installed; an empty list fills the prompt alone.
+ *
+ * `cover` is the per-task thumbnail shown at the left of every row: a single character glyph
+ * (emoji) by default — zero asset cost, no per-locale text. Folders already carry an SVG path
+ * (`FOLDER_GLYPHS`); the cover sits at a different granularity (per row, not per folder) and
+ * stays a character so a future SVG-or-URL swap is a one-line change at the render site.
  */
 export const EXAMPLE_FOLDERS = [
   {
     id: "webapps",
     tasks: [
-      { id: "game", skills: ["web-design"] },
-      { id: "gamecenter", skills: ["web-design"] },
-      { id: "lol", skills: ["web-design"] },
-      { id: "rhythmRunner", skills: ["web-design"] },
+      { id: "game", skills: ["web-design"], cover: "🎮" },
+      { id: "gamecenter", skills: ["web-design"], cover: "🕹️" },
+      { id: "lol", skills: ["web-design"], cover: "⚔️" },
+      { id: "rhythmRunner", skills: ["web-design"], cover: "🎵" },
     ],
   },
   {
     id: "agents",
     tasks: [
-      { id: "investmentCopilot", skills: ["linsight-sdk", "web-design"] },
-      { id: "rag", skills: ["linsight-sdk", "web-design"] },
-      { id: "agentBenchmarkBuild", skills: [] },
-      { id: "agentOptimization", skills: [] },
+      { id: "investmentCopilot", skills: ["linsight-sdk", "web-design"], cover: "📈" },
+      { id: "rag", skills: ["linsight-sdk", "web-design"], cover: "📚" },
+      { id: "agentBenchmarkBuild", skills: [], cover: "🧪" },
+      { id: "agentOptimization", skills: [], cover: "⚙️" },
     ],
   },
   {
     id: "schedules",
     tasks: [
-      { id: "dailyPlan", skills: [] },
-      { id: "githubDigest", skills: [] },
-      { id: "memoryReview", skills: [] },
+      { id: "dailyPlan", skills: [], cover: "📅" },
+      { id: "githubDigest", skills: [], cover: "🐙" },
+      { id: "memoryReview", skills: [], cover: "🧠" },
     ],
   },
 ] as const;

@@ -17,6 +17,7 @@ import { ModelsPage } from "./features/models/models-page";
 import { UsagePage } from "./features/usage/usage-page";
 import { BenchmarkPage } from "./features/benchmark/benchmark-page";
 import { TerminalPage } from "./features/terminal/terminal-page";
+import { AppCenterPage } from "./features/chat/app-center-page";
 
 /** Route guard: shows blank while initializing, redirects to /login when not authenticated. */
 function RequireAuth() {
@@ -75,6 +76,7 @@ export function AppRouter() {
               everyone else, so a member only ever reaches this by typing the URL. */}
           <Route path="/usage" element={<UsagePage />} />
           <Route path="/benchmark" element={<BenchmarkPage />} />
+          <Route path="/app-center" element={<AppCenterPage />} />
           {/* System settings and user management live in the settings dialog now (see
               SettingsDialog); their old routes fall through to the catch-all. */}
           <Route path="*" element={<Navigate to="/chat" replace />} />
