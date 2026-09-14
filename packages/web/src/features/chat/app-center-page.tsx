@@ -10,6 +10,12 @@
  * folder rows: a returning user wants to scan the whole menu at once, not open a single
  * folder at a time. The cover glyph the draft screen added to each row becomes a per-card
  * thumbnail here, so the user can recognize a card without reading the title.
+ *
+ * Cards share the model library's two-part shape (`features/plugins/plugins-page.tsx`): the
+ * main body opens a detail Modal, a paper-plane icon button on the right is the quick-start
+ * that triggers the same `fillExample`/`fillShortcut` handoff the Modal's footer button does.
+ * That keeps the App Center and the plugins library consistent — both are browse pages
+ * where the user reads first and starts second.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
@@ -19,95 +25,169 @@ import { useAuth } from "../../state/auth";
 import { useProject } from "../../state/project";
 import { InfoPopover } from "../../components/ui/info-popover";
 import { Tabs, type TabItem } from "../../components/ui/tabs";
+import { Button } from "../../components/ui/button";
+import { GlyphIcon } from "../../components/ui/glyph-icon";
+import { SEND_ICON } from "../../components/ui/icons";
+import { ICON_SIZE } from "../../lib/icon-scale";
 import { DRAFT_SESSION_ID } from "./chat-page";
 import { draftKey, loadDraft, saveDraft } from "./draft-cache";
 import { parkActiveDraft } from "./draft-sessions";
-import { EXAMPLE_FOLDERS, EXAMPLE_TASKS } from "./example-tasks";
-import type { ExampleFolderId, ExampleTask, ExampleTaskId } from "./example-tasks";
+import {
+  EXAMPLE_FOLDERS,
+  EXAMPLE_TASKS,
+  type ExampleFolderId,
+  type ExampleTask,
+  type ExampleTaskId,
+} from "./example-tasks";
 import { SHORTCUTS_FOLDER_ID } from "./shortcuts-folder";
 import { normalizeShortcuts } from "./user-shortcuts";
 import type { UserShortcut } from "./user-shortcuts";
+import { ExampleDetailModal, isExampleTaskEntry, type DetailEntry } from "./example-detail";
 import * as api from "../../api/endpoints";
 
 type AppCenterTab = ExampleFolderId | typeof SHORTCUTS_FOLDER_ID;
 
 /**
- * The grid card: cover thumbnail + label + one-line description. The whole card is one
- * button so the affordance covers the whole tile, not just the title. Cards are sized to
- * fit two-per-row from the sm breakpoint up and one-per-row on narrow screens — the same
- * breakpoint the plugin library uses, so a row never gets tight on a laptop.
+ * Build the card's meta line — the same string the detail Modal shows under the title.
+ * Pulled out so the card and the Modal share one source of truth for "category + skill
+ * count". Shortcuts use a fixed label instead.
+ */
+function metaFor(entry: DetailEntry): string {
+  if (isExampleTaskEntry(entry)) {
+    const folder = EXAMPLE_FOLDERS.find((f) => f.tasks.some((t) => t.id === entry.id));
+    const folderLabel = folder ? S.chat.exampleFolders[folder.id] : "";
+    return S.chat.appCenter.metaLine(folderLabel, entry.skills.length);
+  }
+  return S.chat.appCenter.shortcutMeta;
+}
+
+/**
+ * The grid card for a built-in example. Two-part shape:
+ *   - the main body is a button that opens the detail Modal (the model-library card pattern);
+ *   - the right edge carries a single paper-plane icon button that triggers the same
+ *     `fillExample` handoff the Modal's footer uses, so both affordances are reachable from
+ *     a single card without leaving the page.
  */
 function ExampleCard({
-  cover,
-  label,
-  desc,
+  task,
   disabled,
-  onClick,
+  onDetailOpen,
+  onInvoke,
 }: {
-  cover: string;
-  label: string;
-  desc: string;
+  task: ExampleTask;
   /** Mirrors the draft screen's "wait for installed skills" gate: a fill without the agent's
         installed skills would silently drop the skill pins the example asked for. */
   disabled: boolean;
-  onClick: () => void;
+  onDetailOpen: () => void;
+  onInvoke: () => void;
 }) {
+  const copy = S.chat.exampleTasks[task.id as ExampleTaskId];
+  const cover = task.cover ?? S.chat.appCenter.coverFallback;
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      title={`${desc}\n${S.chat.appCenter.fillHint}`}
-      onClick={onClick}
-      className="group flex h-full items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50 disabled:cursor-default disabled:opacity-60 disabled:hover:border-gray-200 disabled:hover:bg-white dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:hover:bg-gray-800/60 dark:disabled:hover:border-gray-800 dark:disabled:hover:bg-gray-900"
-    >
-      {/* 56px square thumbnail — large enough to read the glyph at a glance, small enough
+    <div className="flex items-stretch gap-3 rounded-lg border border-gray-200 bg-white p-3 transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:hover:bg-gray-800/60">
+      {/* Main body — same composition as the previous tile, but now a `button` that opens the
+            detail Modal rather than firing the fillExample directly. Disabled state lifted out:
+            the body always opens the read-only preview, only the quick-start button gates on
+            the agent's installed skills. */}
+      <button
+        type="button"
+        onClick={onDetailOpen}
+        className="flex min-w-0 flex-1 items-start gap-3 text-left"
+        title={copy.desc}
+      >
+        {/* 56px square thumbnail — large enough to read the glyph at a glance, small enough
             that two per row on a laptop keeps each tile readable. Brand-tinted in light,
             muted brand in dark; a single character, so it inherits size and centers on its
             own baseline. */}
-      <span
-        aria-hidden
-        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-gray-100 text-3xl leading-none dark:bg-gray-800"
-      >
-        {cover}
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          {label}
+        <span
+          aria-hidden
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-gray-100 text-3xl leading-none dark:bg-gray-800"
+        >
+          {cover}
         </span>
-        <span className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">{desc}</span>
-      </span>
-    </button>
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            {copy.label}
+          </span>
+          <span className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">{copy.desc}</span>
+          <span className="mt-0.5 truncate text-[11px] text-gray-400 dark:text-gray-500">
+            {metaFor(task)}
+          </span>
+        </span>
+      </button>
+
+      {/* Right edge: paper-plane quick-start. The Modal's footer button calls the same handoff;
+            the icon button here is the single-press alternative when the user already knows
+            what they want. `disabled` gates both: opening it without the agent's installed
+            skills would silently drop the example's skill pins. */}
+      <div className="flex shrink-0 items-center justify-center">
+        <Button
+          size="sm"
+          className="h-8 w-8 shrink-0 justify-center p-0"
+          aria-label={`${S.chat.appCenter.invokeHint} ${copy.label}`}
+          title={S.chat.appCenter.invokeHint}
+          disabled={disabled}
+          onClick={onInvoke}
+        >
+          <GlyphIcon d={SEND_ICON} size={ICON_SIZE.iconButton} />
+        </Button>
+      </div>
+    </div>
   );
 }
 
 /**
- * Card for a saved shortcut — same shape as ExampleCard but the cover is a fixed ⚡ (the
+ * Card for a saved shortcut — same shape as `ExampleCard` but the cover is a fixed ⚡ (the
  * shortcut folder's glyph), so the tab switches by visual rhythm rather than by reading
  * titles. Editing the shortcut still happens in the draft screen; this page is read-only.
  */
-function ShortcutCard({ shortcut, onClick }: { shortcut: UserShortcut; onClick: () => void }) {
+function ShortcutCard({
+  shortcut,
+  onDetailOpen,
+  onInvoke,
+}: {
+  shortcut: UserShortcut;
+  onDetailOpen: () => void;
+  onInvoke: () => void;
+}) {
   return (
-    <button
-      type="button"
-      title={`${shortcut.title}\n${S.chat.appCenter.fillHint}`}
-      onClick={onClick}
-      className="group flex h-full items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:hover:bg-gray-800/60"
-    >
-      <span
-        aria-hidden
-        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-gray-100 text-3xl leading-none dark:bg-gray-800"
+    <div className="flex items-stretch gap-3 rounded-lg border border-gray-200 bg-white p-3 transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:hover:bg-gray-800/60">
+      <button
+        type="button"
+        onClick={onDetailOpen}
+        className="flex min-w-0 flex-1 items-start gap-3 text-left"
+        title={shortcut.title}
       >
-        ⚡
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          {shortcut.title}
+        <span
+          aria-hidden
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-gray-100 text-3xl leading-none dark:bg-gray-800"
+        >
+          ⚡
         </span>
-        <span className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
-          {shortcut.prompt}
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            {shortcut.title}
+          </span>
+          <span className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+            {shortcut.prompt}
+          </span>
+          <span className="mt-0.5 truncate text-[11px] text-gray-400 dark:text-gray-500">
+            {metaFor(shortcut)}
+          </span>
         </span>
-      </span>
-    </button>
+      </button>
+      <div className="flex shrink-0 items-center justify-center">
+        <Button
+          size="sm"
+          className="h-8 w-8 shrink-0 justify-center p-0"
+          aria-label={`${S.chat.appCenter.invokeHint} ${shortcut.title}`}
+          title={S.chat.appCenter.invokeHint}
+          onClick={onInvoke}
+        >
+          <GlyphIcon d={SEND_ICON} size={ICON_SIZE.iconButton} />
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -144,9 +224,13 @@ export function AppCenterPage() {
     };
   }, [activeTab, user, currentProject]);
 
+  /** Detail Modal entry (null = closed): the example or shortcut the user opened. */
+  const [detailEntry, setDetailEntry] = useState<DetailEntry | null>(null);
+
   /** Wait until the Agent's installed skills are known so the preselect in saveDraft doesn't
        silently drop an example's skills. The draft screen gates on the same flag. */
   const skillsLoaded = currentAgent !== undefined;
+
   /** Card click handler: mirror plugins-page.quickInvoke — park whatever is in the active
        draft, write a new draft cache entry with the canned prompt + skills, then navigate
        to the new-chat route on the current agent. The user reads, edits, and sends there. */
@@ -181,6 +265,13 @@ export function AppCenterPage() {
     });
     setCurrentAgentId(agentId);
     navigate(`/chat/${DRAFT_SESSION_ID}`, { state: { agentId } });
+  };
+
+  /** Modal footer handoff — same flow as the card's quick-start icon, just triggered from
+       inside the Modal so the user can read first and decide. */
+  const invokeDetail = (entry: DetailEntry) => {
+    if (isExampleTaskEntry(entry)) fillExample(entry);
+    else fillShortcut(entry);
   };
 
   /** Tab items: built-in folders from the registry, then the user's shortcuts tab. The
@@ -218,20 +309,16 @@ export function AppCenterPage() {
         <div className="mt-4">
           {activeFolder !== null ? (
             <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {activeFolder.tasks.map((task) => {
-                const copy = S.chat.exampleTasks[task.id as ExampleTaskId];
-                return (
-                  <li key={task.id}>
-                    <ExampleCard
-                      cover={task.cover ?? S.chat.appCenter.coverFallback}
-                      label={copy.label}
-                      desc={copy.desc}
-                      disabled={!skillsLoaded}
-                      onClick={() => fillExample(task)}
-                    />
-                  </li>
-                );
-              })}
+              {activeFolder.tasks.map((task) => (
+                <li key={task.id}>
+                  <ExampleCard
+                    task={task}
+                    disabled={!skillsLoaded}
+                    onDetailOpen={() => setDetailEntry(task)}
+                    onInvoke={() => fillExample(task)}
+                  />
+                </li>
+              ))}
             </ul>
           ) : shortcutsLoaded ? (
             shortcuts.length === 0 ? (
@@ -242,7 +329,11 @@ export function AppCenterPage() {
               <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {shortcuts.map((shortcut) => (
                   <li key={shortcut.id}>
-                    <ShortcutCard shortcut={shortcut} onClick={() => fillShortcut(shortcut)} />
+                    <ShortcutCard
+                      shortcut={shortcut}
+                      onDetailOpen={() => setDetailEntry(shortcut)}
+                      onInvoke={() => fillShortcut(shortcut)}
+                    />
                   </li>
                 ))}
               </ul>
@@ -254,6 +345,19 @@ export function AppCenterPage() {
           )}
         </div>
       </div>
+
+      {detailEntry !== null && (
+        <ExampleDetailModal
+          entry={detailEntry}
+          disabled={!skillsLoaded}
+          onClose={() => setDetailEntry(null)}
+          onInvoke={() => {
+            const entry = detailEntry;
+            setDetailEntry(null);
+            if (entry) invokeDetail(entry);
+          }}
+        />
+      )}
     </div>
   );
 }
