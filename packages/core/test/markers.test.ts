@@ -10,8 +10,10 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_COMPANION_PERSONA_TEXT,
   MARKER_TAGS,
   TITLE_NOISE_TAGS,
+  buildCompanionPersonaMessage,
   buildContextSummaryText,
   buildHandoffMessage,
   buildModelSwitchMessage,
@@ -23,6 +25,7 @@ import {
   extractSummary,
   markerBlock,
   matchDualForm,
+  parseCompanionPersonaMessage,
   parseHandoffMessage,
   parseModelSwitchMessage,
   parseScheduledMessage,
@@ -30,6 +33,7 @@ import {
   parseUserSteeringText,
   startsWithMarker,
   stripConversationMarkers,
+  stripLeadingMarkerBlocks,
   stripMarkerBlocks,
   transcribeToolCall,
   transcribeUserInput,
@@ -70,6 +74,7 @@ describe("marker block primitives", () => {
       MARKER_TAGS.scheduledTask,
       MARKER_TAGS.modelSwitchFrom,
       MARKER_TAGS.backgroundTaskDone,
+      MARKER_TAGS.companionPersona,
     ]);
   });
 });
@@ -294,5 +299,56 @@ describe("origin blocks ([use_skills] / [handoff_from] / [scheduled_task] / [mod
       sessionTitle: "Fix the parser",
       tracePath: "/data/t.jsonl",
     });
+  });
+
+  it("[companion_persona]: the default-text builder and the parse-back round-trip", () => {
+    // The default text ships with the engine so the server has one source of truth and
+    // hosts that don't override get something sensible out of the box.
+    const built = buildCompanionPersonaMessage();
+    expect(built.startsWith(`[${MARKER_TAGS.companionPersona}]\n`)).toBe(true);
+    expect(built.endsWith(`\n[/${MARKER_TAGS.companionPersona}]`)).toBe(true);
+    expect(built).toContain("AI companion");
+    // Round-trip: parser accepts the canonical square form and returns the inner text.
+    expect(parseCompanionPersonaMessage(built)).toEqual({
+      text: expect.stringContaining("AI companion"),
+    });
+    // Legacy angle form still parses (the dual-form contract is shared with every other
+    // origin block — old Traces must keep rendering). Build the legacy form explicitly
+    // rather than transforming the square form by string replacement, which would only
+    // catch the outermost brackets and leave the inner `[/tag]` marker untouched.
+    const legacy = `<${MARKER_TAGS.companionPersona}>\n${DEFAULT_COMPANION_PERSONA_TEXT}\n</${MARKER_TAGS.companionPersona}>`;
+    expect(parseCompanionPersonaMessage(legacy)).toEqual({
+      text: expect.stringContaining("AI companion"),
+    });
+    // Whole-message contract: only a block that fills the whole message parses; the block
+    // is normally followed by the user's text, but the parser is here for symmetry.
+    expect(parseCompanionPersonaMessage(`${built}\n\nhello`)).toBeNull();
+    expect(parseCompanionPersonaMessage("plain text")).toBeNull();
+  });
+
+  it("[companion_persona]: an explicit override replaces the default text", () => {
+    const custom = "You are a friendly, attentive helper.";
+    expect(buildCompanionPersonaMessage(custom)).toBe(
+      `[${MARKER_TAGS.companionPersona}]\n${custom}\n[/${MARKER_TAGS.companionPersona}]`,
+    );
+    expect(parseCompanionPersonaMessage(buildCompanionPersonaMessage(custom))).toEqual({
+      text: custom,
+    });
+  });
+});
+
+describe("stripLeadingMarkerBlocks", () => {
+  it("strips every TITLE_NOISE_TAG block — including [companion_persona] — from a leading prefix", () => {
+    // The server prepends [companion_persona] before the user's text; the goal route runs
+    // stripLeadingMarkerBlocks on the joined text to recover the user's own input. Pin the
+    // new tag here so a future change to TITLE_NOISE_TAGS cannot silently drop the block.
+    const persona = buildCompanionPersonaMessage();
+    expect(stripLeadingMarkerBlocks(persona)).toBe("");
+    expect(stripLeadingMarkerBlocks(`${persona}\n\nfix the layout`)).toBe("fix the layout");
+    // Stripping another block first then the persona still leaves the user's text.
+    const skills = buildSkillsMessage(["demo"], "");
+    expect(stripLeadingMarkerBlocks(`${skills}\n\n${persona}\n\nhello`)).toBe("hello");
+    // Plain user text with no leading block stays untouched.
+    expect(stripLeadingMarkerBlocks("just a normal message")).toBe("just a normal message");
   });
 });

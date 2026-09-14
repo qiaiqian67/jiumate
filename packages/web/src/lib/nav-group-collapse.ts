@@ -34,6 +34,27 @@ export const NAV_GROUP_KEYS = [
 export type NavGroupKey = (typeof NAV_GROUP_KEYS)[number];
 
 /**
+ * The route path that corresponds to each manifest key. Pinned here (not derived from
+ * `/${key}`) because a key is an identifier and a route is a URL: `/app-center` is
+ * kebab-case while the manifest key is camelCase, and React Router 7's path matching is
+ * case-sensitive on character sequences — `/${key}` produced `/appCenter`, which the router
+ * did not have a route for and which fell through to the catch-all `<Navigate to="/chat">`,
+ * making the sidebar's "App Center" entry look like it kicked the user into the chat.
+ *
+ * Both surfaces (the expanded sidebar and the collapsed rail) read from this map, so a new
+ * multi-word entry only needs the manifest + this map declared once for the URL to stay right.
+ */
+export const NAV_ROUTES: Record<NavGroupKey, string> = {
+  appCenter: "/app-center",
+  agents: "/agents",
+  plugins: "/plugins",
+  models: "/models",
+  machines: "/machines",
+  usage: "/usage",
+  benchmark: "/benchmark",
+};
+
+/**
  * Entries the server refuses to a non-admin, so the sidebar does not offer them. Machines
  * installs software on another machine over ssh with the SERVER account's keys, which
  * `/api/machines` gates on `isAdmin` — a row that always answers 403 is worse than no row.

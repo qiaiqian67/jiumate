@@ -45,6 +45,11 @@ import { getUpdaterStatus, handleUpdaterCommand, initUpdater, onUpdaterStatus } 
 import { parseUpdaterCommand, updaterStatusMessage } from "./updater-status.js";
 import { wireExportPdf } from "./export-pdf.js";
 import {
+  createCompanionWindow,
+  isCompanionWindowOpen,
+  type CompanionWindowHandle,
+} from "./companion-window.js";
+import {
   desktopLoginUrl,
   isAppUrl,
   isLocalSurfaceUrl,
@@ -65,6 +70,7 @@ app.setName(identity.name);
 if (process.platform === "win32") app.setAppUserModelId(identity.appUserModelId);
 
 let win: BrowserWindow | null = null;
+let companionHandle: CompanionWindowHandle | null = null;
 let server: EmbeddedServer | null = null;
 /** App origin (embedded or attached); null until boot resolves. */
 let appOrigin: string | null = null;
@@ -91,10 +97,15 @@ function createWindow(url: string): void {
     autoHideMenuBar: true,
     ...(iconPath !== null ? { icon: iconPath } : {}),
     webPreferences: {
-      // The window is a plain browser: no Node, no preload — the minimal attack surface.
+      // Same hardening as before, plus the companion preload bridge. The bridge
+      // exposes only `window.companion.open / close / savePosition` — enough for the
+      // chat window to open the floating pet when the user picks that placement
+      // and to ask the companion to close it on placement flips. No Node, no IPC
+      // beyond the companion namespace.
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      preload: path.join(__dirname, "preload.js"),
     },
   });
   win.once("ready-to-show", () => win?.show());
@@ -205,6 +216,16 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
     clearTimeout(healthyTimer);
     void handleServerExit(dataRoot, code);
   });
+  // Bring up the floating-companion plumbing now that the origin is known. The
+  // IPC handlers stay inert until the chat window calls `window.companion.open`;
+  // `__dirname` is the tsup output dir, where `preload.js` lives.
+  if (companionHandle === null) {
+    companionHandle = createCompanionWindow({
+      appOrigin: started.origin,
+      preloadDir: __dirname,
+    });
+    companionHandle.wireIpc();
+  }
   const url = desktopLoginUrl(started.origin, started.token);
   if (win === null) createWindow(url);
   else void win.loadURL(url);
@@ -248,6 +269,13 @@ async function boot(): Promise<void> {
     // so the window goes through the normal login page of the existing instance.
     appOrigin = `http://localhost:${existing.port}`;
     process.stdout.write(`[shell] attaching to the running server at ${appOrigin}\n`);
+    if (companionHandle === null) {
+      companionHandle = createCompanionWindow({
+        appOrigin,
+        preloadDir: __dirname,
+      });
+      companionHandle.wireIpc();
+    }
     createWindow(`${appOrigin}/`);
     return;
   }
@@ -267,12 +295,21 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on("window-all-closed", () => {
-    // macOS keeps the app alive in the Dock; elsewhere closing the window quits.
-    if (process.platform !== "darwin") app.quit();
+    // macOS keeps the app alive in the Dock; elsewhere closing the window quits —
+    // unless the floating companion window is still open, in which case the user
+    // explicitly asked for it and we'd yank it away on every chat-window close.
+    if (process.platform === "darwin") return;
+    if (isCompanionWindowOpen()) return;
+    app.quit();
   });
 
   app.on("activate", () => {
-    if (win === null && appOrigin !== null) createWindow(`${appOrigin}/`);
+    if (win === null && appOrigin !== null) {
+      // macOS dock activate after the user closed every window: bring the main
+      // window back, but only if the companion window isn't the one still alive.
+      if (isCompanionWindowOpen()) return;
+      createWindow(`${appOrigin}/`);
+    }
   });
 
   // Quit path: stop the embedded server gracefully first (shutdown endpoint → kill),

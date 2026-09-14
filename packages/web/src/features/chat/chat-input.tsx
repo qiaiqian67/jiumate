@@ -126,6 +126,10 @@ import { FileDropZone } from "./drop-zone";
 import { ContextGauge } from "./context-gauge";
 import { splitDroppedFiles } from "../../lib/file-drop";
 import { splitBySize } from "../../lib/upload-limits";
+import { useAsr } from "./companion-asr/use-asr";
+import { useCompanionStore } from "./companion-store";
+import type { AsrError } from "./companion-asr/provider";
+import { detectLang } from "./companion-banner-helpers";
 
 const APPROVAL_MODES: ApprovalMode[] = ["always-ask", "read-only", "allow-all", "deny-all"];
 
@@ -1015,6 +1019,79 @@ export function ChatInput({
   /** Live text mirror for slash-command run() closures (the commands memo deliberately doesn't depend on text). */
   const textRef = useRef(text);
   textRef.current = text;
+  // ASR mic button (L.5): reads the chosen provider from the companion store; the button
+  // itself only renders when asrProvider !== "off" && useAsr().available. Transcripts go
+  // through the same onTextChange path as keyboard input, so draft auto-caching, slash
+  // menu caret tracking and history navigation stay consistent.
+  const { asrProvider } = useCompanionStore();
+  const asr = useAsr();
+  /** Map a Web Speech error to the i18n key the toast surfaces. Centralised so a unit
+   *  test can pin the mapping without rendering the composer. */
+  const asrErrorMessage = (err: AsrError): string => {
+    switch (err.kind) {
+      case "permission-denied":
+        return S.chat.chatAsrPermissionDenied;
+      case "no-speech":
+        return S.chat.chatAsrNoSpeech;
+      case "audio-capture":
+        return S.chat.chatAsrAudioCapture;
+      case "network":
+        return S.chat.chatAsrNetwork;
+      case "aborted":
+        return S.chat.chatAsrAborted;
+      case "other":
+        return err.message !== "" ? err.message : S.chat.chatAsrOther;
+    }
+  };
+  // Surface ASR errors as a toast exactly once per session end (the hook itself clears on
+  // start; aborted sessions are silent on purpose — user-initiated, not an error).
+  const lastAsrErrorRef = useRef<AsrError | null>(null);
+  useEffect(() => {
+    if (asr.error === null) {
+      lastAsrErrorRef.current = null;
+      return;
+    }
+    if (asr.error === lastAsrErrorRef.current) return;
+    lastAsrErrorRef.current = asr.error;
+    if (asr.error.kind === "aborted") return;
+    toastError(asrErrorMessage(asr.error));
+  }, [asr.error]);
+  /** Start/stop toggle for the mic button. While idle, tap to start; while listening,
+   *  tap to stop. The Web Speech recognizer's own `onend` is what fires the final
+   *  transcript callback, so stopping "early" still gets the partial text. */
+  const toggleMic = useCallback(() => {
+    if (asr.listening) {
+      asr.stop();
+      return;
+    }
+    const currentText = textRef.current;
+    const sep =
+      currentText.length === 0 || currentText.endsWith(" ") || currentText.endsWith("\n")
+        ? ""
+        : " ";
+    void asr.start(
+      {
+        onFinal: (transcript) => {
+          if (transcript === "") return;
+          const next = currentText + sep + transcript;
+          textRef.current = next;
+          setText(next);
+          onTextChange?.(next);
+          // Park caret at the end (same convention as applyRecalled / applyHistory).
+          requestAnimationFrame(() => {
+            const el = textareaRef.current;
+            if (!el) return;
+            el.focus();
+            el.setSelectionRange(next.length, next.length);
+            el.scrollTop = el.scrollHeight;
+          });
+        },
+      },
+      // Pass the UI language so the recognizer picks the right model on bilingual OSes
+      // (e.g. macOS / Windows language packs that switch engines per lang).
+      { lang: detectLang() === "zh" ? "zh-CN" : "en-US" },
+    );
+  }, [asr, onTextChange]);
   const [images, setImages] = useState<string[]>([]);
   // File attachments picked from the "+" menu (any type): held as base64 data URLs, exactly
   // like images — a draft has no Session yet, so there is nothing to upload them to ahead of
@@ -2629,6 +2706,51 @@ export function ChatInput({
                   className="h-4 w-4 shrink-0"
                 />
                 <span className="hidden min-w-0 truncate @md:block">{lockedModelLabel}</span>
+              </button>
+            )}
+            {/* Mic button (L.5): only rendered when ASR is enabled in companion settings AND
+              the browser exposes the SpeechRecognition API in a secure context. While
+              listening, the icon flips to a filled circle and a tiny pulse ring paints
+              around it so the user knows it is recording. Clicking again stops; the
+              recognizer's `onend` then streams the final transcript into the composer
+              via `onTextChange` (same path as keyboard input). */}
+            {asrProvider !== "off" && asr.available && (
+              <button
+                type="button"
+                title={asr.listening ? S.chat.chatMicStop : S.chat.chatMicStart}
+                aria-label={asr.listening ? S.chat.chatMicStop : S.chat.chatMicStart}
+                aria-pressed={asr.listening}
+                onClick={toggleMic}
+                className={
+                  asr.listening
+                    ? "relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-50 text-red-600 transition-colors duration-150 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-950"
+                    : "relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                }
+              >
+                {/* Listening pulse ring: a single fading circle behind the icon, painted
+                    via Tailwind's animate-ping so we do not need a CSS keyframe file. */}
+                {asr.listening && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 m-auto h-4 w-4 animate-ping rounded-full bg-red-400 opacity-50 dark:bg-red-500"
+                  />
+                )}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                  className="relative block"
+                >
+                  <rect x="9" y="2" width="6" height="12" rx="3" />
+                  <path d="M5 11a7 7 0 0 0 14 0" />
+                  <path d="M12 18v3" />
+                </svg>
               </button>
             )}
             {/* One action button, never two: while running an empty composer means "Stop"

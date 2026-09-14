@@ -95,6 +95,11 @@ import type { CostStatDisplay } from "./header-stats";
 import { buildInputHistory } from "./input-history";
 import { buildOutline } from "./outline-model";
 import { GoalStatusBanner } from "./goal-banner";
+import { CompanionBanner } from "./companion-banner";
+import { CompanionWidget } from "./companion-widget";
+import { useCompanionStore } from "./companion-store";
+import { useProactiveTrigger } from "./use-proactive-trigger";
+import { COMPANION_CHANNEL } from "./companion-page";
 import { handoffMessage, modelSwitchMessage } from "./agent-handoff";
 import { hasConfiguredKey, sameModelRef } from "../models/model-grouping";
 import { providerInfo } from "@prismshadow/linsight-core/model-catalog";
@@ -114,6 +119,7 @@ import {
   adoptDockScope,
   dockViews,
   dockVersion,
+  isNarrow,
   isTabShown,
   openPanel,
   panelDock,
@@ -393,6 +399,36 @@ export function ChatPage() {
     // Sub-session registration notice (session_created is pushed over the parent session's channel): reload the list so it appears immediately.
     () => void reloadSessions(),
   );
+
+  // AI companion plumbing: the chat page is the source of truth for placement +
+  // taskState. When the user picks "floating" we ask the Electron shell to open the
+  // companion window; when the user picks anything else we ask it to close. The
+  // companion page listens to the same BroadcastChannel we post to here, so the
+  // pet on the floating window mirrors the chat-window pet without a second SSE
+  // connection.
+  const companion = useCompanionStore();
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const bc = new BroadcastChannel(COMPANION_CHANNEL);
+    bc.postMessage({ kind: "taskState", value: stream.taskState });
+    return () => bc.close();
+  }, [stream.taskState]);
+
+  // L.2 proactive-trigger skeleton: mounts the idle-detection hook while the chat
+  // page is open. The hook's only consumer for now is "no one" — it just tracks
+  // idle and exposes `armed` for a future phase to subscribe to. Mounting it here
+  // means the timer runs against real document events rather than being a pure
+  // unit-tested function with no in-app integration.
+  useProactiveTrigger(companion.proactiveTimeoutMs);
+  useEffect(() => {
+    const bridge = window.companion;
+    if (bridge === undefined) return;
+    if (companion.placement === "floating") {
+      void bridge.open(companion.floatingPosition ?? undefined);
+    } else {
+      void bridge.close();
+    }
+  }, [companion.placement, companion.floatingPosition]);
 
   // Chat input area draft: caches text, both staged switch chips (`/agent` target, `/model`
   // target) and the selected skills keyed by sessionId; restored after navigating away and back
@@ -2021,6 +2057,9 @@ export function ChatPage() {
                             during this page's lifetime. The stop button is the composer's
                             regular stop (one abort ends the whole goal loop). */}
                         {stream.goal && <GoalStatusBanner goal={stream.goal} />}
+                        {/* AI companion banner — visible only when companion mode is on
+                            (returns null otherwise, so the layout below is unaffected). */}
+                        <CompanionBanner taskState={stream.taskState} />
                         {input}
                       </div>
                     </div>
@@ -2039,6 +2078,14 @@ export function ChatPage() {
             </div>
           )}
         </ChatDropRegion>
+
+        {/* Companion widget (placement === "widget"): sits in the right rail when
+            the dock is empty and the viewport is wide enough. `rightMount.view === null`
+            keeps the dock as the authoritative right-rail surface; `!isNarrow()` hides
+            the widget below the lg breakpoint so the chat column doesn't get squeezed. */}
+        {rightMount.view === null && !isNarrow() && (
+          <CompanionWidget taskState={stream.taskState} />
+        )}
 
         {rightMount.view && (
           <DockPanel

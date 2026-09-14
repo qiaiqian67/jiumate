@@ -379,6 +379,93 @@
   animation: compact-squeeze 1.8s ease-in-out infinite;
 }
 
+/* Companion banner tail sway (features/chat/companion-banner.tsx: the SVG fox's tail). A
+   small rotational swing pivoted at the tail base; the long 4s period keeps it under the
+   user's eye without ever demanding it. Pure transform, so reduced-motion users get a
+   still tail rather than a vanished pet. Pivot is set inside the path's own bounding
+   box via `transform-box: fill-box` + `transform-origin: 0% 100%` so the swing is
+   consistent regardless of where the SVG was placed in the parent. */
+@keyframes companion-tail-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+.companion-tail-sway {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: companion-tail-sway 4s ease-in-out infinite;
+}
+
+/* Tail fast-wag variant for the "celebrating" pose (turn-done happiness). Same
+   pivot as the slow sway, just a shorter period + larger angle so the tail
+   reads as excited instead of relaxed. Pure transform, so reduced-motion
+   users get a still tail. */
+@keyframes companion-tail-sway-fast {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(14deg);
+  }
+}
+.companion-tail-sway-fast {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: companion-tail-sway-fast 0.8s ease-in-out infinite;
+}
+
+/* Whole-body breathing: a 4s ease-in-out scale on the SVG wrapper. The 0.96→1.0
+   range is subtle enough that the user reads it as "alive" without it being
+   distracting. The wrapper is a span with explicit pixel dimensions so the
+   transform doesn't shift surrounding flex layout. */
+@keyframes companion-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.96);
+  }
+}
+.companion-breathe {
+  animation: companion-breathe 4s ease-in-out infinite;
+}
+
+/* Click-wave: short ear-wiggle on the left ear. Runs once per click via the
+   `companion-ear-wave` class toggled in companion-pet.tsx; the keyframe has a
+   `forwards` direction so the wiggle lands back at zero without snapping.
+   Pure transform. */
+@keyframes companion-ear-wave {
+  0% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-18deg);
+  }
+  40% {
+    transform: rotate(12deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(4deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+.companion-ear-wave {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: companion-ear-wave 1.5s ease-in-out;
+}
+
 /* Login page circuit traces (login-circuit.tsx): pathLength=1 normalization, draw-in -> hold -> fade-out
    loop. Base state is fully hidden: the positive animation-delay wait keeps the first paint blank, and
    lines only start growing after load; once reduced-motion globally disables animation, the override below

@@ -285,8 +285,117 @@ export interface UiPrefs {
    * known key holding user-authored text rather than a flag or an id.
    */
   draftShortcuts?: DraftShortcut[];
+  /**
+   * Where the AI companion surface lives. Replaces the old boolean `companionModeEnabled`:
+   * users now pick one of four placements in System settings → General — a banner above the
+   * composer, a persistent right widget next to the dock, or a floating Electron window
+   * — or "off" to opt out. The server prepends a `[companion_persona]` block whenever the
+   * value is anything other than "off". The block is stripped from generated Session
+   * titles and from goal-mode objectives (it is in `TITLE_NOISE_TAGS`).
+   *
+   * Backward compat: a stored `companionModeEnabled: true` (legacy) is honoured by the
+   * server gate even when `companionPlacement` is absent — `PUT /me/prefs` migrates that
+   * boolean to `companionPlacement: "banner"` on the next explicit write.
+   */
+  companionPlacement?: CompanionPlacement;
+  /** Position of the Electron floating companion window (only meaningful when
+   *  `companionPlacement === "floating"`). Persisted across restarts. */
+  companionFloatingPosition?: { x: number; y: number };
+  /** Display name of the companion (e.g. shown in greetings). Free-form, bounded on
+   *  write by `services/companion-prefs.ts`. Independent of the placement picker —
+   *  setting a name does NOT enable the companion. */
+  companionName?: string;
+  /** Grammatical person the companion refers to itself as. Drives `system prompt`
+   *  templates once L.2 ships real proactive content. Defaults to "they" if unset. */
+  companionPronoun?: CompanionPronoun;
+  /** Idle threshold before the companion may proactively speak (L.2 trigger
+   *  skeleton). 0 = never proactive. Bounded 0..60 minutes on write. */
+  companionProactiveTimeoutMs?: number;
+  /** TTS provider for the Electron floating pet (L.4). "off" is the safe default —
+   *  the user has to opt in to having the pet speak. New providers (ElevenLabs,
+   *  OpenAI, local Kokoro) land here; the Web Speech implementation is wired in
+   *  PR-B, the rest are future phases. */
+  companionTtsProvider?: CompanionTtsProvider;
+  /** Voice id picked from the chosen provider's voice list. Provider-specific:
+   *  Web Speech stores the SpeechSynthesisVoice.voiceURI; ElevenLabs / OpenAI
+   *  store their own ids. Free-form, length-bounded. */
+  companionTtsVoice?: string;
+  /** ASR provider for the chat composer (L.5). "off" hides the mic button;
+   *  "webspeech" enables tap-to-talk via Chromium's `SpeechRecognition`. AWS
+   *  Transcribe / OpenAI Whisper / local Whisper.cpp land in later phases
+   *  through the same closed enum. */
+  companionAsrProvider?: CompanionAsrProvider;
+  /** Avatar renderer for the AI companion (L.6). "svg" is the safe default
+   *  and ships the existing 2D fox on every surface; "live2d" swaps in a
+   *  pseudo-3D Cubism model behind the same `<CompanionPet>` swap point.
+   *  The renderer is auto-degraded to "svg" by the client when WebGL is
+   *  unavailable. */
+  companionAvatarRenderer?: CompanionAvatarRenderer;
+  /** Which built-in Live2D preset to load when `companionAvatarRenderer ===
+   *  "live2d"`. Closed list of Cubism SDK sample-data ids (Hiyori / Mark /
+   *  Mao). Anything else is a 400 — the Settings picker only exposes
+   *  presets the runtime can resolve. */
+  companionAvatarPreset?: CompanionAvatarPreset;
   [key: string]: unknown;
 }
+
+/** Closed list of ASR providers the client understands. Same extensibility
+ *  pattern as `CompanionTtsProvider`: a new engine is an enum extension on
+ *  both server and client, plus an entry in `companion-asr/registry.ts`. */
+export type CompanionAsrProvider = "off" | "webspeech";
+export const COMPANION_ASR_PROVIDERS: readonly CompanionAsrProvider[] = ["off", "webspeech"];
+
+/** Closed list of TTS providers the client understands. Anything else is a 400.
+ *  Add a new provider by extending this enum, the `CompanionTtsProvider` mirror
+ *  in `packages/web/src/features/chat/companion-store.tsx`, and the
+ *  provider-impl registry under `packages/web/src/features/chat/companion-tts/`. */
+export type CompanionTtsProvider = "off" | "webspeech";
+export const COMPANION_TTS_PROVIDERS: readonly CompanionTtsProvider[] = ["off", "webspeech"];
+
+/** Closed list of avatar renderers the client understands. Same extensibility
+ *  pattern as the TTS / ASR providers: a new renderer is an enum extension on
+ *  both server and client, plus an entry in
+ *  `packages/web/src/features/chat/companion-live2d/`. "svg" is the safe
+ *  default — a brand-new user never sees a Live2D model without opting in. */
+export type CompanionAvatarRenderer = "svg" | "live2d";
+export const COMPANION_AVATAR_RENDERERS: readonly CompanionAvatarRenderer[] = ["svg", "live2d"];
+
+/** Closed list of Live2D preset ids the runtime knows how to resolve. The
+ *  Settings picker iterates this list; the server-side gate uses it to reject
+ *  unknown ids (a hand-crafted PUT must not be able to put a junk id into the
+ *  prefs row). The catalog itself lives in
+ *  `packages/web/src/features/chat/companion-live2d/manifest.ts` — server and
+ *  client must agree on this closed list. */
+export type CompanionAvatarPreset = "hiyori" | "mark" | "mao";
+export const COMPANION_AVATAR_PRESETS: readonly CompanionAvatarPreset[] = ["hiyori", "mark", "mao"];
+
+/** Closed list of pronoun keys — the settings page renders a 4-segment picker over
+ *  this set, and the server-side gate uses it to reject unknown strings rather than
+ *  treat them as "they". Keep this list narrow on purpose: airi-style personalization
+ *  is its own design problem and a long tail belongs in a future L.x phase. */
+export type CompanionPronoun = "he" | "she" | "they" | "it";
+
+export const COMPANION_PRONOUNS: readonly CompanionPronoun[] = ["he", "she", "they", "it"];
+
+/** The four placements the user can pick from. The first three trigger the server's
+ *  persona injection; "off" opts out. Re-exported from core's enum so web / desktop /
+ *  server share one type definition. */
+export type CompanionPlacement = "off" | "banner" | "widget" | "floating";
+
+/** Canonical ordering — used by the Settings UI's 4-segment picker and by tests. */
+export const COMPANION_PLACEMENTS: readonly CompanionPlacement[] = [
+  "off",
+  "banner",
+  "widget",
+  "floating",
+];
+
+/** Subset that turns on the persona block at the server. */
+export const PERSONA_ON_PLACEMENTS: ReadonlySet<CompanionPlacement> = new Set([
+  "banner",
+  "widget",
+  "floating",
+]);
 
 export interface PrefsResponse {
   prefs: UiPrefs;

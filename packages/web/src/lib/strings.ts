@@ -123,6 +123,79 @@ export const zh = {
   settings: {
     language: "语言",
     languageInfo: "界面语言，可跟随浏览器设置。",
+    /** 4-segment picker in System settings → General: pick where the AI companion
+     *  lives. Replaces the old boolean switch. */
+    companionModeTitle: "AI 伴侣模式",
+    companionModeInfo:
+      "选择 AI 伴侣出现的位置。「输入框上方」在 composer 上方挂一张小卡；「右侧面板」与右侧 dock 并排显示；「悬浮窗」打开一个独立的桌面宠物窗口，可拖动、始终置顶。选择「关闭」则不显示伴侣。",
+    /** The four labels on the 4-segment placement picker. */
+    companionModeOff: "关闭",
+    companionModeBanner: "输入框上方",
+    companionModeWidget: "右侧面板",
+    companionModeFloating: "悬浮窗",
+    /** Shown as a toast when the user picks "悬浮窗" in the Vite dev build (no
+     *  Electron shell, so the floating window has nowhere to host). */
+    companionModeFloatingDevHint: "悬浮窗需要在桌面客户端中使用",
+    /** Right-rail widget subtitle — shown under the pet when the agent is idle. */
+    companionWidgetIdleHint: "伴侣就在这里——开始对话，看看它会做什么。",
+    /** Right-rail widget subtitle — shown while the agent is running a turn. */
+    companionWidgetThinkingHint: "伴侣正和智能体一起思考。",
+    /** Companion-specific settings page (System settings → Companion). */
+    companionPageTitle: "AI 伴侣",
+    companionPageInfo:
+      "伴侣的配置独立于 Agent：这里改的是伴侣自己（名字、称谓、主动说话的间隔），不会影响 Linsight 的工作流。",
+    /** Pet name input label. Empty = 内部默认名（locale 适配）。 */
+    companionNameLabel: "名字",
+    companionNamePlaceholder: "给你的伴侣起个名字",
+    /** Self-referential pronoun picker label. 4-segment: 他 / 她 / 它 / ta。 */
+    companionPronounLabel: "称谓",
+    companionPronounHe: "他",
+    companionPronounShe: "她",
+    companionPronounIt: "它",
+    companionPronounThey: "ta",
+    /** Idle-timeout slider label. 0 = 关闭主动聊天；其余为「无操作多久后开口」。 */
+    companionProactiveTimeoutLabel: "主动聊天间隔",
+    companionProactiveTimeoutHint: "无操作多久后开口。设为「关闭」则不会主动说话。",
+    /** Slider's leftmost segment — explicit opt-out, distinct from "unset". */
+    companionProactiveTimeoutOff: "关闭",
+    /** Slider stops. Compact labels so the slider's segments stay readable on a
+     *  220-px Settings row; the actual values are minutes. */
+    companionProactiveTimeout1m: "1 分钟",
+    companionProactiveTimeout5m: "5 分钟",
+    companionProactiveTimeout15m: "15 分钟",
+    companionProactiveTimeout30m: "30 分钟",
+    companionProactiveTimeout60m: "60 分钟",
+    /** TTS row (L.4). The provider picker mirrors the voice picker on
+     *  every chat locale; "关闭" stays the safe default. */
+    companionTtsProviderLabel: "语音输出",
+    companionTtsProviderInfo:
+      "伴侣在悬浮窗里把反应气泡念出来。「关闭」= 静默；其它选项按浏览器/系统的 TTS 引擎朗读。",
+    companionTtsProviderOff: "关闭",
+    companionTtsProviderWebspeech: "系统语音",
+    companionTtsVoiceLabel: "嗓音",
+    companionTtsVoiceDefault: "跟随系统",
+    companionTtsVoiceEmpty: "暂无嗓音",
+    /** ASR row (L.5): the provider picker for the chat composer's mic button.
+     *  Mirrors the TTS row's terminology — "Off" is the safe default. */
+    companionAsrProviderLabel: "语音输入",
+    companionAsrProviderInfo:
+      "在 composer 旁显示一个麦克风按钮，点按录音，再次点按结束。转写后的文本会写入 composer，由你确认后再发送。",
+    companionAsrProviderOff: "关闭",
+    companionAsrProviderWebspeech: "系统识别",
+    /** Avatar row (L.6): the renderer picker (svg vs Live2D) and the
+     *  preset picker (only shown when renderer === live2d). The runtime
+     *  falls back to SVG automatically when WebGL is unavailable. */
+    companionAvatarRendererLabel: "立体头像",
+    companionAvatarRendererInfo:
+      "把伴侣的 SVG 换成 Live2D 立体模型。需要在浏览器里启用 WebGL；如果环境不支持，伴侣会自动回退到 SVG。",
+    companionAvatarRendererSvg: "2D",
+    companionAvatarRendererLive2d: "Live2D",
+    companionAvatarPresetLabel: "模型",
+    companionAvatarPresetInfo:
+      "切换内置立体模型。当前模型需先下载 Cubism 官方示例资产后才会显示，否则显示占位图标。",
+    companionAvatarPresetLoading: "加载中…",
+    companionAvatarPresetFailed: "模型加载失败，已回退到 2D。",
+    companionAvatarRendererFallbackToast: "立体头像不可用，已回退到 2D。",
     /** Sidebar user-menu row opening the System settings dialog. */
     systemSettings: "系统设置",
     /** Rail headings: the viewer's own preferences vs. the whole server's. */
@@ -1373,6 +1446,31 @@ export const zh = {
       shortcutsEmpty: "你还没有保存快捷指令——选一张内置卡片开始，把输入框的内容存为快捷指令即可。",
       /** 点击后的行为提示，与新建对话页一行提示保持一致。 */
       fillHint: "点击填入输入框，可修改后自行发送",
+      /**
+       * 应用详情 Modal：标题与底部按钮。Modal 内的 cover/desc/prompt 都来自 S.chat.exampleTasks
+       * 与 S.chat.shortcuts，本组只放 chrome（标题与动作）。"在草稿中打开"沿用 plugins 库的语义——
+       * 不是"立即发送"，而是 park + saveDraft + 跳 /chat/new，让用户在草稿里读、改、再发。
+       */
+      detailTitle: "应用详情",
+      /** 详情 Modal 底部主按钮：触发与 plugins quick start 一致的 fillExample 链路。 */
+      invoke: "在草稿中打开",
+      /** 详情 Modal 内、提示词区段标题（参考 plugins 详情里"插件说明"的 chrome）。 */
+      promptLabel: "提示词",
+      /** 详情 Modal 内、预选技能区段标题。 */
+      skillsLabel: "预选技能",
+      /** 当一个 example / shortcut 没有 skills 时，详情 Modal 内显示的占位。 */
+      noSkillsHint: "（未预选技能）",
+      /**
+       * 详情 Modal 与卡片主体的元信息行（参考 PluginCard meta 的拼接风格）：
+       * "分类：Web · 预选 2 项技能"。folderName 是 S.chat.exampleFolders 的标签，shortcut
+       * 不走这条——它的元信息是固定的 shortcutMeta。
+       */
+      metaLine: (folderName: string, skillCount: number): string =>
+        skillCount > 0 ? `分类：${folderName} · 预选 ${skillCount} 项技能` : `分类：${folderName}`,
+      /** 详情 Modal 顶部、"我的快捷指令"卡片的固定 meta 行。 */
+      shortcutMeta: "我的快捷指令",
+      /** 卡片右侧"在草稿中打开"按钮的 tooltip。 */
+      invokeHint: "在草稿中打开",
     },
     /**
      * Example task cards on the draft screen: one click fills the composer with the canned
@@ -1604,6 +1702,18 @@ Benchmark：
     recallQueuedTitle: "撤回到输入框，编辑后重新发送",
     send: "发送",
     stop: "停止",
+    /** Mic button (L.5): title + aria-label, toggles between start and stop. */
+    chatMicStart: "开始录音",
+    chatMicStop: "停止录音",
+    /** ASR error toasts — keyed off the `AsrError.kind` discriminator. The
+     *  `chatAsrAborted` variant is intentionally never surfaced (user-initiated
+     *  stop, not an error); the chat input gates the toast on `kind !== "aborted"`. */
+    chatAsrPermissionDenied: "麦克风权限被拒绝，请在浏览器或系统设置里允许。",
+    chatAsrNoSpeech: "没有听到声音，再试一次。",
+    chatAsrAudioCapture: "麦克风不可用，检查设备连接。",
+    chatAsrNetwork: "语音识别服务暂时不可用。",
+    chatAsrAborted: "录音已取消。",
+    chatAsrOther: "语音识别失败。",
     compact: "压缩上下文",
     approve: "允许",
     deny: "拒绝",

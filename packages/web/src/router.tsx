@@ -18,6 +18,7 @@ import { UsagePage } from "./features/usage/usage-page";
 import { BenchmarkPage } from "./features/benchmark/benchmark-page";
 import { TerminalPage } from "./features/terminal/terminal-page";
 import { AppCenterPage } from "./features/chat/app-center-page";
+import { CompanionPage } from "./features/chat/companion-page";
 
 /** Route guard: shows blank while initializing, redirects to /login when not authenticated. */
 function RequireAuth() {
@@ -62,6 +63,17 @@ export function AppRouter() {
           element={
             <RequireAuthBare>
               <TerminalPage />
+            </RequireAuthBare>
+          }
+        />
+        {/* Companion floating window page (Electron `companionWin`). Standalone
+            surface — no sidebar, no Project context, just the pet. The loopback
+            origin reuses the same `linsight_session` cookie. */}
+        <Route
+          path="/companion"
+          element={
+            <RequireAuthBare>
+              <CompanionPage />
             </RequireAuthBare>
           }
         />

@@ -61,7 +61,7 @@ import { AgentAvatar } from "../../components/ui/agent-avatar";
 import { Button } from "../../components/ui/button";
 import { Chevron } from "../../components/ui/chevron";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
-import { PLUGIN_ICON } from "../../components/ui/icons";
+import { PLUGIN_ICON, SEND_ICON } from "../../components/ui/icons";
 import { Modal } from "../../components/ui/modal";
 import { TodoNotice } from "../../components/ui/todo-notice";
 import { UpdateDot } from "../../components/ui/update-dot";
@@ -94,8 +94,7 @@ export type InstalledMap = ReadonlyMap<string, AgentInstalls>;
 /** The three fields of a plugin the install questions below read (the card passes the whole DTO; tests can pass just these). */
 export type PluginParts = Pick<PluginItem, "name" | "skills" | "hooks">;
 
-/** "Quick start" button icon (paper plane, 24×24 line path; button shows only the icon, copy goes into aria/title). */
-const SEND_ICON = "M22 2 11 13M22 2 15 22 11 13 2 9 22 2";
+/** "Quick start" button icon (paper plane, 24×24 line path; the path lives in `components/ui/icons.tsx` so the App Center and other surfaces can reuse it without a cross-feature import). */
 /** "Manage installs" button icon (download into tray, 24×24 line path). */
 const INSTALL_ICON = "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3";
 /** "Update installs" button icon (rotate-cw, 24×24 line path). */

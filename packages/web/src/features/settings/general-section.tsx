@@ -1,8 +1,8 @@
 /**
  * General page of System settings: per-account preferences that are neither appearance nor
  * credentials. Everything applies the moment it is touched — the stores persist each value
- * (language and currency per browser) — so the page carries no Save button and no draft
- * state to lose.
+ * (language and currency per browser; companion-mode per server) — so the page carries no
+ * Save button and no draft state to lose.
  */
 import { S } from "../../lib/strings";
 import { Segmented } from "../../components/ui/segmented";
@@ -12,6 +12,7 @@ import { useTheme } from "../../state/theme";
 import type { Currency } from "../../state/theme";
 import { PrefRow } from "./setting-row";
 import { TraceImportRow } from "./trace-import-row";
+import { CompanionModeRow } from "./companion-mode-row";
 
 export function GeneralSection() {
   const { lang, setLang } = useLocale();
@@ -35,6 +36,7 @@ export function GeneralSection() {
       <PrefRow label={S.models.currency} info={S.settings.currencyInfo}>
         <Segmented options={currencyOptions} value={currency} onChange={setCurrency} cols={2} />
       </PrefRow>
+      <CompanionModeRow />
       <TraceImportRow />
     </div>
   );

@@ -112,6 +112,78 @@ export const en: Strings = {
   settings: {
     language: "Language",
     languageInfo: "Interface language; can follow the browser.",
+    /** 4-segment picker in System settings → General: pick where the AI companion
+     *  lives. Replaces the old boolean switch. */
+    companionModeTitle: "AI companion mode",
+    companionModeInfo:
+      "Where the AI companion lives. Banner sits above the composer. Widget is a persistent panel next to the right dock. Floating opens a separate, always-on-top, draggable desktop pet window. Choose Off to hide the companion entirely.",
+    /** The four labels on the 4-segment placement picker. */
+    companionModeOff: "Off",
+    companionModeBanner: "Banner",
+    companionModeWidget: "Widget",
+    companionModeFloating: "Floating",
+    /** Shown as a toast when the user picks "Floating" in the Vite dev build (no
+     *  Electron shell, so the floating window has nowhere to host). */
+    companionModeFloatingDevHint: "Floating pet is only available in the desktop app",
+    /** Right-rail widget subtitle — shown under the pet when the agent is idle. */
+    companionWidgetIdleHint: "Companion is here — start a turn to see what it does.",
+    /** Right-rail widget subtitle — shown while the agent is running a turn. */
+    companionWidgetThinkingHint: "Companion is thinking along with the agent.",
+    /** Companion-specific settings page (System settings → Companion). */
+    companionPageTitle: "AI companion",
+    companionPageInfo:
+      "Settings for the companion itself — name, pronoun, how long it waits before speaking on its own. Independent of the Agent workflow.",
+    /** Pet name input label. Empty = internal default (locale-aware). */
+    companionNameLabel: "Name",
+    companionNamePlaceholder: "Give your companion a name",
+    /** Self-referential pronoun picker label. 4-segment: he / she / they / it. */
+    companionPronounLabel: "Pronoun",
+    companionPronounHe: "he",
+    companionPronounShe: "she",
+    companionPronounIt: "it",
+    companionPronounThey: "they",
+    /** Idle-timeout slider label. 0 = never proactive; otherwise the gap after which
+     *  the pet may speak. */
+    companionProactiveTimeoutLabel: "Proactive chat interval",
+    companionProactiveTimeoutHint:
+      "How long the companion waits in silence before speaking. Off means it never speaks first.",
+    /** Slider's leftmost segment — explicit opt-out, distinct from "unset". */
+    companionProactiveTimeoutOff: "Off",
+    companionProactiveTimeout1m: "1 min",
+    companionProactiveTimeout5m: "5 min",
+    companionProactiveTimeout15m: "15 min",
+    companionProactiveTimeout30m: "30 min",
+    companionProactiveTimeout60m: "60 min",
+    /** TTS row (L.4). The provider picker mirrors the voice picker on
+     *  every chat locale; "Off" stays the safe default. */
+    companionTtsProviderLabel: "Voice output",
+    companionTtsProviderInfo:
+      "Reads the reaction bubble aloud on the floating pet. Off = silent; other options use the browser/OS TTS engine.",
+    companionTtsProviderOff: "Off",
+    companionTtsProviderWebspeech: "System voices",
+    companionTtsVoiceLabel: "Voice",
+    companionTtsVoiceDefault: "Follow system",
+    companionTtsVoiceEmpty: "No voices available",
+    /** ASR row (L.5): the provider picker for the chat composer's mic button. */
+    companionAsrProviderLabel: "Voice input",
+    companionAsrProviderInfo:
+      "Shows a microphone button next to the composer. Tap to record, tap again to stop; the transcript fills the composer for you to confirm before sending.",
+    companionAsrProviderOff: "Off",
+    companionAsrProviderWebspeech: "System recognition",
+    /** Avatar row (L.6): the renderer picker (SVG vs Live2D) and the
+     *  preset picker (only shown when renderer === live2d). The runtime
+     *  falls back to SVG automatically when WebGL is unavailable. */
+    companionAvatarRendererLabel: "Stereo avatar",
+    companionAvatarRendererInfo:
+      "Swap the companion's SVG for a pseudo-3D Live2D model. Requires WebGL in the browser; if the environment cannot run WebGL, the companion silently falls back to SVG.",
+    companionAvatarRendererSvg: "2D",
+    companionAvatarRendererLive2d: "Live2D",
+    companionAvatarPresetLabel: "Model",
+    companionAvatarPresetInfo:
+      "Switch between the bundled Live2D presets. Models need the Cubism SDK sample-data assets to be present; until then, the picker shows a placeholder.",
+    companionAvatarPresetLoading: "Loading…",
+    companionAvatarPresetFailed: "Model failed to load — falling back to 2D.",
+    companionAvatarRendererFallbackToast: "Stereo avatar unavailable — reverted to 2D.",
     /** Sidebar user-menu row opening the System settings dialog. */
     systemSettings: "System settings",
     /** Rail headings: the viewer's own preferences vs. the whole server's. */
@@ -1403,6 +1475,23 @@ export const en: Strings = {
         "You haven't saved any shortcuts yet — pick one of the built-in cards to start, then save the composer text as a shortcut.",
       /** Click affordance: the same line the draft screen uses (the row tooltip already carries it). */
       fillHint: "Click to fill the composer — edit it if you like, then send",
+      /**
+       * App detail Modal chrome (title + footer button). Cover/desc/prompt come from
+       * S.chat.exampleTasks and S.chat.shortcuts; this group only carries the chrome.
+       * "Open in draft" mirrors the plugins library's quick-start semantics — not "send now",
+       * but park + saveDraft + navigate /chat/new so the user reads, edits, then sends.
+       */
+      detailTitle: "App detail",
+      invoke: "Open in draft",
+      promptLabel: "Prompt",
+      skillsLabel: "Preselected skills",
+      noSkillsHint: "(no preselected skills)",
+      metaLine: (folderName: string, skillCount: number): string =>
+        skillCount > 0
+          ? `Category: ${folderName} · ${skillCount} preselected skill${skillCount === 1 ? "" : "s"}`
+          : `Category: ${folderName}`,
+      shortcutMeta: "Saved shortcut",
+      invokeHint: "Open in draft",
     },
     exampleTasks: {
       game: {
@@ -1642,6 +1731,19 @@ Scenarios:
     recallQueuedTitle: "Recall to the input box to edit and resend",
     send: "Send",
     stop: "Stop",
+    /** Mic button (L.5): title + aria-label, toggles between start and stop. */
+    chatMicStart: "Start recording",
+    chatMicStop: "Stop recording",
+    /** ASR error toasts — keyed off the `AsrError.kind` discriminator. The
+     *  `chatAsrAborted` variant is intentionally never surfaced (user-initiated
+     *  stop, not an error); the chat input gates the toast on `kind !== "aborted"`. */
+    chatAsrPermissionDenied:
+      "Microphone access was denied. Allow it in your browser or system settings.",
+    chatAsrNoSpeech: "Didn't hear anything. Try again.",
+    chatAsrAudioCapture: "Microphone is unavailable. Check the device connection.",
+    chatAsrNetwork: "Speech recognition service is unavailable right now.",
+    chatAsrAborted: "Recording was cancelled.",
+    chatAsrOther: "Speech recognition failed.",
     compact: "Compact context",
     approve: "Allow",
     deny: "Deny",

@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import {
   NAV_GROUP_COLLAPSED_KEY,
   NAV_GROUP_KEYS,
+  NAV_ROUTES,
   initialNavGroupCollapsed,
   navKeysFor,
   storeNavGroupCollapsed,
@@ -171,5 +172,31 @@ describe("persisted collapse state (one global localStorage key)", () => {
     } as unknown as NavCollapseStorage;
     expect(() => initialNavGroupCollapsed(hostile)).not.toThrow();
     expect(initialNavGroupCollapsed(hostile)).toBe(false);
+  });
+});
+
+describe("NAV_ROUTES", () => {
+  it("covers the full manifest with the route the router actually has (so the sidebar never navigates to a path the router doesn't know)", () => {
+    // Pin every manifest key has a route: a key without one would render `<NavLink to={undefined}>`.
+    for (const key of NAV_GROUP_KEYS) {
+      expect(NAV_ROUTES[key]).toMatch(/^\/[a-z-]+$/);
+    }
+    // Pin the names that don't match `/${key}` exactly. `appCenter` (camelCase manifest key)
+    // would produce `/appCenter` by concatenation, which React Router 7 does not match against
+    // `/app-center` — the route fell through to the catch-all `<Navigate to="/chat">` and
+    // the sidebar looked like it kicked the user into a chat. The map pins the kebab-case
+    // path the router actually registers.
+    expect(NAV_ROUTES.appCenter).toBe("/app-center");
+    expect(NAV_ROUTES.appCenter).not.toBe("/appCenter");
+    // Every other key is single-word, so concatenation happens to be right; pin the routes
+    // anyway so a future typo (e.g. "/usage" → "/Usage") shows up here.
+    expect(NAV_ROUTES).toMatchObject({
+      agents: "/agents",
+      plugins: "/plugins",
+      models: "/models",
+      machines: "/machines",
+      usage: "/usage",
+      benchmark: "/benchmark",
+    });
   });
 });

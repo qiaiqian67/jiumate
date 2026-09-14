@@ -7,6 +7,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useMatch, useNavigate } from "react-router";
 import * as api from "../../api/endpoints";
+import { NAV_ROUTES } from "../../lib/nav-group-collapse";
 import { S } from "../../lib/strings";
 import { latestConversation } from "../../lib/session-grouping";
 import { navNoteFor, useUpdateBadges } from "../../lib/use-update-badges";
@@ -26,6 +27,7 @@ import { UpdateModal } from "../account/update-modal";
 import { TerminalDockRuntime } from "../../features/terminal/terminal-view-pool";
 import { setDockScope } from "../../features/dock/dock-state";
 import { toneStrip } from "../../lib/tone";
+import { CompanionProvider } from "../../features/chat/companion-store";
 
 /**
  * "Last conversation" glyph, used only by the rail: lucide's history mark — a clock read
@@ -85,14 +87,17 @@ function CollapsedRail({ onExpand }: { onExpand: () => void }) {
 
   /** Page entries (rail positions 3-7): same routes, same labels as the pinned nav.
       Traces is not among them: reading a Trace happens in the chat toolbar's panel
-      switcher, which is the only place it happens. */
+      switcher, which is the only place it happens. Paths come from `NAV_ROUTES` rather
+      than `/${key}` concatenation — manifest keys are identifiers, paths are URLs
+      (`/app-center` is kebab-case while the key is camelCase), and a wrong character
+      sequence falls through to the catch-all `<Navigate to="/chat">`. */
   const pages: ReadonlyArray<{ to: string; label: string; icon: string }> = [
-    { to: "/app-center", label: S.nav.appCenter, icon: NAV_ICONS.appCenter },
-    { to: "/agents", label: S.nav.agents, icon: NAV_ICONS.agents },
-    { to: "/plugins", label: S.nav.plugins, icon: NAV_ICONS.plugins },
-    { to: "/models", label: S.nav.models, icon: NAV_ICONS.models },
-    { to: "/usage", label: S.nav.usage, icon: NAV_ICONS.usage },
-    { to: "/benchmark", label: S.nav.benchmark, icon: NAV_ICONS.benchmark },
+    { to: NAV_ROUTES.appCenter, label: S.nav.appCenter, icon: NAV_ICONS.appCenter },
+    { to: NAV_ROUTES.agents, label: S.nav.agents, icon: NAV_ICONS.agents },
+    { to: NAV_ROUTES.plugins, label: S.nav.plugins, icon: NAV_ICONS.plugins },
+    { to: NAV_ROUTES.models, label: S.nav.models, icon: NAV_ICONS.models },
+    { to: NAV_ROUTES.usage, label: S.nav.usage, icon: NAV_ICONS.usage },
+    { to: NAV_ROUTES.benchmark, label: S.nav.benchmark, icon: NAV_ICONS.benchmark },
   ];
 
   return (
@@ -245,110 +250,117 @@ export function AppLayout() {
     });
 
   return (
-    <div className="flex h-full">
-      {/* Desktop: single-column sidebar (collapsible to a narrow rail) */}
-      <aside
-        className={`hidden shrink-0 border-r border-gray-200 bg-gray-50 md:block dark:border-gray-800 dark:bg-gray-900 ${
-          collapsed ? "w-12" : "w-64 lg:w-72"
-        }`}
-      >
-        {collapsed ? (
-          <CollapsedRail onExpand={toggleCollapsed} />
-        ) : (
-          <Sidebar onCollapse={toggleCollapsed} />
-        )}
-      </aside>
+    <CompanionProvider>
+      <div className="flex h-full">
+        {/* Desktop: single-column sidebar (collapsible to a narrow rail) */}
+        <aside
+          className={`hidden shrink-0 border-r border-gray-200 bg-gray-50 md:block dark:border-gray-800 dark:bg-gray-900 ${
+            collapsed ? "w-12" : "w-64 lg:w-72"
+          }`}
+        >
+          {collapsed ? (
+            <CollapsedRail onExpand={toggleCollapsed} />
+          ) : (
+            <Sidebar onCollapse={toggleCollapsed} />
+          )}
+        </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile: top thin bar (hamburger + brand) */}
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-2 md:hidden dark:border-gray-800 dark:bg-gray-950">
-          {/* The outermost menu on a phone: it carries a dot for EITHER trail, so its wording
+        <div className="flex min-w-0 flex-1 flex-col">
+          {/* Mobile: top thin bar (hamburger + brand) */}
+          <header className="flex h-12 shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-2 md:hidden dark:border-gray-800 dark:bg-gray-950">
+            {/* The outermost menu on a phone: it carries a dot for EITHER trail, so its wording
               is the combined one — naming one of two updates would point at the wrong trail.
               Both trails continue inside the drawer's sidebar (the Agents entry, the user
               row's update entry). */}
-          <button
-            type="button"
-            aria-label={
-              badges.note !== null ? `${S.chat.sessionList} · ${badges.note}` : S.chat.sessionList
-            }
-            {...(badges.note !== null ? { title: badges.note } : {})}
-            onClick={() => setDrawerOpen(true)}
-            className="relative flex h-9 w-9 items-center justify-center rounded-md text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              aria-hidden
+            <button
+              type="button"
+              aria-label={
+                badges.note !== null ? `${S.chat.sessionList} · ${badges.note}` : S.chat.sessionList
+              }
+              {...(badges.note !== null ? { title: badges.note } : {})}
+              onClick={() => setDrawerOpen(true)}
+              className="relative flex h-9 w-9 items-center justify-center rounded-md text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
             >
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            {badges.any && <UpdateDot />}
-          </button>
-          <span className="text-sm font-semibold">{S.appName}</span>
-        </header>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                aria-hidden
+              >
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              {badges.any && <UpdateDot />}
+            </button>
+            <span className="text-sm font-semibold">{S.appName}</span>
+          </header>
 
-        {/* Initial-password notice banner (seed/admin-set password): disappears once passwordIsInitial clears after a successful change.
+          {/* Initial-password notice banner (seed/admin-set password): disappears once passwordIsInitial clears after a successful change.
             Hidden in desktop mode — the seed password there is random and never shown, so "change it" is meaningless nagging.
             Permanently dismissible via the X on the right (per-user ui_prefs); only rendered once
             hydrated prefs confirm it was never dismissed, so it does not flash-then-vanish on load. */}
-        {passwordBannerRelevant && passwordBannerDismissed === false && (
-          <div
-            className={`relative flex shrink-0 items-center justify-center gap-3 border-b px-8 py-1.5 text-xs ${toneStrip.attention}`}
-          >
-            <span>{S.account.initialPasswordBanner}</span>
-            <button
-              type="button"
-              className="shrink-0 font-medium underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100"
-              onClick={() => setChangePasswordOpen(true)}
+          {passwordBannerRelevant && passwordBannerDismissed === false && (
+            <div
+              className={`relative flex shrink-0 items-center justify-center gap-3 border-b px-8 py-1.5 text-xs ${toneStrip.attention}`}
             >
-              {S.account.changeNow}
-            </button>
-            {/* Amber-toned twin of the shared CloseButton (same glyph + aria-label) — its hardcoded
+              <span>{S.account.initialPasswordBanner}</span>
+              <button
+                type="button"
+                className="shrink-0 font-medium underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100"
+                onClick={() => setChangePasswordOpen(true)}
+              >
+                {S.account.changeNow}
+              </button>
+              {/* Amber-toned twin of the shared CloseButton (same glyph + aria-label) — its hardcoded
                 gray colors would clash here. Flat: hover feedback is icon-color-only (no background
                 fill), same hover shades as the change-now link. Absolutely positioned at the right
                 edge: near-full-height hit area without growing the banner and without transform (see
                 the stacking-context note in the file header); the banner's symmetric px-8 keeps the
                 centered text clear. */}
-            <button
-              type="button"
-              aria-label={S.common.close}
-              title={S.common.close}
-              onClick={dismissPasswordBanner}
-              className="absolute inset-y-0.5 right-1.5 flex items-center rounded-md px-1 text-amber-500 transition-colors duration-150 hover:text-amber-950 dark:text-amber-400/70 dark:hover:text-amber-100"
-            >
-              <CloseIcon size={12} />
-            </button>
-          </div>
-        )}
+              <button
+                type="button"
+                aria-label={S.common.close}
+                title={S.common.close}
+                onClick={dismissPasswordBanner}
+                className="absolute inset-y-0.5 right-1.5 flex items-center rounded-md px-1 text-amber-500 transition-colors duration-150 hover:text-amber-950 dark:text-amber-400/70 dark:hover:text-amber-100"
+              >
+                <CloseIcon size={12} />
+              </button>
+            </div>
+          )}
 
-        <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
-          <Outlet />
-        </main>
-        {/* The docks themselves render inside the chat page (features/dock); the xterm
+          <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
+            <Outlet />
+          </main>
+          {/* The docks themselves render inside the chat page (features/dock); the xterm
             views live in this pool and are adopted into dock tab bodies by DOM handoff,
             so navigating between pages never reconnects a terminal. */}
-        <TerminalDockRuntime />
-      </div>
-
-      {/* The software-update modal, opened from the sidebar's update row and the draft
-          page's version badge alike; mounted here so it outlives both. */}
-      <UpdateModal />
-      <ChangePasswordDialog
-        open={changePasswordOpen}
-        onClose={() => setChangePasswordOpen(false)}
-      />
-
-      {/* Mobile: sidebar drawer */}
-      <Drawer open={drawerOpen} side="left" title={S.appName} onClose={() => setDrawerOpen(false)}>
-        <div className="h-full bg-gray-50 dark:bg-gray-900">
-          <Sidebar onNavigate={() => setDrawerOpen(false)} />
+          <TerminalDockRuntime />
         </div>
-      </Drawer>
-    </div>
+
+        {/* The software-update modal, opened from the sidebar's update row and the draft
+          page's version badge alike; mounted here so it outlives both. */}
+        <UpdateModal />
+        <ChangePasswordDialog
+          open={changePasswordOpen}
+          onClose={() => setChangePasswordOpen(false)}
+        />
+
+        {/* Mobile: sidebar drawer */}
+        <Drawer
+          open={drawerOpen}
+          side="left"
+          title={S.appName}
+          onClose={() => setDrawerOpen(false)}
+        >
+          <div className="h-full bg-gray-50 dark:bg-gray-900">
+            <Sidebar onNavigate={() => setDrawerOpen(false)} />
+          </div>
+        </Drawer>
+      </div>
+    </CompanionProvider>
   );
 }
