@@ -230,7 +230,20 @@ describe("script pre-tool-use hooks", () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-tool-script-"));
   });
   afterEach(async () => {
-    await fs.rm(dir, { recursive: true, force: true });
+    // Windows holds a directory handle to the script's cwd (its temp dir) inside the
+    // child process for a tick or two after the child exits — even after we destroy
+    // stdio and the child reports 'close'. A SIGKILL'd `setInterval` script makes
+    // that a hard race. Retry until the OS lets us clean up; `force: true` skips
+    // the recursive error so a genuine rmdir failure still surfaces eventually.
+    for (let i = 0; i < 10; i++) {
+      try {
+        await fs.rm(dir, { recursive: true, force: true });
+        return;
+      } catch (e) {
+        if (i === 9) throw e;
+        await new Promise((r) => setTimeout(r, 20));
+      }
+    }
   });
 
   it("scriptPreToolUseHook feeds the call on stdin and narrows the parsed answer", async () => {
@@ -274,7 +287,20 @@ describe("Session user-prompt hook", () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-prompt-hook-"));
   });
   afterEach(async () => {
-    await fs.rm(dir, { recursive: true, force: true });
+    // Windows holds a directory handle to the script's cwd (its temp dir) inside the
+    // child process for a tick or two after the child exits — even after we destroy
+    // stdio and the child reports 'close'. A SIGKILL'd `setInterval` script makes
+    // that a hard race. Retry until the OS lets us clean up; `force: true` skips
+    // the recursive error so a genuine rmdir failure still surfaces eventually.
+    for (let i = 0; i < 10; i++) {
+      try {
+        await fs.rm(dir, { recursive: true, force: true });
+        return;
+      } catch (e) {
+        if (i === 9) throw e;
+        await new Promise((r) => setTimeout(r, 20));
+      }
+    }
   });
 
   it("runs the named package's hook with the Session's own id and scratchpad, null when absent", async () => {
@@ -328,7 +354,20 @@ describe("Session stop hooks", () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-hooks-"));
   });
   afterEach(async () => {
-    await fs.rm(dir, { recursive: true, force: true });
+    // Windows holds a directory handle to the script's cwd (its temp dir) inside the
+    // child process for a tick or two after the child exits — even after we destroy
+    // stdio and the child reports 'close'. A SIGKILL'd `setInterval` script makes
+    // that a hard race. Retry until the OS lets us clean up; `force: true` skips
+    // the recursive error so a genuine rmdir failure still surfaces eventually.
+    for (let i = 0; i < 10; i++) {
+      try {
+        await fs.rm(dir, { recursive: true, force: true });
+        return;
+      } catch (e) {
+        if (i === 9) throw e;
+        await new Promise((r) => setTimeout(r, 20));
+      }
+    }
   });
 
   const fakeEnvironment: EnvironmentInterface = {
@@ -543,7 +582,20 @@ describe("Session pre-tool-use hooks", () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-tool-hooks-"));
   });
   afterEach(async () => {
-    await fs.rm(dir, { recursive: true, force: true });
+    // Windows holds a directory handle to the script's cwd (its temp dir) inside the
+    // child process for a tick or two after the child exits — even after we destroy
+    // stdio and the child reports 'close'. A SIGKILL'd `setInterval` script makes
+    // that a hard race. Retry until the OS lets us clean up; `force: true` skips
+    // the recursive error so a genuine rmdir failure still surfaces eventually.
+    for (let i = 0; i < 10; i++) {
+      try {
+        await fs.rm(dir, { recursive: true, force: true });
+        return;
+      } catch (e) {
+        if (i === 9) throw e;
+        await new Promise((r) => setTimeout(r, 20));
+      }
+    }
   });
 
   /** Turn 1 calls exec_command; turn 2 answers with the tool output it saw. */
