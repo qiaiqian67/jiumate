@@ -104,6 +104,9 @@ importers:
       '@linsight/use-firecrawl':
         specifier: workspace:*
         version: link:../../plugins/use-firecrawl
+      '@linsight/use-guizang-ppt':
+        specifier: workspace:*
+        version: link:../../plugins/use-guizang-ppt
       '@modelcontextprotocol/client':
         specifier: ^2.0.0
         version: 2.0.0
@@ -183,6 +186,9 @@ importers:
       '@linsight/use-firecrawl':
         specifier: workspace:*
         version: link:../../plugins/use-firecrawl
+      '@linsight/use-guizang-ppt':
+        specifier: workspace:*
+        version: link:../../plugins/use-guizang-ppt
       '@modelcontextprotocol/client':
         specifier: ^2.0.0
         version: 2.0.0
@@ -262,6 +268,9 @@ importers:
       '@linsight/use-firecrawl':
         specifier: workspace:*
         version: link:../../plugins/use-firecrawl
+      '@linsight/use-guizang-ppt':
+        specifier: workspace:*
+        version: link:../../plugins/use-guizang-ppt
     devDependencies:
       '@prismshadow/linsight-cli':
         specifier: workspace:*
@@ -605,6 +614,8 @@ importers:
   plugins/use-claude-code: {}
 
   plugins/use-firecrawl: {}
+
+  plugins/use-guizang-ppt: {}
 
 packages:
 
@@ -1180,6 +1191,9 @@ packages:
 
   '@linsight/use-firecrawl@file:plugins/use-firecrawl':
     resolution: {directory: plugins/use-firecrawl, type: directory}
+
+  '@linsight/use-guizang-ppt@file:plugins/use-guizang-ppt':
+    resolution: {directory: plugins/use-guizang-ppt, type: directory}
 
   '@malept/cross-spawn-promise@2.0.0':
     resolution: {integrity: sha512-1DpKU0Z5ThltBwjNySMC14g0CkbyhCaz9FkhxqNsZI6uAPJXFS8cMXlBKo26FJ8ZuW6S9GCMcR9IO5k2X5/9Fg==}
@@ -5710,6 +5724,8 @@ snapshots:
 
   '@linsight/use-firecrawl@file:plugins/use-firecrawl': {}
 
+  '@linsight/use-guizang-ppt@file:plugins/use-guizang-ppt': {}
+
   '@malept/cross-spawn-promise@2.0.0':
     dependencies:
       cross-spawn: 7.0.6
@@ -5949,6 +5965,7 @@ snapshots:
       '@linsight/use-bento-slides': file:plugins/use-bento-slides
       '@linsight/use-claude-code': file:plugins/use-claude-code
       '@linsight/use-firecrawl': file:plugins/use-firecrawl
+      '@linsight/use-guizang-ppt': file:plugins/use-guizang-ppt
       '@modelcontextprotocol/client': 2.0.0
       '@prismshadow/agenthub': 0.4.9(supports-color@10.2.2)(ws@8.21.0)
       '@prismshadow/linsight-core': file:packages/core(supports-color@10.2.2)(ws@8.21.0)
@@ -5980,6 +5997,7 @@ snapshots:
       '@linsight/use-bento-slides': file:plugins/use-bento-slides
       '@linsight/use-claude-code': file:plugins/use-claude-code
       '@linsight/use-firecrawl': file:plugins/use-firecrawl
+      '@linsight/use-guizang-ppt': file:plugins/use-guizang-ppt
       '@modelcontextprotocol/client': 2.0.0
       '@prismshadow/agenthub': 0.4.9(supports-color@10.2.2)(ws@8.21.0)
       arktype: 2.2.3
@@ -6007,6 +6025,7 @@ snapshots:
       '@linsight/use-bento-slides': file:plugins/use-bento-slides
       '@linsight/use-claude-code': file:plugins/use-claude-code
       '@linsight/use-firecrawl': file:plugins/use-firecrawl
+      '@linsight/use-guizang-ppt': file:plugins/use-guizang-ppt
       '@modelcontextprotocol/client': 2.0.0
       '@prismshadow/agenthub': 0.4.9(supports-color@10.2.2)(ws@8.21.0)(zod@4.4.3)
       arktype: 2.2.3

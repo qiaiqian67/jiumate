@@ -21,3 +21,8 @@ playwright-report/
 
 # in-progress RAG example — not part of the current branch; tracked separately
 examples/claude-code-rag/
+
+# vendored skill assets: HTML templates, minified JS, and pre-built validator scripts
+# come from upstream unchanged. Format-checking them would fight upstream's own style.
+plugins/use-guizang-ppt/skills/guizang-ppt-skill/assets/
+plugins/use-guizang-ppt/skills/guizang-ppt-skill/scripts/

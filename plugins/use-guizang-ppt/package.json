@@ -1,0 +1,20 @@
+{
+  "name": "@linsight/use-guizang-ppt",
+  "version": "0.3.0",
+  "description": "Author Magazine Web PPT decks — single-file HTML horizontal-swipe slide presentations. Wraps the upstream guizang-ppt-skill (歸藏) as a Linsight plugin.",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Prism-Shadow/linsight.git",
+    "directory": "plugins/use-guizang-ppt"
+  },
+  "files": [
+    "plugin.json",
+    "icon.svg",
+    "skills",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
