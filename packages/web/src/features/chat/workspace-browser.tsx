@@ -159,14 +159,7 @@ const RenderedMd = memo(function RenderedMd({
                 ? raw.filter((c) => typeof c === "string").join("")
                 : ""
           ).replace(/\n$/, "");
-          return (
-            <MermaidBlock
-              code={code}
-              nonce={`ws-${fileNonce}-${hash32(code)}`}
-              editable={Boolean(diagramEditable && onDiagramSave)}
-              {...(onDiagramSave ? { onSave: (next: string) => onDiagramSave(code, next) } : {})}
-            />
-          );
+          return <MermaidBlock code={code} nonce={`ws-${fileNonce}-${hash32(code)}`} />;
         }
         return (
           <CodeBlock
@@ -614,75 +607,7 @@ export function WorkspaceBrowser({
     [preview, session.sessionId, previewPath],
   );
 
-/**
-   * In-place save for a single Mermaid diagram: locate the matching ```mermaid fence inside the
-   * host Markdown body, write the patched file back through the workspace API. Non-greedy fence
-   * regex + exact body match so two diagrams sharing the first line can't get confused; the first
-   * matching fence wins.
-   *
-   * Disabled while `editingMd` is true so the two edit surfaces don't fight each other for the
-   * same file: while the full-file MarkdownEditor is open, its draftMd is the source of truth,
-   * and an in-place diagram save would be overwritten the moment the user saves the whole file.
-   */
-  const saveMermaidDiagram = useCallback(
-    async (oldCode: string, newCode: string): Promise<{ ok: boolean; error?: string }> => {
-      if (!preview || preview.kind !== "md" || preview.content === undefined) {
-        return { ok: false, error: "No file to edit." };
-      }
-      if (editingMd) {
-        return { ok: false, error: "Finish editing the file before editing a single diagram." };
-      }
-      if (oldCode === newCode) {
-        return { ok: true };
-      }
-      const fenceRe = /```mermaid\n([\s\S]*?)\n```/g;
-      let match: RegExpExecArray | null;
-      let replaced = false;
-      let patched = preview.content;
-      while ((match = fenceRe.exec(preview.content)) !== null) {
-        if (match[1] === oldCode) {
-          patched =
-            preview.content.slice(0, match.index) +
-            "```mermaid\n" +
-            newCode +
-            "\n```" +
-            preview.content.slice(fenceRe.lastIndex);
-          replaced = true;
-          break;
-        }
-      }
-      if (!replaced) {
-        return { ok: false, error: "Could not locate the original diagram in the file." };
-      }
-      setSavingMd(true);
-      try {
-        const dataBase64 = btoa(unescape(encodeURIComponent(patched)));
-        const newEtag = await api.uploadWorkspaceFile(
-          session.sessionId,
-          preview.path,
-          dataBase64,
-          preview.etag,
-        );
-        if (newEtag !== null) {
-          setPreview((p) => (p && p.path === preview.path ? { ...p, etag: newEtag } : p));
-        }
-        // Refresh so the rendered view reflects the patched diagram; the diagram-edit state inside
-        // MermaidBlock resets because the Edit button stays mounted under a fresh nonce.
-        void previewPath(preview.path, { refresh: true });
-        return { ok: true };
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 409 && err.code === "file_conflict") {
-          return { ok: false, error: "File changed on disk; reload and retry." };
-        }
-        return { ok: false, error: apiErrorText(err) };
-      } finally {
-        setSavingMd(false);
-      }
-    },
-    [preview, editingMd, session.sessionId, previewPath],
-  );
-
->/** Discard edits: clear the editor mount (the editor's own onChange buffer goes with it)
+  /** Discard edits: clear the editor mount (the editor's own onChange buffer goes with it)
    *  and exit edit mode. The Preview.content is left untouched on purpose — it is the
    *  source of truth for the rendered view, and a stray edit would re-mount MarkdownEditor
    *  on a stale value. */

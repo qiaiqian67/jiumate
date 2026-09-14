@@ -18,3 +18,6 @@ specs/
 # Playwright e2e artifacts
 test-results/
 playwright-report/
+
+# in-progress RAG example — not part of the current branch; tracked separately
+examples/claude-code-rag/
