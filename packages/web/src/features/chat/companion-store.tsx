@@ -53,10 +53,16 @@ export const COMPANION_ASR_PROVIDERS: readonly CompanionAsrProvider[] = ["off", 
 /** Mirrors `CompanionAvatarRenderer` on the server (L.6). "svg" is the safe
  *  default — every existing user keeps the 2D fox on every surface until
  *  they opt in. "live2d" swaps in a pseudo-3D Cubism model behind the same
- *  `<CompanionPet>` swap point; the runtime auto-degrades to "svg" when
- *  WebGL is unavailable (a setting row never lands on a broken canvas). */
-export type CompanionAvatarRenderer = "svg" | "live2d";
-export const COMPANION_AVATAR_RENDERERS: readonly CompanionAvatarRenderer[] = ["svg", "live2d"];
+ *  `<CompanionPet>` swap point; "vrm" swaps in a rigged VRM model rendered
+ *  with three.js + @pixiv/three-vrm. The runtime auto-degrades to "svg"
+ *  when WebGL is unavailable (a setting row never lands on a broken
+ *  canvas). */
+export type CompanionAvatarRenderer = "svg" | "live2d" | "vrm";
+export const COMPANION_AVATAR_RENDERERS: readonly CompanionAvatarRenderer[] = [
+  "svg",
+  "live2d",
+  "vrm",
+];
 
 /** Mirrors `CompanionAvatarPreset` on the server (L.6). Closed list of the
  *  built-in Cubism SDK sample models the runtime knows how to resolve. The
@@ -64,6 +70,16 @@ export const COMPANION_AVATAR_RENDERERS: readonly CompanionAvatarRenderer[] = ["
  *  unknown ids. */
 export type CompanionAvatarPreset = "hiyori" | "mark" | "mao";
 export const COMPANION_AVATAR_PRESETS: readonly CompanionAvatarPreset[] = ["hiyori", "mark", "mao"];
+
+/** Mirrors `CompanionAvatarVrmPreset` on the server (L.6). Closed list of
+ *  the built-in VRM models the runtime knows how to resolve. The id space
+ *  is independent from `CompanionAvatarPreset` so the Live2D and VRM
+ *  catalogs can evolve on their own license / format timelines. */
+export type CompanionAvatarVrmPreset = "vrm-sample-a" | "vrm-sample-b";
+export const COMPANION_AVATAR_VRM_PRESETS: readonly CompanionAvatarVrmPreset[] = [
+  "vrm-sample-a",
+  "vrm-sample-b",
+];
 
 /** Two-element tuple for the Electron floating window. Kept inline rather than imported
  *  because no other surface in the web app needs it. */
@@ -98,14 +114,20 @@ export interface CompanionStoreValue {
   /** ASR provider for the chat composer. "off" hides the mic button entirely. */
   asrProvider: CompanionAsrProvider;
   /** Avatar renderer (L.6). "svg" = existing 2D fox, "live2d" = pseudo-3D
-   *  Cubism model. Size-gated inside `<CompanionPet>`: sm (36 px banner)
-   *  always renders SVG regardless of this value, so the visual quality at
-   *  small sizes never regresses. */
+   *  Cubism model, "vrm" = rigged VRM model. Size-gated inside
+   *  `<CompanionPet>`: sm (36 px banner) always renders SVG regardless of
+   *  this value, so the visual quality at small sizes never regresses. */
   avatarRenderer: CompanionAvatarRenderer;
   /** Live2D preset id, only meaningful when `avatarRenderer === "live2d"`.
    *  Defaults to "hiyori" on hydration so a user who flips the renderer on
    *  before opening the picker still sees a model. */
   avatarPreset: CompanionAvatarPreset;
+  /** VRM preset id, only meaningful when `avatarRenderer === "vrm"`.
+   *  Defaults to "vrm-sample-a" on hydration so a user who flips the
+   *  renderer on before opening the picker still sees a model. The id
+   *  space is independent from `avatarPreset` — the two fields are not
+   *  kept in sync. */
+  avatarVrmPreset: CompanionAvatarVrmPreset;
   /** Update the placement and persist. Synchronous local update so the UI responds
    *  on the same tick; the putPrefs write is fire-and-forget. */
   setPlacement: (next: CompanionPlacement) => void;
@@ -122,6 +144,7 @@ export interface CompanionStoreValue {
   setAsrProvider: (next: CompanionAsrProvider) => void;
   setAvatarRenderer: (next: CompanionAvatarRenderer) => void;
   setAvatarPreset: (next: CompanionAvatarPreset) => void;
+  setAvatarVrmPreset: (next: CompanionAvatarVrmPreset) => void;
 }
 
 const CompanionContext = createContext<CompanionStoreValue | null>(null);
@@ -189,29 +212,45 @@ export function companionAsrFromPrefs(prefs: { companionAsrProvider?: unknown })
   return { provider };
 }
 
-/** Hydrate the avatar fields (L.6). The renderer mirrors `CompanionAvatarRenderer`
- *  closed-enum on the server: anything other than "svg" / "live2d" falls back to
- *  "svg" so a hand-crafted prefs row never lands the user on an unknown
- *  renderer. The preset mirrors `CompanionAvatarPreset` closed list; unknown
- *  ids fall back to "hiyori" so a future preset removed from the catalog
- *  still resolves to a working model.
+/** Hydrate the avatar fields (L.6). The renderer mirrors
+ *  `CompanionAvatarRenderer` closed-enum on the server: anything other
+ *  than "svg" / "live2d" / "vrm" falls back to "svg" so a hand-crafted
+ *  prefs row never lands the user on an unknown renderer. The Live2D
+ *  preset mirrors `CompanionAvatarPreset` closed list; the VRM preset
+ *  mirrors `CompanionAvatarVrmPreset` closed list. Unknown ids fall
+ *  back to the canonical "first" preset of each catalog so a future
+ *  preset removed from a catalog still resolves to a working model.
  *
- *  Renderer and preset are independent on purpose: a user can flip the
- *  renderer on before picking a preset, and the runtime is happy with the
- *  "hiyori" default. */
+ *  Renderer and presets are independent on purpose: a user can flip
+ *  the renderer on before picking a preset, and the runtime is happy
+ *  with the catalog default. The Live2D and VRM preset fields are
+ *  also independent — they live in disjoint id spaces and a flip
+ *  between renderers does not auto-copy one into the other. */
 export function companionAvatarFromPrefs(prefs: {
   companionAvatarRenderer?: unknown;
   companionAvatarPreset?: unknown;
-}): { renderer: CompanionAvatarRenderer; preset: CompanionAvatarPreset } {
+  companionAvatarVrmPreset?: unknown;
+}): {
+  renderer: CompanionAvatarRenderer;
+  preset: CompanionAvatarPreset;
+  vrmPreset: CompanionAvatarVrmPreset;
+} {
   const renderer: CompanionAvatarRenderer =
-    prefs.companionAvatarRenderer === "live2d" ? "live2d" : "svg";
+    prefs.companionAvatarRenderer === "live2d" || prefs.companionAvatarRenderer === "vrm"
+      ? prefs.companionAvatarRenderer
+      : "svg";
   const preset: CompanionAvatarPreset =
     prefs.companionAvatarPreset === "hiyori" ||
     prefs.companionAvatarPreset === "mark" ||
     prefs.companionAvatarPreset === "mao"
       ? prefs.companionAvatarPreset
       : "hiyori";
-  return { renderer, preset };
+  const vrmPreset: CompanionAvatarVrmPreset =
+    prefs.companionAvatarVrmPreset === "vrm-sample-a" ||
+    prefs.companionAvatarVrmPreset === "vrm-sample-b"
+      ? prefs.companionAvatarVrmPreset
+      : "vrm-sample-a";
+  return { renderer, preset, vrmPreset };
 }
 
 export function CompanionProvider({ children }: { children: ReactNode }) {
@@ -225,6 +264,8 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
   const [asrProvider, setAsrProviderState] = useState<CompanionAsrProvider>("off");
   const [avatarRenderer, setAvatarRendererState] = useState<CompanionAvatarRenderer>("svg");
   const [avatarPreset, setAvatarPresetState] = useState<CompanionAvatarPreset>("hiyori");
+  const [avatarVrmPreset, setAvatarVrmPresetState] =
+    useState<CompanionAvatarVrmPreset>("vrm-sample-a");
 
   useEffect(() => {
     let cancelled = false;
@@ -254,6 +295,7 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
         const avatar = companionAvatarFromPrefs(res.prefs);
         setAvatarRendererState(avatar.renderer);
         setAvatarPresetState(avatar.preset);
+        setAvatarVrmPresetState(avatar.vrmPreset);
       })
       .catch(() => {
         // Unreachable prefs: opt-out, same as every other settings row. The Settings
@@ -278,6 +320,7 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
       asrProvider,
       avatarRenderer,
       avatarPreset,
+      avatarVrmPreset,
       setPlacement: (next) => {
         setPlacementState(next);
         // We do NOT clear `companionFloatingPosition` when leaving "floating": the
@@ -336,6 +379,10 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
         setAvatarPresetState(next);
         void api.putPrefs({ companionAvatarPreset: next }).catch(() => undefined);
       },
+      setAvatarVrmPreset: (next) => {
+        setAvatarVrmPresetState(next);
+        void api.putPrefs({ companionAvatarVrmPreset: next }).catch(() => undefined);
+      },
     }),
     [
       placement,
@@ -348,6 +395,7 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
       asrProvider,
       avatarRenderer,
       avatarPreset,
+      avatarVrmPreset,
     ],
   );
 
@@ -371,6 +419,7 @@ export function useCompanionStore(): CompanionStoreValue {
       asrProvider: "off",
       avatarRenderer: "svg",
       avatarPreset: "hiyori",
+      avatarVrmPreset: "vrm-sample-a",
       setPlacement: () => undefined,
       setFloatingPosition: () => undefined,
       setName: () => undefined,
@@ -381,6 +430,7 @@ export function useCompanionStore(): CompanionStoreValue {
       setAsrProvider: () => undefined,
       setAvatarRenderer: () => undefined,
       setAvatarPreset: () => undefined,
+      setAvatarVrmPreset: () => undefined,
     }
   );
 }

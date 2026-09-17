@@ -49,6 +49,7 @@ import type { MouseEvent as ReactMouseEvent } from "react";
 import type { SessionStatus } from "@prismshadow/linsight-server/api";
 import { useCompanionStore } from "./companion-store";
 import { resolvePreset } from "./companion-live2d/manifest";
+import { resolveVrmPreset } from "./companion-vrm/manifest";
 
 /** Pixel size of the SVG. The right widget sits at `md` (visual parity with the
  *  dock icons); the banner uses `sm` (one row of micro-copy); the floating window
@@ -123,6 +124,17 @@ function detectLang(): "zh" | "en" {
 const CompanionLive2DLazy = lazy(async () => {
   const mod = await import("./companion-live2d/CompanionLive2D");
   return { default: mod.CompanionLive2D };
+});
+
+/** Lazy-loaded VRM renderer (L.6). Bundled with three.js +
+ *  @pixiv/three-vrm; the `Suspense` fallback below renders the SVG path
+ *  while the chunk downloads, so the user sees the existing 2D fox flash
+ *  for one frame instead of an empty box. A user who never opts in to
+ *  VRM never downloads this chunk — three.js alone is ~600 KB
+ *  pre-bundled. */
+const CompanionVrmLazy = lazy(async () => {
+  const mod = await import("./companion-vrm/CompanionVrm");
+  return { default: mod.CompanionVrm };
 });
 
 /** Micro-copy used by all surfaces. Inline rather than in the i18n catalog
@@ -504,17 +516,29 @@ export function CompanionPet({ taskState, size = "md", pose, onClick }: Companio
   // `null` until assets are present). `useLive2D` reads both — it must
   // stay in the component body so React hooks rules are satisfied, and
   // `resolvePreset` is pure so calling it inside render is cheap.
-  const { avatarRenderer, avatarPreset, setAvatarRenderer } = useCompanionStore();
-  const resolvedPreset = avatarRenderer === "live2d" ? resolvePreset(avatarPreset) : null;
-  // Size gate: the 36 px banner is too small for a Cubism model face to
-  // read clearly, so even when the user picks Live2D the banner keeps
-  // the SVG path. The widget (md) and floating window (lg) honour the
-  // pick. This is the documented honest trade-off from the L.6 plan.
-  const useLive2D = avatarRenderer === "live2d" && size !== "sm" && resolvedPreset !== null;
-  // WebGL auto-fallback. The lazy chunk reports `no-webgl` or `load-failed`
-  // through `<CompanionLive2D onFallback>`; we flip the renderer back to
-  // "svg" and let the existing SVG path take over on the next render.
-  const onLive2DFallback = (): void => {
+  // The VRM renderer mirrors the Live2D shape but resolves through a
+  // separate manifest; the two preset slots are disjoint, so the
+  // companion never tries to load a `.moc3` URL into a VRM model or
+  // vice versa.
+  const { avatarRenderer, avatarPreset, avatarVrmPreset, setAvatarRenderer } = useCompanionStore();
+  const resolvedLive2D = avatarRenderer === "live2d" ? resolvePreset(avatarPreset) : null;
+  const resolvedVrm =
+    avatarRenderer === "vrm"
+      ? (resolveVrmPreset(avatarVrmPreset) ?? resolveVrmPreset("vrm-sample-a"))
+      : null;
+  // Size gate: the 36 px banner is too small for a 3D model face to
+  // read clearly, so even when the user picks Live2D or VRM the banner
+  // keeps the SVG path. The widget (md) and floating window (lg)
+  // honour the pick. This is the documented honest trade-off from the
+  // L.6 plan.
+  const useLive2D = avatarRenderer === "live2d" && size !== "sm" && resolvedLive2D !== null;
+  const useVrm = avatarRenderer === "vrm" && size !== "sm" && resolvedVrm !== null;
+  // WebGL auto-fallback. The lazy chunk reports `no-webgl` or
+  // `load-failed` through `<CompanionLive2D onFallback>` or
+  // `<CompanionVrm onFallback>`; both flip the renderer back to "svg"
+  // and let the existing SVG path take over on the next render. The
+  // shared callback keeps the toast logic identical between renderers.
+  const on3dFallback = (): void => {
     setAvatarRenderer("svg");
   };
 
@@ -592,7 +616,7 @@ export function CompanionPet({ taskState, size = "md", pose, onClick }: Companio
       className={`flex items-center text-orange-900 dark:text-orange-100 ${layoutClass}`}
     >
       <div className="relative companion-breathe" style={{ width: px, height: px }}>
-        {useLive2D && resolvedPreset !== null ? (
+        {useLive2D && resolvedLive2D !== null ? (
           // Lazy Live2D renderer (L.6). The `<Suspense>` fallback is the
           // existing `<PetSvg>` so a user who just enabled Live2D sees
           // the SVG for one frame while the chunk downloads; the heart
@@ -609,10 +633,33 @@ export function CompanionPet({ taskState, size = "md", pose, onClick }: Companio
             }
           >
             <CompanionLive2DLazy
-              preset={resolvedPreset}
+              preset={resolvedLive2D}
               px={px}
               pose={effectivePose}
-              onFallback={onLive2DFallback}
+              onFallback={on3dFallback}
+            />
+          </Suspense>
+        ) : useVrm && resolvedVrm !== null ? (
+          // Lazy VRM renderer (L.6). The `<Suspense>` fallback is the
+          // existing `<PetSvg>` so a user who just enabled VRM sees the
+          // SVG for one frame while the chunk downloads; the heart
+          // bubble lives outside the renderer so it works in both paths.
+          <Suspense
+            fallback={
+              <PetSvg
+                pose={effectivePose}
+                px={px}
+                isBlinking={isBlinking}
+                eyeOffset={eyeOffset}
+                isWaving={isWaving}
+              />
+            }
+          >
+            <CompanionVrmLazy
+              preset={resolvedVrm}
+              px={px}
+              pose={effectivePose}
+              onFallback={on3dFallback}
             />
           </Suspense>
         ) : (

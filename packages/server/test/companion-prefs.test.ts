@@ -311,10 +311,15 @@ describe("ui_prefs companionAvatarRenderer", () => {
     expect((await readPrefs()).companionAvatarRenderer).toBe("live2d");
   });
 
+  it("stores 'vrm' verbatim", async () => {
+    await api.put("/api/me/prefs", { companionAvatarRenderer: "vrm" });
+    expect((await readPrefs()).companionAvatarRenderer).toBe("vrm");
+  });
+
   it("rejects an unknown renderer with a 400 and stores nothing", async () => {
     // Seed an unrelated field to prove the failed merge did not clobber it.
     await api.put("/api/me/prefs", { lastProjectId: "default_project" });
-    const res = await api.put("/api/me/prefs", { companionAvatarRenderer: "vrm" });
+    const res = await api.put("/api/me/prefs", { companionAvatarRenderer: "vrm2" });
     expect(res.status).toBe(400);
     const body = (await readPrefs()) as UiPrefs & { companionAvatarRenderer?: string };
     expect(body.companionAvatarRenderer).toBeUndefined();
@@ -378,5 +383,74 @@ describe("ui_prefs companionAvatarPreset", () => {
   it("rejects non-string presets", async () => {
     const res = await api.put("/api/me/prefs", { companionAvatarPreset: 0 });
     expect(res.status).toBe(400);
+  });
+});
+
+describe("ui_prefs companionAvatarVrmPreset", () => {
+  // The VRM preset id selects which built-in VRM model the runtime loads
+  // when the renderer is "vrm". The closed list mirrors
+  // `packages/web/src/features/chat/companion-vrm/manifest.ts` — server
+  // and client must agree. The id space is independent from the Live2D
+  // catalog (`companionAvatarPreset`) so each can evolve on its own
+  // license / format timeline. Unknown ids are rejected so a hand-crafted
+  // PUT cannot leave the runtime trying to resolve a model URL it cannot
+  // find.
+  let t: TestApp;
+  let api: ReturnType<typeof apiClient>;
+
+  beforeEach(async () => {
+    t = await createTestApp();
+    const { cookie } = await provisionUser(t.app, "river");
+    api = apiClient(t.app, cookie);
+  });
+  afterEach(async () => {
+    await t.cleanup();
+  });
+
+  const readPrefs = async (): Promise<UiPrefs> => {
+    const body = (await (await api.get("/api/me/prefs")).json()) as { prefs: UiPrefs };
+    return body.prefs;
+  };
+
+  it.each(["vrm-sample-a", "vrm-sample-b"] as const)("stores '%s' verbatim", async (preset) => {
+    await api.put("/api/me/prefs", { companionAvatarVrmPreset: preset });
+    expect((await readPrefs()).companionAvatarVrmPreset).toBe(preset);
+  });
+
+  it("rejects an unknown VRM preset with a 400 and stores nothing", async () => {
+    // Seed an unrelated field to prove the failed merge did not clobber it,
+    // and seed a valid renderer too — the two fields are independent on
+    // purpose and a bad preset write must not roll back a good renderer
+    // write that happened in the same PUT.
+    await api.put("/api/me/prefs", {
+      lastProjectId: "default_project",
+      companionAvatarRenderer: "vrm",
+    });
+    const res = await api.put("/api/me/prefs", { companionAvatarVrmPreset: "shizuku-vrm" });
+    expect(res.status).toBe(400);
+    const body = (await readPrefs()) as UiPrefs & {
+      companionAvatarVrmPreset?: string;
+      companionAvatarRenderer?: string;
+    };
+    expect(body.companionAvatarVrmPreset).toBeUndefined();
+    expect(body.companionAvatarRenderer).toBe("vrm");
+    expect(body.lastProjectId).toBe("default_project");
+  });
+
+  it("rejects non-string VRM presets", async () => {
+    const res = await api.put("/api/me/prefs", { companionAvatarVrmPreset: 0 });
+    expect(res.status).toBe(400);
+  });
+
+  it("does not collide with Live2D preset ids", async () => {
+    // Live2D ids (`hiyori` / `mark` / `mao`) are valid in
+    // `companionAvatarPreset` but the VRM catalog is a different id
+    // space — sending a Live2D id to the VRM slot must reject so a
+    // copy-paste from the wrong picker field does not silently store
+    // the wrong value.
+    for (const live2d of ["hiyori", "mark", "mao"] as const) {
+      const res = await api.put("/api/me/prefs", { companionAvatarVrmPreset: live2d });
+      expect(res.status).toBe(400);
+    }
   });
 });

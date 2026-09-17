@@ -23,6 +23,7 @@ import {
   COMPANION_ASR_PROVIDERS,
   COMPANION_AVATAR_RENDERERS,
   COMPANION_AVATAR_PRESETS,
+  COMPANION_AVATAR_VRM_PRESETS,
   type CompanionPlacement,
   type CompanionPronoun,
 } from "../src/features/chat/companion-store";
@@ -216,23 +217,28 @@ describe("companionAvatarFromPrefs", () => {
 
   it("returns the safe defaults when no avatar field is present", () => {
     // A brand-new user (or one whose prefs predates L.6) hydrates to SVG
-    // + Hiyori — they keep the existing 2D fox and only pay bundle cost
-    // when they explicitly opt in to Live2D.
-    expect(call({})).toEqual({ renderer: "svg", preset: "hiyori" });
-    expect(call({ theme: "dark" })).toEqual({ renderer: "svg", preset: "hiyori" });
+    // + Hiyori + vrm-sample-a — they keep the existing 2D fox and only pay
+    // bundle cost when they explicitly opt in to a 3D renderer.
+    expect(call({})).toEqual({ renderer: "svg", preset: "hiyori", vrmPreset: "vrm-sample-a" });
+    expect(call({ theme: "dark" })).toEqual({
+      renderer: "svg",
+      preset: "hiyori",
+      vrmPreset: "vrm-sample-a",
+    });
   });
 
   it("echoes a valid renderer verbatim", () => {
     expect(call({ companionAvatarRenderer: "svg" }).renderer).toBe("svg");
     expect(call({ companionAvatarRenderer: "live2d" }).renderer).toBe("live2d");
+    expect(call({ companionAvatarRenderer: "vrm" }).renderer).toBe("vrm");
   });
 
   it("falls back to 'svg' for an unknown renderer string", () => {
     // A future server may ship an extension the client does not yet
-    // understand (e.g. a "vrm" renderer landed after the running client).
+    // understand (e.g. a "vr2" renderer landed after the running client).
     // Picking "live2d" silently would attempt to mount a renderer the
     // runtime cannot drive; "svg" is the safe degradation.
-    expect(call({ companionAvatarRenderer: "vrm" }).renderer).toBe("svg");
+    expect(call({ companionAvatarRenderer: "vr2" }).renderer).toBe("svg");
     expect(call({ companionAvatarRenderer: null }).renderer).toBe("svg");
     expect(call({ companionAvatarRenderer: 42 }).renderer).toBe("svg");
   });
@@ -259,14 +265,29 @@ describe("companionAvatarFromPrefs", () => {
     expect(call({ companionAvatarRenderer: "live2d" })).toEqual({
       renderer: "live2d",
       preset: "hiyori",
+      vrmPreset: "vrm-sample-a",
     });
     expect(call({ companionAvatarPreset: "mark" })).toEqual({
       renderer: "svg",
       preset: "mark",
+      vrmPreset: "vrm-sample-a",
     });
     expect(call({ companionAvatarRenderer: "live2d", companionAvatarPreset: "mao" })).toEqual({
       renderer: "live2d",
       preset: "mao",
+      vrmPreset: "vrm-sample-a",
+    });
+    expect(
+      call({ companionAvatarRenderer: "vrm", companionAvatarVrmPreset: "vrm-sample-b" }),
+    ).toEqual({
+      renderer: "vrm",
+      preset: "hiyori",
+      vrmPreset: "vrm-sample-b",
+    });
+    expect(call({ companionAvatarVrmPreset: "vrm-sample-b" })).toEqual({
+      renderer: "svg",
+      preset: "hiyori",
+      vrmPreset: "vrm-sample-b",
     });
   });
 });
@@ -276,7 +297,7 @@ describe("COMPANION_AVATAR_RENDERERS", () => {
     // The Settings renderer row iterates this directly; "svg" first means
     // a brand-new user lands on the opt-out (the same default the
     // hydration helper picks when no value is persisted).
-    expect([...COMPANION_AVATAR_RENDERERS]).toEqual(["svg", "live2d"]);
+    expect([...COMPANION_AVATAR_RENDERERS]).toEqual(["svg", "live2d", "vrm"]);
   });
 });
 
@@ -286,5 +307,50 @@ describe("COMPANION_AVATAR_PRESETS", () => {
     // expectation (the friendly character first, the lion last). A
     // re-ordering is a UX change.
     expect([...COMPANION_AVATAR_PRESETS]).toEqual(["hiyori", "mark", "mao"]);
+  });
+});
+
+describe("COMPANION_AVATAR_VRM_PRESETS", () => {
+  it("is exactly the closed list, in the canonical display order", () => {
+    // The Settings picker iterates this directly; the order is the
+    // canonical sample-a → sample-b progression the Settings panel
+    // displays. A re-ordering is a UX change.
+    expect([...COMPANION_AVATAR_VRM_PRESETS]).toEqual(["vrm-sample-a", "vrm-sample-b"]);
+  });
+});
+
+describe("companionAvatarFromPrefs VRM preset", () => {
+  // Parallel to the Live2D preset block above — same shape, different
+  // closed list. The two presets are independent: a user who has
+  // `companionAvatarVrmPreset: "vrm-sample-b"` but never set a Live2D
+  // preset must still hydrate to "hiyori" on the Live2D slot, and vice
+  // versa.
+  type Args = Parameters<typeof companionAvatarFromPrefs>[0];
+  const call = (prefs: Record<string, unknown>) =>
+    companionAvatarFromPrefs(prefs as unknown as Args);
+
+  it("echoes each known VRM preset verbatim", () => {
+    for (const p of ["vrm-sample-a", "vrm-sample-b"] as const) {
+      expect(call({ companionAvatarVrmPreset: p }).vrmPreset).toBe(p);
+    }
+  });
+
+  it("falls back to 'vrm-sample-a' for an unknown VRM preset string", () => {
+    // A future preset removed from the catalog (or one added server-side
+    // before the client ships the matching manifest) must still resolve to
+    // a model — the user sees vrm-sample-a instead of an empty canvas.
+    expect(call({ companionAvatarVrmPreset: "shizuku-vrm" }).vrmPreset).toBe("vrm-sample-a");
+    expect(call({ companionAvatarVrmPreset: null }).vrmPreset).toBe("vrm-sample-a");
+    expect(call({ companionAvatarVrmPreset: 42 }).vrmPreset).toBe("vrm-sample-a");
+  });
+
+  it("does not let Live2D preset ids leak into the VRM slot", () => {
+    // Live2D ids are valid for `companionAvatarPreset` but the VRM
+    // catalog is a disjoint id space — sending a Live2D id to the VRM
+    // slot must fall back to the VRM default, never silently echo back
+    // the Live2D id.
+    for (const live2d of ["hiyori", "mark", "mao"] as const) {
+      expect(call({ companionAvatarVrmPreset: live2d }).vrmPreset).toBe("vrm-sample-a");
+    }
   });
 });

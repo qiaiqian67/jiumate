@@ -327,8 +327,9 @@ export interface UiPrefs {
   companionAsrProvider?: CompanionAsrProvider;
   /** Avatar renderer for the AI companion (L.6). "svg" is the safe default
    *  and ships the existing 2D fox on every surface; "live2d" swaps in a
-   *  pseudo-3D Cubism model behind the same `<CompanionPet>` swap point.
-   *  The renderer is auto-degraded to "svg" by the client when WebGL is
+   *  pseudo-3D Cubism model behind the same `<CompanionPet>` swap point;
+   *  "vrm" swaps in a rigged VRM model rendered with three.js. The
+   *  renderer is auto-degraded to "svg" by the client when WebGL is
    *  unavailable. */
   companionAvatarRenderer?: CompanionAvatarRenderer;
   /** Which built-in Live2D preset to load when `companionAvatarRenderer ===
@@ -336,6 +337,12 @@ export interface UiPrefs {
    *  Mao). Anything else is a 400 — the Settings picker only exposes
    *  presets the runtime can resolve. */
   companionAvatarPreset?: CompanionAvatarPreset;
+  /** Which built-in VRM preset to load when `companionAvatarRenderer ===
+   *  "vrm"`. Closed list of VRM ids the runtime knows how to resolve —
+   *  independent from `companionAvatarPreset` so the Live2D and VRM
+   *  catalogs can evolve separately. Anything else is a 400 — the
+   *  Settings picker only exposes presets the runtime can resolve. */
+  companionAvatarVrmPreset?: CompanionAvatarVrmPreset;
   [key: string]: unknown;
 }
 
@@ -355,10 +362,15 @@ export const COMPANION_TTS_PROVIDERS: readonly CompanionTtsProvider[] = ["off", 
 /** Closed list of avatar renderers the client understands. Same extensibility
  *  pattern as the TTS / ASR providers: a new renderer is an enum extension on
  *  both server and client, plus an entry in
- *  `packages/web/src/features/chat/companion-live2d/`. "svg" is the safe
- *  default — a brand-new user never sees a Live2D model without opting in. */
-export type CompanionAvatarRenderer = "svg" | "live2d";
-export const COMPANION_AVATAR_RENDERERS: readonly CompanionAvatarRenderer[] = ["svg", "live2d"];
+ *  `packages/web/src/features/chat/companion-live2d/` or
+ *  `packages/web/src/features/chat/companion-vrm/`. "svg" is the safe default
+ *  — a brand-new user never sees a 3D model without opting in. */
+export type CompanionAvatarRenderer = "svg" | "live2d" | "vrm";
+export const COMPANION_AVATAR_RENDERERS: readonly CompanionAvatarRenderer[] = [
+  "svg",
+  "live2d",
+  "vrm",
+];
 
 /** Closed list of Live2D preset ids the runtime knows how to resolve. The
  *  Settings picker iterates this list; the server-side gate uses it to reject
@@ -368,6 +380,21 @@ export const COMPANION_AVATAR_RENDERERS: readonly CompanionAvatarRenderer[] = ["
  *  client must agree on this closed list. */
 export type CompanionAvatarPreset = "hiyori" | "mark" | "mao";
 export const COMPANION_AVATAR_PRESETS: readonly CompanionAvatarPreset[] = ["hiyori", "mark", "mao"];
+
+/** Closed list of VRM preset ids the runtime knows how to resolve. The
+ *  Settings picker iterates this list; the server-side gate uses it to reject
+ *  unknown ids (a hand-crafted PUT must not be able to put a junk id into the
+ *  prefs row). The catalog itself lives in
+ *  `packages/web/src/features/chat/companion-vrm/manifest.ts` — server and
+ *  client must agree on this closed list. VRM ids live in their own
+ *  namespace, independent from `CompanionAvatarPreset`, because the
+ *  Live2D and VRM catalogs are different file formats with different
+ *  license provenance. */
+export type CompanionAvatarVrmPreset = "vrm-sample-a" | "vrm-sample-b";
+export const COMPANION_AVATAR_VRM_PRESETS: readonly CompanionAvatarVrmPreset[] = [
+  "vrm-sample-a",
+  "vrm-sample-b",
+];
 
 /** Closed list of pronoun keys — the settings page renders a 4-segment picker over
  *  this set, and the server-side gate uses it to reject unknown strings rather than

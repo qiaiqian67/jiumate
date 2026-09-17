@@ -21,6 +21,7 @@ import type {
   CompanionAsrProvider,
   CompanionAvatarPreset,
   CompanionAvatarRenderer,
+  CompanionAvatarVrmPreset,
   CompanionPronoun,
   CompanionTtsProvider,
 } from "../api/types.js";
@@ -28,6 +29,7 @@ import {
   COMPANION_ASR_PROVIDERS,
   COMPANION_AVATAR_PRESETS,
   COMPANION_AVATAR_RENDERERS,
+  COMPANION_AVATAR_VRM_PRESETS,
   COMPANION_PRONOUNS,
   COMPANION_TTS_PROVIDERS,
 } from "../api/types.js";
@@ -120,9 +122,9 @@ export function validateCompanionAsrProvider(value: unknown): CompanionAsrProvid
 }
 
 /** Validate (and normalize) an incoming `companionAvatarRenderer` (L.6).
- *  Closed-enum: anything other than "svg" / "live2d" is a 400. The client
- *  silently degrades to "svg" on WebGL failure — that flip lives in the web
- *  store, not in this gate. */
+ *  Closed-enum: anything other than "svg" / "live2d" / "vrm" is a 400. The
+ *  client silently degrades to "svg" on WebGL failure — that flip lives in
+ *  the web store, not in this gate. */
 export function validateCompanionAvatarRenderer(value: unknown): CompanionAvatarRenderer {
   if (typeof value !== "string") throw invalid("companionAvatarRenderer must be a string.");
   if (!(COMPANION_AVATAR_RENDERERS as readonly string[]).includes(value)) {
@@ -145,4 +147,19 @@ export function validateCompanionAvatarPreset(value: unknown): CompanionAvatarPr
     throw invalid(`companionAvatarPreset must be one of ${COMPANION_AVATAR_PRESETS.join(", ")}.`);
   }
   return value as CompanionAvatarPreset;
+}
+
+/** Validate (and normalize) an incoming `companionAvatarVrmPreset` (L.6).
+ *  Parallel to `validateCompanionAvatarPreset`, but for the VRM catalog —
+ *  the Live2D and VRM id spaces are kept disjoint so each catalog can
+ *  evolve independently. Server and client keep this closed list in
+ *  sync, so an unknown id here is rejected rather than stored. */
+export function validateCompanionAvatarVrmPreset(value: unknown): CompanionAvatarVrmPreset {
+  if (typeof value !== "string") throw invalid("companionAvatarVrmPreset must be a string.");
+  if (!(COMPANION_AVATAR_VRM_PRESETS as readonly string[]).includes(value)) {
+    throw invalid(
+      `companionAvatarVrmPreset must be one of ${COMPANION_AVATAR_VRM_PRESETS.join(", ")}.`,
+    );
+  }
+  return value as CompanionAvatarVrmPreset;
 }

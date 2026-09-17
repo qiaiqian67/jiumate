@@ -170,17 +170,19 @@ export const en: Strings = {
       "Shows a microphone button next to the composer. Tap to record, tap again to stop; the transcript fills the composer for you to confirm before sending.",
     companionAsrProviderOff: "Off",
     companionAsrProviderWebspeech: "System recognition",
-    /** Avatar row (L.6): the renderer picker (SVG vs Live2D) and the
-     *  preset picker (only shown when renderer === live2d). The runtime
-     *  falls back to SVG automatically when WebGL is unavailable. */
+    /** Avatar row (L.6): the renderer picker (SVG / Live2D / VRM) and the
+     *  preset picker (only shown when renderer is Live2D or VRM). The
+     *  runtime falls back to SVG automatically when WebGL is
+     *  unavailable. */
     companionAvatarRendererLabel: "Stereo avatar",
     companionAvatarRendererInfo:
-      "Swap the companion's SVG for a pseudo-3D Live2D model. Requires WebGL in the browser; if the environment cannot run WebGL, the companion silently falls back to SVG.",
+      "Swap the companion's SVG for a 3D model. Requires WebGL in the browser; if the environment cannot run WebGL, the companion silently falls back to SVG.",
     companionAvatarRendererSvg: "2D",
     companionAvatarRendererLive2d: "Live2D",
+    companionAvatarRendererVrm: "VRM",
     companionAvatarPresetLabel: "Model",
     companionAvatarPresetInfo:
-      "Switch between the bundled Live2D presets. Models need the Cubism SDK sample-data assets to be present; until then, the picker shows a placeholder.",
+      "Switch between the bundled 3D presets. Models need their respective sample assets to be present; until then, the picker shows a placeholder.",
     companionAvatarPresetLoading: "Loading…",
     companionAvatarPresetFailed: "Model failed to load — falling back to 2D.",
     companionAvatarRendererFallbackToast: "Stereo avatar unavailable — reverted to 2D.",

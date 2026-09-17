@@ -182,17 +182,19 @@ export const zh = {
       "在 composer 旁显示一个麦克风按钮，点按录音，再次点按结束。转写后的文本会写入 composer，由你确认后再发送。",
     companionAsrProviderOff: "关闭",
     companionAsrProviderWebspeech: "系统识别",
-    /** Avatar row (L.6): the renderer picker (svg vs Live2D) and the
-     *  preset picker (only shown when renderer === live2d). The runtime
-     *  falls back to SVG automatically when WebGL is unavailable. */
+    /** Avatar row (L.6): the renderer picker (svg / Live2D / VRM) and the
+     *  preset picker (only shown when renderer is Live2D or VRM). The
+     *  runtime falls back to SVG automatically when WebGL is
+     *  unavailable. */
     companionAvatarRendererLabel: "立体头像",
     companionAvatarRendererInfo:
-      "把伴侣的 SVG 换成 Live2D 立体模型。需要在浏览器里启用 WebGL；如果环境不支持，伴侣会自动回退到 SVG。",
+      "把伴侣的 SVG 换成 3D 模型。需要在浏览器里启用 WebGL；如果环境不支持，伴侣会自动回退到 SVG。",
     companionAvatarRendererSvg: "2D",
     companionAvatarRendererLive2d: "Live2D",
+    companionAvatarRendererVrm: "VRM",
     companionAvatarPresetLabel: "模型",
     companionAvatarPresetInfo:
-      "切换内置立体模型。当前模型需先下载 Cubism 官方示例资产后才会显示，否则显示占位图标。",
+      "切换内置立体模型。当前模型需先下载示例资产后才会显示，否则显示占位图标。",
     companionAvatarPresetLoading: "加载中…",
     companionAvatarPresetFailed: "模型加载失败，已回退到 2D。",
     companionAvatarRendererFallbackToast: "立体头像不可用，已回退到 2D。",

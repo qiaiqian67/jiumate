@@ -1,0 +1,10 @@
+{
+  "id": "vrm-sample-b",
+  "displayName": {
+    "zh": "示例 VRM B",
+    "en": "VRM Sample B"
+  },
+  "vrm": "vrm-sample-b.vrm",
+  "license": "CC-BY-4.0",
+  "notes": "Placeholder catalog shipped with the companion VRM renderer. Drop a CC-BY / VRM Consortium sample model named vrm-sample-b.vrm into this directory to enable VRM rendering. Until the asset is present the runtime's WebGL auto-fallback engages and the pet stays on SVG. License attribution is required by the bundled model's own terms; replace this string with the SPDX-style identifier (e.g. 'CC-BY-4.0', 'CC0-1.0', 'VRM Consortium Sample Data License') before shipping the asset drop."
+}

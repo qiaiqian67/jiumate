@@ -79,8 +79,17 @@ export default defineConfig({
     // Cubism 4 entry point the bundled Hiyori / Mark / Mao sample models
     // need. Without the cubism4 entry, the first request after the user
     // picks Live2D races on a cold module graph and the WebGL auto-fallback
-    // engages before the canvas paints a frame.
-    include: ["pixi.js", "pixi-live2d-display", "pixi-live2d-display/cubism4"],
+    // engages before the canvas paints a frame. The VRM mirror ships
+    // `three` (the WebGL renderer) and `@pixiv/three-vrm` (the VRM
+    // runtime); pre-bundling both keeps the runtime swap symmetric with
+    // the Live2D path.
+    include: [
+      "pixi.js",
+      "pixi-live2d-display",
+      "pixi-live2d-display/cubism4",
+      "three",
+      "@pixiv/three-vrm",
+    ],
   },
   server: {
     // Fixed Linsight dev port (stands alone — vite configs cannot import core TS,

@@ -18,6 +18,7 @@ import { validateDraftShortcuts } from "../../services/draft-shortcuts.js";
 import {
   validateCompanionAsrProvider,
   validateCompanionAvatarPreset,
+  validateCompanionAvatarVrmPreset,
   validateCompanionAvatarRenderer,
   validateCompanionName,
   validateCompanionPronoun,
@@ -164,18 +165,24 @@ export function meRoutes(deps: AppDeps): Hono<AppEnv> {
     if (body.companionAsrProvider !== undefined) {
       body.companionAsrProvider = validateCompanionAsrProvider(body.companionAsrProvider);
     }
-    // Avatar (L.6): the renderer is a closed enum (svg / live2d) and the
-    // preset is a closed list of ids the runtime knows how to resolve. Both
-    // validated for the same reason the other companion fields are — a
-    // hand-crafted PUT must not put junk into the prefs row. The two fields
-    // are independent on purpose: a user can opt in to "live2d" before
-    // picking a preset (the picker uses "hiyori" as a safe default) and the
-    // server does not need to keep them in sync.
+    // Avatar (L.6): the renderer is a closed enum (svg / live2d / vrm) and
+    // the preset is a closed list of ids the runtime knows how to resolve.
+    // Both validated for the same reason the other companion fields are —
+    // a hand-crafted PUT must not put junk into the prefs row. The
+    // Live2D and VRM preset fields are independent on purpose: a user can
+    // opt in to "vrm" before picking a VRM preset (the picker uses
+    // "vrm-sample-a" as a safe default) and the server does not need to
+    // keep them in sync.
     if (body.companionAvatarRenderer !== undefined) {
       body.companionAvatarRenderer = validateCompanionAvatarRenderer(body.companionAvatarRenderer);
     }
     if (body.companionAvatarPreset !== undefined) {
       body.companionAvatarPreset = validateCompanionAvatarPreset(body.companionAvatarPreset);
+    }
+    if (body.companionAvatarVrmPreset !== undefined) {
+      body.companionAvatarVrmPreset = validateCompanionAvatarVrmPreset(
+        body.companionAvatarVrmPreset,
+      );
     }
     const raw = deps.prefsRepo.get(c.var.user.userId);
     let current: UiPrefs = {};

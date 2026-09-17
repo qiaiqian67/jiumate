@@ -26,6 +26,8 @@ import {
 import { useTts } from "../chat/companion-tts/use-tts";
 import { listResolvedPresets, resolvePreset } from "../chat/companion-live2d/manifest";
 import { PresetPreview } from "../chat/companion-live2d/preset-preview";
+import { listResolvedVrmPresets, resolveVrmPreset } from "../chat/companion-vrm/manifest";
+import { PresetPreview as VrmPresetPreview } from "../chat/companion-vrm/preset-preview";
 
 /** The five stops the proactive-interval slider snaps to. 0 = "Off" (never
  *  proactive); otherwise the value is minutes * 60_000. Bounded by
@@ -78,6 +80,8 @@ export function CompanionSection() {
     setAvatarRenderer,
     avatarPreset,
     setAvatarPreset,
+    avatarVrmPreset,
+    setAvatarVrmPreset,
   } = useCompanionStore();
   const tts = useTts();
 
@@ -139,22 +143,29 @@ export function CompanionSection() {
     { value: "webspeech", label: S.settings.companionAsrProviderWebspeech },
   ];
 
-  /** Avatar renderer picker (L.6). Two-segment picker mirroring the
+  /** Avatar renderer picker (L.6). Three-segment picker mirroring the
    *  TTS/ASR shape; "svg" is the safe default (every existing user
    *  lands on it on hydration). Switching to "live2d" lazy-loads the
-   *  pixi chunk via `<CompanionLive2D>` on the next render. */
+   *  pixi chunk via `<CompanionLive2D>` on the next render; switching
+   *  to "vrm" lazy-loads the three.js + @pixiv/three-vrm chunk via
+   *  `<CompanionVrm>`. */
   const avatarRendererOptions: ReadonlyArray<{
     value: CompanionAvatarRenderer;
     label: string;
   }> = [
     { value: "svg", label: S.settings.companionAvatarRendererSvg },
     { value: "live2d", label: S.settings.companionAvatarRendererLive2d },
+    { value: "vrm", label: S.settings.companionAvatarRendererVrm },
   ];
 
   /** Preset catalog for the Live2D picker. `resolvePreset` falls back to
    *  `null` when the manifest is missing; the picker skips missing
    *  entries rather than rendering a broken row. */
   const presets = listResolvedPresets().filter((p) => resolvePreset(p.id) !== null);
+  /** Preset catalog for the VRM picker. Same shape as the Live2D row;
+   *  the two are gated on `avatarRenderer` so the user only sees the
+   *  one matching their renderer pick. */
+  const vrmPresets = listResolvedVrmPresets().filter((p) => resolveVrmPreset(p.id) !== null);
 
   return (
     <div className="divide-y divide-gray-100 dark:divide-gray-800/60">
@@ -241,9 +252,10 @@ export function CompanionSection() {
         />
       </PrefRow>
       {/* Avatar (L.6): the renderer picker is always visible; the
-          preset row only renders when the user has opted in to Live2D.
-          The runtime's WebGL auto-fallback flips renderer back to "svg"
-          when assets are missing or the host cannot run WebGL. */}
+          preset row only renders when the user has opted in to a 3D
+          renderer. The runtime's WebGL auto-fallback flips renderer
+          back to "svg" when assets are missing or the host cannot run
+          WebGL. */}
       <PrefRow
         label={S.settings.companionAvatarRendererLabel}
         info={S.settings.companionAvatarRendererInfo}
@@ -252,7 +264,7 @@ export function CompanionSection() {
           options={avatarRendererOptions}
           value={avatarRenderer}
           onChange={setAvatarRenderer}
-          cols={2}
+          cols={3}
         />
       </PrefRow>
       {avatarRenderer === "live2d" && presets.length > 0 && (
@@ -271,6 +283,27 @@ export function CompanionSection() {
                 preset={p}
                 selected={avatarPreset === p.id}
                 onSelect={setAvatarPreset}
+              />
+            ))}
+          </div>
+        </PrefRow>
+      )}
+      {avatarRenderer === "vrm" && vrmPresets.length > 0 && (
+        <PrefRow
+          label={S.settings.companionAvatarPresetLabel}
+          info={S.settings.companionAvatarPresetInfo}
+        >
+          <div
+            className="flex gap-2"
+            role="radiogroup"
+            aria-label={S.settings.companionAvatarPresetLabel}
+          >
+            {vrmPresets.map((p) => (
+              <VrmPresetPreview
+                key={p.id}
+                preset={p}
+                selected={avatarVrmPreset === p.id}
+                onSelect={setAvatarVrmPreset}
               />
             ))}
           </div>
