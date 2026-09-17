@@ -444,7 +444,14 @@ linsight run --message "分析 data.csv，输出季度销售额"`,
     groups: [
       {
         title: "办公效率",
-        skills: ["data-analysis", "firecrawl", "bento-slides", "humanizer", "format"],
+        skills: [
+          "data-analysis",
+          "firecrawl",
+          "bento-slides",
+          "humanizer",
+          "format",
+          "guizang-ppt-skill",
+        ],
       },
       {
         title: "软件开发",
