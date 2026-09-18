@@ -105,6 +105,15 @@ describe("pets api", () => {
     expect(((await (await client.get("/api/pets")).json()) as PetListBody).pets).toHaveLength(1);
   });
 
+  it("accepts an explicit null fingerprint as 'nothing to verify against'", async () => {
+    // The web picker sends `expectedFingerprint: null` for a folder the user chose
+    // directly; rejecting it as a bad type made every import from Settings fail with 400.
+    const source = await makePetSource(t.root);
+    const res = await client.post("/api/pets/import", { path: source, expectedFingerprint: null });
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { pet: { id: string } }).pet.id).toBe("my-pet");
+  });
+
   it("rejects a bad import body and a source without pet.json", async () => {
     expect((await client.post("/api/pets/import", {})).status).toBe(400);
     expect((await client.post("/api/pets/import", { path: "" })).status).toBe(400);

@@ -99,11 +99,17 @@ export function petRoutes(deps: AppDeps): Hono<AppEnv> {
     if (typeof path !== "string" || path.length === 0) {
       throw new HttpError(400, "invalid_pet_import", "path must be a non-empty string");
     }
-    if (expected !== undefined && typeof expected !== "string") {
+    // `null` is the explicit "nothing was reviewed to verify against" a folder import
+    // sends when the user picked a path rather than a listed candidate; it means the
+    // same thing as an absent key. Only a non-string, non-null value is a bad request.
+    if (expected !== undefined && expected !== null && typeof expected !== "string") {
       throw new HttpError(400, "invalid_pet_import", "expectedFingerprint must be a string");
     }
     try {
-      const pet = await catalog.importPackage(path, expected);
+      const pet = await catalog.importPackage(
+        path,
+        typeof expected === "string" ? expected : undefined,
+      );
       return c.json({ pet });
     } catch (err) {
       if (err instanceof PetPackageError) {

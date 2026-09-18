@@ -93,7 +93,13 @@ export async function importPetPackage(
 ): Promise<PetPackageWithPreview> {
   const pet = await apiFetch<{ pet: PetPackage }>("/api/pets/import", {
     method: "POST",
-    body: { path, expectedFingerprint: expectedFingerprint ?? null },
+    // Omit the key entirely when there is nothing to verify against. Sending an explicit
+    // `null` made every folder import fail with 400 (`expectedFingerprint must be a
+    // string`) — the picker has no fingerprint to review for a path the user just chose.
+    body: {
+      path,
+      ...(expectedFingerprint === undefined ? {} : { expectedFingerprint }),
+    },
   });
   return {
     ...pet.pet,

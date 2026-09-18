@@ -8,6 +8,7 @@ import type { PetPackage } from "@prismshadow/linsight-pets";
 import {
   defaultBuiltinPet,
   findBuiltinPet,
+  importPetPackage,
   listPets,
   resolvePetById,
   resolvePetSpriteSrc,
@@ -107,6 +108,33 @@ describe("listPets", () => {
     const pets = await listPets();
     expect(pets).toHaveLength(13);
     expect(pets.every((p) => p.source === "preset")).toBe(true);
+  });
+});
+
+describe("importPetPackage", () => {
+  it("omits expectedFingerprint when there is nothing to verify against", async () => {
+    // The route rejects a non-string value, so the `null` this used to send made every
+    // folder import from Settings fail with 400.
+    const fetchMock = vi.fn(async (_url: string, _init: RequestInit) =>
+      jsonResponse({ pet: userPet("my-pet") }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await importPetPackage("/tmp/source-pet");
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(JSON.parse(String(init?.body))).toEqual({ path: "/tmp/source-pet" });
+  });
+
+  it("sends the reviewed fingerprint when there is one", async () => {
+    const fetchMock = vi.fn(async (_url: string, _init: RequestInit) =>
+      jsonResponse({ pet: userPet("my-pet") }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await importPetPackage("/tmp/source-pet", "abc123");
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(JSON.parse(String(init?.body))).toEqual({
+      path: "/tmp/source-pet",
+      expectedFingerprint: "abc123",
+    });
   });
 });
 

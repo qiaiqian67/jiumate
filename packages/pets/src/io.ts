@@ -20,7 +20,7 @@
  */
 import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { join, relative, sep } from "node:path";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import {
   ARCHIVE_LIMIT,
   FRAME_HEIGHT,
@@ -120,6 +120,17 @@ export function coercePetPackage(value: unknown, ctx: { packagePath: string }): 
   ) {
     throw new PetPackageError("Pet manifest spritesheetPath escapes its package directory");
   }
+  // A `..` in the *middle* of the path escapes exactly as surely as a leading one, and the
+  // prefix/suffix checks above miss it: `a/../../../etc/passwd` passes all of them and
+  // `join` then silently resolves it out of the package directory. Reject any `.`, `..` or
+  // empty segment wherever it appears, so the only paths left are plain relative names.
+  if (
+    spritesheetPath
+      .split("/")
+      .some((segment) => segment === "" || segment === "." || segment === "..")
+  ) {
+    throw new PetPackageError("Pet manifest spritesheetPath escapes its package directory");
+  }
   const spriteVersionNumber = (raw["spriteVersionNumber"] as unknown) ?? 1;
   if (spriteVersionNumber !== 1 && spriteVersionNumber !== 2) {
     throw new PetPackageError(
@@ -136,6 +147,14 @@ export function coercePetPackage(value: unknown, ctx: { packagePath: string }): 
   // Always store the absolute path the host will read from. Use forward
   // slashes so POSIX-form test assertions remain stable on every host.
   const absoluteSpritesheet = join(ctx.packagePath, spritesheetPath).split(sep).join("/");
+  // Last line of defence, on the resolved result rather than on the text: the segment
+  // checks above cover the forms we know about, this one covers the forms we do not (a
+  // Windows segment Win32 normalises away, a separator form the split did not see).
+  const packageRoot = resolve(ctx.packagePath);
+  const escaped = relative(packageRoot, resolve(absoluteSpritesheet));
+  if (escaped === "" || escaped.startsWith("..") || isAbsolute(escaped)) {
+    throw new PetPackageError("Pet manifest spritesheetPath escapes its package directory");
+  }
   return {
     id,
     displayName,
@@ -152,10 +171,14 @@ export function coercePetPackage(value: unknown, ctx: { packagePath: string }): 
 }
 
 /**
- * Read every installed pet under `root/`. Folders whose name does not match
- * the slug regex, or whose manifest fails to parse, are skipped with a logged
- * warning rather than aborting the whole catalog — a single bad pet must
- * never take down the picker.
+ * Read every installed pet under `root/`. Folders whose name is a dotfile, or whose
+ * manifest fails to parse, are skipped with a logged warning rather than aborting the
+ * whole catalog — a single bad pet must never take down the picker.
+ *
+ * The `MAX_PACKAGES` cap truncates the list rather than throwing: throwing here read as
+ * "the catalog is empty" to every caller that catches (see `PetCatalogService.list`),
+ * which hid every installed pet *and* defeated the import guard that counts them. Only
+ * directories count towards the cap — a stray file in the pets root is not a pet.
  */
 export async function readPetCatalog(root: string): Promise<PetPackage[]> {
   const pets = petsDir(root);
@@ -166,14 +189,13 @@ export async function readPetCatalog(root: string): Promise<PetPackage[]> {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw err;
   }
-  if (entries.length > MAX_PACKAGES) {
-    throw new PetPackageError(`Pet directory holds more than ${MAX_PACKAGES} pets`);
-  }
+  const slugs = entries
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b))
+    .slice(0, MAX_PACKAGES);
   const out: PetPackage[] = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    if (entry.name.startsWith(".")) continue;
-    const slug = entry.name;
+  for (const slug of slugs) {
     try {
       const pet = await readPetPackage(root, slug);
       if (pet !== null) out.push(pet);

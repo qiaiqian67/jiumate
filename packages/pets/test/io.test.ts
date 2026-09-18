@@ -87,6 +87,31 @@ describe("coercePetPackage", () => {
       coercePetPackage({ spritesheetPath: "/absolute.png" }, { packagePath: "/data/pets/bad" }),
     ).toThrow(/relative POSIX/);
   });
+
+  it("rejects a traversal in the middle of the path, not just at the front", () => {
+    // The prefix/suffix checks alone let these through and `join` then resolved them out
+    // of the package directory, so an imported manifest could name any file on the host.
+    for (const spritesheetPath of [
+      "a/../../../etc/passwd",
+      "foo/../../secret.png",
+      "nested/../../out.png",
+      "a/./b.png",
+      "a//b.png",
+      "..",
+    ]) {
+      expect(() =>
+        coercePetPackage({ spritesheetPath }, { packagePath: "/data/pets/bad" }),
+      ).toThrow(PetPackageError);
+    }
+  });
+
+  it("accepts a plain nested relative path", () => {
+    const pet = coercePetPackage(
+      { spritesheetPath: "art/sprite.png" },
+      { packagePath: "/data/pets/bad" },
+    );
+    expect(pet.spritesheetPath).toBe("/data/pets/bad/art/sprite.png");
+  });
 });
 
 describe("readPetPackage / readPetCatalog", () => {
@@ -123,6 +148,30 @@ describe("readPetPackage / readPetCatalog", () => {
     await writeFile(join(badDir, "pet.json"), "{ this is not json", "utf8");
     const catalog = await readPetCatalog(root);
     expect(catalog.map((p) => p.id)).toEqual(["good"]);
+  });
+
+  it("still returns the catalog when the pets root holds stray files", async () => {
+    // Counting every entry against MAX_PACKAGES made a few loose files (an editor
+    // dotfile, a downloaded .zip) read as "too many pets" — which the service turned into
+    // an empty list, hiding every installed pet from the picker.
+    await makePet("alpha", { id: "alpha", displayName: "A", spritesheetPath: "x.png" });
+    for (let i = 0; i < MAX_PACKAGES + 4; i += 1) {
+      await writeFile(join(root, "pets", `stray-${i}.png`), "not a pet", "utf8");
+    }
+    const catalog = await readPetCatalog(root);
+    expect(catalog.map((p) => p.id)).toEqual(["alpha"]);
+  });
+
+  it("caps the catalog at MAX_PACKAGES directories instead of throwing", async () => {
+    // Exceeding the cap must not throw: callers catch and read the throw as an empty
+    // catalog, which is both a lost picker and a defeated import guard.
+    const over = MAX_PACKAGES + 3;
+    for (let i = 0; i < over; i += 1) {
+      const slug = `pet-${String(i).padStart(3, "0")}`;
+      await makePet(slug, { id: slug, displayName: slug, spritesheetPath: "x.png" });
+    }
+    const catalog = await readPetCatalog(root);
+    expect(catalog).toHaveLength(MAX_PACKAGES);
   });
 });
 

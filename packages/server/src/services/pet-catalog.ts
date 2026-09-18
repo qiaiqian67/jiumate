@@ -157,9 +157,21 @@ export class PetCatalogService {
 
   // ---- internals ----
 
+  /**
+   * The cap counts pet *directories*, read straight off the filesystem rather than
+   * derived from `list()`. `list()` reports an unreadable catalog as zero pets, so a
+   * guard built on it would wave through every import exactly when the directory is
+   * already too full to read.
+   */
   private async ensureRoom(): Promise<void> {
-    const { pets } = await this.list();
-    if (pets.length >= MAX_PACKAGES) {
+    const fs = await import("node:fs/promises");
+    const entries = await fs
+      .readdir(petsDir(this.root), { withFileTypes: true })
+      .catch(() => [] as import("node:fs").Dirent[]);
+    const installed = entries.filter(
+      (entry) => entry.isDirectory() && !entry.name.startsWith("."),
+    ).length;
+    if (installed >= MAX_PACKAGES) {
       throw new PetPackageError("Pet package limit reached");
     }
   }
