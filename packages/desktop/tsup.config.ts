@@ -7,10 +7,15 @@ import { buildGitDefine } from "../../scripts/build-git-stamp.mjs";
 import { ESM_CJS_BANNER } from "../../scripts/esm-cjs-banner.mjs";
 
 /**
- * Five self-contained bundles, no shared chunks: the shell itself, the server it forks as a
+ * Four self-contained bundles, no shared chunks: the shell itself, the server it forks as a
  * utilityProcess, the CLI its bin/ launchers start on the app's Electron runtime, and the two
  * modules scripts/build-assets.mjs imports (plain node, no Electron) to produce the rest of
  * the build — launcher.ts writes the launcher scripts, pty-payload.ts stages node-pty.
+ *
+ * The preload bridge is deliberately NOT here. A renderer with `sandbox: true` only loads a
+ * CommonJS preload; bundling it in this ESM build emitted `import` statements and Electron
+ * dropped it with "Cannot use import statement outside a module", leaving `window.pet`
+ * undefined. It is built as its own CJS bundle by tsup.preload.config.ts instead.
  *
  * The server and the CLI are bundled from their own packages' build output, so the app runs
  * exactly what an `npm install` of those packages would, linked into one file each.
@@ -26,7 +31,6 @@ import { ESM_CJS_BANNER } from "../../scripts/esm-cjs-banner.mjs";
 export default defineConfig({
   entry: {
     main: "src/main.ts",
-    preload: "src/preload.ts",
     launcher: "src/launcher.ts",
     "pty-payload": "src/pty-payload.ts",
     server: "../server/dist/index.js",

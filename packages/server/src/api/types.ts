@@ -286,143 +286,27 @@ export interface UiPrefs {
    */
   draftShortcuts?: DraftShortcut[];
   /**
-   * Where the AI companion surface lives. Replaces the old boolean `companionModeEnabled`:
-   * users now pick one of four placements in System settings → General — a banner above the
-   * composer, a persistent right widget next to the dock, or a floating Electron window
-   * — or "off" to opt out. The server prepends a `[companion_persona]` block whenever the
-   * value is anything other than "off". The block is stripped from generated Session
-   * titles and from goal-mode objectives (it is in `TITLE_NOISE_TAGS`).
-   *
-   * Backward compat: a stored `companionModeEnabled: true` (legacy) is honoured by the
-   * server gate even when `companionPlacement` is absent — `PUT /me/prefs` migrates that
-   * boolean to `companionPlacement: "banner"` on the next explicit write.
+   * Whether to show the Petdex desktop pet window. When false the pet window stays
+   * hidden even if the user picked one earlier. Persisted across restarts.
    */
-  companionPlacement?: CompanionPlacement;
-  /** Position of the Electron floating companion window (only meaningful when
-   *  `companionPlacement === "floating"`). Persisted across restarts. */
-  companionFloatingPosition?: { x: number; y: number };
-  /** Display name of the companion (e.g. shown in greetings). Free-form, bounded on
-   *  write by `services/companion-prefs.ts`. Independent of the placement picker —
-   *  setting a name does NOT enable the companion. */
-  companionName?: string;
-  /** Grammatical person the companion refers to itself as. Drives `system prompt`
-   *  templates once L.2 ships real proactive content. Defaults to "they" if unset. */
-  companionPronoun?: CompanionPronoun;
-  /** Idle threshold before the companion may proactively speak (L.2 trigger
-   *  skeleton). 0 = never proactive. Bounded 0..60 minutes on write. */
-  companionProactiveTimeoutMs?: number;
-  /** TTS provider for the Electron floating pet (L.4). "off" is the safe default —
-   *  the user has to opt in to having the pet speak. New providers (ElevenLabs,
-   *  OpenAI, local Kokoro) land here; the Web Speech implementation is wired in
-   *  PR-B, the rest are future phases. */
-  companionTtsProvider?: CompanionTtsProvider;
-  /** Voice id picked from the chosen provider's voice list. Provider-specific:
-   *  Web Speech stores the SpeechSynthesisVoice.voiceURI; ElevenLabs / OpenAI
-   *  store their own ids. Free-form, length-bounded. */
-  companionTtsVoice?: string;
-  /** ASR provider for the chat composer (L.5). "off" hides the mic button;
-   *  "webspeech" enables tap-to-talk via Chromium's `SpeechRecognition`. AWS
-   *  Transcribe / OpenAI Whisper / local Whisper.cpp land in later phases
-   *  through the same closed enum. */
-  companionAsrProvider?: CompanionAsrProvider;
-  /** Avatar renderer for the AI companion (L.6). "svg" is the safe default
-   *  and ships the existing 2D fox on every surface; "live2d" swaps in a
-   *  pseudo-3D Cubism model behind the same `<CompanionPet>` swap point;
-   *  "vrm" swaps in a rigged VRM model rendered with three.js. The
-   *  renderer is auto-degraded to "svg" by the client when WebGL is
-   *  unavailable. */
-  companionAvatarRenderer?: CompanionAvatarRenderer;
-  /** Which built-in Live2D preset to load when `companionAvatarRenderer ===
-   *  "live2d"`. Closed list of Cubism SDK sample-data ids (Hiyori / Mark /
-   *  Mao). Anything else is a 400 — the Settings picker only exposes
-   *  presets the runtime can resolve. */
-  companionAvatarPreset?: CompanionAvatarPreset;
-  /** Which built-in VRM preset to load when `companionAvatarRenderer ===
-   *  "vrm"`. Closed list of VRM ids the runtime knows how to resolve —
-   *  independent from `companionAvatarPreset` so the Live2D and VRM
-   *  catalogs can evolve separately. Anything else is a 400 — the
-   *  Settings picker only exposes presets the runtime can resolve. */
-  companionAvatarVrmPreset?: CompanionAvatarVrmPreset;
+  enablePet?: boolean;
+  /** Id of the active Petdex pet package (preset id or installed slug). Resolved
+   *  by `services/pet-catalog.ts` against the on-disk manifest. Stored by id so a
+   *  reinstall of the same pet under a different path does not lose the selection. */
+  activePetId?: string | null;
+  /**
+   * Last position of the floating pet window. Persisted by the desktop shell when
+   * the user releases a drag; the pet window reads it on startup.
+   */
+  petWindowPosition?: { x: number; y: number };
+  /**
+   * Size multiplier for the floating pet window and its sprite (1 = the shell's
+   * base pet footprint). The window itself is content-sized, so this scales the
+   * pet, not a fixed box around it.
+   */
+  petWindowScale?: number | null;
   [key: string]: unknown;
 }
-
-/** Closed list of ASR providers the client understands. Same extensibility
- *  pattern as `CompanionTtsProvider`: a new engine is an enum extension on
- *  both server and client, plus an entry in `companion-asr/registry.ts`. */
-export type CompanionAsrProvider = "off" | "webspeech";
-export const COMPANION_ASR_PROVIDERS: readonly CompanionAsrProvider[] = ["off", "webspeech"];
-
-/** Closed list of TTS providers the client understands. Anything else is a 400.
- *  Add a new provider by extending this enum, the `CompanionTtsProvider` mirror
- *  in `packages/web/src/features/chat/companion-store.tsx`, and the
- *  provider-impl registry under `packages/web/src/features/chat/companion-tts/`. */
-export type CompanionTtsProvider = "off" | "webspeech";
-export const COMPANION_TTS_PROVIDERS: readonly CompanionTtsProvider[] = ["off", "webspeech"];
-
-/** Closed list of avatar renderers the client understands. Same extensibility
- *  pattern as the TTS / ASR providers: a new renderer is an enum extension on
- *  both server and client, plus an entry in
- *  `packages/web/src/features/chat/companion-live2d/` or
- *  `packages/web/src/features/chat/companion-vrm/`. "svg" is the safe default
- *  — a brand-new user never sees a 3D model without opting in. */
-export type CompanionAvatarRenderer = "svg" | "live2d" | "vrm";
-export const COMPANION_AVATAR_RENDERERS: readonly CompanionAvatarRenderer[] = [
-  "svg",
-  "live2d",
-  "vrm",
-];
-
-/** Closed list of Live2D preset ids the runtime knows how to resolve. The
- *  Settings picker iterates this list; the server-side gate uses it to reject
- *  unknown ids (a hand-crafted PUT must not be able to put a junk id into the
- *  prefs row). The catalog itself lives in
- *  `packages/web/src/features/chat/companion-live2d/manifest.ts` — server and
- *  client must agree on this closed list. */
-export type CompanionAvatarPreset = "hiyori" | "mark" | "mao";
-export const COMPANION_AVATAR_PRESETS: readonly CompanionAvatarPreset[] = ["hiyori", "mark", "mao"];
-
-/** Closed list of VRM preset ids the runtime knows how to resolve. The
- *  Settings picker iterates this list; the server-side gate uses it to reject
- *  unknown ids (a hand-crafted PUT must not be able to put a junk id into the
- *  prefs row). The catalog itself lives in
- *  `packages/web/src/features/chat/companion-vrm/manifest.ts` — server and
- *  client must agree on this closed list. VRM ids live in their own
- *  namespace, independent from `CompanionAvatarPreset`, because the
- *  Live2D and VRM catalogs are different file formats with different
- *  license provenance. */
-export type CompanionAvatarVrmPreset = "vrm-sample-a" | "vrm-sample-b";
-export const COMPANION_AVATAR_VRM_PRESETS: readonly CompanionAvatarVrmPreset[] = [
-  "vrm-sample-a",
-  "vrm-sample-b",
-];
-
-/** Closed list of pronoun keys — the settings page renders a 4-segment picker over
- *  this set, and the server-side gate uses it to reject unknown strings rather than
- *  treat them as "they". Keep this list narrow on purpose: airi-style personalization
- *  is its own design problem and a long tail belongs in a future L.x phase. */
-export type CompanionPronoun = "he" | "she" | "they" | "it";
-
-export const COMPANION_PRONOUNS: readonly CompanionPronoun[] = ["he", "she", "they", "it"];
-
-/** The four placements the user can pick from. The first three trigger the server's
- *  persona injection; "off" opts out. Re-exported from core's enum so web / desktop /
- *  server share one type definition. */
-export type CompanionPlacement = "off" | "banner" | "widget" | "floating";
-
-/** Canonical ordering — used by the Settings UI's 4-segment picker and by tests. */
-export const COMPANION_PLACEMENTS: readonly CompanionPlacement[] = [
-  "off",
-  "banner",
-  "widget",
-  "floating",
-];
-
-/** Subset that turns on the persona block at the server. */
-export const PERSONA_ON_PLACEMENTS: ReadonlySet<CompanionPlacement> = new Set([
-  "banner",
-  "widget",
-  "floating",
-]);
 
 export interface PrefsResponse {
   prefs: UiPrefs;
@@ -2325,6 +2209,12 @@ export interface MessagingTestMessageResponse {
 
 /** Docs: /docs/server-api § "Streaming (SSE)". */
 export type ServerEvent =
+  /**
+   * The signed-in user's UI prefs changed somewhere other than their own browser — today
+   * only the `pet` tool, which acts on the local admin's row. The web app re-reads prefs on
+   * it so a surface that mirrors them (the pet window) follows without a reload.
+   */
+  | { type: "prefs_changed" }
   /**
    * Approval request escalated to a human: every call under always-ask, plus rw/unknown-permission
    * calls under read-only (see runtime/approvals.ts); pending approvals are resent on reconnect.

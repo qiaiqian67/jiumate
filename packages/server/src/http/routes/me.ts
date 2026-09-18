@@ -15,17 +15,7 @@ import { readJson, requireString } from "../validate.js";
 import type { AppDeps } from "../../app.js";
 import { resolvePreviewTarget } from "../../services/preview-token.js";
 import { validateDraftShortcuts } from "../../services/draft-shortcuts.js";
-import {
-  validateCompanionAsrProvider,
-  validateCompanionAvatarPreset,
-  validateCompanionAvatarVrmPreset,
-  validateCompanionAvatarRenderer,
-  validateCompanionName,
-  validateCompanionPronoun,
-  validateCompanionProactiveTimeoutMs,
-  validateCompanionTtsProvider,
-  validateCompanionTtsVoice,
-} from "../../services/companion-prefs.js";
+import { validatePetPrefs } from "../../services/pet-prefs.js";
 import {
   INLINE_IMAGE_MAX_MB,
   MAX_ATTACHMENT_COUNT,
@@ -115,16 +105,11 @@ export function meRoutes(deps: AppDeps): Hono<AppEnv> {
   // clear credentialGuideSeen, breaking the "show onboarding once ever" guarantee.
   app.put("/prefs", async (c) => {
     const body = await readJson(c);
-    // Legacy `companionModeEnabled: boolean` migrates to the four-way `companionPlacement`
-    // union on the next write: a stored `true` becomes `"banner"` so the user keeps
-    // seeing the persona block; a stored `false` is dropped (the absence of
-    // `companionPlacement` already means opt-out). We never persist the legacy field
-    // alongside the new one — a future GET would otherwise see both keys.
-    if (body.companionModeEnabled !== undefined) {
-      if (body.companionPlacement === undefined && body.companionModeEnabled === true) {
-        body.companionPlacement = "banner";
-      }
-      delete body.companionModeEnabled;
+    // Strip any leftover AI-伴侣 keys from older prefs JSON so a previous install cannot
+    // bleed back in via shallow-merge. The pet prefs take their place; the new fields
+    // are validated just below.
+    for (const legacyKey of LEGACY_COMPANION_PREF_KEYS) {
+      if (body[legacyKey] !== undefined) delete body[legacyKey];
     }
     // The one known key whose value is text the user wrote, so the one that needs a bound here:
     // everything else in ui_prefs is a flag or an id, and the store itself has no schema to lean
@@ -132,58 +117,11 @@ export function meRoutes(deps: AppDeps): Hono<AppEnv> {
     if (body.draftShortcuts !== undefined) {
       body.draftShortcuts = validateDraftShortcuts(body.draftShortcuts);
     }
-    // Companion-specific prefs (name / pronoun / proactive timeout) are validated in
-    // the same way: free-form JSON has no schema, so any user-authored text needs a
-    // server-side bound. Validation is done per-field rather than as a single object
-    // because each field has its own normalizer (trim, round, …) and the PUT may
-    // carry any subset.
-    if (body.companionName !== undefined) {
-      body.companionName = validateCompanionName(body.companionName);
-    }
-    if (body.companionPronoun !== undefined) {
-      body.companionPronoun = validateCompanionPronoun(body.companionPronoun);
-    }
-    if (body.companionProactiveTimeoutMs !== undefined) {
-      body.companionProactiveTimeoutMs = validateCompanionProactiveTimeoutMs(
-        body.companionProactiveTimeoutMs,
-      );
-    }
-    // TTS (L.4): the provider is a closed enum; the voice id is a free-form
-    // string bounded by `companion-prefs.ts`. Both validated here for the same
-    // reason the other companion fields are — a hand-crafted PUT must not be
-    // able to put junk into the prefs row.
-    if (body.companionTtsProvider !== undefined) {
-      body.companionTtsProvider = validateCompanionTtsProvider(body.companionTtsProvider);
-    }
-    if (body.companionTtsVoice !== undefined) {
-      body.companionTtsVoice = validateCompanionTtsVoice(body.companionTtsVoice);
-    }
-    // ASR (L.5): the provider is a closed enum validated here for the same
-    // reason the TTS provider is — a hand-crafted PUT must not put junk into
-    // the prefs row. Voice id is not persisted for ASR; the provider supplies
-    // its own default language / model.
-    if (body.companionAsrProvider !== undefined) {
-      body.companionAsrProvider = validateCompanionAsrProvider(body.companionAsrProvider);
-    }
-    // Avatar (L.6): the renderer is a closed enum (svg / live2d / vrm) and
-    // the preset is a closed list of ids the runtime knows how to resolve.
-    // Both validated for the same reason the other companion fields are —
-    // a hand-crafted PUT must not put junk into the prefs row. The
-    // Live2D and VRM preset fields are independent on purpose: a user can
-    // opt in to "vrm" before picking a VRM preset (the picker uses
-    // "vrm-sample-a" as a safe default) and the server does not need to
-    // keep them in sync.
-    if (body.companionAvatarRenderer !== undefined) {
-      body.companionAvatarRenderer = validateCompanionAvatarRenderer(body.companionAvatarRenderer);
-    }
-    if (body.companionAvatarPreset !== undefined) {
-      body.companionAvatarPreset = validateCompanionAvatarPreset(body.companionAvatarPreset);
-    }
-    if (body.companionAvatarVrmPreset !== undefined) {
-      body.companionAvatarVrmPreset = validateCompanionAvatarVrmPreset(
-        body.companionAvatarVrmPreset,
-      );
-    }
+    // Pet prefs (enablePet / activePetId / petWindowPosition) are validated the same
+    // way as draftShortcuts — free-form JSON has no schema, so any user-authored
+    // value needs a server-side bound. activePetId is only bounded, not resolved:
+    // builtin presets live in the web bundle, so an unknown id is a legal selection.
+    await validatePetPrefs(body);
     const raw = deps.prefsRepo.get(c.var.user.userId);
     let current: UiPrefs = {};
     if (raw !== null) {
@@ -200,3 +138,20 @@ export function meRoutes(deps: AppDeps): Hono<AppEnv> {
 
   return app;
 }
+
+/** Field names from the removed AI 伴侣 feature. Stripped on PUT so a previous install
+ *  cannot bleed back into the merged prefs; harmless once written, but cleaner. */
+const LEGACY_COMPANION_PREF_KEYS = [
+  "companionModeEnabled",
+  "companionPlacement",
+  "companionFloatingPosition",
+  "companionName",
+  "companionPronoun",
+  "companionProactiveTimeoutMs",
+  "companionTtsProvider",
+  "companionTtsVoice",
+  "companionAsrProvider",
+  "companionAvatarRenderer",
+  "companionAvatarPreset",
+  "companionAvatarVrmPreset",
+] as const;

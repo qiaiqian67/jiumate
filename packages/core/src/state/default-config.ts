@@ -924,6 +924,38 @@ function defaultBuiltinTools(): ToolDefinitionConfig[] {
       timeoutMs: 90000,
       maxOutputLength: 16000,
     },
+    {
+      name: "pet",
+      description:
+        "Inspect and control the desktop pet (the floating Petdex companion window). " +
+        'action="list" reports which pets are available and which one is active; ' +
+        'action="use" (with pet_id) switches to a pet that is already available; ' +
+        'action="show" / "hide" opens or closes the pet window. This only chooses among ' +
+        "pets the user already has — it never installs, downloads or deletes anything, so a " +
+        "request to add a pet from a path belongs to the user in Settings → Application.",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["list", "use", "show", "hide"],
+            description:
+              'What to do: "list" the pets, "use" one (requires pet_id), or "show"/"hide" the pet window.',
+          },
+          pet_id: {
+            type: "string",
+            description:
+              'Id of the pet to select, from a previous action="list". Required for action="use".',
+          },
+        },
+        required: ["action"],
+      },
+      // "rw": the switch and the show/hide both change a user preference, so it rides the
+      // approval flow like every other mutating tool rather than being auto-approved.
+      permission: "rw",
+      timeoutMs: 15000,
+      maxOutputLength: 8000,
+    },
   ];
 }
 

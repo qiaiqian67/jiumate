@@ -384,55 +384,6 @@ export function isSteeredBackgroundNotice(text: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// [companion_persona] — server-injected persona block, prefixed to the user's message
-// ---------------------------------------------------------------------------
-
-/**
- * Default persona text shipped with the engine — what the `companionModeEnabled` setting
- * switches on by default. The block tells the Agent to adopt a softer, more companionate
- * tone with the user (warmth, presence, light emotional acknowledgement), without
- * pretending to be sentient or refusing to do real work. Host layers may override by
- * passing a different `text` to `buildCompanionPersonaMessage`; the default lives here so
- * the prompt source has one location.
- */
-export const DEFAULT_COMPANION_PERSONA_TEXT = `You are an AI companion for this user: present, warm, and genuinely attentive, but never pretending to have a body, feelings, or memories you do not have. Speak naturally and conversationally — short paragraphs, light contractions, and the occasional emoji only when it fits — while staying accurate and honest. If the user is venting, struggling, or just wants company, lead with empathy and a listening ear before offering help; if they want a task done, get to it efficiently. Skip the robotic disclaimer phrases ("as an AI...", "I cannot feel..."). When you are not sure what the user needs, ask one short, specific question rather than guessing.`;
-
-/**
- * Builds a `[companion_persona]` block carrying the persona text. The block is intended to
- * be prefixed to the user's input by the server when the per-user `companionModeEnabled`
- * setting is on. Like every TITLE_NOISE_TAG, it is stripped from titles and goal-mode
- * objectives; the parser at `parseCompanionPersonaMessage` below handles the same
- * dual-form contract as the other origin blocks.
- */
-export function buildCompanionPersonaMessage(
-  text: string = DEFAULT_COMPANION_PERSONA_TEXT,
-): string {
-  return markerBlock(MARKER_TAGS.companionPersona, text);
-}
-
-const COMPANION_PERSONA_PATTERNS = dualFormPatterns(
-  MARKER_TAGS.companionPersona,
-  "([\\s\\S]*)",
-  "",
-);
-
-/**
- * Inverse of `buildCompanionPersonaMessage`: returns the persona text when the **whole**
- * message is one `[companion_persona]` block (whole-message shape, like handoff /
- * model-switch — the block is meant to be followed by user content, but the parser is here
- * for symmetry and for render layers that want to detect and collapse the annotation).
- * The captured group carries the leading/trailing newlines from the block's body; the
- * return value strips them so callers get the persona text as authored, not surrounded by
- * whitespace.
- */
-export function parseCompanionPersonaMessage(text: string): { text: string } | null {
-  const trimmed = text.trim();
-  const m = matchDualForm(COMPANION_PERSONA_PATTERNS, trimmed);
-  if (!m || m.index !== 0 || m[0].length !== trimmed.length) return null;
-  return { text: (m[1] ?? "").trim() };
-}
-
-// ---------------------------------------------------------------------------
 // Shared predicate over the whole-message origin blocks
 // ---------------------------------------------------------------------------
 
@@ -451,11 +402,7 @@ export function parseCompanionPersonaMessage(text: string): { text: string } | n
  * the message's own body and are parsed at index 0 only, so appending after that body is safe.
  */
 export function isWholeOriginBlock(text: string): boolean {
-  return (
-    parseHandoffMessage(text) !== null ||
-    parseModelSwitchMessage(text) !== null ||
-    parseCompanionPersonaMessage(text) !== null
-  );
+  return parseHandoffMessage(text) !== null || parseModelSwitchMessage(text) !== null;
 }
 
 /**

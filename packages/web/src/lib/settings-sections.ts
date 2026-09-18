@@ -24,7 +24,7 @@ import type { AccountMenuSession } from "./account-menu";
 
 /** A page of the System settings dialog. */
 export type SettingsSectionKey =
-  "general" | "appearance" | "companion" | "account" | "proxy" | "uploads" | "users";
+  "general" | "appearance" | "application" | "account" | "proxy" | "uploads" | "users";
 
 /** Rail heading a page sits under: the viewer's own preferences vs. the whole server's. */
 export type SettingsGroupKey = "personal" | "server";
@@ -47,10 +47,10 @@ const SECTION_RULES: ReadonlyArray<SettingsSection & { visible(viewer: SettingsV
   [
     { key: "general", group: "personal", visible: () => true },
     { key: "appearance", group: "personal", visible: () => true },
-    // Companion-specific settings: independent persona page (L.3 of the airi roadmap).
-    // Visibly always — the page exists even when the placement picker is "off", since
-    // editing the name / pronoun does not by itself enable the companion.
-    { key: "companion", group: "personal", visible: () => true },
+    // Application-level per-user preferences (Petdex desktop pet, …). Page is always
+    // visible — the toggle is independent of the rest, so disabling the pet does not
+    // hide the page.
+    { key: "application", group: "personal", visible: () => true },
     // The desktop shell's own window has no password to change; a password-established
     // session against the same server still does. Same predicate as the old menu row.
     { key: "account", group: "personal", visible: (v) => offersChangePassword(v) },

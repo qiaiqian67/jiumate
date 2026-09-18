@@ -15,7 +15,7 @@
  */
 import fs from "node:fs/promises";
 import { agentsDir, createAgent, isSessionMeta } from "@prismshadow/linsight-core";
-import type { ControlEnvContext, ProxyEnvPolicy } from "@prismshadow/linsight-core";
+import type { ControlEnvContext, PetControlPort, ProxyEnvPolicy } from "@prismshadow/linsight-core";
 import type {
   ApprovalMode,
   MessagingChannel,
@@ -66,6 +66,12 @@ export interface SessionServiceDeps {
    * agents can drive the harness back through the CLI/API.
    */
   controlEnv?: (ctx: ControlEnvContext) => Record<string, string>;
+  /**
+   * Desktop pet control handed to every Session this service creates, so the `pet` tool can
+   * inspect and change the floating pet window (see services/pet-control.ts). Absent in
+   * assemblies without a pet surface.
+   */
+  petControl?: PetControlPort;
   /**
    * The channel of the Session's ENABLED messaging binding, or null when none is enabled
    * (SessionInfo.messagingChannel, the sidebar row's per-channel indicator — saved-but-
@@ -351,6 +357,7 @@ export class SessionService {
       agentId: args.agentId,
       ...(this.deps.proxyEnv ? { proxyEnv: this.deps.proxyEnv } : {}),
       ...(this.deps.controlEnv ? { controlEnv: this.deps.controlEnv } : {}),
+      ...(this.deps.petControl ? { petControl: this.deps.petControl } : {}),
     });
     let session;
     try {

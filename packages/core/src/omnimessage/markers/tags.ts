@@ -29,12 +29,6 @@ export const MARKER_TAGS = {
   modelSwitchFrom: "model_switch_from",
   /** AGENTS.md wrapper inside the system prompt (static template text). */
   developerInstructions: "developer_instructions",
-  /**
-   * "AI companion" persona block, prefixed to the user's message when the per-user setting
-   * `companionModeEnabled` is on (server-side injection at `POST /tasks`). Hosts that show
-   * the block as an annotation collapse it the same way `[use_skills]` is collapsed.
-   */
-  companionPersona: "companion_persona",
 } as const;
 
 /** Inner tags used inside a transcribed turn block (`[turn_aborted]` / `[turn_retried]`). */
@@ -58,7 +52,4 @@ export const TITLE_NOISE_TAGS: readonly string[] = [
   MARKER_TAGS.scheduledTask,
   MARKER_TAGS.modelSwitchFrom,
   MARKER_TAGS.backgroundTaskDone,
-  // The companion-persona block is server-injected at task creation and is not the user's
-  // own input — it must not leak into a generated Session title or the goal-mode objective.
-  MARKER_TAGS.companionPersona,
 ];

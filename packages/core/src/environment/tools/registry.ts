@@ -22,6 +22,7 @@ import { SUBAGENT_NAME, createSubagentTool } from "./run-subagent.js";
 import { INPUT_SUBAGENT_NAME, createInputSubagentTool } from "./input-subagent.js";
 import { READ_IMAGE_NAME, createReadImageTool } from "./read-image.js";
 import { DESCRIBE_IMAGE_NAME, createDescribeImageTool } from "./describe-image.js";
+import { PET_NAME, createPetTool } from "./pet.js";
 
 /**
  * A factory that constructs a BuiltinTool instance from a tool config entry; optionally
@@ -50,4 +51,7 @@ export const BUILTIN_TOOL_FACTORIES: Record<string, BuiltinToolFactory> = {
   // that don't apply to the session's model.
   [DESCRIBE_IMAGE_NAME]: (definition, services) =>
     createDescribeImageTool(definition, services?.visionDescriber ?? { modelId: null }),
+  // pet: control over the desktop pet window. A host with no pet surface leaves
+  // `petControl` unset and the tool reports that instead of failing.
+  [PET_NAME]: (definition, services) => createPetTool(definition, services?.petControl),
 };

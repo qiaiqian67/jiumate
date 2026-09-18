@@ -21,7 +21,7 @@ Trigger scenarios:
 | Desktop (OS) notification | missing | Electron `Notification` / macOS NSUserNotification / Windows toast |
 | Email notification | missing | escalation when idle for too long |
 | IM-bridge notification | TBD | push to Feishu / DingTalk / WeChat / QQ via L's "project-level bridge"? |
-| Sound cue | missing | desktop pet / TTS (re-uses K) |
+| Sound cue | missing | desktop pet (Petdex) for the visual cue; TTS uses the host's speech synthesis |
 | Mobile push | missing | mobile-app push, or PWA web-push |
 | Notification aggregation / quiet policy | missing | aggregate via G's inbox; Do-Not-Disturb window; per-session folding |
 | Reminder priority | TBD | approvals are high-priority; info items can be downgraded to silent |

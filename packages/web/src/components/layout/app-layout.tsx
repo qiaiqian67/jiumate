@@ -27,7 +27,7 @@ import { UpdateModal } from "../account/update-modal";
 import { TerminalDockRuntime } from "../../features/terminal/terminal-view-pool";
 import { setDockScope } from "../../features/dock/dock-state";
 import { toneStrip } from "../../lib/tone";
-import { CompanionProvider } from "../../features/chat/companion-store";
+import { PetProvider } from "../../features/pet/pet-store";
 
 /**
  * "Last conversation" glyph, used only by the rail: lucide's history mark — a clock read
@@ -250,7 +250,7 @@ export function AppLayout() {
     });
 
   return (
-    <CompanionProvider>
+    <PetProvider>
       <div className="flex h-full">
         {/* Desktop: single-column sidebar (collapsible to a narrow rail) */}
         <aside
@@ -361,6 +361,6 @@ export function AppLayout() {
           </div>
         </Drawer>
       </div>
-    </CompanionProvider>
+    </PetProvider>
   );
 }

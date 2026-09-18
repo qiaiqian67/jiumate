@@ -220,6 +220,41 @@ export interface VisionDescriberService {
 }
 
 /**
+ * One pet the host can offer, in the shape the `pet` tool reports.
+ * `source` is the catalog's own vocabulary: "preset" (ships with the app) or "user" (installed).
+ */
+export interface PetControlEntry {
+  id: string;
+  displayName: string;
+  source: string;
+}
+
+/** What the desktop pet looks like right now, and what could be chosen instead. */
+export interface PetControlSnapshot {
+  /** Whether the floating pet window is shown. */
+  enabled: boolean;
+  /** Id of the selected pet; null when nothing is selected. */
+  activePetId: string | null;
+  pets: PetControlEntry[];
+}
+
+/**
+ * Host-provided control over the desktop pet, injected by hosts that have one (the Web
+ * server; see `services/pet-control.ts`). Absent in SDK/CLI standalone use and anywhere
+ * without a pet surface — the `pet` tool then reports that control is unavailable rather
+ * than failing.
+ *
+ * Mutating calls return the snapshot they produced, so the tool can report the outcome
+ * without a second round trip.
+ */
+export interface PetControlPort {
+  list(): Promise<PetControlSnapshot>;
+  /** Throws when the id is not one of the available pets. */
+  setActivePet(petId: string): Promise<PetControlSnapshot>;
+  setEnabled(enabled: boolean): Promise<PetControlSnapshot>;
+}
+
+/**
  * Runtime services Environment injects into individual tools (e.g. `run_subagent` needs `SubagentRunner`); most tools don't use these.
  * Docs: /docs/interfaces § "ToolExecutionRequest and EnvironmentConfig".
  */
@@ -227,6 +262,8 @@ export interface EnvironmentServices {
   subagentRunner?: SubagentRunner;
   /** Injected when the session model doesn't support images: for describe_image's single-shot vision-model proxy reading. */
   visionDescriber?: VisionDescriberService;
+  /** Desktop pet control for the `pet` tool; absent on hosts with no pet surface. */
+  petControl?: PetControlPort;
   /** Registry of long-running command sessions (shared by `exec_command` / `input_command`); constructed and injected internally by Environment. */
   commandSessions?: CommandSessionManager;
   /** Registry of background subagent sessions (shared by `run_subagent` / `input_subagent`); constructed and injected internally by Environment. */

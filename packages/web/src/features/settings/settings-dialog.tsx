@@ -22,7 +22,7 @@ import { Icon } from "../../components/ui/group-list";
 import { GEAR_ICON } from "../../components/ui/icons";
 import { GeneralSection } from "./general-section";
 import { AppearanceSection } from "./appearance-section";
-import { CompanionSection } from "./companion-section";
+import { ApplicationSection } from "./application-section";
 import { AccountSection } from "./account-section";
 import { ProxySection } from "./proxy-section";
 import { UploadsSection } from "./uploads-section";
@@ -36,9 +36,8 @@ const SECTION_ICONS: Record<SettingsSectionKey, string> = {
     "M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4l1.4-1.4",
   /** Single person: the signed-in account. */
   account: "M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
-  /** Speech-bubble head: the AI companion (independent persona page). */
-  companion:
-    "M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z",
+  /** Window with a heart: application-level preferences (Petdex desktop pet). */
+  application: "M3 5h18v12H3zM3 17l4-4 4 4 4-4 4 4M9 9h.01M15 9h.01M9 13s1 1 3 1 3-1 3-1",
   /** Globe: outbound traffic. */
   proxy:
     "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 0 0 18M12 3a15 15 0 0 1 0 18",
@@ -49,7 +48,19 @@ const SECTION_ICONS: Record<SettingsSectionKey, string> = {
     "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
 };
 
-export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function SettingsDialog({
+  open,
+  onClose,
+  initialSection = null,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /**
+   * Page to open on. Null keeps the default (the viewer's first page). Used by
+   * the desktop pet's context menu, which lands straight on Application.
+   */
+  initialSection?: SettingsSectionKey | null;
+}) {
   // uploadLimits feeds the Upload limits page's "?" (sectionInfo below); the rest pick pages.
   const { user, desktopMode, sessionVia, uploadLimits } = useAuth();
   const sections = visibleSettingsSections({
@@ -63,8 +74,8 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   // below resolve it against the live list. Deliberately keyed on `open` alone — re-running
   // on every sections identity change would yank the user off a page they navigated to.
   useEffect(() => {
-    if (open) setActive(null);
-  }, [open]);
+    if (open) setActive(initialSection);
+  }, [open, initialSection]);
 
   const current = resolveSettingsSection(active, sections);
   if (current === null) return null;
@@ -73,7 +84,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const sectionLabel: Record<SettingsSectionKey, string> = {
     general: S.settings.generalTitle,
     appearance: S.settings.appearanceTitle,
-    companion: S.settings.companionPageTitle,
+    application: S.settings.applicationTitle,
     account: S.settings.accountTitle,
     proxy: S.settings.proxyTitle,
     uploads: S.settings.uploadLimitsTitle,
@@ -116,7 +127,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
     >
       {current === "general" && <GeneralSection />}
       {current === "appearance" && <AppearanceSection />}
-      {current === "companion" && <CompanionSection />}
+      {current === "application" && <ApplicationSection />}
       {current === "account" && <AccountSection />}
       {current === "proxy" && <ProxySection />}
       {current === "uploads" && <UploadsSection />}

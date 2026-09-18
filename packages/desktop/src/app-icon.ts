@@ -15,6 +15,13 @@ import path from "node:path";
 /** Window icon location relative to the app directory (the package dir for a source run). */
 export const WINDOW_ICON_RELPATH = ["dist", "icon.png"];
 
+/**
+ * Tray icon location, same convention. A downscaled copy of the app icon: the
+ * notification area draws at ~16px, so handing it the 1024px master would have the
+ * shell scale it down (badly) on every redraw.
+ */
+export const TRAY_ICON_RELPATH = ["dist", "tray.png"];
+
 /** The window-icon path for a platform, or null where window icons are not used (macOS). */
 export function windowIconPathFor(appPath: string, platform: NodeJS.Platform): string | null {
   if (platform === "darwin") return null;
@@ -25,4 +32,10 @@ export function windowIconPathFor(appPath: string, platform: NodeJS.Platform): s
 export function resolveWindowIcon(appPath: string, platform: NodeJS.Platform): string | null {
   const iconPath = windowIconPathFor(appPath, platform);
   return iconPath !== null && fs.existsSync(iconPath) ? iconPath : null;
+}
+
+/** The tray icon when the build packed one, or null — the tray is then skipped entirely. */
+export function resolveTrayIcon(appPath: string): string | null {
+  const iconPath = path.join(appPath, ...TRAY_ICON_RELPATH);
+  return fs.existsSync(iconPath) ? iconPath : null;
 }

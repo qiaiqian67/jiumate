@@ -45,6 +45,7 @@ import {
   workspaceGroupQuery,
 } from "../lib/session-grouping";
 import { useProject } from "./project";
+import { emitPrefsChanged } from "../features/pet/prefs-events";
 
 interface SessionsContextValue {
   /** Loaded list (paged per Agent and category; each Agent's entries newest first). */
@@ -559,6 +560,12 @@ export function applyUserEvent(
   // window runs the new code.
   if (ev.type === "web_updated") {
     onWebUpdated();
+    return;
+  }
+  // Prefs changed server-side (the `pet` tool). Not a list update at all: fan it out to the
+  // stores that mirror prefs (see features/pet/prefs-events.ts).
+  if (ev.type === "prefs_changed") {
+    emitPrefsChanged();
     return;
   }
   // A Session changed run state. This is what keeps every row honest: a tab subscribes to the

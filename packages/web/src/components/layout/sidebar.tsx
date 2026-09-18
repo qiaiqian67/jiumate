@@ -164,6 +164,8 @@ import { UpdateRow } from "../account/update-row";
 import { openUpdateModal } from "../../lib/use-update-flow";
 import { navNoteFor, useUpdateBadges } from "../../lib/use-update-badges";
 import { SettingsDialog } from "../../features/settings/settings-dialog";
+import { subscribeOpenSettings } from "../../lib/open-settings";
+import type { SettingsSectionKey } from "../../lib/settings-sections";
 import { ICON_SIZE } from "../../lib/icon-scale";
 
 /** New-chat pencil (the pinned "New chat" button and the collapsed rail share it). */
@@ -346,8 +348,21 @@ export function Sidebar({
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  /** Page the dialog opens on; set by the desktop pet's "switch pet" menu item. */
+  const [settingsSection, setSettingsSection] = useState<SettingsSectionKey | null>(null);
   /** The badges over the update and to-do trails (use-update-badges.ts); the avatar's dot follows the update flow's offer / restart states. */
   const badges = useUpdateBadges();
+
+  // The floating pet window cannot reach this dialog (separate window, no router),
+  // so its "switch pet" menu item relays through the chat window as a DOM event.
+  useEffect(
+    () =>
+      subscribeOpenSettings((section) => {
+        setSettingsSection(section);
+        setSettingsOpen(true);
+      }),
+    [],
+  );
   const currentProjectId = currentProject?.projectId ?? null;
   /** This Project's read markers; re-renders the rows whenever one is stamped. */
   const sessionSeen = useSessionSeen(currentProjectId);
@@ -2183,7 +2198,11 @@ export function Sidebar({
         </Dropdown>
       </div>
 
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        initialSection={settingsSection}
+      />
 
       <CreateProjectDialog
         open={createProjectOpen}

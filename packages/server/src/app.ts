@@ -117,6 +117,9 @@ import { UsageService } from "./services/usage-service.js";
 import { WorkspaceFilesService } from "./services/workspace-files-service.js";
 import { PandocService } from "./services/pandoc-service.js";
 import { DesktopExportPort } from "./services/desktop-export-port.js";
+import { PetCatalogService } from "./services/pet-catalog.js";
+import { PetExternalService } from "./services/pet-external.js";
+import { PetControlService } from "./services/pet-control.js";
 import { HmrHost } from "./hmr/host.js";
 import { hmrRoutes } from "./hmr/routes.js";
 import { platformHttpSeam } from "./hmr/http-seam.js";
@@ -139,6 +142,7 @@ import { adminUsersRoutes } from "./http/routes/admin.js";
 import { adminSettingsRoutes } from "./http/routes/admin-settings.js";
 import type { ServerEvent } from "./api/types.js";
 import { meRoutes } from "./http/routes/me.js";
+import { petRoutes } from "./http/routes/pets.js";
 import { eventsRoutes, userChannelKey } from "./http/routes/events.js";
 import { projectsRoutes } from "./http/routes/projects.js";
 import { membersRoutes } from "./http/routes/members.js";
@@ -195,6 +199,10 @@ export interface AppDeps {
   usageService: UsageService;
   /** GitHub latest-release lookup for the web UI's update reminder (cached, fail-soft). */
   updateCheck: UpdateCheckService;
+  /** Petdex pet catalog (list / import / delete). Anchored at `config.root`. */
+  petCatalog: PetCatalogService;
+  /** Pets bundled in another agent app's install (the Codex desktop app). */
+  petExternal: PetExternalService;
   /** The admin self-update run in the background (`linsight update --yes`), with its progress for the update modal. */
   updateJob: UpdateJobService;
   workspaceFiles: WorkspaceFilesService;
@@ -293,6 +301,10 @@ export interface BuildDepsOverrides {
   pandoc?: PandocService;
   /** Test double: PDF export port; null in tests that don't exercise the PDF path. */
   desktopExportPort?: DesktopExportPort | null;
+  /** Test double: pet catalog with a temp root. */
+  petCatalog?: PetCatalogService;
+  /** Test double: external pet discovery pointed at a fixture archive. */
+  petExternal?: PetExternalService;
 }
 
 /**
@@ -916,6 +928,20 @@ export function buildAppDeps(
   const updateCheck =
     overrides.updateCheck ?? new UpdateCheckService(overrides.now ? { now: overrides.now } : {});
   const updateJob = overrides.updateJob ?? new UpdateJobService();
+  // Petdex pet catalog: anchored at `config.root` so the catalog lives next to
+  // the agent state the user already shares between the web, server and CLI.
+  const petCatalog = overrides.petCatalog ?? new PetCatalogService(config.root);
+  const petExternal = overrides.petExternal ?? new PetExternalService(petCatalog);
+  // Desktop pet control for the `pet` tool. The floating pet window belongs to the desktop
+  // app, which signs in as the built-in admin, so the tool acts on that account's prefs —
+  // the same authority the local API token already carries (see services/pet-control.ts).
+  const petControl = new PetControlService({
+    catalog: petCatalog,
+    prefs: prefsRepo,
+    ownerUserId: () => usersRepo.list().find((user) => user.isAdmin)?.userId ?? null,
+    notify: (userId) =>
+      channels.peek(userChannelKey(userId))?.publish({ type: "prefs_changed" }, "server_event"),
+  });
 
   const recorder = new UsageRecorder(usageRepo, overrides.now ?? (() => new Date()));
   const errors = new ErrorRecorder(errorsRepo, overrides.now ?? (() => new Date()));
@@ -952,7 +978,11 @@ export function buildAppDeps(
     channels,
     loader:
       overrides.loader ??
-      createCoreSessionLoader(config.root, sessionSources, { proxyEnv, controlEnv }),
+      createCoreSessionLoader(config.root, sessionSources, {
+        proxyEnv,
+        controlEnv,
+        petControl,
+      }),
     sources: sessionSources,
     recorder,
     errors,
@@ -1049,6 +1079,7 @@ export function buildAppDeps(
     traceIndex,
     proxyEnv,
     controlEnv,
+    petControl,
     // List rows carry the ENABLED channel's indicator (saved-but-dark configs stay off
     // the row); a point query per row keeps the repo out of the service. An unknown
     // stored channel reads as none (same defensive skip as the bridge and the routes).
@@ -1127,6 +1158,8 @@ export function buildAppDeps(
     // `available = false` and the route returns 503. Keeps the route's contract stable
     // across deployments where Pandoc is or isn't installed.
     pandoc: overrides.pandoc ?? new PandocService({ pandocPath: config.pandocPath }),
+    petCatalog,
+    petExternal,
     // PDF: only the desktop shell can render HTML to PDF (hidden BrowserWindow +
     // printToPDF), so the port is null in CLI/web mode. The override hook lets tests
     // inject a fake even outside desktop mode.
@@ -1245,6 +1278,7 @@ export function createApp(
   // Protected routes: cookie -> auth_session -> user, over the runtime's auth service.
   app.use("/api/*", authMiddleware(deps.authService, deps.config.trustProxy));
   app.route("/api/me", meRoutes(deps));
+  app.route("/api/pets", petRoutes(deps));
   app.route("/api/version", versionRoutes(deps));
   app.route("/api/admin/users", adminUsersRoutes(deps));
   app.route("/api/admin/settings", adminSettingsRoutes(deps));

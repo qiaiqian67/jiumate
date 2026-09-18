@@ -65,7 +65,6 @@ export const DOCS_NAV: DocsSectionDef[] = [
           "draft-h-editable-docs",
           "draft-i-app-center",
           "draft-j-knowledge-base",
-          "draft-k-companion",
           "draft-l-project-bridge",
           "draft-m-reminders",
         ],

@@ -54,7 +54,7 @@ describe("visibleSettingsSections", () => {
     expect(admin.map((s) => s.key)).toEqual([
       "general",
       "appearance",
-      "companion",
+      "application",
       "account",
       "proxy",
       "uploads",
@@ -66,10 +66,10 @@ describe("visibleSettingsSections", () => {
     // Not "fewer pages" — the exact list. Proxy, upload limits and user management are
     // admin surfaces, and the whole point of dropping them is that a non-admin is never
     // told they exist. Updating is not among them either way: it lives in the sidebar user
-    // menu, outside this dialog, for every account. The companion page (L.3) is per-user
-    // (name / pronoun / proactive / TTS / ASR) so every account gets it — the row keys off
+    // menu, outside this dialog, for every account. The application page is per-user
+    // (Petdex desktop pet, …) so every account gets it — the row keys off
     // `visible: () => true`, not `isAdmin`.
-    expect(plain.map((s) => s.key)).toEqual(["general", "appearance", "companion", "account"]);
+    expect(plain.map((s) => s.key)).toEqual(["general", "appearance", "application", "account"]);
   });
 
   it("strips the desktop shell's window down to what a token session can use", () => {
@@ -78,7 +78,7 @@ describe("visibleSettingsSections", () => {
     expect(shell.map((s) => s.key)).toEqual([
       "general",
       "appearance",
-      "companion",
+      "application",
       "proxy",
       "uploads",
     ]);
@@ -90,7 +90,7 @@ describe("visibleSettingsSections", () => {
     expect(desktopBrowser.map((s) => s.key)).toEqual([
       "general",
       "appearance",
-      "companion",
+      "application",
       "account",
       "proxy",
       "uploads",

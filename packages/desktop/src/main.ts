@@ -35,7 +35,7 @@ import { resolveRoot } from "@prismshadow/linsight-core";
 import { liveServerLock } from "@prismshadow/linsight-server/lock";
 import { appIdentity, desktopDataRoot } from "./app-identity.js";
 import { webDistEntry, webDistFor } from "./web-dist.js";
-import { resolveWindowIcon } from "./app-icon.js";
+import { resolveTrayIcon, resolveWindowIcon } from "./app-icon.js";
 import { installCliCommand, ensureCliCommand, currentCliInstallKind } from "./cli-install.js";
 import { applyLoginShellEnv } from "./login-shell-env.js";
 import { installAppMenu } from "./menu.js";
@@ -44,11 +44,8 @@ import type { EmbeddedServer } from "./server-process.js";
 import { getUpdaterStatus, handleUpdaterCommand, initUpdater, onUpdaterStatus } from "./updater.js";
 import { parseUpdaterCommand, updaterStatusMessage } from "./updater-status.js";
 import { wireExportPdf } from "./export-pdf.js";
-import {
-  createCompanionWindow,
-  isCompanionWindowOpen,
-  type CompanionWindowHandle,
-} from "./companion-window.js";
+import { createPetWindow, isPetWindowOpen, type PetWindowHandle } from "./pet-window.js";
+import { destroyPetTray, syncPetTray, wirePetTrayIpc, type PetTrayDeps } from "./pet-tray.js";
 import {
   desktopLoginUrl,
   isAppUrl,
@@ -70,7 +67,7 @@ app.setName(identity.name);
 if (process.platform === "win32") app.setAppUserModelId(identity.appUserModelId);
 
 let win: BrowserWindow | null = null;
-let companionHandle: CompanionWindowHandle | null = null;
+let petHandle: PetWindowHandle | null = null;
 let server: EmbeddedServer | null = null;
 /** App origin (embedded or attached); null until boot resolves. */
 let appOrigin: string | null = null;
@@ -86,6 +83,41 @@ function fatal(context: string, err: unknown): void {
   app.exit(1);
 }
 
+/**
+ * Bring the main window to the front. The floating pet is a separate window, so
+ * a click on the pet — or on one of its bubbles — can only ask the shell to
+ * raise the app; it has no router or session store of its own.
+ */
+function focusMain(): void {
+  if (win === null || win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+}
+
+/**
+ * The tray's "show desktop pet" item. Both the checked state and the `enablePet` pref
+ * it flips live in the renderer, so a click is a relay rather than a write. The app can
+ * outlive the main window while the pet is open, and then there is nothing left that
+ * could write the pref — so the window is brought back first.
+ */
+function requestPetToggle(): void {
+  if (win === null || win.isDestroyed()) {
+    if (appOrigin !== null) createWindow(`${appOrigin}/`);
+    return;
+  }
+  win.webContents.send("pet:toggle-requested");
+}
+
+function petTrayDeps(): PetTrayDeps {
+  return {
+    iconPath: resolveTrayIcon(app.getAppPath()),
+    onTogglePet: requestPetToggle,
+    onShowMain: focusMain,
+    onQuit: () => app.quit(),
+  };
+}
+
 function createWindow(url: string): void {
   // Linux window/taskbar icon (and Windows dev runs); packaged Windows uses the exe
   // resources and macOS its bundle icns, so those ignore it (see app-icon.ts).
@@ -97,15 +129,17 @@ function createWindow(url: string): void {
     autoHideMenuBar: true,
     ...(iconPath !== null ? { icon: iconPath } : {}),
     webPreferences: {
-      // Same hardening as before, plus the companion preload bridge. The bridge
-      // exposes only `window.companion.open / close / savePosition` — enough for the
-      // chat window to open the floating pet when the user picks that placement
-      // and to ask the companion to close it on placement flips. No Node, no IPC
-      // beyond the companion namespace.
+      // Same hardening as before, plus the pet preload bridge. The bridge
+      // exposes only `window.pet.open / close / savePosition` — enough for the
+      // chat window to open the floating pet window when the user enables it
+      // and to ask the pet window to close on toggle flips. No Node, no IPC
+      // beyond the pet namespace.
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      preload: path.join(__dirname, "preload.js"),
+      // `.cjs`, not `.js`: a sandboxed renderer loads the preload as CommonJS and this
+      // package is `"type": "module"` (see tsup.preload.config.ts).
+      preload: path.join(__dirname, "preload.cjs"),
     },
   });
   win.once("ready-to-show", () => win?.show());
@@ -216,15 +250,17 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
     clearTimeout(healthyTimer);
     void handleServerExit(dataRoot, code);
   });
-  // Bring up the floating-companion plumbing now that the origin is known. The
-  // IPC handlers stay inert until the chat window calls `window.companion.open`;
-  // `__dirname` is the tsup output dir, where `preload.js` lives.
-  if (companionHandle === null) {
-    companionHandle = createCompanionWindow({
+  // Bring up the floating pet window plumbing now that the origin is known. The
+  // IPC handlers stay inert until the chat window calls `window.pet.open`;
+  // `__dirname` is the tsup output dir, where `preload.cjs` lives.
+  if (petHandle === null) {
+    petHandle = createPetWindow({
       appOrigin: started.origin,
       preloadDir: __dirname,
+      focusMain,
     });
-    companionHandle.wireIpc();
+    petHandle.wireIpc();
+    wirePetTrayIpc(petTrayDeps());
   }
   const url = desktopLoginUrl(started.origin, started.token);
   if (win === null) createWindow(url);
@@ -269,12 +305,14 @@ async function boot(): Promise<void> {
     // so the window goes through the normal login page of the existing instance.
     appOrigin = `http://localhost:${existing.port}`;
     process.stdout.write(`[shell] attaching to the running server at ${appOrigin}\n`);
-    if (companionHandle === null) {
-      companionHandle = createCompanionWindow({
+    if (petHandle === null) {
+      petHandle = createPetWindow({
         appOrigin,
         preloadDir: __dirname,
+        focusMain,
       });
-      companionHandle.wireIpc();
+      petHandle.wireIpc();
+      wirePetTrayIpc(petTrayDeps());
     }
     createWindow(`${appOrigin}/`);
     return;
@@ -296,18 +334,18 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on("window-all-closed", () => {
     // macOS keeps the app alive in the Dock; elsewhere closing the window quits —
-    // unless the floating companion window is still open, in which case the user
+    // unless the floating pet window is still open, in which case the user
     // explicitly asked for it and we'd yank it away on every chat-window close.
     if (process.platform === "darwin") return;
-    if (isCompanionWindowOpen()) return;
+    if (isPetWindowOpen()) return;
     app.quit();
   });
 
   app.on("activate", () => {
     if (win === null && appOrigin !== null) {
       // macOS dock activate after the user closed every window: bring the main
-      // window back, but only if the companion window isn't the one still alive.
-      if (isCompanionWindowOpen()) return;
+      // window back, but only if the pet window isn't the one still alive.
+      if (isPetWindowOpen()) return;
       createWindow(`${appOrigin}/`);
     }
   });
@@ -316,6 +354,7 @@ if (!app.requestSingleInstanceLock()) {
   // then let the quit proceed. Attach mode has no child to stop.
   app.on("before-quit", (event) => {
     quitting = true;
+    destroyPetTray();
     if (server !== null && stopPromise === null) {
       event.preventDefault();
       const running = server;

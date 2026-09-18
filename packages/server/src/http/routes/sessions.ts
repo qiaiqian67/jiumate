@@ -12,7 +12,6 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import {
   THINKING_LEVEL_NAMES,
-  buildCompanionPersonaMessage,
   imageUrlMessage,
   scratchpadDir,
   sessionScratchpadDir,
@@ -124,51 +123,6 @@ export const APPROVAL_MODES: readonly ApprovalMode[] = [
   "read-only",
   "always-ask",
 ];
-
-/**
- * Reads the current user's ui_prefs JSON and returns a partial `UiPrefs` (only the fields
- * the callers here actually consult). Used by `POST /:sessionId/tasks` to look up
- * `companionPlacement` (and the still-supported legacy `companionModeEnabled`). Mirrors
- * `me.ts`'s tolerance: corrupted JSON falls through to `null`, which the caller treats as
- * opt-out — the request still succeeds, the user just does not get the persona block.
- */
-function safeReadPrefs(
-  deps: AppDeps,
-  userId: string,
-): {
-  companionPlacement?: unknown;
-  companionModeEnabled?: unknown;
-  companionFloatingPosition?: unknown;
-} | null {
-  let raw: string | null;
-  try {
-    raw = deps.prefsRepo.get(userId);
-  } catch {
-    return null;
-  }
-  if (raw === null) return null;
-  try {
-    return JSON.parse(raw) as {
-      companionPlacement?: unknown;
-      companionModeEnabled?: unknown;
-      companionFloatingPosition?: unknown;
-    };
-  } catch {
-    return null;
-  }
-}
-
-/** Single source of truth for whether the persona block should be prepended. The legacy
- *  `companionModeEnabled: true` row is honoured as "banner" so a user who opted in before
- *  the enum refactor keeps the persona block until they explicitly pick something else;
- *  unknown / garbage strings fall through to opt-out. */
-function placementEnablesPersona(raw: ReturnType<typeof safeReadPrefs>): boolean {
-  if (raw === null) return false;
-  const p = raw.companionPlacement;
-  if (p === "banner" || p === "widget" || p === "floating") return true;
-  if (p === "off") return false;
-  return raw.companionModeEnabled === true;
-}
 
 /** Unit-count bounds for windowed history reads (`tailLimit` / `limit`), and the `before` page's default. */
 const MESSAGES_PAGE_LIMIT_MAX = 1000;
@@ -969,17 +923,6 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     // Resolved per request from the admin settings, so a limit change applies to the very next
     // upload rather than at the next restart.
     const limits = toAttachmentLimits(deps.serverSettingsRepo.getAttachmentLimitsMb());
-    // AI companion mode (per-user ui_prefs.companionPlacement): when set to anything
-    // other than "off" (including the older boolean companionModeEnabled for backward
-    // compat — see `placementEnablesPersona`), the server prepends a `[companion_persona]`
-    // block to every new task so the Agent replies in a softer, more companionate tone.
-    // The block lives in TITLE_NOISE_TAGS, so it is stripped from the goal-mode objective
-    // (line below) and never leaks into a generated Session title. Corrupted prefs fall
-    // through to opt-out, mirroring GET /me/prefs.
-    const prefsRaw = safeReadPrefs(deps, c.var.user.userId);
-    const personaPrefix = placementEnablesPersona(prefsRaw)
-      ? [userText(buildCompanionPersonaMessage(), "server")]
-      : [];
     if (goal) {
       // Goal mode: the input needs non-empty text, since its marker-stripped text becomes the
       // objective that every round re-injects and an image on its own doesn't say what the
@@ -987,9 +930,7 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
       // folds them into the objective, so they are turned away here, before any upload is
       // written to disk.
       const { messages, attachments } = parseTaskInput(body, limits);
-      const messagesWithPersona =
-        personaPrefix.length > 0 ? [...personaPrefix, ...messages] : messages;
-      const text = messagesWithPersona
+      const text = messages
         .filter((m) => (m.payload as { type?: string }).type === "text")
         .map((m) => (m.payload as { text: string }).text)
         .join("\n")
@@ -1002,24 +943,16 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
       }
       // The goal plugin owns the protocol — its user_prompt hook writes the goal file and
       // composes round 1, its stop hook drives every later round; the manager runs the
-      // start under the session lock, so a goal is never started over a running one. The
-      // persona block is stripped here so the saved GOAL.json objective is the user's own
-      // text — re-injecting the persona every round would inflate the context needlessly.
+      // start under the session lock, so a goal is never started over a running one.
       const objective = stripLeadingMarkerBlocks(text).trim() || text;
       const { sessionId } = await deps.manager.startGoal(row.sessionId, {
-        messages: messagesWithPersona,
+        messages,
         objective,
         budget: goal.budget,
       });
       return c.json({ sessionId } satisfies TaskCreateResponse, 202);
     }
     const parsed = parseTaskInput(body, limits);
-    // The persona block (if any) is prepended here, BEFORE attachFilesToInput — the
-    // attachment-line helper only touches the LAST text message in the array, so the
-    // persona block stays as its own first message and the user's text keeps the file
-    // markers on it (as the Web composer expects to see).
-    const messagesWithPersona =
-      personaPrefix.length > 0 ? [...personaPrefix, ...parsed.messages] : parsed.messages;
     // Follow-up queue: with queueIfBusy, a busy session enqueues the input instead of 409
     // (auto-starts as an ordinary next task once idle; the response says which happened).
     const queueIfBusy = body.queueIfBusy === true;
@@ -1035,7 +968,7 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     // new id below keeps its files under the id they were written with — the paths in the
     // message stay valid; only the delete-with-the-Session cleanup misses them in that case.
     const { input, written } = await attachFilesToInput(
-      messagesWithPersona,
+      parsed.messages,
       parsed.attachments,
       scratchpadDir(deps.config.root, row.projectId, row.agentId),
       row.sessionId,

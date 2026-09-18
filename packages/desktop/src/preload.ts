@@ -1,44 +1,75 @@
 /**
- * Preload bridge for the AI companion floating window.
+ * Petdex pet window preload script.
  *
- * Exposes a small, typed surface (`window.companion`) to both the main chat window
- * and the companion window itself. The companion window's `open` / `close` /
- * `move` reach the main process via `ipcRenderer.invoke`; the main window only
- * needs `open` and `savePosition` (a persist-then-close helper used when the user
- * disables the companion via a control inside the floating window).
+ * Exposes a small, typed surface (`window.pet`) to BOTH the main chat window
+ * (which calls `open` / `close` on toggle flips) and the floating pet window
+ * itself (which can persist its drag-released position).
  *
- * Sandbox note: with `sandbox: true` the preload runs in a restricted context but
- * can still import the `electron` module for `contextBridge` / `ipcRenderer`.
- * Anything beyond that (Node built-ins, network APIs, …) is intentionally blocked.
+ * Sandbox note: with `sandbox: true` the preload runs in a restricted context
+ * but can still import the `electron` module for `contextBridge` / `ipcRenderer`.
+ * Anything beyond that (Node built-ins, network APIs, …) is intentionally
+ * blocked.
+ *
+ * Build note: this file is bundled to CommonJS (`dist/preload.cjs`) by
+ * tsup.preload.config.ts. A sandboxed renderer refuses an ESM preload outright,
+ * so it must not be folded back into the ESM build in tsup.config.ts.
  */
 import { contextBridge, ipcRenderer } from "electron";
 
-/** Two-element position. Mirror of `companionFloatingPosition` in `UiPrefs`. */
+/** Two-element screen position. Mirror of `petWindowPosition` in `UiPrefs`. */
 export interface FloatingPosition {
   x: number;
   y: number;
 }
 
-/** Methods exposed to the renderer. Typed here so web code can import the type
- *  without pulling in electron. The `typeof api` below is what the renderer sees. */
+/** Content size the floating window should adopt (pet alone, or pet + bubble). */
+export interface FloatingSize {
+  width: number;
+  height: number;
+}
+
 const api = {
-  /** Open the floating companion window at the saved position, or at the default
+  /** Open the floating pet window at the saved position, or at the default
    *  location when no position is provided (or the value fails validation). */
   open: (savedPos?: FloatingPosition | null): Promise<void> =>
-    ipcRenderer.invoke("companion:open", savedPos ?? null),
-  /** Close the floating window — the placement stays in `ui_prefs` so a re-open
+    ipcRenderer.invoke("pet:open", savedPos ?? null),
+  /** Close the floating window — the toggle stays in `ui_prefs` so a re-open
    *  restores the position. */
-  close: (): Promise<void> => ipcRenderer.invoke("companion:close"),
+  close: (): Promise<void> => ipcRenderer.invoke("pet:close"),
   /** Move the window to an absolute screen position (rejects non-finite values). */
-  move: (pos: FloatingPosition): Promise<void> => ipcRenderer.invoke("companion:move", pos),
+  move: (pos: FloatingPosition): Promise<void> => ipcRenderer.invoke("pet:move", pos),
+  /** Resize the window to fit its content. The shell keeps the bottom-right
+   *  corner fixed, so a bubble grows up and to the left of the pet. */
+  resize: (size: FloatingSize): Promise<void> => ipcRenderer.invoke("pet:resize", size),
+  /** Screen-space cursor position, for the pet's look-at-cursor frames. */
+  cursor: (): Promise<FloatingPosition> => ipcRenderer.invoke("pet:cursor"),
+  /** Raise the main window (pet click, or opening a bubble's session). */
+  focusMain: (): Promise<void> => ipcRenderer.invoke("pet:focusMain"),
   /** Read the current screen position, or null if the window isn't open. */
-  getPosition: (): Promise<FloatingPosition | null> => ipcRenderer.invoke("companion:getPosition"),
+  getPosition: (): Promise<FloatingPosition | null> => ipcRenderer.invoke("pet:getPosition"),
   /** Persist the current position into `ui_prefs` so the next open restores here. */
-  savePosition: (): Promise<{ x: number; y: number } | null> =>
-    ipcRenderer.invoke("companion:savePosition"),
+  savePosition: (): Promise<FloatingPosition | null> => ipcRenderer.invoke("pet:savePosition"),
+  /** Native folder picker for importing a Petdex package directory. */
+  pickPackage: (): Promise<string | null> => ipcRenderer.invoke("pet:pickPackage"),
+  /**
+   * Report the `enablePet` pref so the shell can create or drop the tray icon. The
+   * tray exists only while the pet does — see `pet-tray.ts`.
+   */
+  setEnabled: (enabled: boolean): Promise<void> => ipcRenderer.invoke("pet:setEnabled", enabled),
+  /**
+   * Listen for the tray's "show desktop pet" click. The pref lives in the renderer,
+   * so the shell can only ask for the flip; returns an unsubscribe function.
+   */
+  onToggleRequested: (listener: () => void): (() => void) => {
+    const handler = () => listener();
+    ipcRenderer.on("pet:toggle-requested", handler);
+    return () => {
+      ipcRenderer.removeListener("pet:toggle-requested", handler);
+    };
+  },
 };
 
-contextBridge.exposeInMainWorld("companion", api);
+contextBridge.exposeInMainWorld("pet", api);
 
 /** The shape exposed to the renderer. The web side augments `Window` with this. */
-export type CompanionBridge = typeof api;
+export type PetBridge = typeof api;

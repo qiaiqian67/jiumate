@@ -85,6 +85,7 @@ Recovery 文件保存 Environment 收到的未经脱敏的工具文本。误读�
 | `input_subagent` | rw | 600000 | 轮询后台 Subagent、运行中插话、停止其当前轮，或在其空闲时追加后续 Prompt |
 | `read_image` | r | 60000 | 读取图片并作为图像内容返回(vision 模型) |
 | `describe_image` | r | 90000 | 由 `vision_model` 代读图片并返回文字回答(text-only 模型) |
+| `pet` | rw | 15000 | 查看与控制桌面宠物：列出可用宠物、切换当前宠物、显示或隐藏宠物浮窗 |
 
 注意：既有 Agent 已落盘的 `tools.builtin` 列表按原样冻结（设置页只能编辑行、不能增行）：较早创建的 Agent 不会自动获得后来新增的工具（如文件工具）与新增参数（`run_in_background`、`kill`、`abort`），已移除工具（`kill_command`、`kill_subagent`）的存量条目则不再装配——模型按旧名调用得到标准的未知工具报错；采纳新条目需手工编辑该 Agent 的 `system_config.yaml`（可从 `packages/core/src/state/default-config.ts` 的默认定义复制），或走「更新内核」。
 
@@ -202,6 +203,8 @@ Web App 的智能体面板用**与主对话相同的 composer**（子会话变�
 ### 图像工具
 
 `read_image` 与 `describe_image` 互斥，按 Session 模型的 vision 标记二选一装配。两者都接受 http(s) URL 或 Workspace 路径，支持 png/jpeg/gif/webp，不超过 5MB。text-only 模型走 `describe_image`：图片连同提问转交 Project 配置的 `vision_model`，其文字回答即工具输出。见 [模型与 Provider](/models)。
+
+`pet` 用于操作桌面宠物（悬浮的 Petdex 窗口）。`action: "list"` 报出有哪些宠物、当前是哪一只；`action: "use"`（带 `pet_id`）切换到其中一只；`action: "show"` / `"hide"` 打开或关闭浮窗。它只在用户已有的宠物之间做选择——安装或删除包会写磁盘，仍留在 设置 → 应用。由于工具调用不携带用户（Session 属于 Project 而不是某个人），它作用于**本机管理员**的偏好：那正是桌面端登录的账号，也是本地 API token 本来就具备的权限。没有宠物界面的宿主不注入端口，工具会如实说明而不是报错。
 
 ```ts
 // read_image(vision 模型)

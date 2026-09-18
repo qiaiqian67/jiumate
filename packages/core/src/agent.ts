@@ -85,6 +85,7 @@ import type {
   ApproveFn,
   CommandPolicyConfig,
   GenerativeModelConfig,
+  PetControlPort,
   ProxyEnvPolicy,
   SubagentHandle,
   SubagentRunner,
@@ -126,6 +127,13 @@ export interface CreateAgentOptions {
    * standalone use).
    */
   controlEnv?: (ctx: ControlEnvContext) => Record<string, string>;
+  /**
+   * Desktop pet control for the `pet` tool, for every Session this Agent creates or
+   * resumes. Absent = the tool reports that the host has no pet surface (SDK/CLI
+   * standalone use). Unlike `controlEnv` this is not per-Session: the pet is a single
+   * host surface, not a property of a conversation.
+   */
+  petControl?: PetControlPort;
 }
 
 /** The Session coordinates a {@link CreateAgentOptions.controlEnv} policy is evaluated with. */
@@ -280,7 +288,7 @@ export async function createAgent(opts: CreateAgentOptions = {}): Promise<Agent>
     init: {},
   });
   const projectConfig = await loadProjectConfig(state.root, state.projectId);
-  return new Agent(state, projectConfig, opts.proxyEnv, opts.controlEnv);
+  return new Agent(state, projectConfig, opts.proxyEnv, opts.controlEnv, opts.petControl);
 }
 
 export class Agent {
@@ -291,6 +299,8 @@ export class Agent {
     private readonly proxyEnv?: () => ProxyEnvPolicy | null,
     /** See {@link CreateAgentOptions.controlEnv}; evaluated per Session with that Session's coordinates. */
     private readonly controlEnv?: (ctx: ControlEnvContext) => Record<string, string>,
+    /** See {@link CreateAgentOptions.petControl}; forwarded into every Session's Environment. */
+    private readonly petControl?: PetControlPort,
   ) {}
 
   /**
@@ -1010,7 +1020,11 @@ export class Agent {
         this.state.agentId,
         sessionId,
       ),
-      services: { subagentRunner, ...(visionDescriber ? { visionDescriber } : {}) },
+      services: {
+        subagentRunner,
+        ...(visionDescriber ? { visionDescriber } : {}),
+        ...(this.petControl ? { petControl: this.petControl } : {}),
+      },
       ...(Object.keys(initial.vault).length > 0 ? { vault: initial.vault } : {}),
       ...(this.proxyEnv ? { proxyEnv: this.proxyEnv } : {}),
       // The control-env policy is bound to THIS Session's coordinates here (sessionId is

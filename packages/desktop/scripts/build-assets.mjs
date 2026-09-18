@@ -44,6 +44,27 @@ for (const required of [launcherModule, path.join(distDir, "pty-payload.js")]) {
   }
 }
 
+// The pet preload bridge must be CommonJS. A renderer created with `sandbox: true` refuses
+// an ESM preload outright ("Cannot use import statement outside a module"), so Electron drops
+// it, `contextBridge.exposeInMainWorld` never runs, and `window.pet` stays undefined — which
+// is exactly why the floating pet window never opened. tsup.preload.config.ts emits this file;
+// fail the build loudly if that ever regresses (e.g. the entry is folded back into the ESM
+// build in tsup.config.ts).
+const preloadModule = path.join(distDir, "preload.cjs");
+if (!fs.existsSync(preloadModule)) {
+  console.error(
+    "[build-assets] dist/preload.cjs is missing — the preload must be built by tsup.preload.config.ts.",
+  );
+  process.exit(1);
+}
+const preloadSource = fs.readFileSync(preloadModule, "utf8");
+if (/^\s*(import|export)\s/m.test(preloadSource)) {
+  console.error(
+    "[build-assets] dist/preload.cjs contains ESM syntax — a sandboxed renderer will refuse it.",
+  );
+  process.exit(1);
+}
+
 const repoRoot = path.resolve(pkgDir, "..", "..");
 for (const name of ["install.sh", "install.ps1"]) {
   const src = path.join(repoRoot, name);
@@ -60,6 +81,17 @@ if (!fs.existsSync(iconSrc)) {
   process.exit(1);
 }
 fs.copyFileSync(iconSrc, path.join(distDir, "icon.png"));
+
+// The tray draws at ~16px, so it gets the 128px freedesktop render rather than the master
+// (see src/app-icon.ts). A missing one is not fatal: the pet tray is simply not offered.
+const trayIconSrc = path.join(pkgDir, "build", "icons", "128x128.png");
+if (fs.existsSync(trayIconSrc)) {
+  fs.copyFileSync(trayIconSrc, path.join(distDir, "tray.png"));
+} else {
+  console.error(
+    "[build-assets] build/icons/128x128.png is missing — the pet tray will be skipped.",
+  );
+}
 
 // node-pty, resolved from the package that depends on it: under pnpm it is installed into
 // packages/server/node_modules, out of reach of any lookup anchored in this package.
@@ -113,5 +145,5 @@ if (fs.existsSync(pandocPlatformDir)) {
 }
 
 console.log(
-  `[build-assets] done: dist/icon.png, dist/install.{sh,ps1}, bin/, ${NODE_PTY_RELDIR.join("/")} (${ptyFiles.length} files, bindings: ${bindings.join(", ")})`,
+  `[build-assets] done: dist/icon.png, dist/tray.png, dist/install.{sh,ps1}, bin/, ${NODE_PTY_RELDIR.join("/")} (${ptyFiles.length} files, bindings: ${bindings.join(", ")})`,
 );

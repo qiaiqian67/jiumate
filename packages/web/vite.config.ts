@@ -67,30 +67,6 @@ function katexWoff2Only(): Plugin {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), katexWoff2Only()],
-  // Pre-bundle the Live2D runtime (L.6) so the lazy-import boundary at
-  // `<CompanionLive2D>` resolves cleanly. The cubism4 entry point is what
-  // `pixi-live2d-display` actually imports for the Hiyori / Mark / Mao
-  // sample models; without it the first request after the user picks
-  // Live2D races on the prebundle. `pixi.js` is the renderer; pulling
-  // both into the same chunk keeps the runtime swap atomic.
-  optimizeDeps: {
-    // Pre-bundle the Live2D runtime (L.6). `pixi.js` is the WebGL renderer,
-    // `pixi-live2d-display` is the Cubism 2/3 plugin, and `cubism4` is the
-    // Cubism 4 entry point the bundled Hiyori / Mark / Mao sample models
-    // need. Without the cubism4 entry, the first request after the user
-    // picks Live2D races on a cold module graph and the WebGL auto-fallback
-    // engages before the canvas paints a frame. The VRM mirror ships
-    // `three` (the WebGL renderer) and `@pixiv/three-vrm` (the VRM
-    // runtime); pre-bundling both keeps the runtime swap symmetric with
-    // the Live2D path.
-    include: [
-      "pixi.js",
-      "pixi-live2d-display",
-      "pixi-live2d-display/cubism4",
-      "three",
-      "@pixiv/three-vrm",
-    ],
-  },
   server: {
     // Fixed Linsight dev port (stands alone — vite configs cannot import core TS,
     // so the numbers are literals here; the allocation table lives in core's internal/ports.ts).

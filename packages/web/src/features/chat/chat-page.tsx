@@ -42,7 +42,7 @@ import {
 } from "../../lib/format";
 import { latestConversation } from "../../lib/session-grouping";
 import { sessionActivity } from "../../lib/session-activity";
-import { noteSessionSeen } from "../../lib/session-seen";
+import { noteSessionSeen, useSessionSeen } from "../../lib/session-seen";
 import {
   approvalKey,
   createStreamModel,
@@ -95,11 +95,10 @@ import type { CostStatDisplay } from "./header-stats";
 import { buildInputHistory } from "./input-history";
 import { buildOutline } from "./outline-model";
 import { GoalStatusBanner } from "./goal-banner";
-import { CompanionBanner } from "./companion-banner";
-import { CompanionWidget } from "./companion-widget";
-import { useCompanionStore } from "./companion-store";
-import { useProactiveTrigger } from "./use-proactive-trigger";
-import { COMPANION_CHANNEL } from "./companion-page";
+import { usePetStore } from "../pet/pet-store";
+import { aggregatePetMood, emitPetActivity, subscribePetCommands } from "../pet/pet-activity";
+import { buildPetTasks } from "../pet/pet-tasks";
+import { openSettings } from "../../lib/open-settings";
 import { handoffMessage, modelSwitchMessage } from "./agent-handoff";
 import { hasConfiguredKey, sameModelRef } from "../models/model-grouping";
 import { providerInfo } from "@prismshadow/linsight-core/model-catalog";
@@ -400,35 +399,98 @@ export function ChatPage() {
     () => void reloadSessions(),
   );
 
-  // AI companion plumbing: the chat page is the source of truth for placement +
-  // taskState. When the user picks "floating" we ask the Electron shell to open the
-  // companion window; when the user picks anything else we ask it to close. The
-  // companion page listens to the same BroadcastChannel we post to here, so the
-  // pet on the floating window mirrors the chat-window pet without a second SSE
-  // connection.
-  const companion = useCompanionStore();
+  // Pet plumbing: when the user has the Petdex desktop pet enabled, ask the
+  // Electron shell to open its floating window. The pet window subscribes
+  // to session activity via a separate BroadcastChannel (see `pet-activity.ts`).
+  const pet = usePetStore();
   useEffect(() => {
-    if (typeof BroadcastChannel === "undefined") return;
-    const bc = new BroadcastChannel(COMPANION_CHANNEL);
-    bc.postMessage({ kind: "taskState", value: stream.taskState });
-    return () => bc.close();
-  }, [stream.taskState]);
-
-  // L.2 proactive-trigger skeleton: mounts the idle-detection hook while the chat
-  // page is open. The hook's only consumer for now is "no one" — it just tracks
-  // idle and exposes `armed` for a future phase to subscribe to. Mounting it here
-  // means the timer runs against real document events rather than being a pure
-  // unit-tested function with no in-app integration.
-  useProactiveTrigger(companion.proactiveTimeoutMs);
-  useEffect(() => {
-    const bridge = window.companion;
+    const bridge = window.pet;
     if (bridge === undefined) return;
-    if (companion.placement === "floating") {
-      void bridge.open(companion.floatingPosition ?? undefined);
+    if (pet.prefs.enablePet) {
+      void bridge.open(pet.prefs.petWindowPosition ?? undefined);
     } else {
       void bridge.close();
     }
-  }, [companion.placement, companion.floatingPosition]);
+  }, [pet.prefs.enablePet, pet.prefs.petWindowPosition]);
+
+  // Pet plumbing: the floating window mirrors the whole Session list, not just the one on
+  // screen — a bubble for a Session waiting on approval is most of the reason the pet
+  // exists. The payload also carries the pet appearance, because the floating window is a
+  // second Electron window whose own prefs fetch runs once, at mount.
+  const setEnablePet = pet.setEnablePet;
+
+  // Tray: the shell keeps a notification-area icon only while the pet is enabled, and its
+  // "show desktop pet" item flips the pref that lives here — the shell has no access to
+  // `ui_prefs`, so a click arrives as a request and the write happens in this window.
+  const enablePetRef = useRef(pet.prefs.enablePet);
+  useEffect(() => {
+    enablePetRef.current = pet.prefs.enablePet;
+    void window.pet?.setEnabled(pet.prefs.enablePet);
+  }, [pet.prefs.enablePet]);
+
+  useEffect(() => {
+    return window.pet?.onToggleRequested(() => setEnablePet(!enablePetRef.current));
+  }, [setEnablePet]);
+
+  const sessionSeen = useSessionSeen(projectId);
+  const petTasks = useMemo(
+    () =>
+      buildPetTasks({
+        sessions,
+        projectId,
+        seen: sessionSeen,
+        currentSessionId: selected?.sessionId ?? null,
+        currentTaskState: stream.taskState,
+        currentItems: stream.model.items,
+      }),
+    // `stream.version` stands in for `stream.model.items`, which is a fresh array on every
+    // streamed token; the version is what keys it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sessions, projectId, sessionSeen, selected?.sessionId, stream.taskState, stream.version],
+  );
+  const petSequenceRef = useRef(0);
+  const [petSyncTick, setPetSyncTick] = useState(0);
+  useEffect(() => {
+    petSequenceRef.current += 1;
+    emitPetActivity({
+      mood: aggregatePetMood(petTasks),
+      tasks: petTasks,
+      petId: pet.prefs.activePetId,
+      scale: pet.prefs.petWindowScale,
+      sequence: petSequenceRef.current,
+      emittedAt: Date.now(),
+    });
+  }, [petTasks, pet.prefs.activePetId, pet.prefs.petWindowScale, petSyncTick]);
+
+  // Commands from the floating window: it has no router, no session store and no settings
+  // dialog of its own, so everything it can ask for lands here.
+  useEffect(() => {
+    return subscribePetCommands((command) => {
+      switch (command.kind) {
+        case "sync-request":
+          // The pet just opened (or reloaded) mid-run: re-send what it missed.
+          setPetSyncTick((tick) => tick + 1);
+          return;
+        case "open-session":
+          navigate(`/chat/${command.sessionId}`);
+          return;
+        case "dismiss-task": {
+          // Acknowledging a settled bubble is what marks it read; a running one is only
+          // silenced in the pet window, so its completion can still surface later.
+          const row = sessions.find((session) => session.sessionId === command.sessionId);
+          if (row !== undefined && row.status === "idle") {
+            noteSessionSeen(projectId, row.sessionId, row.lastActiveAt);
+          }
+          return;
+        }
+        case "open-pet-settings":
+          openSettings("application");
+          return;
+        case "disable-pet":
+          setEnablePet(false);
+      }
+    });
+  }, [navigate, sessions, projectId, setEnablePet]);
 
   // Chat input area draft: caches text, both staged switch chips (`/agent` target, `/model`
   // target) and the selected skills keyed by sessionId; restored after navigating away and back
@@ -2057,9 +2119,6 @@ export function ChatPage() {
                             during this page's lifetime. The stop button is the composer's
                             regular stop (one abort ends the whole goal loop). */}
                         {stream.goal && <GoalStatusBanner goal={stream.goal} />}
-                        {/* AI companion banner — visible only when companion mode is on
-                            (returns null otherwise, so the layout below is unaffected). */}
-                        <CompanionBanner taskState={stream.taskState} />
                         {input}
                       </div>
                     </div>
@@ -2078,14 +2137,6 @@ export function ChatPage() {
             </div>
           )}
         </ChatDropRegion>
-
-        {/* Companion widget (placement === "widget"): sits in the right rail when
-            the dock is empty and the viewport is wide enough. `rightMount.view === null`
-            keeps the dock as the authoritative right-rail surface; `!isNarrow()` hides
-            the widget below the lg breakpoint so the chat column doesn't get squeezed. */}
-        {rightMount.view === null && !isNarrow() && (
-          <CompanionWidget taskState={stream.taskState} />
-        )}
 
         {rightMount.view && (
           <DockPanel

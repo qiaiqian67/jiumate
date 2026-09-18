@@ -120,84 +120,62 @@ export const zh = {
     loadFailed: "轨迹加载失败",
   },
 
+  /** Floating pet window: the speech bubble hanging off the pet, and its menus. */
+  pet: {
+    statusThinking: "思考中",
+    statusWriting: "撰写回复",
+    statusUsingTools: "调用工具",
+    statusCompacting: "整理上下文",
+    statusWaitingApproval: "等待确认",
+    statusWorking: "工作中",
+    statusCompleted: "已完成",
+    statusFailed: "失败",
+    statusInterrupted: "已中断",
+    menuSwitchPet: "切换宠物",
+    menuClosePet: "关闭宠物",
+    menuCloseBubble: "关闭气泡",
+    composerOpen: "回复",
+    composerPlaceholder: "回复这个会话…",
+    composerSend: "发送",
+    composerCancel: "取消",
+  },
+
   settings: {
     language: "语言",
     languageInfo: "界面语言，可跟随浏览器设置。",
-    /** 4-segment picker in System settings → General: pick where the AI companion
-     *  lives. Replaces the old boolean switch. */
-    companionModeTitle: "AI 伴侣模式",
-    companionModeInfo:
-      "选择 AI 伴侣出现的位置。「输入框上方」在 composer 上方挂一张小卡；「右侧面板」与右侧 dock 并排显示；「悬浮窗」打开一个独立的桌面宠物窗口，可拖动、始终置顶。选择「关闭」则不显示伴侣。",
-    /** The four labels on the 4-segment placement picker. */
-    companionModeOff: "关闭",
-    companionModeBanner: "输入框上方",
-    companionModeWidget: "右侧面板",
-    companionModeFloating: "悬浮窗",
-    /** Shown as a toast when the user picks "悬浮窗" in the Vite dev build (no
-     *  Electron shell, so the floating window has nowhere to host). */
-    companionModeFloatingDevHint: "悬浮窗需要在桌面客户端中使用",
-    /** Right-rail widget subtitle — shown under the pet when the agent is idle. */
-    companionWidgetIdleHint: "伴侣就在这里——开始对话，看看它会做什么。",
-    /** Right-rail widget subtitle — shown while the agent is running a turn. */
-    companionWidgetThinkingHint: "伴侣正和智能体一起思考。",
-    /** Companion-specific settings page (System settings → Companion). */
-    companionPageTitle: "AI 伴侣",
-    companionPageInfo:
-      "伴侣的配置独立于 Agent：这里改的是伴侣自己（名字、称谓、主动说话的间隔），不会影响 Linsight 的工作流。",
-    /** Pet name input label. Empty = 内部默认名（locale 适配）。 */
-    companionNameLabel: "名字",
-    companionNamePlaceholder: "给你的伴侣起个名字",
-    /** Self-referential pronoun picker label. 4-segment: 他 / 她 / 它 / ta。 */
-    companionPronounLabel: "称谓",
-    companionPronounHe: "他",
-    companionPronounShe: "她",
-    companionPronounIt: "它",
-    companionPronounThey: "ta",
-    /** Idle-timeout slider label. 0 = 关闭主动聊天；其余为「无操作多久后开口」。 */
-    companionProactiveTimeoutLabel: "主动聊天间隔",
-    companionProactiveTimeoutHint: "无操作多久后开口。设为「关闭」则不会主动说话。",
-    /** Slider's leftmost segment — explicit opt-out, distinct from "unset". */
-    companionProactiveTimeoutOff: "关闭",
-    /** Slider stops. Compact labels so the slider's segments stay readable on a
-     *  220-px Settings row; the actual values are minutes. */
-    companionProactiveTimeout1m: "1 分钟",
-    companionProactiveTimeout5m: "5 分钟",
-    companionProactiveTimeout15m: "15 分钟",
-    companionProactiveTimeout30m: "30 分钟",
-    companionProactiveTimeout60m: "60 分钟",
-    /** TTS row (L.4). The provider picker mirrors the voice picker on
-     *  every chat locale; "关闭" stays the safe default. */
-    companionTtsProviderLabel: "语音输出",
-    companionTtsProviderInfo:
-      "伴侣在悬浮窗里把反应气泡念出来。「关闭」= 静默；其它选项按浏览器/系统的 TTS 引擎朗读。",
-    companionTtsProviderOff: "关闭",
-    companionTtsProviderWebspeech: "系统语音",
-    companionTtsVoiceLabel: "嗓音",
-    companionTtsVoiceDefault: "跟随系统",
-    companionTtsVoiceEmpty: "暂无嗓音",
-    /** ASR row (L.5): the provider picker for the chat composer's mic button.
-     *  Mirrors the TTS row's terminology — "Off" is the safe default. */
-    companionAsrProviderLabel: "语音输入",
-    companionAsrProviderInfo:
-      "在 composer 旁显示一个麦克风按钮，点按录音，再次点按结束。转写后的文本会写入 composer，由你确认后再发送。",
-    companionAsrProviderOff: "关闭",
-    companionAsrProviderWebspeech: "系统识别",
-    /** Avatar row (L.6): the renderer picker (svg / Live2D / VRM) and the
-     *  preset picker (only shown when renderer is Live2D or VRM). The
-     *  runtime falls back to SVG automatically when WebGL is
-     *  unavailable. */
-    companionAvatarRendererLabel: "立体头像",
-    companionAvatarRendererInfo:
-      "把伴侣的 SVG 换成 3D 模型。需要在浏览器里启用 WebGL；如果环境不支持，伴侣会自动回退到 SVG。",
-    companionAvatarRendererSvg: "2D",
-    companionAvatarRendererLive2d: "Live2D",
-    companionAvatarRendererVrm: "VRM",
-    companionAvatarPresetLabel: "模型",
-    companionAvatarPresetInfo:
-      "切换内置立体模型。当前模型需先下载示例资产后才会显示，否则显示占位图标。",
-    companionAvatarPresetLoading: "加载中…",
-    companionAvatarPresetFailed: "模型加载失败，已回退到 2D。",
-    companionAvatarRendererFallbackToast: "立体头像不可用，已回退到 2D。",
+    /** Application page of the settings dialog (Petdex desktop pet, …). */
+    applicationTitle: "应用",
+    applicationInfo: "桌面宠物等应用级偏好；切换不影响 Linsight 的工作流。",
+    applicationEnablePet: "显示桌面宠物",
+    applicationEnablePetInfo: "在桌面客户端打开独立的宠物窗口。",
+    applicationPetPicker: "宠物外观",
+    applicationPetSizeLabel: "宠物大小",
+    applicationPetSizeInfo: "调整桌面宠物浮窗的大小。",
+    applicationPetSizeSmall: "小",
+    applicationPetSizeMedium: "中",
+    applicationPetSizeLarge: "大",
+    applicationPetDelete: "删除",
+    applicationPetImport: "导入",
+    applicationPetImporting: "导入中…",
+    applicationPetRefresh: "刷新列表",
+    applicationPetRefreshing: "刷新中…",
+    applicationPetListFailed: "读取宠物列表失败。",
+    applicationPetExternalTitle: "从 Codex 导入",
+    applicationPetExternalInfo: "读取本机 Codex 桌面端内置的宠物，审核后导入。",
+    applicationPetExternalScan: "重新扫描",
+    applicationPetExternalScanning: "扫描中…",
+    applicationPetExternalEmpty: "没有在本机的 Codex 安装里找到内置宠物。",
+    applicationPetExternalImport: "导入",
+    applicationPetExternalImported: "已导入",
+    applicationPetExternalBuiltin: "已内置",
+    applicationPetExternalCopyModified: "副本已修改",
+    applicationPetExternalSourceChanged: "来源已更新",
+    applicationPetExternalFailed: "导入这个宠物失败。",
+    applicationPetImportHint: "选择含 pet.json 与 spritesheet 的本地 Petdex 目录。",
+    applicationPetImportDesktopOnly: "导入 Petdex 包需要桌面客户端。",
+    applicationPetImportFailed: "导入宠物失败。",
+    applicationPetImported: (name: string) => `已导入「${name}」`,
+    applicationPetDeleted: "已删除该宠物。",
     /** Sidebar user-menu row opening the System settings dialog. */
     systemSettings: "系统设置",
     /** Rail headings: the viewer's own preferences vs. the whole server's. */
@@ -1704,18 +1682,6 @@ Benchmark：
     recallQueuedTitle: "撤回到输入框，编辑后重新发送",
     send: "发送",
     stop: "停止",
-    /** Mic button (L.5): title + aria-label, toggles between start and stop. */
-    chatMicStart: "开始录音",
-    chatMicStop: "停止录音",
-    /** ASR error toasts — keyed off the `AsrError.kind` discriminator. The
-     *  `chatAsrAborted` variant is intentionally never surfaced (user-initiated
-     *  stop, not an error); the chat input gates the toast on `kind !== "aborted"`. */
-    chatAsrPermissionDenied: "麦克风权限被拒绝，请在浏览器或系统设置里允许。",
-    chatAsrNoSpeech: "没有听到声音，再试一次。",
-    chatAsrAudioCapture: "麦克风不可用，检查设备连接。",
-    chatAsrNetwork: "语音识别服务暂时不可用。",
-    chatAsrAborted: "录音已取消。",
-    chatAsrOther: "语音识别失败。",
     compact: "压缩上下文",
     approve: "允许",
     deny: "拒绝",

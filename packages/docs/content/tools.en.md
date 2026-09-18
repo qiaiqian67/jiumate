@@ -85,6 +85,7 @@ There are 9 built-in tools (assembled via `packages/core/src/environment/tools/r
 | `input_subagent` | rw | 600000 | Poll a background subagent, steer it mid-run, stop its current run, or continue it with a follow-up prompt |
 | `read_image` | r | 60000 | Read an image and return it as image content (vision models) |
 | `describe_image` | r | 90000 | Have the configured `vision_model` read the image and answer in text (text-only models) |
+| `pet` | rw | 15000 | Inspect and control the desktop pet: list the available pets, switch to one, show or hide the pet window |
 
 Note that an existing agent's persisted `tools.builtin` list is frozen as written (the settings UI edits rows but adds none): agents created before this toolset do not pick up newer tools (e.g. the file tools) or newer arguments (`run_in_background`, `kill`, `abort`) automatically — and entries for since-removed tools (`kill_command`, `kill_subagent`) simply stop assembling: a model calling them gets the standard unknown-tool failure — hand-edit the agent's `system_config.yaml` and add the new entries (copy them from the default definitions in `packages/core/src/state/default-config.ts`) to adopt them.
 
@@ -204,6 +205,8 @@ The Web App's subagents panel drives a selected child with the **same composer a
 ### Image tools
 
 `read_image` and `describe_image` are mutually exclusive, selected by the Session model's vision flag. Both accept an http(s) URL or a Workspace path and support png/jpeg/gif/webp up to 5MB. Text-only models get `describe_image`: the image plus a prompt are forwarded to the Project's configured `vision_model`, whose text answer becomes the tool output. See [Models & Providers](/models).
+
+`pet` drives the desktop pet (the floating Petdex window). `action: "list"` reports which pets are available and which one is active, `action: "use"` (with `pet_id`) switches to one of them, and `action: "show"` / `"hide"` opens or closes the window. It only chooses among pets the user already has — installing or deleting a package writes to disk and stays in Settings → Application. Because a tool call carries no user (Sessions belong to a Project, not a person), it acts on the **local admin's** prefs: that is the account the desktop app signs in as, and the same authority the local API token already carries. Hosts without a pet surface inject no port and the tool says so instead of failing.
 
 ```ts
 // read_image (vision models)

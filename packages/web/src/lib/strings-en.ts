@@ -109,83 +109,65 @@ export const en: Strings = {
     loadFailed: "Failed to load traces",
   },
 
+  /** Floating pet window: the speech bubble hanging off the pet, and its menus. */
+  pet: {
+    statusThinking: "Thinking",
+    statusWriting: "Writing",
+    statusUsingTools: "Using tools",
+    statusCompacting: "Compacting context",
+    statusWaitingApproval: "Waiting for approval",
+    statusWorking: "Working",
+    statusCompleted: "Completed",
+    statusFailed: "Failed",
+    statusInterrupted: "Interrupted",
+    menuSwitchPet: "Switch pet",
+    menuClosePet: "Hide pet",
+    menuCloseBubble: "Dismiss",
+    composerOpen: "Reply",
+    composerPlaceholder: "Reply to this session…",
+    composerSend: "Send",
+    composerCancel: "Cancel",
+  },
+
   settings: {
     language: "Language",
     languageInfo: "Interface language; can follow the browser.",
-    /** 4-segment picker in System settings → General: pick where the AI companion
-     *  lives. Replaces the old boolean switch. */
-    companionModeTitle: "AI companion mode",
-    companionModeInfo:
-      "Where the AI companion lives. Banner sits above the composer. Widget is a persistent panel next to the right dock. Floating opens a separate, always-on-top, draggable desktop pet window. Choose Off to hide the companion entirely.",
-    /** The four labels on the 4-segment placement picker. */
-    companionModeOff: "Off",
-    companionModeBanner: "Banner",
-    companionModeWidget: "Widget",
-    companionModeFloating: "Floating",
-    /** Shown as a toast when the user picks "Floating" in the Vite dev build (no
-     *  Electron shell, so the floating window has nowhere to host). */
-    companionModeFloatingDevHint: "Floating pet is only available in the desktop app",
-    /** Right-rail widget subtitle — shown under the pet when the agent is idle. */
-    companionWidgetIdleHint: "Companion is here — start a turn to see what it does.",
-    /** Right-rail widget subtitle — shown while the agent is running a turn. */
-    companionWidgetThinkingHint: "Companion is thinking along with the agent.",
-    /** Companion-specific settings page (System settings → Companion). */
-    companionPageTitle: "AI companion",
-    companionPageInfo:
-      "Settings for the companion itself — name, pronoun, how long it waits before speaking on its own. Independent of the Agent workflow.",
-    /** Pet name input label. Empty = internal default (locale-aware). */
-    companionNameLabel: "Name",
-    companionNamePlaceholder: "Give your companion a name",
-    /** Self-referential pronoun picker label. 4-segment: he / she / they / it. */
-    companionPronounLabel: "Pronoun",
-    companionPronounHe: "he",
-    companionPronounShe: "she",
-    companionPronounIt: "it",
-    companionPronounThey: "they",
-    /** Idle-timeout slider label. 0 = never proactive; otherwise the gap after which
-     *  the pet may speak. */
-    companionProactiveTimeoutLabel: "Proactive chat interval",
-    companionProactiveTimeoutHint:
-      "How long the companion waits in silence before speaking. Off means it never speaks first.",
-    /** Slider's leftmost segment — explicit opt-out, distinct from "unset". */
-    companionProactiveTimeoutOff: "Off",
-    companionProactiveTimeout1m: "1 min",
-    companionProactiveTimeout5m: "5 min",
-    companionProactiveTimeout15m: "15 min",
-    companionProactiveTimeout30m: "30 min",
-    companionProactiveTimeout60m: "60 min",
-    /** TTS row (L.4). The provider picker mirrors the voice picker on
-     *  every chat locale; "Off" stays the safe default. */
-    companionTtsProviderLabel: "Voice output",
-    companionTtsProviderInfo:
-      "Reads the reaction bubble aloud on the floating pet. Off = silent; other options use the browser/OS TTS engine.",
-    companionTtsProviderOff: "Off",
-    companionTtsProviderWebspeech: "System voices",
-    companionTtsVoiceLabel: "Voice",
-    companionTtsVoiceDefault: "Follow system",
-    companionTtsVoiceEmpty: "No voices available",
-    /** ASR row (L.5): the provider picker for the chat composer's mic button. */
-    companionAsrProviderLabel: "Voice input",
-    companionAsrProviderInfo:
-      "Shows a microphone button next to the composer. Tap to record, tap again to stop; the transcript fills the composer for you to confirm before sending.",
-    companionAsrProviderOff: "Off",
-    companionAsrProviderWebspeech: "System recognition",
-    /** Avatar row (L.6): the renderer picker (SVG / Live2D / VRM) and the
-     *  preset picker (only shown when renderer is Live2D or VRM). The
-     *  runtime falls back to SVG automatically when WebGL is
-     *  unavailable. */
-    companionAvatarRendererLabel: "Stereo avatar",
-    companionAvatarRendererInfo:
-      "Swap the companion's SVG for a 3D model. Requires WebGL in the browser; if the environment cannot run WebGL, the companion silently falls back to SVG.",
-    companionAvatarRendererSvg: "2D",
-    companionAvatarRendererLive2d: "Live2D",
-    companionAvatarRendererVrm: "VRM",
-    companionAvatarPresetLabel: "Model",
-    companionAvatarPresetInfo:
-      "Switch between the bundled 3D presets. Models need their respective sample assets to be present; until then, the picker shows a placeholder.",
-    companionAvatarPresetLoading: "Loading…",
-    companionAvatarPresetFailed: "Model failed to load — falling back to 2D.",
-    companionAvatarRendererFallbackToast: "Stereo avatar unavailable — reverted to 2D.",
+    /** Application page of the settings dialog (Petdex desktop pet, …). */
+    applicationTitle: "Application",
+    applicationInfo:
+      "Application-level preferences such as the desktop pet. Switching them does not affect the Linsight workflow.",
+    applicationEnablePet: "Show desktop pet",
+    applicationEnablePetInfo: "Opens the floating pet window in the desktop app.",
+    applicationPetPicker: "Pet appearance",
+    applicationPetSizeLabel: "Pet size",
+    applicationPetSizeInfo: "Scale the floating desktop pet window.",
+    applicationPetSizeSmall: "Small",
+    applicationPetSizeMedium: "Medium",
+    applicationPetSizeLarge: "Large",
+    applicationPetDelete: "Delete",
+    applicationPetImport: "Import",
+    applicationPetImporting: "Importing…",
+    applicationPetRefresh: "Refresh list",
+    applicationPetRefreshing: "Refreshing…",
+    applicationPetListFailed: "Could not read the pet list.",
+    applicationPetExternalTitle: "Import from Codex",
+    applicationPetExternalInfo:
+      "Read the pets bundled with the Codex desktop app on this machine and import the ones you pick.",
+    applicationPetExternalScan: "Rescan",
+    applicationPetExternalScanning: "Scanning…",
+    applicationPetExternalEmpty: "No bundled pets were found in a Codex install on this machine.",
+    applicationPetExternalImport: "Import",
+    applicationPetExternalImported: "Imported",
+    applicationPetExternalBuiltin: "Built in",
+    applicationPetExternalCopyModified: "Copy edited",
+    applicationPetExternalSourceChanged: "Source updated",
+    applicationPetExternalFailed: "Could not import this pet.",
+    applicationPetImportHint:
+      "Pick a local Petdex folder that contains pet.json and a spritesheet.",
+    applicationPetImportDesktopOnly: "Importing a Petdex package requires the desktop app.",
+    applicationPetImportFailed: "Could not import the pet.",
+    applicationPetImported: (name: string) => `Imported “${name}”`,
+    applicationPetDeleted: "Pet deleted.",
     /** Sidebar user-menu row opening the System settings dialog. */
     systemSettings: "System settings",
     /** Rail headings: the viewer's own preferences vs. the whole server's. */
@@ -1733,19 +1715,6 @@ Scenarios:
     recallQueuedTitle: "Recall to the input box to edit and resend",
     send: "Send",
     stop: "Stop",
-    /** Mic button (L.5): title + aria-label, toggles between start and stop. */
-    chatMicStart: "Start recording",
-    chatMicStop: "Stop recording",
-    /** ASR error toasts — keyed off the `AsrError.kind` discriminator. The
-     *  `chatAsrAborted` variant is intentionally never surfaced (user-initiated
-     *  stop, not an error); the chat input gates the toast on `kind !== "aborted"`. */
-    chatAsrPermissionDenied:
-      "Microphone access was denied. Allow it in your browser or system settings.",
-    chatAsrNoSpeech: "Didn't hear anything. Try again.",
-    chatAsrAudioCapture: "Microphone is unavailable. Check the device connection.",
-    chatAsrNetwork: "Speech recognition service is unavailable right now.",
-    chatAsrAborted: "Recording was cancelled.",
-    chatAsrOther: "Speech recognition failed.",
     compact: "Compact context",
     approve: "Allow",
     deny: "Deny",
