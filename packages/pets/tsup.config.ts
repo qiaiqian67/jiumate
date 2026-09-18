@@ -2,7 +2,9 @@ import { defineConfig } from "tsup";
 import { buildGitDefine } from "../../scripts/build-git-stamp.mjs";
 
 export default defineConfig({
-  entry: ["src/index.ts"],
+  // Two entries on purpose: `presets` is pure metadata and is imported by the web app, so it
+  // must not drag in `io.ts`'s Node built-ins (fs / crypto / path) through the barrel.
+  entry: ["src/index.ts", "src/presets.ts"],
   format: ["esm"],
   target: "node24",
   dts: true,

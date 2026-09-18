@@ -14,7 +14,7 @@ import {
   BUILTIN_PETS,
   DEFAULT_BUILTIN_PET_ID,
   findBuiltinPetPreset,
-} from "@prismshadow/linsight-pets";
+} from "@prismshadow/linsight-pets/presets";
 import type { PetPackage, SpriteVersionNumber } from "@prismshadow/linsight-pets";
 
 export interface PetPackageWithPreview extends PetPackage {
