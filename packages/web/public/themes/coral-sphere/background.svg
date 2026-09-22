@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" width="2560" height="1440" preserveAspectRatio="xMidYMid slice">
+  <!--
+    Coral Sphere - the "skin-03" direction: luminous white negative space on the left, a
+    colossal translucent coral-red energy sphere over a pearl-white future city on the right,
+    a razor-thin vertical beam through its centre, soft sunrise bloom.
+
+    The direction has no figure, so nothing here had to be left out. Composition follows the
+    same contract: x=0%-52% (up to 1330) is an almost-white atmospheric fade, and every strong
+    red structure sits right of centre.
+  -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="0.46" stop-color="#fdf6f6" />
+      <stop offset="0.7" stop-color="#fbe8e8" />
+      <stop offset="1" stop-color="#f7d4d4" />
+    </linearGradient>
+    <radialGradient id="halo" cx="0.78" cy="0.42" r="0.42">
+      <stop offset="0" stop-color="#ff9d8a" stop-opacity="0.55" />
+      <stop offset="0.55" stop-color="#ff8a76" stop-opacity="0.18" />
+      <stop offset="1" stop-color="#ff8a76" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="sphere" cx="0.42" cy="0.36" r="0.72">
+      <stop offset="0" stop-color="#fff0ec" stop-opacity="0.95" />
+      <stop offset="0.34" stop-color="#ff8f79" stop-opacity="0.62" />
+      <stop offset="0.72" stop-color="#ef5a44" stop-opacity="0.42" />
+      <stop offset="1" stop-color="#d33f2c" stop-opacity="0.5" />
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="0.25" stop-color="#fff1ee" stop-opacity="0.85" />
+      <stop offset="0.75" stop-color="#ffb9a8" stop-opacity="0.8" />
+      <stop offset="1" stop-color="#ff8a76" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="1" stop-color="#e7dcdc" stop-opacity="0.75" />
+    </linearGradient>
+    <linearGradient id="promenade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdf3f2" />
+      <stop offset="1" stop-color="#efdedd" />
+    </linearGradient>
+    <filter id="blur12" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
+    <filter id="blur40" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="40" />
+    </filter>
+    <filter id="blur90" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="90" />
+    </filter>
+    <clipPath id="sphereClip">
+      <circle cx="2000" cy="600" r="440" />
+    </clipPath>
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#sky)" />
+  <rect width="2560" height="1440" fill="url(#halo)" />
+
+  <!-- Clouds inside and behind the sphere, drawn only where the sphere is. -->
+  <g clip-path="url(#sphereClip)" filter="url(#blur40)" opacity="0.5">
+    <ellipse cx="1900" cy="700" rx="300" ry="60" fill="#fff6f4" />
+    <ellipse cx="2120" cy="520" rx="240" ry="48" fill="#fff6f4" />
+    <ellipse cx="2000" cy="860" rx="260" ry="42" fill="#ffe4de" />
+  </g>
+
+  <!-- The sphere. -->
+  <circle cx="2000" cy="600" r="440" fill="url(#sphere)" />
+  <circle cx="2000" cy="600" r="440" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.7" />
+  <!-- The luminous network across it: great-circle arcs. -->
+  <g clip-path="url(#sphereClip)" fill="none" stroke="#fff0ec" stroke-width="2.5" opacity="0.55">
+    <ellipse cx="2000" cy="600" rx="440" ry="150" />
+    <ellipse cx="2000" cy="600" rx="440" ry="300" />
+    <ellipse cx="2000" cy="600" rx="150" ry="440" />
+    <ellipse cx="2000" cy="600" rx="320" ry="440" />
+    <ellipse cx="2000" cy="600" rx="120" ry="440" />
+  </g>
+
+  <!-- The beam, through the sphere's centre and down to the portal. -->
+  <g filter="url(#blur12)">
+    <rect x="1990" y="150" width="20" height="900" fill="url(#beam)" />
+    <rect x="1978" y="200" width="44" height="820" fill="#ff8a76" opacity="0.18" />
+  </g>
+
+  <!-- Hovering ring craft, distant. -->
+  <g fill="none" stroke="#e9a99c" stroke-width="4" opacity="0.6">
+    <ellipse cx="1560" cy="380" rx="46" ry="14" />
+    <ellipse cx="2320" cy="300" rx="38" ry="12" />
+    <ellipse cx="2440" cy="760" rx="30" ry="10" />
+  </g>
+
+  <!-- Horizon and promenades. Everything below y=940, right of x=1240. -->
+  <path d="M1240 940 H 2560 V 1000 H 1240 Z" fill="url(#promenade)" opacity="0.9" />
+  <g filter="url(#blur12)" opacity="0.5">
+    <path d="M1300 1000 L 2560 1080 V 1140 L 1300 1060 Z" fill="#e8d3d1" />
+    <path d="M1300 1120 L 2560 1240 V 1300 L 1300 1180 Z" fill="#efdedd" />
+  </g>
+
+  <!-- Blade towers, rising from the horizon into the sphere. -->
+  <g fill="url(#tower)">
+    <path d="M1420 940 L 1470 940 L 1458 470 L 1432 470 Z" opacity="0.9" />
+    <path d="M1580 940 L 1650 940 L 1630 380 L 1600 380 Z" opacity="0.85" />
+    <path d="M2200 940 L 2280 940 L 2256 300 L 2224 300 Z" opacity="0.9" />
+    <path d="M2380 940 L 2440 940 L 2424 520 L 2396 520 Z" opacity="0.8" />
+    <path d="M2500 940 L 2560 940 L 2560 420 L 2516 420 Z" opacity="0.75" />
+    <path d="M1300 940 L 1340 940 L 1330 600 L 1310 600 Z" opacity="0.7" />
+  </g>
+
+  <!-- Fine red light paths converging on the portal. -->
+  <g stroke="#ef5a44" stroke-width="3" opacity="0.45" fill="none">
+    <path d="M1330 1240 C 1600 1180, 1860 1000, 2000 900" />
+    <path d="M1400 1340 C 1700 1240, 1900 1020, 2000 900" />
+    <path d="M2560 1300 C 2300 1200, 2120 1000, 2000 900" />
+    <path d="M2560 1120 C 2320 1080, 2140 960, 2000 900" />
+  </g>
+
+  <!-- Portal structure at the beam's foot. -->
+  <g>
+    <ellipse cx="2000" cy="900" rx="70" ry="20" fill="#ffd9d1" opacity="0.8" />
+    <path d="M1930 900 h 140 l -20 60 h -100 z" fill="#fdf3f2" />
+    <ellipse cx="2000" cy="960" rx="50" ry="14" fill="#ff8a76" opacity="0.5" filter="url(#blur12)" />
+  </g>
+
+  <!-- Mist over the left, so the fade into the safe zone is gradual rather than a seam. -->
+  <rect x="0" y="0" width="1400" height="1440" fill="#ffffff" opacity="0.42" filter="url(#blur90)" />
+
+  <!-- Star particles, sparse and faint. -->
+  <g fill="#ffffff">
+    <circle cx="1560" cy="220" r="2.5" opacity="0.8" />
+    <circle cx="1780" cy="140" r="2" opacity="0.7" />
+    <circle cx="2180" cy="180" r="2.5" opacity="0.75" />
+    <circle cx="2400" cy="420" r="2" opacity="0.6" />
+    <circle cx="1700" cy="760" r="2" opacity="0.5" />
+    <circle cx="2260" cy="880" r="2.5" opacity="0.6" />
+  </g>
+</svg>

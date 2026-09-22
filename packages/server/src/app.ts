@@ -120,6 +120,8 @@ import { DesktopExportPort } from "./services/desktop-export-port.js";
 import { PetCatalogService } from "./services/pet-catalog.js";
 import { PetExternalService } from "./services/pet-external.js";
 import { PetControlService } from "./services/pet-control.js";
+import { SkinCatalogService } from "./services/skin-catalog.js";
+import { InspirationCatalogService } from "./services/inspiration-catalog.js";
 import { HmrHost } from "./hmr/host.js";
 import { hmrRoutes } from "./hmr/routes.js";
 import { platformHttpSeam } from "./hmr/http-seam.js";
@@ -143,6 +145,8 @@ import { adminSettingsRoutes } from "./http/routes/admin-settings.js";
 import type { ServerEvent } from "./api/types.js";
 import { meRoutes } from "./http/routes/me.js";
 import { petRoutes } from "./http/routes/pets.js";
+import { skinRoutes } from "./http/routes/skins.js";
+import { inspirationRoutes } from "./http/routes/inspirations.js";
 import { eventsRoutes, userChannelKey } from "./http/routes/events.js";
 import { projectsRoutes } from "./http/routes/projects.js";
 import { membersRoutes } from "./http/routes/members.js";
@@ -203,6 +207,10 @@ export interface AppDeps {
   petCatalog: PetCatalogService;
   /** Pets bundled in another agent app's install (the Codex desktop app). */
   petExternal: PetExternalService;
+  /** Skin catalog (list / import / delete). Anchored at `config.root`. */
+  skinCatalog: SkinCatalogService;
+  /** Inspiration library (built-in cases + the admin's own). Anchored at `config.root`. */
+  inspirationCatalog: InspirationCatalogService;
   /** The admin self-update run in the background (`linsight update --yes`), with its progress for the update modal. */
   updateJob: UpdateJobService;
   workspaceFiles: WorkspaceFilesService;
@@ -305,6 +313,10 @@ export interface BuildDepsOverrides {
   petCatalog?: PetCatalogService;
   /** Test double: external pet discovery pointed at a fixture archive. */
   petExternal?: PetExternalService;
+  /** Test double: skin catalog with a temp root. */
+  skinCatalog?: SkinCatalogService;
+  /** Test double: inspiration library with a temp root. */
+  inspirationCatalog?: InspirationCatalogService;
 }
 
 /**
@@ -932,6 +944,14 @@ export function buildAppDeps(
   // the agent state the user already shares between the web, server and CLI.
   const petCatalog = overrides.petCatalog ?? new PetCatalogService(config.root);
   const petExternal = overrides.petExternal ?? new PetExternalService(petCatalog);
+  // Skin catalog: anchored at `config.root` for the same reason as the pet catalog — the
+  // installed skins live next to the rest of the state the user shares between web, server
+  // and CLI, so a skin installed from one surface is visible from all of them.
+  const skinCatalog = overrides.skinCatalog ?? new SkinCatalogService(config.root);
+  // Inspiration library: anchored at `config.root` like the two catalogs above. The built-in
+  // cases come from the package and the admin's own live on disk; the service merges them.
+  const inspirationCatalog =
+    overrides.inspirationCatalog ?? new InspirationCatalogService(config.root);
   // Desktop pet control for the `pet` tool. The floating pet window belongs to the desktop
   // app, which signs in as the built-in admin, so the tool acts on that account's prefs —
   // the same authority the local API token already carries (see services/pet-control.ts).
@@ -1160,6 +1180,8 @@ export function buildAppDeps(
     pandoc: overrides.pandoc ?? new PandocService({ pandocPath: config.pandocPath }),
     petCatalog,
     petExternal,
+    skinCatalog,
+    inspirationCatalog,
     // PDF: only the desktop shell can render HTML to PDF (hidden BrowserWindow +
     // printToPDF), so the port is null in CLI/web mode. The override hook lets tests
     // inject a fake even outside desktop mode.
@@ -1279,6 +1301,8 @@ export function createApp(
   app.use("/api/*", authMiddleware(deps.authService, deps.config.trustProxy));
   app.route("/api/me", meRoutes(deps));
   app.route("/api/pets", petRoutes(deps));
+  app.route("/api/skins", skinRoutes(deps));
+  app.route("/api/inspirations", inspirationRoutes(deps));
   app.route("/api/version", versionRoutes(deps));
   app.route("/api/admin/users", adminUsersRoutes(deps));
   app.route("/api/admin/settings", adminSettingsRoutes(deps));

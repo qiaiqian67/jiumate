@@ -45,6 +45,7 @@ import { getUpdaterStatus, handleUpdaterCommand, initUpdater, onUpdaterStatus } 
 import { parseUpdaterCommand, updaterStatusMessage } from "./updater-status.js";
 import { wireExportPdf } from "./export-pdf.js";
 import { createPetWindow, isPetWindowOpen, type PetWindowHandle } from "./pet-window.js";
+import { registerThemePicker } from "./theme-picker.js";
 import { destroyPetTray, syncPetTray, wirePetTrayIpc, type PetTrayDeps } from "./pet-tray.js";
 import {
   desktopLoginUrl,
@@ -262,6 +263,7 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
     petHandle.wireIpc();
     wirePetTrayIpc(petTrayDeps());
   }
+  registerThemePicker();
   const url = desktopLoginUrl(started.origin, started.token);
   if (win === null) createWindow(url);
   else void win.loadURL(url);
@@ -314,6 +316,7 @@ async function boot(): Promise<void> {
       petHandle.wireIpc();
       wirePetTrayIpc(petTrayDeps());
     }
+    registerThemePicker();
     createWindow(`${appOrigin}/`);
     return;
   }

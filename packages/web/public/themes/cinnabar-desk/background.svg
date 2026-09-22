@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" width="2560" height="1440" preserveAspectRatio="xMidYMid slice">
+  <!--
+    Cinnabar Desk - the "skin-02" direction: ivory rice paper with gold fibre, auspicious cloud
+    ribbons, antique gold and cinnabar red, warm morning side light.
+
+    The direction puts a God-of-Wealth mascot at a desk on the right; this renders the paper,
+    the clouds and the light instead. Composition follows the same contract: x=0%-52% (up to
+    1330) stays low-detail, with no coin cluster or high-contrast ornament inside it.
+  -->
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="0.5">
+      <stop offset="0" stop-color="#fbf5e8" />
+      <stop offset="0.5" stop-color="#f7eeda" />
+      <stop offset="1" stop-color="#f0e0c2" />
+    </linearGradient>
+    <radialGradient id="morning" cx="0.82" cy="0.18" r="0.55">
+      <stop offset="0" stop-color="#fff3d4" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#fff3d4" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#e0553f" stop-opacity="0.9" />
+      <stop offset="0.62" stop-color="#d94b36" stop-opacity="0.55" />
+      <stop offset="1" stop-color="#c73f2c" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0" stop-color="#c9a24a" />
+      <stop offset="0.5" stop-color="#e8c877" />
+      <stop offset="1" stop-color="#b98c35" />
+    </linearGradient>
+    <filter id="blur18" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" />
+    </filter>
+    <filter id="blur48" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="48" />
+    </filter>
+    <!-- A cloud ribbon: a tapered band that curls at one end. -->
+    <path id="ribbon" d="M0 0 C 90 -34, 210 -34, 300 -6 C 380 18, 470 20, 540 -4 L 556 34 C 470 62, 372 60, 288 34 C 210 10, 104 10, 16 40 Z" />
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#paper)" />
+  <rect width="2560" height="1440" fill="url(#morning)" />
+
+  <!-- Rice-paper fibre: fine horizontal strands, uniform across the whole canvas so the left
+       half has texture without contrast. -->
+  <g stroke="#d9c69b" stroke-width="1.5" opacity="0.22">
+    <line x1="0" y1="120" x2="2560" y2="132" />
+    <line x1="0" y1="300" x2="2560" y2="286" />
+    <line x1="0" y1="470" x2="2560" y2="484" />
+    <line x1="0" y1="650" x2="2560" y2="640" />
+    <line x1="0" y1="820" x2="2560" y2="836" />
+    <line x1="0" y1="1000" x2="2560" y2="988" />
+    <line x1="0" y1="1170" x2="2560" y2="1184" />
+    <line x1="0" y1="1330" x2="2560" y2="1322" />
+  </g>
+
+  <!-- Cinnabar sun, low and to the right, behind everything. -->
+  <g filter="url(#blur48)">
+    <circle cx="2060" cy="560" r="330" fill="url(#sun)" />
+  </g>
+
+  <!-- Auspicious clouds. The faintest line art crosses into the safe zone; the weight stays
+       right of x=1300. -->
+  <g filter="url(#blur18)" opacity="0.35">
+    <use href="#ribbon" transform="translate(1180 220) scale(1.5)" fill="#e0c07a" />
+    <use href="#ribbon" transform="translate(1560 980) scale(1.3)" fill="#dcb96f" />
+  </g>
+  <g opacity="0.85">
+    <use href="#ribbon" transform="translate(1420 420) scale(1.6)" fill="url(#gold)" opacity="0.5" />
+    <use href="#ribbon" transform="translate(1740 760) scale(1.9)" fill="url(#gold)" opacity="0.42" />
+    <use href="#ribbon" transform="translate(2000 180) scale(1.4)" fill="url(#gold)" opacity="0.38" />
+    <use href="#ribbon" transform="translate(2100 1120) scale(2.1)" fill="url(#gold)" opacity="0.34" />
+    <use href="#ribbon" transform="translate(1620 1240) scale(1.5)" fill="url(#gold)" opacity="0.3" />
+  </g>
+
+  <!-- Curled cloud outlines: the traditional motif, drawn rather than filled. -->
+  <g fill="none" stroke="url(#gold)" stroke-width="4" opacity="0.55">
+    <path d="M1520 300 c 40 -46, 116 -46, 150 -6 c 30 -30, 96 -22, 108 20 c 44 -10, 78 30, 56 68" />
+    <path d="M1820 1240 c 36 -42, 106 -42, 138 -4 c 28 -28, 88 -20, 100 18 c 40 -10, 72 28, 52 62" />
+    <path d="M2260 640 c 30 -36, 92 -36, 118 -4 c 24 -24, 76 -18, 86 16 c 34 -8, 62 24, 44 54" />
+  </g>
+
+  <!-- Gold ingots and coins, all right of x=1560. -->
+  <g>
+    <g fill="url(#gold)">
+      <path d="M1820 1180 l 54 -40 h 96 l 54 40 z" />
+      <path d="M1874 1140 h 96 v 12 h -96 z" fill="#f0d68f" opacity="0.7" />
+      <path d="M2080 1240 l 44 -34 h 80 l 44 34 z" />
+    </g>
+    <g fill="none" stroke="url(#gold)" stroke-width="5" opacity="0.75">
+      <circle cx="2280" cy="900" r="34" />
+      <circle cx="2280" cy="900" r="20" />
+      <circle cx="2420" cy="1050" r="26" />
+      <circle cx="2420" cy="1050" r="15" />
+      <circle cx="2160" cy="1020" r="22" />
+    </g>
+  </g>
+
+  <!-- Red envelope, kept at the far right edge. -->
+  <g transform="rotate(-12 2400 760)">
+    <rect x="2340" y="700" width="120" height="170" rx="8" fill="#c73f2c" />
+    <rect x="2340" y="700" width="120" height="170" rx="8" fill="none" stroke="#a8301f" stroke-width="3" />
+    <path d="M2340 760 h 120" stroke="#e8c877" stroke-width="4" opacity="0.8" />
+    <circle cx="2400" cy="800" r="18" fill="url(#gold)" />
+  </g>
+
+  <!-- Warm sparkles. -->
+  <g fill="#e8c877">
+    <circle cx="1700" cy="600" r="4" opacity="0.9" />
+    <circle cx="1960" cy="880" r="3" opacity="0.8" />
+    <circle cx="2200" cy="420" r="3.5" opacity="0.85" />
+    <circle cx="2480" cy="620" r="3" opacity="0.7" />
+    <circle cx="1860" cy="1000" r="2.5" opacity="0.75" />
+    <circle cx="2340" cy="1240" r="3" opacity="0.8" />
+    <circle cx="1600" cy="820" r="2.5" opacity="0.6" />
+    <circle cx="2520" cy="940" r="2" opacity="0.65" />
+  </g>
+</svg>

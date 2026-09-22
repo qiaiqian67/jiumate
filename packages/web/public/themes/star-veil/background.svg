@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" width="2560" height="1440" preserveAspectRatio="xMidYMid slice">
+  <!--
+    Star Veil - the "skin-06" direction: a dreamy cosmic stage of deep cobalt, electric blue,
+    violet, magenta and cyan aurora gradients, layered star fields, fine glitter trails,
+    iridescent butterflies, translucent heart-shaped light rings, soft nebula haze.
+
+    The direction puts a beauty portrait on the right; this renders the stage instead.
+    Composition follows the same contract: x=0%-52% (up to 1330) is a smooth blue-to-violet
+    gradient with sparse small stars and a subtle glow.
+  -->
+  <defs>
+    <linearGradient id="cosmos" x1="0" y1="0" x2="1" y2="0.5">
+      <stop offset="0" stop-color="#141a4a" />
+      <stop offset="0.4" stop-color="#1b2566" />
+      <stop offset="0.68" stop-color="#3a2a7a" />
+      <stop offset="0.86" stop-color="#5b2d80" />
+      <stop offset="1" stop-color="#7a2f76" />
+    </linearGradient>
+    <radialGradient id="nebulaA" cx="0.8" cy="0.32" r="0.46">
+      <stop offset="0" stop-color="#ff5fc4" stop-opacity="0.42" />
+      <stop offset="1" stop-color="#ff5fc4" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="nebulaB" cx="0.66" cy="0.78" r="0.44">
+      <stop offset="0" stop-color="#25d6e6" stop-opacity="0.36" />
+      <stop offset="1" stop-color="#25d6e6" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="core" cx="0.84" cy="0.42" r="0.34">
+      <stop offset="0" stop-color="#b98cff" stop-opacity="0.5" />
+      <stop offset="1" stop-color="#b98cff" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="auroraA" x1="0" y1="0" x2="1" y2="0.2">
+      <stop offset="0" stop-color="#25d6e6" stop-opacity="0" />
+      <stop offset="0.45" stop-color="#25d6e6" stop-opacity="0.32" />
+      <stop offset="0.75" stop-color="#8f6bff" stop-opacity="0.34" />
+      <stop offset="1" stop-color="#ff5fc4" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="auroraB" x1="0" y1="0" x2="1" y2="0.2">
+      <stop offset="0" stop-color="#ff5fc4" stop-opacity="0" />
+      <stop offset="0.5" stop-color="#ff7fd0" stop-opacity="0.26" />
+      <stop offset="1" stop-color="#25d6e6" stop-opacity="0" />
+    </linearGradient>
+    <filter id="blur22" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="22" />
+    </filter>
+    <filter id="blur60" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="60" />
+    </filter>
+    <filter id="blur6" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" />
+    </filter>
+    <g id="butterfly">
+      <path d="M0 0 C -34 -34, -66 -18, -58 8 C -52 30, -22 30, 0 4 Z" fill="#e9a6ff" opacity="0.85" />
+      <path d="M0 0 C 34 -34, 66 -18, 58 8 C 52 30, 22 30, 0 4 Z" fill="#9fd8ff" opacity="0.85" />
+      <path d="M0 0 C -22 10, -34 34, -20 48 C -8 58, 0 34, 0 8 Z" fill="#c58cff" opacity="0.7" />
+      <path d="M0 0 C 22 10, 34 34, 20 48 C 8 58, 0 34, 0 8 Z" fill="#7fc4ff" opacity="0.7" />
+      <ellipse cx="0" cy="6" rx="3" ry="16" fill="#fbe9ff" opacity="0.9" />
+    </g>
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#cosmos)" />
+
+  <!-- Aurora bands, sweeping across but weighted to the right. -->
+  <g filter="url(#blur60)">
+    <path d="M760 180 C 1260 60, 1780 340, 2560 140 L 2560 460 C 1760 620, 1220 340, 700 420 Z" fill="url(#auroraA)" />
+    <path d="M900 1080 C 1400 940, 1900 1180, 2560 1020 L 2560 1300 C 1860 1440, 1340 1220, 840 1330 Z" fill="url(#auroraB)" />
+  </g>
+
+  <rect width="2560" height="1440" fill="url(#nebulaA)" />
+  <rect width="2560" height="1440" fill="url(#nebulaB)" />
+  <rect width="2560" height="1440" fill="url(#core)" />
+
+  <!-- Soft nebula haze, concentrated behind the focal area. -->
+  <g filter="url(#blur60)" opacity="0.5">
+    <ellipse cx="2020" cy="620" rx="420" ry="260" fill="#8f5cd6" />
+    <ellipse cx="1760" cy="960" rx="320" ry="200" fill="#3f6fd6" />
+  </g>
+
+  <!-- Star fields. The left half is sparse and dim on purpose. -->
+  <g fill="#ffffff">
+    <circle cx="120" cy="220" r="1.8" opacity="0.5" />
+    <circle cx="340" cy="520" r="1.5" opacity="0.4" />
+    <circle cx="600" cy="180" r="1.8" opacity="0.45" />
+    <circle cx="820" cy="700" r="1.5" opacity="0.35" />
+    <circle cx="480" cy="1020" r="1.8" opacity="0.4" />
+    <circle cx="980" cy="340" r="1.6" opacity="0.42" />
+    <circle cx="1120" cy="880" r="1.5" opacity="0.36" />
+    <circle cx="700" cy="1260" r="1.7" opacity="0.38" />
+  </g>
+  <g fill="#ffffff">
+    <circle cx="1460" cy="240" r="2.4" opacity="0.85" />
+    <circle cx="1620" cy="520" r="2" opacity="0.75" />
+    <circle cx="1780" cy="160" r="2.6" opacity="0.9" />
+    <circle cx="1940" cy="420" r="2.2" opacity="0.8" />
+    <circle cx="2100" cy="220" r="2.8" opacity="0.95" />
+    <circle cx="2260" cy="560" r="2.2" opacity="0.8" />
+    <circle cx="2400" cy="320" r="2.6" opacity="0.9" />
+    <circle cx="2520" cy="700" r="2.2" opacity="0.75" />
+    <circle cx="1560" cy="780" r="2.4" opacity="0.8" />
+    <circle cx="1720" cy="1060" r="2" opacity="0.7" />
+    <circle cx="1900" cy="840" r="2.6" opacity="0.85" />
+    <circle cx="2080" cy="1180" r="2.2" opacity="0.75" />
+    <circle cx="2240" cy="920" r="2.4" opacity="0.8" />
+    <circle cx="2420" cy="1140" r="2" opacity="0.7" />
+    <circle cx="2540" cy="1000" r="2.4" opacity="0.8" />
+    <circle cx="1640" cy="1320" r="2" opacity="0.65" />
+    <circle cx="2160" cy="1360" r="2.2" opacity="0.7" />
+  </g>
+  <!-- A few brighter ones with a cross flare, far right only. -->
+  <g stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.7">
+    <path d="M2100 220 v -16 M2100 220 v 16 M2100 220 h -16 M2100 220 h 16" />
+    <path d="M2400 320 v -12 M2400 320 v 12 M2400 320 h -12 M2400 320 h 12" />
+    <path d="M1780 160 v -12 M1780 160 v 12 M1780 160 h -12 M1780 160 h 12" />
+  </g>
+
+  <!-- Glitter trails: fine arcs of dust. -->
+  <g fill="none" stroke="#ffd9f6" stroke-width="2" opacity="0.5" stroke-dasharray="3 9">
+    <path d="M1500 420 C 1760 320, 2020 460, 2320 340" />
+    <path d="M1580 940 C 1840 860, 2100 980, 2400 880" />
+    <path d="M1660 1240 C 1900 1180, 2140 1280, 2420 1200" />
+  </g>
+
+  <!-- Heart-shaped light rings, translucent, right of centre. -->
+  <g fill="none" stroke="#ff9fdc" stroke-width="4" opacity="0.55" filter="url(#blur6)">
+    <path d="M1880 340 c 0 -34, 48 -40, 56 0 c 8 -40, 56 -34, 56 0 c 0 40, -56 66, -56 66 s -56 -26, -56 -66 z" />
+    <path d="M2280 1080 c 0 -26, 36 -30, 42 0 c 6 -30, 42 -26, 42 0 c 0 30, -42 50, -42 50 s -42 -20, -42 -50 z" />
+    <path d="M1680 700 c 0 -20, 28 -24, 33 0 c 5 -24, 33 -20, 33 0 c 0 24, -33 39, -33 39 s -33 -15, -33 -39 z" />
+  </g>
+
+  <!-- Butterflies, densest around the focal area and the far-right edge. -->
+  <g>
+    <use href="#butterfly" transform="translate(1980 520) scale(1.5)" />
+    <use href="#butterfly" transform="translate(2340 760) scale(1.15) rotate(14)" />
+    <use href="#butterfly" transform="translate(2160 1160) scale(1.3) rotate(-18)" />
+    <use href="#butterfly" transform="translate(1700 280) scale(0.9) rotate(22)" />
+    <use href="#butterfly" transform="translate(2480 480) scale(1.0) rotate(-10)" />
+    <use href="#butterfly" transform="translate(1820 980) scale(0.8) rotate(30)" opacity="0.8" />
+  </g>
+
+  <!-- Violet-blue bokeh. -->
+  <g opacity="0.3">
+    <circle cx="1520" cy="620" r="58" fill="#b98cff" />
+    <circle cx="1880" cy="1200" r="72" fill="#7fc4ff" />
+    <circle cx="2300" cy="400" r="50" fill="#ff9fdc" />
+    <circle cx="2500" cy="880" r="64" fill="#b98cff" />
+    <circle cx="1740" cy="440" r="44" fill="#7fc4ff" />
+  </g>
+
+  <!-- Diamond glints. -->
+  <g fill="#eafaff" opacity="0.85">
+    <path d="M1620 1080 l 8 16 l 16 8 l -16 8 l -8 16 l -8 -16 l -16 -8 l 16 -8 z" />
+    <path d="M2420 640 l 6 12 l 12 6 l -12 6 l -6 12 l -6 -12 l -12 -6 l 12 -6 z" />
+    <path d="M2060 140 l 6 12 l 12 6 l -12 6 l -6 12 l -6 -12 l -12 -6 l 12 -6 z" />
+    <path d="M1500 320 l 5 10 l 10 5 l -10 5 l -5 10 l -5 -10 l -10 -5 l 10 -5 z" />
+  </g>
+</svg>

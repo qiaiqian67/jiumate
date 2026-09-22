@@ -15,7 +15,9 @@ import { readJson, requireString } from "../validate.js";
 import type { AppDeps } from "../../app.js";
 import { resolvePreviewTarget } from "../../services/preview-token.js";
 import { validateDraftShortcuts } from "../../services/draft-shortcuts.js";
+import { validateInspirationFavorites } from "../../services/inspiration-favorites.js";
 import { validatePetPrefs } from "../../services/pet-prefs.js";
+import { validateSkinPrefs } from "../../services/skin-prefs.js";
 import {
   INLINE_IMAGE_MAX_MB,
   MAX_ATTACHMENT_COUNT,
@@ -117,11 +119,21 @@ export function meRoutes(deps: AppDeps): Hono<AppEnv> {
     if (body.draftShortcuts !== undefined) {
       body.draftShortcuts = validateDraftShortcuts(body.draftShortcuts);
     }
+    // Inspiration favourites: the same reasoning as draftShortcuts — free-form JSON has no schema,
+    // so any value a client can grow without limit needs a server-side bound. Bounded but not
+    // resolved: the built-in cases live in a package, so an unknown id is a legal selection.
+    if (body.inspirationFavorites !== undefined) {
+      body.inspirationFavorites = validateInspirationFavorites(body.inspirationFavorites);
+    }
     // Pet prefs (enablePet / activePetId / petWindowPosition) are validated the same
     // way as draftShortcuts — free-form JSON has no schema, so any user-authored
     // value needs a server-side bound. activePetId is only bounded, not resolved:
     // builtin presets live in the web bundle, so an unknown id is a legal selection.
     await validatePetPrefs(body);
+    // Skin prefs (activeSkinLight / activeSkinDark) are bounded the same way, and for the
+    // same reason: the builtin skins live in the web bundle, so the server cannot resolve an
+    // id and must not try — an unknown one is a legal selection the client degrades.
+    await validateSkinPrefs(body);
     const raw = deps.prefsRepo.get(c.var.user.userId);
     let current: UiPrefs = {};
     if (raw !== null) {

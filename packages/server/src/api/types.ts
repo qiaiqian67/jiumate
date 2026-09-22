@@ -286,6 +286,15 @@ export interface UiPrefs {
    */
   draftShortcuts?: DraftShortcut[];
   /**
+   * Ids of the inspiration cases this user starred, in the order they were starred.
+   *
+   * A selection, not a reference: the catalog resolves what it can and a favourite that no longer
+   * matches a case simply stops showing. Replaced whole on every write, like `draftShortcuts`,
+   * and bounded on write by services/inspiration-favorites.ts — count and id shape — because this
+   * is another key in a free-form column that would otherwise hold unbounded storage.
+   */
+  inspirationFavorites?: string[];
+  /**
    * Whether to show the Petdex desktop pet window. When false the pet window stays
    * hidden even if the user picked one earlier. Persisted across restarts.
    */
@@ -305,6 +314,28 @@ export interface UiPrefs {
    * pet, not a fixed box around it.
    */
   petWindowScale?: number | null;
+  /**
+   * The theme in effect, or null for the app's own appearance.
+   *
+   * One selection, not one per mode: a theme carries its palette *and* its artwork, and
+   * `appearance` is what decides whether it pins the shell. Stored by id, so a theme
+   * reinstalled under a different path keeps the selection; an id that no longer resolves
+   * falls back to the built-in appearance.
+   */
+  activeTheme?: string | null;
+  /**
+   * Alpha applied to the surfaces the active theme declares (`SkinPackage.surfaces`), 0 to 1.
+   *
+   * A preference rather than a constant baked into a theme's colours: the theme decides *which*
+   * tokens are surfaces, the user decides how transparent they are. Absent or null means the
+   * built-in default.
+   */
+  skinSurfaceAlpha?: number | null;
+  /**
+   * Scrim over the active theme's artwork, 0 to 1. Overrides whatever the theme's `art` block
+   * states. Absent or null means the theme's own value.
+   */
+  skinBackgroundDim?: number | null;
   [key: string]: unknown;
 }
 
@@ -3143,6 +3174,45 @@ export interface PluginInstallRequest {
 export interface AgentPluginsInstallResponse {
   skills: SkillMetadataItem[];
   hooks: HookItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Inspiration library
+// ---------------------------------------------------------------------------
+
+import type { InspirationCase, InspirationCategory } from "@prismshadow/linsight-inspirations";
+
+/**
+ * The inspiration library's case and category types come from
+ * `@prismshadow/linsight-inspirations` — the same package the server stores them with and the
+ * web app renders them from, so the wire shape has exactly one definition. Only the envelope is
+ * declared here.
+ */
+export type { InspirationCase, InspirationCategory };
+
+/**
+ * GET /api/inspirations: the whole library — the built-in cases plus the ones admins authored.
+ *
+ * `canManage` is the server's answer to "may this viewer write?", so the gallery never has to
+ * infer an admin from the user record it holds; the write routes re-check it regardless, and
+ * `diagnostics` carries the non-fatal problems the catalog found while reading (an unreadable
+ * case directory) so an admin can be told instead of silently seeing a shorter list.
+ */
+export interface InspirationCatalogResponse {
+  categories: InspirationCategory[];
+  cases: InspirationCase[];
+  diagnostics: string[];
+  canManage: boolean;
+}
+
+/** POST/PUT of one case: the stored case as the catalog resolved it. */
+export interface InspirationCaseResponse {
+  case: InspirationCase;
+}
+
+/** POST/PUT of one category. */
+export interface InspirationCategoryResponse {
+  category: InspirationCategory;
 }
 
 /** GET /api/projects/:p/agents/:a/skills: Skills installed on this Agent. */

@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" width="2560" height="1440" preserveAspectRatio="xMidYMid slice">
+  <!--
+    Seafoam Stage - the "skin-07" direction: a luminous pastel digital stage with soft cyan,
+    sky blue, lavender, pink and pearl-white gradients, flowing holographic ribbons, abstract
+    music waveforms, five-point stars, translucent hearts, equalizer light particles and
+    floating crystal confetti.
+
+    The direction puts a virtual singer on the right; this renders the stage instead.
+    Composition follows the same contract: x=0%-52% (up to 1330) is calm pale aqua-to-white
+    glow with a faint horizontal waveform and only sparse star dust.
+  -->
+  <defs>
+    <linearGradient id="stage" x1="0" y1="0" x2="1" y2="0.45">
+      <stop offset="0" stop-color="#f4fdff" />
+      <stop offset="0.42" stop-color="#e4f6fb" />
+      <stop offset="0.7" stop-color="#d8ecfa" />
+      <stop offset="0.88" stop-color="#dfe4fb" />
+      <stop offset="1" stop-color="#ece0f8" />
+    </linearGradient>
+    <radialGradient id="pastel" cx="0.82" cy="0.34" r="0.5">
+      <stop offset="0" stop-color="#ffd9e8" stop-opacity="0.7" />
+      <stop offset="1" stop-color="#ffd9e8" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="aqua" cx="0.68" cy="0.8" r="0.44">
+      <stop offset="0" stop-color="#8fe6e0" stop-opacity="0.5" />
+      <stop offset="1" stop-color="#8fe6e0" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="ribbonA" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0" stop-color="#8fe6e0" stop-opacity="0" />
+      <stop offset="0.4" stop-color="#8fe6e0" stop-opacity="0.55" />
+      <stop offset="0.72" stop-color="#b9a6ff" stop-opacity="0.6" />
+      <stop offset="1" stop-color="#ffb0cf" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="ribbonB" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0" stop-color="#ffb0cf" stop-opacity="0" />
+      <stop offset="0.5" stop-color="#ffc9dd" stop-opacity="0.5" />
+      <stop offset="1" stop-color="#8fd8ff" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="crystal" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="1" stop-color="#bfe6ff" />
+    </linearGradient>
+    <filter id="blur16" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="16" />
+    </filter>
+    <filter id="blur44" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="44" />
+    </filter>
+    <path id="hribbon" d="M0 0 C 160 -90, 340 -60, 470 40 C 560 110, 660 130, 780 96 L 800 156 C 650 200, 528 172, 424 92 C 306 0, 150 -26, 14 62 Z" />
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#stage)" />
+  <rect width="2560" height="1440" fill="url(#pastel)" />
+  <rect width="2560" height="1440" fill="url(#aqua)" />
+
+  <!-- Soft glow pools behind the focal area. -->
+  <g filter="url(#blur44)" opacity="0.55">
+    <ellipse cx="2060" cy="560" rx="380" ry="240" fill="#d9b8ff" />
+    <ellipse cx="1820" cy="1020" rx="320" ry="180" fill="#9fe8e2" />
+  </g>
+
+  <!-- Holographic ribbons, flowing across the right. -->
+  <g opacity="0.85">
+    <use href="#hribbon" transform="translate(1340 300) scale(1.1)" fill="url(#ribbonA)" />
+    <use href="#hribbon" transform="translate(1500 880) scale(1.3) rotate(-6)" fill="url(#ribbonB)" />
+    <use href="#hribbon" transform="translate(1760 1180) scale(1.0) rotate(4)" fill="url(#ribbonA)" opacity="0.8" />
+    <use href="#hribbon" transform="translate(1900 180) scale(0.9) rotate(8)" fill="url(#ribbonB)" opacity="0.75" />
+  </g>
+
+  <!-- The faint waveform crossing the safe zone: one line, very low contrast. -->
+  <g fill="none" stroke="#7fd4d0" stroke-width="3" opacity="0.35">
+    <path d="M120 720 C 380 700, 620 742, 880 716 C 1080 696, 1240 730, 1400 714" />
+  </g>
+
+  <!-- Equalizer bars: abstract light particles, no notation. Only right of x=1360. -->
+  <g>
+    <g fill="#8fe6e0" opacity="0.7">
+      <rect x="1400" y="820" width="10" height="70" rx="5" />
+      <rect x="1440" y="790" width="10" height="130" rx="5" />
+      <rect x="1480" y="840" width="10" height="30" rx="5" />
+      <rect x="1520" y="770" width="10" height="170" rx="5" />
+      <rect x="1560" y="810" width="10" height="90" rx="5" />
+    </g>
+    <g fill="#b9a6ff" opacity="0.6">
+      <rect x="2380" y="800" width="10" height="110" rx="5" />
+      <rect x="2420" y="760" width="10" height="190" rx="5" />
+      <rect x="2460" y="830" width="10" height="50" rx="5" />
+      <rect x="2500" y="780" width="10" height="150" rx="5" />
+    </g>
+    <g fill="#ffb0cf" opacity="0.55">
+      <rect x="1900" y="1260" width="9" height="80" rx="4.5" />
+      <rect x="1936" y="1230" width="9" height="140" rx="4.5" />
+      <rect x="1972" y="1270" width="9" height="60" rx="4.5" />
+    </g>
+  </g>
+
+  <!-- Five-point stars. -->
+  <g fill="#ffffff" opacity="0.95">
+    <path d="M1700 240 l 10 30 h 32 l -26 20 l 9 31 l -25 -19 l -25 19 l 9 -31 l -26 -20 h 32 z" />
+    <path d="M2200 400 l 8 24 h 26 l -21 16 l 7 25 l -20 -15 l -20 15 l 7 -25 l -21 -16 h 26 z" />
+    <path d="M2460 960 l 7 21 h 22 l -18 14 l 7 21 l -18 -14 l -18 14 l 7 -21 l -18 -14 h 22 z" />
+    <path d="M1560 560 l 6 18 h 19 l -15 12 l 6 18 l -16 -12 l -16 12 l 6 -18 l -15 -12 h 19 z" />
+  </g>
+  <g fill="#8fd8ff" opacity="0.8">
+    <path d="M2020 1120 l 7 21 h 22 l -18 14 l 7 21 l -18 -14 l -18 14 l 7 -21 l -18 -14 h 22 z" />
+    <path d="M2340 240 l 6 18 h 19 l -15 12 l 6 18 l -16 -12 l -16 12 l 6 -18 l -15 -12 h 19 z" />
+  </g>
+
+  <!-- Translucent hearts. -->
+  <g fill="#ffb0cf" opacity="0.7">
+    <path d="M1860 620 c 0 -22, 32 -26, 37 0 c 5 -26, 37 -22, 37 0 c 0 26, -37 44, -37 44 s -37 -18, -37 -44 z" />
+    <path d="M2280 1240 c 0 -16, 24 -19, 27 0 c 4 -19, 27 -16, 27 0 c 0 19, -27 32, -27 32 s -27 -13, -27 -32 z" />
+    <path d="M1620 880 c 0 -13, 19 -15, 22 0 c 3 -15, 22 -13, 22 0 c 0 15, -22 26, -22 26 s -22 -11, -22 -26 z" />
+  </g>
+
+  <!-- Floating crystal confetti. -->
+  <g>
+    <g transform="rotate(18 1760 460)">
+      <path d="M1750 430 l 20 -18 l 20 18 l -20 46 z" fill="url(#crystal)" opacity="0.9" />
+    </g>
+    <g transform="rotate(-24 2120 800)">
+      <path d="M2110 776 l 16 -14 l 16 14 l -16 36 z" fill="url(#crystal)" opacity="0.85" />
+    </g>
+    <g transform="rotate(36 2440 560)">
+      <path d="M2430 538 l 15 -13 l 15 13 l -15 34 z" fill="url(#crystal)" opacity="0.8" />
+    </g>
+    <g transform="rotate(-14 1920 1020)">
+      <path d="M1911 1000 l 14 -12 l 14 12 l -14 30 z" fill="url(#crystal)" opacity="0.75" />
+    </g>
+    <g transform="rotate(28 2320 1140)">
+      <path d="M2311 1120 l 13 -11 l 13 11 l -13 28 z" fill="url(#crystal)" opacity="0.7" />
+    </g>
+  </g>
+
+  <!-- Iridescent ribbons: thin stroked curls. -->
+  <g fill="none" stroke-linecap="round" opacity="0.6">
+    <path d="M1500 460 q 80 -60 150 0 t 150 0" stroke="#8fe6e0" stroke-width="5" />
+    <path d="M1980 900 q 70 -54 132 0 t 132 0" stroke="#b9a6ff" stroke-width="5" />
+    <path d="M1660 1280 q 64 -48 120 0 t 120 0" stroke="#ffb0cf" stroke-width="5" />
+  </g>
+
+  <!-- Restrained lens flare, far right. -->
+  <g filter="url(#blur16)" opacity="0.5">
+    <ellipse cx="2360" cy="300" rx="150" ry="30" fill="#ffffff" transform="rotate(-22 2360 300)" />
+    <ellipse cx="2240" cy="360" rx="60" ry="14" fill="#ffd9e8" transform="rotate(-22 2240 360)" />
+  </g>
+
+  <!-- Sparse star dust inside the safe zone: the direction allows only this much. -->
+  <g fill="#ffffff" opacity="0.55">
+    <circle cx="360" cy="300" r="2.5" />
+    <circle cx="720" cy="520" r="2" />
+    <circle cx="1080" cy="260" r="2.2" />
+    <circle cx="520" cy="960" r="2" />
+    <circle cx="900" cy="1180" r="2.4" />
+    <circle cx="1240" cy="540" r="2" />
+  </g>
+</svg>

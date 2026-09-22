@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" width="2560" height="1440" preserveAspectRatio="xMidYMid slice">
+  <!--
+    Sage Studio - the "skin-04" direction: airy cream studio with handmade-paper and linen
+    texture, translucent olive and eucalyptus leaves, a folded paper crane, thin hand-drawn
+    star glints, sparse pale-gold dust.
+
+    The direction puts a fashion portrait on the right; this renders the studio instead.
+    Composition follows the same contract: x=0%-52% (up to 1330) is warm ivory with a barely
+    visible sage wash, and no dense decoration sits behind the title area.
+  -->
+  <defs>
+    <linearGradient id="studio" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0" stop-color="#fbf8f0" />
+      <stop offset="0.5" stop-color="#f6f2e6" />
+      <stop offset="0.78" stop-color="#e9ecdd" />
+      <stop offset="1" stop-color="#dde3d2" />
+    </linearGradient>
+    <radialGradient id="window" cx="0.14" cy="0.1" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#a8b892" />
+      <stop offset="1" stop-color="#7d8f6a" />
+    </linearGradient>
+    <linearGradient id="leafPale" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#c3cfae" />
+      <stop offset="1" stop-color="#9aa986" />
+    </linearGradient>
+    <filter id="blur10" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" />
+    </filter>
+    <filter id="blur34" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="34" />
+    </filter>
+    <filter id="blur70" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="70" />
+    </filter>
+    <!-- A eucalyptus sprig: a stem with paired rounded leaves. -->
+    <g id="sprig">
+      <path d="M0 0 C 30 -60, 70 -110, 120 -150" fill="none" stroke="#8b9b76" stroke-width="3" />
+      <ellipse cx="18" cy="-34" rx="30" ry="20" transform="rotate(-40 18 -34)" fill="url(#leaf)" />
+      <ellipse cx="58" cy="-76" rx="28" ry="19" transform="rotate(-46 58 -76)" fill="url(#leafPale)" />
+      <ellipse cx="96" cy="-118" rx="25" ry="17" transform="rotate(-52 96 -118)" fill="url(#leaf)" />
+      <ellipse cx="34" cy="-52" rx="26" ry="18" transform="rotate(18 34 -52)" fill="url(#leafPale)" />
+      <ellipse cx="76" cy="-96" rx="24" ry="16" transform="rotate(12 76 -96)" fill="url(#leaf)" />
+    </g>
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#studio)" />
+  <rect width="2560" height="1440" fill="url(#window)" />
+
+  <!-- Handmade paper: faint fibres, uniform so the safe zone keeps texture without contrast. -->
+  <g stroke="#ded6c0" stroke-width="1.4" opacity="0.3">
+    <line x1="0" y1="180" x2="2560" y2="170" />
+    <line x1="0" y1="420" x2="2560" y2="436" />
+    <line x1="0" y1="700" x2="2560" y2="690" />
+    <line x1="0" y1="960" x2="2560" y2="974" />
+    <line x1="0" y1="1220" x2="2560" y2="1208" />
+  </g>
+
+  <!-- Linen weave, only under the right half where the light falls. -->
+  <g stroke="#cfc7ae" stroke-width="1" opacity="0.22">
+    <line x1="1360" y1="0" x2="1300" y2="1440" />
+    <line x1="1520" y1="0" x2="1460" y2="1440" />
+    <line x1="1700" y1="0" x2="1640" y2="1440" />
+    <line x1="1900" y1="0" x2="1840" y2="1440" />
+    <line x1="2120" y1="0" x2="2060" y2="1440" />
+    <line x1="2360" y1="0" x2="2300" y2="1440" />
+  </g>
+
+  <!-- Botanical shadows: soft, low contrast, right of x=1360. -->
+  <g filter="url(#blur34)" opacity="0.3">
+    <use href="#sprig" transform="translate(1640 1420) scale(2.4)" />
+    <use href="#sprig" transform="translate(2140 1460) scale(2.9)" />
+    <use href="#sprig" transform="translate(2480 1380) scale(2.1) scale(-1 1)" />
+  </g>
+
+  <!-- The leaves themselves, along the right and lower-right edge. -->
+  <g opacity="0.9">
+    <use href="#sprig" transform="translate(1700 1400) scale(2.1)" />
+    <use href="#sprig" transform="translate(2200 1440) scale(2.6)" />
+    <use href="#sprig" transform="translate(2500 1360) scale(1.9) scale(-1 1)" />
+    <use href="#sprig" transform="translate(2380 240) scale(1.6) rotate(24)" />
+    <use href="#sprig" transform="translate(1980 120) scale(1.3) rotate(-14)" opacity="0.7" />
+  </g>
+
+  <!-- The folded paper crane, near the right edge. Two wings, a body and a neck, all straight
+       folds - the point is that it reads as folded paper, not as a bird. -->
+  <g transform="translate(2300 1080) rotate(-8)">
+    <path d="M0 0 L 190 -70 L 120 20 Z" fill="#fdfaf3" stroke="#e2d9c4" stroke-width="3" />
+    <path d="M0 0 L 120 20 L 20 60 Z" fill="#f4efe2" stroke="#e2d9c4" stroke-width="3" />
+    <path d="M120 20 L 250 10 L 190 -70 Z" fill="#fbf7ee" stroke="#e2d9c4" stroke-width="3" />
+    <path d="M120 20 L 250 10 L 210 70 Z" fill="#efe9da" stroke="#e2d9c4" stroke-width="3" />
+    <path d="M0 0 L -70 -50 L -20 -12 Z" fill="#fdfaf3" stroke="#e2d9c4" stroke-width="3" />
+    <path d="M20 60 L 90 96 L 60 40 Z" fill="#f4efe2" stroke="#e2d9c4" stroke-width="3" />
+  </g>
+
+  <!-- Hand-drawn star glints: thin four-point crosses. -->
+  <g stroke="#c9b98a" stroke-width="3" stroke-linecap="round" opacity="0.7">
+    <path d="M1620 300 v -34 M1620 300 v 34 M1620 300 h -34 M1620 300 h 34" />
+    <path d="M2060 620 v -26 M2060 620 v 26 M2060 620 h -26 M2060 620 h 26" />
+    <path d="M2440 480 v -30 M2440 480 v 30 M2440 480 h -30 M2440 480 h 30" />
+    <path d="M1840 980 v -22 M1840 980 v 22 M1840 980 h -22 M1840 980 h 22" />
+    <path d="M2260 260 v -20 M2260 260 v 20 M2260 260 h -20 M2260 260 h 20" />
+  </g>
+
+  <!-- Stitched curves: a fine dashed seam, the studio's handmade note. -->
+  <g fill="none" stroke="#c2b795" stroke-width="2.5" stroke-dasharray="14 12" opacity="0.5">
+    <path d="M1420 1180 C 1620 1120, 1800 1240, 2020 1160" />
+    <path d="M1560 160 C 1760 120, 1940 200, 2120 140" />
+  </g>
+
+  <!-- Pale-gold dust. -->
+  <g fill="#d9c48d" opacity="0.6">
+    <circle cx="1520" cy="480" r="3" />
+    <circle cx="1720" cy="700" r="2.4" />
+    <circle cx="1940" cy="360" r="2.8" />
+    <circle cx="2180" cy="820" r="2.2" />
+    <circle cx="2360" cy="640" r="3" />
+    <circle cx="2500" cy="900" r="2.4" />
+    <circle cx="1660" cy="1060" r="2.2" />
+    <circle cx="2100" cy="1180" r="2.6" />
+  </g>
+
+  <!-- One faint botanical silhouette near the outer edge of the safe zone, as the direction
+       allows - barely there, so it reads as paper rather than as a subject. -->
+  <g opacity="0.16" filter="url(#blur10)">
+    <use href="#sprig" transform="translate(1200 1420) scale(1.8)" />
+  </g>
+</svg>

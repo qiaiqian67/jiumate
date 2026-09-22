@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" width="2560" height="1440" preserveAspectRatio="xMidYMid slice">
+  <!--
+    Black Gold Stage - the "skin-08" direction: an intimate dark concert stage of near-black
+    lacquer, deep espresso shadows, warm out-of-focus spotlights, thin gold rim lights, a few
+    white jasmine flowers, tiny champagne-gold star specks and a delicate horizontal sound wave
+    made only of abstract glowing particles.
+
+    The direction puts a seated singer and a vintage microphone on the right; this renders the
+    stage and the light instead. Composition follows the same contract: x=0%-52% (up to 1330)
+    is a calm near-black-to-charcoal gradient with faint warm haze and very sparse gold dust.
+  -->
+  <defs>
+    <linearGradient id="house" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0" stop-color="#07070a" />
+      <stop offset="0.42" stop-color="#0c0b0f" />
+      <stop offset="0.7" stop-color="#151216" />
+      <stop offset="0.88" stop-color="#221a16" />
+      <stop offset="1" stop-color="#2b1f18" />
+    </linearGradient>
+    <radialGradient id="spot" cx="0.82" cy="0.24" r="0.42">
+      <stop offset="0" stop-color="#ffd79a" stop-opacity="0.42" />
+      <stop offset="0.5" stop-color="#e0a463" stop-opacity="0.16" />
+      <stop offset="1" stop-color="#c98a4a" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="spotB" cx="0.7" cy="0.66" r="0.36">
+      <stop offset="0" stop-color="#c98a4a" stop-opacity="0.2" />
+      <stop offset="1" stop-color="#c98a4a" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0" stop-color="#8a6a33" />
+      <stop offset="0.45" stop-color="#e8c98a" />
+      <stop offset="1" stop-color="#a9823d" />
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e8c98a" stop-opacity="0" />
+      <stop offset="0.4" stop-color="#f2dcae" stop-opacity="0.9" />
+      <stop offset="0.75" stop-color="#e8c98a" stop-opacity="0.7" />
+      <stop offset="1" stop-color="#a9823d" stop-opacity="0" />
+    </linearGradient>
+    <filter id="blur26" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="26" />
+    </filter>
+    <filter id="blur70" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="70" />
+    </filter>
+    <filter id="blur4" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" />
+    </filter>
+    <!-- A jasmine bloom: five white petals around a small warm centre. -->
+    <g id="jasmine">
+      <ellipse cx="0" cy="-15" rx="10" ry="16" fill="#f7f3e8" opacity="0.95" />
+      <ellipse cx="14" cy="-5" rx="10" ry="16" fill="#f2eee2" opacity="0.9" transform="rotate(72 14 -5)" />
+      <ellipse cx="9" cy="13" rx="10" ry="16" fill="#efeade" opacity="0.9" transform="rotate(144 9 13)" />
+      <ellipse cx="-9" cy="13" rx="10" ry="16" fill="#efeade" opacity="0.9" transform="rotate(216 -9 13)" />
+      <ellipse cx="-14" cy="-5" rx="10" ry="16" fill="#f2eee2" opacity="0.9" transform="rotate(288 -14 -5)" />
+      <circle r="4.5" fill="#e8c98a" />
+    </g>
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#house)" />
+
+  <!-- Out-of-focus spotlights. -->
+  <rect width="2560" height="1440" fill="url(#spot)" />
+  <rect width="2560" height="1440" fill="url(#spotB)" />
+
+  <!-- Warm haze, low and right. -->
+  <g filter="url(#blur70)" opacity="0.55">
+    <ellipse cx="2000" cy="700" rx="460" ry="260" fill="#5a3a20" />
+    <ellipse cx="2320" cy="1080" rx="320" ry="180" fill="#4a2c1a" />
+  </g>
+
+  <!-- Lacquered floor: a soft reflection band. -->
+  <g opacity="0.4">
+    <path d="M1240 1160 H 2560 V 1440 H 1240 Z" fill="#1a1410" />
+    <g filter="url(#blur26)">
+      <ellipse cx="2060" cy="1240" rx="380" ry="60" fill="#8a6a33" opacity="0.35" />
+      <ellipse cx="2440" cy="1320" rx="240" ry="44" fill="#c98a4a" opacity="0.25" />
+    </g>
+  </g>
+
+  <!-- Thin gold rim lights: long, low-contrast arcs sweeping the right. -->
+  <g fill="none" stroke="url(#gold)" opacity="0.7">
+    <path d="M1360 240 C 1720 180, 2120 300, 2560 220" stroke-width="3" />
+    <path d="M1420 1180 C 1780 1120, 2160 1240, 2560 1160" stroke-width="3" opacity="0.6" />
+    <path d="M1520 520 C 1820 470, 2140 560, 2500 500" stroke-width="2" opacity="0.4" />
+  </g>
+
+  <!-- A spotlight cone from the upper right. -->
+  <g filter="url(#blur26)" opacity="0.3">
+    <path d="M2240 0 L 2560 0 L 2200 900 L 2000 900 Z" fill="#ffd79a" />
+  </g>
+
+  <!-- The sound wave: a horizontal line of abstract glowing particles, no notation. -->
+  <g>
+    <rect x="1400" y="718" width="1160" height="2" fill="url(#wave)" />
+    <g fill="#f2dcae">
+      <circle cx="1460" cy="719" r="3" opacity="0.7" />
+      <circle cx="1560" cy="719" r="4" opacity="0.8" />
+      <circle cx="1660" cy="719" r="3" opacity="0.65" />
+      <circle cx="1760" cy="719" r="5" opacity="0.9" />
+      <circle cx="1860" cy="719" r="3.5" opacity="0.7" />
+      <circle cx="1960" cy="719" r="4.5" opacity="0.85" />
+      <circle cx="2060" cy="719" r="3" opacity="0.6" />
+      <circle cx="2160" cy="719" r="5" opacity="0.9" />
+      <circle cx="2260" cy="719" r="3.5" opacity="0.7" />
+      <circle cx="2360" cy="719" r="4" opacity="0.75" />
+      <circle cx="2460" cy="719" r="3" opacity="0.6" />
+      <circle cx="2540" cy="719" r="3.5" opacity="0.65" />
+    </g>
+    <!-- A few particles lifted off the line, as if the wave were moving. -->
+    <g fill="#e8c98a" opacity="0.5">
+      <circle cx="1820" cy="690" r="2.5" />
+      <circle cx="2020" cy="748" r="2.5" />
+      <circle cx="2220" cy="684" r="3" />
+      <circle cx="2400" cy="752" r="2.5" />
+      <circle cx="1680" cy="676" r="2" />
+      <circle cx="2480" cy="692" r="2" />
+    </g>
+  </g>
+
+  <!-- Jasmine and dark leaves, along the right and lower-right edge. -->
+  <g>
+    <g fill="#243024" opacity="0.85">
+      <ellipse cx="2180" cy="1300" rx="70" ry="26" transform="rotate(-24 2180 1300)" />
+      <ellipse cx="2340" cy="1360" rx="60" ry="22" transform="rotate(12 2340 1360)" />
+      <ellipse cx="2460" cy="1240" rx="56" ry="20" transform="rotate(-38 2460 1240)" />
+    </g>
+    <use href="#jasmine" transform="translate(2160 1250) scale(1.6)" />
+    <use href="#jasmine" transform="translate(2360 1320) scale(1.3)" />
+    <use href="#jasmine" transform="translate(2480 1160) scale(1.15)" />
+    <use href="#jasmine" transform="translate(2260 1400) scale(1.0)" opacity="0.85" />
+    <use href="#jasmine" transform="translate(2540 1300) scale(0.95)" opacity="0.8" />
+  </g>
+
+  <!-- Champagne-gold dust. -->
+  <g fill="#e8c98a">
+    <circle cx="1440" cy="380" r="3" opacity="0.7" />
+    <circle cx="1620" cy="620" r="2.4" opacity="0.6" />
+    <circle cx="1800" cy="300" r="2.8" opacity="0.75" />
+    <circle cx="1980" cy="960" r="2.4" opacity="0.55" />
+    <circle cx="2140" cy="480" r="3.2" opacity="0.8" />
+    <circle cx="2320" cy="860" r="2.6" opacity="0.65" />
+    <circle cx="2480" cy="420" r="3" opacity="0.75" />
+    <circle cx="1720" cy="1080" r="2.2" opacity="0.5" />
+    <circle cx="2040" cy="160" r="2.6" opacity="0.7" />
+    <circle cx="2560" cy="1000" r="2.4" opacity="0.6" />
+  </g>
+
+  <!-- Very sparse dust inside the safe zone: the direction asks for warm haze and little else. -->
+  <g fill="#e8c98a" opacity="0.28">
+    <circle cx="480" cy="420" r="2" />
+    <circle cx="900" cy="760" r="1.8" />
+    <circle cx="1180" cy="1080" r="2" />
+    <circle cx="660" cy="1180" r="1.8" />
+    <circle cx="1100" cy="300" r="1.8" />
+  </g>
+
+  <!-- A red-brown reflection along the bottom, for the espresso note. -->
+  <g filter="url(#blur70)" opacity="0.4">
+    <ellipse cx="1600" cy="1420" rx="500" ry="90" fill="#4a1f18" />
+  </g>
+
+  <!-- Vintage microphone, far-right foreground, drawn as silhouette and rim light only. -->
+  <g transform="translate(2300 1020)">
+    <g filter="url(#blur4)">
+      <rect x="-14" y="0" width="28" height="230" rx="8" fill="#141013" />
+      <ellipse cx="0" cy="-40" rx="52" ry="60" fill="#1a1619" />
+      <ellipse cx="0" cy="-40" rx="52" ry="60" fill="none" stroke="#e8c98a" stroke-width="3" opacity="0.55" />
+      <g stroke="#e8c98a" stroke-width="2" opacity="0.4">
+        <path d="M-46 -70 h 92 M-50 -40 h 100 M-46 -10 h 92" />
+      </g>
+    </g>
+  </g>
+</svg>

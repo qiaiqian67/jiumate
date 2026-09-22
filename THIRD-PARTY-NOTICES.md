@@ -69,3 +69,25 @@ truetype fallbacks KaTeX also ships are dropped at build time (`dropNonWoff2Font
 
 Source: <https://github.com/KaTeX/KaTeX> — the tag matching the `katex` version resolved in
 `pnpm-lock.yaml`. The font sources and the script that builds them live in that repository.
+
+## Gothic Void Crusade wallpaper — `skins/gothic-void-crusade/background.jpg` in the web assets
+
+Present wherever the Web App ships: every release archive, the desktop application, and the assets
+the server serves. It is the wallpaper of the built-in "哥特虚空远征" skin
+(`packages/skins/src/presets.ts`), served from the web bundle at `/skins/<id>/background.jpg`.
+
+The file is copied **unmodified** from the Codex Dream Skin project's own default preset, whose
+`NOTICE.md` records it as the redistributable default artwork included in that project's public
+macOS and Windows installers, contributed under that project's MIT license by
+[seansong-ideogram](https://github.com/seansong-ideogram) in
+[pull request #134](https://github.com/Fei-Away/Codex-Dream-Skin/pull/134).
+
+**License: MIT**, per the Codex Dream Skin project's `LICENSE` and `NOTICE.md`.
+
+Source: <https://github.com/Fei-Away/Codex-Dream-Skin> — `macos/presets/preset-gothic-void-crusade/background.jpg`.
+
+Codex Dream Skin is an unofficial project, not affiliated with, endorsed by, or sponsored by
+OpenAI. The artwork's name and content imply no such affiliation, and neither does its inclusion
+here. Its sibling preset `preset-arina-hashimoto` is **not** bundled: that project excludes it from
+the MIT grant and from its own installers, and states that redistributing it requires an
+independent rights review.

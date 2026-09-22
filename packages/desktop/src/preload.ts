@@ -73,3 +73,23 @@ contextBridge.exposeInMainWorld("pet", api);
 
 /** The shape exposed to the renderer. The web side augments `Window` with this. */
 export type PetBridge = typeof api;
+
+/**
+ * The theme import picker, exposed as `window.theme`.
+ *
+ * Its own bridge rather than a method on `pet`: the two have nothing to do with each other, and
+ * a name that said `pet` next to a theme import would be the same confusion the Appearance page
+ * was just cleaned of.
+ */
+const themeApi = {
+  /**
+   * Native folder picker for importing a theme directory. Resolves to null when the user
+   * cancels, so the caller can treat "cancelled" and "chose nothing" identically.
+   */
+  pickFolder: (): Promise<string | null> => ipcRenderer.invoke("theme:pickFolder"),
+};
+
+contextBridge.exposeInMainWorld("theme", themeApi);
+
+/** The shape exposed to the renderer. The web side augments `Window` with this. */
+export type ThemeBridge = typeof themeApi;

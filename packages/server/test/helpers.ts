@@ -200,6 +200,22 @@ export function apiClient(app: Hono<AppEnv>, cookie: string) {
     put: call("PUT"),
     patch: call("PATCH"),
     delete: call("DELETE"),
+    /**
+     * POST a raw body. The routes that take bytes rather than JSON (the theme archive upload)
+     * cannot go through `call`, which JSON-stringifies whatever it is given.
+     *
+     * The content type is `application/octet-stream` rather than `application/zip` on purpose:
+     * `jsonOnlyWrites` admits a fixed list of types as a CSRF defence, and octet-stream is
+     * already on it for the hot-update artifact transport. A zip type would mean widening that
+     * list, and the route does not need to know the archive's media type — `readZipEntries`
+     * decides from the bytes.
+     */
+    postBytes: (apiPath: string, body: Uint8Array) =>
+      app.request(apiPath, {
+        method: "POST",
+        headers: { cookie, "content-type": "application/octet-stream" },
+        body,
+      }),
   };
 }
 

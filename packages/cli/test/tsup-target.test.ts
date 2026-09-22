@@ -64,7 +64,16 @@ function requiredMajor(pkgPath: string): number | null {
 
 describe("tsup build target", () => {
   it("covers every package that builds with tsup", () => {
-    expect(tsupPackages.map((p) => p.name).sort()).toEqual(["cli", "core", "desktop", "server"]);
+    // A conscious list on purpose: a package that starts building with tsup has to be added
+    // here, which is the moment to check that its target and engines agree with the rest.
+    expect(tsupPackages.map((p) => p.name).sort()).toEqual([
+      "cli",
+      "core",
+      "desktop",
+      "pets",
+      "server",
+      "skins",
+    ]);
   });
 
   it("is the same Node version everywhere", () => {
