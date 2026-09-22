@@ -6,6 +6,7 @@
  * not.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { spawn } from "node:child_process";
 import {
   chmod,
   lstat,
@@ -116,4 +117,82 @@ describe("atomicWriteFile", () => {
       expect((await lstat(middle)).isSymbolicLink()).toBe(true);
     },
   );
+});
+
+/**
+ * The locked-target retry.
+ *
+ * Windows refuses `rename` over a file another process holds open, with a bare `EPERM` that is
+ * indistinguishable from a permissions problem. In a real session, three of sixteen `edit_file`
+ * calls died that way — the user was viewing the page they were asking the agent to edit. These
+ * tests drive the condition directly rather than imitating it, so what they pin is the retry
+ * itself: that a lock which clears is ridden out, and that one which does not is reported as
+ * what it is.
+ *
+ * Windows-only, because the condition is. A POSIX rename over a file that is open succeeds, so
+ * there is nothing to retry and no failure to assert.
+ */
+describe.skipIf(process.platform !== "win32")("atomicWriteFile against a locked target", () => {
+  /** Hold `file` open with sharing disabled, the way a viewer or a scanner does. */
+  async function holdOpen(file: string, seconds: number): Promise<() => Promise<void>> {
+    const child = spawn(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-Command",
+        `$fs=[System.IO.File]::Open('${file.replace(/'/g, "''")}','Open','Read','None'); ` +
+          `Write-Output 'HELD'; Start-Sleep -Seconds ${String(seconds)}; $fs.Close()`,
+      ],
+      { stdio: ["ignore", "pipe", "ignore"] },
+    );
+    // The handle has to exist before the write is attempted, or the test races its own setup.
+    await new Promise<void>((resolve) => child.stdout.once("data", () => resolve()));
+    return async () => {
+      child.kill();
+      await new Promise<void>((resolve) => child.once("exit", () => resolve()));
+    };
+  }
+
+  it("rides out a lock that clears, and lands the write", async () => {
+    const file = path.join(dir, "page.html");
+    await writeFile(file, "original\n", "utf8");
+    const release = await holdOpen(file, 1);
+
+    // The lock clears well inside the retry budget, so the write succeeds rather than failing.
+    const writing = atomicWriteFile(file, "replaced\n");
+    // Release after the first retry has already been burned, so the retry is what saves it.
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    await release();
+
+    await expect(writing).resolves.toBeUndefined();
+    expect(await readFile(file, "utf8")).toBe("replaced\n");
+    expect(await readdir(dir)).toEqual(["page.html"]);
+  }, 30_000);
+
+  it("names the cause instead of a bare EPERM when the lock never clears", async () => {
+    const file = path.join(dir, "page.html");
+    await writeFile(file, "original\n", "utf8");
+    const release = await holdOpen(file, 30);
+
+    try {
+      // The retries run out in under a second; a 30-second lock outlives every one of them.
+      const err = await atomicWriteFile(file, "never\n").then(
+        () => null,
+        (e: unknown) => e as Error,
+      );
+      expect(err).not.toBeNull();
+      // The message has to name the actual condition: a reader told only "EPERM" reaches for a
+      // chmod, which cannot help.
+      expect(err!.message).toContain("holding it open");
+      expect(err!.message).toContain("unchanged");
+      // And it must not pretend to be a permissions failure.
+      expect(err!.message).not.toContain("EACCES");
+    } finally {
+      await release();
+    }
+
+    // The failed write left the previous content, and no temp file, behind.
+    expect(await readFile(file, "utf8")).toBe("original\n");
+    expect(await readdir(dir)).toEqual(["page.html"]);
+  }, 30_000);
 });

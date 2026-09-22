@@ -22,7 +22,7 @@ import { createHash } from "node:crypto";
  * change without it moving. (The reverse — moving it with no default change — is inert rather
  * than an error: nothing is keyed by version, so there is no table to fall out of sync with.)
  */
-export const KERNEL_VERSION = "2026-09-07";
+export const KERNEL_VERSION = "2026-09-20";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -189,15 +189,30 @@ export function isKernelOutdated(kernelVersion: string | null | undefined): bool
  *   between upstream events, and a model that keeps its reasoning off the wire spends its
  *   whole thinking phase inside the wait for the first one, which 120000 cut short. The
  *   runtime tab moved.
- * - `2026-09-07` (current) — the brand rename swept `PenguinHarness` / `Harness` out of
+ * - `2026-09-07` — the brand rename swept `PenguinHarness` / `Harness` out of
  *   `DEFAULT_SYSTEM_PROMPT` (the `You are ...` line and the `# Constraints` clause about
  *   killing other processes); the runtime defaults, tool set and every other tab are
  *   unchanged. The prompt tab moved.
+ * - `2026-09-20` (current) — the desktop-pet replacement swapped the companion tools for a
+ *   single `pet` tool, moving the tools tab; the same day, `DEFAULT_SYSTEM_PROMPT` gained the
+ *   rules that came out of watching a real run spend thirteen of its eighteen minutes
+ *   installing a browser to screenshot a page it had written: install nothing the user did not
+ *   ask for, run anything that can take minutes with `run_in_background` instead of polling it,
+ *   never pipe a long command through a filter that only emits at the end, and make a repeated
+ *   edit once rather than per occurrence. The prompt and tools tabs moved. A later change the
+ *   same day (the version is reused) touched the prompt tab only: the browser rule was reworded
+ *   so it *raises* verification quality instead of trading it away — render the page with a
+ *   browser the machine already has, and read the markup only when there is none — because the
+ *   earlier wording, by offering `curl` as an equally good way to check your own output, could
+ *   talk the model out of looking at the page at all; and a shell rule joined it, telling the
+ *   model to write the syntax of the shell it is already in rather than spawning a second copy
+ *   of it, which on PowerShell re-parses the command and expands the inner `$variables` to
+ *   nothing before the inner shell ever sees them.
  */
 export const KERNEL_DEFAULT_TAB_HASHES: Readonly<Record<KernelTab, string>> = {
-  prompt: "111630095a2e56c54bacf1b7c03c3646716a4189dfe9d118cd2e04e643c59d94",
+  prompt: "b2d1ae6362da73666a83b007a8fef1f995102d30c18d14af3f1e5a43608b460a",
   runtime: "5dfea06a5e801950c24f44f5527e62435ae4facc311a6587e53aa69983ab0346",
-  tools: "c24bcf47b1377e9da4dcfb69a1f7240dcdbfff2d420df5db0a5eaec2b7d4087d",
+  tools: "5832198f35418754fb96351c7214bcb642f2cf095f1fc62fafb0f903a71b3195",
   skills: "7e343aa692e5eaeadfc8add6bb375fb50ac33ef81ebe460490fc219b0f3d707f",
   memory: "53d190390829cc0132bb12e468a6891f2e0576ec0c4022a9b4a5d9233666900d",
   vault: "19bd36a6d4ab442b66583c423450602b817990a9a79bafa21c9b6137fb6b47d8",
@@ -229,6 +244,22 @@ export const KERNEL_SUPERSEDED_TAB_HASHES: KernelSupersededTabHashes = {
     // appears on a real user's disk (a pre-#257 file predates this code path), but the
     // in-process reconstruction in `kernel-version.test.ts` lands here.
     "0d53b325760ccdbed4882ce46e90b73cf8b78e05fa3cd5da451ac573fe792c49",
+    // before the pet tool replaced the companion tools, and the prompt gained the
+    // install / background / batching rules.
+    "111630095a2e56c54bacf1b7c03c3646716a4189dfe9d118cd2e04e643c59d94",
+    // The 2026-09-20 re-anchor of that same in-process reconstruction. Same caveat as the entry
+    // above: this value is the (current prompt + LEGACY sections) one, so **every prompt change
+    // moves it** and needs another entry appended here. It is test scaffolding sitting in a list
+    // of what shipped; retiring it means freezing the toggles-era prompt as a constant instead
+    // of deriving it from today's, which is the right fix and a bigger one than a hash bump.
+    "8a11e4ebb0e38e5640189ba34d36bca6377d83d28ad27bd444886a638eacad3f",
+    // What shipped before the browser rule was reworded to render with a browser the machine
+    // already has (and to say so without inviting an install), and before the shell rule that
+    // stops the model nesting a second copy of its own shell.
+    "c2cc7046b727ed35905755e2ee497d6f98cb2e9a895b46b3d9bda0d35e50f57b",
+    // The re-anchor of the in-process reconstruction for that same change. Same caveat as the
+    // two entries above: derived from the current prompt, so it moves with every prompt change.
+    "e80b6cfc15648be3ea47d90c0fb9b4a20c7428a5fe6e6700e3d0a11a69ba2530",
   ],
   runtime: [
     "808ae1d1b544f46daff4f59f1e62357b89a61f60803061e86b10635616e0102c", // compaction.max_context_length was 128000, before the rise to 256000
@@ -239,6 +270,7 @@ export const KERNEL_SUPERSEDED_TAB_HASHES: KernelSupersededTabHashes = {
     "c719f2fe8a25bc5c644a4e1a78d26cf960dd0561efc453614af2e395000ed4de", // before `max` joined the ladder
     "074248073c5fe89537ff257cc5d5662159288fc79ede7703eded6b440b4e38e9", // before background execution and the kill tools
     "8bbd336ff1f3fc283c4e11e54d43dd2bfe4ba2458577bf9eb3b6e3d7be4f3cde", // before the kill tools folded into the input tools
+    "c24bcf47b1377e9da4dcfb69a1f7240dcdbfff2d420df5db0a5eaec2b7d4087d", // before the companion tools became the single `pet` tool
   ],
   // The memory prompt's wording before #397 named when a fact is worth saving.
   memory: ["c28acdda755552967cd0c99ba4ced407eddfa843b3dce228a965da4674676dc7"],

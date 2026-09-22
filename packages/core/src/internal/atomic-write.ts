@@ -17,6 +17,30 @@ import { chmod, readlink, rename, rm, writeFile } from "node:fs/promises";
  */
 const MAX_SYMLINK_HOPS = 40;
 
+/**
+ * Backoff before rename retry N (0-based), then give up. Just under a second in total.
+ *
+ * Windows refuses `rename` over a file another process holds open, and reports it as a bare
+ * `EPERM` — the same code a real permissions problem returns. The holder is nearly always
+ * transient: a virus scanner reading the file that was just written, the search indexer, or a
+ * browser the user is viewing the page in. Those clear in milliseconds, so a bounded retry turns
+ * a hard tool failure into a slightly slower write. In a real session on this machine, three of
+ * sixteen `edit_file` calls died this way.
+ *
+ * The budget is deliberately short, because the lock that outlives it is not the transient kind:
+ * it is a process holding the file exclusively, which no amount of waiting fixes. Failing in
+ * well under a second — with an error that names the cause — beats blocking a tool call on a lock
+ * that will never clear.
+ */
+const RENAME_RETRY_DELAYS_MS: readonly number[] = [10, 25, 50, 100, 200, 400];
+
+/**
+ * Codes a retry can plausibly clear. `EPERM` is the one Windows actually returns for a locked
+ * rename; `EBUSY` and `EACCES` are included because the same condition is reported as each of
+ * them across filesystems and SMB shares.
+ */
+const TRANSIENT_RENAME_CODES = new Set(["EPERM", "EBUSY", "EACCES"]);
+
 export interface AtomicWriteOptions {
   /**
    * Permission bits for the result. Rename replaces the inode, so an existing file's bits are
@@ -57,11 +81,70 @@ export async function atomicWriteFile(
       flush: true,
     });
     if (opts.mode !== undefined) await chmod(tmp, opts.mode);
-    await rename(tmp, dest);
+    await renameIntoPlace(tmp, dest, opts.signal);
   } catch (err) {
     await rm(tmp, { force: true }).catch(() => undefined);
     throw err;
   }
+}
+
+/**
+ * `rename` with a bounded retry for the transient-lock case, and an explanatory error when the
+ * lock turns out not to be transient. See {@link RENAME_RETRY_DELAYS_MS}.
+ */
+async function renameIntoPlace(from: string, to: string, signal?: AbortSignal): Promise<void> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await rename(from, to);
+      return;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code ?? "";
+      if (!TRANSIENT_RENAME_CODES.has(code)) throw err;
+      const delay = RENAME_RETRY_DELAYS_MS[attempt];
+      // Out of budget: this lock is not the kind that clears on its own, so say so rather than
+      // hand back a bare EPERM that reads like a permissions problem.
+      if (delay === undefined) throw lockedTargetError(to, err);
+      await delayMs(delay, signal);
+    }
+  }
+}
+
+/**
+ * The error a caller sees when the retries ran out: the original failure, with a message naming
+ * the cause. The bare `EPERM` a locked file produces reads like a permissions problem, which
+ * sends a reader looking for a `chmod` that cannot help — the answer is "something else has the
+ * file open". It says the target is unchanged because that is the caller's real question, and it
+ * is true: the rename never landed, so the old bytes are intact.
+ */
+function lockedTargetError(target: string, cause: unknown): Error {
+  const detail = cause instanceof Error ? cause.message : String(cause);
+  const err = new Error(
+    `Could not replace "${target}": another process is holding it open — an editor, a browser ` +
+      `showing the page, or a virus scanner mid-scan. The file is unchanged. Close whatever has ` +
+      `it open and retry. (${detail})`,
+  );
+  (err as NodeJS.ErrnoException).code = (cause as NodeJS.ErrnoException | undefined)?.code;
+  err.cause = cause;
+  return err;
+}
+
+/** `setTimeout` as a promise, rejecting early if `signal` aborts mid-wait. */
+function delayMs(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted === true) {
+      reject(signal.reason ?? new Error("Aborted"));
+      return;
+    }
+    const onAbort = (): void => {
+      clearTimeout(timer);
+      reject(signal?.reason ?? new Error("Aborted"));
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
 }
 
 /**

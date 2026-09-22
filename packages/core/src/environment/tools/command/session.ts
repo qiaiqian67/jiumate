@@ -98,9 +98,13 @@ export class ManagedSession {
     this.cmd = opts.cmd;
     this.cwd = opts.cwd;
     const shell = sessionShell();
-    this.child = spawn(shell.command, [...shell.args, opts.cmd], {
+    // The preamble is prepended here rather than into `this.cmd`, so the approval prompt and the
+    // completion report both still show the command the user wrote, without encoding setup.
+    // `shell.env` is merged over the caller's own — see `envForShell`: a POSIX shell on Windows
+    // has to be told to inherit the user's PATH, or node/npm/python are invisible to it.
+    this.child = spawn(shell.command, [...shell.args, shell.preamble + opts.cmd], {
       cwd: opts.cwd,
-      env: opts.env,
+      env: shell.env ? { ...opts.env, ...shell.env } : opts.env,
       detached: SUPPORTS_PROCESS_GROUP, // Become the process-group leader, so the whole group can be signaled
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true, // No flashing console window on Windows (ignored elsewhere)
