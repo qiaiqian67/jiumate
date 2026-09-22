@@ -91,9 +91,9 @@ export const KEY_RULES: readonly KeyRule[] = [
   // ---------------------------------------------------------------- browser preferences
   {
     kind: "exact",
-    key: "linsight.theme",
+    key: "linsight.mode",
     scope: "browser",
-    why: "Colour-scheme choice for this browser; names nothing on the server.",
+    why: "Light/dark choice for this browser; names nothing on the server. Deliberately not `linsight.theme` — a theme is a palette plus an artwork, and the mode is not one.",
   },
   {
     kind: "exact",
@@ -106,6 +106,30 @@ export const KEY_RULES: readonly KeyRule[] = [
     key: "linsight.accent",
     scope: "browser",
     why: "Accent colour; pure appearance.",
+  },
+  {
+    kind: "exact",
+    key: "linsight.theme",
+    scope: "browser",
+    why: "The selected theme id — the same kind of choice as the accent beside it, and the one a user would least expect a data-root wipe to reset. An id the new root does not have resolves to the built-in appearance rather than a broken one, so a stale value is inert rather than a lie.",
+  },
+  {
+    kind: "exact",
+    key: "linsight.theme.surfaceAlpha",
+    scope: "browser",
+    why: "How transparent the theme's declared surfaces are — an appearance preference with no server entity behind it, and one whose worst case after a wipe is a slider sitting at the default.",
+  },
+  {
+    kind: "exact",
+    key: "linsight.theme.backgroundDim",
+    scope: "browser",
+    why: "Artwork scrim strength; same reasoning as the surface alpha beside it.",
+  },
+  {
+    kind: "exact",
+    key: "linsight.skin.bootstrap",
+    scope: "browser",
+    why: "The pre-paint appearance cache (dark flag, resolved skin, accent, rendered stylesheet). It describes this browser's own next first paint and names nothing on the server; a stale one is corrected on mount.",
   },
   {
     kind: "exact",

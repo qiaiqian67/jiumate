@@ -8,18 +8,18 @@
  *   counters, the server's copy is the enforcement — so the parity check reads the server module
  *   as text rather than importing it: `@prismshadow/linsight-server` is a type-only dependency
  *   here, and making it a runtime one to check three numbers would be a worse trade than a regex.
- * - **The examples block's height must not move** when folders are switched. The built-in folders
- *   keep that by staying within a row of each other; the user's folder cannot, so it is pinned to
- *   the tallest built-in folder's height and scrolls. Both halves are asserted.
+ * - **The draft picker's height must not move** when tabs are switched. The categories keep that by
+ *   capping their rows (`inspiration-picker.tsx`); the user's folder cannot be capped by category,
+ *   so it is bounded by SHORTCUT_MAX_COUNT instead. Both halves are asserted.
  * - **A click on a shortcut is a fill, not a send**, and it pins no Skills — checked through
- *   buildExampleFill and against the real handler in draft-view.tsx, the way
- *   test/example-fill.test.ts checks the built-in rows.
+ *   buildInspirationFill and against the real handler in draft-view.tsx, the way
+ *   test/inspiration-fill.test.ts checks the case rows.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { buildExampleFill } from "../src/features/chat/example-fill";
-import { EXAMPLE_FOLDERS } from "../src/features/chat/example-tasks";
+import { buildInspirationFill } from "../src/features/inspiration/inspiration-fill";
+import { PICKER_ROWS } from "../src/features/inspiration/inspiration-picker";
 import {
   SHORTCUT_MAX_COUNT,
   SHORTCUT_PROMPT_MAX,
@@ -198,21 +198,23 @@ describe("defaultShortcutTitle — the name suggested when saving what was typed
   });
 });
 
-describe("the examples block keeps its height", () => {
-  it("keeps the built-in folders within one row of each other", () => {
-    // The draft page reserves no scroll area for this block, so a folder much longer than its
-    // siblings is what makes the height jump as folders are switched.
-    const lengths = EXAMPLE_FOLDERS.map((folder) => folder.tasks.length);
-    expect(Math.max(...lengths) - Math.min(...lengths)).toBeLessThanOrEqual(1);
+describe("the draft picker keeps its height", () => {
+  it("caps every category tab at the same number of rows", () => {
+    // The draft page reserves no scroll area for this block, so a category much longer than its
+    // siblings is what makes the height jump as tabs are switched. The cap is per category and
+    // fixed, so every tab is the same height however many cases the library holds — and the
+    // "browse all" row is what makes the cap honest.
+    expect(PICKER_ROWS).toBeGreaterThan(0);
+    const source = read("../src/features/inspiration/inspiration-picker.tsx");
+    expect(source).toContain("activeCases.slice(0, PICKER_ROWS)");
   });
 
-  it("keeps the user folder within one row of the built-in ones", () => {
+  it("keeps the user folder within one row of a category tab", () => {
     // Its tallest state is either the cap with no add row, or one below the cap plus the add
     // row — both SHORTCUT_MAX_COUNT rows. The cap is what holds this, not a pinned height with
     // a scrollbar inside it.
-    const tallestBuiltIn = Math.max(...EXAMPLE_FOLDERS.map((f) => f.tasks.length));
     const tallestUser = Math.max(SHORTCUT_MAX_COUNT, SHORTCUT_MAX_COUNT - 1 + 1);
-    expect(tallestUser - tallestBuiltIn).toBeLessThanOrEqual(1);
+    expect(tallestUser - PICKER_ROWS).toBeLessThanOrEqual(1);
   });
 
   it("drops the add row at the cap instead of disabling it", () => {
@@ -241,9 +243,9 @@ describe("clicking a shortcut", () => {
   it("hands the composer the saved prompt and leaves the Skill selection alone", () => {
     // A saved prompt is not authored against the shipped Skill catalog, so it pins nothing —
     // and an empty pin list is exactly what leaves a selection the user made by hand intact.
-    const fill = buildExampleFill({
+    const fill = buildInspirationFill({
       prompt: "Summarize the week.",
-      exampleSkills: [],
+      caseSkills: [],
       installedSkills: ["web-design", "memory"],
       selectedSkills: ["memory"],
     });

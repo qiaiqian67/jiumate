@@ -54,7 +54,9 @@ describe("visibleSettingsSections", () => {
     expect(admin.map((s) => s.key)).toEqual([
       "general",
       "appearance",
+      "models",
       "application",
+      "logs",
       "account",
       "proxy",
       "uploads",
@@ -69,7 +71,14 @@ describe("visibleSettingsSections", () => {
     // menu, outside this dialog, for every account. The application page is per-user
     // (Petdex desktop pet, …) so every account gets it — the row keys off
     // `visible: () => true`, not `isAdmin`.
-    expect(plain.map((s) => s.key)).toEqual(["general", "appearance", "application", "account"]);
+    expect(plain.map((s) => s.key)).toEqual([
+      "general",
+      "appearance",
+      "models",
+      "application",
+      "logs",
+      "account",
+    ]);
   });
 
   it("strips the desktop shell's window down to what a token session can use", () => {
@@ -78,7 +87,9 @@ describe("visibleSettingsSections", () => {
     expect(shell.map((s) => s.key)).toEqual([
       "general",
       "appearance",
+      "models",
       "application",
+      "logs",
       "proxy",
       "uploads",
     ]);
@@ -90,7 +101,9 @@ describe("visibleSettingsSections", () => {
     expect(desktopBrowser.map((s) => s.key)).toEqual([
       "general",
       "appearance",
+      "models",
       "application",
+      "logs",
       "account",
       "proxy",
       "uploads",

@@ -59,8 +59,6 @@ import { AgentAvatar } from "../../components/ui/agent-avatar";
 import { Chevron } from "../../components/ui/chevron";
 import { Dropdown } from "../../components/ui/dropdown";
 import { LinsightLogo } from "../../components/ui/linsight-logo";
-import { Tabs } from "../../components/ui/tabs";
-import type { TabItem } from "../../components/ui/tabs";
 import { toastError } from "../../components/ui/toast";
 import { useVersionInfo } from "../../lib/use-version-info";
 import { versionBadgeFor } from "../../lib/update-flow";
@@ -69,10 +67,7 @@ import { ChatInput } from "./chat-input";
 import type { ComposerControl } from "./chat-input";
 import { adoptDockScope } from "../dock/dock-state";
 import { setDockCwd } from "../dock/dock-terminal";
-import { EXAMPLE_FOLDERS } from "./example-tasks";
-import type { ExampleFolder, ExampleTask } from "./example-tasks";
-import { exampleRowClass } from "./example-folder-row";
-import { SHORTCUTS_FOLDER_ID, ShortcutsFolder } from "./shortcuts-folder";
+import { InspirationPicker } from "../inspiration/inspiration-picker";
 import { clearDraft, draftKey, loadDraft, saveDraft } from "./draft-cache";
 import type { DraftCache } from "./draft-cache";
 import {
@@ -121,11 +116,11 @@ function saveAppliedRouteKey(field: RouteStateField, key: string): void {
 }
 
 /**
- * The active example tab — exactly one at a time, mirroring the bookmark behaviour the folder
- * rows used to enforce. The shortcuts folder sits alongside the built-ins as a fourth tab rather
- * than a sibling block: same visual treatment, same fillExample handoff, no extra chrome.
+ * The active inspiration tab — exactly one at a time, mirroring the bookmark behaviour the folder
+ * rows used to enforce. The picker owns the tab state itself now (see
+ * `features/inspiration/inspiration-picker.tsx`); what this view keeps is the two fill handlers it
+ * hands down, because the composer handle lives here.
  */
-type ActiveTab = (typeof EXAMPLE_FOLDERS)[number]["id"] | typeof SHORTCUTS_FOLDER_ID;
 
 export function DraftView({
   projectId,
@@ -649,18 +644,20 @@ export function DraftView({
   );
 
   /**
-   * Example tasks: a click FILLS the composer — the prompt into the text body, the example's
-   * skills into the skills dropdown — and sends nothing. The user reads what landed, edits it
-   * if they want, and presses Send, which then builds the very message this card used to
-   * submit by itself (the `[use_skills]` block is the send path's job, so the textarea never
-   * shows a marker block). Filling is instant and local: there is no busy state and no
-   * in-flight guard to keep here, and everything else — where the prompt goes when text is
-   * already typed, focus, the caret — is the composer's, reached through this handle.
+   * Inspiration cases: a click FILLS the composer — the prompt into the text body, the case's
+   * skills into the skills dropdown — and sends nothing. The user reads what landed, edits it if
+   * they want, and presses Send, which then builds the very message this row used to submit by
+   * itself (the `[use_skills]` block is the send path's job, so the textarea never shows a marker
+   * block). Filling is instant and local: there is no busy state and no in-flight guard to keep
+   * here, and everything else — where the prompt goes when text is already typed, focus, the caret
+   * — is the composer's, reached through this handle.
+   *
+   * The prompt arrives already localized from the picker, read at click time rather than at render,
+   * because `S` is a live binding swapped on locale change.
    */
   const composerRef = useRef<ComposerControl | null>(null);
-  const fillExample = useCallback((task: ExampleTask) => {
-    // S is a live binding swapped on locale change: read the prompt at click time, not at render.
-    composerRef.current?.fillExample(S.chat.exampleTasks[task.id].prompt, task.skills);
+  const fillCase = useCallback((prompt: string, skills: readonly string[]) => {
+    composerRef.current?.fillExample(prompt, [...skills]);
   }, []);
   /**
    * A saved shortcut takes the same path with no Skills to pin: its prompt is the user's own text,
@@ -670,26 +667,6 @@ export function DraftView({
   const fillShortcut = useCallback((prompt: string) => {
     composerRef.current?.fillExample(prompt, []);
   }, []);
-
-  /**
-   * The active example tab — always exactly one. Same single-open contract the folder rows
-   * used to enforce, just surfaced as a top tab strip. Defaults to the first built-in folder;
-   * a saved-shortcut tab is appended after the built-ins.
-   */
-  const [activeTab, setActiveTab] = useState<ActiveTab>(EXAMPLE_FOLDERS[0].id);
-
-  const tabItems: TabItem<ActiveTab>[] = [
-    ...EXAMPLE_FOLDERS.map<TabItem<ActiveTab>>((folder) => ({
-      key: folder.id,
-      label: S.chat.exampleFolders[folder.id],
-    })),
-    { key: SHORTCUTS_FOLDER_ID, label: S.chat.shortcuts.folder },
-  ];
-
-  const activeFolder: ExampleFolder | null =
-    activeTab === SHORTCUTS_FOLDER_ID
-      ? null
-      : (EXAMPLE_FOLDERS.find((f) => f.id === activeTab) ?? null);
 
   const selectedAgent = agents.find((a) => a.agentId === agentId) ?? null;
 
@@ -760,53 +737,21 @@ export function DraftView({
           <WorkspaceSelect projectId={projectId} workspace={workspace} onChange={changeWorkspace} />
         </div>
 
-        {/* Example tasks: canned builds showing off the one-sentence → app flow; a click fills
-            the composer with the prompt and the user sends it (see fillExample). The last tab
-            is the user's own saved prompts (see shortcuts-folder.tsx).
-            Tabbed — exactly one tab body is on screen at a time, mirroring the bookmark-style
-            contract the previous folder rows enforced. Body content is the same single-line
-            row per example, with each row's per-task glyph (cover) sitting at the left so a
-            one-line label can still be picked from a thumbnail the way the App Center page
-            shows them. Rows stay disabled until the Agent's installed skills are known — that
-            is all a fill still waits for, and without it the preselect would silently drop the
-            example's skills (a saved shortcut pins none, so it never waits). */}
+        {/* Inspiration: canned builds showing off the one-sentence → app flow; a click fills the
+            composer with the prompt and the user sends it. The picker owns its own tabs (one per
+            category, then the user's saved shortcuts) and its own row cap — see
+            features/inspiration/inspiration-picker.tsx for why the block is bounded rather than
+            scrolling. Rows stay enabled once the Agent's installed skills are known: without them
+            the preselect would silently drop the case's skills (a saved shortcut pins none, so it
+            never waits). */}
         <div className="mt-6">
-          <Tabs items={tabItems} active={activeTab} onChange={setActiveTab} />
-          <div className="mt-2">
-            {activeFolder !== null ? (
-              <ul className="space-y-0.5">
-                {activeFolder.tasks.map((task) => {
-                  const copy = S.chat.exampleTasks[task.id];
-                  return (
-                    <li key={task.id}>
-                      <button
-                        type="button"
-                        title={`${copy.desc}\n${S.chat.exampleFillHint}`}
-                        disabled={!skillsLoaded}
-                        onClick={() => fillExample(task)}
-                        className={`flex w-full items-center gap-2 ${exampleRowClass}`}
-                      >
-                        <span
-                          aria-hidden
-                          className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none"
-                        >
-                          {task.cover ?? ""}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate">{copy.label}</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <ShortcutsFolder
-                open
-                onOpen={() => undefined}
-                readComposerText={() => textRef.current}
-                onFill={fillShortcut}
-              />
-            )}
-          </div>
+          <InspirationPicker
+            skillsReady={skillsLoaded}
+            installedSkills={agentSkills.map((skill) => skill.name)}
+            onFill={fillCase}
+            readComposerText={() => textRef.current}
+            onFillShortcut={fillShortcut}
+          />
         </div>
       </div>
 

@@ -1,8 +1,8 @@
 /**
  * Collapse state of the sidebar's page-nav group (pure decisions, unit tested): the
- * 智能体 → 评估中心 run of entries collapses as one group behind a nav-row-wide chevron
+ * 智能体 → 词元图 run of entries collapses as one group behind a nav-row-wide chevron
  * button under the group's last entry (arrow up = collapse; collapsed, the button
- * stays — arrow down — as the way back). The pinned "New chat" block above is NOT
+ * stays — arrow down — as the way back). The pinned "新会话" block above is NOT
  * part of the group — it stays visible in both states (the manifest below simply never
  * contains it).
  *
@@ -15,23 +15,37 @@
 
 /**
  * Page entries of the collapsible nav group, in rendered order. Each key names its
- * route (`/<key>`), its S.nav label, and its NAV_ICONS glyph — the sidebar derives
+ * route (see `NAV_ROUTES`), its S.nav label, and its NAV_ICONS glyph — the sidebar derives
  * its nav rows from this manifest, so the covered range is pinned here (and in the
- * unit tests) rather than duplicated. Some entries are admin-only (see below), so the
- * sidebar renders navKeysFor(user.isAdmin), not the raw manifest. Traces is deliberately
- * absent: reading a Trace happens in the chat toolbar's panel switcher, which is the only
+ * unit tests) rather than duplicated.
+ *
+ * Three pages that used to be entries are deliberately absent, because each is now reached
+ * from somewhere that fits it better — the page, its route and its server routes are all
+ * untouched:
+ *
+ * - `models` moved into System settings (Personal → Models), where the rest of a viewer's own
+ *   configuration already lives.
+ * - `benchmark` (the Evaluation Center) has no nav entry; its page stays reachable by deep link.
+ * - `machines` was built but never offered (it installs this build onto another host over ssh
+ *   with the server account's keys, which is worth introducing deliberately).
+ *
+ * They live in `NAV_UNLISTED_PAGE_KEYS` so `NAV_ROUTES` stays exhaustive and re-listing one is
+ * a move between two arrays rather than restoring deleted code. Traces is deliberately absent
+ * from both: reading a Trace happens in the chat toolbar's panel switcher, which is the only
  * place it happens.
  */
-export const NAV_GROUP_KEYS = [
-  "appCenter",
-  "agents",
-  "plugins",
-  "models",
-  "machines",
-  "usage",
-  "benchmark",
-] as const;
+export const NAV_GROUP_KEYS = ["agents", "plugins", "appCenter", "usage"] as const;
 export type NavGroupKey = (typeof NAV_GROUP_KEYS)[number];
+
+/**
+ * Pages that have a route and a page component but no nav row, in no particular order — they
+ * are never rendered as a run, so only membership matters.
+ */
+export const NAV_UNLISTED_PAGE_KEYS = ["models", "machines", "benchmark"] as const;
+export type NavUnlistedPageKey = (typeof NAV_UNLISTED_PAGE_KEYS)[number];
+
+/** Every page the sidebar or System settings can navigate to, offered in the nav or not. */
+export type NavPageKey = NavGroupKey | NavUnlistedPageKey;
 
 /**
  * The route path that corresponds to each manifest key. Pinned here (not derived from
@@ -44,51 +58,34 @@ export type NavGroupKey = (typeof NAV_GROUP_KEYS)[number];
  * Both surfaces (the expanded sidebar and the collapsed rail) read from this map, so a new
  * multi-word entry only needs the manifest + this map declared once for the URL to stay right.
  */
-export const NAV_ROUTES: Record<NavGroupKey, string> = {
-  appCenter: "/app-center",
+export const NAV_ROUTES: Record<NavPageKey, string> = {
   agents: "/agents",
   plugins: "/plugins",
+  appCenter: "/app-center",
+  usage: "/usage",
   models: "/models",
   machines: "/machines",
-  usage: "/usage",
   benchmark: "/benchmark",
 };
 
 /**
- * Entries the server refuses to a non-admin, so the sidebar does not offer them. Machines
- * installs software on another machine over ssh with the SERVER account's keys, which
- * `/api/machines` gates on `isAdmin` — a row that always answers 403 is worse than no row.
- * On a personal or desktop server the only account IS the admin, so nothing is hidden there.
+ * The manifest as rendered: every entry, in order. Nothing is filtered — none of the four is
+ * gated server-side (the admin-only surfaces are System settings' server pages, which carry
+ * their own rule in settings-sections.ts), so there is no viewer this list varies by.
  */
-const ADMIN_ONLY_NAV_KEYS: ReadonlySet<NavGroupKey> = new Set<NavGroupKey>(["machines"]);
-
-/**
- * Entries built but not yet offered. They keep their place in the manifest — the page, its
- * route and its server routes all still exist and are reachable from a test — and are simply
- * not put in front of anyone, so releasing one is deleting its name from this set rather than
- * restoring code.
- *
- * `machines` installs this build onto another host over ssh with the server account's keys.
- * That is a capability worth shipping deliberately rather than as a row that happens to appear,
- * so it waits for a release that means to introduce it.
- */
-const UNRELEASED_NAV_KEYS: ReadonlySet<NavGroupKey> = new Set<NavGroupKey>(["machines"]);
-
-/** The manifest as this user sees it. */
-export function navKeysFor(isAdmin: boolean): readonly NavGroupKey[] {
-  const offered = NAV_GROUP_KEYS.filter((key) => !UNRELEASED_NAV_KEYS.has(key));
-  return isAdmin ? offered : offered.filter((key) => !ADMIN_ONLY_NAV_KEYS.has(key));
+export function navKeysFor(): readonly NavGroupKey[] {
+  return NAV_GROUP_KEYS;
 }
 
 /**
  * Page entries that are visible and reachable: collapsing hides the whole group (the
- * chevron-button toggle and the pinned "New chat" block above are outside it and stay).
+ * chevron-button toggle and the pinned "新会话" block above are outside it and stay).
  * The sidebar keeps the rows mounted while collapsed — the collapse is an animated
  * height tween — but at zero height, faded out, and inert: exactly this empty set of
  * reachable entries.
  */
-export function visibleNavKeys(collapsed: boolean, isAdmin = true): readonly NavGroupKey[] {
-  return collapsed ? [] : navKeysFor(isAdmin);
+export function visibleNavKeys(collapsed: boolean): readonly NavGroupKey[] {
+  return collapsed ? [] : navKeysFor();
 }
 
 /** Minimal storage interface (the subset of localStorage used here); tests inject an in-memory implementation. */

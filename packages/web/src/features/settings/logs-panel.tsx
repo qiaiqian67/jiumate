@@ -1,31 +1,37 @@
 /**
- * Server-side error view for the cost center: **a single panel** — a row of small
- * stats up top (total / unexpected / expected / most common error code),
- * with a recent-errors table below (time, source · error code, kind,
- * message). What an error needs to answer is "what exactly went wrong" — a
- * detail table is more direct than a chart here: the count alone in the stats already covers the summary.
+ * The System settings 日志 page's table: **a single panel** — a row of small stats up top
+ * (total / unexpected / expected / most common error code), with a recent-errors table below
+ * (time, source · error code, kind, message). What an error needs to answer is "what exactly
+ * went wrong" — a detail table is more direct than a chart here: the count alone in the stats
+ * already covers the summary.
  *
- * Color semantics are consistent site-wide: unexpected (500s / runtime
- * exceptions) is a prominent rose; expected (HttpError, business 4xx) recedes into gray.
- * The outer frame is provided by the caller's ChartCard (full width, below the four business charts).
+ * Moved here from the cost center, where it was a card below the four business charts. It left
+ * for the reason it now has a range picker of its own: on the dashboard it inherited that page's
+ * date filter, so reading the log meant changing what the charts were showing. Here the range is
+ * the page's, and nothing else on screen moves with it.
+ *
+ * Color semantics are consistent site-wide: unexpected (500s / runtime exceptions) is a
+ * prominent rose; expected (HttpError, business 4xx) recedes into gray. The outer frame comes
+ * from the settings pane — this component draws only the stats row, the table and its footer.
  */
 import { useEffect, useState } from "react";
 import type { UsageErrorItem, UsageErrors } from "@prismshadow/linsight-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
+import { errorSourceCodeLabel } from "../../lib/error-labels";
 import { apiErrorText } from "../../lib/api-error";
 import { formatDateTime } from "../../lib/format";
 import { Badge } from "../../components/ui/badge";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
+import { SettingsEmpty } from "../../components/ui/empty-state";
 import { toastError, toastSuccess } from "../../components/ui/toast";
-import { Empty } from "./usage-charts";
 import { toneInk } from "../../lib/tone";
 
 /** The two error categories. */
 type ErrorKindKey = "unexpected" | "expected";
 
-/** The date/agent filter the panel reads through, and that a clear deletes through. */
-export interface ErrorsFilters {
+/** The range (and optional Agent) the page reads through, and that a clear deletes through. */
+export interface LogsFilters {
   from?: string;
   to?: string;
   agentId?: string;
@@ -34,36 +40,44 @@ export interface ErrorsFilters {
 /**
  * The one sentence the clear confirmation has to get right: exactly which rows will go.
  *
- * The delete is scoped to the filter on screen, so a dialog naming a wider set (the Project's
- * whole history) or a narrower one (this page of rows) would misdescribe what the button does
- * — which is the entire failure a confirmation exists to prevent. Pure and exported so that is
- * asserted directly: this package's vitest runs in `node`, so an opened dialog is not
+ * The delete is scoped to the range and Agent on screen, so a dialog naming a wider set (the
+ * Project's whole history) or a narrower one (this page of rows) would misdescribe what the
+ * button does — which is the entire failure a confirmation exists to prevent. Pure and exported
+ * so that is asserted directly: this package's vitest runs in `node`, so an opened dialog is not
  * something a test can inspect.
+ *
+ * Two shapes for the range, because the page's 全部 preset has no dates to name: with both bounds
+ * the sentence names the range, and with neither it says "all" in as many words rather than
+ * printing an empty pair. (Exactly one bound is not clearable at all — see
+ * {@link clearableFilter}.) An Agent filter narrows either shape further and is named in both.
  */
-export function errorsClearScopeText(filters: ErrorsFilters, count: number): string {
-  const from = filters.from ?? "";
-  const to = filters.to ?? "";
-  return filters.agentId !== undefined && filters.agentId !== ""
-    ? S.usage.errorsClearScopeAgent(count, from, to, filters.agentId)
-    : S.usage.errorsClearScope(count, from, to);
+export function logsClearScopeText(filters: LogsFilters, count: number): string {
+  const { from, to, agentId } = filters;
+  const named = agentId !== undefined && agentId !== "";
+  if (!from && !to) {
+    return named ? S.logs.clearScopeAllAgent(count, agentId) : S.logs.clearScopeAll(count);
+  }
+  return named
+    ? S.logs.clearScopeAgent(count, from ?? "", to ?? "", agentId)
+    : S.logs.clearScope(count, from ?? "", to ?? "");
 }
 
 /**
- * Whether the filter on screen is one a clear may be offered for.
+ * Whether the range on screen is one a clear may be offered for.
  *
- * Both bounds have to be real dates. A custom range with an emptied date input sends no bound
- * at all, which the route reads as "unbounded on that side" — so the delete would reach past
- * every row the reader saw while the sentence above still promised that records outside the
- * range are kept. Refusing to offer the action is the honest answer; the picker is one click
- * from a range that has both ends.
+ * Both bounds or neither. A half-filled range sends no bound on that side, which the route reads
+ * as "unbounded" — so the delete would reach past every row the reader saw while the sentence
+ * above still promised that records outside the range are kept. Refusing to offer the action is
+ * the honest answer. The page's presets only ever produce both ends (今天 / 近 7 天 / 近 30 天) or
+ * neither (全部), so in practice this rejects only a range a caller assembled by hand.
  */
-export function clearableFilter(filters: ErrorsFilters): boolean {
-  return Boolean(filters.from) && Boolean(filters.to);
+export function clearableFilter(filters: LogsFilters): boolean {
+  return Boolean(filters.from) === Boolean(filters.to);
 }
 
 /** Copy: S is a runtime live binding (switching language remounts the whole tree), so it must be read at render time. */
 function kindLabel(key: ErrorKindKey): string {
-  return key === "unexpected" ? S.usage.errorsUnexpected : S.usage.errorsExpected;
+  return key === "unexpected" ? S.logs.unexpected : S.logs.expected;
 }
 
 function kindOf(kind: string): ErrorKindKey {
@@ -71,16 +85,11 @@ function kindOf(kind: string): ErrorKindKey {
 }
 
 /**
- * Source labels are abbreviated so the bracket stays narrow beside a long code:
- * `[env] tool_failed:exec_command`, `[http] password`. Only `environment` needs shortening
- * -- every other source is already short enough to read at a glance.
+ * The row's leading column, labelled: `[环境] 工具失败：exec_command`. Both halves go through
+ * `lib/error-labels.ts`, which owns the two vocabularies and their raw fallbacks — this file
+ * only decides they sit together in one cell, because the bracket answers "where" and the code
+ * "what", and splitting them would put the monospace column between the two.
  */
-const SOURCE_ABBREV: Readonly<Record<string, string>> = { environment: "env" };
-
-/** `[env] tool_failed:read_file` -- the bracketed source followed by the raw error code. */
-function sourceCode(source: string, code: string): string {
-  return `[${SOURCE_ABBREV[source] ?? source}] ${code}`;
-}
 
 /** A single small stat: name + value, one row side by side (not turned into a chart). */
 function Stat({
@@ -125,11 +134,11 @@ function Th({ children, className = "" }: { children: React.ReactNode; className
  * sideways inside its own box rather than dragging the page along with it.
  *
  * The footer under the table carries the pager and, for a Project owner, the clear action.
- * Clearing deletes the rows the current filter selects — the set the reader is looking at,
- * not the Project's whole history — and the confirmation says which set that is, because a
- * deleted error record has no other copy anywhere.
+ * Clearing deletes the rows the current range selects — the set the reader is looking at, not
+ * the Project's whole history behind a narrowed view — and the confirmation says which set that
+ * is, because a deleted error record has no other copy anywhere.
  */
-export function ErrorsPanel({
+export function LogsPanel({
   errors,
   projectId,
   filters,
@@ -139,17 +148,18 @@ export function ErrorsPanel({
   errors: UsageErrors;
   projectId: string;
   /**
-   * The dashboard's own date/agent filter — a page must never widen what the summary counted.
-   * Memoize it at the call site: the fetch effect depends on the object's identity.
+   * The page's own range, and the same one the stats above the table were counted over — a page
+   * must never widen what the summary counted. Memoize it at the call site: the fetch effect
+   * depends on the object's identity.
    */
-  filters: ErrorsFilters;
+  filters: LogsFilters;
   /**
    * Whether this viewer may empty the table (Project owner). A member can read the panel but
    * not clear it, and the route enforces that on its own; hiding the button keeps the panel
    * from offering an action that can only end in a 403.
    */
   canClear: boolean;
-  /** Reload the dashboard after a clear — the stats above the table are the caller's data. */
+  /** Reload the page after a clear — the stats above the table are the caller's data. */
   onCleared: () => void;
 }) {
   const { total, clearable, unexpected, topCode, recent } = errors;
@@ -217,9 +227,9 @@ export function ErrorsPanel({
     try {
       const res = await api.clearUsageErrors(projectId, filters);
       setConfirmingClear(false);
-      toastSuccess(S.usage.errorsClearDone(res.deleted));
-      // The stats above the table are the dashboard's own numbers, so the whole response is
-      // refetched rather than patched here; that also restores page 0 from the new snapshot.
+      toastSuccess(S.logs.clearDone(res.deleted));
+      // The stats above the table are the page's own numbers, so the whole response is refetched
+      // rather than patched here; that also restores page 0 from the new snapshot.
       onCleared();
     } catch (e) {
       toastError(apiErrorText(e));
@@ -242,25 +252,25 @@ export function ErrorsPanel({
     <div>
       {/* Stats: a row of small stats (unexpected is prominent, expected recedes) */}
       <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1.5">
-        <Stat label={S.usage.errorsTotal} value={String(total)} />
+        <Stat label={S.logs.total} value={String(total)} />
         <Stat
-          label={S.usage.errorsUnexpected}
+          label={S.logs.unexpected}
           value={String(unexpected)}
           alert={unexpected > 0}
           muted={unexpected === 0}
         />
-        <Stat label={S.usage.errorsExpected} value={String(total - unexpected)} muted />
+        <Stat label={S.logs.expected} value={String(total - unexpected)} muted />
         {topCode && (
           <Stat
-            label={S.usage.errorsTopCode}
-            value={`${sourceCode(topCode.source, topCode.code)} ×${topCode.count}`}
+            label={S.logs.topCode}
+            value={`${errorSourceCodeLabel(topCode.source, topCode.code)} ×${topCode.count}`}
           />
         )}
       </div>
 
       {/* Recent-errors table */}
       {items.length === 0 ? (
-        <Empty text={S.usage.errorsEmpty} />
+        <SettingsEmpty>{S.logs.empty}</SettingsEmpty>
       ) : (
         <div className="mt-2.5 overflow-x-auto overflow-y-clip border-t border-gray-200 dark:border-gray-800">
           {/* The three leading columns are fixed-width and the message column takes the rest, so
@@ -276,9 +286,9 @@ export function ErrorsPanel({
                 {/* Wide enough to fully fit the longest error code: a tool
                     failure's code carries the tool name (e.g. [env]
                     tool_failed:exec_command), and truncating it would hide which tool failed. */}
-                <Th className="w-72">{S.usage.errorsColCode}</Th>
-                <Th className="w-20">{S.usage.errorsColKind}</Th>
-                <Th>{S.usage.errorsColMessage}</Th>
+                <Th className="w-72">{S.logs.colCode}</Th>
+                <Th className="w-20">{S.logs.colKind}</Th>
+                <Th>{S.logs.colMessage}</Th>
               </tr>
             </thead>
             <tbody>
@@ -293,7 +303,9 @@ export function ErrorsPanel({
                       {formatDateTime(e.ts)}
                     </td>
                     <td className="py-1.5 pr-2 align-top font-mono text-gray-500 dark:text-gray-400">
-                      <span className="block break-words">{sourceCode(e.source, e.code)}</span>
+                      <span className="block break-words">
+                        {errorSourceCodeLabel(e.source, e.code)}
+                      </span>
                     </td>
                     <td className="py-1.5 pr-2 align-top">
                       <Badge tone={key === "unexpected" ? "red" : "gray"}>{kindLabel(key)}</Badge>
@@ -337,7 +349,7 @@ export function ErrorsPanel({
               onClick={() => setConfirmingClear(true)}
               className="rounded-md border border-gray-200 px-2 py-0.5 transition-colors duration-150 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:bg-transparent disabled:hover:text-gray-500 dark:border-gray-800 dark:hover:border-red-900 dark:hover:bg-red-950/50 dark:hover:text-red-400 dark:disabled:hover:border-gray-800 dark:disabled:hover:bg-transparent dark:disabled:hover:text-gray-400"
             >
-              {S.usage.errorsClear}
+              {S.logs.clear}
             </button>
           )}
           {pageError !== null && (
@@ -346,15 +358,15 @@ export function ErrorsPanel({
           {(pageCount > 1 || page > 0) && (
             <>
               <span className="ml-auto tabular-nums">
-                {S.usage.errorsPageOf(page + 1, pageCount, pagedTotal)}
+                {S.logs.pageOf(page + 1, pageCount, pagedTotal)}
               </span>
               <PagerButton
-                label={S.usage.errorsNewer}
+                label={S.logs.newer}
                 disabled={page === 0 || loading}
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
               />
               <PagerButton
-                label={S.usage.errorsOlder}
+                label={S.logs.older}
                 disabled={page + 1 >= pageCount || loading}
                 onClick={() => setPage((p) => p + 1)}
               />
@@ -368,17 +380,15 @@ export function ErrorsPanel({
       <ConfirmModal
         open={confirmingClear}
         tone="danger"
-        title={S.usage.errorsClearTitle}
-        confirmLabel={S.usage.errorsClear}
+        title={S.logs.clearTitle}
+        confirmLabel={S.logs.clear}
         busy={clearing}
         onClose={() => setConfirmingClear(false)}
         onConfirm={() => void runClear()}
       >
         <div className="space-y-1.5 text-sm text-gray-700 dark:text-gray-300">
-          <p className="break-words">{errorsClearScopeText(filters, clearable)}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {S.usage.errorsClearIrreversible}
-          </p>
+          <p className="break-words">{logsClearScopeText(filters, clearable)}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{S.logs.clearIrreversible}</p>
         </div>
       </ConfirmModal>
     </div>

@@ -77,7 +77,7 @@ export function LoginPage() {
         <div aria-label={S.settings.language}>
           <Segmented options={langOptions} value={lang} onChange={setLang} />
         </div>
-        <div aria-label={S.settings.theme}>
+        <div aria-label={S.settings.mode}>
           <Segmented options={themeOptions} value={mode} onChange={setMode} />
         </div>
       </div>

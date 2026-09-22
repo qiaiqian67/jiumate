@@ -7,6 +7,10 @@
  * language (module-level constants do not update on switch — keep reads inside components).
  * Only Token and Agent stay as untranslated English domain terms; translate all other
  * surface labels (Session, Requests, Workspace, Task, Project, Trace) to Chinese in zh.
+ * **One page overrides the Token half of that rule**: the cost center says 词元 throughout
+ * (`S.usage.*`), because that page is titled 词元图 and its own heatmap already counted 词元 —
+ * half a page in one term and half in the other read as two different quantities. Everywhere
+ * else (the trace panel, the model tables, the settings forms) Token stays English.
  * "agent" is a common noun: lowercase mid-sentence, capitalized only at the start of a
  * label/sentence or in a proper name (Agent State, AgentHub). zh names the SURFACE
  * 「智能体」 — the nav entry, the grouping option, the panel — and keeps "Agent" as-is
@@ -17,16 +21,16 @@ export const zh = {
 
   nav: {
     chat: "对话",
-    newChat: "新对话",
-    appCenter: "应用中心",
+    newChat: "新会话",
+    appCenter: "灵感库",
     agents: "智能体",
-    plugins: "插件库",
+    plugins: "插件·技能",
     models: "模型库",
     machines: "机器",
-    usage: "成本中心",
+    usage: "词元图",
     traces: "轨迹观测",
     benchmark: "评估中心",
-    // Collapsed-rail tooltip (product-specified wording; new chat reuses chat.newSessionMenu, the other pages reuse the page names above).
+    // Collapsed-rail tooltip (product-specified wording; 新会话 reuses chat.newSessionMenu, the other pages reuse the page names above).
     lastConversation: "最近一次对话",
     collapseSidebar: "收起侧栏",
     expandSidebar: "展开侧栏",
@@ -188,13 +192,19 @@ export const zh = {
     /** Trace import: the two pickers' accessible names, the pick-a-file action, and its outcomes. */
     importTrace: "导入 Trace",
     importTraceInfo:
-      "上传从其他部署导出的 .jsonl 轨迹文件，它会成为所选 Agent 的一个会话。目的地的两个部分都在这里选择：导入接口按 Agent 划分——轨迹文件自带的 session_meta 无法指认本机的 Agent，其中的 agent_state 路径属于导出它的那台机器——而 Project 需要明确指定，因为本对话框不显示当前是哪一个，也因此可以导入到当前打开之外的 Project。导出在对话的 Trace 面板中进行。",
-    importTraceProject: "导入到 Project",
+      "上传从其他部署导出的 .jsonl 轨迹文件，它会成为所选 Agent 的一个会话。目的地的两个部分都在这里选择：导入接口按 Agent 划分——轨迹文件自带的 session_meta 无法指认本机的 Agent，其中的 agent_state 路径属于导出它的那台机器——而项目需要明确指定，因为本对话框不显示当前是哪一个，也因此可以导入到当前打开之外的项目。导出在对话的 Trace 面板中进行。",
+    importTraceProject: "导入到项目",
     importTraceAgent: "导入到 Agent",
     importTracePick: "选择文件",
     importTraceRunning: "导入中…",
     importTraceDone: (target: string) => `轨迹已导入到 ${target}`,
     importTraceTooLarge: "文件超过 14MB 上限。",
+    /**
+     * The Models page, hosted as a settings pane rather than a nav entry: the whole model
+     * library (providers, keys, pricing, grouping) is per-user configuration, so it belongs
+     * beside the rest of it. The pane is the same component the old /models route renders.
+     */
+    modelsTitle: "模型",
     /** Admin-only sub-page (server-global); its explanation is disclosed at the pane heading. */
     proxyTitle: "代理选项",
     proxyInfo: "服务器全局设置，保存后立即生效，无需重启。回环地址始终直连。",
@@ -217,8 +227,8 @@ export const zh = {
     uploadLimitsInfo: (count: number, imageMb: number): string =>
       `一条消息最多 ${count} 个附件；对话内嵌图片另有 ${imageMb}MB 上限，不随此设置变化——` +
       `图片会进入对话与轨迹，每次翻阅历史与恢复会话都要重新付出它的体积。`,
-    theme: "主题",
-    themeInfo: "应用的明暗外观。",
+    mode: "明暗",
+    modeInfo: "应用的明暗外观。",
     themeLight: "浅色",
     themeDark: "深色",
     followSystem: "跟随系统",
@@ -234,6 +244,39 @@ export const zh = {
     fontLarge: "大",
     accent: "主题色",
     accentInfo: "界面强调色。",
+    themeTitle: "主题",
+    themeInfo:
+      "一个主题就是一套配色加一张画。配色来自作者声明的十个角色，界面用到的整条色阶由它推导——所以换主题就是换掉整个界面的颜色。主题自己声明它在哪种外壳下成立：单模主题会固定上面的明暗设置，标着「跟随明暗设置」的则两种模式都适用。",
+    themePinsMode: (mode: string): string => `固定为${mode}`,
+    themeFollowsMode: "跟随明暗设置",
+    themeNoneNote: "不套用主题",
+    themeMissing: "已不在本机",
+    themeNone: "应用自带外观",
+    themeOwnsAccent: (name: string): string => `由主题「${name}」决定`,
+    themePackagesTitle: "导入主题",
+    themePackagesInfo:
+      "从本机文件夹导入。文件夹里放一个 Codex-Dream-Skin 的 theme.json 加一张 background 图片即可——这就是本应用的原生格式，不需要转换。导入后会出现在上面的画廊里，删除也在那张卡片上。",
+    themeImportPlaceholder: "主题文件夹的完整路径",
+    themeImportPick: "选择文件夹…",
+    themeImportArchive: "上传 .zip",
+    themeImportAction: "导入",
+    themeImporting: "导入中…",
+    themeImported: (name: string): string => `已导入主题「${name}」`,
+    themeImportWarnings: "导入提示：",
+    themeImportFailed: "导入主题失败",
+    themeDelete: "删除",
+    themeDeleted: "已删除主题",
+    themeDeleteFailed: "删除主题失败",
+    themeRefresh: "刷新",
+    themeRefreshing: "刷新中…",
+    themeSurfaceAlpha: "表面透明度",
+    themeSurfaceAlphaInfo:
+      "主题声明为「表面」的那些面板背景有多透。越透，画作露得越多；调到 100% 面板完全不透明，画作就只在面板之外可见。",
+    themeSurfaceAlphaInactive: "当前主题没有声明任何表面，这一项对它不生效。",
+    themeBackgroundDimInactive: "当前主题没有画作，这一项对它不生效。",
+    themeBackgroundDim: "画作压暗",
+    themeBackgroundDimInfo:
+      "盖在画作上的一层遮罩，用来压住过于花哨的图片，让面板之间的空隙不跟文字抢注意力。0 表示不压暗。",
     currencyInfo: "价格显示币种；存储始终为美元。",
     changePasswordInfo: "更改当前账号的登录密码。",
     accentNames: {
@@ -451,27 +494,38 @@ export const zh = {
     createUser: "新增用户",
     initialPassword: "初始密码",
     initialPasswordFlag: "初始密码",
-    defaultProjectNote: (id: string): string => `将自动创建默认 Project：${id}`,
+    defaultProjectNote: (id: string): string => `将自动创建默认项目：${id}`,
     resetPassword: "重置密码",
     resetPasswordTitle: (u: string): string => `重置 ${u} 的密码`,
     resetPasswordNote: "重置后该用户的登录会话全部失效，需用新密码重新登录",
     deleteUserTitle: (u: string): string => `删除用户 ${u}`,
     deleteUserConfirm: (u: string): string =>
-      `将删除用户 ${u} 及其名下全部 Project（含数据目录），不可恢复。`,
+      `将删除用户 ${u} 及其名下全部项目（含数据目录），不可恢复。`,
   },
 
   project: {
     switcher: "项目",
-    create: "新建 Project",
-    createTitle: "新建 Project",
-    id: "Project id",
+    /**
+     * The built-in Project's label. Its id (`default_project`) is a system constant shared with
+     * the CLI, and the admin's copy is provisioned with no display name — so without this the id
+     * itself surfaced in the switcher. A label rather than a seeded `name`: the name is data the
+     * owner can edit, and writing one at signup would freeze whichever language that install
+     * happened to run in.
+     */
+    defaultProjectName: "默认项目",
+    /** Project-level roles, as the switcher's badge shows them. `owner` matches the server-level 管理员. */
+    roleOwner: "管理员",
+    roleMember: "成员",
+    create: "新建项目",
+    createTitle: "新建项目",
+    id: "项目 ID",
     idHint: "2~64 位：小写字母开头，仅小写字母、数字与下划线；创建后不可修改",
     idPrefixHint: "id 固定以「用户名-」为前缀，后接小写字母、数字或下划线；创建后不可修改",
     displayName: "显示名",
     /** Create dialog only: leaving the name empty falls back to the id. In Project settings the saved name cannot be blanked. */
-    displayNameHint: "留空则使用 Project id 作为名称",
-    settings: "Project 设置",
-    settingsTitle: "Project 设置",
+    displayNameHint: "留空则使用项目 ID 作为名称",
+    settings: "项目设置",
+    settingsTitle: "项目设置",
     members: "成员",
     addMember: "添加成员",
     removeMember: "移除",
@@ -489,7 +543,7 @@ export const zh = {
     settingsTabMembers: "成员",
     settingsTabDefaults: "默认值",
     settingsTabSecurity: "安全策略",
-    projectIdLabel: "Project ID",
+    projectIdLabel: "项目 ID",
     deleteProjectDesc: "项目目录将被递归删除，不可恢复。",
     /** Security-policy page (Project settings): disclosed by the "?" beside the tab heading. */
     commandPolicyInfo:
@@ -508,13 +562,12 @@ export const zh = {
     commandPolicyRulePattern: "正则表达式",
     commandPolicyRuleDesc: "描述",
     commandPolicyInvalidPattern: "正则表达式无效",
-    deleteProject: "删除 Project",
-    deleteConfirm: "确认删除该 Project？项目目录将被递归删除，不可恢复。",
-    deleteDefaultForbidden: "default_project 与 CLI 共用，不允许在 Web 端删除",
-    deleteLastForbidden:
-      "这是当前账号最后一个 Project，删除后将无 Project 可用；请先创建新的 Project",
+    deleteProject: "删除项目",
+    deleteConfirm: "确认删除该项目？项目目录将被递归删除，不可恢复。",
+    deleteDefaultForbidden: "默认项目与 CLI 共用，不允许在 Web 端删除",
+    deleteLastForbidden: "这是当前账号最后一个项目，删除后将无项目可用；请先创建新的项目",
     noCredentialTitle: "尚未配置模型 credential",
-    noCredentialBody: "当前 Project 的默认模型尚未配置 API key，发起对话前请先前往模型页配置。",
+    noCredentialBody: "当前项目的默认模型尚未配置 API key，发起对话前请先前往模型页配置。",
     goToModels: "前往模型页",
     later: "稍后再说",
   },
@@ -540,7 +593,7 @@ export const zh = {
     createPluginsPlaceholder: "未选择插件",
     createPluginsPicked: (n: number): string => `已选 ${n} 个插件`,
     createPluginsHint: "创建时安装到该 Agent（技能与钩子包），之后可在其「技能」「钩子」标签页增删",
-    createPluginsEmpty: "插件库暂无可安装的插件",
+    createPluginsEmpty: "插件·技能暂无可安装的插件",
     /** The directory-skills picker's trigger (the field's own label is createDirSkills). */
     createSkillsPlaceholder: "未选择技能",
     createSkillsPicked: (n: number): string => `已选 ${n} 个技能`,
@@ -597,7 +650,7 @@ export const zh = {
       ["{{DATE}}", "当前日期"],
       [
         "{{PROJECT_DIR}}",
-        "Linsight 应用数据根目录（存放全部 Agent 数据与 Project 级数据；不是本次任务的工作目录）",
+        "Linsight 应用数据根目录（存放全部 Agent 数据与项目级数据；不是本次任务的工作目录）",
       ],
       ["{{AGENT_ID}}", "当前 Agent id"],
       ["{{CWD}}", "Workspace 绝对路径"],
@@ -605,9 +658,9 @@ export const zh = {
       ["{{MODEL_ID}}", "上游模型 id"],
       ["{{SESSION_ID}}", "当前 Session id"],
     ] as ReadonlyArray<readonly [string, string]>,
-    maxTurns: "max_turns（单 Task 最大轮次，-1 不限制）",
-    maxTokens: "model.max_tokens",
-    thinkingLevel: "model.thinking_level",
+    maxTurns: "单任务最大轮次（-1 不限制）",
+    maxTokens: "输出 Token 上限",
+    thinkingLevel: "思考等级",
     /** Selectable tiers exclude `none` (many models cannot disable thinking); a stored `none` still displays — see `thinkingLevelNoneKept`. */
     thinkingLevelOptions: [
       ["", "不提交覆盖值，沿用当前生效的配置。"],
@@ -619,31 +672,43 @@ export const zh = {
     ] as ReadonlyArray<readonly [string, string]>,
     /** Row description shown only while the stored config is `none`: displayed as-is, never rewritten, and no longer offered as a choice. */
     thinkingLevelNoneKept: "已存的历史档位：新选择不再提供关闭档（多数模型不支持关闭思考）。",
-    timeoutMs: "model.timeoutMs",
+    timeoutMs: "超时（毫秒）",
     timeoutMsHint: "等待上游下一个事件的空闲上限，毫秒；不是整次请求的总时长上限",
-    compaction: "上下文压缩（compaction）",
-    maxContextLength: "max_context_length",
+    compaction: "上下文压缩",
+    maxContextLength: "上下文长度阈值",
     maxContextLengthHint: "触发压缩的上下文阈值",
-    maxSessionTurns: "max_session_turns",
+    maxSessionTurns: "会话轮数阈值",
     maxSessionTurnsHint: "触发压缩的轮数阈值",
-    compactionMode: "mode（压缩方式）",
+    compactionMode: "压缩方式",
+    /**
+     * Display names for the compaction-mode values, keyed by the value written to the config.
+     *
+     * Same role as `S.chat.thinkingLevelNames` does for the tiers: the dropdown row shows
+     * `生成摘要 (summarize)` — Chinese first, with the wire value it will write — and the trigger
+     * shows the plain `生成摘要`. A value missing here falls back to the raw value, which is what
+     * the en dictionary deliberately relies on (its values are already readable English).
+     */
+    compactionModeNames: {
+      summarize: "生成摘要",
+      discard: "直接丢弃",
+    } as Readonly<Record<string, string>>,
     compactionModeOptions: [
       ["", "不提交覆盖值，沿用当前生效的配置。"],
       ["summarize", "先让模型为旧上下文生成摘要，再从摘要续接新的上下文窗口（缺省）。"],
       ["discard", "不生成摘要，直接丢弃旧上下文，下一轮从新窗口重新开始。"],
     ] as ReadonlyArray<readonly [string, string]>,
-    compactionPrompt: "prompt（摘要提示词）",
+    compactionPrompt: "摘要提示词",
     maxTurnsInvalid: "max_turns 必须 > 0 或为 -1",
     timeoutInvalid: "timeoutMs 必须 > 0 或为 -1",
     toolFieldInvalid: (name: string, field: string) => `${name}: ${field} 必须是 > 0 的整数或 -1`,
-    toolPermission: "permission",
-    permissionReadLabel: "Read-only",
+    toolPermission: "权限",
+    permissionReadLabel: "只读",
     permissionReadDescription: "仅读取。审批模式为 read-only 时自动放行，无需确认。",
-    permissionReadWriteLabel: "Read & write",
+    permissionReadWriteLabel: "读写",
     permissionReadWriteDescription: "可修改。审批模式为 read-only 时需人工确认。",
-    toolTimeout: "timeoutMs",
-    toolMaxOutput: "maxOutputLength",
-    toolCallDescription: "call_description",
+    toolTimeout: "超时（毫秒）",
+    toolMaxOutput: "最大输出",
+    toolCallDescription: "调用说明",
     callDescriptionHint:
       "call_description：开启（缺省）时该工具的 schema 保留可选的 description 参数——模型为每次调用写一句说明，运行期间展示给用户；关闭则装配时从 schema 滤除该参数。仅参数中定义了 description 属性的工具可切换。",
     mcpServers: "MCP Server",
@@ -864,14 +929,14 @@ export const zh = {
     /** Switch label for the per-model fast mode (the provider's premium faster serving tier); the switch is only rendered for models whose AgentHub client can carry the parameter. */
     fastMode: "快速模式",
     /** Shown while the fast-mode switch is ON (and as the label's hover title): what it buys, and that the recorded prices do not follow the premium rate. */
-    fastModeHint: "输出更快，按厂商的溢价档位计费；成本中心仍按条目记录的标准单价统计",
+    fastModeHint: "输出更快，按厂商的溢价档位计费；词元图仍按条目记录的标准单价统计",
     /** Amber line under an ON switch on a model whose client rejects the parameter (a hand-edited config or a renamed id): the switch stays visible only so it can be turned off. */
     fastModeUnsupported: "该模型不支持快速模式，请关闭，否则请求会失败",
     /** Accessible name of the warning dialog raised when the fast-mode switch is turned ON. */
     fastModeConfirmTitle: "开启快速模式",
     /** Body of that warning: premium billing, and that the recorded prices do not follow it. */
     fastModeConfirmBody:
-      "快速模式按厂商的溢价价目计费（MiniMax 为标准价的 1.5 倍，OpenAI 与 Anthropic 另有溢价价目表）。条目记录的按 Token 单价不会随之调整，成本中心会低估这部分用量。",
+      "快速模式按厂商的溢价价目计费（MiniMax 为标准价的 1.5 倍，OpenAI 与 Anthropic 另有溢价价目表）。条目记录的按 Token 单价不会随之调整，词元图会低估这部分用量。",
     /** Extra paragraph shown only for Anthropic-protocol models: fast mode there is a gated research preview. */
     fastModeConfirmPreview:
       "Anthropic 的快速模式目前是限量的 research preview：在你的组织获得授权之前，请求会返回 429 限流错误。",
@@ -977,7 +1042,7 @@ export const zh = {
     default: "默认",
     setDefault: "设为默认模型",
     remove: "删除模型",
-    readOnlyHint: "member 只读；模型与 credential 修改仅 owner 可执行",
+    readOnlyHint: "成员只读；模型与凭证修改仅管理员可执行",
     empty: "尚未配置任何模型",
     noKey: "未配置 key",
     /**
@@ -1101,7 +1166,7 @@ export const zh = {
     overwriteTitle: "覆盖已有环境变量",
     overwriteConfirm: (key: string): string => `「${key}」已存在，保存将覆盖原值且不可恢复。`,
     empty: "尚未配置任何环境变量",
-    readOnlyHint: "member 只读；Vault 修改仅 owner 可执行",
+    readOnlyHint: "成员只读；Vault 修改仅管理员可执行",
     keyHint: "字母、数字与下划线，不能以数字开头",
     keyInvalid: "键名不合法：仅字母、数字与下划线，且不能以数字开头",
     valueRequired: "值不能为空",
@@ -1124,7 +1189,7 @@ export const zh = {
 
   schedule: {
     desc: "定时任务（agent_state/schedule/*.toml）：到点自动向目标 Session 发送 prompt；文件亦可手工编辑，Web 端修改后即时生效。",
-    readOnlyHint: "member 只读；定时任务修改仅 owner 可执行",
+    readOnlyHint: "成员只读；定时任务修改仅管理员可执行",
     colStatus: "状态",
     colPeriod: "周期",
     colTarget: "目标",
@@ -1165,7 +1230,7 @@ export const zh = {
     sessionEmpty: "该 Agent 暂无 Session",
     workspace: "工作区",
     model: "Model",
-    modelDefault: "Project 默认",
+    modelDefault: "项目默认",
     deleteTitle: "删除定时任务",
     deleteConfirm: (name: string): string => `确认删除定时任务「${name}」？`,
     /** Prompt-injection controls (toggle card / template alert / prompt editor), mirroring the memory tab's set. */
@@ -1183,9 +1248,149 @@ export const zh = {
     },
   },
 
+  /**
+   * 灵感库（features/inspiration/*）：内置案例 + 管理员自建案例，按分类归档。
+   * 内置案例的标题／描述／提示词不在这里——它们随案例本身放在
+   * `@prismshadow/linsight-inspirations/presets` 的 title/titleZh 等字段里，这样管理员自建的
+   * 案例与内置案例是同一种东西。这一组只放 chrome。
+   */
+  inspiration: {
+    pageTitle: "灵感库",
+    pageDesc: "内置的优质提示词、智能体、技能与工具，一键填入输入框即可开工。",
+    /** 卡片右上角的收藏按钮，以及详情弹窗里的同一个按钮。 */
+    favorite: "收藏",
+    unfavorite: "取消收藏",
+    /** 内置案例的角标：随产品发布，不可编辑或删除。 */
+    official: "官方",
+    /** 管理员停用（enabled=false）的案例角标：只有管理员看得到这些卡片。 */
+    hiddenBadge: "已停用",
+    /** 分类页签：全部 / 精选 / 分类… / 我的收藏。 */
+    tabAll: "全部",
+    tabFeatured: "精选",
+    tabFavorites: "我的收藏",
+    /** 搜索框（按标题、描述、提示词、技能与工具名过滤，两种语言都匹配）。 */
+    searchLabel: "搜索灵感",
+    searchPlaceholder: "搜索灵感",
+    /** 卡片与详情里的动作。 */
+    invoke: "一键做同款",
+    /**
+     * 卡片右下角那个按钮上的字。与详情弹窗底部的 `invoke` 是同一个动作，措辞对齐；卡片上更短，
+     * 因为它跟「应用」「官方」两个角标挤在一行。
+     *
+     * 「只填入、不发送」这层语义交给草稿页行上的 `fillHint` 去说 —— 那里是用户第一次遇到这个
+     * 行为的地方，也是唯一有空间说清它的地方。
+     */
+    invokeHint: "做同款",
+    openDetail: "查看详情",
+    /** 草稿页行上的第二行 tooltip：点击只填入，不发送。 */
+    fillHint: "点击填入输入框，可修改后自行发送",
+    /** 草稿页最后一行：进入完整灵感库。带总数时说明还有多少条。 */
+    browseAll: (total?: number) =>
+      total === undefined ? "浏览全部灵感 →" : `浏览全部灵感（共 ${total} 条）→`,
+    /** 空状态。 */
+    empty: "这里还没有案例。",
+    favoritesEmpty: "还没有收藏。点卡片上的心形，把常用的收进来。",
+    searchEmpty: (query: string) => `没有匹配「${query}」的案例。`,
+    /** 服务端读目录失败时的提示（此时列表只剩内置案例）。 */
+    offlineHint: "未能读取服务器上的灵感库，当前只显示内置案例。",
+    /** 详情弹窗里的分组标题。 */
+    previewLabel: "效果预览",
+    promptLabel: "提示词",
+    skillsLabel: "预选技能",
+    toolsLabel: "依赖工具",
+    agentLabel: "建议智能体",
+    noneHint: "（无）",
+    metaLine: (category: string) => `分类：${category}`,
+    /** 案例类型角标（与卡片、详情共用）。 */
+    kind: {
+      app: "应用",
+      agent: "智能体",
+      skill: "技能",
+      tool: "工具",
+      prompt: "提示词",
+    },
+    /** 管理员：从会话收进灵感库（会话详情卡底部的入口）。 */
+    capture: "收进灵感库",
+    captureHint: "把这段会话的开场提问存成可复用的灵感案例",
+    captureNoPrompt: "这段会话还没有用户提问，先聊一句再收进来",
+    /** 管理员：新建 / 编辑 / 删除案例。 */
+    newCase: "新建案例",
+    createTitle: "新建案例",
+    editTitle: "编辑案例",
+    manageCategories: "管理分类",
+    created: "案例已创建",
+    saved: "案例已保存",
+    deleted: "案例已删除",
+    deleteTitle: "删除案例",
+    deleteConfirm: (title: string) => `确定删除「${title}」？案例目录（含封面与预览）会一并移除。`,
+    /** 表单字段。 */
+    fieldTitleZh: "名称（中文）",
+    fieldTitleEn: "名称（英文）",
+    fieldId: "标识",
+    fieldIdHint: "小写字母、数字、短横线与下划线；它同时是案例目录名，创建后不可修改",
+    fieldKind: "类型",
+    fieldCategory: "分类",
+    fieldDescriptionZh: "简介（中文）",
+    fieldDescriptionEn: "简介（英文）",
+    fieldPromptZh: "提示词（中文）",
+    fieldPromptEn: "提示词（英文）",
+    fieldPromptInfo:
+      "点击「一键做同款」时，这段文字会原样填入输入框，不会自动发送。写清楚要做什么和不能少的约束即可，步骤交给 Agent 自己拆。",
+    fieldAgent: "建议智能体",
+    fieldAgentHint:
+      "案例是全局的、智能体属于项目，所以这里只记 id：在当前项目里找不到就回退到当前智能体",
+    /** 「建议智能体」下拉的第一项：不指定。 */
+    agentNone: "不指定（用当前智能体）",
+    fieldSkills: "预选技能",
+    fieldSkillsHint: "从内置技能库里挑；点「一键做同款」时只会预选所选智能体已安装的那些",
+    skillsEmpty: "技能库为空",
+    fieldTools: "依赖工具",
+    fieldToolsHint: "取自所选智能体已有的工具；只做展示，不会自动安装或改动任何配置",
+    toolsEmpty: "该智能体没有可用工具",
+    toolsNoAgent: "先在项目里创建一个智能体，它的工具才会出现在这里",
+    toolsSearchPlaceholder: "搜索工具",
+    toolsNoMatch: "没有匹配的工具",
+    /** 多选下拉的触发文案：一个没选 / 选了 N 个。 */
+    pickerNone: "未选择",
+    pickerPicked: (n: number) => `已选 ${n} 项`,
+    fieldCover: "封面",
+    fieldCoverHint: "留空字形时用 emoji；上传图片会替换掉字形",
+    fieldCoverInfo:
+      "字形与图片二选一，卡片只会画其中一个：上传图片会清掉字形，改回字形会删掉已上传的图片文件。",
+    coverUpload: "上传封面",
+    coverUploadHint: "点击左侧方框上传图片",
+    fieldGlyph: "字形",
+    coverUseGlyph: "改回字形",
+    coverExtensionError: (exts: string) => `封面只支持这些格式：${exts}`,
+    fieldPreview: "效果预览（HTML）",
+    fieldPreviewInfo:
+      "粘贴一段自包含的 HTML：它会在详情弹窗里用沙箱 iframe 渲染（脚本可运行，但拿不到本应用的 Cookie 与存储）。留空并保存会移除已有预览。",
+    previewHint: (bytes: number, limit: number) => `${bytes} / ${limit} 字节`,
+    previewKeepHint: "留空保存会移除现有预览",
+    previewTooLarge: "预览超过 1MB 上限",
+    fieldFeatured: "放进「精选」",
+    fieldEnabled: "启用（关闭后仅管理员可见）",
+    fieldOrder: "排序",
+    fieldOrderHint: "同分类内的先后顺序，数字小的排前面",
+    /** 管理员：分类管理。 */
+    categoriesTitle: "管理分类",
+    categoriesDesc:
+      "分类是灵感库的页签。产品自带的三个分类首次启动时写入，之后和你自建的完全一样，可以改名、调序、删除；但下面还有案例时不能删除。",
+    categoriesEmpty: "还没有分类。新建一个，灵感库就有了第一个页签。",
+    categoryNew: "新建分类",
+    categoryNameZh: "名称（中文）",
+    categoryNameEn: "名称（英文）",
+    categoryId: "标识",
+    categoryIdHint: "小写字母、数字、短横线与下划线；它同时是分类文件名，创建后不可修改",
+    categorySaved: "分类已保存",
+    categoryDeleted: "分类已删除",
+    categoryDeleteTitle: "删除分类",
+    categoryDeleteConfirm: (name: string) => `确定删除分类「${name}」？`,
+  },
+
   /** Plugin library page (features/plugins/plugins-page.tsx): one card per library plugin, installed on Agents as a whole. */
   plugins: {
-    pageTitle: "插件库",
+    pageTitle: "插件·技能",
     pageDesc: "内置插件库：每个插件带有技能和／或钩子包，可浏览、快捷调用，或安装到 Agent。",
     /** Plugin count in the group header (small text to the right of the category name). */
     pluginCount: (n: number): string => `${n} 个插件`,
@@ -1311,7 +1516,7 @@ export const zh = {
   chat: {
     /** Footnote of the session picker's menu — the pre-pick reminder: a change applies right away but costs the model's cached context, so compacting first is recommended. */
     thinkingLevelChangeNote: "立即生效。更换思考等级会使模型缓存失效，建议先压缩上下文。",
-    newSessionMenu: "新建对话",
+    newSessionMenu: "新会话",
     chooseAgent: "选择 Agent",
     chooseModel: "选择模型",
     thinkingLevel: "思考等级",
@@ -1379,15 +1584,7 @@ export const zh = {
     tempWorkspaces: "临时工作区",
     newSessionInWorkspace: "在此工作区新建对话",
     draftSubtitle: "最擅长 AI 开发任务的自进化 Agent",
-    /** Collapsed group names for the home-page examples (bookmark style; only one open at a time). */
-    exampleFolders: {
-      webapps: "搭建网页应用",
-      agents: "搭建和优化智能体",
-      schedules: "创建定时任务",
-    },
-    /** Second tooltip line on an example row: the click fills the composer, it does not send. */
-    exampleFillHint: "点击填入输入框，可修改后自行发送",
-    /** The examples block's last folder: prompts the user wrote and saved, stored per user on the server. */
+    /** The draft screen's picker's last tab: prompts the user saved themselves (see user-shortcuts.ts). */
     shortcuts: {
       folder: "我的快捷指令",
       new: "新建快捷指令",
@@ -1415,200 +1612,6 @@ export const zh = {
      * /app-center 页：与新建对话页相同的示例清单，但一次性铺开，方便回访用户按分类浏览而非逐个折叠。
      * 与新建对话的 tab 共用同一份数据形态，点击即「先存草稿 → 跳到新对话页」，行为与新建对话里的 tab 一致。
      */
-    appCenter: {
-      pageTitle: "应用中心",
-      pageDesc:
-        "可浏览的应用示例全集——内置示例加上你自己保存的快捷指令。点一张卡片即可在新建对话中预填好提示词。",
-      /** 没有自定义 cover 时的回退占位（极老的条目可能没设 cover）。 */
-      coverFallback: "✨",
-      /** 当前 tab 是「我的快捷指令」时的加载中 / 空态文案。 */
-      shortcutsLoading: "正在加载你的快捷指令…",
-      shortcutsEmpty: "你还没有保存快捷指令——选一张内置卡片开始，把输入框的内容存为快捷指令即可。",
-      /** 点击后的行为提示，与新建对话页一行提示保持一致。 */
-      fillHint: "点击填入输入框，可修改后自行发送",
-      /**
-       * 应用详情 Modal：标题与底部按钮。Modal 内的 cover/desc/prompt 都来自 S.chat.exampleTasks
-       * 与 S.chat.shortcuts，本组只放 chrome（标题与动作）。"在草稿中打开"沿用 plugins 库的语义——
-       * 不是"立即发送"，而是 park + saveDraft + 跳 /chat/new，让用户在草稿里读、改、再发。
-       */
-      detailTitle: "应用详情",
-      /** 详情 Modal 底部主按钮：触发与 plugins quick start 一致的 fillExample 链路。 */
-      invoke: "在草稿中打开",
-      /** 详情 Modal 内、提示词区段标题（参考 plugins 详情里"插件说明"的 chrome）。 */
-      promptLabel: "提示词",
-      /** 详情 Modal 内、预选技能区段标题。 */
-      skillsLabel: "预选技能",
-      /** 当一个 example / shortcut 没有 skills 时，详情 Modal 内显示的占位。 */
-      noSkillsHint: "（未预选技能）",
-      /**
-       * 详情 Modal 与卡片主体的元信息行（参考 PluginCard meta 的拼接风格）：
-       * "分类：Web · 预选 2 项技能"。folderName 是 S.chat.exampleFolders 的标签，shortcut
-       * 不走这条——它的元信息是固定的 shortcutMeta。
-       */
-      metaLine: (folderName: string, skillCount: number): string =>
-        skillCount > 0 ? `分类：${folderName} · 预选 ${skillCount} 项技能` : `分类：${folderName}`,
-      /** 详情 Modal 顶部、"我的快捷指令"卡片的固定 meta 行。 */
-      shortcutMeta: "我的快捷指令",
-      /** 卡片右侧"在草稿中打开"按钮的 tooltip。 */
-      invokeHint: "在草稿中打开",
-    },
-    /**
-     * Example task cards on the draft screen: one click fills the composer with the canned
-     * prompt, which the user reads, edits and sends. That is why a prompt is SHORT — a short
-     * paragraph, around 100 Chinese characters, carrying what to build plus the constraints the
-     * result would be wrong without. File layouts, field lists, step-by-step headings and
-     * self-test instructions are what the Agent works out or asks about, so they stay out; the
-     * older briefs below are still far longer and are being trimmed to match.
-     */
-    exampleTasks: {
-      game: {
-        label: "2D 企鹅雪橇越野小游戏",
-        desc: "可爱南极企鹅滑雪橇跳石头，难度由易到难的 2D 纯前端小游戏",
-        prompt:
-          "做一个可爱的南极企鹅滑雪橇越野 2D 小游戏：按空格键起跳，跃过冰面上迎面而来的石头；" +
-          "开局要足够简单、上手无压力，滑行速度与障碍密度随时间平滑、循序渐进地上升，避免突然变难，" +
-          "实时计分，撞上石头即结束并可一键重新开始。" +
-          "2D 横版画面、可爱卡通风，纯前端实现（单个 HTML 文件即可），界面遵循 web-design 技能。" +
-          "完成后在浏览器里自测一次，确认开局能轻松玩过几秒，并告诉我怎么打开和怎么玩。",
-      },
-      gamecenter: {
-        label: "多智能体搭建小游戏中心",
-        desc: "并行产出 10 个玩法互不重复的纯前端小游戏，配一个统一风格的索引首页",
-        prompt: `用多智能体并行搭建一个网页小游戏中心：10 个玩法互不重复的纯前端小游戏，外加一个索引首页。
-
-## 分工方式
-- 先规划这 10 个游戏（例如贪吃蛇、2048、俄罗斯方块、打砖块、扫雷、记忆翻牌、推箱子、太空射击、跳跃平台、节奏点击），确认玩法确实互不重复，并定好统一的目录结构、配色与交互规范。
-- 再把 10 个游戏分派给多个子智能体并行实现，每个子智能体只负责自己的那一个游戏，严格按既定规范产出，互不改动他人的文件。
-
-## 每个游戏
-- 独立的 \`games/<slug>/index.html\`，纯前端单文件、file:// 直接打开即可运行，不依赖后端与任何 CDN 资源。
-- 具备开始 / 重新开始、实时计分或计时、失败或通关结算，并同时支持键盘与触摸操作，页面内写明玩法说明。
-- 提供返回索引首页的入口。
-
-## 索引首页
-- 根目录 \`index.html\`：卡片网格列出全部 10 个游戏（名称 + 一句话玩法 + 操作方式），点击进入对应游戏。
-- 与所有游戏共用一套设计语言，遵循 web-design 技能。
-
-## 收尾
-- 统一验收：10 个游戏玩法确实不重复、风格一致，索引页的链接全部可达。
-- 在浏览器里逐个自测，确认都能开始、能结束、能重开，然后告诉我怎么打开。`,
-      },
-      lol: {
-        label: "英雄联盟音乐播放器",
-        desc: "用 SoundCloud Widget API 播放历届 Worlds 主题曲，单文件即开即用",
-        prompt: `用 SoundCloud Widget API（见 https://developers.soundcloud.com/docs/api/html5-widget）做一个英雄联盟 Worlds 主题曲播放器，单文件 index.html，file:// 打开即用。
-
-## 技术约束
-- 使用 SC.Widget JS API（widget.load / widget.toggle / widget.setVolume / widget.seekTo），引入 https://w.soundcloud.com/player/api.js
-- iframe 必须可见（180px 高），visual=true color=f0b90b single_active=true
-- 仅包含以下 8 首已确认可播曲目（oEmbed 验证通过），不要添加未经 oEmbed 验证的曲目：
-  - Warriors (S4) — soundcloud.com/leagueoflegends/warriors
-  - Worlds Collide (S5) — soundcloud.com/leagueoflegends/worlds-collide
-  - Legends Never Die (S7) — soundcloud.com/leagueoflegends/legends-never-die
-  - Phoenix (S9) — soundcloud.com/leagueoflegends/phoenix
-  - Burn It All Down (S11) — soundcloud.com/leagueoflegends/burn-it-all-down
-  - GODS (S13) — soundcloud.com/leagueoflegends/gods
-  - Heavy Is The Crown (S14) — soundcloud.com/linkinpark/heavy-is-the-crown
-  - Sacrifice (S15) — soundcloud.com/leagueoflegends/sacrifice
-
-## 布局
-- 左侧 260px 粘性侧边栏：曲目列表（S4/S5/… 标签 + emoji + 曲名 + 年份），点击高亮金色边框，SC.Widget.load() 切歌 + auto_play
-- 右侧主区域：Hero 标题 + 桌面时钟（80px 等宽金色 HH:MM:SS，每秒刷新，冒号闪烁）+ 心情标签
-- 播放器卡片：SoundCloud iframe + 自定义控制栏（⏮ ▶/⏸ ⏭ + 曲目信息 + 音量滑块，点击喇叭图标静音切换）
-- 心情波动区：15 根金色动画柱，切歌时重新随机生成
-- 键盘快捷键：空格播放暂停、← → 切歌、↑ ↓ 调音量
-
-## 设计
-Linsight 视觉风格（见 web-design 技能），默认深色。手机端侧边栏变为顶部横向滚动。
-
-完成后在浏览器打开 index.html 自测一次。`,
-      },
-      rhythmRunner: {
-        label: "音乐节奏跑酷小游戏",
-        desc: "喵斯快跑式的音乐节奏跑酷：企鹅主角，音符踩着节拍飞来，判定分 Perfect / Great / Miss",
-        prompt:
-          "做一个喵斯快跑（Muse Dash）式的音乐节奏跑酷小游戏：主角是一只企鹅，自动向前跑；" +
-          "音符画成音符图标，严格踩着节拍飞来，玩家按键击打，判定显示 Perfect / Great / Miss 三档，" +
-          "连击计分，难度随曲子推进。纯前端单文件，file:// 直接打开即玩。",
-      },
-      investmentCopilot: {
-        label: "对话式投资分析助理",
-        desc: "用 Linsight SDK 做对话式看盘 Copilot：首页列出近期走势较好的股票，每个判断都说清市场因素",
-        prompt:
-          "用 Linsight SDK 做一个对话式的股市 Copilot，形态参考 perplexity.ai/finance：启动后每 5 分钟实时抓取大盘行情，" +
-          "首页直接列出近期走势较好的股票和板块强弱，每个判断都要说清背后的市场因素——政策、行业消息、" +
-          "资金流向、财报或宏观数据，而不是技术指标，" +
-          "只做分析不是投资建议。它的查股工具要能答「帮我查一下智谱的股票」这类问题：" +
-          "按公司名（中文也行）自己对应到股票代码，查不到或没上市就直说，不要编。",
-      },
-      rag: {
-        label: "构建 Claude Code 文档 RAG 智能体",
-        desc: "收集 claude-code-docs 仓库，生成可对话、带来源引用的 RAG 知识应用",
-        prompt:
-          "收集 https://github.com/ericbuess/claude-code-docs 的文档，构建一个 RAG 知识应用：" +
-          "克隆仓库并整理语料，建立检索索引；应用化身 Claude Code 配置专家，" +
-          "检索增强回答 Claude Code 相关问题并标注可点击的来源引用——" +
-          "引用要能展示命中的原文片段，并链接到真实文档；" +
-          "按 web-design 技能提供美观的 Web 聊天界面。" +
-          "完成后运行应用，用一个中文问题和一个英文问题各自测一次，" +
-          "确认两者都检索到了正确的英文文档、流式回答正常，并告诉我访问方式。",
-      },
-      agentBenchmarkBuild: {
-        label: "构建通用决策智能体和评测基准",
-        desc: "创建一个通用决策 Agent，并用足球、售后和投资任务检验它",
-        prompt: `请依次使用 \`agent-initialization\` 和 \`benchmark-design\`，创建决策 Agent，并产出 Frozen Benchmark 与 Formal Baseline。
-
-Agent：
-- id：\`finite_choice_agent\`
-- 能力：面对有限选项，在公开信息不足或冲突时仍能给出稳定、可解释的选择
-- installed_skills：\`[]\`
-
-Benchmark：
-- id：\`contextual-choice-adaptation\`
-- capability：从公开规则、历史案例和当前事实中形成并迁移稳定的有限选择决策过程
-- desired_baseline_score：\`<75\`
-- pilot_iteration_limit：\`5\`
-
-场景：
-1. 根据历史比赛与当前信息进行足球投注决策。
-2. 根据售后政策与工单事实选择处置动作。
-3. 根据投资策略、历史市场与当前指标选择投资动作。`,
-      },
-      agentOptimization: {
-        label: "优化通用决策智能体的准确率",
-        desc: "根据已有评测结果改进 Agent，并验证新版本是否真正提升",
-        prompt: `请使用 \`agent-optimization\`，根据 Frozen Benchmark 优化决策 Agent。
-
-- test_agent_id：\`finite_choice_agent\`
-- benchmark_id：\`contextual-choice-adaptation\`
-- capability_direction：提高信息不完整、规则冲突和有限选项决策中的稳定性
-- runs：\`3\`
-- desired_score：\`>=95\`
-- candidate_round_limit：\`5\``,
-      },
-      dailyPlan: {
-        label: "每天早 9 点的计划对话",
-        desc: "每天 09:00 在同一个会话里聊当天计划，并回顾昨天的进展",
-        prompt:
-          "建一个定时任务：每天早上 9 点在这个会话里和我聊今天的计划。" +
-          "先回看上文说清昨天定的事做完了多少、哪些卡住，再给我一份排好序的今日候选、每条一句理由，" +
-          "我确认后写成清单。",
-      },
-      githubDigest: {
-        label: "每天汇总 GitHub 项目状态",
-        desc: "定时跑一遍仓库的 Issue、PR 与 CI，日报结尾给出按优先级排序的建议",
-        prompt:
-          "建一个定时任务：每天早上用 gh 汇总一个 GitHub 仓库的 Issue、PR 与 CI 状态，" +
-          "挑出停滞的、待评审的和挂掉的，结尾给出按优先级排序的建议，每条说清为什么排在这个位置。",
-      },
-      memoryReview: {
-        label: "每周五晚回顾并记录 Memory",
-        desc: "周五傍晚一起过一遍这周值得长期记住的事，确认后由你写进 Memory",
-        prompt:
-          "建一个定时任务：每周五傍晚在这个会话里和我过一遍这周值得长期记住的事。" +
-          "先看已有记忆索引避免重复，再逐条问我该记什么、要不要改已有的，我确认后你写进 Memory。",
-      },
-    },
     sessionList: "会话",
     defaultSessionTitle: "新对话",
     agent: "Agent",
@@ -2348,11 +2351,11 @@ Benchmark：
   },
 
   usage: {
-    title: "成本与统计",
+    title: "词元图",
     today: "今日",
     last7d: "近 7 天",
     total: "累计",
-    tokens: "Token",
+    tokens: "词元",
     requests: "请求",
     from: "起始日期",
     to: "结束日期",
@@ -2369,38 +2372,152 @@ Benchmark：
     range30d: "近 30 天",
     range90d: "近 90 天",
     rangeCustom: "自定义",
+    /**
+     * Year heatmap (features/usage/token-heatmap-panel.tsx): one cell per day, weeks across and
+     * weekdays down, over a whole calendar year. Independent of the page's range filter — it is
+     * the one panel that answers "how has this year gone" rather than "what did the selected
+     * window do".
+     */
+    heatmapTitle: "全年词元消耗",
+    heatmapDesc: "一年中每天的词元消耗，颜色越深用量越大。",
+    /** The three figures beside the grid, in the reference layout's order. */
+    heatmapTotal: "累计词元量",
+    heatmapPeak: "单日峰值",
+    heatmapActive: "活跃天数",
+    /**
+     * Weekday labels down the side, Monday first. Spelled out rather than taken from
+     * `Intl`'s narrow form, which in English collapses to M/T/W/T/F/S/S — three pairs of
+     * identical labels for a column of seven rows.
+     */
+    heatmapWeekdays: ["一", "二", "三", "四", "五", "六", "日"],
+    /** Hover tooltip: the day's date, its Token total, and its cache hit rate (the reference card's two lines). */
+    heatmapTipTokens: (tokens: string): string => `词元 ${tokens}`,
+    heatmapTipCache: (percent: string): string => `缓存命中 ${percent}`,
+    heatmapLess: "少",
+    heatmapMore: "多",
+    heatmapPrevYear: "上一年",
+    heatmapNextYear: "下一年",
+    heatmapLoading: "正在加载全年数据…",
+    heatmapError: "全年数据加载失败。",
     chartRequestsByAgent: "各 Agent 请求与成功率",
     chartRequestsByModel: "各模型请求与成功率",
     legendSuccessRate: "成功率",
-    chartTokenTrend: "Token 变化",
+    chartTokenTrend: "词元变化",
     chartCostTrend: "成本变化",
     legendOther: (n: number): string => `其他 ${n} 项`,
     bucketTotal: "合计",
     legendHitRate: "缓存命中率",
     empty: "暂无用量记录",
-    errors: "异常",
-    errorsTotal: "总数",
-    errorsUnexpected: "未预期",
-    errorsExpected: "预期内",
-    errorsTopCode: "最常见",
-    errorsColCode: "来源 · 错误码",
-    errorsColKind: "类型",
-    errorsColMessage: "消息",
-    errorsEmpty: "暂无异常",
+    errorsClearDone: (count: number): string => `已删除 ${count} 条错误记录`,
+  },
+
+  /**
+   * The System settings 日志 page — the server error log, moved off the cost center and into
+   * settings, where a page can carry its own range instead of inheriting the dashboard's.
+   *
+   * The `sources` and `codes` tables localize the two identifiers the server records alongside
+   * each row. Both are vocabularies this codebase owns — `source` is a dozen literals, `code` a
+   * couple of dozen — but neither is exported as a constant anywhere, so neither can be pinned
+   * by a test the way `toolNames` is pinned to core's registry: they are inline string literals
+   * at the record sites. A value missing from either table therefore falls back to the raw
+   * identifier, which is the honest degradation — a new source or code reads as itself until
+   * someone labels it, rather than as a blank or a wrong guess.
+   *
+   * The **message** column is deliberately not here: it is the raw `err.message` text from
+   * Node, fetch and the model providers, and translating it would put words in an upstream's
+   * mouth and cost the reader the one string they can actually search for.
+   */
+  logs: {
+    /** Rail entry and pane heading. */
+    title: "日志",
+    /**
+     * Range presets. The page opens on 近 7 天 because that is the window the anomaly badge
+     * probes (`use-project-todos.ts`): a wider default would raise a dot leading to a table
+     * with no rows in it.
+     */
+    rangeLabel: "时间范围",
+    rangeToday: "今天",
+    range7d: "近 7 天",
+    range30d: "近 30 天",
+    rangeAll: "全部",
+    /** Agent filter: the "no filter" option, and the label of the control itself. */
+    allAgents: "全部 Agent",
+    agentLabel: "Agent 筛选",
+    total: "总数",
+    unexpected: "未预期",
+    expected: "预期内",
+    topCode: "最常见",
+    colCode: "来源 · 错误码",
+    colKind: "类型",
+    colMessage: "消息",
+    empty: "暂无日志",
     /** Detail-table pager: newer/older step back through pages of the same filtered set. */
-    errorsNewer: "较新",
-    errorsOlder: "更早",
-    errorsPageOf: (page: number, pages: number, total: number) =>
+    newer: "较新",
+    older: "更早",
+    pageOf: (page: number, pages: number, total: number) =>
       `第 ${page} / ${pages} 页 · 共 ${total} 条`,
     /** Clearing the table: the action, and the confirm that must name exactly what goes. */
-    errorsClear: "清空",
-    errorsClearTitle: "清空错误记录",
-    errorsClearScope: (count: number, from: string, to: string): string =>
-      `将删除本 Project 在 ${from} 至 ${to} 区间内的 ${count} 条错误记录，其余时间段的记录保留。`,
-    errorsClearScopeAgent: (count: number, from: string, to: string, agentId: string): string =>
-      `将删除本 Project 中 Agent「${agentId}」在 ${from} 至 ${to} 区间内的 ${count} 条错误记录，其他 Agent 与其余时间段的记录保留。`,
-    errorsClearIrreversible: "此操作不可恢复。",
-    errorsClearDone: (count: number): string => `已删除 ${count} 条错误记录`,
+    clear: "清空",
+    clearTitle: "清空错误记录",
+    clearScope: (count: number, from: string, to: string): string =>
+      `将删除本项目在 ${from} 至 ${to} 区间内的 ${count} 条错误记录，其余时间段的记录保留。`,
+    /** The Agent filter narrows the same delete, so the sentence has to name the Agent too. */
+    clearScopeAgent: (count: number, from: string, to: string, agentId: string): string =>
+      `将删除本项目中的 Agent「${agentId}」在 ${from} 至 ${to} 区间内的 ${count} 条错误记录，其他 Agent 与其余时间段的记录保留。`,
+    /** The 全部 preset has no bounds to name, so the confirm says so in as many words rather than printing an empty range. */
+    clearScopeAll: (count: number): string =>
+      `将删除本项目全部 ${count} 条错误记录，其他项目不受影响。`,
+    /** Both narrowings at once: no range to name, but an Agent to. */
+    clearScopeAllAgent: (count: number, agentId: string): string =>
+      `将删除本项目中的 Agent「${agentId}」的全部 ${count} 条错误记录，其他 Agent 不受影响。`,
+    clearIrreversible: "此操作不可恢复。",
+    clearDone: (count: number): string => `已删除 ${count} 条错误记录`,
+    /** `source` labels (see the block comment above). */
+    sources: {
+      compaction: "上下文压缩",
+      environment: "环境",
+      http: "HTTP",
+      llm: "模型",
+      messaging: "消息渠道",
+      preset: "预设",
+      process: "进程",
+      schedule: "定时任务",
+      session: "会话",
+      subagent: "子智能体",
+      title: "标题",
+      usage: "用量统计",
+    } as Readonly<Record<string, string>>,
+    /**
+     * `code` labels (see the block comment above). A code containing a colon is labelled by its
+     * prefix with the rest appended verbatim — which is how the one dynamic family,
+     * `tool_<stop_reason>:<tool name>`, keeps naming the tool that failed.
+     */
+    codes: {
+      compaction_failed: "压缩失败",
+      llm_failed: "模型调用失败",
+      llm_fatal: "模型致命错误",
+      llm_retried: "模型调用已重试",
+      machines_reconnect_failed: "机器重连失败",
+      schedule_create_session_failed: "定时任务创建会话失败",
+      schedule_invalid_file: "定时任务文件无效",
+      schedule_send_failed: "定时任务发送失败",
+      schedule_session_missing: "定时任务会话不存在",
+      schedule_tick_failed: "定时任务触发失败",
+      session_run_failed: "会话运行失败",
+      session_touch_failed: "会话更新失败",
+      subagent_register_failed: "子智能体注册失败",
+      title_failed: "标题生成失败",
+      title_fallback_failed: "标题回退生成失败",
+      title_llm_failed: "标题模型调用失败",
+      title_usage_insert_failed: "标题用量写入失败",
+      tool_failed: "工具失败",
+      tool_fatal: "工具致命错误",
+      tool_timeout: "工具超时",
+      trace_adoption_failed: "轨迹接管失败",
+      uncaught_exception: "未捕获异常",
+      unhandled_rejection: "未处理的 Promise 拒绝",
+      usage_insert_failed: "用量写入失败",
+    } as Readonly<Record<string, string>>,
   },
 
   /** The Trace panel's own view of a Trace file (trace-file-view / timeline-chart); the standalone browsing page these once also served is gone. */
@@ -2475,7 +2592,7 @@ Benchmark：
     networkError: "网络错误，请检查连接",
     modelCredentialMissing: (modelId: string) =>
       `模型 ${modelId} 还没有可用的 API key，请先在「模型」页为它配置`,
-    noDefaultModel: "该 Project 还没有默认模型，请先在「模型」页添加模型并设为默认",
+    noDefaultModel: "该项目还没有默认模型，请先在「模型」页添加模型并设为默认",
     /** Localized text for the common server error codes (server error messages are English-only); looked up by ApiError.code in apiErrorText, falling back to the raw message for unmapped codes. */
     byCode: {
       invalid_credentials: "用户名或密码错误。",
@@ -2487,24 +2604,24 @@ Benchmark：
       not_found: "资源不存在，或你没有访问权限。",
       internal: "服务器内部错误，请稍后重试。",
       agent_not_found: "该 Agent 已不存在。",
-      unknown_agent: "该 Agent 不存在于本 Project。",
+      unknown_agent: "该 Agent 不存在于本项目。",
       agent_exists: "该 Agent id 已被占用。",
       agent_deleting: "该 Agent 正在删除中。",
-      project_exists: "该 Project id 已被占用。",
-      project_not_found: "该 Project 已不存在，或你没有访问权限。",
-      cannot_delete_last_project: "这是最后一个 Project，不能删除。",
+      project_exists: "该项目 ID 已被占用。",
+      project_not_found: "该项目已不存在，或你没有访问权限。",
+      cannot_delete_last_project: "这是最后一个项目，不能删除。",
       user_exists: "该用户名已被占用。",
       user_not_found: "该用户已不存在。",
       cannot_delete_admin: "内置 admin 不可删除。",
-      member_not_found: "该用户不是本 Project 的成员。",
-      already_member: "该用户已是本 Project 的成员。",
-      already_owner: "该用户已是本 Project 的所有者。",
+      member_not_found: "该用户不是本项目的成员。",
+      already_member: "该用户已是本项目的成员。",
+      already_owner: "该用户已是本项目的管理员。",
       memory_import_confirm_required: "本次导入会覆盖或删除已有记忆，请确认后继续。",
       schedule_exists: "已存在同名定时任务。",
       schedule_not_found: "该定时任务已不存在。",
       unknown_skill: "所选目录下没有这个技能。",
-      unknown_plugin: "该插件不在插件库中。",
-      goal_plugin_not_installed: "目标模式需要 goal 插件——请先在插件库中为该 Agent 安装。",
+      unknown_plugin: "该插件不在插件·技能中。",
+      goal_plugin_not_installed: "目标模式需要 goal 插件——请先在插件·技能中为该 Agent 安装。",
       skill_too_large: "该技能目录过大，超出了导入限制。",
       file_not_found: "该文件已不存在。",
       not_pending: "该插话已随本轮送达模型，无法撤回。",
@@ -2559,6 +2676,32 @@ Benchmark：
       messaging_disable_before_scan: "先停用该渠道的连接，才能重新扫码绑定。",
     },
   },
+
+  /**
+   * Display names for the built-in tools, keyed by tool id.
+   *
+   * **Display only.** The id is the contract — it is what the model calls, what
+   * `config.toolsBuiltin` keys on, what an approval prompt authorizes, and what a Trace
+   * records — so nothing here is ever sent anywhere; every surface that shows one of these
+   * also keeps the id reachable (see `toolLabel`'s callers). A lookup that misses falls back
+   * to the id rather than to a guess, which is what keeps an MCP tool (`mcp__<server>__<tool>`)
+   * and any tool added later readable without touching this table.
+   *
+   * The keys are pinned to core's `BUILTIN_TOOL_FACTORIES` by test/tool-labels.test.ts: a
+   * renamed or added built-in tool fails that test rather than silently showing a raw id.
+   */
+  toolNames: {
+    read_file: "读取文件内容",
+    edit_file: "编辑现有文件",
+    write_file: "写入/创建文件",
+    exec_command: "执行系统命令",
+    input_command: "向正在运行的命令/进程发送输入",
+    run_subagent: "启动子智能体",
+    input_subagent: "向子智能体发送输入",
+    read_image: "读取/加载图像文件（用于多模态处理）",
+    describe_image: "对图像进行描述（调用视觉模型）",
+    pet: "与虚拟宠物互动",
+  } as Readonly<Record<string, string>>,
 };
 
 /** Dictionary shape (constrains the English dictionary so keys and function signatures line up). */

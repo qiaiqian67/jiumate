@@ -19,14 +19,17 @@ import { useAuth } from "../../state/auth";
 import { PagedDialog } from "../../components/ui/paged-dialog";
 import type { PagedDialogGroup } from "../../components/ui/paged-dialog";
 import { Icon } from "../../components/ui/group-list";
-import { GEAR_ICON } from "../../components/ui/icons";
+import { GEAR_ICON, NAV_ICONS } from "../../components/ui/icons";
 import { GeneralSection } from "./general-section";
 import { AppearanceSection } from "./appearance-section";
 import { ApplicationSection } from "./application-section";
 import { AccountSection } from "./account-section";
 import { ProxySection } from "./proxy-section";
 import { UploadsSection } from "./uploads-section";
+import { LogsSection } from "./logs-section";
 import { AdminUsersSection } from "../admin/admin-users-page";
+import { ModelsPane } from "../models/models-page";
+import { useUpdateBadges } from "../../lib/use-update-badges";
 
 /** Rail glyphs, on the shared 24x24 stroke grid (see NAV_ICONS' conventions). */
 const SECTION_ICONS: Record<SettingsSectionKey, string> = {
@@ -34,6 +37,8 @@ const SECTION_ICONS: Record<SettingsSectionKey, string> = {
   /** Sun: appearance. */
   appearance:
     "M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4l1.4-1.4",
+  /** Stacked layers: the model library, same glyph the nav entry used. */
+  models: NAV_ICONS.models,
   /** Single person: the signed-in account. */
   account: "M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
   /** Window with a heart: application-level preferences (Petdex desktop pet). */
@@ -46,6 +51,8 @@ const SECTION_ICONS: Record<SettingsSectionKey, string> = {
   /** Two people: user management. */
   users:
     "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+  /** Text lines: the error log. */
+  logs: "M4 6h16M4 11h16M4 16h10",
 };
 
 export function SettingsDialog({
@@ -69,6 +76,11 @@ export function SettingsDialog({
     sessionVia,
   });
   const [active, setActive] = useState<SettingsSectionKey | null>(null);
+  // The anomaly trail's raised todo, read here rather than inside the section because the rail
+  // needs it whether or not the 日志 page is the one open. `todos.errors` is the same value the
+  // page's own notice uses, dismissal included — so the dot and the notice can never disagree.
+  const logsTodo = useUpdateBadges().todos.errors;
+  const logsNote = logsTodo === undefined ? null : S.todo.unexpectedErrors(logsTodo.count);
 
   // Each opening starts on the viewer's first page: clearing the choice lets `current`
   // below resolve it against the live list. Deliberately keyed on `open` alone — re-running
@@ -85,6 +97,8 @@ export function SettingsDialog({
     general: S.settings.generalTitle,
     appearance: S.settings.appearanceTitle,
     application: S.settings.applicationTitle,
+    models: S.settings.modelsTitle,
+    logs: S.logs.title,
     account: S.settings.accountTitle,
     proxy: S.settings.proxyTitle,
     uploads: S.settings.uploadLimitsTitle,
@@ -112,6 +126,11 @@ export function SettingsDialog({
           label: sectionLabel[s.key],
           icon: <Icon d={SECTION_ICONS[s.key]} size={16} />,
           ...(sectionInfo[s.key] !== undefined ? { info: sectionInfo[s.key] } : {}),
+          // The 日志 page wears the anomaly trail's dot, and its note is the same sentence the
+          // rail entry's tooltip carries on the trail it came from (see use-update-badges.ts):
+          // the dot means "unexpected errors are waiting", and the row is the only place left
+          // that says so once the cost center's badge is gone.
+          ...(s.key === "logs" && logsNote !== null ? { note: logsNote, dot: true } : {}),
         })),
     }),
   );
@@ -124,10 +143,18 @@ export function SettingsDialog({
       groups={groups}
       active={current}
       onSelect={setActive}
+      // The Models pane is the whole model library, hosted here rather than at its own route, and
+      // its group headers key their layout off their own `@container` width: at the default
+      // 3xl the content column is ~544px, under the 576px `@xl` its vendor names and the
+      // 官方推荐 pill hide behind — the headers rendered as bare chevrons. 5xl gives the column
+      // ~800px, so the pane shows what the page showed. Every other page keeps the default.
+      widthClass={current === "models" ? "sm:max-w-5xl" : undefined}
     >
       {current === "general" && <GeneralSection />}
       {current === "appearance" && <AppearanceSection />}
       {current === "application" && <ApplicationSection />}
+      {current === "models" && <ModelsPane />}
+      {current === "logs" && <LogsSection />}
       {current === "account" && <AccountSection />}
       {current === "proxy" && <ProxySection />}
       {current === "uploads" && <UploadsSection />}

@@ -44,7 +44,12 @@ import { forgetSession, noteSessionSeen, useSessionSeen } from "../../lib/sessio
 import { apiErrorText } from "../../lib/api-error";
 import { useAuth } from "../../state/auth";
 import { useLocale } from "../../state/locale";
-import { agentDisplayName, projectDisplayName, useProject } from "../../state/project";
+import {
+  agentDisplayName,
+  projectDisplayName,
+  projectRoleLabel,
+  useProject,
+} from "../../state/project";
 import { useSessions } from "../../state/sessions";
 import {
   FOLDER_CATEGORIES,
@@ -352,6 +357,11 @@ export function Sidebar({
   const [settingsSection, setSettingsSection] = useState<SettingsSectionKey | null>(null);
   /** The badges over the update and to-do trails (use-update-badges.ts); the avatar's dot follows the update flow's offer / restart states. */
   const badges = useUpdateBadges();
+  // The anomaly trail's raised todo. The error log lives inside System settings now, so the dot
+  // is raised on that menu entry (and on the 日志 row inside the dialog) instead of on a nav
+  // route — see use-update-badges.ts.
+  const logsTodo = badges.todos.errors;
+  const logsNote = logsTodo === undefined ? null : S.todo.unexpectedErrors(logsTodo.count);
 
   // The floating pet window cannot reach this dialog (separate window, no router),
   // so its "switch pet" menu item relays through the chat window as a DOM event.
@@ -1444,10 +1454,12 @@ export function Sidebar({
           ),
         );
 
-  /** Page entries of the collapsible nav group (智能体 → 评估中心, driven by the NAV_GROUP_KEYS manifest, minus the entries this user's role cannot reach). Always mounted — the collapse animates their height to zero and turns them inert. */
-  const navItems: Array<{ to: string; label: string; icon: string }> = navKeysFor(
-    user?.isAdmin === true,
-  ).map((key) => ({ to: NAV_ROUTES[key], label: S.nav[key], icon: NAV_ICONS[key] }));
+  /** Page entries of the collapsible nav group (智能体 → 词元图, driven by the NAV_GROUP_KEYS manifest). Always mounted — the collapse animates their height to zero and turns them inert. */
+  const navItems: Array<{ to: string; label: string; icon: string }> = navKeysFor().map((key) => ({
+    to: NAV_ROUTES[key],
+    label: S.nav[key],
+    icon: NAV_ICONS[key],
+  }));
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -1497,7 +1509,7 @@ export function Sidebar({
               }`}
             >
               <span className="truncate">{projectDisplayName(p)}</span>
-              <Badge tone="gray">{p.role}</Badge>
+              <Badge tone="gray">{projectRoleLabel(p.role)}</Badge>
             </button>
           ))}
           <div className="mt-1.5 border-t border-gray-100 pt-1.5 dark:border-gray-800">
@@ -2155,16 +2167,24 @@ export function Sidebar({
             {/* System settings dialog: everyone gets the row — the dialog always has the
                 personal pages, and the server-global ones inside it stay gated by the
                 section registry rather than by this row. The preference rows that used to
-                stack here live on its pages now. */}
+                stack here live on its pages now. It wears the anomaly trail's dot, which the
+                error log took with it when it moved inside (see use-update-badges.ts) — without
+                it here, the dot would only be visible after opening the dialog. */}
             <button
               type="button"
-              className={menuItemClass}
+              className={`relative ${menuItemClass}`}
+              {...(logsNote !== null
+                ? { title: logsNote, "aria-label": `${S.settings.systemSettings} · ${logsNote}` }
+                : {})}
               onClick={() => {
                 setUserOpen(false);
                 setSettingsOpen(true);
               }}
             >
               {S.settings.systemSettings}
+              {logsNote !== null && (
+                <UpdateDot size="inline" position="right-2.5 top-1/2 -translate-y-1/2" />
+              )}
             </button>
             {/* Update entry, directly under the settings entry rather than on a page inside
                 it: one row for both backends (the server release here, the shell's own

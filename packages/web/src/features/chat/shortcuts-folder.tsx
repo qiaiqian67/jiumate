@@ -172,7 +172,7 @@ export function ShortcutsFolder({
                 <li key={shortcut.id} className="flex items-center gap-1">
                   <button
                     type="button"
-                    title={`${shortcut.title}\n${S.chat.exampleFillHint}`}
+                    title={`${shortcut.title}\n${S.inspiration.fillHint}`}
                     onClick={() => onFill(shortcut.prompt)}
                     className={`flex min-w-0 flex-1 items-center gap-2 ${exampleRowClass}`}
                   >

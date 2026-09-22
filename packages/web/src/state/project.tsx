@@ -11,10 +11,11 @@
  */
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import type { AgentSummary, ProjectSummary } from "@prismshadow/linsight-server/api";
+import type { AgentSummary, ProjectRole, ProjectSummary } from "@prismshadow/linsight-server/api";
 import { useStore } from "zustand/react";
 import { createStore } from "zustand/vanilla";
 import * as api from "../api/endpoints";
+import { S } from "../lib/strings";
 
 const PROJECT_KEY = "linsight.lastProjectId";
 const agentKey = (projectId: string) => `linsight.lastAgentId.${projectId}`;
@@ -35,9 +36,40 @@ interface ProjectContextValue {
 
 const ProjectContext = createContext<ProjectContextValue | null>(null);
 
-/** Project display name fallback: falls back to projectId when name is absent. */
+/**
+ * The built-in Project's id — a compile-time constant the server owns (`core/src/state/paths.ts`,
+ * `DEFAULT_PROJECT_ID`). The web app names it for itself because core's subpath exports exist for
+ * **web-safe, dependency-free** modules and `paths.ts` imports `node:os` and `node:path`; pulling
+ * it from there would drag Node builtins into the browser bundle. The literal was already spelled
+ * out in two other files (project-dialogs.tsx compares against it, admin-users-page.tsx builds
+ * `<username>-default_project`); this is its one home, with three readers.
+ */
+export const DEFAULT_PROJECT_ID = "default_project";
+
+/**
+ * Project display name: the name the owner set, else the built-in Project's label, else the id.
+ *
+ * The middle case exists because the admin's `default_project` is provisioned with **no** display
+ * name (the server inserts the row with just id/owner/createdAt), so the raw id used to surface in
+ * the switcher. Labelling it here rather than seeding a name keeps UI language out of stored data:
+ * a name written at signup would be frozen in whatever language that install happened to run in,
+ * and it is data the owner can edit afterwards either way.
+ *
+ * A non-admin's `<username>-default_project` is unaffected — the server does give those a name
+ * (the username), so they take the first branch.
+ */
 export function projectDisplayName(p: ProjectSummary): string {
-  return p.name ?? p.projectId;
+  if (p.name !== undefined && p.name !== "") return p.name;
+  if (p.projectId === DEFAULT_PROJECT_ID) return S.project.defaultProjectName;
+  return p.projectId;
+}
+
+/**
+ * A Project-level role as the switcher's badge shows it. `owner` is 管理员, matching the
+ * server-level role the user-management page already uses for the same word.
+ */
+export function projectRoleLabel(role: ProjectRole): string {
+  return role === "owner" ? S.project.roleOwner : S.project.roleMember;
 }
 
 /** Agent display name fallback: falls back to agentId when name is absent. */

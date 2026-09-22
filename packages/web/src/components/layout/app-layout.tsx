@@ -47,9 +47,9 @@ const railItemClass = (active: boolean) =>
 
 /**
  * Collapsed narrow rail: expand button on top; below it, in product-specified order, last
- * conversation / new chat / Agents / Skills / Models / Costs / Benchmark (every entry
- * carries a localized title + aria-label, so hover tooltips follow the UI language); user
- * avatar at the bottom. No Logo shown.
+ * conversation / 新会话 / 智能体 / 插件·技能 / 灵感库 / 词元图 (every entry carries a localized
+ * title + aria-label, so hover tooltips follow the UI language); user avatar at the bottom.
+ * No Logo shown.
  */
 function CollapsedRail({ onExpand }: { onExpand: () => void }) {
   const { user } = useAuth();
@@ -85,19 +85,20 @@ function CollapsedRail({ onExpand }: { onExpand: () => void }) {
     navigate(`/chat/${DRAFT_SESSION_ID}`, agentId ? { state: { agentId } } : undefined);
   };
 
-  /** Page entries (rail positions 3-7): same routes, same labels as the pinned nav.
-      Traces is not among them: reading a Trace happens in the chat toolbar's panel
-      switcher, which is the only place it happens. Paths come from `NAV_ROUTES` rather
-      than `/${key}` concatenation — manifest keys are identifiers, paths are URLs
-      (`/app-center` is kebab-case while the key is camelCase), and a wrong character
-      sequence falls through to the catch-all `<Navigate to="/chat">`. */
+  /**
+   * Page entries (rail positions 3-6): same routes, same order, same labels as the pinned nav.
+   * Models and the Evaluation Center are not among them — the first moved into System settings,
+   * the second has no nav entry at all — and Traces never was: reading a Trace happens in the
+   * chat toolbar's panel switcher, which is the only place it happens. Paths come from
+   * `NAV_ROUTES` rather than `/${key}` concatenation — manifest keys are identifiers, paths are
+   * URLs (`/app-center` is kebab-case while the key is camelCase), and a wrong character
+   * sequence falls through to the catch-all `<Navigate to="/chat">`.
+   */
   const pages: ReadonlyArray<{ to: string; label: string; icon: string }> = [
-    { to: NAV_ROUTES.appCenter, label: S.nav.appCenter, icon: NAV_ICONS.appCenter },
     { to: NAV_ROUTES.agents, label: S.nav.agents, icon: NAV_ICONS.agents },
     { to: NAV_ROUTES.plugins, label: S.nav.plugins, icon: NAV_ICONS.plugins },
-    { to: NAV_ROUTES.models, label: S.nav.models, icon: NAV_ICONS.models },
+    { to: NAV_ROUTES.appCenter, label: S.nav.appCenter, icon: NAV_ICONS.appCenter },
     { to: NAV_ROUTES.usage, label: S.nav.usage, icon: NAV_ICONS.usage },
-    { to: NAV_ROUTES.benchmark, label: S.nav.benchmark, icon: NAV_ICONS.benchmark },
   ];
 
   return (

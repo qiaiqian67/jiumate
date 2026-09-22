@@ -17,6 +17,7 @@
 import { useMemo, useRef, useState } from "react";
 import { S } from "../../lib/strings";
 import { humanizeDuration } from "../../lib/format";
+import { toolLabel } from "../../lib/tool-labels";
 import { stripAnsi } from "../../lib/strip-ansi";
 import { approvalKey } from "../../lib/omni/stream-model";
 import type { ToolCallItem } from "../../lib/omni/stream-model";
@@ -297,8 +298,14 @@ export function ToolCallCard({ item, ctx }: { item: ToolCallItem; ctx: StreamRen
         className={`${DISCLOSURE_ROW_STICKY_CLASS} ${DISCLOSURE_ROW_CLASS}`}
       >
         <StatusIcon state={state} label={stateLabel} />
-        <span className="shrink-0 truncate font-mono text-xs font-semibold text-gray-700 dark:text-gray-300">
-          {item.name || S.chat.unknownTool}
+        {/* Display name only, and `title` carries the id: this row is what the user reads while the
+            agent works, and the id is not what they are reading it for. Hover still answers "which
+            tool, exactly". */}
+        <span
+          title={item.name || undefined}
+          className="shrink-0 truncate text-xs font-semibold text-gray-700 dark:text-gray-300"
+        >
+          {item.name ? toolLabel(item.name) : S.chat.unknownTool}
         </span>
         {/* Human-readable subtitle: the model-written call description (command/subagent tools) or the file path (file tools). */}
         {subtitle && (
@@ -340,8 +347,13 @@ export function ToolCallCard({ item, ctx }: { item: ToolCallItem; ctx: StreamRen
               this pending block unmounts and only the truncating header subtitle remains. At
               ≥sm the row stays one line (the desktop column is wide enough in practice). */}
           <div className="mb-2 flex items-start gap-2 sm:items-center">
-            <span className="shrink-0 rounded-md bg-white px-1.5 py-0.5 font-mono text-xs font-semibold text-gray-700 dark:bg-gray-900 dark:text-gray-300">
-              {item.name || S.chat.unknownTool}
+            {/* The display name, with the id on hover: an approval is about the arguments beside
+                it, and the id is what the Trace will call it if the user goes looking afterwards. */}
+            <span
+              title={item.name || undefined}
+              className="shrink-0 rounded-md bg-white px-1.5 py-0.5 text-xs font-semibold text-gray-700 dark:bg-gray-900 dark:text-gray-300"
+            >
+              {item.name ? toolLabel(item.name) : S.chat.unknownTool}
             </span>
             <span className="min-w-0 flex-1 whitespace-pre-wrap break-all font-mono text-xs text-gray-600 sm:truncate dark:text-gray-400">
               {preview}

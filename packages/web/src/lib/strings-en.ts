@@ -12,16 +12,16 @@ export const en: Strings = {
 
   nav: {
     chat: "Chat",
-    newChat: "New chat",
-    appCenter: "App Center",
+    newChat: "New session",
+    appCenter: "Inspiration",
     agents: "Agents",
-    plugins: "Plugin library",
+    plugins: "Plugins & Skills",
     models: "Models",
     machines: "Machines",
-    usage: "Cost Center",
+    usage: "Token Map",
     traces: "Trajectories",
     benchmark: "Evaluation Center",
-    // Collapsed-rail tooltip (product-specified wording; new chat reuses chat.newSessionMenu, the other pages reuse the page names above).
+    // Collapsed-rail tooltip (product-specified wording; 新会话 reuses chat.newSessionMenu, the other pages reuse the page names above).
     lastConversation: "Last conversation",
     collapseSidebar: "Collapse sidebar",
     expandSidebar: "Expand sidebar",
@@ -187,6 +187,12 @@ export const en: Strings = {
     importTraceRunning: "Importing…",
     importTraceDone: (target: string) => `Trace imported into ${target}`,
     importTraceTooLarge: "The file exceeds the 14MB limit.",
+    /**
+     * The Models page, hosted as a settings pane rather than a nav entry: the whole model
+     * library (providers, keys, pricing, grouping) is per-user configuration, so it belongs
+     * beside the rest of it. The pane is the same component the old /models route renders.
+     */
+    modelsTitle: "Models",
     /** Admin-only sub-page (server-global); its explanation is disclosed at the pane heading. */
     proxyTitle: "Proxy options",
     proxyInfo:
@@ -212,8 +218,8 @@ export const en: Strings = {
       `conversation keep a separate ${imageMb}MB limit that this setting does not raise — an ` +
       `inline image enters the conversation and the Trace, where its size is paid again on ` +
       `every history page and resume.`,
-    theme: "Theme",
-    themeInfo: "Light or dark look of the app.",
+    mode: "Appearance",
+    modeInfo: "Light or dark look of the app.",
     themeLight: "Light",
     themeDark: "Dark",
     followSystem: "System",
@@ -229,6 +235,40 @@ export const en: Strings = {
     fontLarge: "L",
     accent: "Accent",
     accentInfo: "Interface accent color.",
+    themeTitle: "Theme",
+    themeInfo:
+      "A theme is a palette and a picture. The palette is the ten roles its author declared, and the whole gray scale the interface uses is derived from it — so switching themes recolors everything. A theme states which shell it holds up under: a single-shell one pins the appearance above, while one marked “follows the light/dark setting” works in both.",
+    themePinsMode: (mode: string): string => `Pins ${mode}`,
+    themeFollowsMode: "Follows the light/dark setting",
+    themeNoneNote: "No theme",
+    themeMissing: "Not on this machine",
+    themeNone: "The app's own look",
+    themeOwnsAccent: (name: string): string => `Set by the ${name} theme`,
+    themePackagesTitle: "Import a theme",
+    themePackagesInfo:
+      "Import from a folder on this machine. Put a Codex-Dream-Skin theme.json in it with a background image beside it — that is this app's native format, so nothing is converted. What you import joins the gallery above, and removing it is on its card there.",
+    themeImportPlaceholder: "Full path to the theme folder",
+    themeImportPick: "Choose folder…",
+    themeImportArchive: "Upload .zip",
+    themeImportAction: "Import",
+    themeImporting: "Importing…",
+    themeImported: (name: string): string => `Imported the ${name} theme`,
+    themeImportWarnings: "Import notes:",
+    themeImportFailed: "Could not import the theme",
+    themeDelete: "Delete",
+    themeDeleted: "Theme deleted",
+    themeDeleteFailed: "Could not delete the theme",
+    themeRefresh: "Refresh",
+    themeRefreshing: "Refreshing…",
+    themeSurfaceAlpha: "Surface transparency",
+    themeSurfaceAlphaInfo:
+      "How see-through the surfaces the theme declares are. More transparent shows more of the artwork; at 100% the panels are fully opaque and the artwork only appears around them.",
+    themeSurfaceAlphaInactive:
+      "The active theme declares no surfaces, so this does not apply to it.",
+    themeBackgroundDimInactive: "The active theme has no artwork, so this does not apply to it.",
+    themeBackgroundDim: "Artwork dimming",
+    themeBackgroundDimInfo:
+      "A scrim over the artwork, so a busy image does not compete with the text in the gaps between panels. 0 leaves it undimmed.",
     currencyInfo: "Display currency for prices; storage is always USD.",
     changePasswordInfo: "Change this account's sign-in password.",
     accentNames: {
@@ -468,6 +508,17 @@ export const en: Strings = {
 
   project: {
     switcher: "Project",
+    /**
+     * The built-in Project's label. Its id (`default_project`) is a system constant shared with
+     * the CLI, and the admin's copy is provisioned with no display name — so without this the id
+     * itself surfaced in the switcher. A label rather than a seeded `name`: the name is data the
+     * owner can edit, and writing one at signup would freeze whichever language that install
+     * happened to run in.
+     */
+    defaultProjectName: "Default project",
+    /** Project-level roles, as the switcher's badge shows them. */
+    roleOwner: "Owner",
+    roleMember: "Member",
     create: "New Project",
     createTitle: "New Project",
     id: "Project id",
@@ -666,6 +717,12 @@ export const en: Strings = {
         "Drops the old context without summarizing; the next turn starts fresh in a new window.",
       ],
     ] as ReadonlyArray<readonly [string, string]>,
+    /**
+     * Deliberately empty: the values (`summarize`, `discard`) already read as English, so the rows
+     * show the raw value with no annotation — exactly what this menu showed before the zh names
+     * existed. `optionRows` falls back to the value, so an empty table is a complete answer.
+     */
+    compactionModeNames: {} as Readonly<Record<string, string>>,
     compactionPrompt: "prompt (summarization prompt)",
     maxTurnsInvalid: "max_turns must be > 0 or -1",
     timeoutInvalid: "timeoutMs must be > 0 or -1",
@@ -893,12 +950,12 @@ export const en: Strings = {
     visionOffProxyHint: "Images are read via the vision proxy model",
     fastMode: "Fast mode",
     fastModeHint:
-      "Faster output, billed at the provider's premium tier; the Cost center still counts it at the entry's standard prices",
+      "Faster output, billed at the provider's premium tier; the Token Map still counts it at the entry's standard prices",
     fastModeUnsupported:
       "This model does not support fast mode — turn it off, or its requests will fail",
     fastModeConfirmTitle: "Enable fast mode",
     fastModeConfirmBody:
-      "Fast mode is billed at the provider's premium price list (MiniMax charges 1.5x standard; OpenAI and Anthropic publish separate premium rates). The entry's recorded per-token prices are not adjusted, so the Cost center will under-report this usage.",
+      "Fast mode is billed at the provider's premium price list (MiniMax charges 1.5x standard; OpenAI and Anthropic publish separate premium rates). The entry's recorded per-token prices are not adjusted, so the Token Map will under-report this usage.",
     fastModeConfirmPreview:
       "Anthropic's fast mode is a limited research preview: until your organization is granted access, requests return a 429 rate-limit error.",
     fastModeBadge: "Fast",
@@ -1214,9 +1271,156 @@ export const en: Strings = {
     },
   },
 
+  /**
+   * Inspiration library (features/inspiration/*): the built-in cases plus the ones admins authored,
+   * filed into categories. The built-in cases' own copy is NOT here — it travels with the case, as
+   * the `title`/`titleZh` fields in `@prismshadow/linsight-inspirations/presets`, which is what lets
+   * an admin's case and a built-in one be the same kind of thing. This group carries the chrome.
+   */
+  inspiration: {
+    pageTitle: "Inspiration",
+    pageDesc:
+      "Built-in prompts, agents, skills and tools — one click fills the composer and you are started.",
+    /** The card's and the detail modal's star. */
+    favorite: "Add to favourites",
+    unfavorite: "Remove from favourites",
+    /** The badge on a built-in case: ships with the product, and cannot be edited or deleted. */
+    official: "Official",
+    /** The badge on a case an admin parked (`enabled: false`) — only an admin sees those cards. */
+    hiddenBadge: "Disabled",
+    /** The tab strip: All / Featured / one per category / Favourites. */
+    tabAll: "All",
+    tabFeatured: "Featured",
+    tabFavorites: "Favourites",
+    /** The search box (title, description, prompt, skill and tool names; both languages match). */
+    searchLabel: "Search inspirations",
+    searchPlaceholder: "Search inspirations",
+    /** The card's and the detail modal's action. */
+    invoke: "Make one like this",
+    /**
+     * The label on the card's own button. The same action as the detail modal's `invoke`, and worded
+     * to match; shorter on the card, where it shares a row with the kind and official badges.
+     *
+     * "It fills, it does not send" is left to the draft row's `fillHint` — that is where a user meets
+     * the behaviour first, and the only place with room to spell it out.
+     */
+    invokeHint: "Make this",
+    openDetail: "View detail",
+    /** Second tooltip line on a draft-screen row: the click fills, it does not send. */
+    fillHint: "Click to fill the composer — edit it if you like, then send",
+    /** The draft picker's last row: into the full library. Carries the count when there is one. */
+    browseAll: (total?: number) =>
+      total === undefined ? "Browse all inspirations →" : `Browse all inspirations (${total}) →`,
+    /** Empty states. */
+    empty: "No cases here yet.",
+    favoritesEmpty: "Nothing starred yet. Tap the heart on a card to keep it here.",
+    searchEmpty: (query: string) => `No case matches "${query}".`,
+    /** Shown when the server's catalog could not be read (only the built-ins are listed). */
+    offlineHint:
+      "Could not read the inspiration library from the server — showing the built-in cases only.",
+    /** Detail modal section headings. */
+    previewLabel: "Preview",
+    promptLabel: "Prompt",
+    skillsLabel: "Preselected skills",
+    toolsLabel: "Expected tools",
+    agentLabel: "Suggested agent",
+    noneHint: "(none)",
+    metaLine: (category: string) => `Category: ${category}`,
+    /** The kind badge (shared by the card and the detail modal). */
+    kind: {
+      app: "App",
+      agent: "Agent",
+      skill: "Skill",
+      tool: "Tool",
+      prompt: "Prompt",
+    },
+    /** Admin: capture a Session into the library (the details card's bottom row). */
+    capture: "Add to the library",
+    captureHint: "Save this conversation's opening prompt as a reusable case",
+    captureNoPrompt: "This conversation has no user prompt yet — say something first",
+    /** Admin: create / edit / delete a case. */
+    newCase: "New case",
+    createTitle: "New case",
+    editTitle: "Edit case",
+    manageCategories: "Categories",
+    created: "Case created",
+    saved: "Case saved",
+    deleted: "Case deleted",
+    deleteTitle: "Delete case",
+    deleteConfirm: (title: string) =>
+      `Delete "${title}"? Its directory — cover and preview included — goes with it.`,
+    /** Form fields. */
+    fieldTitleZh: "Name (Chinese)",
+    fieldTitleEn: "Name (English)",
+    fieldId: "Id",
+    fieldIdHint:
+      "Lowercase letters, digits, dash or underscore; it is also the case's directory name and cannot change after creation",
+    fieldKind: "Kind",
+    fieldCategory: "Category",
+    fieldDescriptionZh: "Summary (Chinese)",
+    fieldDescriptionEn: "Summary (English)",
+    fieldPromptZh: "Prompt (Chinese)",
+    fieldPromptEn: "Prompt (English)",
+    fieldPromptInfo:
+      "Clicking “Make one like this” puts this text into the composer verbatim and sends nothing. Say what to build and the constraints the result would be wrong without — the Agent works out the steps.",
+    fieldAgent: "Suggested agent",
+    fieldAgentHint:
+      "A case is global and an agent belongs to a project, so only the id is stored — an id that is not in the user's project falls back to the agent they are on",
+    /** First entry of the suggested-agent picker: nothing suggested. */
+    agentNone: "Not specified (use the current agent)",
+    fieldSkills: "Preselected skills",
+    fieldSkillsHint:
+      "Picked from the shipped skill catalog; “Make one like this” preselects only those the chosen Agent has installed",
+    skillsEmpty: "The skill catalog is empty",
+    fieldTools: "Expected tools",
+    fieldToolsHint:
+      "Taken from the chosen Agent's own tools; shown only — nothing is installed or reconfigured",
+    toolsEmpty: "This Agent has no tools",
+    toolsNoAgent: "Create an Agent in this project first — its tools are what this list offers",
+    toolsSearchPlaceholder: "Search tools",
+    toolsNoMatch: "No tool matches",
+    /** The multi-select trigger's label: nothing picked / N picked. */
+    pickerNone: "None picked",
+    pickerPicked: (n: number) => `${n} picked`,
+    fieldCover: "Cover",
+    fieldCoverHint: "A glyph uses an emoji; uploading an image replaces it",
+    fieldCoverInfo:
+      "A glyph and an image are one choice — the card draws only one of them. Uploading an image clears the glyph; going back to a glyph deletes the uploaded file.",
+    coverUpload: "Upload cover",
+    coverUploadHint: "Click the box to upload an image",
+    fieldGlyph: "Glyph",
+    coverUseGlyph: "Back to a glyph",
+    coverExtensionError: (exts: string) => `A cover must be one of: ${exts}`,
+    fieldPreview: "Preview (HTML)",
+    fieldPreviewInfo:
+      "Paste a self-contained HTML document: it renders in the detail modal's sandboxed iframe (scripts run, but the app's cookies and storage are out of reach). Saving with this empty removes an existing preview.",
+    previewHint: (bytes: number, limit: number) => `${bytes} / ${limit} bytes`,
+    previewKeepHint: "Saving with this empty removes the existing preview",
+    previewTooLarge: "The preview exceeds the 1MB limit",
+    fieldFeatured: "Show under Featured",
+    fieldEnabled: "Enabled (a disabled case is visible to admins only)",
+    fieldOrder: "Order",
+    fieldOrderHint: "Position within its category; the lower number comes first",
+    /** Admin: the category manager. */
+    categoriesTitle: "Categories",
+    categoriesDesc:
+      "Categories are the library's tabs. The three that ship are written into a fresh library once and are yours from then on — rename, reorder or delete them like any other. The one thing that holds one in place is the cases filed under it.",
+    categoriesEmpty: "No categories yet. Add one and the library gets its first tab.",
+    categoryNew: "New category",
+    categoryNameZh: "Name (Chinese)",
+    categoryNameEn: "Name (English)",
+    categoryId: "Id",
+    categoryIdHint:
+      "Lowercase letters, digits, dash or underscore; it is also the category's file name and cannot change after creation",
+    categorySaved: "Category saved",
+    categoryDeleted: "Category deleted",
+    categoryDeleteTitle: "Delete category",
+    categoryDeleteConfirm: (name: string) => `Delete the category "${name}"?`,
+  },
+
   /** Plugin library page (features/plugins/plugins-page.tsx): one card per library plugin, installed on agents as a whole. */
   plugins: {
-    pageTitle: "Plugin library",
+    pageTitle: "Plugins & Skills",
     pageDesc:
       "Built-in plugin library: each plugin ships skills and/or a hook package — browse, quick-start a chat, or install to agents.",
     pluginCount: (n: number): string => (n === 1 ? "1 plugin" : `${n} plugins`),
@@ -1349,7 +1553,7 @@ export const en: Strings = {
   chat: {
     thinkingLevelChangeNote:
       "Applies right away. Changing it invalidates the model's cached context — compacting first is recommended.",
-    newSessionMenu: "New chat",
+    newSessionMenu: "New session",
     chooseAgent: "Choose agent",
     chooseModel: "Choose model",
     thinkingLevel: "Thinking level",
@@ -1414,14 +1618,7 @@ export const en: Strings = {
     tempWorkspaces: "Temporary workspaces",
     newSessionInWorkspace: "New chat in this workspace",
     draftSubtitle: "The self-evolving agent that excels at AI development tasks",
-    /** Folder names for the draft page's collapsible examples (bookmark-style: exactly one open at a time). */
-    exampleFolders: {
-      webapps: "Build web apps",
-      agents: "Build and optimize agents",
-      schedules: "Create scheduled tasks",
-    },
-    /** Second tooltip line on an example row: the click fills the composer, it does not send. */
-    exampleFillHint: "Click to fill the composer — edit it if you like, then send",
+    /** The draft screen's picker's last tab: prompts the user saved themselves (see user-shortcuts.ts). */
     shortcuts: {
       folder: "My shortcuts",
       new: "New shortcut",
@@ -1447,197 +1644,6 @@ export const en: Strings = {
      * the draft folder does — a parked draft conversation is created and the chat opens on
      * the new-chat route with the canned prompt pre-filled.
      */
-    appCenter: {
-      pageTitle: "App Center",
-      pageDesc:
-        "A browsable catalog of starter apps — built-in examples plus the shortcuts you saved. Clicking a card opens a new chat with the prompt already filled in.",
-      /** Cover glyph fallback for an example row without one of its own (older entries). */
-      coverFallback: "✨",
-      /** Loading + empty states for the user's shortcuts tab on this page. */
-      shortcutsLoading: "Loading your shortcuts…",
-      shortcutsEmpty:
-        "You haven't saved any shortcuts yet — pick one of the built-in cards to start, then save the composer text as a shortcut.",
-      /** Click affordance: the same line the draft screen uses (the row tooltip already carries it). */
-      fillHint: "Click to fill the composer — edit it if you like, then send",
-      /**
-       * App detail Modal chrome (title + footer button). Cover/desc/prompt come from
-       * S.chat.exampleTasks and S.chat.shortcuts; this group only carries the chrome.
-       * "Open in draft" mirrors the plugins library's quick-start semantics — not "send now",
-       * but park + saveDraft + navigate /chat/new so the user reads, edits, then sends.
-       */
-      detailTitle: "App detail",
-      invoke: "Open in draft",
-      promptLabel: "Prompt",
-      skillsLabel: "Preselected skills",
-      noSkillsHint: "(no preselected skills)",
-      metaLine: (folderName: string, skillCount: number): string =>
-        skillCount > 0
-          ? `Category: ${folderName} · ${skillCount} preselected skill${skillCount === 1 ? "" : "s"}`
-          : `Category: ${folderName}`,
-      shortcutMeta: "Saved shortcut",
-      invokeHint: "Open in draft",
-    },
-    exampleTasks: {
-      game: {
-        label: "2D linsight sled game",
-        desc: "A cute Antarctic linsight sleds over rocks, easy start with a gentle difficulty ramp — a 2D pure-frontend mini game",
-        prompt:
-          "Build a cute Antarctic linsight sledding 2D game: press Space to jump over the rocks " +
-          "coming up on the ice; start easy and forgiving, with sled speed and obstacle density " +
-          "ramping up smoothly and gradually over time (no sudden spikes), live scoring, and " +
-          "hitting a rock ending the run with one-click restart. " +
-          "A 2D side-scroller with a cute cartoon look, pure frontend (a single HTML file is " +
-          "fine), styled per the web-design skill. " +
-          "When done, test it in a browser once, confirm the first few seconds are easy to " +
-          "clear, and tell me how to open it and how to play.",
-      },
-      gamecenter: {
-        label: "A mini-game center built by multiple agents",
-        desc: "Ten pure-frontend games with no repeated mechanics, built in parallel behind one index page",
-        prompt: `Build a web mini-game center with multiple agents working in parallel: 10 pure-frontend games with no two sharing the same mechanic, plus an index page.
-
-## How to split the work
-- First plan the 10 games (say snake, 2048, tetris, breakout, minesweeper, memory match, sokoban, space shooter, platform jumper, rhythm tap), confirm no two mechanics repeat, and fix a shared directory layout, palette and interaction spec.
-- Then hand the 10 games to several subagents to implement in parallel — each subagent owns exactly one game, follows the agreed spec, and never edits another's files.
-
-## Each game
-- Its own \`games/<slug>/index.html\`: pure frontend, a single file that runs straight from file://, with no backend and no CDN assets.
-- Start / restart, live score or timer, a lose-or-clear summary, both keyboard and touch controls, and the rules written on the page.
-- A way back to the index page.
-
-## Index page
-- \`index.html\` at the root: a card grid listing all 10 games (name + one-line mechanic + controls), each card opening its game.
-- One design language shared with every game, following the web-design skill.
-
-## Wrap-up
-- Review as a whole: the 10 mechanics really are distinct, the styling is consistent, and every index link resolves.
-- Self-test each game in a browser — it starts, it ends, it restarts — then tell me how to open it.`,
-      },
-      lol: {
-        label: "League of Legends music player",
-        desc: "Worlds anthems on the SoundCloud Widget API — a single file that opens from file://",
-        prompt: `Build a League of Legends Worlds anthem player with the SoundCloud Widget API (see https://developers.soundcloud.com/docs/api/html5-widget): a single index.html that works when opened from file://.
-
-## Technical constraints
-- Use the SC.Widget JS API (widget.load / widget.toggle / widget.setVolume / widget.seekTo), loading https://w.soundcloud.com/player/api.js
-- The iframe must stay visible (180px tall), with visual=true color=f0b90b single_active=true
-- Include ONLY these 8 tracks confirmed playable (oEmbed-verified); do not add tracks that are not oEmbed-verified:
-  - Warriors (S4) — soundcloud.com/leagueoflegends/warriors
-  - Worlds Collide (S5) — soundcloud.com/leagueoflegends/worlds-collide
-  - Legends Never Die (S7) — soundcloud.com/leagueoflegends/legends-never-die
-  - Phoenix (S9) — soundcloud.com/leagueoflegends/phoenix
-  - Burn It All Down (S11) — soundcloud.com/leagueoflegends/burn-it-all-down
-  - GODS (S13) — soundcloud.com/leagueoflegends/gods
-  - Heavy Is The Crown (S14) — soundcloud.com/linkinpark/heavy-is-the-crown
-  - Sacrifice (S15) — soundcloud.com/leagueoflegends/sacrifice
-
-## Layout
-- Left 260px sticky sidebar: the track list (S4/S5/… badge + emoji + title + year); clicking highlights with a gold border and switches tracks via SC.Widget.load() with auto_play
-- Right main area: hero title + a desktop clock (80px monospace gold HH:MM:SS, refreshed every second, blinking colons) + a mood tag
-- Player card: the SoundCloud iframe + a custom control bar (⏮ ▶/⏸ ⏭ + track info + a volume slider; clicking the speaker icon toggles mute)
-- Mood-wave section: 15 gold animated bars, re-randomized on every track switch
-- Keyboard shortcuts: Space play/pause, ← → previous/next, ↑ ↓ volume
-
-## Design
-Linsight visual style (see the web-design skill), dark by default. On phones the sidebar becomes a horizontally scrolling top bar.
-
-When done, open index.html in a browser and self-test once.`,
-      },
-      rhythmRunner: {
-        label: "Rhythm runner mini game",
-        desc: "A Muse Dash-style rhythm runner: a linsight lead, notes locked to the beat, graded Perfect / Great / Miss",
-        prompt:
-          "Build a Muse Dash-style rhythm runner: a linsight runs forward on its own, and notes — " +
-          "drawn as music-note icons — fly in locked to the beat for me to hit. Show Perfect / " +
-          "Great / Miss for each hit, score combos, and let the difficulty climb as the track goes " +
-          "on. Pure front end, one file, playable straight from file://.",
-      },
-      investmentCopilot: {
-        label: "Conversational investment analyst",
-        desc: "A conversational market Copilot on the Linsight SDK: the home page lists what is trending, with the market factors behind every call",
-        prompt:
-          "Build a conversational stock-market Copilot on the Linsight SDK, along the lines of " +
-          "perplexity.ai/finance: from startup it pulls live market data every 5 minutes, and the " +
-          "home page lists the stocks trending strongest lately alongside how the sectors compare. " +
-          "Every call has to name the market factors behind it — policy, sector news, fund flows, " +
-          "earnings, macro data — rather than technical indicators. Analysis of public data, not " +
-          "investment advice. Its stock-lookup tool has to handle questions like \"look up Zhipu's " +
-          'stock for me": resolve a company name to its ticker itself, and when there is no match ' +
-          "or the company is not listed, say so rather than inventing a quote.",
-      },
-      rag: {
-        label: "Build a Claude Code docs RAG agent",
-        desc: "Collect the claude-code-docs repo into a conversational RAG knowledge app with source citations",
-        prompt:
-          "Collect the docs from https://github.com/ericbuess/claude-code-docs and build a RAG knowledge app: " +
-          "clone the repo and prepare the corpus, then build a retrieval index; " +
-          "the app acts as a Claude Code configuration expert, answering Claude Code questions " +
-          "with retrieval-augmented replies and clickable citations that reveal the matched " +
-          "original text chunk and link to the real documents; " +
-          "give it a beautiful web chat UI following the web-design skill. " +
-          "When done, run the app and self-test one Chinese question and one English question, confirming both retrieve " +
-          "the right English documents and stream their answers, then tell me how to access it.",
-      },
-      agentBenchmarkBuild: {
-        label: "Build a general-purpose decision agent and its benchmark",
-        desc: "Create a general decision Agent and test it on football, after-sales, and investment tasks",
-        prompt: `Use \`agent-initialization\` followed by \`benchmark-design\` to create a decision Agent and produce a frozen Benchmark with a Formal Baseline.
-
-Agent:
-- id: \`finite_choice_agent\`
-- capability: make stable, explainable finite choices when public information is incomplete or conflicting
-- installed_skills: \`[]\`
-
-Benchmark:
-- id: \`contextual-choice-adaptation\`
-- capability: form and transfer a stable finite-choice decision process from public rules, historical examples, and current facts
-- desired_baseline_score: \`<75\`
-- pilot_iteration_limit: \`5\`
-
-Scenarios:
-1. Make football betting decisions from historical matches and current information.
-2. Choose after-sales actions from policy and ticket facts.
-3. Choose investment actions from a strategy, historical markets, and current indicators.`,
-      },
-      agentOptimization: {
-        label: "Improve the general-purpose decision agent's accuracy",
-        desc: "Improve an Agent from existing evaluation results and verify that the new version is better",
-        prompt: `Use \`agent-optimization\` to optimize a decision Agent against its frozen Benchmark.
-
-- test_agent_id: \`finite_choice_agent\`
-- benchmark_id: \`contextual-choice-adaptation\`
-- capability_direction: improve stability under incomplete information, conflicting rules, and finite choices
-- runs: \`3\`
-- desired_score: \`>=95\`
-- candidate_round_limit: \`5\``,
-      },
-      dailyPlan: {
-        label: "A 9am daily planning check-in",
-        desc: "09:00 every day: talk through the day's plan in this same chat, and review yesterday's progress",
-        prompt:
-          "Set up a scheduled task: every day at 9am, in this same conversation, plan today's work " +
-          "with me. Read back over the conversation first and say what yesterday's plan got done and " +
-          "where it stuck, then offer an ordered shortlist for today with a line of reasoning each, " +
-          "and write up what I confirm as a checklist.",
-      },
-      githubDigest: {
-        label: "Daily GitHub project digest",
-        desc: "A daily pass over one repo's issues, PRs and CI, ending in prioritized recommendations",
-        prompt:
-          "Set up a scheduled task: every morning, use gh to digest one GitHub repo's issues, PRs " +
-          "and CI — surface what has stalled, what is waiting on review and what is failing — and " +
-          "end with recommendations ranked by priority, each saying why it sits where it does.",
-      },
-      memoryReview: {
-        label: "Friday memory review",
-        desc: "Friday evening: go through what is worth remembering from the week and write it into Memory",
-        prompt:
-          "Set up a scheduled task: every Friday evening, in this same conversation, go through " +
-          "what is worth remembering from the week with me. Check the existing memory index first so " +
-          "nothing is duplicated, then take it item by item — what to record, what to revise — and " +
-          "write what I confirm into Memory.",
-      },
-    },
     sessionList: "Sessions",
     defaultSessionTitle: "New chat",
     agent: "Agent",
@@ -2398,7 +2404,7 @@ Scenarios:
   },
 
   usage: {
-    title: "Costs & usage",
+    title: "Token Map",
     today: "Today",
     last7d: "Last 7 days",
     total: "Total",
@@ -2419,6 +2425,33 @@ Scenarios:
     range30d: "Last 30 days",
     range90d: "Last 90 days",
     rangeCustom: "Custom",
+    /**
+     * Year heatmap (features/usage/token-heatmap-panel.tsx): one cell per day, weeks across and
+     * weekdays down, over a whole calendar year. Independent of the page's range filter — it is
+     * the one panel that answers "how has this year gone" rather than "what did the selected
+     * window do".
+     */
+    heatmapTitle: "Tokens by day, all year",
+    heatmapDesc: "One cell per day; darker means more tokens.",
+    /** The three figures beside the grid, in the reference layout's order. */
+    heatmapTotal: "Total tokens",
+    heatmapPeak: "Busiest day",
+    heatmapActive: "Active days",
+    /**
+     * Weekday labels down the side, Monday first. Spelled out rather than taken from
+     * `Intl`'s narrow form, which collapses to M/T/W/T/F/S/S — three pairs of identical
+     * labels for a column of seven rows.
+     */
+    heatmapWeekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    /** Hover tooltip: the day's date, its Token total, and its cache hit rate (the reference card's two lines). */
+    heatmapTipTokens: (tokens: string): string => `Tokens ${tokens}`,
+    heatmapTipCache: (percent: string): string => `Cache hit ${percent}`,
+    heatmapLess: "Less",
+    heatmapMore: "More",
+    heatmapPrevYear: "Previous year",
+    heatmapNextYear: "Next year",
+    heatmapLoading: "Loading the year…",
+    heatmapError: "Could not load the year's usage.",
     chartRequestsByAgent: "Requests & success rate by agent",
     chartRequestsByModel: "Requests & success rate by model",
     legendSuccessRate: "Success rate",
@@ -2428,30 +2461,61 @@ Scenarios:
     bucketTotal: "Total",
     legendHitRate: "Cache hit rate",
     empty: "No usage records",
-    errors: "Errors",
-    errorsTotal: "Total",
-    errorsUnexpected: "Unexpected",
-    errorsExpected: "Expected",
-    errorsTopCode: "Most common",
-    errorsColCode: "Source · code",
-    errorsColKind: "Type",
-    errorsColMessage: "Message",
-    errorsEmpty: "No errors",
-    /** Detail-table pager: newer/older step back through pages of the same filtered set. */
-    errorsNewer: "Newer",
-    errorsOlder: "Older",
-    errorsPageOf: (page: number, pages: number, total: number) =>
-      `Page ${page} / ${pages} · ${total} total`,
-    /** Clearing the table: the action, and the confirm that must name exactly what goes. */
-    errorsClear: "Clear",
-    errorsClearTitle: "Clear error records",
-    errorsClearScope: (count: number, from: string, to: string): string =>
-      `Deletes this Project's ${count} error record${count === 1 ? "" : "s"} between ${from} and ${to}. Records outside that range are kept.`,
-    errorsClearScopeAgent: (count: number, from: string, to: string, agentId: string): string =>
-      `Deletes this Project's ${count} error record${count === 1 ? "" : "s"} for agent ${agentId} between ${from} and ${to}. Other agents and other dates are kept.`,
-    errorsClearIrreversible: "This cannot be undone.",
     errorsClearDone: (count: number): string =>
       `Deleted ${count} error record${count === 1 ? "" : "s"}`,
+  },
+
+  /**
+   * The System settings "Logs" page — the server error log, moved off the cost center.
+   *
+   * `sources` and `codes` are deliberately empty: every value is already a readable English
+   * identifier (`environment`, `session_run_failed`), so the raw value IS the English label and
+   * the lookups fall back to it. Same reasoning as `toolNames` — the identifier is also what a
+   * Trace and the server's own logs say, so nothing is lost by showing it.
+   */
+  logs: {
+    title: "Logs",
+    rangeLabel: "Time range",
+    rangeToday: "Today",
+    range7d: "Last 7 days",
+    range30d: "Last 30 days",
+    rangeAll: "All time",
+    /** Agent filter: the "no filter" option, and the label of the control itself. */
+    allAgents: "All agents",
+    agentLabel: "Filter by Agent",
+    total: "Total",
+    unexpected: "Unexpected",
+    expected: "Expected",
+    topCode: "Most common",
+    colCode: "Source · code",
+    colKind: "Type",
+    colMessage: "Message",
+    empty: "No log entries",
+    /** Detail-table pager: newer/older step back through pages of the same filtered set. */
+    newer: "Newer",
+    older: "Older",
+    pageOf: (page: number, pages: number, total: number) =>
+      `Page ${page} / ${pages} · ${total} total`,
+    /** Clearing the table: the action, and the confirm that must name exactly what goes. */
+    clear: "Clear",
+    clearTitle: "Clear error records",
+    clearScope: (count: number, from: string, to: string): string =>
+      `Deletes this Project's ${count} error record${count === 1 ? "" : "s"} between ${from} and ${to}. Records outside that range are kept.`,
+    /** The Agent filter narrows the same delete, so the sentence has to name the Agent too. */
+    clearScopeAgent: (count: number, from: string, to: string, agentId: string): string =>
+      `Deletes this Project's ${count} error record${count === 1 ? "" : "s"} for agent ${agentId} between ${from} and ${to}. Other agents and other dates are kept.`,
+    /** The "All time" preset has no bounds to name, so the confirm says so in as many words. */
+    clearScopeAll: (count: number): string =>
+      `Deletes all ${count} of this Project's error records. Other Projects are unaffected.`,
+    /** Both narrowings at once: no range to name, but an Agent to. */
+    clearScopeAllAgent: (count: number, agentId: string): string =>
+      `Deletes all ${count} of this Project's error records for agent ${agentId}. Other agents are unaffected.`,
+    clearIrreversible: "This cannot be undone.",
+    clearDone: (count: number): string => `Deleted ${count} error record${count === 1 ? "" : "s"}`,
+    /** Empty: the raw source reads as its own English label (see the block comment above). */
+    sources: {} as Readonly<Record<string, string>>,
+    /** Empty: the raw code reads as its own English label (see the block comment above). */
+    codes: {} as Readonly<Record<string, string>>,
   },
 
   /** The Trace panel's own view of a Trace file (trace-file-view / timeline-chart); the standalone browsing page these once also served is gone. */
@@ -2617,4 +2681,14 @@ Scenarios:
         "Disable this channel's connection before rebinding it by scan.",
     },
   },
+
+  /**
+   * Display names for the built-in tools, keyed by tool id.
+   *
+   * Deliberately empty: the tool ids are already English (`read_file`, `exec_command`, …), so
+   * the English surface reads the id — which is also the name that appears in a Trace and in
+   * the model's own calls. `toolLabel` falls back to the id, so an empty table is a complete
+   * answer here, not a gap. Fill it in only if a friendlier English label is ever wanted.
+   */
+  toolNames: {} as Readonly<Record<string, string>>,
 };

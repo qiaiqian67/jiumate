@@ -18,18 +18,48 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
 
 describe("optionRows", () => {
   it("drops the '' inherit row and keeps dictionary order", () => {
-    const rows = optionRows(ENTRIES);
+    const rows = optionRows(ENTRIES, {});
     expect(rows.map((r) => r.value)).toEqual(["low", "medium", "high", "xhigh", "max"]);
     expect(rows.some((r) => r.value === "")).toBe(false);
   });
 
-  it("maps value into both labels and carries the description through", () => {
-    const rows = optionRows([["summarize", "Summarize old context."]]);
+  it("falls back to the raw value on both labels when no name is known", () => {
+    // The en dictionary ships an empty name table: the value is already its own English name.
+    const rows = optionRows([["summarize", "Summarize old context."]], {});
     expect(rows[0]).toEqual({
       value: "summarize",
       triggerLabel: "summarize",
       label: "summarize",
       description: "Summarize old context.",
     });
+  });
+
+  it("localizes the trigger to the plain name and the row to the name plus wire value", () => {
+    const rows = optionRows(
+      [
+        ["summarize", "Summarize old context."],
+        ["discard", "Drop old context."],
+      ],
+      { summarize: "生成摘要", discard: "直接丢弃" },
+    );
+    expect(rows[0]).toEqual({
+      value: "summarize",
+      triggerLabel: "生成摘要",
+      label: "生成摘要 (summarize)",
+      description: "Summarize old context.",
+    });
+    expect(rows[1]).toMatchObject({ triggerLabel: "直接丢弃", label: "直接丢弃 (discard)" });
+  });
+
+  it("mixes named and unnamed rows without disturbing either", () => {
+    const rows = optionRows(
+      [
+        ["summarize", "Summarize old context."],
+        ["compact_hard", "Drop old context."],
+      ],
+      { summarize: "生成摘要" },
+    );
+    expect(rows.map((r) => r.triggerLabel)).toEqual(["生成摘要", "compact_hard"]);
+    expect(rows.map((r) => r.label)).toEqual(["生成摘要 (summarize)", "compact_hard"]);
   });
 });

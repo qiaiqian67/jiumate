@@ -98,6 +98,24 @@ export interface ThinkingLevelOptionRow {
 }
 
 /**
+ * The localized names a dropdown row needs, passed in rather than imported so this module stays
+ * free of `S` (see the note at the top: `S` is a live binding, and a pure row builder must not
+ * capture it).
+ */
+export interface ThinkingLevelLabels {
+  /**
+   * Plain tier name (`S.chat.thinkingLevelNames`): what a level displays as on anything showing
+   * a settled value, the trigger included — in zh 低/中/高/极高/最高.
+   */
+  names: Readonly<Record<string, string>>;
+  /**
+   * Row-title variant that also names the wire value (`S.chat.thinkingLevelMenuName`); a no-op
+   * in en, where the plain name already IS the value.
+   */
+  menuName: (name: string, level: string) => string;
+}
+
+/**
  * Assembles the agent-settings thinking-level dropdown rows from the dictionary's
  * [value, description] pairs, composing both review decisions:
  * - the "" (inherit) row is **filtered** — the menu offers only concrete tiers, the user
@@ -109,25 +127,31 @@ export interface ThinkingLevelOptionRow {
  *   Gating on the persisted value (not the local edit state) means a misclick onto another
  *   tier keeps the row until the change is actually saved, so the user can always click
  *   back to the value still stored on disk.
+ *
+ * Name placement follows the same split as the composer's picker (chat-input.tsx): the
+ * **trigger** carries the plain name, and only the **row** — the surface where the tier is
+ * chosen — annotates it with the wire value the pick will write.
  */
 export function thinkingLevelOptionsFor(
+  labels: ThinkingLevelLabels,
   options: ReadonlyArray<readonly [string, string]>,
   noneKeptDescription: string,
   storedLevel: string | undefined,
 ): ThinkingLevelOptionRow[] {
+  const plainName = (level: string): string => labels.names[level] ?? level;
   const rows = options
     .filter(([value]) => value !== "")
     .map(([value, description]) => ({
       value,
-      triggerLabel: value,
-      label: value,
+      triggerLabel: plainName(value),
+      label: labels.menuName(plainName(value), value),
       description,
     }));
   if (storedLevel === "none") {
     rows.push({
       value: "none",
-      triggerLabel: "none",
-      label: "none",
+      triggerLabel: plainName("none"),
+      label: labels.menuName(plainName("none"), "none"),
       description: noneKeptDescription,
     });
   }

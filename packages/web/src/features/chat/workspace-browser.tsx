@@ -893,7 +893,7 @@ export function WorkspaceBrowser({
                 src={api.workspaceFilePreviewUrl(session.sessionId, preview.path)}
                 title={preview.name}
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
-                className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800"
+                className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
               />
             ) : preview.content === undefined ? (
               // Only reachable when previewIsolated flipped to false after an isolated
@@ -916,7 +916,7 @@ export function WorkspaceBrowser({
                 srcDoc={withStorageShim(preview.content)}
                 title={preview.name}
                 sandbox="allow-scripts"
-                className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800"
+                className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
               />
             )
           ) : preview.kind === "md" && richView === "edit" && editingMd ? (

@@ -29,12 +29,12 @@ describe("model-catalog", () => {
     expect(new Set(pairs).size).toBe(pairs.length);
     const ids = MODEL_CATALOG.map((m) => m.modelId);
     expect(MODEL_CATALOG[0]!.provider).toBe("deepseek");
-    // Group order is hand-curated, interleaving gateways and first-party vendors: TokenDance
-    // first (the recommended group), DeepSeek next (the default model's provider) and custom
-    // always last. This is the page's DEFAULT only — a Project that has reordered its groups
-    // stores every key and keeps its own arrangement (web's model-group-order.ts).
+    // Group order is hand-curated, interleaving gateways and first-party vendors: DeepSeek
+    // first (the recommended group and the default model's provider), TokenDance trailing the
+    // real platforms, and custom always last. This is the page's DEFAULT only — a Project that
+    // has reordered its groups stores every key and keeps its own arrangement (web's
+    // model-group-order.ts).
     expect(MODEL_PROVIDERS.map((p) => p.id)).toEqual([
-      "tokendance",
       "deepseek",
       "openrouter",
       "fireworks",
@@ -47,11 +47,12 @@ describe("model-catalog", () => {
       "minimax",
       "qwen-pay-as-you-go",
       "qwen-token-plan",
+      "tokendance",
       "custom",
     ]);
     // Exactly one group is marked recommended, and it is the one that leads the default
     // order: the caption and the placement are two statements of the same curation.
-    expect(MODEL_PROVIDERS.filter((p) => p.recommended).map((p) => p.id)).toEqual(["tokendance"]);
+    expect(MODEL_PROVIDERS.filter((p) => p.recommended).map((p) => p.id)).toEqual(["deepseek"]);
     expect(MODEL_PROVIDERS[0]!.recommended).toBe(true);
     expect(providerInfo("siliconflow")!.label).toBe("SiliconFlow");
     expect(providerInfo("minimax")!.label).toBe("MiniMax");

@@ -26,6 +26,7 @@ import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
+import { toolLabel, toolLabelHidesId } from "../../lib/tool-labels";
 import { useDocumentTitle } from "../../lib/use-document-title";
 import { useProject } from "../../state/project";
 import { Tabs } from "../../components/ui/tabs";
@@ -64,24 +65,36 @@ type TabKey =
   | "schedules";
 
 /**
- * Dropdown rows from a dictionary's [value, description] pairs (exported for unit tests).
+ * Dropdown rows from a dictionary's [value, description] pairs plus its name table (exported
+ * for unit tests).
+ *
  * The "" (not-overridden / inherit) row is filtered out per review — the menus offer only
  * concrete values in dictionary order, the user picks explicitly. An unset stored value
  * simply matches no row, so the OptionMenu trigger falls back to its placeholder
  * ("(default)", the same convention as the tools-table permission menu); nothing is
  * ever written silently, and the reset link next to each menu rewinds a local pick back to "".
+ *
+ * Name placement mirrors the thinking-level menu above: the **trigger** shows the plain name,
+ * and the **row** — where the value is chosen — annotates it with the wire value the pick will
+ * write, the same format as `S.chat.thinkingLevelMenuName`. A value missing from `names` (every
+ * value, in en, where the id already reads as a name) falls back to the raw value with no
+ * annotation, so an unmapped entry degrades to exactly what this menu showed before.
  */
 export function optionRows(
   entries: ReadonlyArray<readonly [string, string]>,
+  names: Readonly<Record<string, string>>,
 ): ReadonlyArray<OptionMenuChoice<string>> {
   return entries
     .filter(([value]) => value !== "")
-    .map(([value, description]) => ({
-      value,
-      triggerLabel: value,
-      label: value,
-      description,
-    }));
+    .map(([value, description]) => {
+      const name = names[value];
+      return {
+        value,
+        triggerLabel: name ?? value,
+        label: name !== undefined ? `${name} (${value})` : value,
+        description,
+      };
+    });
 }
 
 /** Numeric input's string state → number (empty/invalid = undefined, meaning no change). */
@@ -798,19 +811,27 @@ function RuntimeTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveF
   // misclick onto another tier keeps it reachable until the change is actually saved
   // (see thinking-level.ts).
   const thinkingLevelOptions = thinkingLevelOptionsFor(
+    { names: S.chat.thinkingLevelNames, menuName: S.chat.thinkingLevelMenuName },
     S.agent.thinkingLevelOptions,
     S.agent.thinkingLevelNoneKept,
     cfg.model?.thinkingLevel,
   );
-  const compactionModeOptions = optionRows(S.agent.compactionModeOptions);
+  const compactionModeOptions = optionRows(
+    S.agent.compactionModeOptions,
+    S.agent.compactionModeNames,
+  );
 
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="p-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {/* Every control in this tab carries the config key it writes in `title`, and the two
+                section bars carry theirs: the fields are labelled in the user's language, while
+                the YAML path stays reachable for anyone cross-referencing agent_state. */}
             <Input
               label={S.agent.maxTurns}
+              title="max_turns"
               size="sm"
               value={maxTurns}
               error={fieldErrors.maxTurns}
@@ -823,6 +844,7 @@ function RuntimeTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveF
             />
             <Input
               label={S.agent.maxTokens}
+              title="model.max_tokens"
               size="sm"
               value={maxTokens}
               onChange={(e) => setMaxTokens(e.target.value)}
@@ -831,6 +853,7 @@ function RuntimeTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveF
             />
             <OptionMenu
               label={S.agent.thinkingLevel}
+              title="model.thinking_level"
               fullWidth
               size="sm"
               placeholder={S.agent.defaultValue}
@@ -840,6 +863,7 @@ function RuntimeTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveF
             />
             <Input
               label={S.agent.timeoutMs}
+              title="model.timeoutMs"
               info={S.agent.timeoutMsHint}
               infoLabel={S.agent.timeoutMs}
               size="sm"
@@ -856,12 +880,13 @@ function RuntimeTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveF
         </div>
 
         <div className="border-t border-b border-gray-200 bg-gray-50/80 px-3 py-2 text-xs font-semibold text-gray-500 dark:border-gray-800 dark:bg-gray-900">
-          {S.agent.compaction}
+          <span title="compaction">{S.agent.compaction}</span>
         </div>
         <div className="p-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <Input
               label={S.agent.maxContextLength}
+              title="max_context_length"
               info={S.agent.maxContextLengthHint}
               infoLabel={S.agent.maxContextLength}
               size="sm"
@@ -872,6 +897,7 @@ function RuntimeTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveF
             />
             <Input
               label={S.agent.maxSessionTurns}
+              title="max_session_turns"
               info={S.agent.maxSessionTurnsHint}
               infoLabel={S.agent.maxSessionTurns}
               size="sm"
@@ -882,6 +908,7 @@ function RuntimeTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveF
             />
             <OptionMenu
               label={S.agent.compactionMode}
+              title="mode"
               fullWidth
               size="sm"
               placeholder={S.agent.defaultValue}
@@ -893,7 +920,7 @@ function RuntimeTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveF
         </div>
 
         <div className="border-t border-b border-gray-200 bg-gray-50/80 px-3 py-2 text-xs font-semibold text-gray-500 dark:border-gray-800 dark:bg-gray-900">
-          {S.agent.compactionPrompt}
+          <span title="prompt">{S.agent.compactionPrompt}</span>
         </div>
         <div className="p-3">
           <Textarea
@@ -1032,10 +1059,20 @@ function ToolsTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveFn 
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50/80 text-xs text-gray-500 dark:border-gray-800 dark:bg-gray-900">
               <th className="px-3 py-2">{S.common.name}</th>
-              <th className="px-3 py-2">{S.agent.toolPermission}</th>
-              <th className="px-3 py-2">{S.agent.toolTimeout}</th>
-              <th className="px-3 py-2">{S.agent.toolMaxOutput}</th>
-              <th className="px-3 py-2">
+              {/* Each header names the column in Chinese and carries the config key it edits in
+                  `title`: this table writes YAML, so the key is how the setting is looked up
+                  afterwards, but it is not what the user is reading the table for. The
+                  validation errors below still name the raw key for the same reason. */}
+              <th className="px-3 py-2" title="permission">
+                {S.agent.toolPermission}
+              </th>
+              <th className="px-3 py-2" title="timeoutMs">
+                {S.agent.toolTimeout}
+              </th>
+              <th className="px-3 py-2" title="maxOutputLength">
+                {S.agent.toolMaxOutput}
+              </th>
+              <th className="px-3 py-2" title="call_description">
                 <span className="flex items-center gap-1.5">
                   {S.agent.toolCallDescription}
                   <InfoPopover label={S.agent.toolCallDescription}>
@@ -1048,7 +1085,19 @@ function ToolsTab({ data, onSave }: { data: AgentConfigResponse; onSave: SaveFn 
           <tbody>
             {rows.map((row, i) => (
               <tr key={row.base.name} className="border-b border-gray-100 dark:border-gray-800/60">
-                <td className="px-3 py-2 align-top font-mono text-xs">{row.base.name}</td>
+                {/* The display name is what the row is scanned by; the id stays beside it because
+                    this table *is* the config — the id is the key being written, and it is what
+                    the model calls. An unmapped tool shows its id alone rather than twice. */}
+                <td className="px-3 py-2 align-top">
+                  <span className="text-sm text-gray-800 dark:text-gray-200">
+                    {toolLabel(row.base.name)}
+                  </span>
+                  {toolLabelHidesId(row.base.name) && (
+                    <span className="mt-0.5 block font-mono text-xs text-gray-400 dark:text-gray-500">
+                      {row.base.name}
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2 align-top">
                   <OptionMenu
                     mono

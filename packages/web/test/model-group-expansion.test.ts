@@ -42,7 +42,7 @@ describe("defaultExpandedProviders", () => {
     expect([...defaultExpandedProviders()]).toEqual([MODEL_PROVIDERS[0]!.id]);
     // The group that leads is a product decision, so it is spelled out once here: the page
     // opens on the recommended group rather than on whichever id used to be hard-coded.
-    expect(MODEL_PROVIDERS[0]!.id).toBe("tokendance");
+    expect(MODEL_PROVIDERS[0]!.id).toBe("deepseek");
     expect(MODEL_PROVIDERS[0]!.recommended).toBe(true);
   });
 

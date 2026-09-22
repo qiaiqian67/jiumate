@@ -7,8 +7,51 @@
     <meta name="theme-color" content="#030712" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/linsight-logo.svg" />
     <title>Linsight</title>
+    <!--
+      Pre-paint appearance restore.
+
+      Everything here is also done by the React tree a moment later, but "a moment later" is
+      after the first paint, which is long enough to see the built-in palette and then watch it
+      get replaced. This runs before the body is parsed, so the first paint is already correct.
+
+      The payload is written by `features/skin/skin-bootstrap.ts` and is a CACHE, never the
+      source of truth: a stale or unparsable value is ignored and the app corrects the document
+      as soon as it mounts. That is why the shape is duplicated here as plain JS rather than
+      shared — the alternative is a build step for four lines of reading, and the version field
+      (`v`) is what makes a shape change safe: an old payload is simply skipped.
+
+      No `data-accent` is written when `ownsAccent` is set, matching the mounted behaviour:
+      a skin that claims the accent pair must not race a same-specificity `data-accent` rule.
+    -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("linsight.skin.bootstrap");
+          if (!raw) return;
+          var p = JSON.parse(raw);
+          if (!p || p.v !== 1) return;
+          var root = document.documentElement;
+          if (p.dark) root.classList.add("dark");
+          if (p.skin) root.setAttribute("data-skin", p.skin);
+          if (p.accent && !p.ownsAccent) root.setAttribute("data-accent", p.accent);
+          if (p.font) root.style.fontSize = p.font;
+          if (p.css) {
+            var style = document.createElement("style");
+            style.id = "linsight-skin";
+            style.textContent = p.css;
+            document.head.appendChild(style);
+          }
+        } catch (err) {
+          /* Blocked site data, or a payload from a version that no longer parses: the app
+             renders the built-in appearance and rewrites the cache on mount. */
+        }
+      })();
+    </script>
   </head>
   <body>
+    <!-- Driven entirely by the skin stylesheet's custom properties; see styles.css. Static so
+         that it exists for the pre-paint pass above, before any component has mounted. -->
+    <div class="linsight-skin-background" aria-hidden="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

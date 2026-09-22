@@ -38,7 +38,7 @@ import { catalogDelta } from "../features/models/catalog-sync";
 import { useProject } from "../state/project";
 
 /** The nav routes that can carry a dot, and what each one's dot leads to. */
-export type BadgedRoute = "/agents" | "/plugins" | "/models" | "/usage";
+export type BadgedRoute = "/agents" | "/plugins" | "/models";
 
 export interface UpdateBadges {
   /** A software update this mode can act on, or null. */
@@ -104,7 +104,10 @@ export function useUpdateBadges(eager = false): UpdateBadges {
   if (kernelTodo !== null) navNotes["/agents"] = S.agent.kernelOutdatedHint;
   if (plugins !== null) navNotes["/plugins"] = S.todo.pluginUpdates(plugins.count);
   if (models !== null) navNotes["/models"] = S.todo.presetUpdates(models.count);
-  if (errors !== null) navNotes["/usage"] = S.todo.unexpectedErrors(errors.count);
+  // The cost center's own note is gone with its error card: the log moved to the System settings
+  // 日志 page, so a dot on /usage would lead to a page with no errors on it. Its dot is raised by
+  // the settings entry in the sidebar user menu and by the 日志 row inside the dialog, both of
+  // which read `todos.errors` below — the same raised todo, so the two cannot disagree.
 
   return {
     software,

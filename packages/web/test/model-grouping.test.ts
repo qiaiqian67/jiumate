@@ -81,11 +81,10 @@ describe("groupModelRows", () => {
     expect(groups[4]!.provider.envKey).toBe("OPENAI_API_KEY");
     expect(groups[4]!.rows.map((r) => r.modelId)).toEqual(["weird-model"]);
     // Group order matches MODEL_PROVIDERS, whose sequence is hand-curated (gateways and
-    // first-party vendors interleaved): TokenDance first as the recommended group, DeepSeek
-    // next as the default model's provider, custom last. This is the page's DEFAULT — the
-    // stored per-Project order applied below overrides it.
+    // first-party vendors interleaved): DeepSeek first as the recommended group and the default
+    // model's provider, TokenDance trailing the real platforms, custom last. This is the page's
+    // DEFAULT — the stored per-Project order applied below overrides it.
     expect(MODEL_PROVIDERS.map((p) => p.id)).toEqual([
-      "tokendance",
       "deepseek",
       "openrouter",
       "fireworks",
@@ -98,6 +97,7 @@ describe("groupModelRows", () => {
       "minimax",
       "qwen-pay-as-you-go",
       "qwen-token-plan",
+      "tokendance",
       "custom",
     ]);
     expect(MODEL_PROVIDERS.find((p) => p.id === "siliconflow")!.label).toBe("SiliconFlow");

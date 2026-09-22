@@ -21,7 +21,13 @@ import {
   PROJECT_SUFFIX_PATTERN,
   SEMANTIC_ID_PATTERN,
 } from "../../lib/semantic-id";
-import { agentDisplayName, projectDisplayName, useProject } from "../../state/project";
+import {
+  DEFAULT_PROJECT_ID,
+  agentDisplayName,
+  projectDisplayName,
+  projectRoleLabel,
+  useProject,
+} from "../../state/project";
 import { useAuth } from "../../state/auth";
 import { clearDraftChatDefaults, clearDraftModelRef } from "../../features/chat/draft-cache";
 import {
@@ -406,7 +412,7 @@ function GeneralSection({
         <span className="font-mono text-xs text-gray-400">{projectId}</span>
       </SettingRow>
       {isOwner &&
-        (projectId === "default_project" ? (
+        (projectId === DEFAULT_PROJECT_ID ? (
           <SettingRow
             title={S.project.deleteProject}
             description={S.project.deleteDefaultForbidden}
@@ -509,7 +515,7 @@ function MembersSection({ projectId, isOwner }: { projectId: string; isOwner: bo
             <tr key={m.userId}>
               <td className="whitespace-nowrap px-2.5 py-1.5">{m.userId}</td>
               <td className="whitespace-nowrap px-2.5 py-1.5">
-                <Badge tone="gray">{m.role}</Badge>
+                <Badge tone="gray">{projectRoleLabel(m.role)}</Badge>
               </td>
               <td className="whitespace-nowrap px-2.5 py-1 text-right">
                 {isOwner && m.role !== "owner" && m.userId !== user?.userId && (

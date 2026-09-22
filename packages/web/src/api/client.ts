@@ -38,6 +38,14 @@ export interface ApiFetchOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   /** JSON request body (auto-serialized with Content-Type: application/json). */
   body?: unknown;
+  /**
+   * A raw request body, for the few routes that take bytes rather than JSON (the theme archive
+   * upload). Mutually exclusive with {@link body}: only one of them may be set, because the
+   * Content-Type and the serialization differ and a request cannot have both.
+   */
+  rawBody?: Blob;
+  /** Content-Type for {@link rawBody}. Ignored when `body` is used. */
+  contentType?: string;
   /** Query parameters (undefined values are skipped). */
   query?: Record<string, string | number | undefined>;
   /** Extra request headers (e.g. `If-Match` for ETag-based conflict detection). */
@@ -63,8 +71,35 @@ export interface ApiFetchMeta {
   etag: string | null;
 }
 
-/** Makes an API request; non-2xx responses uniformly throw ApiError; 204/empty body returns undefined. */
-export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+/**
+ * The `fetch` body and headers for one request.
+ *
+ * Three cases, and they are exclusive: a raw body (already serialized, caller picks the type),
+ * a JSON body (serialized here), or neither. Kept as a function so the exclusivity is stated
+ * once rather than re-derived at the call site.
+ */
+function requestBodyInit(options: ApiFetchOptions): RequestInit {
+  if (options.rawBody !== undefined) {
+    return {
+      headers: {
+        "Content-Type": options.contentType ?? "application/octet-stream",
+        ...(options.headers ?? {}),
+      },
+      body: options.rawBody,
+    };
+  }
+  if (options.body !== undefined) {
+    return {
+      headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
+      body: JSON.stringify(options.body),
+    };
+  }
+  return options.headers ? { headers: options.headers } : {};
+}
+
+/** Makes an API request; non-2xx responses uniformly throw ApiError; 204/empty body returns undefined. */ export async function apiFetch<
+  T,
+>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   return (await apiFetchWithMeta<T>(path, options)).data;
 }
 
@@ -88,12 +123,7 @@ export async function apiFetchWithMeta<T>(
     response = await fetch(url, {
       method: options.method ?? "GET",
       credentials: "same-origin",
-      ...(options.body !== undefined
-        ? {
-            headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
-            body: JSON.stringify(options.body),
-          }
-        : { ...(options.headers ? { headers: options.headers } : {}) }),
+      ...requestBodyInit(options),
     });
   } catch {
     throw new ApiError(0, "network_error", S.errors.networkError);

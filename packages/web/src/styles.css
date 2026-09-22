@@ -104,9 +104,47 @@
   .overflow-y-scroll {
     position: relative;
   }
+  /* The base tone lives on `html`, and `body` is left transparent, so that a skin's wallpaper
+     can sit BETWEEN them: a fixed layer at z-index -1 paints above the background of the
+     element that establishes the stacking context but below all in-flow content, which only
+     holds if the intervening body paints nothing of its own. With the tone on `body` the layer
+     ended up underneath it and the wallpaper was invisible.
+     Consequence for skins: a surface only shows the wallpaper where the skin makes it
+     translucent — `--color-white: rgba(255, 251, 252, 0.72)` rather than an opaque hex. The
+     token allowlist accepts `rgba()` for exactly this. */
+  html {
+    @apply bg-white dark:bg-gray-950;
+  }
   body {
-    @apply bg-white text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
+    @apply text-gray-900 antialiased dark:text-gray-100;
+    background-color: transparent;
     font-family: var(--font-app-sans);
+  }
+  /* The skin wallpaper. A static element in index.html rather than a React node: it is driven
+     entirely by the custom properties the skin stylesheet sets on :root, so it must be in the
+     document before the first paint — the pre-mount bootstrap script (index.html) is what makes
+     a reload show the right wallpaper without a flash of the built-in appearance.
+     `zoom` scales from the focal point, which is what makes it read as "zoom into the subject"
+     rather than "enlarge the picture around its middle". */
+  .linsight-skin-background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--wallpaper-image, none);
+    background-size: cover;
+    background-position: var(--wallpaper-focus-x, 50%) var(--wallpaper-focus-y, 50%);
+    background-repeat: no-repeat;
+    transform: scale(var(--wallpaper-zoom, 1));
+    transform-origin: var(--wallpaper-focus-x, 50%) var(--wallpaper-focus-y, 50%);
+  }
+  /* The dimming layer. A separate box rather than a second background so the alpha comes from
+     one variable and the image needs no colour-mix support from the renderer. */
+  .linsight-skin-background::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, var(--wallpaper-dim, 0));
   }
   code,
   pre,

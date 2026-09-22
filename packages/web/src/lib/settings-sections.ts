@@ -24,7 +24,15 @@ import type { AccountMenuSession } from "./account-menu";
 
 /** A page of the System settings dialog. */
 export type SettingsSectionKey =
-  "general" | "appearance" | "application" | "account" | "proxy" | "uploads" | "users";
+  | "general"
+  | "appearance"
+  | "application"
+  | "models"
+  | "logs"
+  | "account"
+  | "proxy"
+  | "uploads"
+  | "users";
 
 /** Rail heading a page sits under: the viewer's own preferences vs. the whole server's. */
 export type SettingsGroupKey = "personal" | "server";
@@ -47,10 +55,20 @@ const SECTION_RULES: ReadonlyArray<SettingsSection & { visible(viewer: SettingsV
   [
     { key: "general", group: "personal", visible: () => true },
     { key: "appearance", group: "personal", visible: () => true },
+    // The model library: providers, API keys, pricing and grouping. It used to be a nav entry;
+    // it is per-user configuration like everything else on this side of the rail, so it sits
+    // here now and the sidebar no longer offers it. The page component is unchanged.
+    { key: "models", group: "personal", visible: () => true },
     // Application-level per-user preferences (Petdex desktop pet, …). Page is always
     // visible — the toggle is independent of the rest, so disabling the pet does not
     // hide the page.
     { key: "application", group: "personal", visible: () => true },
+    // The server error log, moved off the cost center. Visible to everyone on purpose: it was a
+    // card on the cost center, which every member can open, so gating it to admins here would
+    // take away a view they already had. It sits on the personal side for the same reason the
+    // gate is not `isAdmin` — the read is Project-scoped (`requireProjectAccess`), and the one
+    // admin-only thing about it is the clear, which the panel hides per Project role.
+    { key: "logs", group: "personal", visible: () => true },
     // The desktop shell's own window has no password to change; a password-established
     // session against the same server still does. Same predicate as the old menu row.
     { key: "account", group: "personal", visible: (v) => offersChangePassword(v) },

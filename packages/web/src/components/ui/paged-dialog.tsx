@@ -16,6 +16,7 @@ import { ICON_GAP } from "../../lib/icon-scale";
 import { Modal } from "./modal";
 import { CloseButton } from "./icons";
 import { InfoPopover } from "./info-popover";
+import { UpdateDot } from "./update-dot";
 
 export interface PagedDialogItem<K extends string> {
   key: K;
@@ -29,6 +30,18 @@ export interface PagedDialogItem<K extends string> {
    * be re-read on every visit.
    */
   info?: ReactNode;
+  /**
+   * What the page's dot means, e.g. "3 unexpected errors". Set with `dot` and never alone: the
+   * rail row has no room for the sentence, so it becomes the row's tooltip and the tail of its
+   * accessible name — the same split the sidebar's nav rows use (see `navNoteFor`), so a dot
+   * reads the same on both rails.
+   */
+  note?: string;
+  /**
+   * Draw the trail dot at the row's right edge. The caller owns the gate (whether anything is
+   * actually waiting) — this only draws what it is told to, the way `UpdateDot` does.
+   */
+  dot?: boolean;
 }
 
 export interface PagedDialogGroup<K extends string> {
@@ -53,6 +66,7 @@ export function PagedDialog<K extends string>({
   groups,
   active,
   onSelect,
+  widthClass,
   children,
 }: {
   open: boolean;
@@ -62,6 +76,13 @@ export function PagedDialog<K extends string>({
   groups: ReadonlyArray<PagedDialogGroup<K>>;
   active: K;
   onSelect: (key: K) => void;
+  /**
+   * Panel width class, defaulting to `sm:max-w-3xl`. Only a page that needs the room should ask
+   * for more: the rail and the padding take ~224px off whatever is set here, and a page whose
+   * layout keys off its own `@container` width will silently drop labels below its breakpoints
+   * rather than wrap them. See the models pane in settings-dialog.tsx.
+   */
+  widthClass?: string;
   /** The active page's content. */
   children: ReactNode;
 }) {
@@ -70,7 +91,14 @@ export function PagedDialog<K extends string>({
   const activeLabel = activeItem?.label ?? title;
 
   return (
-    <Modal open={open} onClose={onClose} title={title} headerless bare widthClass="sm:max-w-3xl">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      headerless
+      bare
+      widthClass={widthClass ?? "sm:max-w-3xl"}
+    >
       <div className="flex h-[min(40rem,85vh)] flex-col sm:flex-row">
         {/* Rail: vertical on desktop, a horizontal scroller above the pane on narrow screens. */}
         <nav
@@ -88,8 +116,16 @@ export function PagedDialog<K extends string>({
                 <button
                   key={item.key}
                   type="button"
-                  className={railItemClass(item.key === active)}
+                  className={`relative ${railItemClass(item.key === active)}`}
                   aria-current={item.key === active ? "page" : undefined}
+                  {...(item.dot === true && item.note !== undefined
+                    ? {
+                        // The dot alone is mysterious: name what is waiting, in the same
+                        // tooltip-plus-accessible-name split the sidebar's nav rows use.
+                        title: item.note,
+                        "aria-label": `${item.label} · ${item.note}`,
+                      }
+                    : {})}
                   onClick={() => onSelect(item.key)}
                 >
                   {item.icon !== undefined && (
@@ -98,6 +134,9 @@ export function PagedDialog<K extends string>({
                     </span>
                   )}
                   <span className="min-w-0 truncate">{item.label}</span>
+                  {item.dot === true && (
+                    <UpdateDot size="inline" position="right-2.5 top-1/2 -translate-y-1/2" />
+                  )}
                 </button>
               ))}
             </div>

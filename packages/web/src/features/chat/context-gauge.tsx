@@ -43,6 +43,7 @@ import { usePortalPanel } from "../../components/ui/use-portal-panel";
 import { resolveContextWindow } from "../../lib/context";
 import { formatPercent, humanizeTokens } from "../../lib/format";
 import { S } from "../../lib/strings";
+import { toolLabel } from "../../lib/tool-labels";
 import { toneInk } from "../../lib/tone";
 import { contextComposition } from "./context-parts";
 import type { ContextPartKey } from "./context-parts";
@@ -326,8 +327,10 @@ function ContextPanel({
               <ul className="mt-1 space-y-0.5">
                 {composition.tools.map((t) => (
                   <ShareRow
+                    // Keyed and hovered by id — the label is display only, and the bar segment
+                    // this row highlights is matched by the same raw name.
                     key={t.name}
-                    label={t.name}
+                    label={toolLabel(t.name)}
                     mono
                     tokens={t.tokens}
                     percent={t.percent}

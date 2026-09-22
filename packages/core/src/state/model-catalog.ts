@@ -153,12 +153,18 @@ const MINIMAX_ANT_BASE_URL = "https://api.minimax.cn/anthropic";
 /**
  * Provider list (web model page groups in this order BY DEFAULT — a user's dragged
  * arrangement is stored per Project and wins over this sequence; see the web's
- * model-group-order.ts). The sequence is a hand-curated display order: TokenDance leads as
- * the recommended group, DeepSeek follows as the default model's provider, and custom
- * (custom OpenAI-protocol models) is always last; in between, gateways and first-party
- * vendors are interleaved by expected use rather than sorted by kind. Only this default
- * moves when the curation changes: a Project that has ever reordered its groups has every
- * key stored already, so it keeps the arrangement its user built.
+ * model-group-order.ts). The sequence is a hand-curated display order: DeepSeek leads as
+ * the recommended group and the default model's provider, TokenDance trails the real
+ * platforms, and custom (custom OpenAI-protocol models) is always last; in between,
+ * gateways and first-party vendors are interleaved by expected use rather than sorted by
+ * kind. Only this default moves when the curation changes: a Project that has ever
+ * reordered its groups has every key stored already, so it keeps the arrangement its user
+ * built.
+ *
+ * "Leads" and "is recommended" are the same entry, and two things depend on that rather
+ * than on the flag: `defaultExpandedProviders` (web's model-group-expansion.ts) opens the
+ * group at index 0, and the models page captions whichever entry carries `recommended`.
+ * Moving one without the other would expand a group the page does not call recommended.
  *
  * The six gateway groups — OpenRouter, Fireworks AI, SiliconFlow, TokenDance, Qwen
  * Pay-As-You-Go and Qwen Token Plan — reach their models through one of AgentHub's generic
@@ -169,28 +175,13 @@ const MINIMAX_ANT_BASE_URL = "https://api.minimax.cn/anthropic";
  */
 export const MODEL_PROVIDERS: ModelProviderInfo[] = [
   {
-    id: "tokendance",
-    label: "TokenDance",
-    envKey: "OPENAI_API_KEY",
-    envBaseUrlKey: "OPENAI_BASE_URL",
-    apiKeyUrl: "https://tokendance.space/keys",
-    modelsUrl: "https://tokendance.space/models",
-    gatewayBaseUrl: TOKENDANCE_BASE_URL,
-    recommended: true,
-    // https://tokendance.space/docs/api-key-oauth
-    oauth: {
-      authorizeUrl: "https://tokendance.space/auth",
-      exchangeUrl: "https://tokendance.space/portal/api/v1/auth/keys",
-      keyName: "Linsight",
-    },
-  },
-  {
     id: "deepseek",
     label: "DeepSeek",
     envKey: "DEEPSEEK_API_KEY",
     envBaseUrlKey: "DEEPSEEK_BASE_URL",
     apiKeyUrl: "https://platform.deepseek.com/api_keys",
     modelsUrl: "https://api-docs.deepseek.com/quick_start/pricing",
+    recommended: true,
   },
   {
     id: "openrouter",
@@ -289,6 +280,21 @@ export const MODEL_PROVIDERS: ModelProviderInfo[] = [
     modelsUrl:
       "https://platform.qianwenai.com/docs/token-plan/personal/token-plan-personal-overview",
     gatewayBaseUrl: QWEN_TOKEN_PLAN_BASE_URL,
+  },
+  {
+    id: "tokendance",
+    label: "TokenDance",
+    envKey: "OPENAI_API_KEY",
+    envBaseUrlKey: "OPENAI_BASE_URL",
+    apiKeyUrl: "https://tokendance.space/keys",
+    modelsUrl: "https://tokendance.space/models",
+    gatewayBaseUrl: TOKENDANCE_BASE_URL,
+    // https://tokendance.space/docs/api-key-oauth
+    oauth: {
+      authorizeUrl: "https://tokendance.space/auth",
+      exchangeUrl: "https://tokendance.space/portal/api/v1/auth/keys",
+      keyName: "Linsight",
+    },
   },
   { id: "custom", label: "Custom", envKey: "OPENAI_API_KEY", envBaseUrlKey: "OPENAI_BASE_URL" },
 ];

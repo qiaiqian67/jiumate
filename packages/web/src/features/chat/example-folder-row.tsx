@@ -1,11 +1,12 @@
 /**
- * The header row of one draft-screen example folder.
+ * The header row of one draft-screen picker folder.
  *
  * A tab, not a disclosure: the open folder stays open (clicking it is a no-op) and carries the
  * block's whole body, so exactly one folder's rows are ever on screen. It lives in its own module
- * because two callers render it — the built-in folders in draft-view.tsx and the user's own
- * shortcuts folder in shortcuts-folder.tsx — and a folder row that reads differently from its
- * neighbours would be read as a different kind of thing.
+ * because two callers render it — the category tabs the picker builds from the library
+ * (`features/inspiration/inspiration-picker.tsx`) and the user's own shortcuts folder in
+ * `shortcuts-folder.tsx` — and a folder row that reads differently from its neighbours would be
+ * read as a different kind of thing.
  */
 import { Chevron } from "../../components/ui/chevron";
 import { ICON_SIZE } from "../../lib/icon-scale";

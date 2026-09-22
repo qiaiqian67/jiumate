@@ -61,6 +61,7 @@ export function OptionMenu<T extends string>({
   required,
   fullWidth,
   size = "base",
+  title,
   "aria-label": ariaLabel,
 }: {
   options: ReadonlyArray<OptionMenuChoice<T>>;
@@ -81,6 +82,15 @@ export function OptionMenu<T extends string>({
   fullWidth?: boolean;
   /** Same size tier as Input/Select (sizeClass), for pixel-perfect alignment when mixed together. */
   size?: ControlSize;
+  /**
+   * Native hover tooltip on the trigger, for the config key the control writes.
+   *
+   * Same role as the `title` an Input carries through to its `<input>`: a settings form labels
+   * its fields in the user's language, and this is where the YAML key stays reachable for
+   * anyone cross-referencing the file. Not a substitute for `label` — the visible title stays
+   * localized.
+   */
+  title?: string;
   "aria-label"?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -99,6 +109,7 @@ export function OptionMenu<T extends string>({
       <button
         ref={triggerRef}
         type="button"
+        title={title}
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}

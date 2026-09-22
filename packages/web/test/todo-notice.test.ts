@@ -72,7 +72,9 @@ describe("the notice block is the one shape on every page that has one", () => {
       "features/agents/agents-page.tsx",
       "features/models/models-page.tsx",
       "features/plugins/plugins-page.tsx",
-      "features/usage/usage-page.tsx",
+      // The error log's trail: the notice sits on the System settings 日志 page, where the log
+      // moved from the cost center (features/settings/logs-section.tsx).
+      "features/settings/logs-section.tsx",
     ]);
   });
 
@@ -84,7 +86,7 @@ describe("the notice block is the one shape on every page that has one", () => {
     }
   });
 
-  it("only the cost center omits the bulk action — nothing there can be updated", () => {
+  it("only the logs page omits the bulk action — nothing there can be updated", () => {
     const withAction = sites.filter((s) => s.attrs.has("onAction")).map((s) => s.file);
     expect(withAction.sort()).toEqual([
       "features/agents/agents-page.tsx",

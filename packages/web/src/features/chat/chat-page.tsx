@@ -55,6 +55,8 @@ import type { MemoryLocateTarget } from "../../lib/omni/memory-changes";
 import { bucketCostUsd, liveSessionElapsedMs } from "../../lib/omni/task-stats";
 import type { TaskStatsTracker } from "../../lib/omni/task-stats";
 import { useAuth } from "../../state/auth";
+import { useInspirationCatalog } from "../inspiration/inspiration-store";
+import { CaseEditorDialog } from "../inspiration/inspiration-editor";
 import { useTheme } from "../../state/theme";
 import { agentDisplayName, useProject } from "../../state/project";
 import { useSessions } from "../../state/sessions";
@@ -289,6 +291,8 @@ export function ChatPage() {
   const [, bumpUsageStamp] = useState(0);
   const [credentialGuide, setCredentialGuide] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  /** Whether the "add this conversation to the library" editor is open (admins only). */
+  const [captureOpen, setCaptureOpen] = useState(false);
   const [modeSaving, setModeSaving] = useState(false);
   const [models, setModels] = useState<ModelsResponse | null>(null);
   // Background processes the conversation started (details popover list + the header's
@@ -398,6 +402,12 @@ export function ChatPage() {
     // Sub-session registration notice (session_created is pushed over the parent session's channel): reload the list so it appears immediately.
     () => void reloadSessions(),
   );
+
+  // The library's categories, for the capture editor's category picker. Read only when this viewer
+  // can open that editor at all: a member has no capture row, so fetching the catalog on their
+  // every conversation would be a request nothing on the page uses. The gallery page and the draft
+  // picker both call this without the flag — there the list is what they render.
+  const captureCatalog = useInspirationCatalog(user?.isAdmin === true);
 
   // Pet plumbing: when the user has the Petdex desktop pet enabled, ask the
   // Electron shell to open its floating window. The pet window subscribes
@@ -2017,6 +2027,31 @@ export function ChatPage() {
                 </div>
               )}
             </div>
+            {/* "Add this conversation to the library", for an admin: the one place the app offers
+                to turn a Session into a reusable case. It lives at the bottom of the details card
+                because that card already answers "what is this conversation?" — the Agent, the
+                Model, the Workspace, the id — and this is the action about that whole, rather than
+                about any one message. A member sees no row at all: the write routes answer them
+                403, and a disabled control would only advertise a door they cannot open. */}
+            {user?.isAdmin === true && (
+              <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-800">
+                <Button
+                  size="sm"
+                  disabled={inputHistory.length === 0}
+                  title={
+                    inputHistory.length === 0
+                      ? S.inspiration.captureNoPrompt
+                      : S.inspiration.captureHint
+                  }
+                  onClick={() => {
+                    setInfoOpen(false);
+                    setCaptureOpen(true);
+                  }}
+                >
+                  {S.inspiration.capture}
+                </Button>
+              </div>
+            )}
           </Dropdown>
         </div>
       )}
@@ -2182,6 +2217,24 @@ export function ChatPage() {
       >
         <p className="text-sm text-gray-600 dark:text-gray-300">{S.project.noCredentialBody}</p>
       </Modal>
+
+      {/* Capture: the details card's "add to the library" opens the same case editor the gallery
+          uses, seeded from this conversation. Mounted here rather than in the card so the dialog
+          survives the card closing under it — the dropdown unmounts its panel on close, and the
+          editor has to outlive that. */}
+      {user?.isAdmin === true && (
+        <CaseEditorDialog
+          open={captureOpen}
+          one={null}
+          catalog={captureCatalog.catalog}
+          capture={{
+            title: selected?.title ?? null,
+            prompt: inputHistory[0] ?? "",
+            agentId: selected?.agentId ?? null,
+          }}
+          onClose={() => setCaptureOpen(false)}
+        />
+      )}
 
       {/* Mid-chat thinking-level switch confirmation (issue #310), three choices: compact
           first and switch when it finishes (primary — the recommended, cheap path), switch

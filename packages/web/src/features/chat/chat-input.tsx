@@ -112,7 +112,7 @@ import { SELECTABLE_THINKING_LEVELS, thinkingLevelLabel } from "./thinking-level
 import { BOOK_ICON, buildSkillsMessage, localizedShortText, skillSlashItems } from "./skill-use";
 import { GOAL_ICON, UNLIMITED_BUDGET, parseBudgetInput } from "./goal-use";
 import { mergeRecalledDraft } from "./recall-draft";
-import { buildExampleFill } from "./example-fill";
+import { buildInspirationFill } from "../inspiration/inspiration-fill";
 import {
   caretOnFirstLine,
   caretOnLastLine,
@@ -1327,16 +1327,16 @@ export function ChatInput({
   );
 
   /**
-   * Fill from a draft-screen example card, without sending (see ComposerControl): the prompt
-   * REPLACES the text body — any draft is cleared first — and the example's installed skills
-   * join the selection, so pressing Send builds exactly the `[use_skills]` message the card
-   * used to submit on its own. Why text replaces while skills merge is buildExampleFill.
+   * Fill from an inspiration case, without sending (see ComposerControl): the prompt REPLACES the
+   * text body — any draft is cleared first — and the case's installed skills join the selection, so
+   * pressing Send builds exactly the `[use_skills]` message the row used to submit on its own. Why
+   * text replaces while skills merge is buildInspirationFill.
    */
   const fillExample = useCallback(
-    (prompt: string, exampleSkills: readonly string[]) => {
-      const fill = buildExampleFill({
+    (prompt: string, caseSkills: readonly string[]) => {
+      const fill = buildInspirationFill({
         prompt,
-        exampleSkills,
+        caseSkills,
         installedSkills: skills.map((s) => s.name),
         selectedSkills,
       });

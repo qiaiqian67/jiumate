@@ -12,6 +12,7 @@ import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
 import { USERNAME_PATTERN } from "../../lib/semantic-id";
+import { DEFAULT_PROJECT_ID } from "../../state/project";
 import { formatDateTime } from "../../lib/format";
 import { useAuth } from "../../state/auth";
 import { Badge } from "../../components/ui/badge";
@@ -220,7 +221,7 @@ function CreateUserDialog({
         />
         {USERNAME_PATTERN.test(userId.trim()) && (
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            {S.admin.defaultProjectNote(`${userId.trim()}-default_project`)}
+            {S.admin.defaultProjectNote(`${userId.trim()}-${DEFAULT_PROJECT_ID}`)}
           </p>
         )}
       </div>

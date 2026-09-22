@@ -11,6 +11,14 @@ export {};
 
 declare global {
   interface Window {
+    /**
+     * The desktop shell's theme bridge. Absent in a plain browser, where the import control
+     * falls back to a typed path — so every call site has to null-check it.
+     */
+    theme?: {
+      /** Native folder picker; null when the user cancels. */
+      pickFolder(): Promise<string | null>;
+    };
     pet?: {
       open(savedPos?: { x: number; y: number } | null): Promise<void>;
       close(): Promise<void>;

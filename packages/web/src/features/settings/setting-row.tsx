@@ -49,9 +49,18 @@ export function PrefRow({
 export function AccentPicker({
   value,
   onChange,
+  disabled = false,
 }: {
   value: Accent;
   onChange: (a: Accent) => void;
+  /**
+   * Inert when the active skin declares the accent pair. Disabled rather than hidden, unlike
+   * the settings *pages* that drop themselves for a viewer who may not open them
+   * (lib/settings-sections.ts): that rule exists so a greyed-out row cannot reveal a
+   * permission, whereas the accent row's existence is not a secret — hiding it would read as
+   * the feature having been removed. The row's `hint` names the skin that owns it.
+   */
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -59,11 +68,14 @@ export function AccentPicker({
         <button
           key={s.value}
           type="button"
+          disabled={disabled}
           title={S.settings.accentNames[s.value]}
           aria-label={S.settings.accentNames[s.value]}
           aria-pressed={value === s.value}
           onClick={() => onChange(s.value)}
-          className={`h-5 w-5 rounded-full border transition-transform duration-150 hover:scale-110 ${
+          className={`h-5 w-5 rounded-full border transition-transform duration-150 ${
+            disabled ? "cursor-not-allowed opacity-40" : "hover:scale-110"
+          } ${
             value === s.value
               ? "border-gray-500 ring-2 ring-gray-400/50 dark:border-gray-300"
               : "border-transparent"

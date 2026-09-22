@@ -599,8 +599,33 @@ const isModelGroupDrag = (e: ReactDragEvent): boolean =>
 /** Dragging a group needs a pointer that can drag — HTML5 drag-and-drop never fires from touch (the sidebar's query). */
 const DRAG_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
 
+/**
+ * The routed page: the model library plus the chrome a page owns — the document title and the
+ * full-height scroll container.
+ *
+ * The library itself is `ModelsPane`, because System settings hosts the same content in a pane
+ * (Personal → Models) and neither piece of that chrome belongs there: `useDocumentTitle` sets
+ * the tab title and never restores it, so an embedded copy would leave "模型库 · Linsight" in the
+ * tab after the dialog closed, and a second `h-full overflow-y-auto` inside the dialog's own
+ * scroll container would nest two scrollbars with two sets of padding.
+ */
 export function ModelsPage() {
   useDocumentTitle(S.models.title);
+  return (
+    <div className="h-full overflow-y-auto p-4 md:p-6">
+      <ModelsPane />
+    </div>
+  );
+}
+
+/**
+ * The model library, with no page chrome — hosted by the routed page and by System settings.
+ *
+ * Its root stays a plain `<div>` rather than a fragment: the dialogs it opens (add-group,
+ * model, OAuth, the two confirms) are siblings of the content wrapper inside it, so the element
+ * has to exist to hold them. Carrying no classes is what makes it chrome-free.
+ */
+export function ModelsPane() {
   const { currentProject } = useProject();
   const projectId = currentProject?.projectId ?? null;
   const isOwner = currentProject?.role === "owner";
@@ -984,7 +1009,7 @@ export function ModelsPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6">
+    <div>
       <div className="mx-auto max-w-5xl">
         <div className="mb-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
