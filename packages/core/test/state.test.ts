@@ -257,6 +257,7 @@ describe("buildToolConfig", () => {
       "input_subagent",
       "read_image",
       "describe_image",
+      "pet",
     ]);
     const exec = cfg.customTools.find((t) => t.name === "exec_command")!;
     expect(exec.permission).toBe("rw");
@@ -385,6 +386,7 @@ describe("buildToolConfig", () => {
       "input_subagent",
       "read_image",
       "describe_image",
+      "pet",
     ]);
   });
 });

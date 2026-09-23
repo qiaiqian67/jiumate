@@ -445,31 +445,40 @@ describe("read_file — argument coercion, CRLF, secret guard", () => {
     expect(cfg.text).toContain("Refusing to read");
   });
 
-  it("refuses case-variant names and symlinks that dereference to a secret store", async () => {
+  it("refuses a case-variant name that resolves to a secret store", async () => {
     await writeFile(path.join(tmp, ".vault.toml"), "SECRET=1\n");
     // Case variant: a case-insensitive filesystem (macOS/Windows) opens ".VAULT.TOML" as
     // the store itself; on a case-sensitive one refusing the name is a harmless false positive.
     const upper = await run(tool(), { file_path: ".VAULT.TOML" }, tmp);
     expect(upper.result?.stopReason).toBe("fatal");
     expect(upper.text).toContain("Refusing to read");
-    // Symlink: the link's own basename says nothing about what it dereferences to.
-    await symlink(path.join(tmp, ".vault.toml"), path.join(tmp, "notes.txt"));
-    const linked = await run(tool(), { file_path: "notes.txt" }, tmp);
-    expect(linked.result?.stopReason).toBe("fatal");
-    expect(linked.text).toContain("Refusing to read");
-    expect(linked.text).not.toContain("SECRET=1");
-    // A symlink NAMED like a store but pointing elsewhere is refused on the lexical name —
-    // an acceptable false positive for a guard.
-    await writeFile(path.join(tmp, "plain.txt"), "hello\n");
-    await symlink(path.join(tmp, "plain.txt"), path.join(tmp, ".project_config.toml"));
-    const named = await run(tool(), { file_path: ".project_config.toml" }, tmp);
-    expect(named.result?.stopReason).toBe("fatal");
-    // An ordinary symlink to an ordinary file still reads.
-    await symlink(path.join(tmp, "plain.txt"), path.join(tmp, "alias.txt"));
-    const ok = await run(tool(), { file_path: "alias.txt" }, tmp);
-    expect(ok.result?.stopReason).toBeUndefined();
-    expect(ok.text).toContain("hello");
   });
+
+  // Creating symlinks on Windows needs Developer Mode or an elevated shell; the fixture would
+  // fail with a bare EPERM before any product code runs, so this skips there rather than fail.
+  it.skipIf(process.platform === "win32")(
+    "refuses symlinks that dereference to a secret store",
+    async () => {
+      await writeFile(path.join(tmp, ".vault.toml"), "SECRET=1\n");
+      // Symlink: the link's own basename says nothing about what it dereferences to.
+      await symlink(path.join(tmp, ".vault.toml"), path.join(tmp, "notes.txt"));
+      const linked = await run(tool(), { file_path: "notes.txt" }, tmp);
+      expect(linked.result?.stopReason).toBe("fatal");
+      expect(linked.text).toContain("Refusing to read");
+      expect(linked.text).not.toContain("SECRET=1");
+      // A symlink NAMED like a store but pointing elsewhere is refused on the lexical name —
+      // an acceptable false positive for a guard.
+      await writeFile(path.join(tmp, "plain.txt"), "hello\n");
+      await symlink(path.join(tmp, "plain.txt"), path.join(tmp, ".project_config.toml"));
+      const named = await run(tool(), { file_path: ".project_config.toml" }, tmp);
+      expect(named.result?.stopReason).toBe("fatal");
+      // An ordinary symlink to an ordinary file still reads.
+      await symlink(path.join(tmp, "plain.txt"), path.join(tmp, "alias.txt"));
+      const ok = await run(tool(), { file_path: "alias.txt" }, tmp);
+      expect(ok.result?.stopReason).toBeUndefined();
+      expect(ok.text).toContain("hello");
+    },
+  );
 });
 
 describe("read_file — bounded scan and output budget", () => {
@@ -726,7 +735,9 @@ describe("write_file — overwrite diffs", () => {
   });
 });
 
-describe("edit_file / write_file — symlinked targets", () => {
+// Creating symlinks on Windows needs Developer Mode or an elevated shell; the fixture would
+// fail with a bare EPERM before any product code runs, so these skip there rather than fail.
+describe.skipIf(process.platform === "win32")("edit_file / write_file — symlinked targets", () => {
   const edit = () => createEditFileTool(def(EDIT_FILE_NAME, "rw"));
   const write = () => createWriteFileTool(def(WRITE_FILE_NAME, "rw"));
 

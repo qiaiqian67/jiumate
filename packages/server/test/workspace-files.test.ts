@@ -75,51 +75,60 @@ describe("workspace-files-service", () => {
     expect(sub.entries.map((e) => e.name)).toEqual(["c.md"]);
   });
 
-  it("a symlink to a directory inside the Workspace: kind is dir and it can be drilled into", async () => {
-    await fs.symlink(path.join(ws, "sub"), path.join(ws, "link-sub"));
-    const root = await svc.list(ws, "");
-    expect(root.entries.map((e) => `${e.kind}:${e.name}`)).toEqual([
-      "dir:link-sub",
-      "dir:sub",
-      "file:b.txt",
-    ]);
-    const viaLink = await svc.list(ws, "link-sub");
-    expect(viaLink.entries.map((e) => e.name)).toEqual(["c.md"]);
-  });
+  it.skipIf(process.platform === "win32")(
+    "a symlink to a directory inside the Workspace: kind is dir and it can be drilled into",
+    async () => {
+      await fs.symlink(path.join(ws, "sub"), path.join(ws, "link-sub"));
+      const root = await svc.list(ws, "");
+      expect(root.entries.map((e) => `${e.kind}:${e.name}`)).toEqual([
+        "dir:link-sub",
+        "dir:sub",
+        "file:b.txt",
+      ]);
+      const viaLink = await svc.list(ws, "link-sub");
+      expect(viaLink.entries.map((e) => e.name)).toEqual(["c.md"]);
+    },
+  );
 
-  it("symlink escape: reads and writes are both rejected when the link points outside the Workspace", async () => {
-    await fs.symlink(outside, path.join(ws, "link-out"));
-    const root = await svc.list(ws, "");
-    expect(root.entries.map((entry) => entry.name)).not.toContain("link-out");
-    await expect(svc.list(ws, "link-out")).rejects.toMatchObject({ status: 400 });
-    await expect(svc.read(ws, "link-out/secret.txt")).rejects.toMatchObject({ status: 400 });
-    // Writing outside via a directory symlink: caught by the parent-directory realpath check.
-    await expect(svc.write(ws, "link-out/evil.txt", Buffer.from("x"))).rejects.toMatchObject({
-      status: 400,
-    });
-    // Auto-creation under a missing path is equally restricted: if the nearest
-    // existing ancestor is a symlink pointing outside, mkdir must not be used to escape.
-    await expect(svc.write(ws, "link-out/new/evil.txt", Buffer.from("x"))).rejects.toMatchObject({
-      status: 400,
-    });
-    expect(
-      await fs
-        .stat(path.join(outside, "new"))
-        .then(() => true)
-        .catch(() => false),
-    ).toBe(false);
-  });
+  it.skipIf(process.platform === "win32")(
+    "symlink escape: reads and writes are both rejected when the link points outside the Workspace",
+    async () => {
+      await fs.symlink(outside, path.join(ws, "link-out"));
+      const root = await svc.list(ws, "");
+      expect(root.entries.map((entry) => entry.name)).not.toContain("link-out");
+      await expect(svc.list(ws, "link-out")).rejects.toMatchObject({ status: 400 });
+      await expect(svc.read(ws, "link-out/secret.txt")).rejects.toMatchObject({ status: 400 });
+      // Writing outside via a directory symlink: caught by the parent-directory realpath check.
+      await expect(svc.write(ws, "link-out/evil.txt", Buffer.from("x"))).rejects.toMatchObject({
+        status: 400,
+      });
+      // Auto-creation under a missing path is equally restricted: if the nearest
+      // existing ancestor is a symlink pointing outside, mkdir must not be used to escape.
+      await expect(svc.write(ws, "link-out/new/evil.txt", Buffer.from("x"))).rejects.toMatchObject({
+        status: 400,
+      });
+      expect(
+        await fs
+          .stat(path.join(outside, "new"))
+          .then(() => true)
+          .catch(() => false),
+      ).toBe(false);
+    },
+  );
 
-  it("writing through a last-segment symlink: O_NOFOLLOW refuses to overwrite files outside the Workspace by proxy", async () => {
-    // The Agent has a symlink inside the Workspace pointing to an outside file; an upload attempts to overwrite it.
-    const victim = path.join(outside, "secret.txt");
-    await fs.symlink(victim, path.join(ws, "report.pdf"));
-    await expect(svc.write(ws, "report.pdf", Buffer.from("PWNED"))).rejects.toMatchObject({
-      status: 400,
-    });
-    // The outside file's content is unchanged.
-    expect(await fs.readFile(victim, "utf8")).toBe("secret");
-  });
+  it.skipIf(process.platform === "win32")(
+    "writing through a last-segment symlink: O_NOFOLLOW refuses to overwrite files outside the Workspace by proxy",
+    async () => {
+      // The Agent has a symlink inside the Workspace pointing to an outside file; an upload attempts to overwrite it.
+      const victim = path.join(outside, "secret.txt");
+      await fs.symlink(victim, path.join(ws, "report.pdf"));
+      await expect(svc.write(ws, "report.pdf", Buffer.from("PWNED"))).rejects.toMatchObject({
+        status: 400,
+      });
+      // The outside file's content is unchanged.
+      expect(await fs.readFile(victim, "utf8")).toBe("secret");
+    },
+  );
 });
 
 describe("files/stat route (batch existence check)", () => {

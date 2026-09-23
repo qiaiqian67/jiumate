@@ -298,9 +298,16 @@ describe("origin blocks ([use_skills] / [handoff_from] / [scheduled_task] / [mod
   });
 
   it("strips the scheduled_task origin block from a leading prefix", () => {
-    const scheduled = buildScheduledMessage("session-01", "Fix the parser", "/data/t.jsonl");
-    expect(stripLeadingMarkerBlocks(scheduled)).toBe("");
-    expect(stripLeadingMarkerBlocks(`${scheduled}\n\nfix the layout`)).toBe("fix the layout");
+    const scheduled = buildScheduledMessage(
+      "session-01",
+      "2026-07-16T01:00:00.000Z",
+      "Fix the parser",
+    );
+    // The block goes; the task prompt is body text and survives it.
+    expect(stripLeadingMarkerBlocks(scheduled)).toBe("Fix the parser");
+    expect(stripLeadingMarkerBlocks(`${scheduled}\n\nfix the layout`)).toBe(
+      "Fix the parser\n\nfix the layout",
+    );
   });
 });
 

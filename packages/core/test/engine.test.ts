@@ -112,6 +112,15 @@ function execCommandToolConfig() {
   };
 }
 
+/**
+ * Several fixtures below drive `exec_command` with POSIX shell commands — `printf one > a.txt` and
+ * friends — and then assert the file they were supposed to write. Windows has no `printf`, so the
+ * command fails, the file never appears, and `readFileEventually` gives up and returns "": the
+ * fixture fails before the engine under test does anything. Those tests skip there rather than
+ * report a failure they cannot be about, and the tool-call handling stays covered where CI runs.
+ */
+const skipWithoutPosixShell = process.platform === "win32";
+
 const isToolCall = (m: OmniMessage): boolean =>
   isCompleteModelMessage(m) && m.payload.type === "tool_call";
 
@@ -201,47 +210,50 @@ describe("ContextEngine ReAct loop (mock LLM, approve callback)", () => {
     await rm(traces, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   });
 
-  it("approves a tool call, writes the file, returns the final answer, traces it", async () => {
-    const llm = new FakeLLM();
-    const environment = new Environment({
-      workspaceDir: workspace,
-      toolConfig: execCommandToolConfig(),
-    });
-    const trace = new Writer({ tracesDir: traces, sessionId: "sess_test" });
-    const engine = new ContextEngine({ llm, environment, trace });
+  it.skipIf(skipWithoutPosixShell)(
+    "approves a tool call, writes the file, returns the final answer, traces it",
+    async () => {
+      const llm = new FakeLLM();
+      const environment = new Environment({
+        workspaceDir: workspace,
+        toolConfig: execCommandToolConfig(),
+      });
+      const trace = new Writer({ tracesDir: traces, sessionId: "sess_test" });
+      const engine = new ContextEngine({ llm, environment, trace });
 
-    const collected = await collectRun(
-      engine,
-      [userText("Create hello.txt saying Hello, Linsight")],
-      allowAll,
-    );
+      const collected = await collectRun(
+        engine,
+        [userText("Create hello.txt saying Hello, Linsight")],
+        allowAll,
+      );
 
-    expect(llm.calls).toBe(2);
-    expect(
-      llm.receivedSecondInput!.some(
-        (m) => (m.payload as { type?: string }).type === "tool_call_output",
-      ),
-    ).toBe(true);
-    expect(await readFileEventually(join(workspace, "hello.txt"), "Hello, Linsight")).toBe(
-      "Hello, Linsight",
-    );
+      expect(llm.calls).toBe(2);
+      expect(
+        llm.receivedSecondInput!.some(
+          (m) => (m.payload as { type?: string }).type === "tool_call_output",
+        ),
+      ).toBe(true);
+      expect(await readFileEventually(join(workspace, "hello.txt"), "Hello, Linsight")).toBe(
+        "Hello, Linsight",
+      );
 
-    const types = collected.map((m) => (m.payload as { type?: string }).type);
-    expect(types).toContain("tool_call_output");
-    // approve is a callback; context_engine emits the approval result as an approval_decision
-    // event (for frontend rendering + Trace).
-    expect(types).toContain("approval_decision");
-    const finalTexts = collected
-      .filter((m) => isCompleteModelMessage(m) && m.payload.type === "text")
-      .map((m) => (m.payload as TextPayload).text);
-    expect(finalTexts.some((t) => t.includes("Done"))).toBe(true);
+      const types = collected.map((m) => (m.payload as { type?: string }).type);
+      expect(types).toContain("tool_call_output");
+      // approve is a callback; context_engine emits the approval result as an approval_decision
+      // event (for frontend rendering + Trace).
+      expect(types).toContain("approval_decision");
+      const finalTexts = collected
+        .filter((m) => isCompleteModelMessage(m) && m.payload.type === "text")
+        .map((m) => (m.payload as TextPayload).text);
+      expect(finalTexts.some((t) => t.includes("Done"))).toBe(true);
 
-    const recorded = await readTrace(trace.currentPath());
-    const recordedTypes = recorded.map((m) => (m.payload as { type?: string }).type);
-    expect(recordedTypes).toContain("tool_call");
-    expect(recordedTypes).toContain("tool_call_output");
-    expect(recordedTypes.some((t) => t?.startsWith("partial_"))).toBe(false);
-  });
+      const recorded = await readTrace(trace.currentPath());
+      const recordedTypes = recorded.map((m) => (m.payload as { type?: string }).type);
+      expect(recordedTypes).toContain("tool_call");
+      expect(recordedTypes).toContain("tool_call_output");
+      expect(recordedTypes.some((t) => t?.startsWith("partial_"))).toBe(false);
+    },
+  );
 
   it("lets the next Agent turn recover truncated text, keeps UI == Agent output, and preserves it after Task end", async () => {
     const NAME = "__recoverable_text_tool__";
@@ -1050,28 +1062,39 @@ describe("ContextEngine async/incremental tool calls (overlapping execution)", (
     await rm(workspace, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   });
 
-  it("emits both tool calls in one round; second is approved while the first executes; outputs come back in completion order", async () => {
-    // The first turn yields two tool_calls; the second yields the final reply.
-    const llm: LLMInterface = {
-      calls: 0,
-      async *streamGenerate(this: { calls: number }) {
-        this.calls += 1;
-        if (this.calls === 1) {
-          // First tool: slow (sleep 0.4s). Second tool: fast.
-          yield toolCall({
-            name: "exec_command",
-            arguments: JSON.stringify({ cmd: "sleep 0.4; printf one > a.txt" }),
-            toolCallId: "t1",
-            stopReason: "completed",
-          });
-          yield toolCall({
-            name: "exec_command",
-            arguments: JSON.stringify({ cmd: "printf two > b.txt" }),
-            toolCallId: "t2",
-            stopReason: "completed",
-          });
-          // The model output completes normally -> this turn is not interrupted, results are
-          // fed back into the next turn.
+  it.skipIf(skipWithoutPosixShell)(
+    "emits both tool calls in one round; second is approved while the first executes; outputs come back in completion order",
+    async () => {
+      // The first turn yields two tool_calls; the second yields the final reply.
+      const llm: LLMInterface = {
+        calls: 0,
+        async *streamGenerate(this: { calls: number }) {
+          this.calls += 1;
+          if (this.calls === 1) {
+            // First tool: slow (sleep 0.4s). Second tool: fast.
+            yield toolCall({
+              name: "exec_command",
+              arguments: JSON.stringify({ cmd: "sleep 0.4; printf one > a.txt" }),
+              toolCallId: "t1",
+              stopReason: "completed",
+            });
+            yield toolCall({
+              name: "exec_command",
+              arguments: JSON.stringify({ cmd: "printf two > b.txt" }),
+              toolCallId: "t2",
+              stopReason: "completed",
+            });
+            // The model output completes normally -> this turn is not interrupted, results are
+            // fed back into the next turn.
+            yield tokenUsage(emptyTokenCounts(), {
+              cache_read: 0,
+              cache_write: 0,
+              output: 1,
+              total: 1,
+            });
+            return { status: "completed" };
+          }
+          yield assistantText("both done");
           yield tokenUsage(emptyTokenCounts(), {
             cache_read: 0,
             cache_write: 0,
@@ -1079,68 +1102,62 @@ describe("ContextEngine async/incremental tool calls (overlapping execution)", (
             total: 1,
           });
           return { status: "completed" };
+        },
+      } as LLMInterface & { calls: number };
+
+      const environment = new Environment({
+        workspaceDir: workspace,
+        toolConfig: execCommandToolConfig(),
+      });
+      const engine = new ContextEngine({ llm, environment });
+
+      // Record approval order and timestamps to prove the second tool enters approval while the
+      // first is still executing (execution can overlap).
+      const approvedAt: Record<string, number> = {};
+      const firstCompleteAt: Record<string, number> = {};
+      const start = Date.now();
+      const approve: ApproveFn = async (tc) => {
+        approvedAt[tc.payload.tool_call_id] = Date.now() - start;
+        return "allow";
+      };
+
+      const all: OmniMessage[] = [];
+      for await (const msg of engine.run([userText("go")], { approve })) {
+        all.push(msg);
+        if (isCompleteModelMessage(msg) && msg.payload.type === "tool_call_output") {
+          const id = (msg.payload as { tool_call_id: string }).tool_call_id;
+          if (firstCompleteAt[id] === undefined) firstCompleteAt[id] = Date.now() - start;
         }
-        yield assistantText("both done");
-        yield tokenUsage(emptyTokenCounts(), {
-          cache_read: 0,
-          cache_write: 0,
-          output: 1,
-          total: 1,
-        });
-        return { status: "completed" };
-      },
-    } as LLMInterface & { calls: number };
-
-    const environment = new Environment({
-      workspaceDir: workspace,
-      toolConfig: execCommandToolConfig(),
-    });
-    const engine = new ContextEngine({ llm, environment });
-
-    // Record approval order and timestamps to prove the second tool enters approval while the
-    // first is still executing (execution can overlap).
-    const approvedAt: Record<string, number> = {};
-    const firstCompleteAt: Record<string, number> = {};
-    const start = Date.now();
-    const approve: ApproveFn = async (tc) => {
-      approvedAt[tc.payload.tool_call_id] = Date.now() - start;
-      return "allow";
-    };
-
-    const all: OmniMessage[] = [];
-    for await (const msg of engine.run([userText("go")], { approve })) {
-      all.push(msg);
-      if (isCompleteModelMessage(msg) && msg.payload.type === "tool_call_output") {
-        const id = (msg.payload as { tool_call_id: string }).tool_call_id;
-        if (firstCompleteAt[id] === undefined) firstCompleteAt[id] = Date.now() - start;
       }
-    }
 
-    // Both tools were approved.
-    expect(approvedAt["t1"]).toBeDefined();
-    expect(approvedAt["t2"]).toBeDefined();
-    // The second tool's approval happens before the first tool's execution completes (the slow
-    // command has not finished yet) -- i.e., execution does not block the next approval.
-    expect(approvedAt["t2"]!).toBeLessThan(firstCompleteAt["t1"] ?? Infinity);
-    // The fast b.txt finishes first, the slow a.txt finishes later (outputs in completion order).
-    // POSIX only: on Windows a cold Git-Bash spawn costs 1-2s, which can swamp the 400ms sleep
-    // delta that makes t1 "the slow one" — CI has seen the two complete within 5ms — so the
-    // relative completion order is not controllable there. The overlap assertion above and the
-    // file contents below still run on Windows.
-    if (process.platform !== "win32") {
-      expect(firstCompleteAt["t2"]!).toBeLessThan(firstCompleteAt["t1"]!);
-    }
+      // Both tools were approved.
+      expect(approvedAt["t1"]).toBeDefined();
+      expect(approvedAt["t2"]).toBeDefined();
+      // The second tool's approval happens before the first tool's execution completes (the slow
+      // command has not finished yet) -- i.e., execution does not block the next approval.
+      expect(approvedAt["t2"]!).toBeLessThan(firstCompleteAt["t1"] ?? Infinity);
+      // The fast b.txt finishes first, the slow a.txt finishes later (outputs in completion order).
+      // POSIX only: on Windows a cold Git-Bash spawn costs 1-2s, which can swamp the 400ms sleep
+      // delta that makes t1 "the slow one" — CI has seen the two complete within 5ms — so the
+      // relative completion order is not controllable there. The overlap assertion above and the
+      // file contents below still run on Windows.
+      if (process.platform !== "win32") {
+        expect(firstCompleteAt["t2"]!).toBeLessThan(firstCompleteAt["t1"]!);
+      }
 
-    expect(await readFileEventually(join(workspace, "a.txt"), "one")).toBe("one");
-    expect(await readFileEventually(join(workspace, "b.txt"), "two")).toBe("two");
-    // Both tool outputs are fed back into the second turn, producing the final reply.
-    expect(
-      all.some(
-        (m) =>
-          isCompleteModelMessage(m) && m.payload.type === "text" && m.payload.text === "both done",
-      ),
-    ).toBe(true);
-  });
+      expect(await readFileEventually(join(workspace, "a.txt"), "one")).toBe("one");
+      expect(await readFileEventually(join(workspace, "b.txt"), "two")).toBe("two");
+      // Both tool outputs are fed back into the second turn, producing the final reply.
+      expect(
+        all.some(
+          (m) =>
+            isCompleteModelMessage(m) &&
+            m.payload.type === "text" &&
+            m.payload.text === "both done",
+        ),
+      ).toBe(true);
+    },
+  );
 
   it("collects all tool outputs (count matches tool calls) before the next round", async () => {
     const llm = {
@@ -2297,67 +2314,70 @@ describe("ContextEngine LLM timeout / network interruption (PRN-012)", () => {
     expect(calls).toBe(3); // Initial attempt + 2 retries.
   });
 
-  it("LLM timeout after a tool already executed: retry carries the call/result via [turn_retried] (tool runs once)", async () => {
-    let calls = 0;
-    const inputs: OmniMessage[][] = [];
-    const llm: LLMInterface = {
-      async *streamGenerate(params) {
-        calls += 1;
-        inputs.push(params.newMessages);
-        if (calls === 1) {
-          // Real tool_call -> the engine dispatches it for execution (appends to a file, a
-          // side effect), followed by a timeout/network drop (retryable).
-          yield toolCall({
-            name: "exec_command",
-            arguments: JSON.stringify({ cmd: "printf x >> count.txt" }),
-            toolCallId: "t1",
-            stopReason: "completed",
+  it.skipIf(skipWithoutPosixShell)(
+    "LLM timeout after a tool already executed: retry carries the call/result via [turn_retried] (tool runs once)",
+    async () => {
+      let calls = 0;
+      const inputs: OmniMessage[][] = [];
+      const llm: LLMInterface = {
+        async *streamGenerate(params) {
+          calls += 1;
+          inputs.push(params.newMessages);
+          if (calls === 1) {
+            // Real tool_call -> the engine dispatches it for execution (appends to a file, a
+            // side effect), followed by a timeout/network drop (retryable).
+            yield toolCall({
+              name: "exec_command",
+              arguments: JSON.stringify({ cmd: "printf x >> count.txt" }),
+              toolCallId: "t1",
+              stopReason: "completed",
+            });
+            return { status: "retryable" };
+          }
+          yield assistantText("second");
+          yield tokenUsage(emptyTokenCounts(), {
+            cache_read: 0,
+            cache_write: 0,
+            output: 1,
+            total: 1,
           });
-          return { status: "retryable" };
-        }
-        yield assistantText("second");
-        yield tokenUsage(emptyTokenCounts(), {
-          cache_read: 0,
-          cache_write: 0,
-          output: 1,
-          total: 1,
-        });
-        return { status: "completed" };
-      },
-    };
-    const environment = new Environment({
-      workspaceDir: workspace,
-      toolConfig: execCommandToolConfig(),
-    });
-    const engine = new ContextEngine({
-      llm,
-      environment,
-      maxReconnects: 3,
-      reconnectBackoffMs: 0,
-    });
+          return { status: "completed" };
+        },
+      };
+      const environment = new Environment({
+        workspaceDir: workspace,
+        toolConfig: execCommandToolConfig(),
+      });
+      const engine = new ContextEngine({
+        llm,
+        environment,
+        maxReconnects: 3,
+        reconnectBackoffMs: 0,
+      });
 
-    const all = await collectRun(engine, [userText("go")], allowAll);
+      const all = await collectRun(engine, [userText("go")], allowAll);
 
-    // The tool executes exactly once: retry input = original input + [turn_retried] (containing
-    // a text transcript of the t1 call/result), so the model does not call it again; the
-    // transcript is plain text and is never dispatched again.
-    const content = await readFile(join(workspace, "count.txt"), "utf8").catch(() => "");
-    expect(content).toBe("x");
-    expect(calls).toBe(2); // Completes after one retry within the same run.
-    expect(inputs[1]![0]).toEqual(inputs[0]![0]);
-    const retried = (inputs[1]![1]!.payload as { text?: string }).text ?? "";
-    expect(retried).toContain("[turn_retried]");
-    expect(retried).toContain('[tool_call name="exec_command" id="t1"]');
-    expect(retried).toContain('[tool_call_output id="t1"');
-    // Completes, no abort.
-    expect(
-      all.some(
-        (m) =>
-          isCompleteModelMessage(m) && m.payload.type === "text" && m.payload.text === "second",
-      ),
-    ).toBe(true);
-    expect(all.map((m) => (m.payload as { type?: string }).type)).not.toContain("abort");
-  });
+      // The tool executes exactly once: retry input = original input + [turn_retried] (containing
+      // a text transcript of the t1 call/result), so the model does not call it again; the
+      // transcript is plain text and is never dispatched again.
+      const content = await readFile(join(workspace, "count.txt"), "utf8").catch(() => "");
+      expect(content).toBe("x");
+      expect(calls).toBe(2); // Completes after one retry within the same run.
+      expect(inputs[1]![0]).toEqual(inputs[0]![0]);
+      const retried = (inputs[1]![1]!.payload as { text?: string }).text ?? "";
+      expect(retried).toContain("[turn_retried]");
+      expect(retried).toContain('[tool_call name="exec_command" id="t1"]');
+      expect(retried).toContain('[tool_call_output id="t1"');
+      // Completes, no abort.
+      expect(
+        all.some(
+          (m) =>
+            isCompleteModelMessage(m) && m.payload.type === "text" && m.payload.text === "second",
+        ),
+      ).toBe(true);
+      expect(all.map((m) => (m.payload as { type?: string }).type)).not.toContain("abort");
+    },
+  );
 
   it("flatten carry-over (auth exit) includes the model's partial thinking and text (PRN-014)", async () => {
     let calls = 0;
@@ -2406,87 +2426,90 @@ describe("ContextEngine LLM timeout / network interruption (PRN-012)", () => {
     expect(text).toContain("next");
   });
 
-  it("carry-over after exhausted retries: raw original input + [turn_retried] with all attempts' products", async () => {
-    let calls = 0;
-    const inputs: OmniMessage[][] = [];
-    const llm: LLMInterface = {
-      async *streamGenerate(params) {
-        calls += 1;
-        inputs.push(params.newMessages);
-        if (calls === 1) {
-          // Attempt 1: a real tool_call (execution has a side effect) followed by a timeout.
-          yield toolCall({
-            name: "exec_command",
-            arguments: JSON.stringify({ cmd: "printf x >> chain.txt" }),
-            toolCallId: "t1",
-            stopReason: "completed",
+  it.skipIf(skipWithoutPosixShell)(
+    "carry-over after exhausted retries: raw original input + [turn_retried] with all attempts' products",
+    async () => {
+      let calls = 0;
+      const inputs: OmniMessage[][] = [];
+      const llm: LLMInterface = {
+        async *streamGenerate(params) {
+          calls += 1;
+          inputs.push(params.newMessages);
+          if (calls === 1) {
+            // Attempt 1: a real tool_call (execution has a side effect) followed by a timeout.
+            yield toolCall({
+              name: "exec_command",
+              arguments: JSON.stringify({ cmd: "printf x >> chain.txt" }),
+              toolCallId: "t1",
+              stopReason: "completed",
+            });
+            return { status: "retryable" };
+          }
+          if (calls === 2) {
+            // Attempt 2 (retry, original input resent): produces partial thinking then times out
+            // again -> retries exhausted.
+            yield thinkingMessage("retry-thought", "retryable");
+            return { status: "retryable" };
+          }
+          yield assistantText("ok");
+          yield tokenUsage(emptyTokenCounts(), {
+            cache_read: 0,
+            cache_write: 0,
+            output: 1,
+            total: 1,
           });
-          return { status: "retryable" };
-        }
-        if (calls === 2) {
-          // Attempt 2 (retry, original input resent): produces partial thinking then times out
-          // again -> retries exhausted.
-          yield thinkingMessage("retry-thought", "retryable");
-          return { status: "retryable" };
-        }
-        yield assistantText("ok");
-        yield tokenUsage(emptyTokenCounts(), {
-          cache_read: 0,
-          cache_write: 0,
-          output: 1,
-          total: 1,
-        });
-        return { status: "completed" };
-      },
-    };
-    const environment = new Environment({
-      workspaceDir: workspace,
-      toolConfig: execCommandToolConfig(),
-    });
-    // Both failed attempts produce content (a tool call, then thinking), which resets the
-    // consecutive ladder; maxTurnAttempts=2 is therefore the budget that runs out after
-    // attempt 2, stashing the original input as carry-over for the next run.
-    const engine = new ContextEngine({
-      llm,
-      environment,
-      maxReconnects: 1,
-      maxTurnAttempts: 2,
-      reconnectBackoffMs: 0,
-    });
+          return { status: "completed" };
+        },
+      };
+      const environment = new Environment({
+        workspaceDir: workspace,
+        toolConfig: execCommandToolConfig(),
+      });
+      // Both failed attempts produce content (a tool call, then thinking), which resets the
+      // consecutive ladder; maxTurnAttempts=2 is therefore the budget that runs out after
+      // attempt 2, stashing the original input as carry-over for the next run.
+      const engine = new ContextEngine({
+        llm,
+        environment,
+        maxReconnects: 1,
+        maxTurnAttempts: 2,
+        reconnectBackoffMs: 0,
+      });
 
-    await collectRun(engine, [userText("go")], allowAll);
-    expect(calls).toBe(2);
-    // Retry = original input + [turn_retried] (attempt 1's t1 call/result).
-    expect(inputs[1]![0]).toEqual(inputs[0]![0]);
-    expect((inputs[1]![1]!.payload as { text?: string }).text ?? "").toContain("[turn_retried]");
+      await collectRun(engine, [userText("go")], allowAll);
+      expect(calls).toBe(2);
+      // Retry = original input + [turn_retried] (attempt 1's t1 call/result).
+      expect(inputs[1]![0]).toEqual(inputs[0]![0]);
+      expect((inputs[1]![1]!.payload as { text?: string }).text ?? "").toContain("[turn_retried]");
 
-    // Next run: carry-over = original input + [turn_retried] (accumulating attempt 1's t1
-    // call/result and attempt 2's partial thinking), a single un-nested block; produces no
-    // [turn_aborted].
-    await collectRun(engine, [userText("next")], allowAll);
-    const nextRunTexts = inputs[2]!.map((m) => (m.payload as { text?: string }).text ?? "");
-    expect(nextRunTexts).toHaveLength(3);
-    expect(nextRunTexts[0]).toBe("go");
-    const block = nextRunTexts[1]!;
-    expect(block).toContain('[tool_call name="exec_command" id="t1"]');
-    expect(block).toContain('[tool_call_output id="t1"');
-    expect(block).toContain("[thinking]retry-thought[/thinking]");
-    expect((block.match(/\[turn_retried\]/g) ?? []).length).toBe(1);
-    expect(nextRunTexts[2]).toBe("next");
-    expect(nextRunTexts.join("\n")).not.toContain("[turn_aborted]");
-    // t1 already executed once during the failed attempts (side effect occurred); the
-    // transcript is plain text and is not dispatched again by either the retry or the next run.
-    // Polled, not read once: t1 was dispatched by an attempt that then timed out, so the turn
-    // was abandoned with nobody awaiting the spawned process — on a slow-spawning host
-    // (Windows CI) it can still be in flight here. A second dispatch would settle on "xx",
-    // which this still catches.
-    const chainFile = join(workspace, "chain.txt");
-    const readChain = (): Promise<string> => readFile(chainFile, "utf8").catch(() => "");
-    for (let i = 0; i < 100 && (await readChain()) !== "x"; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    }
-    expect(await readChain()).toBe("x");
-  });
+      // Next run: carry-over = original input + [turn_retried] (accumulating attempt 1's t1
+      // call/result and attempt 2's partial thinking), a single un-nested block; produces no
+      // [turn_aborted].
+      await collectRun(engine, [userText("next")], allowAll);
+      const nextRunTexts = inputs[2]!.map((m) => (m.payload as { text?: string }).text ?? "");
+      expect(nextRunTexts).toHaveLength(3);
+      expect(nextRunTexts[0]).toBe("go");
+      const block = nextRunTexts[1]!;
+      expect(block).toContain('[tool_call name="exec_command" id="t1"]');
+      expect(block).toContain('[tool_call_output id="t1"');
+      expect(block).toContain("[thinking]retry-thought[/thinking]");
+      expect((block.match(/\[turn_retried\]/g) ?? []).length).toBe(1);
+      expect(nextRunTexts[2]).toBe("next");
+      expect(nextRunTexts.join("\n")).not.toContain("[turn_aborted]");
+      // t1 already executed once during the failed attempts (side effect occurred); the
+      // transcript is plain text and is not dispatched again by either the retry or the next run.
+      // Polled, not read once: t1 was dispatched by an attempt that then timed out, so the turn
+      // was abandoned with nobody awaiting the spawned process — on a slow-spawning host
+      // (Windows CI) it can still be in flight here. A second dispatch would settle on "xx",
+      // which this still catches.
+      const chainFile = join(workspace, "chain.txt");
+      const readChain = (): Promise<string> => readFile(chainFile, "utf8").catch(() => "");
+      for (let i = 0; i < 100 && (await readChain()) !== "x"; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      expect(await readChain()).toBe("x");
+    },
+  );
 
   it("user abort after a failed retry: [turn_retried] un-nests into the [turn_aborted] flatten", async () => {
     const controller = new AbortController();

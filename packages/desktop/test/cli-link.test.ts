@@ -45,7 +45,9 @@ function packApp(name: string): string {
   return launcher;
 }
 
-describe("syncSymlink (the macOS form)", () => {
+// Creating symlinks on Windows needs Developer Mode or an elevated shell; every fixture in this
+// block would fail with a bare EPERM before the launcher logic runs, so it skips there.
+describe.skipIf(process.platform === "win32")("syncSymlink (the macOS form)", () => {
   it("installs when nothing is there", () => {
     const desired = packApp("Linsight.app");
     const link = path.join(tmp, "usr-local-bin", "linsight");
@@ -163,21 +165,24 @@ describe("syncWrapper (the Linux AppImage form)", () => {
     expect(fs.readFileSync(target, "utf8")).toBe(script);
   });
 
-  it("never replaces the symlink install.sh puts at this exact path", () => {
-    // install.sh does `ln -sf ~/.linsight/bin/linsight ~/.local/bin/linsight`, unconditionally,
-    // at the very path this form uses. Ours is the side that has to give way.
-    const theirs = path.join(tmp, "dot-linsight", "bin", "linsight");
-    fs.mkdirSync(path.dirname(theirs), { recursive: true });
-    fs.writeFileSync(theirs, "#!/bin/sh\necho tarball\n", { mode: 0o755 });
-    const target = path.join(tmp, "local-bin", "linsight");
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.symlinkSync(theirs, target);
+  it.skipIf(process.platform === "win32")(
+    "never replaces the symlink install.sh puts at this exact path",
+    () => {
+      // install.sh does `ln -sf ~/.linsight/bin/linsight ~/.local/bin/linsight`, unconditionally,
+      // at the very path this form uses. Ours is the side that has to give way.
+      const theirs = path.join(tmp, "dot-linsight", "bin", "linsight");
+      fs.mkdirSync(path.dirname(theirs), { recursive: true });
+      fs.writeFileSync(theirs, "#!/bin/sh\necho tarball\n", { mode: 0o755 });
+      const target = path.join(tmp, "local-bin", "linsight");
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.symlinkSync(theirs, target);
 
-    const result = syncWrapper(target, script, false);
-    expect(result.action).toBe("skipped");
-    expect(result.detail).toContain("which this app did not write");
-    expect(fs.readlinkSync(target)).toBe(theirs);
-  });
+      const result = syncWrapper(target, script, false);
+      expect(result.action).toBe("skipped");
+      expect(result.detail).toContain("which this app did not write");
+      expect(fs.readlinkSync(target)).toBe(theirs);
+    },
+  );
 
   it("never replaces a foreign regular file", () => {
     const target = path.join(tmp, "local-bin", "linsight");
