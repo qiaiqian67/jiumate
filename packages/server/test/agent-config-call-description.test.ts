@@ -37,7 +37,13 @@ describe("agent config: per-tool call_description", () => {
     const initial = (await (await owner.get(configPath)).json()) as AgentConfigResponse;
     const names = initial.config.toolsBuiltin.map((tool) => tool.name);
     // File tools lead the default toolset; the renamed shell tool follows.
-    expect(names.slice(0, 4)).toEqual(["read_file", "edit_file", "write_file", "exec_command"]);
+    expect(names.slice(0, 5)).toEqual([
+      "read_file",
+      "read_document",
+      "edit_file",
+      "write_file",
+      "exec_command",
+    ]);
     const propsOf = (tool: ToolDefinitionConfig): Record<string, unknown> =>
       (tool.parameters as { properties: Record<string, unknown> }).properties;
     for (const name of ["exec_command", "input_command", "run_subagent", "input_subagent"]) {

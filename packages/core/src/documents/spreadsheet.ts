@@ -25,6 +25,30 @@ const MAX_ROWS = 500;
 /** A cell as read-excel-file reports it. */
 type CellValue = string | number | boolean | Date | null;
 
+/**
+ * Every sheet's cells as plain strings, in workbook order.
+ *
+ * The raw material the preview grid is built from, with the same trimming the Markdown path does
+ * so a sheet padded to a million rows reports its real extent. Rendered values, not raw ones: a
+ * preview showing `4200000` where the sheet shows `4,200,000` would be a different document.
+ */
+export async function xlsxSheets(data: Uint8Array): Promise<{ name: string; rows: string[][] }[]> {
+  const { default: readXlsxFile } = await import("read-excel-file/node");
+  let sheets: Awaited<ReturnType<typeof readXlsxFile>>;
+  try {
+    sheets = await readXlsxFile(Buffer.from(data));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new DocumentExtractError(
+      `This .xlsx file could not be read (${message}). It may be corrupt, password-protected, or saved in the legacy .xls format instead.`,
+    );
+  }
+  return sheets.map(({ sheet, data: rows }) => ({
+    name: sheet,
+    rows: trimGrid(rows as CellValue[][]).map((row) => row.map(renderCell)),
+  }));
+}
+
 /** Renders one cell for a Markdown table: pipes escaped, newlines flattened, dates as ISO days. */
 function renderCell(value: CellValue): string {
   if (value === null || value === undefined) return "";
@@ -116,23 +140,12 @@ function sheetToMarkdown(
 }
 
 export async function extractXlsx(data: Uint8Array): Promise<ExtractResult> {
-  const { default: readXlsxFile } = await import("read-excel-file/node");
-
-  let sheets: Awaited<ReturnType<typeof readXlsxFile>>;
-  try {
-    // Buffer.from over the same memory rather than a copy: read-excel-file only reads it.
-    sheets = await readXlsxFile(Buffer.from(data));
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new DocumentExtractError(
-      `This .xlsx file could not be read (${message}). It may be corrupt, password-protected, or saved in the legacy .xls format instead.`,
-    );
-  }
+  const sheets = await xlsxSheets(data);
 
   const warnings: string[] = [];
   const units: ExtractedUnit[] = [];
-  for (const { sheet, data: rows } of sheets) {
-    const grid = trimGrid(rows as CellValue[][]);
+  for (const { name: sheet, rows } of sheets) {
+    const grid = rows as CellValue[][];
     const rendered = sheetToMarkdown(sheet, grid);
     warnings.push(...rendered.warnings);
     units.push({ label: `sheet "${sheet}"`, markdown: rendered.markdown });

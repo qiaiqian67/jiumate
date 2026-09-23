@@ -46,7 +46,16 @@ function normalizeMammothHtml(html: string): string {
   });
 }
 
-export async function extractDocx(data: Uint8Array): Promise<ExtractResult> {
+/**
+ * Reads a .docx into mammoth's HTML, images included.
+ *
+ * Separate from `extractDocx` because the two callers want opposite things from the same
+ * conversion. The tool wants Markdown with images dropped — a data URI is megabytes of base64 in
+ * a tool result, and a model cannot see an image anyway. The workspace preview wants HTML with
+ * images *kept*, because it is rendering to a person who can. Both share the normalization and the
+ * message handling below; only the last step differs.
+ */
+export async function docxToHtml(data: Uint8Array): Promise<{ html: string; warnings: string[] }> {
   const warnings: string[] = [];
 
   const mammoth = await import("mammoth");
@@ -68,6 +77,12 @@ export async function extractDocx(data: Uint8Array): Promise<ExtractResult> {
       `This .docx file could not be read (${message}). It may be corrupt, password-protected, or saved in the legacy .doc format instead.`,
     );
   }
+
+  return { html, warnings };
+}
+
+export async function extractDocx(data: Uint8Array): Promise<ExtractResult> {
+  const { html, warnings } = await docxToHtml(data);
 
   const imageCount = (html.match(/<img\b/g) ?? []).length;
   if (imageCount > 0) {

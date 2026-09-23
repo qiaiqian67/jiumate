@@ -146,6 +146,7 @@ import type {
   WorkspaceFilesResponse,
 } from "@prismshadow/linsight-server/api";
 import type { MCPServerConfig } from "@prismshadow/linsight-core/interfaces";
+import type { DocumentPreview } from "@prismshadow/linsight-core/documents";
 import { apiFetch, apiFetchWithMeta, postBinary } from "./client";
 
 // Auth & user -----------------------------------------------------------------
@@ -985,6 +986,18 @@ export const workspaceFileUrl = (sessionId: string, path: string, download = fal
  */
 export const workspaceFilePreviewUrl = (sessionId: string, path: string): string =>
   `/api/sessions/${sessionId}/files/preview-redirect?path=${encodeURIComponent(path)}`;
+
+/**
+ * The converted form of a workspace document, for the preview pane.
+ *
+ * A fetch rather than an iframe src because the answer is structured — HTML for a .docx, cells for
+ * a workbook, slides for a deck — and the pane decides how to draw each. PDF is not served here:
+ * the browser renders it natively and the pane embeds the file directly.
+ */
+export const documentPreview = (sessionId: string, path: string): Promise<DocumentPreview> =>
+  apiFetch<DocumentPreview>(
+    `/api/sessions/${sessionId}/files/document-preview?path=${encodeURIComponent(path)}`,
+  );
 
 /**
  * Save a workspace file. When `ifMatch` is supplied, the write is rejected with 409 if

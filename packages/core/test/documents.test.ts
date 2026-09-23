@@ -30,9 +30,11 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   DocumentExtractError,
+  buildDocumentPreview,
   documentFormatOf,
   extractDocumentFromPath,
   renderExtraction,
+  type DocumentFormat,
 } from "../src/documents/index.js";
 
 const fixtureDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
@@ -209,6 +211,55 @@ describe("odt", () => {
     const { zipSync, strToU8 } = await import("fflate");
     const bytes = zipSync({ mimetype: strToU8("application/vnd.oasis.opendocument.text") });
     await expect(extractDocumentFromPath("fake.odt", bytes)).rejects.toThrow(/no content\.xml/);
+  });
+});
+
+describe("buildDocumentPreview", () => {
+  const preview = async (name: string, format: DocumentFormat) =>
+    buildDocumentPreview(await readFile(path.join(fixtureDir, name)), format);
+
+  // The preview is the same conversion asked by a different reader, so what matters is that it
+  // keeps what the tool deliberately drops: the images, and the structure a pane can lay out.
+  it("keeps a docx's embedded image, which the tool drops", async () => {
+    const result = await preview("sample.docx", "docx");
+    expect(result.kind).toBe("html");
+    if (result.kind !== "html") return;
+    expect(result.html).toContain("<img");
+    expect(result.html).toContain("data:image/png;base64,");
+    // The opposite of the Markdown path: a preview keeps the table as markup, because the point
+    // is to draw the document rather than to describe it.
+    expect(result.html).toContain("<table");
+  });
+
+  it("returns a workbook as cells a grid can lay out, one entry per sheet", async () => {
+    const result = await preview("sample.xlsx", "xlsx");
+    expect(result.kind).toBe("grid");
+    if (result.kind !== "grid") return;
+    expect(result.sheets.map((s) => s.name)).toEqual(["Summary", "Detail"]);
+    expect(result.sheets[0]!.rows[0]).toEqual(["Region", "Revenue", "Growth"]);
+    // Rendered values, matching what the sheet shows.
+    expect(result.sheets[0]!.rows[4]![1]).toBe("2026-09-23");
+  });
+
+  it("returns a deck as slides in presentation order", async () => {
+    const result = await preview("sample.pptx", "pptx");
+    expect(result.kind).toBe("slides");
+    if (result.kind !== "slides") return;
+    expect(result.slides.map((s) => s.title)).toEqual(["What next", "Where we are", "Agenda"]);
+    expect(result.slides[0]!.lines).toEqual(["Hire two engineers", "Ship the migration"]);
+    expect(result.slides[0]!.notes).toBe("Owners named in the appendix.");
+  });
+
+  it("falls back to Markdown for ODF", async () => {
+    const result = await preview("sample.odt", "odt");
+    expect(result.kind).toBe("markdown");
+    if (result.kind !== "markdown") return;
+    expect(result.markdown).toContain("Quarterly Report");
+  });
+
+  // A PDF has no converted form on purpose: the browser's viewer beats anything this could emit.
+  it("refuses a PDF rather than producing a worse rendering", async () => {
+    await expect(preview("sample.pdf", "pdf")).rejects.toThrow(/browser directly/);
   });
 });
 

@@ -129,9 +129,23 @@ function slideNotes(archive: Record<string, Uint8Array>, slidePath: string): str
   return null;
 }
 
-export async function extractPptx(data: Uint8Array): Promise<ExtractResult> {
-  const archive = readArchive(data, ".pptx");
+/** One slide as the preview needs it: its title, its body lines, and its notes. */
+export interface PptxSlide {
+  title: string | null;
+  lines: string[];
+  notes: string | null;
+}
 
+/**
+ * Every slide as structured text, in presentation order.
+ *
+ * The same walk `extractPptx` does, stopping one step earlier: the tool renders each slide to
+ * Markdown, while the preview hands the parts to the web app so it can lay them out as slides.
+ * Keeping the walk here rather than duplicating it means the ordering rule — follow `p:sldIdLst`,
+ * never the part filenames — has exactly one implementation.
+ */
+export async function pptxSlides(data: Uint8Array): Promise<PptxSlide[]> {
+  const archive = readArchive(data, ".pptx");
   const presentation = parsePart(archive, "ppt/presentation.xml");
   if (presentation === null) {
     throw new DocumentExtractError(
@@ -142,33 +156,37 @@ export async function extractPptx(data: Uint8Array): Promise<ExtractResult> {
   const rels = relationshipTargets(readPart(archive, "ppt/_rels/presentation.xml.rels"));
   const slideIds = asArray(dig(presentation, "p:presentation", "p:sldIdLst", "p:sldId"));
 
+  const slides: PptxSlide[] = [];
+  for (const slideId of slideIds) {
+    const relId = attr(slideId, "r:id");
+    const target = relId === undefined ? undefined : rels.get(relId);
+    if (target === undefined) continue;
+    const slidePath = resolveTarget(target, "ppt");
+    const parsed = parsePart(archive, slidePath);
+    if (parsed === null) continue;
+    slides.push({
+      title: slideTitle(parsed),
+      lines: slideBody(parsed),
+      notes: slideNotes(archive, slidePath),
+    });
+  }
+  return slides;
+}
+
+export async function extractPptx(data: Uint8Array): Promise<ExtractResult> {
+  const slides = await pptxSlides(data);
+
   const warnings: string[] = [];
   const units: ExtractedUnit[] = [];
 
-  for (const [index, slideId] of slideIds.entries()) {
-    const relId = attr(slideId, "r:id");
-    const target = relId === undefined ? undefined : rels.get(relId);
-    if (target === undefined) {
-      warnings.push(`Slide ${index + 1} is listed in the presentation but has no target; skipped.`);
-      continue;
-    }
-    const slidePath = resolveTarget(target, "ppt");
-    const parsed = parsePart(archive, slidePath);
-    if (parsed === null) {
-      warnings.push(`Slide ${index + 1} (${slidePath}) is missing from the package; skipped.`);
-      continue;
-    }
-
-    const title = slideTitle(parsed);
-    const lines = slideBody(parsed);
+  for (const [index, slide] of slides.entries()) {
     const body: string[] = [];
-    if (title !== null) body.push(`## ${title}`);
-    for (const line of lines) body.push(line);
-    const notes = slideNotes(archive, slidePath);
-    if (notes !== null) body.push("", `_Speaker notes:_ ${notes}`);
+    if (slide.title !== null) body.push(`## ${slide.title}`);
+    for (const line of slide.lines) body.push(line);
+    if (slide.notes !== null) body.push("", `_Speaker notes:_ ${slide.notes}`);
 
     units.push({
-      label: `slide ${index + 1}${title !== null ? ` — ${title}` : ""}`,
+      label: `slide ${index + 1}${slide.title !== null ? ` — ${slide.title}` : ""}`,
       markdown: body.join("\n").trim(),
     });
   }

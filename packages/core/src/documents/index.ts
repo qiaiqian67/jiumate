@@ -40,6 +40,12 @@ export {
   type ExtractedUnit,
   type ExtractResult,
 } from "./types.js";
+export {
+  buildDocumentPreview,
+  buildDocumentPreviewFromPath,
+  type DocumentPreview,
+} from "./preview.js";
+export type { PptxSlide } from "./slides.js";
 
 /** Extraction by known format. Throws DocumentExtractError with a message fit to show the user. */
 export async function extractDocument(

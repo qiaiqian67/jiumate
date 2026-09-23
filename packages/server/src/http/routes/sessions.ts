@@ -18,6 +18,10 @@ import {
   stripLeadingMarkerBlocks,
   userText,
 } from "@prismshadow/linsight-core";
+// The documents subpath rather than the root entry: the root is the SDK surface every host
+// loads, and the extractors pull mammoth, pdf.js and a zip reader behind them. Nothing that
+// merely imports core should pay for them.
+import { buildDocumentPreview, documentFormatOf } from "@prismshadow/linsight-core/documents";
 import type { OmniMessage } from "@prismshadow/linsight-core";
 import type {
   ApprovalMode,
@@ -1349,6 +1353,32 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     });
     const encoded = rel.split("/").map(encodeURIComponent).join("/");
     return c.redirect(`${target.origin}/preview/${token}/${encoded}`, 302);
+  });
+
+  app.get("/:sessionId/files/document-preview", async (c) => {
+    const row = resolveSession(c);
+    const rel = c.req.query("path") ?? "";
+
+    const format = documentFormatOf(rel);
+    if (format === null || format === "pdf") {
+      // PDF is not an error the UI should ever hit — the client embeds the file directly — but
+      // answering 415 is better than converting it into something worse than the browser's viewer.
+      throw new HttpError(
+        415,
+        "not_previewable_document",
+        "This file has no converted preview. PDF is rendered by the browser directly.",
+      );
+    }
+
+    const { data } = await deps.workspaceFiles.read(row.workspace, rel);
+    try {
+      return c.json(await buildDocumentPreview(data, format));
+    } catch (err) {
+      // A document that cannot be parsed is the user's file, not a server fault: 422 with the
+      // converter's own message, which is written to be read by whoever opened the file.
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpError(422, "document_preview_failed", message);
+    }
   });
 
   // Bulk existence check (message file cards list only files that actually exist):

@@ -35,6 +35,8 @@ import { MermaidBlock } from "./mermaid-block";
 import { languageForExtension } from "./code-languages";
 import { ExportMenu } from "./workspace-export";
 import { MarkdownEditor } from "./markdown-editor";
+import { DocumentPreviewView } from "./document-preview";
+import type { DocumentPreview } from "@prismshadow/linsight-core/documents";
 import { toneInk } from "../../lib/tone";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { ICON_SIZE } from "../../lib/icon-scale";
@@ -78,6 +80,13 @@ const TEXT_EXTS = new Set([
 ]);
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "webp", "svg"]);
 const HTML_EXTS = new Set(["html", "htm"]);
+/**
+ * Extensions the server can convert into a preview. Kept in step with `DOCUMENT_EXTENSIONS` in
+ * core — a format listed here but not there answers 415, which the catch below reports as
+ * unsupported rather than as a crash. `pdf` is absent on purpose: the browser renders it natively
+ * and the iframe branch above handles it.
+ */
+const DOCUMENT_EXTS = new Set(["docx", "xlsx", "pptx", "odt", "ods", "odp"]);
 /** Read cap for text preview (beyond this, truncated with a download prompt). */
 const TEXT_PREVIEW_LIMIT = 256 * 1024;
 /** Source highlighting cap: tokenizing the full 256KB preview cap's worth of content in one go would block the main thread, so beyond this it falls back to unhighlighted. */
@@ -268,10 +277,16 @@ function withStorageShim(html: string): string {
 interface Preview {
   path: string;
   name: string;
-  kind: "text" | "md" | "image" | "html" | "pdf" | "unsupported";
+  kind: "text" | "md" | "image" | "html" | "pdf" | "document" | "unsupported";
   /** Content for kind=text/md/html (may be truncated). */
   content?: string;
   truncated?: boolean;
+  /**
+   * Converted payload for kind=document: a .docx as HTML, a workbook as cells, a deck as slides.
+   * Fetched from the server rather than derived here, because the conversion needs mammoth, a zip
+   * reader and a spreadsheet parser — none of which belong in the web bundle.
+   */
+  document?: DocumentPreview;
   /** Bumped on every previewPath call; keys the isolated HTML iframe so re-opening the
    *  same path remounts it and refetches fresh content (its src alone would not change). */
   nonce: number;
@@ -454,6 +469,33 @@ export function WorkspaceBrowser({
       }
       const isHtml = HTML_EXTS.has(ext);
       const isMd = ext === "md";
+      // Documents get a converted preview instead of the "unsupported" notice. The server does the
+      // conversion; this only asks for it and decides how the payload is shown.
+      if (!isHtml && !isMd && DOCUMENT_EXTS.has(ext)) {
+        try {
+          const payload = await api.documentPreview(session.sessionId, filePath);
+          // ODF extracts to text rather than to a layout, so it is handed to the Markdown view the
+          // app already has — the same pane, one less renderer to maintain.
+          if (payload.kind === "markdown") {
+            present({
+              path: filePath,
+              name,
+              kind: "md",
+              content: payload.markdown,
+              truncated: false,
+              nonce,
+            });
+            return;
+          }
+          present({ path: filePath, name, kind: "document", document: payload, nonce });
+        } catch {
+          // A file that cannot be converted is reported as such rather than as a generic
+          // "unsupported type": the user's next question is why, and the notice answers the
+          // category at least.
+          if (!refresh) present({ path: filePath, name, kind: "unsupported", nonce });
+        }
+        return;
+      }
       if (!isHtml && !TEXT_EXTS.has(ext)) {
         present({ path: filePath, name, kind: "unsupported", nonce });
         return;
@@ -966,6 +1008,8 @@ export function WorkspaceBrowser({
                 </>
               );
             })()
+          ) : preview.kind === "document" && preview.document ? (
+            <DocumentPreviewView payload={preview.document} />
           ) : preview.kind === "text" || preview.kind === "html" || preview.kind === "md" ? (
             preview.content === undefined ? (
               // Isolated HTML reaches the Source view before its lazy fetch lands: show a
