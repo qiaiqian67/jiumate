@@ -94,6 +94,13 @@ function HtmlDocumentView({ html }: { html: string }) {
   );
 }
 
+/** One pending cell change, keyed by sheet and address. */
+export interface CellEditDraft {
+  sheet: string;
+  address: string;
+  value: string;
+}
+
 /** Excel's column letters for a 0-based index: 0 -> A, 26 -> AA. */
 function columnLetter(index: number): string {
   let n = index;
@@ -106,25 +113,80 @@ function columnLetter(index: number): string {
 }
 
 /**
- * A workbook as a grid, one tab per sheet.
+ * A workbook as a grid, one tab per sheet, editable in place.
  *
  * Row numbers and column letters are rendered because a spreadsheet is addressed, not just read:
  * the first thing anyone does with a previewed sheet is point at a cell, and "B7" is a more useful
- * thing to be able to say than "the one in the second column". The first row is styled as a header
- * without being treated as one — the same first row the Markdown path promotes to a table header,
- * marked visually here so nothing about the data is assumed.
+ * thing to be able to say than "the one in the second column" — and it is the address an edit is
+ * sent under.
+ *
+ * Editing holds a **draft**, not a new workbook. A changed cell is recorded as `{sheet, address,
+ * value}` and the cell keeps showing the draft value until save; nothing re-serializes the file,
+ * because the browser never parsed one. That is what makes the save lossless: the server receives a
+ * handful of coordinates and applies them to the bytes on disk, so charts and pivot tables the
+ * browser could not represent are never asked to survive a round trip through it.
  */
-function SheetGridView({ sheets }: { sheets: { name: string; rows: string[][] }[] }) {
+function SheetGridView({
+  sheets,
+  onSaveCells,
+}: {
+  sheets: { name: string; rows: string[][] }[];
+  onSaveCells?: (edits: CellEditDraft[]) => Promise<void>;
+}) {
   const [active, setActive] = useState(0);
+  const [editing, setEditing] = useState<{ sheet: string; address: string } | null>(null);
+  const [drafts, setDrafts] = useState<Map<string, string>>(new Map());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const sheet = sheets[Math.min(active, sheets.length - 1)];
   if (!sheet) return <p className="text-sm text-gray-500">This workbook has no sheets.</p>;
 
+  const keyOf = (sheetName: string, address: string): string => `${sheetName}\u0000${address}`;
+  const valueAt = (sheetName: string, address: string, original: string): string =>
+    drafts.get(keyOf(sheetName, address)) ?? original;
+
+  const commit = (sheetName: string, address: string, next: string, original: string): void => {
+    setDrafts((previous) => {
+      const updated = new Map(previous);
+      // A value typed back to what was there is not an edit; dropping it keeps the save honest
+      // about what actually changed.
+      if (next === original) updated.delete(keyOf(sheetName, address));
+      else updated.set(keyOf(sheetName, address), next);
+      return updated;
+    });
+    setEditing(null);
+  };
+
+  const save = async (): Promise<void> => {
+    if (!onSaveCells || drafts.size === 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const edits: CellEditDraft[] = [];
+      for (const [key, value] of drafts) {
+        const [sheetName, address] = key.split("\u0000") as [string, string];
+        // A blank cell clears it; anything else is a string. Numbers typed into a numeric column
+        // are left as text on purpose — guessing would silently reformat identifiers like "007".
+        edits.push({ sheet: sheetName, address, value });
+      }
+      await onSaveCells(edits);
+      setDrafts(new Map());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const width = sheet.rows.reduce((max, row) => Math.max(max, row.length), 0);
+  const dirty = drafts.size;
+
   return (
     <div className="flex h-full flex-col gap-2">
-      {sheets.length > 1 && (
-        <div className="flex flex-wrap gap-1">
-          {sheets.map((entry, index) => (
+      <div className="flex flex-wrap items-center gap-1">
+        {sheets.length > 1 &&
+          sheets.map((entry, index) => (
             <button
               key={entry.name}
               type="button"
@@ -138,7 +200,34 @@ function SheetGridView({ sheets }: { sheets: { name: string; rows: string[][] }[
               {entry.name}
             </button>
           ))}
-        </div>
+        {dirty > 0 && (
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-gray-500">
+              {dirty} cell{dirty === 1 ? "" : "s"} changed
+            </span>
+            <button
+              type="button"
+              onClick={() => setDrafts(new Map())}
+              disabled={saving}
+              className="rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Discard
+            </button>
+            <button
+              type="button"
+              onClick={() => void save()}
+              disabled={saving}
+              className="rounded-md bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        )}
+      </div>
+      {error !== null && (
+        <p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+          {error}
+        </p>
       )}
       <div className="min-h-[40vh] flex-1 overflow-auto rounded-md border border-gray-200 dark:border-gray-800">
         {width === 0 ? (
@@ -164,15 +253,55 @@ function SheetGridView({ sheets }: { sheets: { name: string; rows: string[][] }[
                   <th className="border border-gray-200 bg-gray-50 px-2 py-1 text-right text-gray-500 dark:border-gray-700 dark:bg-gray-800">
                     {rowIndex + 1}
                   </th>
-                  {Array.from({ length: width }, (_, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className="max-w-[28rem] truncate border border-gray-200 px-2 py-1 dark:border-gray-700"
-                      title={row[colIndex] ?? ""}
-                    >
-                      {row[colIndex] ?? ""}
-                    </td>
-                  ))}
+                  {Array.from({ length: width }, (_, colIndex) => {
+                    const address = `${columnLetter(colIndex)}${rowIndex + 1}`;
+                    const original = row[colIndex] ?? "";
+                    const value = valueAt(sheet.name, address, original);
+                    const isEditing = editing?.sheet === sheet.name && editing.address === address;
+                    const isDirty = drafts.has(keyOf(sheet.name, address));
+                    if (isEditing) {
+                      return (
+                        <td
+                          key={colIndex}
+                          className="border border-blue-400 p-0 dark:border-blue-600"
+                        >
+                          <input
+                            autoFocus
+                            defaultValue={value}
+                            onBlur={(event) =>
+                              commit(sheet.name, address, event.target.value, original)
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                commit(sheet.name, address, event.currentTarget.value, original);
+                              } else if (event.key === "Escape") {
+                                setEditing(null);
+                              }
+                            }}
+                            className="w-full min-w-[6rem] bg-white px-2 py-1 text-xs outline-none dark:bg-gray-900"
+                          />
+                        </td>
+                      );
+                    }
+                    return (
+                      <td
+                        key={colIndex}
+                        onClick={() => {
+                          if (onSaveCells) setEditing({ sheet: sheet.name, address });
+                        }}
+                        className={
+                          "max-w-[28rem] truncate border border-gray-200 px-2 py-1 dark:border-gray-700" +
+                          (onSaveCells
+                            ? " cursor-cell hover:bg-blue-50 dark:hover:bg-blue-950"
+                            : "") +
+                          (isDirty ? " bg-amber-50 font-medium dark:bg-amber-950" : "")
+                        }
+                        title={onSaveCells ? `${address} — click to edit` : value}
+                      >
+                        {value}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -234,8 +363,21 @@ function SlidesView({
   );
 }
 
-/** Renders a converted document. Returns null for the `markdown` payload — see the file header. */
-export function DocumentPreviewView({ payload }: { payload: DocumentPreview }) {
+/**
+ * Renders a converted document. Returns null for the `markdown` payload — see the file header.
+ *
+ * `onSaveCells` is what makes a workbook editable, and its absence is what makes the same component
+ * read-only. That is deliberate: the preview is shown in a docked panel and a drawer that never
+ * mount at once, and only one of them owns the file's ETag. A grid that saved without an ETag would
+ * skip the conflict check, so the callback carries both the write and the freshness check with it.
+ */
+export function DocumentPreviewView({
+  payload,
+  onSaveCells,
+}: {
+  payload: DocumentPreview;
+  onSaveCells?: (edits: CellEditDraft[]) => Promise<void>;
+}) {
   if (payload.kind === "markdown") return null;
   return (
     <div className="flex h-full flex-col">
@@ -243,7 +385,7 @@ export function DocumentPreviewView({ payload }: { payload: DocumentPreview }) {
       {payload.kind === "html" ? (
         <HtmlDocumentView html={payload.html} />
       ) : payload.kind === "grid" ? (
-        <SheetGridView sheets={payload.sheets} />
+        <SheetGridView sheets={payload.sheets} onSaveCells={onSaveCells} />
       ) : (
         <SlidesView slides={payload.slides} />
       )}

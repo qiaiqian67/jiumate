@@ -148,7 +148,6 @@ import type {
 import type { MCPServerConfig } from "@prismshadow/linsight-core/interfaces";
 import type { DocumentPreview } from "@prismshadow/linsight-core/documents";
 import { apiFetch, apiFetchWithMeta, postBinary } from "./client";
-
 // Auth & user -----------------------------------------------------------------
 
 export const login = (body: AuthLoginRequest) =>
@@ -993,10 +992,43 @@ export const workspaceFilePreviewUrl = (sessionId: string, path: string): string
  * A fetch rather than an iframe src because the answer is structured — HTML for a .docx, cells for
  * a workbook, slides for a deck — and the pane decides how to draw each. PDF is not served here:
  * the browser renders it natively and the pane embeds the file directly.
+ *
+ * The ETag comes back alongside the payload so a cell edit can be sent under If-Match without a
+ * second request just to stat the file. It is the same weak ETag the file read returns.
  */
-export const documentPreview = (sessionId: string, path: string): Promise<DocumentPreview> =>
-  apiFetch<DocumentPreview>(
+export const documentPreview = (
+  sessionId: string,
+  path: string,
+): Promise<{ payload: DocumentPreview; etag?: string }> =>
+  apiFetchWithMeta<DocumentPreview>(
     `/api/sessions/${sessionId}/files/document-preview?path=${encodeURIComponent(path)}`,
+  ).then(({ data, etag }) => ({ payload: data, etag: etag ?? undefined }));
+
+/**
+ * Applies cell edits to a workbook.
+ *
+ * Only the changes travel, not the file. The browser never parsed the workbook, so sending a whole
+ * file back would mean sending a lossy reconstruction of the one on disk — which is the fidelity
+ * loss the surgical server-side write exists to avoid. The delta goes over; the server applies it
+ * to the real bytes.
+ *
+ * `ifMatch` is the ETag from the read, and the server answers 409 when the file has moved on —
+ * the same contract the Markdown editor saves under, and more important here, because a stale cell
+ * delta applied silently is a wrong number in a document someone may already have sent.
+ */
+export const documentCellEdits = (
+  sessionId: string,
+  path: string,
+  edits: { sheet: string; address: string; value: string | number | null }[],
+  ifMatch?: string,
+): Promise<void> =>
+  apiFetch<void>(
+    `/api/sessions/${sessionId}/files/document-cells?path=${encodeURIComponent(path)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ edits }),
+      ...(ifMatch === undefined ? {} : { headers: { "if-match": ifMatch } }),
+    },
   );
 
 /**

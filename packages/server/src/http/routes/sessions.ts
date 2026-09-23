@@ -21,7 +21,12 @@ import {
 // The documents subpath rather than the root entry: the root is the SDK surface every host
 // loads, and the extractors pull mammoth, pdf.js and a zip reader behind them. Nothing that
 // merely imports core should pay for them.
-import { buildDocumentPreview, documentFormatOf } from "@prismshadow/linsight-core/documents";
+import {
+  applyCellEdits,
+  buildDocumentPreview,
+  documentFormatOf,
+  type CellEdit,
+} from "@prismshadow/linsight-core/documents";
 import type { OmniMessage } from "@prismshadow/linsight-core";
 import type {
   ApprovalMode,
@@ -91,6 +96,8 @@ const SESSION_TITLE_MAX = 120;
 /** Max path count and per-path length for a single files/stat check (message file-card candidates never exceed this scale). */
 const STAT_MAX_PATHS = 100;
 const STAT_MAX_PATH_LEN = 512;
+/** Cap on one workbook edit request. A spreadsheet edit is a handful of cells, not a rewrite. */
+const MAX_CELL_EDITS = 500;
 
 /**
  * Weak ETag for a file based on its mtimeMs (changes whenever the file is written on disk).
@@ -1372,7 +1379,18 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
 
     const { data } = await deps.workspaceFiles.read(row.workspace, rel);
     try {
-      return c.json(await buildDocumentPreview(data, format));
+      const payload = await buildDocumentPreview(data, format);
+      // The ETag travels with the conversion so a cell edit can be sent back under If-Match
+      // without a second round trip to stat the file. Same weak-ETag contract as the read route.
+      const stats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
+      const mtime = stats[0]?.mtimeMs;
+      return new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...(mtime === undefined ? {} : { ETag: weakEtag(mtime) }),
+        },
+      });
     } catch (err) {
       // A document that cannot be parsed is the user's file, not a server fault: 422 with the
       // converter's own message, which is written to be read by whoever opened the file.
@@ -1403,6 +1421,52 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     return c.json({ existing } satisfies FilesStatResponse);
   });
 
+  /**
+   * Rejects the request when the file has moved on since the caller read it.
+   *
+   * Shared by both write routes rather than written twice: the rule has three cases that are easy
+   * to get subtly different — no If-Match means write anyway, a malformed one is the caller's bug,
+   * and a miss is a conflict even when the file no longer exists, because the caller's expectation
+   * was a known version and that version is gone. Without that last case a force-save would
+   * silently resurrect a deleted file.
+   */
+  const assertUnchanged = async (
+    workspace: string,
+    rel: string,
+    ifMatch: string | undefined,
+  ): Promise<void> => {
+    if (ifMatch === undefined) return;
+    const expected = parseWeakEtag(ifMatch);
+    if (expected === null) {
+      throw badRequest('If-Match header must be a weak ETag like W/"<mtimeMs>".');
+    }
+    const stats = await deps.workspaceFiles.statExistingWithMtime(workspace, [rel]);
+    const current = stats[0];
+    if (!current) {
+      throw new HttpError(409, "file_conflict", "File no longer exists; reload to retry.");
+    }
+    if (Math.round(current.mtimeMs) !== expected) {
+      throw new HttpError(
+        409,
+        "file_conflict",
+        "File changed on disk since you opened it. Reload to see the latest version.",
+      );
+    }
+  };
+
+  /**
+   * 204 with the file's new mtime as an ETag, so a caller can keep using If-Match across saves
+   * without a separate GET — an entire file read saved on every save.
+   */
+  const noContentWithEtag = async (workspace: string, rel: string): Promise<Response> => {
+    const stats = await deps.workspaceFiles.statExistingWithMtime(workspace, [rel]);
+    const newMtime = stats[0]?.mtimeMs;
+    return new Response(null, {
+      status: 204,
+      headers: newMtime !== undefined ? { ETag: weakEtag(newMtime) } : {},
+    });
+  };
+
   app.put("/:sessionId/files/content", async (c) => {
     const row = resolveSession(c);
     const rel = c.req.query("path") ?? "";
@@ -1414,43 +1478,55 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     if (data.length > MAX_UPLOAD_BYTES) {
       throw new HttpError(413, "file_too_large", "Uploaded file exceeds the 14MB limit.");
     }
-    // ETag-based conflict detection: the in-place Markdown editor reads the file, captures
-    // its ETag, and sends it back as If-Match on save. If the file's mtime has moved (e.g.
-    // the Agent wrote to it during the user's edit), we reject so the user can choose
-    // "reload" (discard their edits) or "overwrite" (force-save without the check).
-    //
-    // A miss is reported as 409 even when the file no longer exists — the client's expectation
-    // was a known version; that version is gone, and the right move is for the user to reload
-    // and see the current state of the Workspace. Without this guard, a force-save would
-    // silently resurrect a deleted file.
-    const ifMatch = c.req.header("if-match");
-    if (ifMatch !== undefined) {
-      const expected = parseWeakEtag(ifMatch);
-      if (expected === null) {
-        throw badRequest('If-Match header must be a weak ETag like W/"<mtimeMs>".');
-      }
-      const stats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
-      const current = stats[0];
-      if (!current) {
-        throw new HttpError(409, "file_conflict", "File no longer exists; reload to retry.");
-      }
-      if (Math.round(current.mtimeMs) !== expected) {
-        throw new HttpError(
-          409,
-          "file_conflict",
-          "File changed on disk since you opened it. Reload to see the latest version.",
-        );
-      }
-    }
+    await assertUnchanged(row.workspace, rel, c.req.header("if-match"));
     await deps.workspaceFiles.write(row.workspace, rel, data);
-    // Return the new mtime so subsequent saves can keep using If-Match without a separate
-    // GET round-trip (saves an entire file read on every save).
-    const newStats = await deps.workspaceFiles.statExistingWithMtime(row.workspace, [rel]);
-    const newMtime = newStats[0]?.mtimeMs;
-    return new Response(null, {
-      status: 204,
-      headers: newMtime !== undefined ? { ETag: weakEtag(newMtime) } : {},
+    return noContentWithEtag(row.workspace, rel);
+  });
+
+  /**
+   * PUT /api/sessions/:sessionId/files/document-cells — apply cell edits to a workbook.
+   *
+   * A separate route from the whole-file write above, because the client does not have the new
+   * file: it has a few changed cells. Sending a whole workbook back would mean the browser holding
+   * a re-serialized copy of a file it cannot faithfully re-serialize — which is exactly the
+   * fidelity loss the surgical write exists to avoid. So the edits travel, and the server applies
+   * them to the bytes on disk.
+   *
+   * Conflict detection is the same If-Match dance the Markdown editor uses, and it matters more
+   * here: a workbook edit is a small delta against a file the Agent may have rewritten, and
+   * applying a stale delta silently is worse than refusing it.
+   */
+  app.put("/:sessionId/files/document-cells", async (c) => {
+    const row = resolveSession(c);
+    const rel = c.req.query("path") ?? "";
+    const body = await readJson(c);
+
+    const edits = body.edits;
+    if (!Array.isArray(edits) || edits.length === 0 || edits.length > MAX_CELL_EDITS) {
+      throw badRequest(`edits must be a non-empty array of at most ${MAX_CELL_EDITS} cell edits.`);
+    }
+    const parsed: CellEdit[] = edits.map((raw: unknown) => {
+      const edit = raw as { sheet?: unknown; address?: unknown; value?: unknown };
+      if (typeof edit.sheet !== "string" || typeof edit.address !== "string") {
+        throw badRequest("Each edit needs a string sheet and a string address.");
+      }
+      if (edit.value !== null && typeof edit.value !== "string" && typeof edit.value !== "number") {
+        throw badRequest("Each edit's value must be a string, a number, or null.");
+      }
+      return { sheet: edit.sheet, address: edit.address, value: edit.value };
     });
+
+    await assertUnchanged(row.workspace, rel, c.req.header("if-match"));
+    const { data } = await deps.workspaceFiles.read(row.workspace, rel);
+    let updated: Uint8Array;
+    try {
+      updated = applyCellEdits(data, parsed);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpError(422, "document_edit_failed", message);
+    }
+    await deps.workspaceFiles.write(row.workspace, rel, Buffer.from(updated));
+    return noContentWithEtag(row.workspace, rel);
   });
 
   /**

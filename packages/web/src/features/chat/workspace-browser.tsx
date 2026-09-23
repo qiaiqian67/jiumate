@@ -36,6 +36,7 @@ import { languageForExtension } from "./code-languages";
 import { ExportMenu } from "./workspace-export";
 import { MarkdownEditor } from "./markdown-editor";
 import { DocumentPreviewView } from "./document-preview";
+import type { CellEditDraft } from "./document-preview";
 import type { DocumentPreview } from "@prismshadow/linsight-core/documents";
 import { toneInk } from "../../lib/tone";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
@@ -473,7 +474,7 @@ export function WorkspaceBrowser({
       // conversion; this only asks for it and decides how the payload is shown.
       if (!isHtml && !isMd && DOCUMENT_EXTS.has(ext)) {
         try {
-          const payload = await api.documentPreview(session.sessionId, filePath);
+          const { payload, etag } = await api.documentPreview(session.sessionId, filePath);
           // ODF extracts to text rather than to a layout, so it is handed to the Markdown view the
           // app already has — the same pane, one less renderer to maintain.
           if (payload.kind === "markdown") {
@@ -487,7 +488,14 @@ export function WorkspaceBrowser({
             });
             return;
           }
-          present({ path: filePath, name, kind: "document", document: payload, nonce });
+          present({
+            path: filePath,
+            name,
+            kind: "document",
+            document: payload,
+            nonce,
+            etag: etag ?? undefined,
+          });
         } catch {
           // A file that cannot be converted is reported as such rather than as a generic
           // "unsupported type": the user's next question is why, and the notice answers the
@@ -1009,7 +1017,16 @@ export function WorkspaceBrowser({
               );
             })()
           ) : preview.kind === "document" && preview.document ? (
-            <DocumentPreviewView payload={preview.document} />
+            <DocumentPreviewView
+              payload={preview.document}
+              onSaveCells={async (edits) => {
+                await api.documentCellEdits(session.sessionId, preview.path, edits, preview.etag);
+                // Re-read so the grid shows what is actually on disk — the surgical write
+                // normalizes cell formatting (a number stored as text comes back as a number),
+                // and a grid still showing the typed value would disagree with the file.
+                void previewPath(preview.path, { refresh: true });
+              }}
+            />
           ) : preview.kind === "text" || preview.kind === "html" || preview.kind === "md" ? (
             preview.content === undefined ? (
               // Isolated HTML reaches the Source view before its lazy fetch lands: show a
