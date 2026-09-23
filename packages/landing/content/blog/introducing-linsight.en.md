@@ -24,8 +24,6 @@ Three reasons, in deliberate order — from task quality, to how agents get buil
 
 A deliberately minimal toolset over clean low-level interfaces: fewer tool calls, fewer Tokens, deeply tuned for open models like DeepSeek. Each harness runs the model it is normally paired with — the comparison is between the products as people actually use them — head-to-head on two suites:
 
-![Benchmark: Linsight leads the data-analysis suite and ties OpenAI Codex on coding, at a small fraction of both rivals' cost](/blog-assets/benchmark-light.svg)
-
 Complex data analysis (15 tasks, single run; Linsight and Codex at thinking xhigh, Claude Code at max):
 
 | Framework      | Model           | Accuracy (%) | Tokens (M) | Cost ($) |
@@ -53,8 +51,6 @@ Collect the docs from https://github.com/ericbuess/claude-code-docs and build a 
 ```
 
 And this is the finished product — a docs expert with retrieval, cited sources that link to the original files, and example questions built in:
-
-![The generated RAG app: a Claude Code docs expert answering with cited, clickable sources and example questions](/blog-assets/rag-app-en-light.webp)
 
 **And generating this entire RAG app burned just $0.02 (¥0.2) of tokens — on DeepSeek V4 Pro.**
 
@@ -110,7 +106,6 @@ A self-improving harness needs a community that improves with it. Come discuss, 
 
 - [Discord](https://discord.gg/eFHKqqcU3D): chat with us and other developers in real time;
 - [X (Twitter)](https://x.com/code_hiyouga): follow the latest updates;
-- [WeChat group](https://github.com/qiaiqian67/linsight-community/blob/main/wechat/group.jpg): Chinese community discussions;
 - [GitHub](https://github.com/qiaiqian67/linsight): stars, Issues, and PRs all welcome.
 
 Self-evolving agent infrastructure, for everyone — starting today.

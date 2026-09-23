@@ -7,10 +7,10 @@
  *   packages/landing/.blog-assets/benchmark-light.svg
  *
  * That last one is a two-step flow: blog images are not committed to this repo, so the file
- * lands in the gitignored staging dir packages/landing/.blog-assets/ and is then uploaded to
- * the `blog-assets/` directory of the sibling `qiaiqian67/linsight-community` repo,
- * which is what the posts load from (the renderer resolves /blog-assets/<name> there — see
- * packages/landing/src/lib/links.ts).
+ * lands in the gitignored staging dir packages/landing/.blog-assets/ and is then published to
+ * wherever the post's `/blog-assets/<name>` paths are served from — the path in the Markdown
+ * is the contract, and nothing in the renderer rewrites it (see the blog section of
+ * .agents/skills/linsight-dev/SKILL.md).
  *
  * Two panels per suite (accuracy, cost), horizontal bars scaled linearly from zero — the
  * cost spread is ~70x, so the Linsight bar is by far the shortest. That is the

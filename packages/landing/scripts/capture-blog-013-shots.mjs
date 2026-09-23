@@ -23,9 +23,9 @@
  *
  * Output is a two-step flow, because blog images are not committed to this repo:
  *   1. this script writes into the gitignored staging dir packages/landing/.blog-assets/;
- *   2. upload the files it produced to the `blog-assets/` directory of the sibling
- *      `qiaiqian67/linsight-community` repo, which is what the posts load from
- *      (the renderer resolves /blog-assets/<name> there — see src/lib/links.ts).
+ *   2. publish those files to wherever the post's `/blog-assets/<name>` paths are served
+ *      from — the path in the Markdown is the contract, and nothing in the renderer
+ *      rewrites it (see the blog section of .agents/skills/linsight-dev/SKILL.md).
  *
  * Prereqs: `pnpm --filter @prismshadow/linsight-{skills,core,server,web} build` and
  * Playwright's chromium. Run: `node scripts/capture-blog-013-shots.mjs` (or

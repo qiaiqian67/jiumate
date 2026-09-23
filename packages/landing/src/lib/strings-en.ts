@@ -527,7 +527,6 @@ linsight run --message "Analyze data.csv and summarize quarterly sales"`,
     items: {
       discord: { name: "Discord", desc: "Chat with us and other developers in real time." },
       x: { name: "X (Twitter)", desc: "Follow the latest product and team updates." },
-      wechat: { name: "WeChat group", desc: "Chinese community discussions and support." },
       github: { name: "GitHub", desc: "Stars, Issues, and PRs all welcome." },
     },
   },

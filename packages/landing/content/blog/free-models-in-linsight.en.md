@@ -16,8 +16,6 @@ As of today the free lineup is four entries, all in the OpenRouter group:
 | OpenRouter     | `poolside/laguna-m.1:free`               |        262,144 | $0    |
 | OpenRouter     | `openrouter/free`                        | 128,000 (conservative) | $0    |
 
-![The Models page's OpenRouter group: Ling 3.0 Flash (free), Nemotron 3 Ultra (free), Laguna M.1 (free) and the Free Models Router all carry the light-yellow Free badge, with Claude Opus 5 in the first card row](/blog-assets/free-models-page-en-light.webp)
-
 ## Nemotron 3 Ultra (free)
 
 The catalog's first free row, and still its largest: NVIDIA's open frontier-reasoning and orchestration model, a Mixture-of-Experts with 55B active parameters out of 550B total on a hybrid Transformer–Mamba architecture, with a 1M-token context window. If you want to see what the harness's planning-heavy loops look like on a big reasoning model — without paying big-reasoning-model prices — this is the row.

@@ -508,7 +508,6 @@ linsight run --message "分析 data.csv，输出季度销售额"`,
     items: {
       discord: { name: "Discord", desc: "与我们和其他开发者实时交流。" },
       x: { name: "X（Twitter）", desc: "关注产品与团队的最新动态。" },
-      wechat: { name: "微信群", desc: "中文社区讨论与互助。" },
       github: { name: "GitHub", desc: "Star、Issue 与 PR 都欢迎。" },
     },
   },

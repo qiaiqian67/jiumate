@@ -24,8 +24,6 @@ excerpt: 我们在 GDPevo Benchmark 中验证了 Agent 自我进化的能力，�
 
 刻意精简的工具集配合干净的底层接口：更少的工具调用、更少的 Token，对 DeepSeek 等开放模型深度适配。每个产品搭配它常用的模型——比的是大家实际会怎么用——在两套题库上正面对比：
 
-![Benchmark：Linsight 在数据分析题库准确率最高、编程题库与 OpenAI Codex 持平，成本仅为两者的零头](/blog-assets/benchmark-light.svg)
-
 复杂数据分析（15 题，单次运行；Linsight 与 Codex 为 thinking xhigh，Claude Code 为 max）：
 
 | 实验框架       | 模型名称        | 准确率（%） | Token 用量（M） | 成本（$） |
@@ -53,8 +51,6 @@ Token 与成本均为全套题目合计，不是单次均值。数据分析套�
 ```
 
 这是做出来的成品——一个文档专家：检索增强、引用可点击直达原文、内置示例问题：
-
-![生成的 RAG 应用成品：Claude Code 配置专家，回答带可点击的来源引用与示例问题](/blog-assets/rag-app-zh-light.webp)
 
 **而生成整个 RAG 应用，仅消耗了 0.2 元（$0.02）的 token——使用 DeepSeek V4 Pro 模型。**
 
@@ -110,7 +106,6 @@ linsight web        # 打开 http://127.0.0.1:7364（首次登录：admin，初�
 
 - [Discord](https://discord.gg/eFHKqqcU3D)：与我们和其他开发者实时交流；
 - [X（Twitter）](https://x.com/code_hiyouga)：关注最新动态；
-- [微信群](https://github.com/qiaiqian67/linsight-community/blob/main/wechat/group.jpg)：中文社区讨论；
 - [GitHub](https://github.com/qiaiqian67/linsight)：Star、Issue 与 PR 都欢迎。
 
 让每个人都用上会自我进化的 Agent 基础设施——从今天开始。

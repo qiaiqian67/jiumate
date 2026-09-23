@@ -11,7 +11,6 @@ import { useLocale } from "../state/locale";
 import type { Locale } from "../state/locale";
 import { Section } from "../components/section";
 import { BrowserFrame } from "../components/browser-frame";
-import { demoVideoUrl } from "../lib/links";
 import chatZhLight from "../assets/shots/chat-zh-light.webp";
 import chatZhDark from "../assets/shots/chat-zh-dark.webp";
 import chatEnLight from "../assets/shots/chat-en-light.webp";
@@ -23,18 +22,7 @@ import gameEnDark from "../assets/game-en-dark.webp";
 
 type ShotSet = Record<Locale, { light: string; dark: string }>;
 
-/**
- * Demo recording for a case, index-aligned with S.cases.tabs; null where the finished
- * product is still shown as a still. The community-hosted file only downloads on play
- * (preload="none"), and a matching Linsight run doubles as the poster — so a video
- * tab costs a visitor exactly what an image tab already did until they press play.
- */
-const CASE_VIDEOS: Array<Record<Locale, string> | null> = [
-  { zh: demoVideoUrl("rag_zh"), en: demoVideoUrl("rag_en") },
-  null,
-];
-
-/** Theme- and locale-matched posters or stills, index-aligned with S.cases.tabs. */
+/** Theme- and locale-matched stills, index-aligned with S.cases.tabs. */
 const CASE_STILLS: ShotSet[] = [
   {
     zh: { light: chatZhLight, dark: chatZhDark },
@@ -52,7 +40,6 @@ export function Cases() {
   const [active, setActive] = useState(0);
   const tab = tabs[active] ?? tabs[0]!;
   const shots = (CASE_STILLS[active] ?? CASE_STILLS[0]!)[locale];
-  const video = (CASE_VIDEOS[active] ?? null)?.[locale];
 
   return (
     <Section id="cases" eyebrow={S.cases.eyebrow} title={S.cases.title} subtitle={S.cases.subtitle}>
@@ -87,46 +74,18 @@ export function Cases() {
           </code>
         </div>
         <BrowserFrame>
-          {/* Light/dark are two elements rather than one with a swapped source: a <video>
-              takes a single poster, and the theme-matched still is what stands in for the
-              recording before play. Only the visible one's poster is ever fetched. */}
-          {video ? (
-            <>
-              <video
-                src={video}
-                poster={shots.light}
-                controls
-                preload="none"
-                playsInline
-                aria-label={tab.caption}
-                className="block h-auto w-full bg-gray-950 dark:hidden"
-              />
-              <video
-                src={video}
-                poster={shots.dark}
-                controls
-                preload="none"
-                playsInline
-                aria-label={tab.caption}
-                className="hidden h-auto w-full bg-gray-950 dark:block"
-              />
-            </>
-          ) : (
-            <>
-              <img
-                src={shots.light}
-                alt={tab.caption}
-                loading="lazy"
-                className="block h-auto w-full dark:hidden"
-              />
-              <img
-                src={shots.dark}
-                alt={tab.caption}
-                loading="lazy"
-                className="hidden h-auto w-full dark:block"
-              />
-            </>
-          )}
+          <img
+            src={shots.light}
+            alt={tab.caption}
+            loading="lazy"
+            className="block h-auto w-full dark:hidden"
+          />
+          <img
+            src={shots.dark}
+            alt={tab.caption}
+            loading="lazy"
+            className="hidden h-auto w-full dark:block"
+          />
         </BrowserFrame>
         <figcaption className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
           {tab.caption}

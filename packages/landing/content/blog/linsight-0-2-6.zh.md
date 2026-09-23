@@ -13,21 +13,15 @@ Linsight 0.2.6 发布。预置模型库多了两个低价 Flash 模型和一整�
 
 GLM-5.3 Flash 在模型库里出现了三次，因为有三条通路在卖它——Z.AI 直连、OpenRouter，以及新增的 TokenDance——每条记录写的都是这条通路的收费。
 
-![OpenRouter、TokenDance 与 Z.AI (GLM) 下各有一条 GLM-5.3 Flash，都带视觉标记，价格各不相同](/blog-assets/linsight-0-2-5-glm-flash-rows-zh.png)
-
 三个价格不一致有两个原因，其中一个是值得知道的口径差异。TokenDance 只是按自己的费率收费；而 Z.AI 正在对这个模型做 50% 促销，有效期至 2026-09-09——两条记录对这次促销的处理是**有意不同**的：**直连厂商的记录写厂商的官方标价**，所以 Z.AI 那条是每百万 Token $0.03 / $0.15 / $0.50；**网关的记录写网关实际计费的价格**，所以 OpenRouter 那条是它的一半。促销结束之前，直连那条记录把 Z.AI 的实际收费高估了一倍。
 
 直连那条上的「视觉」标记比看上去要新。AgentHub 0.4.8 让 GLM 客户端开始转发 `image_url` 部件——提示词里和工具结果里都转发——而且只对 `glm-5.3-flash` 一个 id 生效。其他每个 GLM id 面对图片都会直接报 `"GLM <id> does not support image inputs."`，而不是悄悄丢掉，这也是该分组其余模型仍标为不支持视觉的原因。
 
 Qwen 3.8 Flash 位于 Qwen Pay-As-You-Go 分组，百万 Token 输入窗口、131K 输出上限，同样支持图片输入。
 
-![Qwen Pay-As-You-Go 分组里并排的 Qwen 3.8 Flash 与 Qwen 3.8 Max](/blog-assets/linsight-0-2-5-qwen-flash-row-zh.png)
-
 ## TokenDance 网关，以及一把不用手抄的密钥
 
 TokenDance 现在是独立的供应商分组，通过 Chat Completions 协议访问 `https://tokendance.space/gateway/v1`，随分组提供七个预置模型。
-
-![TokenDance 分组：七个预置模型，分组头部有添加模型、自动获取密钥、手动设置密钥、测速与前往密钥管理](/blog-assets/linsight-0-2-5-tokendance-group-zh.png)
 
 值得单独点出来的是**自动获取密钥**。它把你送到 TokenDance 自己的授权页，在你的账号下签发一把新密钥，并写入该分组的每一个模型——第一次使用不必再跑一趟控制台手工复制。PKCE 校验串在服务端生成、从不下发给浏览器，签发出的密钥也不经过浏览器直接进入分组的模型配置，不出现在任何响应、日志、URL 或错误信息里。回调到不了你这里的场景（桌面端，或某些部署形态）另有一种手动模式：授权页改为显示一次性验证码，粘贴即可。
 
@@ -40,8 +34,6 @@ TokenDance 现在是独立的供应商分组，通过 Chat Completions 协议访
 ## 可以对话的子智能体
 
 子智能体过去是「发出去，然后只能看着」。子会话还在运行时 `input_subagent` 会拒绝新的提示词；面板里既不能纠偏也不能停止；停掉主智能体，它的子会话还在跑。这些现在都没有了，取而代之的是同一套机制：把你本来就有的、对主会话的纠偏通道指向子会话，模型和你都能用。
-
-![子智能体面板：上方是调用关系图，下方是子会话对话——一条纠偏消息与子会话的后续回复，底部是子会话自己的输入框](/blog-assets/linsight-0-2-5-subagent-steering-zh.png)
 
 对模型来说，`input_subagent` 增强了不少。发给运行中子会话的提示词会作为纠偏消息在它下一步注入。新增的 `abort` 参数只停掉子会话**当前这一轮**——会话本身保留，还能继续对话——`abort` 与提示词一起给出，就是一次调用完成「打断并改道」。它的返回值现在是子会话**最近一条完整回复**，每次访问都是幂等快照，而不是增量抽取。已释放的 `subagent_id` 在模型再次给它发消息时会自动复活。
 
@@ -57,8 +49,6 @@ TokenDance 现在是独立的供应商分组，通过 Chat Completions 协议访
 
 这次重建是后面这些的前提。除 `run` 与 `chat` 外，现在还有一组用于查看和操作一套部署的命令——`ls`、`input`、`logs`、`agent`、`project`、`cost` 与 `schedule`——而 Agent 运行的每一条命令都会被交给使用它们所需的坐标。`LINSIGHT_API_URL`、`LINSIGHT_API_TOKEN`、`LINSIGHT_PROJECT_ID`、`LINSIGHT_AGENT_ID` 与 `LINSIGHT_SESSION_ID` 会注入每一个工具子进程，因此在会话内部，一句不带任何参数的 `linsight agent ls` 访问的正是承载该会话的那个服务端，并且已经以该 Project 与该 Agent 为默认值。这条路径上没有任何登录步骤。
 
-![智能体在自己的对话里执行 linsight agent create 与 linsight run --background，随后用 linsight ls 看到刚刚启动的会话](/blog-assets/linsight-0-2-5-orchestration-zh.png)
-
 `linsight input` 正是它与上一节交汇的地方：同一个动作，只是往外挪了一层。发给**运行中**会话时，它会在下一步作为纠偏被吸收，与对子智能体发送纠偏消息完全一致；发给空闲会话则开启新一轮。不带 `-m` 时它转为轮询，打印该会话最近一条完整的助手回复——一份幂等快照，与 `input_subagent` 传空提示词时的语义相同。`--timeout` 为任何等待设定上限，到期是一次软让出：退出码 0、一行点名后续命令的提示，而任务仍在服务端继续跑。
 
 智能体启动的会话会继承它自己的配置。`run` 会把你没有指定的每个字段，逐个从调用方会话的实时取值里补齐——工作区、模型对、审批模式、思考档位——与 `run_subagent` 对子会话的继承是同一套。因此在 Agent 内部，单独一句 `linsight run -m "…"` 通常就是对的，参数是用来偏离它的。
@@ -70,8 +60,6 @@ TokenDance 现在是独立的供应商分组，通过 Chat Completions 协议访
 ## 可以从飞书或 Telegram 联系的 Session
 
 对话不再只能在浏览器标签页里读。Session 可以绑定到一个自建的飞书应用或一个 Telegram 机器人：发给机器人的消息会作为普通用户输入进入该 Session，助手的回复也会回到聊天里。
-
-![Telegram 下的消息软件面板：先是渠道选择器，随后是带实时状态的启用开关与两个探测按钮，再往下才是 Bot Token 字段及其已存密钥掩码与清除勾选框](/blog-assets/linsight-0-2-5-messaging-zh.png)
 
 两个渠道位于同一层连接器抽象之后，Session 为每个渠道各保存一份配置——飞书需要 App ID、App Secret 与 API 域名，Telegram 只需要一个 Bot Token——但**同时至多只有一个处于启用状态**，持有实时连接的就是它。想启用第二个时，开关会带着原因被拦住，服务端也会拒绝。
 

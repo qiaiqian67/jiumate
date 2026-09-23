@@ -9,8 +9,6 @@ You would expect a feature-rich agent harness to beat a minimal one. More tools,
 
 Databricks tested it against real work — roughly a hundred pull requests pulled from their own multi-million-line production monorepo, graded by restoring the held-out tests and running them. Here is the result:
 
-![Databricks' Pareto chart: pass-rate against cost per task. The frontier is dominated by the minimal Pi harness, and the highest score on the chart is Opus 4.8 on Pi](/blog-assets/databricks-pareto.png)
-
 _Pass-rate against cost per task. Red points form the Pareto frontier. Source: [Databricks](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase)._
 
 Read the top of that chart carefully, because it is the opposite of what the intuition predicts. **The single highest pass-rate — about 90% — belongs to Opus 4.8 running on [Pi](https://github.com/earendil-works/pi), a harness whose entire core is read, write, edit, and a shell.** The same model on Claude Code at maximum effort scores slightly lower, at roughly twice the cost per task. And of the points on the Pareto frontier, most are Pi.

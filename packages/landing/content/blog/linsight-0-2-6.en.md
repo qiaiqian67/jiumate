@@ -13,21 +13,15 @@ Linsight 0.2.6 is out. The model catalog gained two low-cost Flash models and a 
 
 GLM-5.3 Flash is in the catalog three times, because three routes sell it — Z.AI directly, OpenRouter, and the new TokenDance group — and each row records what that route charges.
 
-![GLM-5.3 Flash listed under OpenRouter, TokenDance and Z.AI (GLM), each with a Vision badge and its own three prices](/blog-assets/linsight-0-2-5-glm-flash-rows-en.png)
-
 The three prices disagree for two different reasons, and one of them is a convention worth knowing. TokenDance simply charges its own rate. But Z.AI is running a 50% promotion on this model through 2026-09-09, and the two rows treat it differently on purpose: a **direct-vendor row records the vendor's list price**, so the Z.AI row reads $0.03 / $0.15 / $0.50 per million tokens, while a **gateway row records what the gateway actually bills**, so the OpenRouter row reads half that. Until the promotion lapses, the direct row over-states what Z.AI charges you by a factor of two.
 
 The Vision badge on the direct row is newer than it looks. AgentHub 0.4.8 taught the GLM client to forward `image_url` parts — in a prompt and in a tool result alike — and it does so for `glm-5.3-flash` and nothing else. Every other GLM id answers an image with `"GLM <id> does not support image inputs."` rather than quietly dropping it, which is why the rest of that group is still marked vision-off.
 
 Qwen 3.8 Flash sits in the Qwen Pay-As-You-Go group, a million-token input window against a 131K output cap, images included.
 
-![Qwen 3.8 Flash and Qwen 3.8 Max side by side in the Qwen Pay-As-You-Go group](/blog-assets/linsight-0-2-5-qwen-flash-row-en.png)
-
 ## A TokenDance gateway, and a key you do not have to copy
 
 TokenDance is now a provider group of its own, reaching `https://tokendance.space/gateway/v1` over Chat Completions, with seven presets.
-
-![The TokenDance group: seven presets under a header carrying Add model, Authorize key, Set key, Speed test and Manage keys](/blog-assets/linsight-0-2-5-tokendance-group-en.png)
 
 **Authorize key** is the part worth pointing at. It sends you to TokenDance's own authorization page, mints a key on your account there, and writes it into every model in the group — so a first run no longer starts with a trip to a console and a copy-paste. The PKCE verifier is generated on the server and never sent to a browser, and the minted key goes straight into the group's models without passing through one either; it appears in no response, log line, URL or error message. Where a redirect cannot reach you — the desktop shell, an odd deployment — a manual mode shows a one-time code to paste instead.
 
@@ -40,8 +34,6 @@ None of this reaches a Project you already have on its own. Presets are copied i
 ## Subagents you can talk to
 
 A subagent used to be fire-and-observe. `input_subagent` refused a prompt while the child was still running, the panel offered no way to correct or stop one at all, and stopping the main agent left its children running. All of that is gone, replaced by one mechanism: the steering channel you already have into the main session, pointed at the child session, and reachable by the model and by you.
-
-![The subagents panel: the call graph above, the child conversation below with a steering message and the child's follow-up reply, and the child's own composer at the bottom](/blog-assets/linsight-0-2-5-subagent-steering-en.png)
 
 For the model, `input_subagent` gained a lot. A prompt sent to a running child is injected mid-run as a steering message at the child's next step. A new `abort` argument stops the child's current run only — the session survives for follow-ups — and combining `abort` with a prompt interrupts and redirects in one call. Its output is now the child's most recent complete reply, an idempotent snapshot on every access rather than a delta drain. And a released `subagent_id` revives automatically when the model messages it again.
 
@@ -57,8 +49,6 @@ One trade-off comes with it, and it is a real one. Since a subagent session is a
 
 That rebuild is what the rest of this rests on. Beside `run` and `chat` there is now a family for reading and moving an install — `ls`, `input`, `logs`, `agent`, `project`, `cost` and `schedule` — and every command an Agent runs is handed the coordinates to use them. `LINSIGHT_API_URL`, `LINSIGHT_API_TOKEN`, `LINSIGHT_PROJECT_ID`, `LINSIGHT_AGENT_ID` and `LINSIGHT_SESSION_ID` go into every tool subprocess, so from inside a session a bare `linsight agent ls` reaches the very server running that session, with that Project and that Agent already the defaults. There is no login step anywhere on that path.
 
-![An Agent inside its own conversation running linsight agent create and linsight run --background, then linsight ls showing the session it just started](/blog-assets/linsight-0-2-5-orchestration-en.png)
-
 `linsight input` is where this meets the section above: the same verb, one level out. Sent at a **running** session it is absorbed as a course correction at the next step, exactly as a steering message is on a subagent; sent at an idle one it starts a new turn. Without `-m` it polls instead, printing that session's most recent complete assistant reply — an idempotent snapshot, the same semantics `input_subagent` has with an empty prompt. `--timeout` bounds any wait and expires as a soft yield: exit 0, a line naming the follow-up command, and the Task still running on the server.
 
 A session an Agent starts inherits the Agent's own. `run` fills each field left unspecified from the calling session's live values — Workspace, the model pair, approval mode, thinking level — field by field, the same inheritance `run_subagent` applies to children. So from inside an Agent, `linsight run -m "…"` on its own usually does the right thing, and flags are for diverging from it.
@@ -70,8 +60,6 @@ The recipes ship as a Skill. **`linsight-orchestration`** joined the library's A
 ## A Session you can reach from Feishu or Telegram
 
 A conversation no longer has to be read in a browser tab. A Session can be bound to a self-built Feishu app or a Telegram bot: messages sent to the bot land in that Session as ordinary user input, and the assistant's replies come back into the chat.
-
-![The Messaging panel on Telegram: the channel selector, then the enable switch with its live status and the two probes, and only below them the Bot Token field with its stored-secret mask and clear checkbox](/blog-assets/linsight-0-2-5-messaging-en.png)
 
 Both channels sit behind one connector seam, and a Session keeps a saved config for each — Feishu takes an App ID, an App Secret and an API domain, Telegram a single Bot Token — but **at most one of them is enabled**, and the enabled one holds the live connection. Turning the second on is gated with the reason on screen, and refused by the server as well.
 

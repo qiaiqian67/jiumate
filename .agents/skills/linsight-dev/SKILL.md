@@ -9,7 +9,7 @@ Linsight is a TypeScript monorepo: an Agent SDK (`packages/core`), an HTTP serve
 
 ## Repo shape — read before your first edit
 
-Two repositories sit side by side: the implementation repo (`linsight`) and the design repo (`linsight-design`). Three paths inside the implementation repo are symlinks into the design repo and are gitignored here:
+Two repositories sit side by side: the implementation repo (`linsight`) and the design repo (`linsight-design`), which is **private** — its links and PR references 404 for anyone without access, and that is expected rather than a sign the repo is gone. Three paths inside the implementation repo are symlinks into the design repo and are gitignored here:
 
 - `design/` → the design repo, so specs are reachable as `design/specs/…`
 - `AGENTS.md` → `design/AGENTS.md`
@@ -87,9 +87,7 @@ An entry ships **inside the PR that makes the change** — there is no separate 
 
 A post is a pair under `packages/landing/content/blog/`: `<slug>.en.md` and `<slug>.zh.md`, each with `title` / `date` / `category` / `excerpt` frontmatter. Same rule as changelog entries — one without the other is unfinished.
 
-**The images are not in this repo.** Screenshots and demo videos live in the sibling `qiaiqian67/linsight-community` repo, under `blog-assets/` and `videos/`. A published post's screenshots are never deleted, so that asset class grows without bound in the number of posts written; keeping it out of this history keeps everyone's clone small.
-
-**Posts still write a repo-local path.** Reference an image as `/blog-assets/<name>` — both `![alt](…)` and the raw `<img src="…">` some posts use — and let the renderer resolve it: `blogAssetUrl` in `packages/landing/src/lib/links.ts`, applied by the `img` adapter in `src/pages/blog-post.tsx`. Never paste the raw `raw.githubusercontent` URL into a post. One source of truth for the host, Markdown that stays readable and diffable, and moving the host again is a one-line change instead of a sweep over every post.
+**Images are referenced but not committed.** A post writes `/blog-assets/<name>` — both `![alt](…)` and the raw `<img src="…">` some posts use — and that path is served from this site's own `packages/landing/public/blog-assets/`, which is gitignored. Nothing resolves it to another host: there is no image adapter in the renderer, so what a post writes is what the browser requests. Capture scripts stage their output in `packages/landing/.blog-assets/`; where the files are kept between releases is a decision that has been made differently more than once, so treat the path in the post as the contract and the storage location as an implementation detail.
 
 Release screenshots are captured, not mocked up: drive the app through the Playwright e2e harness in `packages/web/e2e/` with its mock LLM, against a scratch `LINSIGHT_HOME` — never `~/.linsight`, which is the developer's real data. Shoot at `deviceScaleFactor: 2`, crop to the feature rather than the whole window, and check the frame for what must not ship publicly: absolute paths carrying a home directory, API keys, and mock-model filler text.
 

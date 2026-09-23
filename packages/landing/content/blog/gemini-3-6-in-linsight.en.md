@@ -17,8 +17,6 @@ One caveat up front, and it holds for every figure below: these are **Google's n
 
 ## The rest of the scoreboard
 
-![Gemini 3.6 Flash evaluation chart: DeepSWE v1.1, MLE-Bench, GDPval-AA v2 and OSWorld-Verified, each comparing Gemini 3.1 Pro, 3.5 Flash and 3.6 Flash](/blog-assets/gemini-3-6-flash-evals.webp)
-
 *Figure by Google, reproduced from its announcement post [Introducing Gemini 3.6 Flash, 3.5 Flash-Lite, and 3.5 Flash Cyber](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/) (July 21, 2026). All numbers and the evaluation methodology are Google's, not ours.*
 
 MLE-Bench does not stand alone. Against 3.5 Flash, Google reports:

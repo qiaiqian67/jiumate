@@ -10,7 +10,6 @@ import { ArrowRightIcon } from "../components/icons";
 const HREFS = {
   discord: "https://discord.gg/eFHKqqcU3D",
   x: "https://x.com/code_hiyouga",
-  wechat: "https://github.com/qiaiqian67/linsight-community/blob/main/wechat/group.jpg",
   github: REPO_URL,
 } as const;
 
@@ -27,7 +26,7 @@ export function Community() {
       title={S.community.title}
       subtitle={S.community.subtitle}
     >
-      <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
           <a
             key={item.key}

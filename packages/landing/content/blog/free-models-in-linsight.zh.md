@@ -16,8 +16,6 @@ excerpt: 预置目录现有四条 $0 价格的 OpenRouter 条目——已有的 
 | OpenRouter | `poolside/laguna-m.1:free`               |          262,144 | $0   |
 | OpenRouter | `openrouter/free`                        | 128,000(保守值) | $0   |
 
-![模型仓库的 OpenRouter 分组：Ling 3.0 Flash (free)、Nemotron 3 Ultra (free)、Laguna M.1 (free) 与 Free Models Router 均带淡黄色「免费」标签，首行还能看到 Claude Opus 5](/blog-assets/free-models-page-zh-light.webp)
-
 ## Nemotron 3 Ultra (free)
 
 目录里的第一条免费行，也仍是最大的一条：NVIDIA 的开放前沿推理与编排模型，MoE 架构，总参数 550B、每 Token 激活 55B，混合 Transformer–Mamba，上下文窗口 1M Token。想看看 Harness 的重规划循环跑在大推理模型上是什么样、又不想付大推理模型的价格，就选这一行。

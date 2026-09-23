@@ -11,15 +11,11 @@ Linsight 0.2.4 is out. Three things carry this release: a DeepSeek model that re
 
 AgentHub 0.4.6 brings `deepseek-v4-flash-vision-exp` into the catalog. It adds image input on top of V4 Flash's text capabilities, keeps the 1M context window, and bills at V4 Flash's own price.
 
-![The DeepSeek model group, with the Vision badge on deepseek-v4-flash-vision-exp](/blog-assets/linsight-0-2-4-deepseek-vision-model-en.png)
-
 It is the only vision-capable model in that group, and that changes how a session handles an image. A text-only model routes pictures through the `vision_model` proxy, which describes them with `describe_image` and hands the agent a paragraph of text. A session running the vision model reads the image itself — no proxy, no description in between.
 
 The model is also on OpenRouter at that gateway's published rates. Both rows record DeepSeek's **off-peak** tier, the same convention the existing rows follow: Beijing 9:00–12:00 and 14:00–18:00 bill exactly double, and the cost center uses one rate, so peak usage is under-counted by half.
 
 The same release moves the first-party DeepSeek client from Chat Completions to the OpenAI Responses API, which the base-URL hint now reflects.
-
-![The model dialog's base URL field, its protocol hint reading /responses](/blog-assets/linsight-0-2-4-model-protocol-hint-en.png)
 
 That is a breaking change if you point a `deepseek-v4*` entry at something other than DeepSeek's own endpoint — see [Upgrading](#upgrading) below.
 
@@ -29,19 +25,13 @@ Elsewhere in the catalog: `claude-opus-5` joined the direct Anthropic group, the
 
 The chat page used to have drawer-style side panels and a separate terminal pane system, each with its own rules. Both are gone. Every side element — the subagents panel, the Workspace files panel, Memory, the new Trace panel, and any number of terminals — is now a closable tab in one of two docks, one on the right and one along the bottom.
 
-![The chat page with the right dock showing Agents, Memory and Workspace tabs, and a terminal in the bottom dock](/blog-assets/linsight-0-2-4-dock-tabs-en.png)
-
 Anything can go in either dock. Drag a tab across, split your attention how the task actually needs it, and the arrangement stays with the conversation.
 
 Terminals are real server-side shells, and they live in the same tab strip as everything else.
 
-![A live terminal in the bottom dock, showing git log output](/blog-assets/linsight-0-2-4-dock-terminal-en.png)
-
 ## Long commands stop blocking the conversation
 
 A command that takes minutes no longer holds the turn. It goes to the background, the agent carries on, and the harness injects a completion report when it finishes — so the model learns the outcome without polling for it. There are kill tools for stopping one, and a process that opens a port gets a link straight to it.
-
-![A background process row, with its command, pid, a localhost link and a Stop control](/blog-assets/linsight-0-2-4-background-process-en.png)
 
 Alongside it, a Project-level **sandbox command policy**: regex rules that refuse a shell command before it runs, checked against both shell entry points, and applied whatever the approval mode would otherwise allow. It is a guardrail against accidents rather than a security boundary — a command assembled at run time can still slip past a pattern.
 
@@ -49,13 +39,9 @@ Alongside it, a Project-level **sandbox command policy**: regex rules that refus
 
 The usage page was four widgets answering four different questions over four different windows. It is now one time axis that every chart draws over.
 
-![The cost center: range preset, and the Token chart with its cache hit rate line](/blog-assets/linsight-0-2-4-usage-range-en.png)
-
 You pick a range — trailing last hour or last 24 hours, calendar 7 / 30 / 90 days, or a custom pair of dates — and the range alone decides the precision: per minute, hourly, daily, weekly or monthly. There is no second control to keep in step with the first.
 
 The share pie and the per-model progress bars are replaced by two charts, side by side, one broken down by Agent and one by Model. Each bucket's requests are a stacked bar against the left axis; each entity's success rate is a dashed line against the right-hand percentage axis, in the same hue.
-
-![Requests and success rate, by agent and by model, side by side with legends](/blog-assets/linsight-0-2-4-usage-agent-model-en.png)
 
 Both breakdowns are on screen at once — no dimension toggle to flip, and neither chart opens on an aggregate total that tells you nothing. The top four entities are named with one colorblind-checked hue each, and the rest fold into a neutral series whose label says how many it folded. Hovering a bar segment, a rate line or a legend item singles that entity out and fades the others.
 

@@ -9,8 +9,6 @@ excerpt: Databricks 拿自家百万行代码库里的真实 PR，评测了多个
 
 Databricks 拿真实工作检验了它——从自家百万行的生产级 monorepo 里挑出约一百个 Pull Request，把此前抽走的测试恢复回去跑一遍来判分。结果是这样的：
 
-![Databricks 的 Pareto 图：任务通过率对单任务成本。前沿几乎被精简的 Pi harness 占满，全图最高分是跑在 Pi 上的 Opus 4.8](/blog-assets/databricks-pareto.png)
-
 _横轴是单任务成本，纵轴是整体通过率，红点构成 Pareto 前沿。图片来源：[Databricks](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase)。_
 
 请仔细看这张图的顶部，因为那里的结论和直觉完全相反。**全场最高的通过率，约 90%，属于跑在 [Pi](https://github.com/earendil-works/pi) 上的 Opus 4.8**——而 Pi 的整个内核只有读、写、编辑，加一个 shell。同一个模型跑在 Claude Code 上、开到最高档，分数略低，单任务成本却是它的两倍左右。而 Pareto 前沿上的点，大部分都是 Pi。

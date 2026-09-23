@@ -17,8 +17,6 @@ Linsight 存在的意义，就是**让 Agent 构建 Agent——更快、更好�
 
 ## 其余的成绩单
 
-![Gemini 3.6 Flash 评测图：DeepSWE v1.1、MLE-Bench、GDPval-AA v2 与 OSWorld-Verified 四项，逐项对比 Gemini 3.1 Pro、3.5 Flash 与 3.6 Flash](/blog-assets/gemini-3-6-flash-evals.webp)
-
 *图片版权归 Google 所有，转载自其发布博客 [Introducing Gemini 3.6 Flash, 3.5 Flash-Lite, and 3.5 Flash Cyber](https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/)（2026 年 7 月 21 日）。图中全部数据与评测方法均出自 Google，而非我们自测。*
 
 MLE-Bench 不是孤证。对比 3.5 Flash，Google 给出的数据是：

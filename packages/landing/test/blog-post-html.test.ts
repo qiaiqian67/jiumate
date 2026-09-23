@@ -11,28 +11,13 @@ import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import Markdown from "react-markdown";
-import { MdImage, REHYPE_PLUGINS, REMARK_PLUGINS } from "../src/pages/blog-post";
-import { blogAssetUrl } from "../src/lib/links";
+import { REHYPE_PLUGINS, REMARK_PLUGINS } from "../src/pages/blog-post";
 
 const render = (markdown: string) =>
   renderToStaticMarkup(
     createElement(
       Markdown,
       { remarkPlugins: REMARK_PLUGINS, rehypePlugins: REHYPE_PLUGINS },
-      markdown,
-    ),
-  );
-
-/** Same pipeline plus the image adapter the page installs. */
-const renderWithImages = (markdown: string) =>
-  renderToStaticMarkup(
-    createElement(
-      Markdown,
-      {
-        remarkPlugins: REMARK_PLUGINS,
-        rehypePlugins: REHYPE_PLUGINS,
-        components: { img: MdImage },
-      },
       markdown,
     ),
   );
@@ -75,34 +60,31 @@ describe("blog post raw HTML", () => {
 });
 
 /**
- * Blog images are not committed to this repo — they are hosted in the community repo, and post
- * bodies keep writing the portable `/blog-assets/<name>` path. What has to hold is therefore not
- * that a local file exists, but that the renderer resolves that path to the hosted URL; anything
- * else a post embeds must be left alone.
+ * Image sources reach the DOM exactly as the post wrote them. The renderer installs no image
+ * adapter, so `/blog-assets/<name>` is a path into this site's own public directory rather than an
+ * alias for somewhere else. Pinning the passthrough is what keeps a future adapter from silently
+ * moving every post's images to another host.
  */
 describe("blog post images", () => {
-  const HOSTED = blogAssetUrl("rag-app-en-light.webp");
-
-  it("resolves a Markdown /blog-assets/ image to the community repo", () => {
-    const html = renderWithImages("![The generated RAG app](/blog-assets/rag-app-en-light.webp)");
-    expect(html).toContain(`src="${HOSTED}"`);
-    expect(html).not.toContain('src="/blog-assets/');
+  it("leaves a Markdown image source and alt text untouched", () => {
+    const html = render("![The generated RAG app](/blog-assets/rag-app-en-light.webp)");
+    expect(html).toContain('src="/blog-assets/rag-app-en-light.webp"');
     expect(html).toContain('alt="The generated RAG app"');
   });
 
-  it("resolves raw <img> tags too, keeping their attributes", () => {
-    const html = renderWithImages(
+  it("leaves raw <img> tags and their attributes untouched", () => {
+    const html = render(
       '<img class="dark:hidden" src="/blog-assets/goal-mode-en-light.webp" alt="Goal mode" width="1920" height="1350" />',
     );
-    expect(html).toContain(`src="${blogAssetUrl("goal-mode-en-light.webp")}"`);
+    expect(html).toContain('src="/blog-assets/goal-mode-en-light.webp"');
     expect(html).toContain('class="dark:hidden"');
     expect(html).toContain('width="1920"');
     expect(html).toContain('height="1350"');
   });
 
-  it("leaves every other image source untouched", () => {
+  it("leaves external image sources untouched", () => {
     const external = "https://github.com/user-attachments/assets/a0d866e9";
-    const html = renderWithImages(`![Local config](${external})\n\n![Site asset](/og-cover.png)`);
+    const html = render(`![Local config](${external})\n\n![Site asset](/og-cover.png)`);
     expect(html).toContain(`src="${external}"`);
     expect(html).toContain('src="/og-cover.png"');
   });
