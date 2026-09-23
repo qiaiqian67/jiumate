@@ -249,6 +249,7 @@ describe("buildToolConfig", () => {
     expect(cfg.mcpServers).toEqual([]);
     expect(cfg.customTools.map((t) => t.name)).toEqual([
       "read_file",
+      "read_document",
       "edit_file",
       "write_file",
       "exec_command",
@@ -378,6 +379,7 @@ describe("buildToolConfig", () => {
     const cfg = buildToolConfig(state);
     expect(cfg.customTools.map((t) => t.name)).toEqual([
       "read_file",
+      "read_document",
       "edit_file",
       "write_file",
       "exec_command",
@@ -418,7 +420,14 @@ describe("buildToolConfig — per-tool call_description filter", () => {
       expect(required(tool)).toContain("description");
     }
     // The file tools' path argument is self-describing: no description parameter in config.
-    for (const name of ["read_file", "edit_file", "write_file", "read_image", "describe_image"]) {
+    for (const name of [
+      "read_file",
+      "read_document",
+      "edit_file",
+      "write_file",
+      "read_image",
+      "describe_image",
+    ]) {
       const tool = cfg.customTools.find((t) => t.name === name)!;
       expect(properties(tool)["description"]).toBeUndefined();
     }

@@ -15,6 +15,9 @@ export default defineConfig({
     // The extension contract: types only, so an extension package compiles against the SDK
     // without depending on whatever embeds it.
     "src/extension/index.ts",
+    // Document extraction: the server converts a document for the workspace preview with the same
+    // code the read_document tool uses, and it cannot reach into core's internals to do it.
+    "src/documents/index.ts",
     "src/state/model-catalog.ts",
     // Hot-update kernel: zero-dependency subpath so web can bundle it directly.
     "src/kernel/index.ts",

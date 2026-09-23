@@ -34,6 +34,9 @@ import { partialToolCallOutput } from "../../omnimessage/index.js";
 import type { OmniMessage } from "../../omnimessage/index.js";
 import type { ToolDefinitionConfig } from "../../interfaces/index.js";
 import { missingPathHint } from "./path-hint.js";
+// From `documents/types.js` rather than the module's barrel: the barrel pulls the format
+// extractors and their parsers, and read_file only needs the extension table.
+import { documentFormatOf } from "../../documents/types.js";
 import type { BuiltinTool, ToolExecutionContext, ToolResult } from "./types.js";
 
 /** Tool name constant (used only within this tool module, never exposed to Environment). */
@@ -330,8 +333,14 @@ export function createReadFileTool(definition: ToolDefinitionConfig): BuiltinToo
       }
       if (scan.aborted || signal?.aborted) return { stopReason: "aborted" };
       if (scan.binary) {
+        // A .docx/.xlsx/.pptx is a zip, so it reaches this branch. Naming the tool that can
+        // actually open it is the difference between the model reading the file and the model
+        // going to install something that can.
+        const format = documentFormatOf(resolved);
         yield delta(
-          `"${filePath}" looks like a binary file (contains NUL bytes). Use shell commands to inspect it, or read_image if it is an image.`,
+          format !== null
+            ? `"${filePath}" is a ${format} document, not a text file — read it with read_document.`
+            : `"${filePath}" looks like a binary file (contains NUL bytes). Use shell commands to inspect it, or read_image if it is an image.`,
         );
         return { stopReason: "fatal" };
       }

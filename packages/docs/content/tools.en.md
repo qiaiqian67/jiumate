@@ -79,6 +79,7 @@ There are 9 built-in tools (assembled via `packages/core/src/environment/tools/r
 | `exec_command` | rw | 120000 | Run a shell command in the Workspace via `bash -lc`, streaming stdout/stderr |
 | `input_command` | rw | 130000 | Drive a command session by `process_id`: write stdin, send Ctrl-C, poll output, or terminate it (`kill: true`) |
 | `read_file` | r | 30000 | Read a text file as a line-numbered (`cat -n`) window, paged by offset/limit |
+| `read_document` | r | 120000 | Extract .docx / .pdf / .xlsx / .pptx / .odt / .ods / .odp as Markdown, one section per page, sheet or slide |
 | `edit_file` | rw | 30000 | Exact-string replacement in an existing file, echoing a verification snippet |
 | `write_file` | rw | 30000 | Create or overwrite a whole file, creating parent directories as needed |
 | `run_subagent` | rw | 600000 | Delegate a self-contained subtask to a child Agent in the same Workspace |
@@ -165,7 +166,32 @@ On POSIX, Ctrl-C sends `SIGINT` to the session's process group, interrupting the
   file_path: string;       // required
   content: string;         // required: full file content; an empty string creates an empty file
 }
+
+// read_document — extracts a document's text as Markdown. A PDF is sectioned by page, a
+// workbook by sheet, a deck by slide; a docx or ODF text is one section. offset/limit window
+// the sections. The output carries notes about what it could not represent — embedded images,
+// charts, formulas — because reading a lossy extraction as the whole file is worse than
+// reading nothing.
+{
+  file_path: string;       // required: absolute, or relative to the workspace
+  offset?: number;         // 1-based section to start from; defaults to 1
+  limit?: number;          // max sections to return; defaults to all remaining
+}
 ```
+
+### Document tools
+
+`read_document` covers `.docx` / `.pdf` / `.xlsx` / `.pptx` / `.odt` / `.ods` / `.odp` and returns Markdown. It is a **built-in capability**: a model neither needs nor should install a converter or a library to open a document. Before it existed, `read_file` refused a .docx (it is a zip, so it contains NUL bytes) and the shell was the only remaining door — so a model went looking for `pip install` or a conda environment mid-task. The fix is not a prompt telling it not to; it is handing it the capability.
+
+The extraction itself lives in `packages/core/src/documents/` and is exported as a core subpath (`@prismshadow/linsight-core/documents`) — the workspace preview runs the same code, and the server cannot reach into core's internals to do it.
+
+Deliberate trade-offs:
+
+- **Lossy, and it says so.** Embedded images, charts, SmartArt, formulas and layout are not extracted. Every format returns what it could not represent as part of its result rather than as a log line.
+- **PDF text reconstruction is heuristic.** A PDF has no lines, only glyphs at coordinates; a change in baseline y ends a line and a horizontal gap reinserts a space. A scanned page (an image and no text) is named as needing OCR rather than reported as blank.
+- **pptx follows presentation order, not filenames.** PowerPoint reorders by rewriting `p:sldIdLst` and leaves the part filenames alone, so reading `slide1.xml`, `slide2.xml`, ... scrambles any deck that has been reordered.
+- **xlsx is values only.** Formulas appear as their results; this representation cannot be written back into an equivalent file, and writing goes through a separate surgical XML path.
+- **A 64 MB cap.** Parsing needs the whole file in memory, so an oversized document is refused outright rather than risked on an allocation the process may not survive.
 
 ### Subagents
 

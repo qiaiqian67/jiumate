@@ -22,7 +22,7 @@ import { createHash } from "node:crypto";
  * change without it moving. (The reverse — moving it with no default change — is inert rather
  * than an error: nothing is keyed by version, so there is no table to fall out of sync with.)
  */
-export const KERNEL_VERSION = "2026-09-20";
+export const KERNEL_VERSION = "2026-09-23";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -193,8 +193,8 @@ export function isKernelOutdated(kernelVersion: string | null | undefined): bool
  *   `DEFAULT_SYSTEM_PROMPT` (the `You are ...` line and the `# Constraints` clause about
  *   killing other processes); the runtime defaults, tool set and every other tab are
  *   unchanged. The prompt tab moved.
- * - `2026-09-20` (current) — the desktop-pet replacement swapped the companion tools for a
- *   single `pet` tool, moving the tools tab; the same day, `DEFAULT_SYSTEM_PROMPT` gained the
+ * - `2026-09-20` — the desktop-pet replacement swapped the companion tools for a single `pet` tool,
+ *   moving the tools tab; the same day, `DEFAULT_SYSTEM_PROMPT` gained the
  *   rules that came out of watching a real run spend thirteen of its eighteen minutes
  *   installing a browser to screenshot a page it had written: install nothing the user did not
  *   ask for, run anything that can take minutes with `run_in_background` instead of polling it,
@@ -208,11 +208,15 @@ export function isKernelOutdated(kernelVersion: string | null | undefined): bool
  *   model to write the syntax of the shell it is already in rather than spawning a second copy
  *   of it, which on PowerShell re-parses the command and expands the inner `$variables` to
  *   nothing before the inner shell ever sees them.
+ * - `2026-09-23` (current) — `read_document` joined the set, giving the model a built-in way to
+ *   read .docx / .pdf / .xlsx / .pptx / .odt / .ods / .odp. It is the same problem the `pet` entry
+ *   above describes from the other side: a model handed a .docx had no tool for it, so it went and
+ *   installed one mid-task. The tools tab moved; every other tab is unchanged.
  */
 export const KERNEL_DEFAULT_TAB_HASHES: Readonly<Record<KernelTab, string>> = {
   prompt: "b2d1ae6362da73666a83b007a8fef1f995102d30c18d14af3f1e5a43608b460a",
   runtime: "5dfea06a5e801950c24f44f5527e62435ae4facc311a6587e53aa69983ab0346",
-  tools: "5832198f35418754fb96351c7214bcb642f2cf095f1fc62fafb0f903a71b3195",
+  tools: "3fc74b9382421b9a0b92e8e87764bbd8f1b45a4d636516e32f5ae4c74ef7ee49",
   skills: "7e343aa692e5eaeadfc8add6bb375fb50ac33ef81ebe460490fc219b0f3d707f",
   memory: "53d190390829cc0132bb12e468a6891f2e0576ec0c4022a9b4a5d9233666900d",
   vault: "19bd36a6d4ab442b66583c423450602b817990a9a79bafa21c9b6137fb6b47d8",
@@ -271,6 +275,7 @@ export const KERNEL_SUPERSEDED_TAB_HASHES: KernelSupersededTabHashes = {
     "074248073c5fe89537ff257cc5d5662159288fc79ede7703eded6b440b4e38e9", // before background execution and the kill tools
     "8bbd336ff1f3fc283c4e11e54d43dd2bfe4ba2458577bf9eb3b6e3d7be4f3cde", // before the kill tools folded into the input tools
     "c24bcf47b1377e9da4dcfb69a1f7240dcdbfff2d420df5db0a5eaec2b7d4087d", // before the companion tools became the single `pet` tool
+    "5832198f35418754fb96351c7214bcb642f2cf095f1fc62fafb0f903a71b3195", // before `read_document` joined the set
   ],
   // The memory prompt's wording before #397 named when a fact is worth saving.
   memory: ["c28acdda755552967cd0c99ba4ced407eddfa843b3dce228a965da4674676dc7"],

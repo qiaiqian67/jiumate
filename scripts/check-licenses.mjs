@@ -23,6 +23,35 @@ import { execSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 /**
+ * Older packages name their license in prose rather than by SPDX identifier, and refusing them
+ * would mean writing an exception for every one — which is how an allowlist turns into a list of
+ * things nobody re-reads.
+ *
+ * Only aliases for *permissive* licenses belong here. An alias is a claim that the license is
+ * the same one under a different name, so mapping anything copyleft would silently widen the
+ * policy; unmapped spellings keep falling through to a refusal, which is the safe direction.
+ *
+ * Bare `BSD` is the interesting entry. It is ambiguous between the 2-, 3- and 4-clause variants,
+ * and the ambiguity is entirely inside the permissive family — every reading is a license this
+ * project ships. The map cannot resolve which one a given package meant, and does not need to.
+ */
+const LEGACY_ALIASES = new Map([
+  ["mit/x11", "mit"],
+  ["x11", "mit"],
+  ["mit license", "mit"],
+  ["the mit license", "mit"],
+  ["bsd", "bsd-2-clause"],
+  ["bsd license", "bsd-2-clause"],
+  ["bsd-2", "bsd-2-clause"],
+  ["bsd-3", "bsd-3-clause"],
+  ["apache 2.0", "apache-2.0"],
+  ["apache-2", "apache-2.0"],
+  ["apache license 2.0", "apache-2.0"],
+  ["apache license, version 2.0", "apache-2.0"],
+  ["isc license", "isc"],
+]);
+
+/**
  * Licenses that may be bundled. Keys are SPDX identifiers, lowercased — SPDX matching is
  * case-insensitive, and pnpm reports whatever casing the package used.
  *
@@ -131,7 +160,8 @@ export function isAllowed(expression) {
   const andParts = splitTopLevel(stripped, " AND ");
   if (andParts.length > 1) return andParts.every(isAllowed);
 
-  return ALLOWED.has(stripped.replace(/\+$/, "").toLowerCase());
+  const leaf = stripped.replace(/\+$/, "").toLowerCase();
+  return ALLOWED.has(LEGACY_ALIASES.get(leaf) ?? leaf);
 }
 
 /**

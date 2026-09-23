@@ -67,6 +67,32 @@ describe("license policy — SPDX evaluation", () => {
     expect(allows("mit")).toBe(true);
   });
 
+  describe("legacy identifiers", () => {
+    // Older packages write prose instead of SPDX. These appear in this very tree: mammoth pulls
+    // `duck`, whose package.json says only "BSD".
+    it.each([
+      ["MIT/X11", true],
+      ["X11", true],
+      ["BSD", true],
+      ["BSD License", true],
+      ["Apache 2.0", true],
+      ["Apache License, Version 2.0", true],
+      ["ISC License", true],
+      ["MIT License", true],
+    ])("reads %s as the permissive license it names", (license, want) => {
+      expect(allows(license)).toBe(want);
+    });
+
+    // The aliases must not become a back door: an unmapped spelling still falls through to a
+    // refusal, and no alias may point at something copyleft.
+    it.each(["GPL", "GPLv3", "AGPL", "AGPLv3", "SSPL", "BSD-NC", "CC-BY-NC"])(
+      "still refuses %s",
+      (license) => {
+        expect(allows(license)).toBe(false);
+      },
+    );
+  });
+
   describe("compound expressions", () => {
     it("takes either side of an OR", () => {
       expect(allows("(MPL-2.0 OR Apache-2.0)")).toBe(true);

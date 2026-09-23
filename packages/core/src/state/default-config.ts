@@ -634,6 +634,38 @@ function defaultBuiltinTools(): ToolDefinitionConfig[] {
       maxOutputLength: 64000,
     },
     {
+      name: "read_document",
+      description:
+        "Read a document and return its text as Markdown — .docx, .pdf, .xlsx, .pptx, .odt, .ods " +
+        "and .odp. Use this instead of read_file for these formats, and never install a converter " +
+        "or library to open one: the capability is built in. A PDF returns one section per page, a " +
+        "workbook one per sheet, a deck one per slide; pass offset/limit to read a window of them. " +
+        "Embedded images, charts and formulas are not extracted, and the output says so when that " +
+        "affects what you are reading.",
+      parameters: {
+        type: "object",
+        properties: {
+          file_path: {
+            type: "string",
+            description: "Path to the document; absolute, or relative to the workspace.",
+          },
+          offset: {
+            type: "number",
+            description:
+              "1-based section to start from (page / sheet / slide); defaults to 1. A .docx has a single section.",
+          },
+          limit: {
+            type: "number",
+            description: "Max sections to return; defaults to all remaining.",
+          },
+        },
+        required: ["file_path"],
+      },
+      permission: "r",
+      timeoutMs: 120000,
+      maxOutputLength: 64000,
+    },
+    {
       name: "edit_file",
       description:
         "Edit a file by exact string replacement — the preferred way to make a precise change. " +

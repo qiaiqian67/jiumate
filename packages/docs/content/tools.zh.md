@@ -79,6 +79,7 @@ Recovery 文件保存 Environment 收到的未经脱敏的工具文本。误读�
 | `exec_command` | rw | 120000 | 在 Workspace 内以 `bash -lc` 运行命令，流式返回 stdout/stderr |
 | `input_command` | rw | 130000 | 按 `process_id` 驱动命令会话：写 stdin、发 Ctrl-C、轮询输出，或终止（`kill: true`） |
 | `read_file` | r | 30000 | 按 `cat -n` 风格带行号读取文本文件，以 offset/limit 分页 |
+| `read_document` | r | 120000 | 把 .docx / .pdf / .xlsx / .pptx / .odt / .ods / .odp 抽取为 Markdown，按页/工作表/幻灯片分节 |
 | `edit_file` | rw | 30000 | 对既有文件做精确字符串替换，回显校验片段 |
 | `write_file` | rw | 30000 | 新建或整体覆写文件，按需创建父目录 |
 | `run_subagent` | rw | 600000 | 把自包含子任务委派给同 Workspace 的子 Agent |
@@ -163,7 +164,31 @@ POSIX 上 Ctrl-C 向会话进程组发送 `SIGINT`，中断前台命令。Window
   file_path: string;       // 必填
   content: string;         // 必填:完整文件内容;空字符串创建空文件
 }
+
+// read_document — 把文档正文抽取为 Markdown。PDF 按页、工作簿按工作表、
+// 幻灯片按幻灯片分节,docx 与 ODF 文本为单节;offset/limit 按节取窗口。
+// 输出会附上"未能表示的内容"注记(嵌入图片、图表、公式),因为把有损抽取
+// 当成完整原文来读,比读不到更糟。
+{
+  file_path: string;       // 必填:绝对路径,或相对 Workspace 的路径
+  offset?: number;         // 起始节(1 起);默认 1
+  limit?: number;          // 最多返回的节数;默认全部剩余
+}
 ```
+
+### 文档工具
+
+`read_document` 覆盖 `.docx` / `.pdf` / `.xlsx` / `.pptx` / `.odt` / `.ods` / `.odp`，返回 Markdown。它是**内置能力**：模型不需要、也不应该为了打开一个文档去安装转换器或库。在它出现之前，模型拿到一个 .docx 时 `read_file` 会拒绝（docx 是 zip，含 NUL 字节），Shell 成了唯一的门——于是它在任务中途去找 `pip install` 或 conda 环境。修法不是写一句提示让它别这么做，而是把能力交到它手上。
+
+抽取本身在 `packages/core/src/documents/`，并作为 core 的子路径导出（`@prismshadow/linsight-core/documents`）——工作区预览用的是同一套代码，而 server 够不到 core 的内部文件。
+
+几个刻意的取舍：
+
+- **有损，并且说出来。** 嵌入图片、图表、SmartArt、公式、版面都不会被抽取。每种格式都会把"没能表示什么"作为结果的一部分返回，而不是写进日志。
+- **PDF 的文本重建是有启发式的。** PDF 没有"行"的概念，只有带坐标的字形；这里用基线 y 的变化断行、用水平间距补空格。扫描件（整页只有图、没有文字）会被明确指认为需要 OCR，而不是被当成空页。
+- **pptx 按演示顺序，而不是文件名顺序。** PowerPoint 重排幻灯片时改写的是 `p:sldIdLst`，文件名不动——按 `slide1.xml`、`slide2.xml` 的顺序读会打乱任何重排过的演示文稿。
+- **xlsx 只取值。** 公式以结果呈现；这份表示无法写回成等价文件，写回走的是另一条外科式 XML 路径。
+- **大文档有 64 MB 上限。** 解析需要整个文件在内存里，所以宁可明确拒绝，也不去赌一次可能撑不过去的分配。
 
 ### Subagent
 

@@ -22,6 +22,7 @@ import { SUBAGENT_NAME, createSubagentTool } from "./run-subagent.js";
 import { INPUT_SUBAGENT_NAME, createInputSubagentTool } from "./input-subagent.js";
 import { READ_IMAGE_NAME, createReadImageTool } from "./read-image.js";
 import { DESCRIBE_IMAGE_NAME, createDescribeImageTool } from "./describe-image.js";
+import { READ_DOCUMENT_NAME, createReadDocumentTool } from "./read-document.js";
 import { PET_NAME, createPetTool } from "./pet.js";
 
 /**
@@ -44,6 +45,10 @@ export const BUILTIN_TOOL_FACTORIES: Record<string, BuiltinToolFactory> = {
   [SUBAGENT_NAME]: createSubagentTool,
   [INPUT_SUBAGENT_NAME]: createInputSubagentTool,
   [READ_IMAGE_NAME]: createReadImageTool,
+  // read_document: text out of .docx / .pdf / .xlsx / .pptx / .odt / .ods / .odp. Built in on
+  // purpose — without it the only way to open a document is the shell, and a model that has to
+  // install a converter mid-task will.
+  [READ_DOCUMENT_NAME]: createReadDocumentTool,
   // describe_image: the text-only-model variant of read_image (hands the image to the
   // configured vision model for description, returns text).
   // Which tool is used for which model class is declared by the config entry's forModel
