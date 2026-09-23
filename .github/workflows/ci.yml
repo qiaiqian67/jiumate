@@ -41,6 +41,13 @@ jobs:
       - name: Lint (oxlint)
         run: pnpm lint
 
+      # Every production dependency's license, against an allowlist (default-deny). Here
+      # rather than in its own job because it needs no build — only the install the setup
+      # action already did — and a new dependency is exactly the kind of thing that should
+      # fail on the cheapest job in the run.
+      - name: Licenses (production dependencies)
+        run: pnpm check:licenses
+
       # A workflow that does not parse produces a run with zero jobs and no annotation
       # anywhere useful -- the failure this very file shipped once, over a double-quoted
       # string in a ${{ }} expression, where only single quotes are legal. Cheap to catch.

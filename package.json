@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "oxlint",
+    "check:licenses": "node scripts/check-licenses.mjs",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter @prismshadow/linsight-core test:e2e",

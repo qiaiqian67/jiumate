@@ -71,7 +71,10 @@ export const DOCS_NAV: DocsSectionDef[] = [
       },
     ]),
   },
-  { id: "reference", pages: pages("cli", "server-api", "configuration", "security") },
+  {
+    id: "reference",
+    pages: pages("cli", "server-api", "configuration", "security", "third-party"),
+  },
 ];
 
 /** All slugs in display order — each parent immediately followed by its children. */
