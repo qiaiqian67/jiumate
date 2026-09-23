@@ -70,6 +70,7 @@ describe("tsup build target", () => {
       "cli",
       "core",
       "desktop",
+      "inspirations",
       "pets",
       "server",
       "skins",
