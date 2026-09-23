@@ -77,7 +77,7 @@ Every change ships a changelog entry, in both languages, in `changelog/unrelease
 
 **Reasoning does not go on disk.** No `## Why`, `## Problem`, `## Decision`, `## Alternatives considered`, `## Verification`, `## Risks`, and no claims about what the codebase currently *is*. The thinking is still required — report it in the conversation and write it into the PR description, which stays attached to its diff.
 
-**Numbers are links, and half of them are issues.** A bare `#N` does not render as a link in Markdown. Worse, this repository's bug reports and its PRs share one numbering space: `#83`, `#85`, `#102`, `#136`–`#140`, `#150`, `#170`, `#215`, `#218`, `#229`, `#239` are issues. Classify before writing — `gh api repos/qiaiqian67/linsight/issues/N --jq 'if .pull_request then "PR" else "ISSUE" end'` — and route them to `Issue`, not `PR`. A cross-repo reference names its repo: `agenthub [#162](https://github.com/qiaiqian67/agenthub/pull/162)`.
+**Numbers are links, and half of them are issues.** A bare `#N` does not render as a link in Markdown. Worse, this repository's bug reports and its PRs share one numbering space: `#83`, `#85`, `#102`, `#136`–`#140`, `#150`, `#170`, `#215`, `#218`, `#229`, `#239` are issues. Classify before writing — `gh api repos/qiaiqian67/linsight/issues/N --jq 'if .pull_request then "PR" else "ISSUE" end'` — and route them to `Issue`, not `PR`. A cross-repo reference names its repo: `agenthub [#162](https://github.com/Prism-Shadow/agenthub/pull/162)`.
 
 The PR number exists only once the PR is open: open it, then add the links in a follow-up commit on the same branch. `PR` is the field that actually gets forgotten — `grep -L 'PR:' changelog/unreleased/*.md` before asking for review.
 

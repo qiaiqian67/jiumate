@@ -7,7 +7,7 @@
 
 [English](2026-08-18-model-fast-mode.md)
 
-模型条目新增一项可选的快速模式设置：开启后，该模型的会话请求进入厂商更快的推理档位，按溢价计费，由 AgentHub 的 UniConfig `fast_mode` 承载（agenthub [#171](https://github.com/qiaiqian67/agenthub/pull/171)）——OpenAI 协议 client 发送 `service_tier: "priority"`，Anthropic 协议 client 发送 `speed: "fast"` 并附带 fast-mode beta 请求头。默认关闭，且只会持久化 `true`（条目上的 `fast_mode = true`），既有配置不受影响。开关只在模型所解析出的 AgentHub client 确实能提供快速档位时才出现；打开它会先要求确认，因为快速模式按溢价计费；而模型若仍然拒绝这个参数，本次运行会立即失败并给出可操作的提示，而不是继续重试。
+模型条目新增一项可选的快速模式设置：开启后，该模型的会话请求进入厂商更快的推理档位，按溢价计费，由 AgentHub 的 UniConfig `fast_mode` 承载（agenthub [#171](https://github.com/Prism-Shadow/agenthub/pull/171)）——OpenAI 协议 client 发送 `service_tier: "priority"`，Anthropic 协议 client 发送 `speed: "fast"` 并附带 fast-mode beta 请求头。默认关闭，且只会持久化 `true`（条目上的 `fast_mode = true`），既有配置不受影响。开关只在模型所解析出的 AgentHub client 确实能提供快速档位时才出现；打开它会先要求确认，因为快速模式按溢价计费；而模型若仍然拒绝这个参数，本次运行会立即失败并给出可操作的提示，而不是继续重试。
 
 ## Core
 
