@@ -152,6 +152,48 @@ export function attr(node: unknown, name: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+/**
+ * Resolves a relationship id to its target inside the package, from a `.rels` part.
+ *
+ * Shared by the OOXML readers because every one of them needs it for the same reason: a part is
+ * never addressed by its filename. `presentation.xml` names slides through `r:id`s, `workbook.xml`
+ * names sheets the same way, and the mapping lives in a sibling `_rels` part. Reading
+ * `sheet1.xml` because it is called `sheet1.xml` is how a workbook with reordered or renamed
+ * sheets gets its data from the wrong place.
+ */
+export function relationshipTargets(relsXml: string | null): Map<string, string> {
+  const targets = new Map<string, string>();
+  if (relsXml === null) return targets;
+  // The rels part is XML too, but it is small and flat; matching it directly avoids a second
+  // parser configuration for one shape.
+  for (const match of relsXml.matchAll(/<Relationship\b[^>]*>/g)) {
+    const tag = match[0];
+    const id = /\bId="([^"]*)"/.exec(tag)?.[1];
+    const target = /\bTarget="([^"]*)"/.exec(tag)?.[1];
+    if (id && target) targets.set(id, target);
+  }
+  return targets;
+}
+
+/**
+ * Resolves a relationship target to its archive key.
+ *
+ * Two forms, and the difference matters: a target beginning with `/` is absolute from the package
+ * root, while anything else is relative to the part that declared it. Treating the absolute form as
+ * relative prepends the base directory a second time — `xl/xl/worksheets/sheet1.xml` — which is a
+ * file that does not exist, and the failure reads as a missing part rather than as a path bug.
+ */
+export function resolveTarget(target: string, baseDir: string): string {
+  const parts = (target.startsWith("/") ? target : `${baseDir}/${target}`).split("/");
+  const stack: string[] = [];
+  for (const part of parts) {
+    if (part === "." || part === "") continue;
+    if (part === "..") stack.pop();
+    else stack.push(part);
+  }
+  return stack.join("/");
+}
+
 /** Navigates a chain of object keys, returning undefined at the first missing link. */
 export function dig(node: unknown, ...keys: string[]): unknown {
   let current: unknown = node;

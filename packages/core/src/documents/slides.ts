@@ -21,35 +21,10 @@ import {
   paragraphText,
   readArchive,
   readPart,
+  relationshipTargets,
+  resolveTarget,
 } from "./ooxml.js";
 import { DocumentExtractError, type ExtractResult, type ExtractedUnit } from "./types.js";
-
-/** Resolves a relationship id to its target inside the package, from a `.rels` part. */
-function relationshipTargets(relsXml: string | null): Map<string, string> {
-  const targets = new Map<string, string>();
-  if (relsXml === null) return targets;
-  // The rels part is XML too, but it is small and flat; matching it directly avoids a second
-  // parser configuration for one shape.
-  for (const match of relsXml.matchAll(/<Relationship\b[^>]*>/g)) {
-    const tag = match[0];
-    const id = /\bId="([^"]*)"/.exec(tag)?.[1];
-    const target = /\bTarget="([^"]*)"/.exec(tag)?.[1];
-    if (id && target) targets.set(id, target);
-  }
-  return targets;
-}
-
-/** `../slides/slide3.xml` (relative to ppt/) becomes the archive key `ppt/slides/slide3.xml`. */
-function resolveTarget(target: string, baseDir: string): string {
-  const parts = `${baseDir}/${target}`.split("/");
-  const stack: string[] = [];
-  for (const part of parts) {
-    if (part === "." || part === "") continue;
-    if (part === "..") stack.pop();
-    else stack.push(part);
-  }
-  return stack.join("/");
-}
 
 /** The title text of a slide, if it has a title placeholder. */
 function slideTitle(parsed: Record<string, unknown>): string | null {

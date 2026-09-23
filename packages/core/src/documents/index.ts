@@ -45,6 +45,7 @@ export {
   buildDocumentPreviewFromPath,
   type DocumentPreview,
 } from "./preview.js";
+export { applyCellEdits, parseAddress, type CellEdit } from "./spreadsheet-write.js";
 export type { PptxSlide } from "./slides.js";
 
 /** Extraction by known format. Throws DocumentExtractError with a message fit to show the user. */
