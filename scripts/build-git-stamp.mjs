@@ -66,6 +66,14 @@ export function checkoutFacts() {
  * The value is double-encoded on purpose: `define` substitutes a JS *expression*, so the
  * expression has to be a quoted string literal whose contents are the JSON the runtime
  * parses back into CheckoutFacts.
+ *
+ * The return type is spelled out because inference would otherwise widen the two branches into
+ * `{ [BUILD_GIT_DEFINE]?: undefined } | { [BUILD_GIT_DEFINE]: string }`, and the optional
+ * `undefined` branch does not satisfy the `{ [k: string]: string }` that tsup and esbuild
+ * declare for `define` — an error that never reaches CI, since the packages' tsconfigs include
+ * only `src` and `test`, but shows up in every editor that opens a tsup config.
+ *
+ * @returns {Record<string, string>} The define entry, or `{}` when there is nothing to stamp.
  */
 export function buildGitDefine() {
   const facts = checkoutFacts();
