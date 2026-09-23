@@ -426,8 +426,7 @@ describe("buildInstallerInvocation (preserves the shape of the install being upg
         hasBundledNode: true,
         version: "0.2.0",
         downloadBaseUrl: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
-        downloadFallbackBaseUrl:
-          "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
+        downloadFallbackBaseUrl: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
       }).env,
     ).toEqual({
       LINSIGHT_VERSION: "v0.2.0",
