@@ -27,8 +27,7 @@
     "@linsight/software-development": "workspace:*",
     "@linsight/use-bento-slides": "workspace:*",
     "@linsight/use-firecrawl": "workspace:*",
-    "@linsight/use-claude-code": "workspace:*",
-    "@linsight/use-guizang-ppt": "workspace:*"
+    "@linsight/use-claude-code": "workspace:*"
   },
   "devDependencies": {
     "@prismshadow/linsight-cli": "workspace:*",

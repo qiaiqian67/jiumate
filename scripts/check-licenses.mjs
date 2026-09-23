@@ -90,17 +90,6 @@ const ALLOWED = new Set([
  */
 const EXCEPTIONS = new Map([
   [
-    "@linsight/use-guizang-ppt",
-    "AGPL-3.0, and it is the one license here that the project has declared off-limits. It is a " +
-      "separate, published plugin package (plugins/use-guizang-ppt) that wraps the upstream " +
-      "guizang-ppt-skill; it is `preinstall: false`, so it is not installed or active unless a " +
-      "user picks it from the plugin library, and its own source ships with it under the same " +
-      "AGPL. Recorded rather than silently allowed: whether a host that merely carries an " +
-      "optional AGPL plugin is 'conveying' it is a legal question, not a technical one, and it " +
-      "predates this gate. Remove this entry by removing the plugin, or keep it by deciding the " +
-      "arrangement is acceptable — but do not leave it undecided.",
-  ],
-  [
     "khroma",
     "Reported as `Unknown` because its package.json carries no license field; the repository " +
       "states MIT. Pulled in transitively by mermaid (the web app's diagram renderer), so it is " +

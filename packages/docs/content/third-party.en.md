@@ -29,10 +29,11 @@ For SPDX expressions, `OR` is satisfied by either side (choosing the Apache bran
 
 Cases the rule cannot decide on its own are recorded in the script's `EXCEPTIONS`, each with a reason, and **printed on every run** — including passing ones. An exception that only appears when something is wrong is an exception nobody remembers agreeing to.
 
-There are two today:
+There is one today:
 
-- **`@linsight/use-guizang-ppt`** — AGPL-3.0, the very license this project rules out. It is a separately published plugin package (`plugins/use-guizang-ppt`) wrapping the upstream `guizang-ppt-skill`, and it is `preinstall: false`: it is not installed or active unless a user picks it from the plugin library, and its own source ships with it under the same license. Recorded rather than silently allowed, because whether a host that merely carries an optional AGPL plugin is "conveying" it is a legal question rather than a technical one, and it predates this gate. Remove the plugin, or decide the arrangement is acceptable — but do not leave it undecided.
 - **`khroma`** — reported as `Unknown` because its package.json carries no license field; the repository states MIT. Pulled in transitively by mermaid (the web app's diagram renderer), so it is not a dependency anyone here chose directly.
+
+The first entry this gate ever produced was `@linsight/use-guizang-ppt`, an optional plugin under AGPL-3.0. It was recorded rather than silently allowed, and then removed: the license is one this project has ruled out, and `use-bento-slides` (MIT) covers the same presentation use case.
 
 ## Conclusions already reached
 

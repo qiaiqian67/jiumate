@@ -24,5 +24,3 @@ examples/claude-code-rag/
 
 # vendored skill assets: HTML templates, minified JS, and pre-built validator scripts
 # come from upstream unchanged. Format-checking them would fight upstream's own style.
-plugins/use-guizang-ppt/skills/guizang-ppt-skill/assets/
-plugins/use-guizang-ppt/skills/guizang-ppt-skill/scripts/

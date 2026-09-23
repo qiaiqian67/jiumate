@@ -87,7 +87,7 @@ Three plugin categories ship in the box ([docs](https://linsight.ooo/docs/skills
 
 | Category             | Plugins                                                                       |
 | -------------------- | ----------------------------------------------------------------------------- |
-| Office Productivity  | `data-analysis`, `use-firecrawl`, `use-bento-slides`, `humanizer`, `goal`, `continual-learning`, `use-guizang-ppt` |
+| Office Productivity  | `data-analysis`, `use-firecrawl`, `use-bento-slides`, `humanizer`, `goal`, `continual-learning` |
 | Software Development | `software-development`, `use-claude-code`                              |
 | AI App Development   | `agent-development`, `model-development`, `skill-porting`, `agent-tuning`     |
 

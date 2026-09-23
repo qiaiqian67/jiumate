@@ -69,7 +69,6 @@
     "@linsight/use-bento-slides": "workspace:*",
     "@linsight/use-claude-code": "workspace:*",
     "@linsight/use-firecrawl": "workspace:*",
-    "@linsight/use-guizang-ppt": "workspace:*",
     "@modelcontextprotocol/client": "^2.0.0",
     "@prismshadow/agenthub": "^0.4.9",
     "arktype": "^2.2.3",

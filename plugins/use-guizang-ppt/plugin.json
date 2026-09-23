@@ -1,9 +1,0 @@
-{
-  "description": "Author Magazine Web PPT decks — single-file HTML horizontal-swipe slide presentations in two visual systems (editorial magazine × electronic ink, or Swiss internationalism). Use whenever the user wants a shareable web-based slide deck, a polished presentation, or mentions 'magazine PPT', 'Swiss PPT', 'magazine web deck', or 'horizontal swipe deck'.",
-  "description_zh": "制作 Magazine Web PPT —— 单文件 HTML 横向翻页幻灯片,提供两种视觉基调(电子杂志 × 电子墨水,或瑞士国际主义)。当用户需要分享型网页幻灯片、精美演示,或提到「杂志风 PPT」「瑞士风 PPT」「横向翻页网页 PPT」时使用。",
-  "short_description": "Magazine Web PPT decks.",
-  "short_description_zh": "制作杂志风网页幻灯片。",
-  "version": "2026-09-14.1",
-  "category": "office-productivity",
-  "preinstall": false
-}
