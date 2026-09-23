@@ -91,6 +91,6 @@ linsight run -m "用 Ollama 启动 Qwen3.5-0.8B 并注册到 Linsight"
 ---
 
 - **文档**：[Skills](https://linsight.ooo/docs/skills) · [工具与审批](https://linsight.ooo/docs/tools) · [模型与供应商](https://linsight.ooo/docs/models)
-- **社区**：[GitHub](https://github.com/Prism-Shadow/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **社区**：[GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**：[vLLM](https://docs.vllm.ai/) · [Ollama](https://ollama.com/) · [LlamaFactory](https://github.com/hiyouga/LlamaFactory) · [Stripe, Can AI agents build real Stripe integrations?](https://stripe.com/blog/can-ai-agents-build-real-stripe-integrations) · [Anthropic, Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)

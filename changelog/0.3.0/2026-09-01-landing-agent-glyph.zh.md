@@ -3,12 +3,12 @@
 - **Date:** 2026-09-01
 - **Type:** fix
 - **Scope:** `landing`, `web`
-- **PR:** [#579](https://github.com/Prism-Shadow/linsight/pull/579)
+- **PR:** [#579](https://github.com/qiaiqian67/linsight/pull/579)
 
 [English](2026-09-01-landing-agent-glyph.md)
 
 官网的 `BotIcon` 改为与 Web App 的智能体字形完全一致——眼睛和笑嘴都在。两边本来就是同一个
-lucide 机器人，直到应用那边加上了五官（[#538](https://github.com/Prism-Shadow/linsight/pull/538)）；
+lucide 机器人，直到应用那边加上了五官（[#538](https://github.com/qiaiqian67/linsight/pull/538)）；
 售卖这个产品的页面不该把产品的核心对象画成第二种样子。
 
 ## 细节

@@ -3,7 +3,7 @@
 - **Date:** 2026-07-29
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#124](https://github.com/Prism-Shadow/penguin-harness/pull/124)
+- **PR:** [#124](https://github.com/qiaiqian67/linsight/pull/124)
 
 [English](2026-07-29-session-elapsed.md)
 

@@ -44,7 +44,7 @@ function releaseResponse(tag: string): Response {
   return new Response(
     JSON.stringify({
       tag_name: tag,
-      html_url: `https://github.com/Prism-Shadow/linsight/releases/tag/${tag}`,
+      html_url: `https://github.com/qiaiqian67/linsight/releases/tag/${tag}`,
       published_at: "2026-07-01T00:00:00Z",
     }),
     { status: 200, headers: { "content-type": "application/json" } },
@@ -126,7 +126,7 @@ describe("GET /api/version/update-check", () => {
     expect(body.currentVersion).toBe(VERSION);
     expect(body.latestVersion).toBe("99.0.0");
     expect(body.updateAvailable).toBe(true);
-    expect(body.releaseUrl).toBe("https://github.com/Prism-Shadow/linsight/releases/tag/v99.0.0");
+    expect(body.releaseUrl).toBe("https://github.com/qiaiqian67/linsight/releases/tag/v99.0.0");
     expect(body.publishedAt).toBe("2026-07-01T00:00:00Z");
     expect(body.error).toBeUndefined();
     expect(body.disabled).toBeUndefined();

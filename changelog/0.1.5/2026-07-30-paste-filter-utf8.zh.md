@@ -3,7 +3,7 @@
 - **Date:** 2026-07-30
 - **Type:** fix
 - **Scope:** `cli`
-- **PR:** [#127](https://github.com/Prism-Shadow/penguin-harness/pull/127)
+- **PR:** [#127](https://github.com/qiaiqian67/linsight/pull/127)
 
 [English](2026-07-30-paste-filter-utf8.md)
 

@@ -3,11 +3,11 @@
 - **Date:** 2026-08-11
 - **Type:** feature
 - **Scope:** `skills`
-- **PR:** [#256](https://github.com/Prism-Shadow/penguin-harness/pull/256)
+- **PR:** [#256](https://github.com/qiaiqian67/linsight/pull/256)
 
 [English](2026-08-11-humanizer-skill.md)
 
-`humanizer` 作为一个手动安装的 Skill 加入内置库的 Office Productivity 分组——`preinstall: false`，因此它不进入 default_agent 的预装集合，而是按需从 Skill 库安装（[#256](https://github.com/Prism-Shadow/penguin-harness/pull/256)）。
+`humanizer` 作为一个手动安装的 Skill 加入内置库的 Office Productivity 分组——`preinstall: false`，因此它不进入 default_agent 的预装集合，而是按需从 Skill 库安装（[#256](https://github.com/qiaiqian67/linsight/pull/256)）。
 
 ## 它做什么
 

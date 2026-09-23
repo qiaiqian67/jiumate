@@ -3,7 +3,7 @@
 - **Date:** 2026-07-24
 - **Type:** process
 - **Scope:** `core`, `server`, `web`
-- **PR:** [#62](https://github.com/Prism-Shadow/penguin-harness/pull/62), [#63](https://github.com/Prism-Shadow/penguin-harness/pull/63), [#64](https://github.com/Prism-Shadow/penguin-harness/pull/64)
+- **PR:** [#62](https://github.com/qiaiqian67/linsight/pull/62), [#63](https://github.com/qiaiqian67/linsight/pull/63), [#64](https://github.com/qiaiqian67/linsight/pull/64)
 
 [English](2026-07-24-backward-compatibility.md)
 

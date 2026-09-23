@@ -3,7 +3,7 @@
 - **Date:** 2026-08-18
 - **Type:** refactor
 - **Scope:** `web`
-- **PR:** [#300](https://github.com/Prism-Shadow/penguin-harness/pull/300)
+- **PR:** [#300](https://github.com/qiaiqian67/linsight/pull/300)
 
 [English](2026-08-18-web-code-highlight-bundle.md)
 
@@ -11,7 +11,7 @@
 
 ## 变更内容
 
-聊天代码块与工作区源码视图不再导入 `shiki`（它的完整打包）（[#300](https://github.com/Prism-Shadow/penguin-harness/pull/300)）。高亮器改为基于 `shiki/core` 以一份显式语言清单组装，而 oniguruma 的 WASM 引擎被 Shiki 的纯 JavaScript 正则引擎取代。
+聊天代码块与工作区源码视图不再导入 `shiki`（它的完整打包）（[#300](https://github.com/qiaiqian67/linsight/pull/300)）。高亮器改为基于 `shiki/core` 以一份显式语言清单组装，而 oniguruma 的 WASM 引擎被 Shiki 的纯 JavaScript 正则引擎取代。
 
 完整打包的开销不在语法上——那些本就按语言惰性加载、每种语言一个分块——而在于两样无论什么语言都会随**第一个**代码块一起加载的东西：WASM 引擎（原始 622 KB / gzip 230 KB），以及描述全部 332 种内置语法的注册表。
 

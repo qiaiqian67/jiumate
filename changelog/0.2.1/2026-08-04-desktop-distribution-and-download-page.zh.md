@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `ci`, `landing`, `docs`
-- **PR:** [#177](https://github.com/Prism-Shadow/penguin-harness/pull/177), [#201](https://github.com/Prism-Shadow/penguin-harness/pull/201), [#205](https://github.com/Prism-Shadow/penguin-harness/pull/205)
+- **PR:** [#177](https://github.com/qiaiqian67/linsight/pull/177), [#201](https://github.com/qiaiqian67/linsight/pull/201), [#205](https://github.com/qiaiqian67/linsight/pull/205)
 
 [English](2026-08-04-desktop-distribution-and-download-page.md)
 

@@ -36,4 +36,4 @@ pnpm --filter @prismshadow/linsight-cli typecheck
 pnpm --filter @prismshadow/linsight-cli test
 ```
 
-Part of [Linsight](https://github.com/Prism-Shadow/linsight) · Apache-2.0
+Part of [Linsight](https://github.com/qiaiqian67/linsight) · Apache-2.0

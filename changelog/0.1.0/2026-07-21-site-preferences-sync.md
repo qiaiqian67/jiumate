@@ -3,7 +3,7 @@
 - **Date:** 2026-07-21
 - **Type:** fix
 - **Scope:** `landing`, `docs`
-- **PR:** [#13](https://github.com/Prism-Shadow/penguin-harness/pull/13)
+- **PR:** [#13](https://github.com/qiaiqian67/linsight/pull/13)
 
 [中文版](2026-07-21-site-preferences-sync.zh.md)
 

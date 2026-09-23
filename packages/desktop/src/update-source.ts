@@ -15,7 +15,7 @@ import { createHash } from "node:crypto";
 
 export const OSS_ORIGIN = "https://linsight-releases.oss-cn-beijing.aliyuncs.com";
 export const OSS_RELEASE_ROOT = `${OSS_ORIGIN}/releases`;
-export const GITHUB_RELEASE_ROOT = "https://github.com/Prism-Shadow/linsight/releases/download";
+export const GITHUB_RELEASE_ROOT = "https://github.com/qiaiqian67/linsight/releases/download";
 export const OSS_LATEST_JSON_URL = `${OSS_ORIGIN}/latest.json`;
 
 /** Same contract as the release installers (install.sh / install.ps1). */

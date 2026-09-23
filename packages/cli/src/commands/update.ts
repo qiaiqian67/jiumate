@@ -70,7 +70,7 @@ import type { InstallerSource, Messages } from "../i18n.js";
 export { compareVersions, normalizeVersion };
 
 /** Repository the released artifacts come from — the same repo install.sh downloads from. */
-export const REPO_SLUG = "Prism-Shadow/linsight";
+export const REPO_SLUG = "qiaiqian67/linsight";
 /** Releases API endpoint for the newest published release. */
 export const LATEST_RELEASE_API = `https://api.github.com/repos/${REPO_SLUG}/releases/latest`;
 /** Public roots shared with the stable installer entry point. */

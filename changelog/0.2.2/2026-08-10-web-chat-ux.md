@@ -3,8 +3,8 @@
 - **Date:** 2026-08-10
 - **Type:** feature
 - **Scope:** `web`, `server`, `core`, `cli`
-- **PR:** [#227](https://github.com/Prism-Shadow/penguin-harness/pull/227), [#241](https://github.com/Prism-Shadow/penguin-harness/pull/241), [#246](https://github.com/Prism-Shadow/penguin-harness/pull/246)
-- **Issue:** [#89](https://github.com/Prism-Shadow/penguin-harness/issues/89)
+- **PR:** [#227](https://github.com/qiaiqian67/linsight/pull/227), [#241](https://github.com/qiaiqian67/linsight/pull/241), [#246](https://github.com/qiaiqian67/linsight/pull/246)
+- **Issue:** [#89](https://github.com/qiaiqian67/linsight/issues/89)
 
 [中文版](2026-08-10-web-chat-ux.zh.md)
 
@@ -30,4 +30,4 @@ Opening the workspace panel while the agents panel is open (or vice versa) retra
 
 ## Queued follow-up correctness
 
-Two races around the mid-run send path are fixed: a `/steer` that returns `409 not_running` during the completion boundary now re-routes the whole draft through the existing `queueIfBusy` Task path instead of a bare `POST /tasks` that could land `409 task_in_progress` and drop the draft ([#227](https://github.com/Prism-Shadow/penguin-harness/pull/227), closes [#89](https://github.com/Prism-Shadow/penguin-harness/issues/89)); and the per-turn thinking level picked in the composer now rides the follow-up queue path too — previously `onQueueFollowUp` posted only the input, silently dropping the level on the very send it was picked for ([#246](https://github.com/Prism-Shadow/penguin-harness/pull/246)).
+Two races around the mid-run send path are fixed: a `/steer` that returns `409 not_running` during the completion boundary now re-routes the whole draft through the existing `queueIfBusy` Task path instead of a bare `POST /tasks` that could land `409 task_in_progress` and drop the draft ([#227](https://github.com/qiaiqian67/linsight/pull/227), closes [#89](https://github.com/qiaiqian67/linsight/issues/89)); and the per-turn thinking level picked in the composer now rides the follow-up queue path too — previously `onQueueFollowUp` posted only the input, silently dropping the level on the very send it was picked for ([#246](https://github.com/qiaiqian67/linsight/pull/246)).

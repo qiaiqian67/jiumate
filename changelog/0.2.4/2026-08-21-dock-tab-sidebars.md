@@ -3,7 +3,7 @@
 - **Date:** 2026-08-21
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#394](https://github.com/Prism-Shadow/penguin-harness/pull/394)
+- **PR:** [#394](https://github.com/qiaiqian67/linsight/pull/394)
 - **Breaking:** yes — previously saved per-conversation terminal dock arrangements (browser localStorage) are not carried over; the docks start closed once, and running shells stay reachable from any dock's "+" menu.
 
 [中文版](2026-08-21-dock-tab-sidebars.zh.md)

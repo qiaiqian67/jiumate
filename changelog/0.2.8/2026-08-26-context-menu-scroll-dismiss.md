@@ -3,7 +3,7 @@
 - **Date:** 2026-08-26
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#491](https://github.com/Prism-Shadow/penguin-harness/pull/491)
+- **PR:** [#491](https://github.com/qiaiqian67/linsight/pull/491)
 
 [中文版](2026-08-26-context-menu-scroll-dismiss.zh.md)
 

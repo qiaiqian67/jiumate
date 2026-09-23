@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`, `docs`
-- **PR:** [#438](https://github.com/Prism-Shadow/penguin-harness/pull/438)
+- **PR:** [#438](https://github.com/qiaiqian67/linsight/pull/438)
 - **Breaking:** yes — a kernel update now keeps or advances a whole settings tab, so editing one field of a tab freezes the rest of that tab until the default configuration is restored.
 
 [中文版](2026-08-24-kernel-tab-hashes.zh.md)
@@ -17,8 +17,8 @@ Changed the unit of the kernel update from a config leaf to an Agent settings **
 - Deleted what the leaf-wise rule needed and the tab-wise one does not: the per-tool merge of `tools.builtin`, the `addedIn` arrival dates and the `newInLatestGeneration` test they fed, and the leaf machinery `kernelLeafEntries` / `KernelLeaf` / `computeKernelHashes` / `historicalHashesFor`. A tools tab that advances is rewritten from the defaults, which brings tools added since; a tools tab that is kept is kept whole, which preserves a tool the user deleted.
 - Reported `advanced` / `kept` entries became tab keys instead of dotted leaf paths. The Web App renders them with the settings page's own tab labels, replacing the per-leaf display dictionary and its per-tool special case; the update's confirm and result copy now speaks of tabs in both languages.
 - Reworked the pinned-hash guard to compare `computeKernelTabHashes(defaultSystemConfig())` against `KERNEL_DEFAULT_TAB_HASHES`, with the failure message naming the tabs that moved and the edit each needs.
-- Carried the generation narrative over as prose on the record: the pre-[#257](https://github.com/Prism-Shadow/penguin-harness/pull/257) template with its hardcoded Vault and Skills sections, the toggles generation, `run_subagent` gaining `thinking_level` and then the widened `max` ladder, `compaction.max_context_length` rising to 256000, and the background-execution batch alongside the reworded memory prompt.
-- Derived the six superseded tab hashes from the built-in defaults as they stood at each recorded generation, and checked every reconstruction against the retired per-leaf table before writing the literals. Kept the pre-[#257](https://github.com/Prism-Shadow/penguin-harness/pull/257) reconstruction proof, retargeted to the prompt tab.
+- Carried the generation narrative over as prose on the record: the pre-[#257](https://github.com/qiaiqian67/linsight/pull/257) template with its hardcoded Vault and Skills sections, the toggles generation, `run_subagent` gaining `thinking_level` and then the widened `max` ladder, `compaction.max_context_length` rising to 256000, and the background-execution batch alongside the reworded memory prompt.
+- Derived the six superseded tab hashes from the built-in defaults as they stood at each recorded generation, and checked every reconstruction against the retired per-leaf table before writing the literals. Kept the pre-[#257](https://github.com/qiaiqian67/linsight/pull/257) reconstruction proof, retargeted to the prompt tab.
 - Updated the configuration guide's merge description and developer paragraph in both languages.
 
 ## Compatibility

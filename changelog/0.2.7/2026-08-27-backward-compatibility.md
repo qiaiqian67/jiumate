@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** process
 - **Scope:** `desktop`
-- **PR:** [#480](https://github.com/Prism-Shadow/penguin-harness/pull/480)
+- **PR:** [#480](https://github.com/qiaiqian67/linsight/pull/480)
 - **Breaking:** yes — a "Not Now" answered to the pre-0.2.7 one-time `penguin` offer is not carried forward; the command installs itself on the next launch
 
 [中文版](2026-08-27-backward-compatibility.zh.md)

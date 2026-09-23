@@ -3,7 +3,7 @@
 - **Date:** 2026-08-06
 - **Type:** feature
 - **Scope:** `desktop`, `server`, `web`
-- **PR:** [#226](https://github.com/Prism-Shadow/penguin-harness/pull/226)
+- **PR:** [#226](https://github.com/qiaiqian67/linsight/pull/226)
 
 [English](2026-08-06-desktop-app.md)
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Linsight one-line installer.
 #
-#   curl -fsSL https://github.com/Prism-Shadow/linsight/releases/latest/download/install.sh | sh
+#   curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
 #
 # Options:
 #   LINSIGHT_VERSION=vX.Y.Z    choose a version (same as --version vX.Y.Z); a published Release
@@ -29,7 +29,7 @@
 # Docs: https://linsight.ooo/docs/quickstart-cli
 set -eu
 
-REPO="https://github.com/Prism-Shadow/linsight"
+REPO="https://github.com/qiaiqian67/linsight"
 OSS_ORIGIN="https://linsight-releases.oss-cn-beijing.aliyuncs.com"
 OSS_RELEASE_ROOT="$OSS_ORIGIN/releases"
 GITHUB_RELEASE_ROOT="$REPO/releases/download"

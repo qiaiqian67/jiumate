@@ -37,4 +37,4 @@ pnpm --filter @prismshadow/linsight-landing preview # serve the assembled site
 
 Deep links work without a 404 fallback: the post-build step copies the SPA shell to `dist/<slug>/index.html` for every content slug.
 
-Part of [Linsight](https://github.com/Prism-Shadow/linsight) · Apache-2.0
+Part of [Linsight](https://github.com/qiaiqian67/linsight) · Apache-2.0

@@ -3,7 +3,7 @@
 - **Date:** 2026-08-31
 - **Type:** feature
 - **Scope:** `landing`
-- **PR:** [#560](https://github.com/Prism-Shadow/linsight/pull/560)
+- **PR:** [#560](https://github.com/qiaiqian67/linsight/pull/560)
 
 [English](2026-08-31-landing-rotating-headline.md)
 

@@ -14,7 +14,7 @@
 set -eu
 OSS_ORIGIN="https://linsight-releases.oss-cn-beijing.aliyuncs.com"
 OSS_RELEASE_ROOT="$OSS_ORIGIN/releases"
-GITHUB_RELEASE_ROOT="https://github.com/Prism-Shadow/linsight/releases/download"
+GITHUB_RELEASE_ROOT="https://github.com/qiaiqian67/linsight/releases/download"
 SOURCE_MODE="${LINSIGHT_DOWNLOAD_SOURCE:-auto}"
 
 fail() {
@@ -83,7 +83,7 @@ use_github() {
   if [ -n "$1" ]; then
     SELECTED_BASE="$GITHUB_RELEASE_ROOT/$1"
   else
-    SELECTED_BASE="https://github.com/Prism-Shadow/linsight/releases/latest/download"
+    SELECTED_BASE="https://github.com/qiaiqian67/linsight/releases/latest/download"
   fi
   FALLBACK_BASE=""
   download_installer "$SELECTED_BASE" \

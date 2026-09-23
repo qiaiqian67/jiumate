@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `web`, `server`
-- **PR:** [#191](https://github.com/Prism-Shadow/penguin-harness/pull/191)
+- **PR:** [#191](https://github.com/qiaiqian67/linsight/pull/191)
 
 [中文版](2026-08-04-project-chat-defaults.zh.md)
 

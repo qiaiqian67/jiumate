@@ -3,7 +3,7 @@
 - **Date:** 2026-07-30
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#143](https://github.com/Prism-Shadow/penguin-harness/pull/143)
+- **PR:** [#143](https://github.com/qiaiqian67/linsight/pull/143)
 
 [English](2026-07-30-file-summary-task-boundary.md)
 

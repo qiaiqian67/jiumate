@@ -3,8 +3,8 @@
 - **Date:** 2026-08-10
 - **Type:** feature
 - **Scope:** `web`, `server`, `core`, `cli`
-- **PR:** [#227](https://github.com/Prism-Shadow/penguin-harness/pull/227), [#241](https://github.com/Prism-Shadow/penguin-harness/pull/241), [#246](https://github.com/Prism-Shadow/penguin-harness/pull/246)
-- **Issue:** [#89](https://github.com/Prism-Shadow/penguin-harness/issues/89)
+- **PR:** [#227](https://github.com/qiaiqian67/linsight/pull/227), [#241](https://github.com/qiaiqian67/linsight/pull/241), [#246](https://github.com/qiaiqian67/linsight/pull/246)
+- **Issue:** [#89](https://github.com/qiaiqian67/linsight/issues/89)
 
 [English](2026-08-10-web-chat-ux.md)
 
@@ -30,4 +30,4 @@ Token / 成本 / 已用时间三个芯片移到工具栏最右侧，并在 `sm+`
 
 ## 排队后续消息的正确性
 
-修复了运行中途发送路径周围的两处竞态：一次在完成边界上返回 `409 not_running` 的 `/steer`，现在会把整份草稿改道经既有的 `queueIfBusy` Task 路径，而不是走一个可能落得 `409 task_in_progress` 并丢掉草稿的裸 `POST /tasks`（[#227](https://github.com/Prism-Shadow/penguin-harness/pull/227)，关闭 [#89](https://github.com/Prism-Shadow/penguin-harness/issues/89)）；以及在输入区选定的逐轮思考等级现在也会搭乘后续队列路径——此前 `onQueueFollowUp` 只投递输入，恰恰在它被选定的那一次发送上静默丢掉了该等级（[#246](https://github.com/Prism-Shadow/penguin-harness/pull/246)）。
+修复了运行中途发送路径周围的两处竞态：一次在完成边界上返回 `409 not_running` 的 `/steer`，现在会把整份草稿改道经既有的 `queueIfBusy` Task 路径，而不是走一个可能落得 `409 task_in_progress` 并丢掉草稿的裸 `POST /tasks`（[#227](https://github.com/qiaiqian67/linsight/pull/227)，关闭 [#89](https://github.com/qiaiqian67/linsight/issues/89)）；以及在输入区选定的逐轮思考等级现在也会搭乘后续队列路径——此前 `onQueueFollowUp` 只投递输入，恰恰在它被选定的那一次发送上静默丢掉了该等级（[#246](https://github.com/qiaiqian67/linsight/pull/246)）。

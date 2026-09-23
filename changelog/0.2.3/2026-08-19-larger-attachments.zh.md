@@ -3,7 +3,7 @@
 - **Date:** 2026-08-19
 - **Type:** feature
 - **Scope:** `server`, `web`, `docs`
-- **Issue:** [#345](https://github.com/Prism-Shadow/penguin-harness/issues/345)
+- **Issue:** [#345](https://github.com/qiaiqian67/linsight/issues/345)
 
 [English](2026-08-19-larger-attachments.md)
 

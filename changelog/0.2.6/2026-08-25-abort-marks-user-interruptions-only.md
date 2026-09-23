@@ -3,7 +3,7 @@
 - **Date:** 2026-08-25
 - **Type:** refactor
 - **Scope:** `core`, `server`, `web`, `cli`
-- **PR:** [#458](https://github.com/Prism-Shadow/penguin-harness/pull/458)
+- **PR:** [#458](https://github.com/qiaiqian67/linsight/pull/458)
 - **Breaking:** yes — the engine no longer emits an abort event for LLM or compaction failures (their terminal record is the `request_end` / `compaction_end` already on the stream), and error information converges on one `error_code` + `error_message` pair across payloads
 
 [中文版](2026-08-25-abort-marks-user-interruptions-only.zh.md)

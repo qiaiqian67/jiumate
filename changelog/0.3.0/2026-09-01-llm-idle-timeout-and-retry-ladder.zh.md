@@ -3,7 +3,7 @@
 - **Date:** 2026-09-01
 - **Type:** fix
 - **Scope:** `core`, `web`, `docs`
-- **PR:** [#571](https://github.com/Prism-Shadow/linsight/pull/571)
+- **PR:** [#571](https://github.com/qiaiqian67/linsight/pull/571)
 
 [English](2026-09-01-llm-idle-timeout-and-retry-ladder.md)
 

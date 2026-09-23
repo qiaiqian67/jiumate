@@ -45,4 +45,4 @@ pnpm --filter @prismshadow/linsight-server start   # node dist/index.js
 - **Terminals are a shell as the OS account running the server**, i.e. the most privileged thing the API hands out — they are not Project-scoped. A terminal is only visible to the account that created it (someone else's id answers 404, not 403), and the stream WebSocket checks `Origin` on top of the session cookie because a WebSocket handshake is not subject to CORS. Do not expose a deployment with terminals enabled to accounts you would not give SSH.
 - Behind a reverse proxy, disable response buffering for SSE paths (the server already sends `X-Accel-Buffering: no`), and set `LINSIGHT_TRUST_PROXY=1` with `x-forwarded-proto` forwarded so session cookies are marked `Secure` — the header alone is not trusted, so without the opt-in an HTTPS deployment issues its cookies without the flag.
 
-Part of [Linsight](https://github.com/Prism-Shadow/linsight) · Apache-2.0
+Part of [Linsight](https://github.com/qiaiqian67/linsight) · Apache-2.0

@@ -7,5 +7,5 @@ contact_links:
     url: https://linsight.ooo/docs/
     about: Installation, configuration, the CLI reference, and the architecture.
   - name: Security vulnerability
-    url: https://github.com/Prism-Shadow/linsight/security/advisories/new
+    url: https://github.com/qiaiqian67/linsight/security/advisories/new
     about: Report privately. Never in a public issue.

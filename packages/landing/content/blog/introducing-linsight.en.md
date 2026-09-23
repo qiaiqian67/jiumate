@@ -110,7 +110,7 @@ A self-improving harness needs a community that improves with it. Come discuss, 
 
 - [Discord](https://discord.gg/eFHKqqcU3D): chat with us and other developers in real time;
 - [X (Twitter)](https://x.com/code_hiyouga): follow the latest updates;
-- [WeChat group](https://github.com/Prism-Shadow/linsight-community/blob/main/wechat/group.jpg): Chinese community discussions;
-- [GitHub](https://github.com/Prism-Shadow/linsight): stars, Issues, and PRs all welcome.
+- [WeChat group](https://github.com/qiaiqian67/linsight-community/blob/main/wechat/group.jpg): Chinese community discussions;
+- [GitHub](https://github.com/qiaiqian67/linsight): stars, Issues, and PRs all welcome.
 
 Self-evolving agent infrastructure, for everyone — starting today.

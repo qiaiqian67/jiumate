@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** fix
 - **Scope:** `cli`
-- **PR:** [#169](https://github.com/Prism-Shadow/penguin-harness/pull/169)
+- **PR:** [#169](https://github.com/qiaiqian67/linsight/pull/169)
 
 [English](2026-08-04-cli-web-probe-diagnostics.md)
 

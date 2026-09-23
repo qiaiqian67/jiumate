@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** feature
 - **Scope:** `landing`, `docs`
-- **PR:** [#473](https://github.com/Prism-Shadow/penguin-harness/pull/473)
+- **PR:** [#473](https://github.com/qiaiqian67/linsight/pull/473)
 
 [English](2026-08-27-landing-homepage-refinement.md)
 

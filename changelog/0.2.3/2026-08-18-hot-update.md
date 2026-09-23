@@ -3,7 +3,7 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `server`, `cli`, `web`, `tooling`
-- **PR:** [#298](https://github.com/Prism-Shadow/penguin-harness/pull/298)
+- **PR:** [#298](https://github.com/qiaiqian67/linsight/pull/298)
 
 [中文版](2026-08-18-hot-update.zh.md)
 

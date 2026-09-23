@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** feature
 - **Scope:** `server`, `web`, `docs`
-- **PR:** [#501](https://github.com/Prism-Shadow/penguin-harness/pull/501)
+- **PR:** [#501](https://github.com/qiaiqian67/linsight/pull/501)
 
 [English](2026-08-27-messaging-qq.md)
 

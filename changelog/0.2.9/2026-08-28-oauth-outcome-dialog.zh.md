@@ -3,7 +3,7 @@
 - **Date:** 2026-08-28
 - **Type:** fix
 - **Scope:** `web`, `server`
-- **PR:** [#532](https://github.com/Prism-Shadow/penguin-harness/pull/532)
+- **PR:** [#532](https://github.com/qiaiqian67/linsight/pull/532)
 
 [English](2026-08-28-oauth-outcome-dialog.md)
 

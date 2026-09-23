@@ -3,11 +3,11 @@
 - **Date:** 2026-08-03
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#164](https://github.com/Prism-Shadow/penguin-harness/pull/164)
+- **PR:** [#164](https://github.com/qiaiqian67/linsight/pull/164)
 
 [English](2026-08-03-web-chat-navigation.md)
 
-长对话此前很难穿行：想召回一条此前的请求就得重打一遍，想折叠一段很长的思考/工具运行就得一路滚回它的标题处，而要抵达某次具体的问答就得滚过中间的一切。聊天页新增的三个导航辅助解决了这一点（[#164](https://github.com/Prism-Shadow/penguin-harness/pull/164)）。
+长对话此前很难穿行：想召回一条此前的请求就得重打一遍，想折叠一段很长的思考/工具运行就得一路滚回它的标题处，而要抵达某次具体的问答就得滚过中间的一切。聊天页新增的三个导航辅助解决了这一点（[#164](https://github.com/qiaiqian67/linsight/pull/164)）。
 
 ## ↑ 输入历史
 

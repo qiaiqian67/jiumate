@@ -16,8 +16,8 @@
   $ProgressPreference = "SilentlyContinue"
   $OssOrigin = "https://linsight-releases.oss-cn-beijing.aliyuncs.com"
   $OssReleaseRoot = "$OssOrigin/releases"
-  $GitHubReleaseRoot = "https://github.com/Prism-Shadow/linsight/releases/download"
-  $GitHubLatestBase = "https://github.com/Prism-Shadow/linsight/releases/latest/download"
+  $GitHubReleaseRoot = "https://github.com/qiaiqian67/linsight/releases/download"
+  $GitHubLatestBase = "https://github.com/qiaiqian67/linsight/releases/latest/download"
 
   function Fail([string]$Message) {
     throw "error: $Message"

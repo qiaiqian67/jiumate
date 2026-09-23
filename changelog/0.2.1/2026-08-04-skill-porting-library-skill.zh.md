@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `skills`, `docs`
-- **PR:** [#195](https://github.com/Prism-Shadow/penguin-harness/pull/195)
+- **PR:** [#195](https://github.com/qiaiqian67/linsight/pull/195)
 
 [English](2026-08-04-skill-porting-library-skill.md)
 

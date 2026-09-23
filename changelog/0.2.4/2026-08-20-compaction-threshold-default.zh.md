@@ -3,7 +3,7 @@
 - **Date:** 2026-08-20
 - **Type:** feature
 - **Scope:** `core`, `docs`
-- **PR:** [#366](https://github.com/Prism-Shadow/penguin-harness/pull/366)
+- **PR:** [#366](https://github.com/qiaiqian67/linsight/pull/366)
 
 [English](2026-08-20-compaction-threshold-default.md)
 

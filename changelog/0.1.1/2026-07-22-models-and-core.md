@@ -3,7 +3,7 @@
 - **Date:** 2026-07-22
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`, `cli`, `model-catalog`
-- **PR:** [#21](https://github.com/Prism-Shadow/penguin-harness/pull/21), [#24](https://github.com/Prism-Shadow/penguin-harness/pull/24), [#28](https://github.com/Prism-Shadow/penguin-harness/pull/28), [#38](https://github.com/Prism-Shadow/penguin-harness/pull/38), [#40](https://github.com/Prism-Shadow/penguin-harness/pull/40), [#43](https://github.com/Prism-Shadow/penguin-harness/pull/43)
+- **PR:** [#21](https://github.com/qiaiqian67/linsight/pull/21), [#24](https://github.com/qiaiqian67/linsight/pull/24), [#28](https://github.com/qiaiqian67/linsight/pull/28), [#38](https://github.com/qiaiqian67/linsight/pull/38), [#40](https://github.com/qiaiqian67/linsight/pull/40), [#43](https://github.com/qiaiqian67/linsight/pull/43)
 
 [中文版](2026-07-22-models-and-core.zh.md)
 

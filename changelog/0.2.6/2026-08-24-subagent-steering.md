@@ -3,8 +3,8 @@
 - **Date:** 2026-08-24
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`, `docs`
-- **PR:** [#433](https://github.com/Prism-Shadow/penguin-harness/pull/433)
-- **Issue:** [#272](https://github.com/Prism-Shadow/penguin-harness/issues/272), [#274](https://github.com/Prism-Shadow/penguin-harness/issues/274)
+- **PR:** [#433](https://github.com/qiaiqian67/linsight/pull/433)
+- **Issue:** [#272](https://github.com/qiaiqian67/linsight/issues/272), [#274](https://github.com/qiaiqian67/linsight/issues/274)
 
 [中文版](2026-08-24-subagent-steering.zh.md)
 
@@ -96,7 +96,7 @@ ending or being stopped converges only the **main** session's approvals — an o
 child approval stays pending, and its card stays rendered, until the user decides. The CLI
 keeps the poll-window-only semantics (it attaches no fallback sink).
 
-## Live child states (issue [#274](https://github.com/Prism-Shadow/penguin-harness/issues/274))
+## Live child states (issue [#274](https://github.com/qiaiqian67/linsight/issues/274))
 
 Child running marks were previously inferred by parsing tool-output text
 (`still running` / `idle` notes), which froze the checkmark, stopped the elapsed timer,

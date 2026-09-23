@@ -144,7 +144,7 @@ spurious user-facing errors without requiring manual retries.
 它甚至先"出声"权衡了这个改动到底算 `fix` 还是 `feat`，才最终定为 `fix`——这个行为完全来自它的父 Agent 为它写的 AGENTS.md。
 
 **你可以自己跑一遍。** 上面整个流程在仓库里有一个自包含、纯 SDK 驱动的脚本：
-[`examples/build-agent-with-agent/`](https://github.com/Prism-Shadow/linsight/tree/main/examples/build-agent-with-agent)。
+[`examples/build-agent-with-agent/`](https://github.com/qiaiqian67/linsight/tree/main/examples/build-agent-with-agent)。
 第一阶段用 `createAgent`/`createSession`/`run` 驱动 `default_agent` 造出 `commit-helper`；第二阶段加载这个新 Agent 并运行它——全部跑在本地 Ollama + qwen3.6:35b 上，不用任何云端 API。一次性的 Ollama 配置见其 `README.md`。
 
 ## 自我进化，一句话概括
@@ -190,7 +190,7 @@ linsight config model add \
 在同一个模型、同一个任务上，仅仅由 Agent 自己编辑一份它会读取的文本文件，分数就走出了 **4.6 → 6.6 → 9.8** 的轨迹（数字每次运行会有波动）——而且 harness 每一轮都只因分数严格提升才保留。这就是自驱动的循环：*Agent 能看到的，Agent 就能改进*——用一份 rubric 度量、关联着 Trace，不是拍脑袋。
 
 **你可以自己跑一遍。** 整个循环在仓库里有一个自包含、纯 SDK 驱动的脚本：
-[`examples/self-improving-agent/`](https://github.com/Prism-Shadow/linsight/tree/main/examples/self-improving-agent)。
+[`examples/self-improving-agent/`](https://github.com/qiaiqian67/linsight/tree/main/examples/self-improving-agent)。
 它用一份确定性的、可读的 rubric（10 分：5 分内容分、5 分只存在于 `AGENTS.md` 的内部约定分），并且——因为本地模型有随机性——对每个版本跑多次取平均分，这正是真实 benchmark 里 `runs`（多次运行）的意义所在。关键在于：脚本从不自己写那套约定；是 *Agent* 从一份通过范例里诊断出缺口，并编辑自己的 `AGENTS.md`。在我们的运行中，平均分沿着 **4.6 → 6.6 → 9.8** 走过两轮自撰改进（先学到结构、再锁定常量），harness 每一轮都只因分数严格提升才保留。它跑在同一套本地 Ollama + qwen3.6:35b 环境上，并使用一个专用 agent id，所以你自己的 Agent 不会被动到。
 
 ## 还没有 AMD GPU？来自 AMD + Fireworks 的免费云端算力
@@ -220,7 +220,7 @@ linsight config model add --model-id <fireworks-模型-id> \
 ## 立即开始
 
 ```bash
-curl -fsSL https://github.com/Prism-Shadow/linsight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
 
 # 指向任意 OpenAI 兼容端点——包括一个本地 Ollama 模型
 linsight config model add --model-id <你的模型> \
@@ -238,6 +238,6 @@ const session = await agent.createSession({ workspaceDir: process.cwd() });
 for await (const out of session.run([userText("...")], { approve: async () => "allow" })) { /* 流式处理 */ }
 ```
 
-完整、可运行的版本见 [`examples/`](https://github.com/Prism-Shadow/linsight/tree/main/examples)——包括一个"用 Agent 造 Agent"和一个"自我改进的 Agent"，都跑在本地 Ollama 上。
+完整、可运行的版本见 [`examples/`](https://github.com/qiaiqian67/linsight/tree/main/examples)——包括一个"用 Agent 造 Agent"和一个"自我改进的 Agent"，都跑在本地 Ollama 上。
 
-无论你跑的是前沿云端模型，还是自己 AMD GPU 上的开源权重模型，Linsight 都为你提供同一套精简、可观测、可自我进化的底座。在 [GitHub](https://github.com/Prism-Shadow/linsight) 关注我们，并提交你的第一个 issue。
+无论你跑的是前沿云端模型，还是自己 AMD GPU 上的开源权重模型，Linsight 都为你提供同一套精简、可观测、可自我进化的底座。在 [GitHub](https://github.com/qiaiqian67/linsight) 关注我们，并提交你的第一个 issue。

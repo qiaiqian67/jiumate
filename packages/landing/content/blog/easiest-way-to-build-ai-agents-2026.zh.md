@@ -87,7 +87,7 @@ linsight run -m "分析 data.csv 并总结季度销售情况"
 
 ### 4.3 让 Agent 来写你的 Agent
 
-你把想要的东西描述出来，剩下的交给一个 Agent：它来写目标 Agent 的 `AGENTS.md`，装好需要的技能，最后把一个能跑的成品交给你。我们用一句话生成过一个完整的 RAG 应用——文档摄取、检索、带出处的引用、Web 界面一应俱全，在 DeepSeek V4 Pro 上的 token 成本是 **$0.02**。[可运行示例](https://github.com/Prism-Shadow/linsight/tree/main/examples/build-agent-with-agent)是一个 82 行的脚本：从一句自然语言需求造出新 Agent，然后跑起来验证它。
+你把想要的东西描述出来，剩下的交给一个 Agent：它来写目标 Agent 的 `AGENTS.md`，装好需要的技能，最后把一个能跑的成品交给你。我们用一句话生成过一个完整的 RAG 应用——文档摄取、检索、带出处的引用、Web 界面一应俱全，在 DeepSeek V4 Pro 上的 token 成本是 **$0.02**。[可运行示例](https://github.com/qiaiqian67/linsight/tree/main/examples/build-agent-with-agent)是一个 82 行的脚本：从一句自然语言需求造出新 Agent，然后跑起来验证它。
 
 这件事能成立，靠的是一条设计原则：**Agent 是可编辑的数据，不是硬编码的常量**。提示词、技能、配置，全都是磁盘上的普通文件。
 
@@ -119,6 +119,6 @@ Linsight 把这些收进一次安装，然后**把优化循环交给 Agent 自�
 ---
 
 - **文档**：[快速开始](https://linsight.ooo/docs/quickstart) · [Skills](https://linsight.ooo/docs/skills) · [会话与 Trace](https://linsight.ooo/docs/sessions-and-traces)
-- **社区**：[GitHub](https://github.com/Prism-Shadow/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **社区**：[GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**（数据均于 2026-07-22 核对）：[LangChain v1 发布说明](https://docs.langchain.com/oss/python/releases/langchain-v1) · [Langfuse](https://github.com/langfuse/langfuse) · [AutoGen README](https://github.com/microsoft/autogen) · [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) · [Google ADK](https://adk.dev/) · [CrewAI](https://docs.crewai.com/en/quickstart) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/quickstart/) · [Dify LICENSE](https://github.com/langgenius/dify/blob/main/LICENSE) · [n8n LICENSE](https://github.com/n8n-io/n8n/blob/master/LICENSE.md) · [Anthropic, Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents)

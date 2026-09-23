@@ -99,4 +99,4 @@ irm https://linsight.ooo/install.ps1 | iex
 linsight web
 ```
 
-The full record of what changed is in [changelog/0.2.3/](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.3).
+The full record of what changed is in [changelog/0.2.3/](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.3).

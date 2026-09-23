@@ -3,7 +3,7 @@
 - **Date:** 2026-07-29
 - **Type:** fix
 - **Scope:** `core`
-- **PR:** [#104](https://github.com/Prism-Shadow/penguin-harness/pull/104), [#107](https://github.com/Prism-Shadow/penguin-harness/pull/107)
+- **PR:** [#104](https://github.com/qiaiqian67/linsight/pull/104), [#107](https://github.com/qiaiqian67/linsight/pull/107)
 
 [中文版](2026-07-29-llm-request-lifecycle.zh.md)
 

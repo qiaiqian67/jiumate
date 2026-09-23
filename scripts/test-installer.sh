@@ -590,7 +590,7 @@ grep -q "OSS mirror" "$WORK_DIR/download-base-override.output" \
   || fail_test "download base override exposed the OSS URL in normal output"
 run_online_case download-fallback primary-network "" success 3 \
   "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test" \
-  "https://github.com/Prism-Shadow/linsight/releases/download/v0.0.0-test"
+  "https://github.com/qiaiqian67/linsight/releases/download/v0.0.0-test"
 [ "$(sed -n '1p' "$WORK_DIR/download-fallback.log")" = \
   "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
   || fail_test "download fallback did not try the primary source first"

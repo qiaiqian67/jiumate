@@ -3,7 +3,7 @@
 - **Date:** 2026-08-23
 - **Type:** process
 - **Scope:** `server`
-- **PR:** [#427](https://github.com/Prism-Shadow/penguin-harness/pull/427)
+- **PR:** [#427](https://github.com/qiaiqian67/linsight/pull/427)
 
 [English](2026-08-23-hmr-comments-match-the-code.md)
 

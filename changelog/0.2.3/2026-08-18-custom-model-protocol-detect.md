@@ -3,7 +3,7 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`, `model-catalog`
-- **PR:** [#324](https://github.com/Prism-Shadow/penguin-harness/pull/324)
+- **PR:** [#324](https://github.com/qiaiqian67/linsight/pull/324)
 
 [中文版](2026-08-18-custom-model-protocol-detect.zh.md)
 

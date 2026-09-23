@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `cli`, `docs`
-- **PR:** [#322](https://github.com/Prism-Shadow/penguin-harness/pull/322)
-- **Issue:** [#305](https://github.com/Prism-Shadow/penguin-harness/issues/305)
+- **PR:** [#322](https://github.com/qiaiqian67/linsight/pull/322)
+- **Issue:** [#305](https://github.com/qiaiqian67/linsight/issues/305)
 
 [English](2026-08-18-cli-thinking-and-output-collapse.md)
 

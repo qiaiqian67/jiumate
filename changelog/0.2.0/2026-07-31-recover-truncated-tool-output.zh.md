@@ -3,7 +3,7 @@
 - **Date:** 2026-07-31
 - **Type:** feature
 - **Scope:** `core`, `web`
-- **PR:** [#145](https://github.com/Prism-Shadow/penguin-harness/pull/145)
+- **PR:** [#145](https://github.com/qiaiqian67/linsight/pull/145)
 
 [English](2026-07-31-recover-truncated-tool-output.md)
 

@@ -3,13 +3,13 @@
 - **Date:** 2026-08-27
 - **Type:** fix
 - **Scope:** `desktop`, `tooling`
-- **PR:** [#482](https://github.com/Prism-Shadow/penguin-harness/pull/482)
+- **PR:** [#482](https://github.com/qiaiqian67/linsight/pull/482)
 
 [中文版](2026-08-27-desktop-bundle-cjs-globals.zh.md)
 
 Binding a Feishu app from the desktop app failed at the credential test and at connect with
 `__dirname is not defined`, so the messaging integration that shipped in 0.2.6
-([#464](https://github.com/Prism-Shadow/penguin-harness/pull/464)) could not be used there at
+([#464](https://github.com/qiaiqian67/linsight/pull/464)) could not be used there at
 all. Only the desktop app was affected: an npm or CLI install resolves
 `@larksuiteoapi/node-sdk` from `node_modules`, where it runs as CommonJS and is handed its own
 `__dirname`, while the desktop app bundles the server and the CLI into one self-contained ESM

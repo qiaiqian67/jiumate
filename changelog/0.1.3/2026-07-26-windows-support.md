@@ -3,7 +3,7 @@
 - **Date:** 2026-07-26
 - **Type:** feature
 - **Scope:** `core`, `cli`, `tooling`, `ci`
-- **PR:** [#79](https://github.com/Prism-Shadow/penguin-harness/pull/79)
+- **PR:** [#79](https://github.com/qiaiqian67/linsight/pull/79)
 
 [中文版](2026-07-26-windows-support.zh.md)
 

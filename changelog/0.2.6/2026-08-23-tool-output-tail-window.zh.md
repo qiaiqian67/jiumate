@@ -3,7 +3,7 @@
 - **Date:** 2026-08-23
 - **Type:** feature
 - **Scope:** `core`, `docs`
-- **PR:** [#432](https://github.com/Prism-Shadow/penguin-harness/pull/432)
+- **PR:** [#432](https://github.com/qiaiqian67/linsight/pull/432)
 
 [English](2026-08-23-tool-output-tail-window.md)
 
@@ -33,4 +33,4 @@
 - 截断标记从追加注记移入正文、位于两窗之间，措辞由 `exceeded N chars` 改为 `kept first H and last T of C chars`。前端把工具输出当纯文本渲染，无需任何渲染层改动；旧 Trace 保留旧标记、照常渲染。
 - 只返回一条完整消息的兼容工具，对该消息套用同样的双窗。
 
-设计：头尾双窗契约与 recovery 归档已入设计规格（[penguin-harness-design #54](https://github.com/Prism-Shadow/penguin-harness-design/pull/54)）。
+设计：头尾双窗契约与 recovery 归档已入设计规格（[penguin-harness-design #54](https://github.com/qiaiqian67/linsight-design/pull/54)）。

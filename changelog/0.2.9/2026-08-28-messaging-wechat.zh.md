@@ -3,7 +3,7 @@
 - **Date:** 2026-08-28
 - **Type:** feature
 - **Scope:** `server`, `web`, `docs`
-- **PR:** [#533](https://github.com/Prism-Shadow/penguin-harness/pull/533)
+- **PR:** [#533](https://github.com/qiaiqian67/linsight/pull/533)
 
 [English](2026-08-28-messaging-wechat.md)
 

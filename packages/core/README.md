@@ -38,4 +38,4 @@ pnpm --filter @prismshadow/linsight-core test
 pnpm test:e2e                                       # live-model e2e (needs DEEPSEEK_API_KEY)
 ```
 
-Part of [Linsight](https://github.com/Prism-Shadow/linsight) · Apache-2.0
+Part of [Linsight](https://github.com/qiaiqian67/linsight) · Apache-2.0

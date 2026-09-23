@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `skills`, `docs`
-- **PR:** [#194](https://github.com/Prism-Shadow/penguin-harness/pull/194)
+- **PR:** [#194](https://github.com/qiaiqian67/linsight/pull/194)
 
 [中文版](2026-08-04-data-analysis-skill-v2.zh.md)
 

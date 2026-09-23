@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** fix
 - **Scope:** `core`, `server`, `web`, `cli`
-- **PR:** [#329](https://github.com/Prism-Shadow/penguin-harness/pull/329)
-- **Issue:** [#288](https://github.com/Prism-Shadow/penguin-harness/issues/288), [#290](https://github.com/Prism-Shadow/penguin-harness/issues/290)
+- **PR:** [#329](https://github.com/qiaiqian67/linsight/pull/329)
+- **Issue:** [#288](https://github.com/qiaiqian67/linsight/issues/288), [#290](https://github.com/qiaiqian67/linsight/issues/290)
 
 [English](2026-08-18-compaction-continuity-and-streaming.md)
 
@@ -32,7 +32,7 @@
 
 Task 中途的压缩一旦失败，此前的循环会陷入一个说不清的状态：整个运行要么在压缩之后空手而归地结束，要么只带着几条光秃秃的 `[tool error]` 修复输出继续，而模型并没有收到任何据以行动的指示。
 
-- Task 中途的压缩失败或被中止时，现在按普通打断的同一套流程收场：本轮尚未了结的状态按既有的「是否已提交」规则转入 carry-over（[#85](https://github.com/Prism-Shadow/penguin-harness/issues/85)），以 `abort` 事件结束本次运行（失败一路的原因为 `compaction failed`），下一条消息把 carry-over 与用户输入合并重发——阈值依然超标，压缩在那里再次触发。
+- Task 中途的压缩失败或被中止时，现在按普通打断的同一套流程收场：本轮尚未了结的状态按既有的「是否已提交」规则转入 carry-over（[#85](https://github.com/qiaiqian67/linsight/issues/85)），以 `abort` 事件结束本次运行（失败一路的原因为 `compaction failed`），下一条消息把 carry-over 与用户输入合并重发——阈值依然超标，压缩在那里再次触发。
 - Task 边界上的压缩失败一如既往：保留原上下文，直接结束本次运行。
 
 ## 压缩摘要实时流式呈现

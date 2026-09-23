@@ -113,8 +113,8 @@ README 路线图新增两项——Agent company and templates，以及 company-l
 ## 获取方式
 
 ```bash
-curl -fsSL https://github.com/Prism-Shadow/linsight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
 linsight web
 ```
 
-然后打开 Models 页面，填入 Gemini 或 OpenRouter 的 Key，选择 `gemini-3.6-flash` 即可。完整的发布说明见 [`changelog/0.1.1/`](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.1.1)。
+然后打开 Models 页面，填入 Gemini 或 OpenRouter 的 Key，选择 `gemini-3.6-flash` 即可。完整的发布说明见 [`changelog/0.1.1/`](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.1.1)。

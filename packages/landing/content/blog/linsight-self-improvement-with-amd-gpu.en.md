@@ -11,7 +11,7 @@ description: "Learn how Linsight combines Benchmarks, Traces, editable Agent Sta
 
 *AMD × PrismShadow — Yuyang Gao and Ning Zhang (AMD), Yaowei Zheng (PrismShadow).*
 
-[Linsight](https://github.com/Prism-Shadow/linsight) is an open-source Agent Harness that brings model integrations, Agent configuration, workspace tools, Sessions, Traces, Skills, and Benchmarks into one runtime, with both a CLI and a Web UI. It can use hosted models as well as local models exposed through an OpenAI-compatible endpoint.
+[Linsight](https://github.com/qiaiqian67/linsight) is an open-source Agent Harness that brings model integrations, Agent configuration, workspace tools, Sessions, Traces, Skills, and Benchmarks into one runtime, with both a CLI and a Web UI. It can use hosted models as well as local models exposed through an OpenAI-compatible endpoint.
 
 What makes the project especially interesting is that it represents Agent behavior as a set of readable, editable, and versioned state files rather than as a fixed prompt that only a developer can maintain manually. Role definitions, operating procedures, reusable Skills, and runtime settings all belong to the Agent State, while each task produces a complete Session and Trace. This allows one Agent to evaluate another, update its State using evidence from real executions, and then verify the change against the same evaluation.
 
@@ -426,6 +426,6 @@ This approach is especially useful for local models. Without preparing training 
 
 ## References
 
-- [Linsight GitHub](https://github.com/Prism-Shadow/linsight)
+- [Linsight GitHub](https://github.com/qiaiqian67/linsight)
 - [Linsight Self-Improvement Documentation](https://linsight.ooo/docs/self-improvement/)
 - [Fireworks API Credits and API Key Guide](https://linsight.ooo/blog/fireworks-credits-amd)

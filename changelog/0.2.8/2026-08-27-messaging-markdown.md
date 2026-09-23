@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** feature
 - **Scope:** `server`, `web`, `docs`
-- **PR:** [#519](https://github.com/Prism-Shadow/penguin-harness/pull/519)
+- **PR:** [#519](https://github.com/qiaiqian67/linsight/pull/519)
 - **Breaking:** yes — existing bindings start rendering Markdown after the upgrade, which changes how every relayed message looks; the new per-binding switch turns it off
 
 [中文版](2026-08-27-messaging-markdown.zh.md)

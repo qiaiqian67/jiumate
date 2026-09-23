@@ -83,4 +83,4 @@ Token 图保留三段式堆叠柱，并新增缓存命中率作为一条画在�
 
 **`agent-creation` 技能更名为 `agent-initialization`。** 新名字说的是它实际做的事——初始化一个 Agent 的设置，而不是「创建 Agent」。已安装的旧副本仍可使用，但不再对应技能库里的任何 Skill，因此不会再收到更新。请安装 `agent-initialization`，在该 Agent 的技能标签页删除 `agent-creation`，并把手工点名旧名字的地方一并改掉：旧名字不会报错，只会静默地什么都匹配不到。
 
-每一项改动的完整细节见 [`changelog/0.2.4/`](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.4)。
+每一项改动的完整细节见 [`changelog/0.2.4/`](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.4)。

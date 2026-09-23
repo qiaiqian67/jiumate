@@ -3,7 +3,7 @@
 - **Date:** 2026-08-23
 - **Type:** process
 - **Scope:** `skills`, `docs`
-- **PR:** [#428](https://github.com/Prism-Shadow/penguin-harness/pull/428)
+- **PR:** [#428](https://github.com/qiaiqian67/linsight/pull/428)
 
 [English](2026-08-23-manual-test-skill.md)
 

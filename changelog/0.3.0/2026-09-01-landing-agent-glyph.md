@@ -3,13 +3,13 @@
 - **Date:** 2026-09-01
 - **Type:** fix
 - **Scope:** `landing`, `web`
-- **PR:** [#579](https://github.com/Prism-Shadow/linsight/pull/579)
+- **PR:** [#579](https://github.com/qiaiqian67/linsight/pull/579)
 
 [中文版](2026-09-01-landing-agent-glyph.zh.md)
 
 The landing page's `BotIcon` now carries the Web App's Agent glyph exactly — eyes and smile
 included. The two were the same lucide robot until the app's grew a face
-([#538](https://github.com/Prism-Shadow/linsight/pull/538)), and the page that sells
+([#538](https://github.com/qiaiqian67/linsight/pull/538)), and the page that sells
 the product should not draw its central object a second way.
 
 ## Details

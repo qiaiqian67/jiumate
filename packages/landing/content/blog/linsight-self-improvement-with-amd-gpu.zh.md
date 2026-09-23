@@ -8,7 +8,7 @@ description: "介绍 Linsight 如何通过 Benchmark、Trace、可编辑的 Agen
 ---
 *AMD × PrismShadow——高钰洋、张宁（AMD），郑耀威（PrismShadow）。*
 
-[Linsight](https://github.com/Prism-Shadow/linsight) 是一个开源的 Agent Harness。它把模型接入、Agent 配置、工作区工具、Session、Trace、Skill 和 Benchmark 放在同一套运行环境中，并同时提供 CLI 与 Web UI。在线模型和通过 OpenAI 兼容接口暴露的本地模型，都可以作为其中的推理后端。
+[Linsight](https://github.com/qiaiqian67/linsight) 是一个开源的 Agent Harness。它把模型接入、Agent 配置、工作区工具、Session、Trace、Skill 和 Benchmark 放在同一套运行环境中，并同时提供 CLI 与 Web UI。在线模型和通过 OpenAI 兼容接口暴露的本地模型，都可以作为其中的推理后端。
 
 这个项目比较特别的一点，是它把 Agent 的行为定义为一组可以读取、修改和版本化的状态文件，而不是一段只能由开发者手工维护的固定提示词。角色说明、工作方式、可复用 Skill 和运行参数都属于 Agent State；一次任务又会留下完整的 Session 与 Trace。因此，另一个 Agent 可以先评测目标 Agent，再根据真实运行记录修改它的状态，最后用同一套评测验证修改是否有效。
 
@@ -399,6 +399,6 @@ candidate 总分 <= reference 总分
 
 ## 参考资料
 
-- [Linsight GitHub](https://github.com/Prism-Shadow/linsight)
+- [Linsight GitHub](https://github.com/qiaiqian67/linsight)
 - [Linsight 自我进化文档](https://linsight.ooo/docs/self-improvement/)
 - [Fireworks API 免费额度兑换与 API Key 获取](https://linsight.ooo/blog/fireworks-credits-amd)

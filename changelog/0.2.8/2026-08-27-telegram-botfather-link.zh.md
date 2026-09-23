@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#506](https://github.com/Prism-Shadow/penguin-harness/pull/506)
+- **PR:** [#506](https://github.com/qiaiqian67/linsight/pull/506)
 
 [English](2026-08-27-telegram-botfather-link.md)
 
@@ -27,4 +27,4 @@ Bot Token 字段角上的链接文案是「前往开发者后台」，指向的�
   一致。
 - 测试补齐了两处锁定：角上链接的目标，以及它的文案与目标指的是同一件事——两者在同一条断言里
   一起校验；并改为遍历两套词典，使该文案无法在测试未激活的那种语言里悄悄回退。
-- 设计规格已同步改写（[penguin-harness-design #70](https://github.com/Prism-Shadow/penguin-harness-design/pull/70)）。
+- 设计规格已同步改写（[penguin-harness-design #70](https://github.com/qiaiqian67/linsight-design/pull/70)）。

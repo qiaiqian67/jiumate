@@ -7,7 +7,7 @@ description: 双击安装，打开即已登录——对终端要求最少的那�
 
 ## 下载与安装
 
-前往[下载页](https://linsight.ooo/download)获取对应平台的安装包（国内自动走 OSS 镜像加速）；同样的文件也附于每个 [GitHub Release](https://github.com/Prism-Shadow/linsight/releases)。
+前往[下载页](https://linsight.ooo/download)获取对应平台的安装包（国内自动走 OSS 镜像加速）；同样的文件也附于每个 [GitHub Release](https://github.com/qiaiqian67/linsight/releases)。
 
 | 平台 | 安装包 |
 | --- | --- |

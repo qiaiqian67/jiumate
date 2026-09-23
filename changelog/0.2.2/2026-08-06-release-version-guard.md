@@ -3,7 +3,7 @@
 - **Date:** 2026-08-06
 - **Type:** process
 - **Scope:** `ci`, `tooling`
-- **PR:** [#219](https://github.com/Prism-Shadow/penguin-harness/pull/219)
+- **PR:** [#219](https://github.com/qiaiqian67/linsight/pull/219)
 
 [中文版](2026-08-06-release-version-guard.zh.md)
 

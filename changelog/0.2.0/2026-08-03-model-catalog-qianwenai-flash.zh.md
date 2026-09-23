@@ -3,7 +3,7 @@
 - **Date:** 2026-08-03
 - **Type:** feature
 - **Scope:** `model-catalog`, `docs`, `skills`
-- **PR:** [#160](https://github.com/Prism-Shadow/penguin-harness/pull/160)
+- **PR:** [#160](https://github.com/qiaiqian67/linsight/pull/160)
 
 [English](2026-08-03-model-catalog-qianwenai-flash.md)
 

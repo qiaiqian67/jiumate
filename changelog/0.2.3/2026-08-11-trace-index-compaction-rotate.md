@@ -3,7 +3,7 @@
 - **Date:** 2026-08-11
 - **Type:** fix
 - **Scope:** `server`, `trace-index`
-- **PR:** [#271](https://github.com/Prism-Shadow/penguin-harness/pull/271)
+- **PR:** [#271](https://github.com/qiaiqian67/linsight/pull/271)
 
 [中文版](2026-08-11-trace-index-compaction-rotate.zh.md)
 

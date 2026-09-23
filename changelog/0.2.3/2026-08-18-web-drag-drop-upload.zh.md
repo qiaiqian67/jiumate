@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `web`, `docs`
-- **PR:** [#319](https://github.com/Prism-Shadow/penguin-harness/pull/319)
-- **Issue:** [#311](https://github.com/Prism-Shadow/penguin-harness/issues/311)
+- **PR:** [#319](https://github.com/qiaiqian67/linsight/pull/319)
+- **Issue:** [#311](https://github.com/qiaiqian67/linsight/issues/311)
 
 [English](2026-08-18-web-drag-drop-upload.md)
 

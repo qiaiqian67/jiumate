@@ -106,4 +106,4 @@ Five changes in this release need a decision from you rather than just an update
 
 **New catalog rows are not automatic.** Presets are copied into `.project_config.toml` at Project creation and nothing rewrites them. Use **sync presets** on the models page to pick up GLM-5.3 Flash, Qwen 3.8 Flash and the TokenDance group. A Project older than that group has to sync once before the group — and its **Authorize key** action — appears at all.
 
-Full detail for every change is in [`changelog/0.2.6/`](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.6).
+Full detail for every change is in [`changelog/0.2.6/`](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.6).

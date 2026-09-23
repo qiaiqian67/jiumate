@@ -3,7 +3,7 @@
 - **Date:** 2026-09-01
 - **Type:** refactor
 - **Scope:** `server`, `web`, `docs`
-- **PR:** [#565](https://github.com/Prism-Shadow/linsight/pull/565)
+- **PR:** [#565](https://github.com/qiaiqian67/linsight/pull/565)
 - **Breaking:** yes — the machines routes moved under a Project, and `machines-installs.json` is read no longer
 
 [中文版](2026-09-01-machines-store.zh.md)

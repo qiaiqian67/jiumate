@@ -60,7 +60,7 @@ We made this bet before the benchmark existed, and it is visible in the source r
 
 There is no read tool, no write tool, no edit tool, no glob, no grep. Reading, writing, editing and searching all go through the shell, because the shell already does them and the model already knows how. Where a four-tool minimal core spends read, write and edit on the filesystem, **we spend one**. We are not claiming the smallest absolute tool count — Pi's core is tighter by one — but the smallest schema surface for what agents actually do all day.
 
-**A 72-line system prompt.** The default template is 72 lines, about 6,600 characters before substitution ([source](https://github.com/Prism-Shadow/linsight/blob/main/packages/core/src/state/default-config.ts)). Role, success criteria, constraints, stop rules, filesystem layout, a short list of suggested workflows — then it stops.
+**A 72-line system prompt.** The default template is 72 lines, about 6,600 characters before substitution ([source](https://github.com/qiaiqian67/linsight/blob/main/packages/core/src/state/default-config.ts)). Role, success criteria, constraints, stop rules, filesystem layout, a short list of suggested workflows — then it stops.
 
 **Output capped by default.** Every tool call truncates at 16,000 characters, enforced centrally by the Environment. Exit codes are appended *outside* the truncation window, so the line telling the model whether the command succeeded survives even when the middle is cut.
 
@@ -112,6 +112,6 @@ linsight web
 ---
 
 - **Read the internals**: [Tools & Approval](https://linsight.ooo/docs/tools) · [The Agent Loop](https://linsight.ooo/docs/agent-loop) · [Skills](https://linsight.ooo/docs/skills)
-- **Come argue with us**: [GitHub](https://github.com/Prism-Shadow/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **Come argue with us**: [GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **Sources**: [Databricks — Benchmarking Coding Agents on Databricks' Multi-Million Line Codebase](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase) · [Pi (earendil-works/pi)](https://github.com/earendil-works/pi) · [SaladDay, "Less is More"](https://x.com/Salad95238547/status/2079508549382644194)

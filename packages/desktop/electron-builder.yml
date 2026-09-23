@@ -24,7 +24,7 @@ productName: Linsight
 # it collected. electron-updater reads the same metadata from the Release.
 publish:
   provider: github
-  owner: Prism-Shadow
+  owner: qiaiqian67
   repo: linsight
 directories:
   output: out
@@ -55,7 +55,7 @@ files:
 # src/app-identity.ts chooses per form.
 extraMetadata:
   name: linsight-desktop
-  homepage: https://github.com/Prism-Shadow/linsight
+  homepage: https://github.com/qiaiqian67/linsight
 asar: false
 # Nothing to rebuild: the only native module is node-pty, staged into dist/node_modules as
 # the binaries its npm tarball prebuilds (darwin, win32) or as the binding pnpm's install

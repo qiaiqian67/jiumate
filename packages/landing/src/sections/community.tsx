@@ -10,7 +10,7 @@ import { ArrowRightIcon } from "../components/icons";
 const HREFS = {
   discord: "https://discord.gg/eFHKqqcU3D",
   x: "https://x.com/code_hiyouga",
-  wechat: "https://github.com/Prism-Shadow/linsight-community/blob/main/wechat/group.jpg",
+  wechat: "https://github.com/qiaiqian67/linsight-community/blob/main/wechat/group.jpg",
   github: REPO_URL,
 } as const;
 

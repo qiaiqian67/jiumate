@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** fix
 - **Scope:** `core`
-- **PR:** [#434](https://github.com/Prism-Shadow/penguin-harness/pull/434)
+- **PR:** [#434](https://github.com/qiaiqian67/linsight/pull/434)
 - **Breaking:** yes — 任何 `PENGUIN_*` 变量都不再传入 Agent 运行的命令；需要哪些请写入该 Agent 的 vault
 
 [English](2026-08-24-agent-commands-own-data-root.md)

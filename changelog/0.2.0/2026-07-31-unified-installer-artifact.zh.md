@@ -3,7 +3,7 @@
 - **Date:** 2026-07-31
 - **Type:** feature
 - **Scope:** `tooling`, `ci`
-- **PR:** [#142](https://github.com/Prism-Shadow/penguin-harness/pull/142)
+- **PR:** [#142](https://github.com/qiaiqian67/linsight/pull/142)
 
 [English](2026-07-31-unified-installer-artifact.md)
 

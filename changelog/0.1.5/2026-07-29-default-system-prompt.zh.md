@@ -3,7 +3,7 @@
 - **Date:** 2026-07-29
 - **Type:** refactor
 - **Scope:** `core`, `docs`
-- **PR:** [#120](https://github.com/Prism-Shadow/penguin-harness/pull/120)
+- **PR:** [#120](https://github.com/qiaiqian67/linsight/pull/120)
 
 [English](2026-07-29-default-system-prompt.md)
 

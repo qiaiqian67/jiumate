@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `web`, `server`, `docs`
-- **PR:** [#320](https://github.com/Prism-Shadow/penguin-harness/pull/320)
-- **Issue:** [#310](https://github.com/Prism-Shadow/penguin-harness/issues/310)
+- **PR:** [#320](https://github.com/qiaiqian67/linsight/pull/320)
+- **Issue:** [#310](https://github.com/qiaiqian67/linsight/issues/310)
 
 [English](2026-08-18-thinking-switch-guard.md)
 

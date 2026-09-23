@@ -3,7 +3,7 @@
 - **Date:** 2026-07-27
 - **Type:** feature
 - **Scope:** `web`, `model-catalog`
-- **PR:** [#91](https://github.com/Prism-Shadow/penguin-harness/pull/91)
+- **PR:** [#91](https://github.com/qiaiqian67/linsight/pull/91)
 
 [English](2026-07-27-models-and-composer.md)
 

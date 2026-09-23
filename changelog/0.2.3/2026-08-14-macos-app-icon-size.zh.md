@@ -3,7 +3,7 @@
 - **Date:** 2026-08-14
 - **Type:** fix
 - **Scope:** `desktop`
-- **PR:** [#281](https://github.com/Prism-Shadow/penguin-harness/pull/281)
+- **PR:** [#281](https://github.com/qiaiqian67/linsight/pull/281)
 
 [English](2026-08-14-macos-app-icon-size.md)
 

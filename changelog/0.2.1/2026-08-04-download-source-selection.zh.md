@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `tooling`, `cli`
-- **PR:** [#176](https://github.com/Prism-Shadow/penguin-harness/pull/176), [#196](https://github.com/Prism-Shadow/penguin-harness/pull/196)
+- **PR:** [#176](https://github.com/qiaiqian67/linsight/pull/176), [#196](https://github.com/qiaiqian67/linsight/pull/196)
 
 [English](2026-08-04-download-source-selection.md)
 

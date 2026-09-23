@@ -3,7 +3,7 @@
 - **Date:** 2026-08-20
 - **Type:** process
 - **Scope:** `server`, `core`, `web`, `skills`, `tooling`
-- **PR:** [#381](https://github.com/Prism-Shadow/penguin-harness/pull/381)
+- **PR:** [#381](https://github.com/qiaiqian67/linsight/pull/381)
 
 [English](2026-08-20-faster-unit-tests.md)
 

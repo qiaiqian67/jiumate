@@ -1,6 +1,6 @@
 # Security Policy
 
-[中文版](https://github.com/Prism-Shadow/linsight/blob/main/.github/SECURITY.zh.md)
+[中文版](https://github.com/qiaiqian67/linsight/blob/main/.github/SECURITY.zh.md)
 
 ## Supported versions
 
@@ -13,13 +13,13 @@ nothing is backported: a fix lands in the next release, and upgrading is the way
 | Any earlier release     | No        |
 
 The releases are listed in
-[CHANGELOG.md](https://github.com/Prism-Shadow/linsight/blob/main/CHANGELOG.md);
+[CHANGELOG.md](https://github.com/qiaiqian67/linsight/blob/main/CHANGELOG.md);
 `linsight version` prints which build a machine is actually running.
 
 ## Reporting a vulnerability
 
 Report privately, through GitHub's
-["Report a vulnerability"](https://github.com/Prism-Shadow/linsight/security/advisories/new)
+["Report a vulnerability"](https://github.com/qiaiqian67/linsight/security/advisories/new)
 form. It opens a draft advisory only the maintainers can see, and it keeps the discussion,
 the fix and the eventual disclosure attached to one another.
 

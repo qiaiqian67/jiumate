@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** refactor
 - **Scope:** `core`, `server`, `web`, `cli`
-- **PR:** [#458](https://github.com/Prism-Shadow/penguin-harness/pull/458)
+- **PR:** [#458](https://github.com/qiaiqian67/linsight/pull/458)
 - **Breaking:** yes — `StopReason` 移除 `failed` / `timeout` / `malformed` / `auth`，改为 `retryable` / `fatal`，并成为唯一的停止原因词表（`ToolStopReason` / `CompactionStatus` / `McpConnectStatus` 删除）；`LLMOutcome.permanent` 删除；Web 输入区的鉴权置灰门控退役
 
 [English](2026-08-24-stop-reason-converges-to-four-values.md)

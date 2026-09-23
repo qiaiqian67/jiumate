@@ -3,8 +3,8 @@
 - **Date:** 2026-08-28
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#529](https://github.com/Prism-Shadow/penguin-harness/pull/529)
-- **Issue:** [#527](https://github.com/Prism-Shadow/penguin-harness/issues/527)
+- **PR:** [#529](https://github.com/qiaiqian67/linsight/pull/529)
+- **Issue:** [#527](https://github.com/qiaiqian67/linsight/issues/527)
 
 [English](2026-08-28-bulk-update-notice.md)
 

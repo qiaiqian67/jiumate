@@ -3,7 +3,7 @@
 - **Date:** 2026-08-26
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#472](https://github.com/Prism-Shadow/penguin-harness/pull/472)
+- **PR:** [#472](https://github.com/qiaiqian67/linsight/pull/472)
 
 [中文版](2026-08-26-update-badges.zh.md)
 

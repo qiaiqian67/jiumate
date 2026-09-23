@@ -37,7 +37,7 @@ Skills become manageable in the interface: Agent settings gains a Skills tab lis
 
 ## Everything else
 
-The server's last two IO hotspots close: the 30-second scheduler tick and the schedules routes serve from mtime-gated caches, and `GET /messages` gains cursor pagination with tail-first web loading. `hono` moves past the CORS-preflight ReDoS advisory, and the OpenRouter catalog gains `qwen/qwen3.8-max`. The full list, item by item: [changelog/0.2.1](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.1).
+The server's last two IO hotspots close: the 30-second scheduler tick and the schedules routes serve from mtime-gated caches, and `GET /messages` gains cursor pagination with tail-first web loading. `hono` moves past the CORS-preflight ReDoS advisory, and the OpenRouter catalog gains `qwen/qwen3.8-max`. The full list, item by item: [changelog/0.2.1](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.1).
 
 ## Install or upgrade
 

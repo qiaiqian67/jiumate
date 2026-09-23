@@ -3,7 +3,7 @@
 - **Date:** 2026-07-27
 - **Type:** feature
 - **Scope:** `core`, `tooling`
-- **PR:** [#95](https://github.com/Prism-Shadow/penguin-harness/pull/95)
+- **PR:** [#95](https://github.com/qiaiqian67/linsight/pull/95)
 
 [English](2026-07-27-windows-bundled-shell.md)
 

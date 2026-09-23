@@ -43,7 +43,7 @@ The top of the panel is a **call graph**: one node per participating agent — a
 
 ## Also in 0.1.4
 
-The same release makes an in-progress reply survive a page refresh — the server keeps a live tail per running session, so after a reload the already-streamed prefix is back immediately and keeps growing. The chat header's cost and elapsed chips now tick live while a Task runs, joining the token count that already did. Trace files gained export and import, so a trajectory can move across deployments. And the app finally knows its own version: a "Check for updates" row with the running version inline, plus a one-click in-place update for admins. The full list is in the [v0.1.4 release notes](https://github.com/Prism-Shadow/linsight/releases/tag/v0.1.4).
+The same release makes an in-progress reply survive a page refresh — the server keeps a live tail per running session, so after a reload the already-streamed prefix is back immediately and keeps growing. The chat header's cost and elapsed chips now tick live while a Task runs, joining the token count that already did. Trace files gained export and import, so a trajectory can move across deployments. And the app finally knows its own version: a "Check for updates" row with the running version inline, plus a one-click in-place update for admins. The full list is in the [v0.1.4 release notes](https://github.com/qiaiqian67/linsight/releases/tag/v0.1.4).
 
 ## Get it
 

@@ -3,7 +3,7 @@
 - **Date:** 2026-09-01
 - **Type:** feature
 - **Scope:** `server`, `cli`, `docs`
-- **PR:** [#568](https://github.com/Prism-Shadow/linsight/pull/568)
+- **PR:** [#568](https://github.com/qiaiqian67/linsight/pull/568)
 
 [中文版](2026-09-01-machines-identity.zh.md)
 

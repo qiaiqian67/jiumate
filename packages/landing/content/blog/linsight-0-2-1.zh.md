@@ -37,7 +37,7 @@ Linsight 0.2.1 发布了。主角是桌面端：不打开终端、不看登录�
 
 ## 其余改进
 
-服务端最后两个 IO 热点关闭：调度器每 30 秒的 tick 与 schedules 路由改为 mtime 门控缓存，`GET /messages` 支持游标分页与 Web 端尾部优先加载。`hono` 升级越过 CORS 预检 ReDoS 通告；OpenRouter 目录新增 `qwen/qwen3.8-max`。完整清单逐条见 [changelog/0.2.1](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.1)。
+服务端最后两个 IO 热点关闭：调度器每 30 秒的 tick 与 schedules 路由改为 mtime 门控缓存，`GET /messages` 支持游标分页与 Web 端尾部优先加载。`hono` 升级越过 CORS 预检 ReDoS 通告；OpenRouter 目录新增 `qwen/qwen3.8-max`。完整清单逐条见 [changelog/0.2.1](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.1)。
 
 ## 安装或升级
 

@@ -3,7 +3,7 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `server`
-- **PR:** [#315](https://github.com/Prism-Shadow/penguin-harness/pull/315)
+- **PR:** [#315](https://github.com/qiaiqian67/linsight/pull/315)
 
 [中文版](2026-08-18-proxy-socks.zh.md)
 

@@ -117,7 +117,7 @@ The extracted bundle keeps the installer, the program payload (`payload.tar.gz` 
 Requires Node.js >= 24 and pnpm:
 
 ```bash
-git clone https://github.com/Prism-Shadow/linsight.git
+git clone https://github.com/qiaiqian67/linsight.git
 cd linsight
 pnpm install && pnpm build
 ```
@@ -149,7 +149,7 @@ Script flags go after `sh -s --`, e.g. `curl -fsSL https://linsight.ooo/install.
 | Integrity check | Always on: online downloads are verified against the published `.sha256`, and bundle payloads against the checksum sealed inside the bundle |
 | Upgrade | Re-run the installer; it swaps `bin`/`lib`/`web`/`node` and never touches `data` |
 
-- **Agent shell**: on Windows, the agent's `exec_command` runs in a POSIX shell, for compatibility with skills written for one. It picks, in order: `bash` on PATH (your own [Git for Windows](https://gitforwindows.org/), preferred because it carries the full MSYS userland); then the **bundled bash** — the Windows zip ships MinGit under `git\`, so a machine with no Git for Windows still gets a POSIX shell, about sixty core utilities and `git.exe`; then PowerShell (`pwsh`, then `powershell`). The PowerShell fallback is only reached by npm installs, which bundle nothing. The `LINSIGHT_SHELL` env var overrides the pick; the session's system prompt tells the model which shell is active. The bundled shell's licensing is recorded in [THIRD-PARTY-NOTICES.md](https://github.com/Prism-Shadow/linsight/blob/main/THIRD-PARTY-NOTICES.md).
+- **Agent shell**: on Windows, the agent's `exec_command` runs in a POSIX shell, for compatibility with skills written for one. It picks, in order: `bash` on PATH (your own [Git for Windows](https://gitforwindows.org/), preferred because it carries the full MSYS userland); then the **bundled bash** — the Windows zip ships MinGit under `git\`, so a machine with no Git for Windows still gets a POSIX shell, about sixty core utilities and `git.exe`; then PowerShell (`pwsh`, then `powershell`). The PowerShell fallback is only reached by npm installs, which bundle nothing. The `LINSIGHT_SHELL` env var overrides the pick; the session's system prompt tells the model which shell is active. The bundled shell's licensing is recorded in [THIRD-PARTY-NOTICES.md](https://github.com/qiaiqian67/linsight/blob/main/THIRD-PARTY-NOTICES.md).
 - **Ctrl-C semantics**: on Windows, sending Ctrl-C to a running command session (`input_command` with `"\u0003"`) terminates the whole command session tree instead of interrupting the foreground command — Windows cannot deliver a console Ctrl-C to a piped child process, so the interrupt degrades to a hard tree kill.
 - **In-place update**: `linsight update` is not yet supported on Windows — upgrade by re-running the installer above.
 - **Config file permissions**: on POSIX, config/credential files are written with `0600` (owner-only) permissions; Windows has no such mode bits, so files fall under your profile's default NTFS ACLs.

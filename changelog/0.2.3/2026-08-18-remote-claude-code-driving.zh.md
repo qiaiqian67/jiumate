@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** process
 - **Scope:** `skills`, `docs`
-- **PR:** [#317](https://github.com/Prism-Shadow/penguin-harness/pull/317)
-- **Issue:** [#307](https://github.com/Prism-Shadow/penguin-harness/issues/307)
+- **PR:** [#317](https://github.com/qiaiqian67/linsight/pull/317)
+- **Issue:** [#307](https://github.com/qiaiqian67/linsight/issues/307)
 
 [English](2026-08-18-remote-claude-code-driving.md)
 

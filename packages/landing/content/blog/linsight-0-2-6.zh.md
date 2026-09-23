@@ -106,4 +106,4 @@ TokenDance 现在是独立的供应商分组，通过 Chat Completions 协议访
 
 **模型库的新条目不会自动出现。** 预置模型是在创建 Project 时复制进 `.project_config.toml` 的，此后不再被改写。在模型页点**同步预置**即可补入 GLM-5.3 Flash、Qwen 3.8 Flash 与 TokenDance 分组。比该分组更早创建的 Project，需要先同步一次，这个分组——以及它的**自动获取密钥**——才会出现。
 
-每一项改动的完整细节见 [`changelog/0.2.6/`](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.6)。
+每一项改动的完整细节见 [`changelog/0.2.6/`](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.6)。

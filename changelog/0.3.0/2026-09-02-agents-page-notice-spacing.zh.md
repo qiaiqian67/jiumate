@@ -3,8 +3,8 @@
 - **Date:** 2026-09-02
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#542](https://github.com/Prism-Shadow/linsight/pull/542)
-- **Issue:** [#578](https://github.com/Prism-Shadow/linsight/issues/578)
+- **PR:** [#542](https://github.com/qiaiqian67/linsight/pull/542)
+- **Issue:** [#578](https://github.com/qiaiqian67/linsight/issues/578)
 
 [English](2026-09-02-agents-page-notice-spacing.md)
 

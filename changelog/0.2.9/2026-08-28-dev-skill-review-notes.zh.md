@@ -3,12 +3,12 @@
 - **Date:** 2026-08-28
 - **Type:** process
 - **Scope:** `skills`
-- **PR:** [#536](https://github.com/Prism-Shadow/penguin-harness/pull/536)
+- **PR:** [#536](https://github.com/qiaiqian67/linsight/pull/536)
 
 [English](2026-08-28-dev-skill-review-notes.md)
 
 `.agents/skills/penguin-harness-dev/SKILL.md`新增四条说明，每一条都来自
-[#528](https://github.com/Prism-Shadow/penguin-harness/pull/528)–[#534](https://github.com/Prism-Shadow/penguin-harness/pull/534)
+[#528](https://github.com/qiaiqian67/linsight/pull/528)–[#534](https://github.com/qiaiqian67/linsight/pull/534)
 这一批中被 review 拦下的缺陷。
 
 ## 细节

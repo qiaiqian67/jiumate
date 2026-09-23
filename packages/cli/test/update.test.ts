@@ -172,11 +172,11 @@ describe("normalizeVersion / compareVersions", () => {
 describe("installerUrl", () => {
   it("resolves the latest release when no version is pinned", () => {
     expect(installerUrl()).toBe(
-      "https://github.com/Prism-Shadow/linsight/releases/latest/download/install.sh",
+      "https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh",
     );
   });
   it("pins a tag, normalising the v prefix", () => {
-    const expected = "https://github.com/Prism-Shadow/linsight/releases/download/v0.1.2/install.sh";
+    const expected = "https://github.com/qiaiqian67/linsight/releases/download/v0.1.2/install.sh";
     expect(installerUrl("0.1.2")).toBe(expected);
     expect(installerUrl("v0.1.2")).toBe(expected);
   });
@@ -184,7 +184,7 @@ describe("installerUrl", () => {
 
 describe("release source selection", () => {
   const ossOrigin = "https://linsight-releases.oss-cn-beijing.aliyuncs.com";
-  const githubApi = "https://api.github.com/repos/Prism-Shadow/linsight/releases/latest";
+  const githubApi = "https://api.github.com/repos/qiaiqian67/linsight/releases/latest";
   const manifest = {
     schemaVersion: 1,
     tag: "v0.2.1",
@@ -305,8 +305,8 @@ describe("release source selection", () => {
       },
       {
         source: "github",
-        baseUrl: "https://github.com/Prism-Shadow/linsight/releases/download/v0.2.0",
-        url: "https://github.com/Prism-Shadow/linsight/releases/download/v0.2.0/install.sh",
+        baseUrl: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
+        url: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0/install.sh",
       },
     ]);
   });
@@ -427,14 +427,14 @@ describe("buildInstallerInvocation (preserves the shape of the install being upg
         version: "0.2.0",
         downloadBaseUrl: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
         downloadFallbackBaseUrl:
-          "https://github.com/Prism-Shadow/linsight/releases/download/v0.2.0",
+          "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
       }).env,
     ).toEqual({
       LINSIGHT_VERSION: "v0.2.0",
       LINSIGHT_DOWNLOAD_BASE_URL:
         "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
       LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL:
-        "https://github.com/Prism-Shadow/linsight/releases/download/v0.2.0",
+        "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
     });
   });
 
@@ -460,11 +460,11 @@ describe("buildInstallerInvocation (preserves the shape of the install being upg
       source: "oss" as const,
       baseUrl: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
       url: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0/install.sh",
-      fallbackBaseUrl: "https://github.com/Prism-Shadow/linsight/releases/download/v0.2.0",
+      fallbackBaseUrl: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
     };
     expect(payloadSourceEnv(candidate, true)).toEqual({
       downloadBaseUrl: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
-      downloadFallbackBaseUrl: "https://github.com/Prism-Shadow/linsight/releases/download/v0.2.0",
+      downloadFallbackBaseUrl: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
     });
     expect(payloadSourceEnv(candidate, false)).toEqual({
       downloadBaseUrl: "",

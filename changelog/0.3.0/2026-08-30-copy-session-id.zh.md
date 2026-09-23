@@ -3,7 +3,7 @@
 - **Date:** 2026-08-30
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#550](https://github.com/Prism-Shadow/linsight/pull/550)
+- **PR:** [#550](https://github.com/qiaiqian67/linsight/pull/550)
 
 [English](2026-08-30-copy-session-id.md)
 

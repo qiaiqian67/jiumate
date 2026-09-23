@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** fix
 - **Scope:** `core`, `server`, `web`, `cli`
-- **PR:** [#329](https://github.com/Prism-Shadow/penguin-harness/pull/329)
-- **Issue:** [#288](https://github.com/Prism-Shadow/penguin-harness/issues/288), [#290](https://github.com/Prism-Shadow/penguin-harness/issues/290)
+- **PR:** [#329](https://github.com/qiaiqian67/linsight/pull/329)
+- **Issue:** [#288](https://github.com/qiaiqian67/linsight/issues/288), [#290](https://github.com/qiaiqian67/linsight/issues/290)
 
 [中文版](2026-08-18-compaction-continuity-and-streaming.zh.md)
 
@@ -32,7 +32,7 @@ Quitting mid-compaction left a `compaction_begin` with no matching end in the sh
 
 A mid-Task compaction that failed used to leave the loop in an ill-defined state: the run either ended empty-handed right after the compaction, or continued on bare `[tool error]` repair outputs the model had no instruction to act on.
 
-- A failed or aborted mid-Task compaction now ends the run the way any interruption does: the turn's pending state is held as carry-over under the existing committed/not-committed rule ([#85](https://github.com/Prism-Shadow/penguin-harness/issues/85)), an `abort` event closes the run (`compaction failed` for the failure case), and the next message resends that carry-over merged with the user's input — where the still-standing threshold triggers the compaction again.
+- A failed or aborted mid-Task compaction now ends the run the way any interruption does: the turn's pending state is held as carry-over under the existing committed/not-committed rule ([#85](https://github.com/qiaiqian67/linsight/issues/85)), an `abort` event closes the run (`compaction failed` for the failure case), and the next message resends that carry-over merged with the user's input — where the still-standing threshold triggers the compaction again.
 - At a Task boundary a failed compaction keeps the original context and simply ends the run, as before.
 
 ## The compaction summary streams live

@@ -25,8 +25,8 @@
 - **Date:** YYYY-MM-DD
 - **Type:** feature
 - **Scope:** `module`, `module`
-- **PR:** [#N](https://github.com/Prism-Shadow/linsight/pull/N)
-- **Issue:** [#N](https://github.com/Prism-Shadow/linsight/issues/N)
+- **PR:** [#N](https://github.com/qiaiqian67/linsight/pull/N)
+- **Issue:** [#N](https://github.com/qiaiqian67/linsight/issues/N)
 - **Breaking:** yes — <一行说明什么被破坏了>
 
 [English](<name>.md)
@@ -51,7 +51,7 @@
 
 不适用的字段应整条省略，而不是写占位符。没有 PR 或 issue 的改动（约定确立之前的条目，或在 PR 之外落地的工作）就是没有那一行。
 
-跨仓库的引用同样写成完整链接，并点名仓库：`agenthub [#162](https://github.com/Prism-Shadow/agenthub/pull/162)`。正文里一个裸的 `#162` 会被读作本仓库的 #162，那是完全不同的一次改动。
+跨仓库的引用同样写成完整链接，并点名仓库：`agenthub [#162](https://github.com/qiaiqian67/agenthub/pull/162)`。正文里一个裸的 `#162` 会被读作本仓库的 #162，那是完全不同的一次改动。
 
 ### 正文
 

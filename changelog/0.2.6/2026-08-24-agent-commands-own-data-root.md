@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** fix
 - **Scope:** `core`
-- **PR:** [#434](https://github.com/Prism-Shadow/penguin-harness/pull/434)
+- **PR:** [#434](https://github.com/qiaiqian67/linsight/pull/434)
 - **Breaking:** yes — no `PENGUIN_*` variable reaches commands an Agent runs; set the ones you want in the Agent's vault
 
 [中文版](2026-08-24-agent-commands-own-data-root.zh.md)

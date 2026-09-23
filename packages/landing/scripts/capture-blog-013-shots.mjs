@@ -24,7 +24,7 @@
  * Output is a two-step flow, because blog images are not committed to this repo:
  *   1. this script writes into the gitignored staging dir packages/landing/.blog-assets/;
  *   2. upload the files it produced to the `blog-assets/` directory of the sibling
- *      `Prism-Shadow/linsight-community` repo, which is what the posts load from
+ *      `qiaiqian67/linsight-community` repo, which is what the posts load from
  *      (the renderer resolves /blog-assets/<name> there — see src/lib/links.ts).
  *
  * Prereqs: `pnpm --filter @prismshadow/linsight-{skills,core,server,web} build` and

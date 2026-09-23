@@ -3,7 +3,7 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `cli`, `server`
-- **PR:** [#315](https://github.com/Prism-Shadow/penguin-harness/pull/315)
+- **PR:** [#315](https://github.com/qiaiqian67/linsight/pull/315)
 
 [English](2026-08-18-admin-password-reset.md)
 

@@ -39,4 +39,4 @@ excerpt: One-line summary for the list page
 
 `pnpm --filter @prismshadow/linsight-landing shots` regenerates `src/assets/shots/`: the script ships a scripted mock LLM (speaking both Anthropic SSE and OpenAI chat-completions streams), boots the Web service on a temp data root, drives a real "build an Agent app" conversation (tools actually execute in the Workspace), then captures the chat page, its Trace panel (opened as a tab in the bottom dock) and the evaluation page per UI language (zh/en, separate users) and theme (light/dark) — 12 shots (`<page>-<lang>-<theme>.webp`, re-encoded to WebP in Chromium to keep sizes down). The landing page always shows the shot matching the visitor's language and theme. Prereqs: build skills/core/server/web first, and have Playwright Chromium installed.
 
-Part of [Linsight](https://github.com/Prism-Shadow/linsight) · Apache-2.0
+Part of [Linsight](https://github.com/qiaiqian67/linsight) · Apache-2.0

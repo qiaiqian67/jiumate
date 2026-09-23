@@ -3,11 +3,11 @@
 - **Date:** 2026-08-11
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`
-- **PR:** [#257](https://github.com/Prism-Shadow/penguin-harness/pull/257)
+- **PR:** [#257](https://github.com/qiaiqian67/linsight/pull/257)
 
 [English](2026-08-11-prompt-injection-toggles.md)
 
-其余三个借提示词生效的子系统现在遵循 Memory 确立的形态（[#257](https://github.com/Prism-Shadow/penguin-harness/pull/257)）：系统提示词模板只携带一个小节占位符，该小节的措辞是逐 Agent 可编辑的配置，而一个开关决定这一节是否被注入。
+其余三个借提示词生效的子系统现在遵循 Memory 确立的形态（[#257](https://github.com/qiaiqian67/linsight/pull/257)）：系统提示词模板只携带一个小节占位符，该小节的措辞是逐 Agent 可编辑的配置，而一个开关决定这一节是否被注入。
 
 ## 模板与配置
 

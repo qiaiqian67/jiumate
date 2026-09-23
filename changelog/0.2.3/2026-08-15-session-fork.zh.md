@@ -3,8 +3,8 @@
 - **Date:** 2026-08-15
 - **Type:** feat
 - **Scope:** `web`, `server`, `docs`
-- **PR:** [#297](https://github.com/Prism-Shadow/penguin-harness/pull/297)
-- **Issue:** [#293](https://github.com/Prism-Shadow/penguin-harness/issues/293)
+- **PR:** [#297](https://github.com/qiaiqian67/linsight/pull/297)
+- **Issue:** [#293](https://github.com/qiaiqian67/linsight/issues/293)
 
 [English](2026-08-15-session-fork.md)
 

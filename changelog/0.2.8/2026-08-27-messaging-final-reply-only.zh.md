@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** feature
 - **Scope:** `server`, `web`, `docs`
-- **PR:** [#512](https://github.com/Prism-Shadow/penguin-harness/pull/512)
+- **PR:** [#512](https://github.com/qiaiqian67/linsight/pull/512)
 
 [English](2026-08-27-messaging-final-reply-only.md)
 

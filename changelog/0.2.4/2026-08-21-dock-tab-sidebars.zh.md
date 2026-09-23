@@ -3,7 +3,7 @@
 - **Date:** 2026-08-21
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#394](https://github.com/Prism-Shadow/penguin-harness/pull/394)
+- **PR:** [#394](https://github.com/qiaiqian67/linsight/pull/394)
 - **Breaking:** yes — 此前保存的终端停靠布局（浏览器 localStorage）不再沿用；停靠区一次性回到关闭状态，运行中的 Shell 仍可从任一停靠区的「+」菜单找回。
 
 [English](2026-08-21-dock-tab-sidebars.md)

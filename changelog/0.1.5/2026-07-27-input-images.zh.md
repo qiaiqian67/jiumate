@@ -3,7 +3,7 @@
 - **Date:** 2026-07-27
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`
-- **PR:** [#71](https://github.com/Prism-Shadow/penguin-harness/pull/71)
+- **PR:** [#71](https://github.com/qiaiqian67/linsight/pull/71)
 
 [English](2026-07-27-input-images.md)
 

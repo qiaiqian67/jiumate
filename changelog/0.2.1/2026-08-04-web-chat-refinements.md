@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#182](https://github.com/Prism-Shadow/penguin-harness/pull/182), [#184](https://github.com/Prism-Shadow/penguin-harness/pull/184), [#185](https://github.com/Prism-Shadow/penguin-harness/pull/185), [#188](https://github.com/Prism-Shadow/penguin-harness/pull/188), [#190](https://github.com/Prism-Shadow/penguin-harness/pull/190)
+- **PR:** [#182](https://github.com/qiaiqian67/linsight/pull/182), [#184](https://github.com/qiaiqian67/linsight/pull/184), [#185](https://github.com/qiaiqian67/linsight/pull/185), [#188](https://github.com/qiaiqian67/linsight/pull/188), [#190](https://github.com/qiaiqian67/linsight/pull/190)
 
 [中文版](2026-08-04-web-chat-refinements.zh.md)
 

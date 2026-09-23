@@ -35,7 +35,7 @@ qianwenai 分组换到当前阵容——qwen3.8-max 与 deepseek-v4-flash-0731 �
 
 ## 其余改进
 
-`read_file` / `edit_file` 对缺失路径给出诊断（最深存在的祖先、第一个缺失段、邻近同名项）而不是一句 "File not found"。手动检查更新汇报每种结果——检查中、已最新、发现新版、失败。评估中心的 Case 详情把目标 Agent 的任务材料与评审侧评分标准分开。文件摘要移到任务边界，每个完成的任务一张卡。完整清单逐条见 [changelog/0.2.0](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.0)。
+`read_file` / `edit_file` 对缺失路径给出诊断（最深存在的祖先、第一个缺失段、邻近同名项）而不是一句 "File not found"。手动检查更新汇报每种结果——检查中、已最新、发现新版、失败。评估中心的 Case 详情把目标 Agent 的任务材料与评审侧评分标准分开。文件摘要移到任务边界，每个完成的任务一张卡。完整清单逐条见 [changelog/0.2.0](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.0)。
 
 ## 安装或升级
 

@@ -3,7 +3,7 @@
 - **Date:** 2026-08-06
 - **Type:** process
 - **Scope:** `landing`
-- **PR:** [#221](https://github.com/Prism-Shadow/penguin-harness/pull/221)
+- **PR:** [#221](https://github.com/qiaiqian67/linsight/pull/221)
 
 [中文版](2026-08-06-landing-desktop-first.zh.md)
 

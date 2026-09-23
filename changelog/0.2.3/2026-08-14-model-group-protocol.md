@@ -3,7 +3,7 @@
 - **Date:** 2026-08-14
 - **Type:** fix
 - **Scope:** `web`, `model-catalog`
-- **PR:** [#282](https://github.com/Prism-Shadow/penguin-harness/pull/282)
+- **PR:** [#282](https://github.com/qiaiqian67/linsight/pull/282)
 
 [中文版](2026-08-14-model-group-protocol.zh.md)
 

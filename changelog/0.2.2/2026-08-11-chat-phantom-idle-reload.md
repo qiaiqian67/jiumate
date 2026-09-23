@@ -3,7 +3,7 @@
 - **Date:** 2026-08-11
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#242](https://github.com/Prism-Shadow/penguin-harness/pull/242)
+- **PR:** [#242](https://github.com/qiaiqian67/linsight/pull/242)
 
 [中文版](2026-08-11-chat-phantom-idle-reload.zh.md)
 
@@ -13,7 +13,7 @@ task state — but the stream also resets to "idle" whenever it detaches, so **s
 conversations or clicking "new conversation" while a Task was still running** fired the
 same reload pair. Both sidebar contexts refetched and the whole app re-rendered right
 after the click, occasionally visible as an uncontrolled flicker on entering the draft
-page ([#242](https://github.com/Prism-Shadow/penguin-harness/pull/242)).
+page ([#242](https://github.com/qiaiqian67/linsight/pull/242)).
 
 The trigger is now guarded by session identity: only a running→idle transition observed
 on the SAME session counts as a completion. On a switch the tracker restarts from idle —

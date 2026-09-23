@@ -7,7 +7,7 @@ The full Web experience as a standalone application: it embeds the server and op
 
 ## Download and install
 
-Get the installer for your platform from the [download page](https://linsight.ooo/download) (it serves the OSS-accelerated mirror when reachable); the same files are attached to every [GitHub Release](https://github.com/Prism-Shadow/linsight/releases).
+Get the installer for your platform from the [download page](https://linsight.ooo/download) (it serves the OSS-accelerated mirror when reachable); the same files are attached to every [GitHub Release](https://github.com/qiaiqian67/linsight/releases).
 
 | Platform | Installers |
 | --- | --- |

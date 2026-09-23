@@ -81,7 +81,7 @@ export const NO_LOCAL: FlowLocal = { checking: false, downloadRequested: false, 
 
 /** The Releases page of one version — the client mode's release-notes link (the shell names a version, never a URL). */
 export function releaseUrlFor(version: string): string {
-  return `https://github.com/Prism-Shadow/linsight/releases/tag/v${version}`;
+  return `https://github.com/qiaiqian67/linsight/releases/tag/v${version}`;
 }
 
 export interface ReleaseInputs {

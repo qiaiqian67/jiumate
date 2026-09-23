@@ -38,7 +38,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue" # Invoke-WebRequest progress rendering slows downloads massively on PS 5.1
 
-$Repo = "https://github.com/Prism-Shadow/linsight"
+$Repo = "https://github.com/qiaiqian67/linsight"
 $OssOrigin = "https://linsight-releases.oss-cn-beijing.aliyuncs.com"
 $OssReleaseRoot = "$OssOrigin/releases"
 $GitHubReleaseRoot = "$Repo/releases/download"

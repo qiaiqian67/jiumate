@@ -3,7 +3,7 @@
 - **Date:** 2026-07-29
 - **Type:** feature
 - **Scope:** `web`, `server`, `core`
-- **PR:** [#121](https://github.com/Prism-Shadow/penguin-harness/pull/121), [#122](https://github.com/Prism-Shadow/penguin-harness/pull/122)
+- **PR:** [#121](https://github.com/qiaiqian67/linsight/pull/121), [#122](https://github.com/qiaiqian67/linsight/pull/122)
 
 [中文版](2026-07-29-composer-attachments-and-switch-commands.zh.md)
 

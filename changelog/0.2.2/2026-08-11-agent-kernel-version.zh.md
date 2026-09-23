@@ -3,15 +3,15 @@
 - **Date:** 2026-08-11
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`
-- **PR:** [#257](https://github.com/Prism-Shadow/penguin-harness/pull/257), [#261](https://github.com/Prism-Shadow/penguin-harness/pull/261), [#263](https://github.com/Prism-Shadow/penguin-harness/pull/263)
+- **PR:** [#257](https://github.com/qiaiqian67/linsight/pull/257), [#261](https://github.com/qiaiqian67/linsight/pull/261), [#263](https://github.com/qiaiqian67/linsight/pull/263)
 
 [English](2026-08-11-agent-kernel-version.md)
 
-`system_config.yaml` 是在 Agent 创建时固化的、从不自动升级，因此在此之前，通往更新内置默认值的唯一途径是一次会丢弃所有自定义内容的完整恢复。Agent 配置现在携带一个**内核版本**（[#263](https://github.com/Prism-Shadow/penguin-harness/pull/263)）：一个日期，`kernel_version: 2026-08-11`，记录该配置是从内置默认值的哪一个世代创建、或最后更新到了哪一代。创建与「恢复默认」都会打上这个戳；普通的配置编辑绝不触碰它（它与 `version` 这个优化计数器无关）。
+`system_config.yaml` 是在 Agent 创建时固化的、从不自动升级，因此在此之前，通往更新内置默认值的唯一途径是一次会丢弃所有自定义内容的完整恢复。Agent 配置现在携带一个**内核版本**（[#263](https://github.com/qiaiqian67/linsight/pull/263)）：一个日期，`kernel_version: 2026-08-11`，记录该配置是从内置默认值的哪一个世代创建、或最后更新到了哪一代。创建与「恢复默认」都会打上这个戳；普通的配置编辑绝不触碰它（它与 `version` 这个优化计数器无关）。
 
 ## 开发侧的版本提升，由机制强制执行
 
-该版本只在开发改动了默认值时才移动，而且不可能被忘记：一个守卫测试把每一个叶子默认值的哈希固定到逐世代历史表的最新条目上，因此任何默认值变更都会让 CI 失败，直到 `KERNEL_VERSION` 拿到一个新日期、且该表新增一代为止。这份历史以两代作为种子——当前默认值，以及 [#257](https://github.com/Prism-Shadow/penguin-harness/pull/257) 之前逐字节重建的那一代——匹配纯粹按哈希进行，绝不按已存的日期。
+该版本只在开发改动了默认值时才移动，而且不可能被忘记：一个守卫测试把每一个叶子默认值的哈希固定到逐世代历史表的最新条目上，因此任何默认值变更都会让 CI 失败，直到 `KERNEL_VERSION` 拿到一个新日期、且该表新增一代为止。这份历史以两代作为种子——当前默认值，以及 [#257](https://github.com/qiaiqian67/linsight/pull/257) 之前逐字节重建的那一代——匹配纯粹按哈希进行，绝不按已存的日期。
 
 ## 更新与恢复并列
 
@@ -21,4 +21,4 @@
 
 ## 概览页收拢为分栏小节
 
-概览页的其余部分跟随这些内核控件（[#261](https://github.com/Prism-Shadow/penguin-harness/pull/261)），采用 Skill 库那一视觉家族的、以水平分割线划分的小节，而不是带框的卡片：一个 **Agent State** 小节（状态版本，快照导入/导出操作紧随其旁，状态路径置于其下——点击即复制，沿用聊天详情卡那套乐观的「已复制」约定，完整路径在悬停时显示），以及 **Kernel** 小节（更新与恢复位于其操作槽中）。版本数值以深色半粗体渲染，对照小号灰色标签，因此数字是第一眼读到的东西。名称/描述表单把它的保存按钮留在它真正保存的那些字段旁边，而活动会话统计从概览页移除。
+概览页的其余部分跟随这些内核控件（[#261](https://github.com/qiaiqian67/linsight/pull/261)），采用 Skill 库那一视觉家族的、以水平分割线划分的小节，而不是带框的卡片：一个 **Agent State** 小节（状态版本，快照导入/导出操作紧随其旁，状态路径置于其下——点击即复制，沿用聊天详情卡那套乐观的「已复制」约定，完整路径在悬停时显示），以及 **Kernel** 小节（更新与恢复位于其操作槽中）。版本数值以深色半粗体渲染，对照小号灰色标签，因此数字是第一眼读到的东西。名称/描述表单把它的保存按钮留在它真正保存的那些字段旁边，而活动会话统计从概览页移除。

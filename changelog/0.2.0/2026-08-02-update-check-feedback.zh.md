@@ -3,7 +3,7 @@
 - **Date:** 2026-08-02
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#142](https://github.com/Prism-Shadow/penguin-harness/pull/142)
+- **PR:** [#142](https://github.com/qiaiqian67/linsight/pull/142)
 
 [English](2026-08-02-update-check-feedback.md)
 

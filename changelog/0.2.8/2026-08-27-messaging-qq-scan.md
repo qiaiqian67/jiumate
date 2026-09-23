@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** feature
 - **Scope:** `server`, `web`, `docs`
-- **PR:** [#504](https://github.com/Prism-Shadow/penguin-harness/pull/504)
+- **PR:** [#504](https://github.com/qiaiqian67/linsight/pull/504)
 
 [中文版](2026-08-27-messaging-qq-scan.zh.md)
 

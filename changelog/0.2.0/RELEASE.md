@@ -39,10 +39,10 @@ npm install -g @prismshadow/penguin-cli
 - **Update checks report every outcome.** The manual "Check for updates" row shows a busy spinner, success toasts for both up-to-date and update-found, and the existing failure notices.
 - **Evaluation Center case details.** Target-agent task materials are separated from project-member-visible scoring rubrics, Score charts use a padded dynamic axis, and the benchmark Skills write YAML-safe Scoreboard summaries.
 - **File summaries move to the Task boundary.** One card per completed Task scanning all of its assistant text; negative existence results are no longer cached, so later Tasks can surface newly created paths.
-- **Backward compatibility, recorded once.** The installers keep a content-probed legacy path so pre-0.2.0 releases stay installable; installer scripts saved from older releases break loudly against new assets by design — re-fetch them. See [the batch's compatibility notes](https://github.com/Prism-Shadow/penguin-harness/blob/main/changelog/0.2.0/2026-07-31-backward-compatibility.md).
+- **Backward compatibility, recorded once.** The installers keep a content-probed legacy path so pre-0.2.0 releases stay installable; installer scripts saved from older releases break loudly against new assets by design — re-fetch them. See [the batch's compatibility notes](https://github.com/qiaiqian67/linsight/blob/main/changelog/0.2.0/2026-07-31-backward-compatibility.md).
 
 ## Requirements
 
 Linux or macOS (x64 / arm64), or Windows 10+ (x64). The installers bundle their own Node runtime; installing from npm needs Node >= 24. All data stays under `~/.penguin/data`.
 
-Full detail: [changelog/0.2.0/](https://github.com/Prism-Shadow/penguin-harness/tree/main/changelog/0.2.0).
+Full detail: [changelog/0.2.0/](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.0).

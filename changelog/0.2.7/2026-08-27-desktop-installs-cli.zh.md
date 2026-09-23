@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** feature
 - **Scope:** `desktop`, `docs`
-- **PR:** [#480](https://github.com/Prism-Shadow/penguin-harness/pull/480)
+- **PR:** [#480](https://github.com/qiaiqian67/linsight/pull/480)
 
 [English](2026-08-27-desktop-installs-cli.md)
 
@@ -41,4 +41,4 @@ AppImage 的包装脚本，都会被重写为指向正在运行的这个应用�
 `quickstart-desktop` 新增了 `penguin` 命令一节，覆盖四种形态与两类拒绝安装的情形；`quickstart`
 不再让桌面端用户去做一次命令行安装来获得该命令。两页同时移除了 macOS 隔离标记与 Windows
 SmartScreen 的首次启动说明——它们早已随未签名构建一同过时，与落地页和 README 的清理
-（[#481](https://github.com/Prism-Shadow/penguin-harness/pull/481)）是同一处修正，只是应用到了文档站。
+（[#481](https://github.com/qiaiqian67/linsight/pull/481)）是同一处修正，只是应用到了文档站。

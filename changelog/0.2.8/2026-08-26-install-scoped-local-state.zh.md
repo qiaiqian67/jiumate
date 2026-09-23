@@ -3,7 +3,7 @@
 - **Date:** 2026-08-26
 - **Type:** fix
 - **Scope:** `server`, `web`, `docs`
-- **PR:** [#508](https://github.com/Prism-Shadow/penguin-harness/pull/508)
+- **PR:** [#508](https://github.com/qiaiqian67/linsight/pull/508)
 
 [English](2026-08-26-install-scoped-local-state.md)
 

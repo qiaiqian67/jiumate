@@ -3,7 +3,7 @@
 - **Date:** 2026-08-26
 - **Type:** fix
 - **Scope:** `server`
-- **PR:** [#493](https://github.com/Prism-Shadow/penguin-harness/pull/493)
+- **PR:** [#493](https://github.com/qiaiqian67/linsight/pull/493)
 
 [中文版](2026-08-26-messaging-inbound-watermark.zh.md)
 

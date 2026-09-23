@@ -138,6 +138,6 @@ Now they are one system, and the human's job moved. You describe the outcome. Th
 On your hardware. On your weights. With your data staying where you put it.
 
 ```bash
-curl -fsSL https://github.com/Prism-Shadow/linsight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
 linsight web
 ```

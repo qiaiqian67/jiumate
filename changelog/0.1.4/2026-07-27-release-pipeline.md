@@ -3,7 +3,7 @@
 - **Date:** 2026-07-27
 - **Type:** fix
 - **Scope:** `ci`, `server`
-- **PR:** [#97](https://github.com/Prism-Shadow/penguin-harness/pull/97), [#99](https://github.com/Prism-Shadow/penguin-harness/pull/99)
+- **PR:** [#97](https://github.com/qiaiqian67/linsight/pull/97), [#99](https://github.com/qiaiqian67/linsight/pull/99)
 
 [中文版](2026-07-27-release-pipeline.zh.md)
 

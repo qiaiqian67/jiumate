@@ -19,8 +19,8 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@prismshadow/linsight-core"><img src="https://img.shields.io/npm/v/@prismshadow/linsight-core" alt="npm version" /></a>
-  <a href="https://github.com/Prism-Shadow/linsight/actions/workflows/ci.yml"><img src="https://github.com/Prism-Shadow/linsight/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://github.com/Prism-Shadow/linsight/actions/workflows/pages.yml"><img src="https://github.com/Prism-Shadow/linsight/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
+  <a href="https://github.com/qiaiqian67/linsight/actions/workflows/ci.yml"><img src="https://github.com/qiaiqian67/linsight/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/qiaiqian67/linsight/actions/workflows/pages.yml"><img src="https://github.com/qiaiqian67/linsight/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0" /></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A5%2024-brightgreen" alt="Node >= 24" />
 </p>
@@ -34,7 +34,7 @@
 <p align="center">
   <a href="https://discord.gg/eFHKqqcU3D"><img src="https://img.shields.io/badge/Discord-join%20chat-5865F2?logo=discord&logoColor=white" alt="Discord" /></a>
   <a href="https://x.com/code_hiyouga"><img src="https://img.shields.io/badge/X-code%5Fhiyouga-000000?logo=x&logoColor=white" alt="X (Twitter)" /></a>
-  <a href="https://github.com/Prism-Shadow/linsight-community/blob/main/wechat/group.jpg"><img src="https://img.shields.io/badge/WeChat-user%20group-07C160?logo=wechat&logoColor=white" alt="WeChat" /></a>
+  <a href="https://github.com/qiaiqian67/linsight-community/blob/main/wechat/group.jpg"><img src="https://img.shields.io/badge/WeChat-user%20group-07C160?logo=wechat&logoColor=white" alt="WeChat" /></a>
 </p>
 
 <p align="center">
@@ -131,7 +131,7 @@ Start with the desktop app, or install the command line on a workstation or serv
 
 The full Web experience as a standalone application: it embeds the server and opens already signed in — no terminal, no login page, no initial password to copy. It works on the same `~/.linsight/data` root as a CLI install, so the two can be used interchangeably (a data root only ever runs one server; if a CLI-started instance is already up, the app attaches to it).
 
-Download the desktop app from the [download page](https://linsight.ooo/download). The page serves the OSS-accelerated mirror when it is reachable, and every installer is also attached to each [GitHub Release](https://github.com/Prism-Shadow/linsight/releases).
+Download the desktop app from the [download page](https://linsight.ooo/download). The page serves the OSS-accelerated mirror when it is reachable, and every installer is also attached to each [GitHub Release](https://github.com/qiaiqian67/linsight/releases).
 
 | Platform    | Installers                  |
 | ----------- | --------------------------- |
@@ -176,7 +176,7 @@ linsight web        # start the service and open http://127.0.0.1:7364
 <details>
 <summary><b>📴 Offline install (air-gapped machines)</b></summary>
 
-Every <a href="https://github.com/Prism-Shadow/linsight/releases">GitHub Release</a> attaches exactly one package per target — Linux and macOS in x64 / arm64, Windows in x64, plus a runtime-less universal package — and the same file serves online and offline installation. Each package seals the program payload, its SHA256 checksum and the platform's installer: download the one file on a networked machine, copy it to the target, extract once and run the bundled installer — no network, no separate checksum file to carry (the sealed SHA256 is always verified).
+Every <a href="https://github.com/qiaiqian67/linsight/releases">GitHub Release</a> attaches exactly one package per target — Linux and macOS in x64 / arm64, Windows in x64, plus a runtime-less universal package — and the same file serves online and offline installation. Each package seals the program payload, its SHA256 checksum and the platform's installer: download the one file on a networked machine, copy it to the target, extract once and run the bundled installer — no network, no separate checksum file to carry (the sealed SHA256 is always verified).
 
 **Linux (on arm64, use `linsight-linux-arm64.tar.gz`):**
 
@@ -254,7 +254,7 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the full workspace guide: dev
 Thanks to everyone who has contributed to Linsight!
 
 <p align="center">
-  <a href="https://github.com/Prism-Shadow/linsight/graphs/contributors"><img src="https://contrib.rocks/image?repo=Prism-Shadow/linsight" alt="Linsight contributors" /></a>
+  <a href="https://github.com/qiaiqian67/linsight/graphs/contributors"><img src="https://contrib.rocks/image?repo=qiaiqian67/linsight" alt="Linsight contributors" /></a>
 </p>
 
 ## Citation
@@ -266,7 +266,7 @@ If you use Linsight in your research, please cite:
   author  = {{PrismShadow Team}},
   title   = {Linsight: Efficient Self-Improving Harness for Everyone},
   year    = {2026},
-  url     = {https://github.com/Prism-Shadow/linsight},
+  url     = {https://github.com/qiaiqian67/linsight},
   license = {Apache-2.0}
 }
 ```
@@ -275,4 +275,4 @@ If you use Linsight in your research, please cite:
 
 [Apache-2.0](LICENSE) © 2026 Prism Shadow
 
-Built with ❤️ by [Yaowei Zheng](https://github.com/hiyouga) (author of [LlamaFactory](https://github.com/hiyouga/LlamaFactory)), the [PrismShadow AI Team](https://github.com/Prism-Shadow), and [Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5).
+Built with ❤️ by [Yaowei Zheng](https://github.com/hiyouga) (author of [LlamaFactory](https://github.com/hiyouga/LlamaFactory)), the [PrismShadow AI Team](https://github.com/qiaiqian67), and [Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5).

@@ -3,7 +3,7 @@
 - **Date:** 2026-07-31
 - **Type:** feature
 - **Scope:** `web`, `server`, `skills`
-- **PR:** [#146](https://github.com/Prism-Shadow/penguin-harness/pull/146)
+- **PR:** [#146](https://github.com/qiaiqian67/linsight/pull/146)
 
 [中文版](2026-07-31-evaluation-center-case-details.zh.md)
 

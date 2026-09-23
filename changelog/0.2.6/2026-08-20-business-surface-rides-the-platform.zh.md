@@ -3,7 +3,7 @@
 - **Date:** 2026-08-20
 - **Type:** refactor
 - **Scope:** `server`, `cli`, `desktop`
-- **PR:** [#359](https://github.com/Prism-Shadow/penguin-harness/pull/359)
+- **PR:** [#359](https://github.com/qiaiqian67/linsight/pull/359)
 
 [English](2026-08-20-business-surface-rides-the-platform.md)
 

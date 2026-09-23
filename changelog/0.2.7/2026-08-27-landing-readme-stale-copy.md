@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** process
 - **Scope:** `landing`, `docs`, `skills`
-- **PR:** [#481](https://github.com/Prism-Shadow/penguin-harness/pull/481)
+- **PR:** [#481](https://github.com/qiaiqian67/linsight/pull/481)
 
 [中文版](2026-08-27-landing-readme-stale-copy.zh.md)
 

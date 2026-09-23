@@ -3,12 +3,12 @@
 - **Date:** 2026-08-02
 - **Type:** fix
 - **Scope:** `core`, `skills`
-- **PR:** [#155](https://github.com/Prism-Shadow/penguin-harness/pull/155)
-- **Issue:** [#138](https://github.com/Prism-Shadow/penguin-harness/issues/138)
+- **PR:** [#155](https://github.com/qiaiqian67/linsight/pull/155)
+- **Issue:** [#138](https://github.com/qiaiqian67/linsight/issues/138)
 
 [English](2026-08-02-file-tool-missing-path-diagnostics.md)
 
-`read_file` / `edit_file` 一直都接受绝对路径，但它们的「File not found」消息只提到按工作区相对解析——于是一个真正缺失的文件（通常是漏掉了 `agent_state/` 这一段）读起来像是「不支持绝对路径」，模型便去反复尝试各种路径形式，而不是去质疑这个路径本身（[#138](https://github.com/Prism-Shadow/penguin-harness/issues/138)）。
+`read_file` / `edit_file` 一直都接受绝对路径，但它们的「File not found」消息只提到按工作区相对解析——于是一个真正缺失的文件（通常是漏掉了 `agent_state/` 这一段）读起来像是「不支持绝对路径」，模型便去反复尝试各种路径形式，而不是去质疑这个路径本身（[#138](https://github.com/qiaiqian67/linsight/issues/138)）。
 
 ## 细节
 

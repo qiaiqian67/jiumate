@@ -3,7 +3,7 @@
 - **Date:** 2026-08-21
 - **Type:** fix
 - **Scope:** `desktop`, `ci`
-- **PR:** [#393](https://github.com/Prism-Shadow/penguin-harness/pull/393)
+- **PR:** [#393](https://github.com/qiaiqian67/linsight/pull/393)
 
 [中文版](2026-08-21-desktop-terminal-node-pty.zh.md)
 

@@ -3,7 +3,7 @@
 - **Date:** 2026-08-25
 - **Type:** feature
 - **Scope:** `server`, `web`
-- **PR:** [#461](https://github.com/Prism-Shadow/penguin-harness/pull/461)
+- **PR:** [#461](https://github.com/qiaiqian67/linsight/pull/461)
 
 [English](2026-08-25-sidebar-group-paging.md)
 

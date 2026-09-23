@@ -3,7 +3,7 @@
 - **Date:** 2026-07-31
 - **Type:** process
 - **Scope:** `tooling`, `core`
-- **PR:** [#142](https://github.com/Prism-Shadow/penguin-harness/pull/142), [#145](https://github.com/Prism-Shadow/penguin-harness/pull/145)
+- **PR:** [#142](https://github.com/qiaiqian67/linsight/pull/142), [#145](https://github.com/qiaiqian67/linsight/pull/145)
 
 [English](2026-07-31-backward-compatibility.md)
 

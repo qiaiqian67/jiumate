@@ -18,7 +18,7 @@ Linsight 尚未发布 1.0，代码从 `main` 出货。项目没有维护分支�
 ## 报告漏洞
 
 请通过 GitHub 的
-["Report a vulnerability"](https://github.com/Prism-Shadow/linsight/security/advisories/new)
+["Report a vulnerability"](https://github.com/qiaiqian67/linsight/security/advisories/new)
 表单私下报告。它会创建一份只有维护者可见的 advisory 草稿，讨论、修复与最终披露都挂在同一处。
 
 如果你无法使用该表单，可以在 [Discord](https://discord.gg/eFHKqqcU3D) 上说明你有一份安全报告——

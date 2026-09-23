@@ -3,7 +3,7 @@
 - **Date:** 2026-08-28
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#528](https://github.com/Prism-Shadow/penguin-harness/pull/528)
+- **PR:** [#528](https://github.com/qiaiqian67/linsight/pull/528)
 
 [English](2026-08-28-retry-line-collapse.md)
 

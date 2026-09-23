@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** feature
 - **Scope:** `cli`, `server`, `docs`
-- **PR:** [#443](https://github.com/Prism-Shadow/penguin-harness/pull/443)
+- **PR:** [#443](https://github.com/qiaiqian67/linsight/pull/443)
 - **Breaking:** yes — the fixed seed password retires; claim the account through the printed first-login link
 
 [中文版](2026-08-24-penguin-auth.zh.md)

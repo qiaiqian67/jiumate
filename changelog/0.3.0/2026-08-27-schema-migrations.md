@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** feature
 - **Scope:** `server`
-- **PR:** [#383](https://github.com/Prism-Shadow/linsight/pull/383)
+- **PR:** [#383](https://github.com/qiaiqian67/linsight/pull/383)
 
 [中文版](2026-08-27-schema-migrations.zh.md)
 

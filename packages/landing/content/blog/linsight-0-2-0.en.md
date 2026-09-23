@@ -35,7 +35,7 @@ The qianwenai groups move to the current lineup — qwen3.8-max and deepseek-v4-
 
 ## And the rest
 
-`read_file` / `edit_file` diagnose a missing path (deepest existing ancestor, first missing segment, nearest names) instead of a bare "File not found". The manual update check reports every outcome — busy, up to date, update found, failed. Evaluation Center case details separate the target agent's task materials from reviewer-facing rubrics. File summaries move to the Task boundary, one card per completed Task. The full list, entry by entry: [changelog/0.2.0](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.0).
+`read_file` / `edit_file` diagnose a missing path (deepest existing ancestor, first missing segment, nearest names) instead of a bare "File not found". The manual update check reports every outcome — busy, up to date, update found, failed. Evaluation Center case details separate the target agent's task materials from reviewer-facing rubrics. File summaries move to the Task boundary, one card per completed Task. The full list, entry by entry: [changelog/0.2.0](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.0).
 
 ## Install or upgrade
 

@@ -3,7 +3,7 @@
 - **Date:** 2026-08-23
 - **Type:** fix
 - **Scope:** `desktop`, `web`
-- **PR:** [#413](https://github.com/Prism-Shadow/penguin-harness/pull/413)
+- **PR:** [#413](https://github.com/qiaiqian67/linsight/pull/413)
 
 [中文版](2026-08-23-update-unavailable-copy.zh.md)
 

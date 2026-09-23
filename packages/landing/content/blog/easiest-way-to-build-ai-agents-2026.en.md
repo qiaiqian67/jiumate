@@ -93,7 +93,7 @@ No project, no imports, no framework. The same engine drives the REPL (`linsight
 
 ### 4.3 An agent builds your agent
 
-You describe what you want; an agent writes its `AGENTS.md`, installs the skills it needs, and hands you something that runs. One sentence produced a complete RAG application — ingestion, retrieval, cited sources, web UI — for **$0.02** of tokens on DeepSeek V4 Pro. The [runnable example](https://github.com/Prism-Shadow/linsight/tree/main/examples/build-agent-with-agent) is an 82-line script that builds a new agent from a plain-language requirement and then runs it.
+You describe what you want; an agent writes its `AGENTS.md`, installs the skills it needs, and hands you something that runs. One sentence produced a complete RAG application — ingestion, retrieval, cited sources, web UI — for **$0.02** of tokens on DeepSeek V4 Pro. The [runnable example](https://github.com/qiaiqian67/linsight/tree/main/examples/build-agent-with-agent) is an 82-line script that builds a new agent from a plain-language requirement and then runs it.
 
 This works because **agents are editable data, not hardcoded constants** — prompts, skills and configuration are plain files on disk.
 
@@ -125,6 +125,6 @@ Not the smallest framework — **no framework, an agent to write the agent, and 
 ---
 
 - **Docs**: [Quickstart](https://linsight.ooo/docs/quickstart) · [Skills](https://linsight.ooo/docs/skills) · [Sessions & Traces](https://linsight.ooo/docs/sessions-and-traces)
-- **Community**: [GitHub](https://github.com/Prism-Shadow/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **Community**: [GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **Sources** — figures checked 2026-07-22: [LangChain v1 release notes](https://docs.langchain.com/oss/python/releases/langchain-v1) · [Langfuse](https://github.com/langfuse/langfuse) · [AutoGen README](https://github.com/microsoft/autogen) · [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) · [Google ADK](https://adk.dev/) · [CrewAI](https://docs.crewai.com/en/quickstart) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/quickstart/) · [Dify LICENSE](https://github.com/langgenius/dify/blob/main/LICENSE) · [n8n LICENSE](https://github.com/n8n-io/n8n/blob/master/LICENSE.md) · [Anthropic, Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents)

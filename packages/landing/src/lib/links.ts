@@ -1,7 +1,7 @@
 /** External links and language-independent constants used across the landing page. */
 
-export const REPO_URL = "https://github.com/Prism-Shadow/linsight";
-export const REPO_API_URL = "https://api.github.com/repos/Prism-Shadow/linsight";
+export const REPO_URL = "https://github.com/qiaiqian67/linsight";
+export const REPO_API_URL = "https://api.github.com/repos/qiaiqian67/linsight";
 export const RELEASES_URL = `${REPO_URL}/releases`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 
@@ -71,7 +71,7 @@ export const CLI_INSTALLERS: Record<"linux" | "macos" | "windows", CliInstaller[
  * `access-control-allow-origin: *` and a 5-minute cache; a GitHub outage degrades the site
  * to missing media, which is the accepted trade for not carrying the bytes here.
  */
-const COMMUNITY_RAW = "https://github.com/Prism-Shadow/linsight-community/raw/refs/heads/main";
+const COMMUNITY_RAW = "https://github.com/qiaiqian67/linsight-community/raw/refs/heads/main";
 
 /**
  * Demo videos: ~9 MB each, against a whole repo history of ~17 MB — committing them here

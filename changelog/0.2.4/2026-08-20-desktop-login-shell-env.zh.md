@@ -3,8 +3,8 @@
 - **Date:** 2026-08-20
 - **Type:** fix
 - **Scope:** `desktop`, `server`, `web`, `docs`
-- **PR:** [#370](https://github.com/Prism-Shadow/penguin-harness/pull/370)
-- **Issue:** [#351](https://github.com/Prism-Shadow/penguin-harness/issues/351)
+- **PR:** [#370](https://github.com/qiaiqian67/linsight/pull/370)
+- **Issue:** [#351](https://github.com/qiaiqian67/linsight/issues/351)
 
 [English](2026-08-20-desktop-login-shell-env.md)
 

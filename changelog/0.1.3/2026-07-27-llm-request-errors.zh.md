@@ -3,7 +3,7 @@
 - **Date:** 2026-07-27
 - **Type:** fix
 - **Scope:** `core`, `server`, `web`
-- **PR:** [#82](https://github.com/Prism-Shadow/penguin-harness/pull/82)
+- **PR:** [#82](https://github.com/qiaiqian67/linsight/pull/82)
 
 [English](2026-07-27-llm-request-errors.md)
 

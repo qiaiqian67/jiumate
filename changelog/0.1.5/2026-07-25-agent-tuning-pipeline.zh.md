@@ -3,7 +3,7 @@
 - **Date:** 2026-07-25
 - **Type:** feature
 - **Scope:** `web`, `skills`
-- **PR:** [#129](https://github.com/Prism-Shadow/penguin-harness/pull/129)
+- **PR:** [#129](https://github.com/qiaiqian67/linsight/pull/129)
 
 [English](2026-07-25-agent-tuning-pipeline.md)
 

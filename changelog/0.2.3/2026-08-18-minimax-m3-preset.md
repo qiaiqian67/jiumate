@@ -3,7 +3,7 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `core`, `web`, `docs`, `model-catalog`
-- **PR:** [#167](https://github.com/Prism-Shadow/penguin-harness/pull/167)
+- **PR:** [#167](https://github.com/qiaiqian67/linsight/pull/167)
 
 [中文版](2026-08-18-minimax-m3-preset.zh.md)
 

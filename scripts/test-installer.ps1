@@ -364,7 +364,7 @@ try {
   Assert-True (-not (($override.Output | Out-String) -match 'aliyuncs\.com')) `
     "download base override exposed the OSS URL in normal output"
 
-  $env:LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL = "https://github.com/Prism-Shadow/linsight/releases/download/v0.0.0-test"
+  $env:LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL = "https://github.com/qiaiqian67/linsight/releases/download/v0.0.0-test"
   $fallback = Invoke-OnlineCase "download-fallback" "primary-network" "" $true 3
   Assert-True ($fallback.Requests[0] -like "https://linsight-releases.oss-cn-beijing.aliyuncs.com/*") `
     "download fallback did not try the primary source first"

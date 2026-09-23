@@ -20,7 +20,7 @@ import { BUILD_DATE, VERSION, compareVersions, normalizeVersion } from "@prismsh
 import type { UpdateCheckResponse } from "../api/types.js";
 
 /** Repository the released artifacts come from (same slug as cli/update.ts's REPO_SLUG). */
-const REPO_SLUG = "Prism-Shadow/linsight";
+const REPO_SLUG = "qiaiqian67/linsight";
 /** Releases API endpoint for the newest published release. */
 export const LATEST_RELEASE_API = `https://api.github.com/repos/${REPO_SLUG}/releases/latest`;
 

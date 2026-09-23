@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** process
 - **Scope:** `desktop`
-- **PR:** [#480](https://github.com/Prism-Shadow/penguin-harness/pull/480)
+- **PR:** [#480](https://github.com/qiaiqian67/linsight/pull/480)
 - **Breaking:** yes — 对 0.2.7 之前那次一次性 `penguin` 询问回答的「Not Now」不会被沿用；命令会在下次启动时自行安装
 
 [English](2026-08-27-backward-compatibility.md)

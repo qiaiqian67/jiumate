@@ -3,7 +3,7 @@
 - **Date:** 2026-07-29
 - **Type:** feature
 - **Scope:** `server`, `web`, `core`
-- **PR:** [#103](https://github.com/Prism-Shadow/penguin-harness/pull/103)
+- **PR:** [#103](https://github.com/qiaiqian67/linsight/pull/103)
 
 [中文版](2026-07-29-cost-center-errors.zh.md)
 

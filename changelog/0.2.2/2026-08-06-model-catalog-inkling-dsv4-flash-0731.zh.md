@@ -3,7 +3,7 @@
 - **Date:** 2026-08-06
 - **Type:** feature
 - **Scope:** `model-catalog`, `skills`, `docs`
-- **PR:** [#220](https://github.com/Prism-Shadow/penguin-harness/pull/220), [#230](https://github.com/Prism-Shadow/penguin-harness/pull/230)
+- **PR:** [#220](https://github.com/qiaiqian67/linsight/pull/220), [#230](https://github.com/qiaiqian67/linsight/pull/230)
 
 [English](2026-08-06-model-catalog-inkling-dsv4-flash-0731.md)
 

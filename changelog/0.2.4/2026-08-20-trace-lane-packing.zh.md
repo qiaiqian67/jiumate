@@ -3,7 +3,7 @@
 - **Date:** 2026-08-20
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#362](https://github.com/Prism-Shadow/penguin-harness/pull/362)
+- **PR:** [#362](https://github.com/qiaiqian67/linsight/pull/362)
 
 [English](2026-08-20-trace-lane-packing.md)
 

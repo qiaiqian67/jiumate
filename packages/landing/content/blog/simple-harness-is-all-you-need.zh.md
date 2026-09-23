@@ -60,7 +60,7 @@ Databricks 自己很谨慎，我们也该同样谨慎：他们明确说过，这
 
 没有 read 工具，没有 write 工具，没有 edit 工具，没有 glob，也没有 grep。读、写、编辑、搜索全部走 shell，因为 shell 本来就能做这些，模型本来就会用它。当一个四工具的最小内核把 read、write、edit 三个名额花在文件系统上时，**我们只花一个**。我们不宣称绝对工具数最少（论内核，Pi 比我们还紧一个），我们宣称的是：**在"Agent 每天真正在做的事"上，我们的 schema 面积最小。**
 
-**72 行的 System Prompt。** 默认模板在变量替换前是 72 行、约 6,600 字符（[源码](https://github.com/Prism-Shadow/linsight/blob/main/packages/core/src/state/default-config.ts)）。角色、成功标准、约束、停止规则、文件系统布局，外加一小段建议工作流，然后就结束了。
+**72 行的 System Prompt。** 默认模板在变量替换前是 72 行、约 6,600 字符（[源码](https://github.com/qiaiqian67/linsight/blob/main/packages/core/src/state/default-config.ts)）。角色、成功标准、约束、停止规则、文件系统布局，外加一小段建议工作流，然后就结束了。
 
 **输出上限是默认行为。** 每次工具调用截断在 16,000 字符，由 Environment 统一执行。退出码被追加在**截断窗口之外**，所以哪怕输出中段被砍掉，那条告诉模型"命令到底成没成"的信息依然还在。
 
@@ -117,6 +117,6 @@ linsight web
 ---
 
 - **读实现**：[工具与审批](https://linsight.ooo/docs/tools) · [Agent Loop](https://linsight.ooo/docs/agent-loop) · [Skills](https://linsight.ooo/docs/skills)
-- **来讨论**：[GitHub](https://github.com/Prism-Shadow/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **来讨论**：[GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**：[Databricks — Benchmarking Coding Agents on Databricks' Multi-Million Line Codebase](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase) · [Pi (earendil-works/pi)](https://github.com/earendil-works/pi) · [SaladDay《Less is More》](https://x.com/Salad95238547/status/2079508549382644194)

@@ -83,4 +83,4 @@ Five changes in this release need a decision from you rather than just an update
 
 **The `agent-creation` skill is now `agent-initialization`.** The name says what it does — it initializes an Agent's settings rather than creating an Agent. An already-installed copy keeps working but no longer matches a library skill, so it will not be updated again. Install `agent-initialization`, delete `agent-creation` from the Agent's Skills tab, and update anything that pins the old name by hand: a stale pin resolves to nothing rather than failing loudly.
 
-Full detail for every change is in [`changelog/0.2.4/`](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.4).
+Full detail for every change is in [`changelog/0.2.4/`](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.4).

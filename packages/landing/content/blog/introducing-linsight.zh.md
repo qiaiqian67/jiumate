@@ -110,7 +110,7 @@ linsight web        # 打开 http://127.0.0.1:7364（首次登录：admin，初�
 
 - [Discord](https://discord.gg/eFHKqqcU3D)：与我们和其他开发者实时交流；
 - [X（Twitter）](https://x.com/code_hiyouga)：关注最新动态；
-- [微信群](https://github.com/Prism-Shadow/linsight-community/blob/main/wechat/group.jpg)：中文社区讨论；
-- [GitHub](https://github.com/Prism-Shadow/linsight)：Star、Issue 与 PR 都欢迎。
+- [微信群](https://github.com/qiaiqian67/linsight-community/blob/main/wechat/group.jpg)：中文社区讨论；
+- [GitHub](https://github.com/qiaiqian67/linsight)：Star、Issue 与 PR 都欢迎。
 
 让每个人都用上会自我进化的 Agent 基础设施——从今天开始。

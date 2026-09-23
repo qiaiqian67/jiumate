@@ -183,7 +183,7 @@ describe("desktopUpdateAssetName", () => {
 describe("feedLabel", () => {
   it("names the known sources and stays neutral for anything else", () => {
     expect(feedLabel("https://x.oss-cn-beijing.aliyuncs.com/releases/v1/")).toBe("OSS mirror");
-    expect(feedLabel("https://github.com/Prism-Shadow/linsight/releases/download/v1/")).toBe(
+    expect(feedLabel("https://github.com/qiaiqian67/linsight/releases/download/v1/")).toBe(
       "GitHub",
     );
     expect(feedLabel("https://mirror.example.com/updates/")).toBe("configured mirror");

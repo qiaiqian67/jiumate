@@ -3,7 +3,7 @@
 - **Date:** 2026-09-01
 - **Type:** feature
 - **Scope:** `server`, `cli`
-- **PR:** [#576](https://github.com/Prism-Shadow/linsight/pull/576)
+- **PR:** [#576](https://github.com/qiaiqian67/linsight/pull/576)
 
 [English](2026-09-01-machines-update.md)
 

@@ -3,7 +3,7 @@
 - **Date:** 2026-09-01
 - **Type:** refactor
 - **Scope:** `server`
-- **PR:** [#567](https://github.com/Prism-Shadow/linsight/pull/567)
+- **PR:** [#567](https://github.com/qiaiqian67/linsight/pull/567)
 
 [中文版](2026-09-01-machines-transport.zh.md)
 

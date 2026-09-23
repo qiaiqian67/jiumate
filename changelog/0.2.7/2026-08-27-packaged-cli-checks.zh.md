@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** process
 - **Scope:** `desktop`, `ci`
-- **PR:** [#480](https://github.com/Prism-Shadow/penguin-harness/pull/480)
+- **PR:** [#480](https://github.com/qiaiqian67/linsight/pull/480)
 
 [English](2026-08-27-packaged-cli-checks.md)
 

@@ -3,12 +3,12 @@
 - **Date:** 2026-08-16
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`
-- **PR:** [#321](https://github.com/Prism-Shadow/penguin-harness/pull/321)
-- **Issue:** [#287](https://github.com/Prism-Shadow/penguin-harness/issues/287)
+- **PR:** [#321](https://github.com/qiaiqian67/linsight/pull/321)
+- **Issue:** [#287](https://github.com/qiaiqian67/linsight/issues/287)
 
 [English](2026-08-16-recall-queued-messages.md)
 
-运行途中仍在等待的消息——尚未投递的 steering 消息，或排在当前运行之后的后续消息——现在可以撤回到输入框，编辑之后重新发送。这份实现脱胎于 @Myriad-Dreamin 提出的草稿 [#304](https://github.com/Prism-Shadow/penguin-harness/pull/304)。
+运行途中仍在等待的消息——尚未投递的 steering 消息，或排在当前运行之后的后续消息——现在可以撤回到输入框，编辑之后重新发送。这份实现脱胎于 @Myriad-Dreamin 提出的草稿 [#304](https://github.com/qiaiqian67/linsight/pull/304)。
 
 ## Web App
 

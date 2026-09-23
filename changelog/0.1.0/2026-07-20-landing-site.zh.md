@@ -3,7 +3,7 @@
 - **Date:** 2026-07-20
 - **Type:** feature
 - **Scope:** `landing`, `docs`
-- **PR:** [#7](https://github.com/Prism-Shadow/penguin-harness/pull/7), [#6](https://github.com/Prism-Shadow/penguin-harness/pull/6)
+- **PR:** [#7](https://github.com/qiaiqian67/linsight/pull/7), [#6](https://github.com/qiaiqian67/linsight/pull/6)
 
 [English](2026-07-20-landing-site.md)
 
@@ -68,10 +68,10 @@ penguin.ooo 落地页：叙事、结构、动画、导航，以及安装域名�
 
 ## 合并 main 以恢复常驻的导航激活高亮
 
-该分支的基线早于 main 的 [#6](https://github.com/Prism-Shadow/penguin-harness/pull/6)（「修正导航状态与锚点滚动」），因此缺少导航的常驻激活高亮——即标记当前小节或路由的黑色片——合并时本会把那个修复回退掉。合并 origin/main 使其恢复，并与该分支的导航改动做了调和。
+该分支的基线早于 main 的 [#6](https://github.com/qiaiqian67/linsight/pull/6)（「修正导航状态与锚点滚动」），因此缺少导航的常驻激活高亮——即标记当前小节或路由的黑色片——合并时本会把那个修复回退掉。合并 origin/main 使其恢复，并与该分支的导航改动做了调和。
 
 - 落地页导航：小节链接重新经由 `/#id` 路由并配合 `getActiveNavItem` 跟踪（新增 `lib/nav-state.ts` 及其测试），激活链接保留带 `aria-current` 的黑色片，分支的就地悬停药丸行为则叠加保留。
-- 同样从 [#6](https://github.com/Prism-Shadow/penguin-harness/pull/6) 恢复：锚点目标滚动到粘性头部之下（通过 `.section-anchor`，id 移到小节的内层 div 上）、页脚/首屏/CTA 锚点改为路由链接，以及文档站品牌 logo 回到落地页。
+- 同样从 [#6](https://github.com/qiaiqian67/linsight/pull/6) 恢复：锚点目标滚动到粘性头部之下（通过 `.section-anchor`，id 移到小节的内层 div 上）、页脚/首屏/CTA 锚点改为路由链接，以及文档站品牌 logo 回到落地页。
 - 文档站导航（与落地页对齐的那套）另外会用同样的黑色片把自己的「Docs」链接标记为当前页。
 
 ## 导航高亮跟随实时滚动位置

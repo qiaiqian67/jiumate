@@ -113,8 +113,8 @@ Upgrading is now one command. `linsight update` resolves the newest release, tel
 ## Get it
 
 ```bash
-curl -fsSL https://github.com/Prism-Shadow/linsight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
 linsight web
 ```
 
-Then open the Models page, drop in a Gemini or OpenRouter key, and pick `gemini-3.6-flash`. The full release notes live in [`changelog/0.1.1/`](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.1.1).
+Then open the Models page, drop in a Gemini or OpenRouter key, and pick `gemini-3.6-flash`. The full release notes live in [`changelog/0.1.1/`](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.1.1).

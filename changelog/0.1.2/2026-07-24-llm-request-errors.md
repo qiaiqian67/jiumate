@@ -3,7 +3,7 @@
 - **Date:** 2026-07-24
 - **Type:** fix
 - **Scope:** `core`
-- **PR:** [#54](https://github.com/Prism-Shadow/penguin-harness/pull/54)
+- **PR:** [#54](https://github.com/qiaiqian67/linsight/pull/54)
 
 [中文版](2026-07-24-llm-request-errors.zh.md)
 

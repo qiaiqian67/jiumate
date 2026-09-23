@@ -3,7 +3,7 @@
 - **Date:** 2026-07-30
 - **Type:** feature
 - **Scope:** `web`, `server`
-- **PR:** [#119](https://github.com/Prism-Shadow/penguin-harness/pull/119), [#130](https://github.com/Prism-Shadow/penguin-harness/pull/130)
+- **PR:** [#119](https://github.com/qiaiqian67/linsight/pull/119), [#130](https://github.com/qiaiqian67/linsight/pull/130)
 
 [中文版](2026-07-30-web-app-refinements.zh.md)
 

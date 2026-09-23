@@ -3,7 +3,7 @@
 - **Date:** 2026-08-23
 - **Type:** feature
 - **Scope:** `core`, `docs`
-- **PR:** [#432](https://github.com/Prism-Shadow/penguin-harness/pull/432)
+- **PR:** [#432](https://github.com/qiaiqian67/linsight/pull/432)
 
 [中文版](2026-08-23-tool-output-tail-window.zh.md)
 
@@ -57,4 +57,4 @@ head/tail rule and is a single constant.
   that message.
 
 Design: the head/tail contract and the recovery archive are recorded in the design specs
-([penguin-harness-design #54](https://github.com/Prism-Shadow/penguin-harness-design/pull/54)).
+([penguin-harness-design #54](https://github.com/qiaiqian67/linsight-design/pull/54)).

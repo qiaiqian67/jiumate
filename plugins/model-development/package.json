@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Prism-Shadow/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/linsight.git",
     "directory": "plugins/model-development"
   },
   "files": [

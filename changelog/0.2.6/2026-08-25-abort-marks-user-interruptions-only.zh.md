@@ -3,7 +3,7 @@
 - **Date:** 2026-08-25
 - **Type:** refactor
 - **Scope:** `core`, `server`, `web`, `cli`
-- **PR:** [#458](https://github.com/Prism-Shadow/penguin-harness/pull/458)
+- **PR:** [#458](https://github.com/qiaiqian67/linsight/pull/458)
 - **Breaking:** yes — 引擎不再为 LLM 与压缩失败产出 abort 事件(其终局记录是流上已有的 `request_end` / `compaction_end`),错误信息收敛为跨载荷统一的 `error_code` + `error_message` 对
 
 [English](2026-08-25-abort-marks-user-interruptions-only.md)

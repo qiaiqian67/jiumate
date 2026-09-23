@@ -8,7 +8,7 @@
  *
  * That last one is a two-step flow: blog images are not committed to this repo, so the file
  * lands in the gitignored staging dir packages/landing/.blog-assets/ and is then uploaded to
- * the `blog-assets/` directory of the sibling `Prism-Shadow/linsight-community` repo,
+ * the `blog-assets/` directory of the sibling `qiaiqian67/linsight-community` repo,
  * which is what the posts load from (the renderer resolves /blog-assets/<name> there — see
  * packages/landing/src/lib/links.ts).
  *

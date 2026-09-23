@@ -144,7 +144,7 @@ spurious user-facing errors without requiring manual retries.
 It even reasoned out loud about whether the change was a `fix` or a `feat` before committing to `fix` — behavior that came entirely from the AGENTS.md its parent agent had written.
 
 **Run it yourself.** The whole flow above is a self-contained, SDK-driven script in the repo:
-[`examples/build-agent-with-agent/`](https://github.com/Prism-Shadow/linsight/tree/main/examples/build-agent-with-agent).
+[`examples/build-agent-with-agent/`](https://github.com/qiaiqian67/linsight/tree/main/examples/build-agent-with-agent).
 Phase 1 uses `createAgent`/`createSession`/`run` to drive `default_agent` into building
 `commit-helper`; phase 2 loads the new agent and runs it — all on the local Ollama + qwen3.6:35b
 setup, no cloud API. See its `README.md` for the one-time Ollama configuration.
@@ -192,7 +192,7 @@ Let's improve the exact agent from the previous section — the same `qwen3.6:35
 That is a **4.6 → 6.6 → 9.8** climb on the same model and task (numbers vary run to run), achieved purely by the agent editing a text file it reads — with the harness keeping each round only because the score strictly improved. That is the loop, self-driven: *what the agent can see, the agent can improve* — measured against a rubric, linked to a Trace, not vibes.
 
 **Run it yourself.** This whole loop is a self-contained, SDK-driven script in the repo:
-[`examples/self-improving-agent/`](https://github.com/Prism-Shadow/linsight/tree/main/examples/self-improving-agent).
+[`examples/self-improving-agent/`](https://github.com/qiaiqian67/linsight/tree/main/examples/self-improving-agent).
 It uses a deterministic, readable rubric (10 points: 5 for content, 5 for the house convention that
 lives only in `AGENTS.md`) and — because a local model is nondeterministic — averages several runs
 per version, which is exactly why real benchmarks use a `runs` count. Crucially, the script never
@@ -233,7 +233,7 @@ Same harness, same one-line swap — whether the tokens are generated on your ow
 ## Get started
 
 ```bash
-curl -fsSL https://github.com/Prism-Shadow/linsight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
 
 # Point at any OpenAI-compatible endpoint — a local Ollama model included
 linsight config model add --model-id <your-model> \
@@ -251,6 +251,6 @@ const session = await agent.createSession({ workspaceDir: process.cwd() });
 for await (const out of session.run([userText("...")], { approve: async () => "allow" })) { /* stream */ }
 ```
 
-Complete, runnable versions live in [`examples/`](https://github.com/Prism-Shadow/linsight/tree/main/examples) — including an agent that builds another agent and an agent that improves itself, both on local Ollama.
+Complete, runnable versions live in [`examples/`](https://github.com/qiaiqian67/linsight/tree/main/examples) — including an agent that builds another agent and an agent that improves itself, both on local Ollama.
 
-Whether you run frontier cloud models or open weights on your own AMD GPU, Linsight gives you the same minimal, observable, self-improving substrate. Follow us on [GitHub](https://github.com/Prism-Shadow/linsight) and open your first issue.
+Whether you run frontier cloud models or open weights on your own AMD GPU, Linsight gives you the same minimal, observable, self-improving substrate. Follow us on [GitHub](https://github.com/qiaiqian67/linsight) and open your first issue.

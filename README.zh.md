@@ -19,8 +19,8 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@prismshadow/linsight-core"><img src="https://img.shields.io/npm/v/@prismshadow/linsight-core" alt="npm 版本" /></a>
-  <a href="https://github.com/Prism-Shadow/linsight/actions/workflows/ci.yml"><img src="https://github.com/Prism-Shadow/linsight/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://github.com/Prism-Shadow/linsight/actions/workflows/pages.yml"><img src="https://github.com/Prism-Shadow/linsight/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
+  <a href="https://github.com/qiaiqian67/linsight/actions/workflows/ci.yml"><img src="https://github.com/qiaiqian67/linsight/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/qiaiqian67/linsight/actions/workflows/pages.yml"><img src="https://github.com/qiaiqian67/linsight/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0" /></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A5%2024-brightgreen" alt="Node >= 24" />
 </p>
@@ -34,7 +34,7 @@
 <p align="center">
   <a href="https://discord.gg/eFHKqqcU3D"><img src="https://img.shields.io/badge/Discord-%E5%8A%A0%E5%85%A5%E8%AE%A8%E8%AE%BA-5865F2?logo=discord&logoColor=white" alt="Discord" /></a>
   <a href="https://x.com/code_hiyouga"><img src="https://img.shields.io/badge/X-code%5Fhiyouga-000000?logo=x&logoColor=white" alt="X（Twitter）" /></a>
-  <a href="https://github.com/Prism-Shadow/linsight-community/blob/main/wechat/group.jpg"><img src="https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1-%E4%BA%A4%E6%B5%81%E7%BE%A4-07C160?logo=wechat&logoColor=white" alt="微信群" /></a>
+  <a href="https://github.com/qiaiqian67/linsight-community/blob/main/wechat/group.jpg"><img src="https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1-%E4%BA%A4%E6%B5%81%E7%BE%A4-07C160?logo=wechat&logoColor=white" alt="微信群" /></a>
 </p>
 
 <p align="center">
@@ -131,7 +131,7 @@ https://github.com/user-attachments/assets/aec49ae9-b743-467b-b247-37bedfeaa36e
 
 完整的 Web 体验打包为独立应用：内嵌服务端，打开即已登录——无需终端、无登录页、也不用抄初始密码——并与 CLI 安装共用同一个 `~/.linsight/data` 数据目录，两者可以混用（一个数据目录同一时刻只运行一个服务端；CLI 已启动实例时，应用会直接接入它）。
 
-从[下载页](https://linsight.ooo/download)获取桌面端应用。下载页会自动选择可用的 OSS 加速源，安装包也附于每个 [GitHub Release](https://github.com/Prism-Shadow/linsight/releases)。
+从[下载页](https://linsight.ooo/download)获取桌面端应用。下载页会自动选择可用的 OSS 加速源，安装包也附于每个 [GitHub Release](https://github.com/qiaiqian67/linsight/releases)。
 
 | 平台          | 安装包                       |
 | ------------- | ---------------------------- |
@@ -176,7 +176,7 @@ linsight web        # 启动服务并打开 http://127.0.0.1:7364
 <details>
 <summary><b>📴 离线安装（无网环境）</b></summary>
 
-每个 <a href="https://github.com/Prism-Shadow/linsight/releases">GitHub Release</a> 每个目标只附带一个安装包——Linux 与 macOS 各有 x64 / arm64 两种架构，Windows 为 x64，另有不带运行时的 universal 包——同一个文件同时服务在线与离线安装。包内封入程序负载、其 SHA256 校验文件与对应平台的安装器：在有网机器下载这一个文件，拷贝到目标机器，解压一次并运行包内安装器即可——全程无需联网，也不必另外携带校验文件（包内封入的 SHA256 始终强制校验）。
+每个 <a href="https://github.com/qiaiqian67/linsight/releases">GitHub Release</a> 每个目标只附带一个安装包——Linux 与 macOS 各有 x64 / arm64 两种架构，Windows 为 x64，另有不带运行时的 universal 包——同一个文件同时服务在线与离线安装。包内封入程序负载、其 SHA256 校验文件与对应平台的安装器：在有网机器下载这一个文件，拷贝到目标机器，解压一次并运行包内安装器即可——全程无需联网，也不必另外携带校验文件（包内封入的 SHA256 始终强制校验）。
 
 **Linux（arm64 机器换用 `linsight-linux-arm64.tar.gz`）：**
 
@@ -254,7 +254,7 @@ pnpm dev                     # 服务端 + Web 一起启动（带前缀日志，
 感谢每一位为 Linsight 作出贡献的开发者！
 
 <p align="center">
-  <a href="https://github.com/Prism-Shadow/linsight/graphs/contributors"><img src="https://contrib.rocks/image?repo=Prism-Shadow/linsight" alt="Linsight 贡献者" /></a>
+  <a href="https://github.com/qiaiqian67/linsight/graphs/contributors"><img src="https://contrib.rocks/image?repo=qiaiqian67/linsight" alt="Linsight 贡献者" /></a>
 </p>
 
 ## 引用
@@ -266,7 +266,7 @@ pnpm dev                     # 服务端 + Web 一起启动（带前缀日志，
   author  = {{PrismShadow Team}},
   title   = {Linsight: Efficient Self-Improving Harness for Everyone},
   year    = {2026},
-  url     = {https://github.com/Prism-Shadow/linsight},
+  url     = {https://github.com/qiaiqian67/linsight},
   license = {Apache-2.0}
 }
 ```
@@ -275,4 +275,4 @@ pnpm dev                     # 服务端 + Web 一起启动（带前缀日志，
 
 [Apache-2.0](LICENSE) © 2026 Prism Shadow
 
-由 [LlamaFactory](https://github.com/hiyouga/LlamaFactory) 作者 [Yaowei Zheng](https://github.com/hiyouga)、[PrismShadow AI Team](https://github.com/Prism-Shadow) 与 [Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5) 共同用 ❤️ 构建。
+由 [LlamaFactory](https://github.com/hiyouga/LlamaFactory) 作者 [Yaowei Zheng](https://github.com/hiyouga)、[PrismShadow AI Team](https://github.com/qiaiqian67) 与 [Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5) 共同用 ❤️ 构建。

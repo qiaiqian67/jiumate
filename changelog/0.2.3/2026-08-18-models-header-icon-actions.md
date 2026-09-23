@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#296](https://github.com/Prism-Shadow/penguin-harness/pull/296)
-- **Issue:** [#294](https://github.com/Prism-Shadow/penguin-harness/issues/294)
+- **PR:** [#296](https://github.com/qiaiqian67/linsight/pull/296)
+- **Issue:** [#294](https://github.com/qiaiqian67/linsight/issues/294)
 
 [中文版](2026-08-18-models-header-icon-actions.zh.md)
 

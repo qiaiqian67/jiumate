@@ -3,7 +3,7 @@
 - **Date:** 2026-07-21
 - **Type:** fix
 - **Scope:** `core`, `cli`, `server`, `web`, `landing`
-- **PR:** [#7](https://github.com/Prism-Shadow/penguin-harness/pull/7)
+- **PR:** [#7](https://github.com/qiaiqian67/linsight/pull/7)
 
 [中文版](2026-07-21-model-reference-and-review-fixes.zh.md)
 

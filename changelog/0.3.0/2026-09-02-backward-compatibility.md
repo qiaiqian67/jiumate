@@ -3,7 +3,7 @@
 - **Date:** 2026-09-02
 - **Type:** process
 - **Scope:** `server`, `core`, `web`, `cli`
-- **PR:** [#542](https://github.com/Prism-Shadow/linsight/pull/542)
+- **PR:** [#542](https://github.com/qiaiqian67/linsight/pull/542)
 - **Breaking:** yes — the first restart-only schema migration: a hot push of this version onto a running runtime is refused until the runtime is restarted; goal mode on an Agent from before this release answers 409 until the `goal` plugin is installed on it
 
 [中文版](2026-09-02-backward-compatibility.zh.md)

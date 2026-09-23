@@ -3,7 +3,7 @@
 - **Date:** 2026-07-28
 - **Type:** fix
 - **Scope:** `web`, `cli`
-- **PR:** [#112](https://github.com/Prism-Shadow/penguin-harness/pull/112)
+- **PR:** [#112](https://github.com/qiaiqian67/linsight/pull/112)
 
 [中文版](2026-07-28-duration-and-byte-formatting.zh.md)
 

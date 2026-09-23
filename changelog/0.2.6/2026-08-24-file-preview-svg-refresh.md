@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** fix
 - **Scope:** `web`, `server`
-- **PR:** [#460](https://github.com/Prism-Shadow/penguin-harness/pull/460)
+- **PR:** [#460](https://github.com/qiaiqian67/linsight/pull/460)
 
 [中文版](2026-08-24-file-preview-svg-refresh.zh.md)
 

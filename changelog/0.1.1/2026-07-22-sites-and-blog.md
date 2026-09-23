@@ -3,7 +3,7 @@
 - **Date:** 2026-07-22
 - **Type:** process
 - **Scope:** `landing`, `docs`
-- **PR:** [#20](https://github.com/Prism-Shadow/penguin-harness/pull/20), [#23](https://github.com/Prism-Shadow/penguin-harness/pull/23), [#25](https://github.com/Prism-Shadow/penguin-harness/pull/25), [#32](https://github.com/Prism-Shadow/penguin-harness/pull/32), [#42](https://github.com/Prism-Shadow/penguin-harness/pull/42), [#45](https://github.com/Prism-Shadow/penguin-harness/pull/45)
+- **PR:** [#20](https://github.com/qiaiqian67/linsight/pull/20), [#23](https://github.com/qiaiqian67/linsight/pull/23), [#25](https://github.com/qiaiqian67/linsight/pull/25), [#32](https://github.com/qiaiqian67/linsight/pull/32), [#42](https://github.com/qiaiqian67/linsight/pull/42), [#45](https://github.com/qiaiqian67/linsight/pull/45)
 
 [中文版](2026-07-22-sites-and-blog.zh.md)
 

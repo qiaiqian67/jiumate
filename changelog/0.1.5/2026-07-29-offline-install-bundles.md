@@ -3,7 +3,7 @@
 - **Date:** 2026-07-29
 - **Type:** feature
 - **Scope:** `tooling`, `ci`
-- **PR:** [#131](https://github.com/Prism-Shadow/penguin-harness/pull/131)
+- **PR:** [#131](https://github.com/qiaiqian67/linsight/pull/131)
 
 [中文版](2026-07-29-offline-install-bundles.zh.md)
 

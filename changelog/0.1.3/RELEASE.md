@@ -43,4 +43,4 @@ npm install -g @prismshadow/penguin-cli
 
 Linux or macOS (x64 / arm64), or Windows 10+ (x64; the one-liner installs via PowerShell). The installer bundles its own Node runtime; installing from npm needs Node >= 24. All data stays under `~/.penguin/data`.
 
-Full detail: [changelog/0.1.3/](https://github.com/Prism-Shadow/penguin-harness/tree/main/changelog/0.1.3)
+Full detail: [changelog/0.1.3/](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.1.3)

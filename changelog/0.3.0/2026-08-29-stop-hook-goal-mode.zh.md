@@ -34,7 +34,7 @@ Session 新增了通用的 hook 机制：核心只编码钩子*点*——**stop*
 - Agent State：`agent_state/hooks/<plugin>/` 存放钩子包（由清单生成的 `hooks.json`——`name`、`description`、`description_zh`、`version` 与每个钩子点各一份命令清单——加脚本），与 `agent_state/skills/` 并列；状态层新增 `installPlugin`、`installHook`、`removeHook`、`listInstalledHooks`。`default_agent` 预装全部未标 `preinstall: false` 的插件。经 API 安装或卸载钩子包会使该 Agent 已缓存的运行时失效（钩子在 Session 构建时绑定）。loader 在声明的插件包缺失或 `plugin.json` 损坏时拒绝加载（那是安装坏了，而不是库变小了）。
 - API：`GET /api/plugins`（分类 → 插件，含各自 Skill 元数据与钩子点）、`GET /api/plugins/:plugin/files`（插件携带的全部文件，按路径键入的文本：各 Skill 的可安装 `SKILL.md` 与参考文件、钩子脚本）、`POST …/agents/:a/plugins { names }`（整插件安装；重装即更新）、`GET|DELETE …/agents/:a/hooks[/:name]`（`HookItem` 带插件的 `icon`；`PluginItem` 不带 `preinstall`）。`GET /api/skills` 与 `POST …/skills { names }` 移除；已装 Skill 的路由（列表、zip 导入导出、卸载）保留。Agent 创建改收 `plugins` 而非 `skills`；`AgentSummary` 报告 `hookCount` 与 `pluginUpdates`（原 `skillUpdates`）；`SkillMetadataItem.version` 改为字符串、`updated` 移除。
 - Web App：技能库页改为**插件库**（`/plugins`）——每张卡片带一行语义化元信息（`v<版本> · N 天前更新 · N 个 Agent 在用`，日期直接解析自版本号），点开即详情 Modal：完整描述与钩子点，其下是插件全部文件的浏览器，形态同 Benchmark 的 Case 浏览器——左侧文件树按 Skill 分组、钩子脚本单独一组，可同时展开任意多组，右侧预览所选文件，打开文件不会覆盖摘要与文件树；按整插件安装与更新；Agent 设置页新增**钩子**标签页；创建弹窗按插件选装。CLI：`linsight agent create --plugins`。
-- 设计规格已同步改写（[linsight-design #86](https://github.com/Prism-Shadow/linsight-design/pull/86)）。
+- 设计规格已同步改写（[linsight-design #86](https://github.com/qiaiqian67/linsight-design/pull/86)）。
 
 ## 兼容性
 

@@ -141,7 +141,7 @@ pnpm test:e2e                                        # core 的真实模型 e2e�
 
 ## 报告缺陷或提出功能建议
 
-从 [issue 表单](https://github.com/Prism-Shadow/linsight/issues/new/choose) 提交。一份缺陷报告
+从 [issue 表单](https://github.com/qiaiqian67/linsight/issues/new/choose) 提交。一份缺陷报告
 附上版本（`linsight version`）、Linsight 的安装方式、操作系统，以及问题是否在全新的数据根目录上
 依然出现（`LINSIGHT_HOME=/tmp/linsight-check linsight ...`），价值会高得多——最后这一条能把代码缺陷与
 旧版本遗留的状态区分开。永远不要把 API Key、机器人 Token、`system_config.yaml` 或 `.env` 贴进

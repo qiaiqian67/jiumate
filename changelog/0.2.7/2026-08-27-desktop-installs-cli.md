@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** feature
 - **Scope:** `desktop`, `docs`
-- **PR:** [#480](https://github.com/Prism-Shadow/penguin-harness/pull/480)
+- **PR:** [#480](https://github.com/qiaiqian67/linsight/pull/480)
 
 [中文版](2026-08-27-desktop-installs-cli.zh.md)
 
@@ -51,5 +51,5 @@ two refusals, and `quickstart` stopped sending desktop users to a CLI install to
 command. Both pages also dropped the macOS quarantine and Windows SmartScreen first-launch
 instructions, which had outlived the unsigned builds they were written for — the same
 correction the landing and README sweep in
-[#481](https://github.com/Prism-Shadow/penguin-harness/pull/481) made, applied to the
+[#481](https://github.com/qiaiqian67/linsight/pull/481) made, applied to the
 documentation site.

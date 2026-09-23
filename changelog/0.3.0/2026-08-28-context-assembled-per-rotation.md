@@ -3,7 +3,7 @@
 - **Date:** 2026-08-28
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`, `cli`, `docs`
-- **PR:** [#539](https://github.com/Prism-Shadow/linsight/pull/539)
+- **PR:** [#539](https://github.com/qiaiqian67/linsight/pull/539)
 - **Breaking:** yes — SDK: `SessionConfig.createLLM` / `ContextEngineDeps.createLLM` became `openNextContext`, `RunOptions.thinkingLevel` and the per-round thinking level of the subagent seams are gone, `SessionConfig.commandPolicy` is a per-context source; HTTP API: `POST /tasks` and the subagent message no longer take `thinkingLevel`, and a follow-up recall no longer returns one
 
 [中文版](2026-08-28-context-assembled-per-rotation.zh.md)

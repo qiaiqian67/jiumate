@@ -3,7 +3,7 @@
 - **Date:** 2026-08-28
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`, `cli`, `docs`
-- **PR:** [#539](https://github.com/Prism-Shadow/linsight/pull/539)
+- **PR:** [#539](https://github.com/qiaiqian67/linsight/pull/539)
 - **Breaking:** yes — SDK：`SessionConfig.createLLM` / `ContextEngineDeps.createLLM` 改为 `openNextContext`，移除 `RunOptions.thinkingLevel` 与子会话接缝上的逐轮思考等级，`SessionConfig.commandPolicy` 改为按上下文取值的来源函数；HTTP API：`POST /tasks` 与子会话消息不再接受 `thinkingLevel`，撤回跟进消息不再返回它
 
 [English](2026-08-28-context-assembled-per-rotation.md)

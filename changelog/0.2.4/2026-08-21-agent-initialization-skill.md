@@ -3,7 +3,7 @@
 - **Date:** 2026-08-21
 - **Type:** refactor
 - **Scope:** `skills`, `web`, `docs`
-- **PR:** [#400](https://github.com/Prism-Shadow/penguin-harness/pull/400)
+- **PR:** [#400](https://github.com/qiaiqian67/linsight/pull/400)
 - **Breaking:** yes — the library Skill `agent-creation` no longer exists under that name
 
 [中文版](2026-08-21-agent-initialization-skill.zh.md)

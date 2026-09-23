@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** feature
 - **Scope:** `server`, `web`, `docs`
-- **PR:** [#441](https://github.com/Prism-Shadow/penguin-harness/pull/441)
+- **PR:** [#441](https://github.com/qiaiqian67/linsight/pull/441)
 
 [中文版](2026-08-24-agent-snapshot-create.zh.md)
 

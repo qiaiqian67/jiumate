@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `desktop`, `server`, `web`, `cli`
-- **PR:** [#173](https://github.com/Prism-Shadow/penguin-harness/pull/173), [#177](https://github.com/Prism-Shadow/penguin-harness/pull/177), [#180](https://github.com/Prism-Shadow/penguin-harness/pull/180), [#189](https://github.com/Prism-Shadow/penguin-harness/pull/189), [#199](https://github.com/Prism-Shadow/penguin-harness/pull/199), [#206](https://github.com/Prism-Shadow/penguin-harness/pull/206)
+- **PR:** [#173](https://github.com/qiaiqian67/linsight/pull/173), [#177](https://github.com/qiaiqian67/linsight/pull/177), [#180](https://github.com/qiaiqian67/linsight/pull/180), [#189](https://github.com/qiaiqian67/linsight/pull/189), [#199](https://github.com/qiaiqian67/linsight/pull/199), [#206](https://github.com/qiaiqian67/linsight/pull/206)
 
 [中文版](2026-08-04-desktop-app.zh.md)
 

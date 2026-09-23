@@ -3,7 +3,7 @@
 - **Date:** 2026-08-26
 - **Type:** fix
 - **Scope:** `core`, `server`
-- **PR:** [#489](https://github.com/Prism-Shadow/penguin-harness/pull/489)
+- **PR:** [#489](https://github.com/qiaiqian67/linsight/pull/489)
 
 [中文版](2026-08-26-title-prompt-language.zh.md)
 

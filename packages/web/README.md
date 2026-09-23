@@ -40,4 +40,4 @@ pnpm --filter @prismshadow/linsight-web build       # vite build → dist/
 
 No separate static server needed: `@prismshadow/linsight-server` auto-hosts `packages/web/dist` (or `LINSIGHT_WEB_DIST`) with an SPA fallback — build the web app, start the server, done. The published npm packages bundle the built front end.
 
-Part of [Linsight](https://github.com/Prism-Shadow/linsight) · Apache-2.0
+Part of [Linsight](https://github.com/qiaiqian67/linsight) · Apache-2.0

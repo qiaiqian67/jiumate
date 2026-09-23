@@ -1,7 +1,7 @@
 /** External links and language-independent constants used across the docs site. */
 
-export const REPO_URL = "https://github.com/Prism-Shadow/linsight";
-export const REPO_API_URL = "https://api.github.com/repos/Prism-Shadow/linsight";
+export const REPO_URL = "https://github.com/qiaiqian67/linsight";
+export const REPO_API_URL = "https://api.github.com/repos/qiaiqian67/linsight";
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 
 /**

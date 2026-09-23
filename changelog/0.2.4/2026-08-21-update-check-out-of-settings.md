@@ -3,7 +3,7 @@
 - **Date:** 2026-08-21
 - **Type:** feature
 - **Scope:** `web`, `docs`
-- **PR:** [#391](https://github.com/Prism-Shadow/penguin-harness/pull/391)
+- **PR:** [#391](https://github.com/qiaiqian67/linsight/pull/391)
 
 [中文版](2026-08-21-update-check-out-of-settings.zh.md)
 

@@ -3,7 +3,7 @@
 - **Date:** 2026-07-29
 - **Type:** fix
 - **Scope:** `core`, `tooling`
-- **PR:** [#100](https://github.com/Prism-Shadow/penguin-harness/pull/100)
+- **PR:** [#100](https://github.com/qiaiqian67/linsight/pull/100)
 
 [English](2026-07-29-harness-env-and-dev-ports.md)
 

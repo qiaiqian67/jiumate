@@ -3,11 +3,11 @@
 - **Date:** 2026-08-11
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`
-- **PR:** [#257](https://github.com/Prism-Shadow/penguin-harness/pull/257)
+- **PR:** [#257](https://github.com/qiaiqian67/linsight/pull/257)
 
 [中文版](2026-08-11-prompt-injection-toggles.zh.md)
 
-The three remaining prompt-borne subsystems now follow the shape Memory established ([#257](https://github.com/Prism-Shadow/penguin-harness/pull/257)): the system-prompt template carries only a section placeholder, the section's wording is per-agent editable config, and an on/off switch decides whether the section is injected at all.
+The three remaining prompt-borne subsystems now follow the shape Memory established ([#257](https://github.com/qiaiqian67/linsight/pull/257)): the system-prompt template carries only a section placeholder, the section's wording is per-agent editable config, and an on/off switch decides whether the section is injected at all.
 
 ## Template and config
 

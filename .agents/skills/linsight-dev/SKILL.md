@@ -77,7 +77,7 @@ Every change ships a changelog entry, in both languages, in `changelog/unrelease
 
 **Reasoning does not go on disk.** No `## Why`, `## Problem`, `## Decision`, `## Alternatives considered`, `## Verification`, `## Risks`, and no claims about what the codebase currently *is*. The thinking is still required — report it in the conversation and write it into the PR description, which stays attached to its diff.
 
-**Numbers are links, and half of them are issues.** A bare `#N` does not render as a link in Markdown. Worse, this repository's bug reports and its PRs share one numbering space: `#83`, `#85`, `#102`, `#136`–`#140`, `#150`, `#170`, `#215`, `#218`, `#229`, `#239` are issues. Classify before writing — `gh api repos/Prism-Shadow/linsight/issues/N --jq 'if .pull_request then "PR" else "ISSUE" end'` — and route them to `Issue`, not `PR`. A cross-repo reference names its repo: `agenthub [#162](https://github.com/Prism-Shadow/agenthub/pull/162)`.
+**Numbers are links, and half of them are issues.** A bare `#N` does not render as a link in Markdown. Worse, this repository's bug reports and its PRs share one numbering space: `#83`, `#85`, `#102`, `#136`–`#140`, `#150`, `#170`, `#215`, `#218`, `#229`, `#239` are issues. Classify before writing — `gh api repos/qiaiqian67/linsight/issues/N --jq 'if .pull_request then "PR" else "ISSUE" end'` — and route them to `Issue`, not `PR`. A cross-repo reference names its repo: `agenthub [#162](https://github.com/qiaiqian67/agenthub/pull/162)`.
 
 The PR number exists only once the PR is open: open it, then add the links in a follow-up commit on the same branch. `PR` is the field that actually gets forgotten — `grep -L 'PR:' changelog/unreleased/*.md` before asking for review.
 
@@ -87,7 +87,7 @@ An entry ships **inside the PR that makes the change** — there is no separate 
 
 A post is a pair under `packages/landing/content/blog/`: `<slug>.en.md` and `<slug>.zh.md`, each with `title` / `date` / `category` / `excerpt` frontmatter. Same rule as changelog entries — one without the other is unfinished.
 
-**The images are not in this repo.** Screenshots and demo videos live in the sibling `Prism-Shadow/linsight-community` repo, under `blog-assets/` and `videos/`. A published post's screenshots are never deleted, so that asset class grows without bound in the number of posts written; keeping it out of this history keeps everyone's clone small.
+**The images are not in this repo.** Screenshots and demo videos live in the sibling `qiaiqian67/linsight-community` repo, under `blog-assets/` and `videos/`. A published post's screenshots are never deleted, so that asset class grows without bound in the number of posts written; keeping it out of this history keeps everyone's clone small.
 
 **Posts still write a repo-local path.** Reference an image as `/blog-assets/<name>` — both `![alt](…)` and the raw `<img src="…">` some posts use — and let the renderer resolve it: `blogAssetUrl` in `packages/landing/src/lib/links.ts`, applied by the `img` adapter in `src/pages/blog-post.tsx`. Never paste the raw `raw.githubusercontent` URL into a post. One source of truth for the host, Markdown that stays readable and diffable, and moving the host again is a one-line change instead of a sweep over every post.
 

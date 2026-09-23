@@ -3,7 +3,7 @@
 - **Date:** 2026-08-21
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#398](https://github.com/Prism-Shadow/penguin-harness/pull/398)
+- **PR:** [#398](https://github.com/qiaiqian67/linsight/pull/398)
 
 [English](2026-08-21-draft-example-fill.md)
 

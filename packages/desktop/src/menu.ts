@@ -14,7 +14,7 @@ import { checkForUpdatesManually, updatesAvailableInThisForm } from "./updater.j
 export const INSTALL_CLI_MENU_LABEL = "Install 'linsight' Command…";
 
 const CHECK_FOR_UPDATES_MENU_LABEL = "Check for Updates…";
-const REPO_URL = "https://github.com/Prism-Shadow/linsight";
+const REPO_URL = "https://github.com/qiaiqian67/linsight";
 
 export function installAppMenu(opts: {
   includeCliInstall: boolean;

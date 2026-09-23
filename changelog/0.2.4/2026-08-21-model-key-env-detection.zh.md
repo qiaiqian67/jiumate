@@ -3,7 +3,7 @@
 - **Date:** 2026-08-21
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#395](https://github.com/Prism-Shadow/penguin-harness/pull/395)
+- **PR:** [#395](https://github.com/qiaiqian67/linsight/pull/395)
 
 [English](2026-08-21-model-key-env-detection.md)
 

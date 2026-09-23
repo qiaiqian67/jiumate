@@ -3,7 +3,7 @@
 - **Date:** 2026-07-30
 - **Type:** feature
 - **Scope:** `skills`, `web`
-- **PR:** [#133](https://github.com/Prism-Shadow/penguin-harness/pull/133)
+- **PR:** [#133](https://github.com/qiaiqian67/linsight/pull/133)
 
 [中文版](2026-07-30-skills-web-design-and-penguin-sdk.zh.md)
 

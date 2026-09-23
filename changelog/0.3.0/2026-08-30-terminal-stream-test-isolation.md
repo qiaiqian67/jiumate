@@ -3,7 +3,7 @@
 - **Date:** 2026-08-30
 - **Type:** process
 - **Scope:** `server`, `tooling`
-- **PR:** [#558](https://github.com/Prism-Shadow/linsight/pull/558)
+- **PR:** [#558](https://github.com/qiaiqian67/linsight/pull/558)
 
 [中文版](2026-08-30-terminal-stream-test-isolation.zh.md)
 

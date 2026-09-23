@@ -3,7 +3,7 @@
 - **Date:** 2026-07-20
 - **Type:** feature
 - **Scope:** `landing`, `docs`
-- **PR:** [#7](https://github.com/Prism-Shadow/penguin-harness/pull/7), [#6](https://github.com/Prism-Shadow/penguin-harness/pull/6)
+- **PR:** [#7](https://github.com/qiaiqian67/linsight/pull/7), [#6](https://github.com/qiaiqian67/linsight/pull/6)
 
 [中文版](2026-07-20-landing-site.zh.md)
 

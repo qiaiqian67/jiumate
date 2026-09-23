@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `web`, `server`
-- **PR:** [#183](https://github.com/Prism-Shadow/penguin-harness/pull/183)
+- **PR:** [#183](https://github.com/qiaiqian67/linsight/pull/183)
 
 [中文版](2026-08-04-traces-page-scaling.zh.md)
 

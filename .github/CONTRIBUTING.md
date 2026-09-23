@@ -165,7 +165,7 @@ pnpm test:e2e                                        # core live-model e2e, need
 
 ## Reporting a bug or proposing a feature
 
-Open an issue from the [issue forms](https://github.com/Prism-Shadow/linsight/issues/new/choose).
+Open an issue from the [issue forms](https://github.com/qiaiqian67/linsight/issues/new/choose).
 A bug report is worth far more with the version (`linsight version`), how Linsight
 was installed, the OS, and whether the problem survives a fresh data root
 (`LINSIGHT_HOME=/tmp/linsight-check linsight ...`) — that last one separates a code defect

@@ -8,7 +8,7 @@
 
 仓库根目录的 `pnpm penguin` 脚本改为运行 `packages/cli/src/penguin.ts`——也就是 `penguin` 可执行文件所构建自的那个源文件——不再运行 `packages/cli/src/index.ts`。
 
-[#298](https://github.com/Prism-Shadow/penguin-harness/pull/298) 拆分 CLI 入口后，`index.ts` 只负责导出 `cli()`，真正的调用挪到了 `penguin.ts`。那次改动同步了 `packages/cli` 自己的 `penguin` 脚本和 bin，却漏掉了根目录这一份，于是自 2026-08-18 起，在仓库根目录执行的每一次 `pnpm penguin <args>` 都只是导入模块、什么也不执行、以 0 退出——没有输出，没有报错，`dotenv/config` 也从未加载。`pnpm penguin chat` 看上去就像一个拒绝启动的 CLI。
+[#298](https://github.com/qiaiqian67/linsight/pull/298) 拆分 CLI 入口后，`index.ts` 只负责导出 `cli()`，真正的调用挪到了 `penguin.ts`。那次改动同步了 `packages/cli` 自己的 `penguin` 脚本和 bin，却漏掉了根目录这一份，于是自 2026-08-18 起，在仓库根目录执行的每一次 `pnpm penguin <args>` 都只是导入模块、什么也不执行、以 0 退出——没有输出，没有报错，`dotenv/config` 也从未加载。`pnpm penguin chat` 看上去就像一个拒绝启动的 CLI。
 
 ## 细节
 

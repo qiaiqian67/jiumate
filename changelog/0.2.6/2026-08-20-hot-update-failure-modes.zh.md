@@ -3,7 +3,7 @@
 - **Date:** 2026-08-20
 - **Type:** fix
 - **Scope:** `core`, `server`
-- **PR:** [#387](https://github.com/Prism-Shadow/penguin-harness/pull/387)
+- **PR:** [#387](https://github.com/qiaiqian67/linsight/pull/387)
 
 [English](2026-08-20-hot-update-failure-modes.md)
 

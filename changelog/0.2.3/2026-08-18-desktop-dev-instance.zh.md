@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** fix
 - **Scope:** `desktop`, `docs`
-- **PR:** [#318](https://github.com/Prism-Shadow/penguin-harness/pull/318)
-- **Issue:** [#292](https://github.com/Prism-Shadow/penguin-harness/issues/292)
+- **PR:** [#318](https://github.com/qiaiqian67/linsight/pull/318)
+- **Issue:** [#292](https://github.com/qiaiqian67/linsight/issues/292)
 
 [English](2026-08-18-desktop-dev-instance.md)
 

@@ -49,7 +49,7 @@ Web 应用这一个月的积累不少，拣要紧的说。对话头部的统计�
 
 ## 其余改进
 
-模型目录：Thinking Machines Lab 的 Inkling 上架 OpenRouter 与 Fireworks AI，Fireworks 新增 DeepSeek V4 Flash 0731，GLM-5.1 的网关条目下架（Z.AI 直连保留），OpenRouter 价格按官方 API 刷新。技能库新增 `humanizer`——中英等多语言通用的去 AI 味改写技能，手动安装；这篇发布文就是按它的方法写的。依赖侧以 workspace override 强制 `@hono/node-server` ≥ 2.0.5（Windows 下 serve-static 的路径穿越通告，旧副本来自 MCP SDK 的传递依赖）与 `nanoid` ≥ 3.3.17，`pnpm audit` 归零。发布工作流拒绝版本号与仓库不一致的 tag。完整清单见 [changelog/0.2.2](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.2.2)。
+模型目录：Thinking Machines Lab 的 Inkling 上架 OpenRouter 与 Fireworks AI，Fireworks 新增 DeepSeek V4 Flash 0731，GLM-5.1 的网关条目下架（Z.AI 直连保留），OpenRouter 价格按官方 API 刷新。技能库新增 `humanizer`——中英等多语言通用的去 AI 味改写技能，手动安装；这篇发布文就是按它的方法写的。依赖侧以 workspace override 强制 `@hono/node-server` ≥ 2.0.5（Windows 下 serve-static 的路径穿越通告，旧副本来自 MCP SDK 的传递依赖）与 `nanoid` ≥ 3.3.17，`pnpm audit` 归零。发布工作流拒绝版本号与仓库不一致的 tag。完整清单见 [changelog/0.2.2](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.2.2)。
 
 ## 安装或升级
 

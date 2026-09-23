@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `model-catalog`, `core`, `web`, `cli`, `skills`
-- **PR:** [#325](https://github.com/Prism-Shadow/penguin-harness/pull/325)
-- **Issue:** [#313](https://github.com/Prism-Shadow/penguin-harness/issues/313)
+- **PR:** [#325](https://github.com/qiaiqian67/linsight/pull/325)
+- **Issue:** [#313](https://github.com/qiaiqian67/linsight/issues/313)
 
 [中文版](2026-08-18-model-catalog-refresh.zh.md)
 

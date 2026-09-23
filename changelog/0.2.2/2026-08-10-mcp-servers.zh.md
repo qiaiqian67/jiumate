@@ -3,13 +3,13 @@
 - **Date:** 2026-08-10
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`, `cli`, `docs`
-- **PR:** [#242](https://github.com/Prism-Shadow/penguin-harness/pull/242)
-- **Issue:** [#229](https://github.com/Prism-Shadow/penguin-harness/issues/229), [#239](https://github.com/Prism-Shadow/penguin-harness/issues/239)
+- **PR:** [#242](https://github.com/qiaiqian67/linsight/pull/242)
+- **Issue:** [#229](https://github.com/qiaiqian67/linsight/issues/229), [#239](https://github.com/qiaiqian67/linsight/issues/239)
 - **Breaking:** yes — 拆分之前的 Trace 中内嵌的工具记录不再被读取或展示。
 
 [English](2026-08-10-mcp-servers.md)
 
-`system_config.yaml` 中的 `tools.mcpServers`——此前一直是一个预留的空接缝——现已接上一个真正的 MCP（Model Context Protocol）客户端，基于官方 TypeScript SDK v2（`@modelcontextprotocol/client` 2.0.0，规范修订版 2026-07-28）。每个条目保持规范的 `{ name, config }` 形状；`config` 描述三种传输之一（[#242](https://github.com/Prism-Shadow/penguin-harness/pull/242)，关闭 [#239](https://github.com/Prism-Shadow/penguin-harness/issues/239) 与 [#229](https://github.com/Prism-Shadow/penguin-harness/issues/229)）：
+`system_config.yaml` 中的 `tools.mcpServers`——此前一直是一个预留的空接缝——现已接上一个真正的 MCP（Model Context Protocol）客户端，基于官方 TypeScript SDK v2（`@modelcontextprotocol/client` 2.0.0，规范修订版 2026-07-28）。每个条目保持规范的 `{ name, config }` 形状；`config` 描述三种传输之一（[#242](https://github.com/qiaiqian67/linsight/pull/242)，关闭 [#239](https://github.com/qiaiqian67/linsight/issues/239) 与 [#229](https://github.com/qiaiqian67/linsight/issues/229)）：
 
 - `stdio`——派生一个本地服务进程（`command` / `args` / `env` / `cwd`）；
 - `http`——Streamable HTTP，即当前规范的远程传输（`url` / `headers`）；

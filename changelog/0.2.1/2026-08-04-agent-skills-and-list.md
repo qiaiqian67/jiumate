@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `web`, `server`
-- **PR:** [#179](https://github.com/Prism-Shadow/penguin-harness/pull/179), [#186](https://github.com/Prism-Shadow/penguin-harness/pull/186)
+- **PR:** [#179](https://github.com/qiaiqian67/linsight/pull/179), [#186](https://github.com/qiaiqian67/linsight/pull/186)
 
 [中文版](2026-08-04-agent-skills-and-list.zh.md)
 

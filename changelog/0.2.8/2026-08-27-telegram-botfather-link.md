@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#506](https://github.com/Prism-Shadow/penguin-harness/pull/506)
+- **PR:** [#506](https://github.com/qiaiqian67/linsight/pull/506)
 
 [中文版](2026-08-27-telegram-botfather-link.zh.md)
 
@@ -34,4 +34,4 @@ name it.
 - Tests were extended to pin both halves — the corner link's target, and that its label and
   its target name the same thing, asserted as one anchor — and to run over both dictionaries,
   so the label cannot regress in the locale the suite does not activate.
-- The design spec was updated to match ([penguin-harness-design #70](https://github.com/Prism-Shadow/penguin-harness-design/pull/70)).
+- The design spec was updated to match ([penguin-harness-design #70](https://github.com/qiaiqian67/linsight-design/pull/70)).

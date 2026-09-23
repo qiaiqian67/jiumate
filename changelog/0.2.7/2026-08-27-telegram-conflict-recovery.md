@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** fix
 - **Scope:** `server`, `web`
-- **PR:** [#484](https://github.com/Prism-Shadow/penguin-harness/pull/484)
+- **PR:** [#484](https://github.com/qiaiqian67/linsight/pull/484)
 
 [中文版](2026-08-27-telegram-conflict-recovery.zh.md)
 

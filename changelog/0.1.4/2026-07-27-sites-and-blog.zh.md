@@ -3,11 +3,11 @@
 - **Date:** 2026-07-27
 - **Type:** process
 - **Scope:** `landing`
-- **PR:** [#98](https://github.com/Prism-Shadow/penguin-harness/pull/98)
+- **PR:** [#98](https://github.com/qiaiqian67/linsight/pull/98)
 
 [English](2026-07-27-sites-and-blog.md)
 
-博客图片是本仓库中唯一一类增长没有上限的资产。已发布文章的图片永远不会被删除，而每篇新文章又会再添几百 KB——这些字节只有营销站点会渲染，却要由每一个为构建产品而克隆仓库的人永久背负。它们现在与演示视频一样，迁到兄弟仓库 `Prism-Shadow/penguin-harness-community`，经 raw.githubusercontent 提供，带 `access-control-allow-origin: *` 与五分钟缓存；本仓库原先放在 `packages/landing/public/blog-assets/` 下的七个文件（六张文章配图加上生成的 `benchmark-light.svg`）已删除。所接受的代价是：GitHub 故障会使站点降级为图片缺失，这比那些字节要便宜。
+博客图片是本仓库中唯一一类增长没有上限的资产。已发布文章的图片永远不会被删除，而每篇新文章又会再添几百 KB——这些字节只有营销站点会渲染，却要由每一个为构建产品而克隆仓库的人永久背负。它们现在与演示视频一样，迁到兄弟仓库 `qiaiqian67/linsight-community`，经 raw.githubusercontent 提供，带 `access-control-allow-origin: *` 与五分钟缓存；本仓库原先放在 `packages/landing/public/blog-assets/` 下的七个文件（六张文章配图加上生成的 `benchmark-light.svg`）已删除。所接受的代价是：GitHub 故障会使站点降级为图片缺失，这比那些字节要便宜。
 
 ## 文章正文未改动
 

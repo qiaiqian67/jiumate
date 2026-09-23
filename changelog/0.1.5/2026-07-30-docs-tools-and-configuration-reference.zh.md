@@ -3,7 +3,7 @@
 - **Date:** 2026-07-30
 - **Type:** process
 - **Scope:** `docs`
-- **PR:** [#126](https://github.com/Prism-Shadow/penguin-harness/pull/126)
+- **PR:** [#126](https://github.com/qiaiqian67/linsight/pull/126)
 
 [English](2026-07-30-docs-tools-and-configuration-reference.md)
 

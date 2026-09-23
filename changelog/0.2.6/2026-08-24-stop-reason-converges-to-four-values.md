@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** refactor
 - **Scope:** `core`, `server`, `web`, `cli`
-- **PR:** [#458](https://github.com/Prism-Shadow/penguin-harness/pull/458)
+- **PR:** [#458](https://github.com/qiaiqian67/linsight/pull/458)
 - **Breaking:** yes — `StopReason` drops `failed` / `timeout` / `malformed` / `auth` in favor of `retryable` / `fatal` and becomes the only stop-reason vocabulary (`ToolStopReason` / `CompactionStatus` / `McpConnectStatus` are removed); `LLMOutcome.permanent` is removed; the Web composer's auth-dead gate is retired
 
 [中文版](2026-08-24-stop-reason-converges-to-four-values.zh.md)

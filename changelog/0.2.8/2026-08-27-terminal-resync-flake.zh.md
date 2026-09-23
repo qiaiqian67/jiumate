@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** process
 - **Scope:** `server`, `ci`
-- **PR:** [#516](https://github.com/Prism-Shadow/penguin-harness/pull/516)
+- **PR:** [#516](https://github.com/qiaiqian67/linsight/pull/516)
 
 [English](2026-08-27-terminal-resync-flake.md)
 

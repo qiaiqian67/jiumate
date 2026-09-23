@@ -3,7 +3,7 @@
 - **Date:** 2026-08-19
 - **Type:** process
 - **Scope:** `desktop`
-- **PR:** [#331](https://github.com/Prism-Shadow/penguin-harness/pull/331)
+- **PR:** [#331](https://github.com/qiaiqian67/linsight/pull/331)
 
 [English](2026-08-19-ignore-desktop-build-artifacts.md)
 

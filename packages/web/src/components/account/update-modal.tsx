@@ -29,7 +29,7 @@ import {
 import { Button } from "../ui/button";
 import { Modal } from "../ui/modal";
 
-const RELEASES_URL = "https://github.com/Prism-Shadow/linsight/releases";
+const RELEASES_URL = "https://github.com/qiaiqian67/linsight/releases";
 
 export function UpdateModal() {
   useUpdateFlowOwner();

@@ -3,7 +3,7 @@
 - **Date:** 2026-09-01
 - **Type:** refactor
 - **Scope:** `server`
-- **PR:** [#597](https://github.com/Prism-Shadow/linsight/pull/597)
+- **PR:** [#597](https://github.com/qiaiqian67/linsight/pull/597)
 
 [English](2026-09-01-machines-connection.md)
 

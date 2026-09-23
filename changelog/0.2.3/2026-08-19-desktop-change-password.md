@@ -3,8 +3,8 @@
 - **Date:** 2026-08-19
 - **Type:** fix
 - **Scope:** `web`, `docs`
-- **PR:** [#349](https://github.com/Prism-Shadow/penguin-harness/pull/349)
-- **Issue:** [#346](https://github.com/Prism-Shadow/penguin-harness/issues/346)
+- **PR:** [#349](https://github.com/qiaiqian67/linsight/pull/349)
+- **Issue:** [#346](https://github.com/qiaiqian67/linsight/issues/346)
 
 [中文版](2026-08-19-desktop-change-password.zh.md)
 

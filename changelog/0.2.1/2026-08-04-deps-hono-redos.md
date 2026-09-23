@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** fix
 - **Scope:** `server`
-- **PR:** [#197](https://github.com/Prism-Shadow/penguin-harness/pull/197)
+- **PR:** [#197](https://github.com/qiaiqian67/linsight/pull/197)
 
 [中文版](2026-08-04-deps-hono-redos.zh.md)
 

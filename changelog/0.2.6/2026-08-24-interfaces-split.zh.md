@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** refactor
 - **Scope:** `core`, `server`, `docs`
-- **PR:** [#459](https://github.com/Prism-Shadow/penguin-harness/pull/459)
+- **PR:** [#459](https://github.com/qiaiqian67/linsight/pull/459)
 - **Breaking:** yes — `SubagentHandle.run` 与 `sendToBackgroundSubagent` 改收 OmniMessage 数组而非字符串，且 build/version 类型移出 `/interfaces` 子路径
 
 [English](2026-08-24-interfaces-split.md)

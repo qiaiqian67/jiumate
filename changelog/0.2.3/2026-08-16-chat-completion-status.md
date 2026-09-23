@@ -3,8 +3,8 @@
 - **Date:** 2026-08-16
 - **Type:** feature
 - **Scope:** `web`, `server`, `docs`
-- **PR:** [#302](https://github.com/Prism-Shadow/penguin-harness/pull/302)
-- **Issue:** [#291](https://github.com/Prism-Shadow/penguin-harness/issues/291)
+- **PR:** [#302](https://github.com/qiaiqian67/linsight/pull/302)
+- **Issue:** [#291](https://github.com/qiaiqian67/linsight/issues/291)
 
 [中文版](2026-08-16-chat-completion-status.zh.md)
 

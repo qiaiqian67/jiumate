@@ -3,7 +3,7 @@
 - **Date:** 2026-08-30
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#556](https://github.com/Prism-Shadow/linsight/pull/556)
+- **PR:** [#556](https://github.com/qiaiqian67/linsight/pull/556)
 
 [English](2026-08-30-terminal-links.md)
 

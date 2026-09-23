@@ -3,7 +3,7 @@
 - **Date:** 2026-08-22
 - **Type:** feature
 - **Scope:** `server`, `docs`
-- **PR:** [#353](https://github.com/Prism-Shadow/penguin-harness/pull/353)
+- **PR:** [#353](https://github.com/qiaiqian67/linsight/pull/353)
 
 [English](2026-08-22-extension-mechanism.md)
 

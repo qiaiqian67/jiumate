@@ -82,4 +82,4 @@ Downgrading to 0.2.9 works on a migrated database: `goal_state` is recreated by 
 
 Linux or macOS (x64 / arm64), or Windows 10+ (x64). The desktop app and the CLI installers bundle their own runtime; installing from npm needs Node >= 24. All data stays under `~/.linsight/data`.
 
-Full detail: [changelog/0.3.0/](https://github.com/Prism-Shadow/linsight/tree/main/changelog/0.3.0).
+Full detail: [changelog/0.3.0/](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.3.0).

@@ -3,7 +3,7 @@
 - **Date:** 2026-08-06
 - **Type:** feature
 - **Scope:** `server`, `web`, `desktop`, `core`
-- **PR:** [#225](https://github.com/Prism-Shadow/penguin-harness/pull/225), [#233](https://github.com/Prism-Shadow/penguin-harness/pull/233)
+- **PR:** [#225](https://github.com/qiaiqian67/linsight/pull/225), [#233](https://github.com/qiaiqian67/linsight/pull/233)
 
 [English](2026-08-06-system-proxy-switch.md)
 

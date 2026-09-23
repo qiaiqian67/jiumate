@@ -3,7 +3,7 @@
 - **Date:** 2026-08-28
 - **Type:** feature
 - **Scope:** `model-catalog`, `core`, `server`, `docs`, `skills`
-- **PR:** [#534](https://github.com/Prism-Shadow/penguin-harness/pull/534)
+- **PR:** [#534](https://github.com/qiaiqian67/linsight/pull/534)
 
 [English](2026-08-28-default-vision-model.md)
 

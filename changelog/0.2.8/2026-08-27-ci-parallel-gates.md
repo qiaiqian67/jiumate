@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** process
 - **Scope:** `ci`, `tooling`
-- **PR:** [#488](https://github.com/Prism-Shadow/penguin-harness/pull/488)
+- **PR:** [#488](https://github.com/qiaiqian67/linsight/pull/488)
 
 [中文版](2026-08-27-ci-parallel-gates.zh.md)
 

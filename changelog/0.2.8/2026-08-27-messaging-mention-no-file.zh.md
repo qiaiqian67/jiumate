@@ -3,7 +3,7 @@
 - **Date:** 2026-08-27
 - **Type:** fix
 - **Scope:** `server`
-- **PR:** [#511](https://github.com/Prism-Shadow/penguin-harness/pull/511)
+- **PR:** [#511](https://github.com/qiaiqian67/linsight/pull/511)
 
 [English](2026-08-27-messaging-mention-no-file.md)
 

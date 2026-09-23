@@ -47,10 +47,10 @@ const FIRST_CHECK_DELAY_MS = 20_000;
 /** Subsequent automatic checks. */
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-const RELEASES_URL = "https://github.com/Prism-Shadow/linsight/releases";
+const RELEASES_URL = "https://github.com/qiaiqian67/linsight/releases";
 const GITHUB_FEED = {
   provider: "github" as const,
-  owner: "Prism-Shadow",
+  owner: "qiaiqian67",
   repo: "linsight",
 };
 

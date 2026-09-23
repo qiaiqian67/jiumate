@@ -3,7 +3,7 @@
 - **Date:** 2026-08-04
 - **Type:** feature
 - **Scope:** `model-catalog`, `skills`
-- **PR:** [#178](https://github.com/Prism-Shadow/penguin-harness/pull/178)
+- **PR:** [#178](https://github.com/qiaiqian67/linsight/pull/178)
 
 [English](2026-08-04-model-catalog-openrouter-qwen38-max.md)
 

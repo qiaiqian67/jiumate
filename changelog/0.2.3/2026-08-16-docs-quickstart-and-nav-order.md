@@ -3,7 +3,7 @@
 - **Date:** 2026-08-16
 - **Type:** process
 - **Scope:** `docs`
-- **PR:** [#303](https://github.com/Prism-Shadow/penguin-harness/pull/303)
+- **PR:** [#303](https://github.com/qiaiqian67/linsight/pull/303)
 
 [中文版](2026-08-16-docs-quickstart-and-nav-order.zh.md)
 

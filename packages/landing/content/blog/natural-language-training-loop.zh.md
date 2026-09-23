@@ -138,6 +138,6 @@ linsight config model list
 跑在你自己的硬件上。用你自己的权重。数据留在你放它的地方。
 
 ```bash
-curl -fsSL https://github.com/Prism-Shadow/linsight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
 linsight web
 ```

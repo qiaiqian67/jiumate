@@ -49,4 +49,4 @@ These four landed in 0.1.3 and reach the npm packages for the first time here.
 
 Linux or macOS (x64 / arm64), or Windows 10+ (x64; the one-liner installs via PowerShell). The installer bundles its own Node runtime; installing from npm needs Node >= 24. All data stays under `~/.penguin/data`.
 
-Full detail: [changelog/0.1.4/](https://github.com/Prism-Shadow/penguin-harness/tree/main/changelog/0.1.4). Per-entry detail for everything under Highlights lives in the [v0.1.3 release notes](https://github.com/Prism-Shadow/penguin-harness/releases/tag/v0.1.3) and [changelog/0.1.3/](https://github.com/Prism-Shadow/penguin-harness/tree/main/changelog/0.1.3).
+Full detail: [changelog/0.1.4/](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.1.4). Per-entry detail for everything under Highlights lives in the [v0.1.3 release notes](https://github.com/qiaiqian67/linsight/releases/tag/v0.1.3) and [changelog/0.1.3/](https://github.com/qiaiqian67/linsight/tree/main/changelog/0.1.3).

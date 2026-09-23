@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** feature
 - **Scope:** `cli`, `server`, `docs`
-- **PR:** [#443](https://github.com/Prism-Shadow/penguin-harness/pull/443)
+- **PR:** [#443](https://github.com/qiaiqian67/linsight/pull/443)
 - **Breaking:** yes —— 固定种子密码退役，改为通过打印的首次登录链接认领账号
 
 [English](2026-08-24-penguin-auth.md)

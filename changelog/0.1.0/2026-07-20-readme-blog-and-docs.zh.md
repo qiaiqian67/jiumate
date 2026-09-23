@@ -3,7 +3,7 @@
 - **Date:** 2026-07-20
 - **Type:** process
 - **Scope:** `docs`, `landing`
-- **PR:** [#7](https://github.com/Prism-Shadow/penguin-harness/pull/7)
+- **PR:** [#7](https://github.com/qiaiqian67/linsight/pull/7)
 
 [English](2026-07-20-readme-blog-and-docs.md)
 

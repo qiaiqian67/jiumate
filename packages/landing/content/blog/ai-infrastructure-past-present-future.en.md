@@ -91,6 +91,6 @@ linsight run -m "Serve Qwen3.5-0.8B with Ollama and register it with Linsight"
 ---
 
 - **Docs**: [Skills](https://linsight.ooo/docs/skills) · [Tools & Approval](https://linsight.ooo/docs/tools) · [Models & Providers](https://linsight.ooo/docs/models)
-- **Community**: [GitHub](https://github.com/Prism-Shadow/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **Community**: [GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **Sources**: [vLLM](https://docs.vllm.ai/) · [Ollama](https://ollama.com/) · [LlamaFactory](https://github.com/hiyouga/LlamaFactory) · [Stripe, Can AI agents build real Stripe integrations?](https://stripe.com/blog/can-ai-agents-build-real-stripe-integrations) · [Anthropic, Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)

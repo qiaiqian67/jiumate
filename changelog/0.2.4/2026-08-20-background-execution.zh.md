@@ -3,7 +3,7 @@
 - **Date:** 2026-08-20
 - **Type:** feature
 - **Scope:** `core`, `server`, `web`, `docs`
-- **PR:** [#376](https://github.com/Prism-Shadow/penguin-harness/pull/376)
+- **PR:** [#376](https://github.com/qiaiqian67/linsight/pull/376)
 
 [English](2026-08-20-background-execution.md)
 

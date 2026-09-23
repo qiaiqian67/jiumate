@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** fix
 - **Scope:** `web`
-- **PR:** [#328](https://github.com/Prism-Shadow/penguin-harness/pull/328)
-- **Issue:** [#309](https://github.com/Prism-Shadow/penguin-harness/issues/309)
+- **PR:** [#328](https://github.com/qiaiqian67/linsight/pull/328)
+- **Issue:** [#309](https://github.com/qiaiqian67/linsight/issues/309)
 
 [中文版](2026-08-18-sidebar-title-scroll-reveal.zh.md)
 

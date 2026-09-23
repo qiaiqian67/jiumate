@@ -3,7 +3,7 @@
 - **Date:** 2026-07-27
 - **Type:** process
 - **Scope:** `landing`
-- **PR:** [#96](https://github.com/Prism-Shadow/penguin-harness/pull/96)
+- **PR:** [#96](https://github.com/qiaiqian67/linsight/pull/96)
 
 [English](2026-07-27-sites-and-blog.md)
 

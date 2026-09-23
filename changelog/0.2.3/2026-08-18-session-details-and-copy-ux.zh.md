@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** fix
 - **Scope:** `web`, `server`, `docs`
-- **PR:** [#327](https://github.com/Prism-Shadow/penguin-harness/pull/327)
-- **Issue:** [#312](https://github.com/Prism-Shadow/penguin-harness/issues/312)
+- **PR:** [#327](https://github.com/qiaiqian67/linsight/pull/327)
+- **Issue:** [#312](https://github.com/qiaiqian67/linsight/issues/312)
 
 [English](2026-08-18-session-details-and-copy-ux.md)
 

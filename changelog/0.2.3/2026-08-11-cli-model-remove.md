@@ -3,7 +3,7 @@
 - **Date:** 2026-08-11
 - **Type:** feature
 - **Scope:** `cli`, `core`, `docs`
-- **PR:** [#273](https://github.com/Prism-Shadow/penguin-harness/pull/273)
+- **PR:** [#273](https://github.com/qiaiqian67/linsight/pull/273)
 
 [中文版](2026-08-11-cli-model-remove.zh.md)
 

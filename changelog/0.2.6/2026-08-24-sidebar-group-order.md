@@ -3,7 +3,7 @@
 - **Date:** 2026-08-24
 - **Type:** feature
 - **Scope:** `web`
-- **PR:** [#440](https://github.com/Prism-Shadow/penguin-harness/pull/440)
+- **PR:** [#440](https://github.com/qiaiqian67/linsight/pull/440)
 
 [中文版](2026-08-24-sidebar-group-order.zh.md)
 

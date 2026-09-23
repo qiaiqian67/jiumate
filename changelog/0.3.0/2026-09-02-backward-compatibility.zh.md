@@ -3,7 +3,7 @@
 - **Date:** 2026-09-02
 - **Type:** process
 - **Scope:** `server`, `core`, `web`, `cli`
-- **PR:** [#542](https://github.com/Prism-Shadow/linsight/pull/542)
+- **PR:** [#542](https://github.com/qiaiqian67/linsight/pull/542)
 - **Breaking:** yes — 首个只能重启应用的 schema 迁移：向运行中的运行时热推送本版本会被拒绝，直到运行时重启；本版本之前就存在的 Agent 上发起目标模式会收到 409，直到给它装上 `goal` 插件
 
 [English](2026-09-02-backward-compatibility.md)

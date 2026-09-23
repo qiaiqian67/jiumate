@@ -3,7 +3,7 @@
 - **Date:** 2026-08-23
 - **Type:** feature
 - **Scope:** `web`, `docs`
-- **PR:** [#429](https://github.com/Prism-Shadow/penguin-harness/pull/429)
+- **PR:** [#429](https://github.com/qiaiqian67/linsight/pull/429)
 
 [English](2026-08-23-trace-one-entry-point.md)
 

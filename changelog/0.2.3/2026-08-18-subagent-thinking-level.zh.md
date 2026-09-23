@@ -3,8 +3,8 @@
 - **Date:** 2026-08-18
 - **Type:** feature
 - **Scope:** `core`, `docs`
-- **PR:** [#323](https://github.com/Prism-Shadow/penguin-harness/pull/323)
-- **Issue:** [#306](https://github.com/Prism-Shadow/penguin-harness/issues/306)
+- **PR:** [#323](https://github.com/qiaiqian67/linsight/pull/323)
+- **Issue:** [#306](https://github.com/qiaiqian67/linsight/issues/306)
 
 [English](2026-08-18-subagent-thinking-level.md)
 

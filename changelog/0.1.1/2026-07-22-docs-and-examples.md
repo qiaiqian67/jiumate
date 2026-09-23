@@ -3,7 +3,7 @@
 - **Date:** 2026-07-22
 - **Type:** process
 - **Scope:** `docs`, `examples`
-- **PR:** [#12](https://github.com/Prism-Shadow/penguin-harness/pull/12), [#29](https://github.com/Prism-Shadow/penguin-harness/pull/29)
+- **PR:** [#12](https://github.com/qiaiqian67/linsight/pull/12), [#29](https://github.com/qiaiqian67/linsight/pull/29)
 
 [中文版](2026-07-22-docs-and-examples.zh.md)
 

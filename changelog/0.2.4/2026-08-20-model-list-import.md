@@ -3,7 +3,7 @@
 - **Date:** 2026-08-20
 - **Type:** feature
 - **Scope:** `web`, `server`, `core`
-- **PR:** [#368](https://github.com/Prism-Shadow/penguin-harness/pull/368)
+- **PR:** [#368](https://github.com/qiaiqian67/linsight/pull/368)
 
 [中文版](2026-08-20-model-list-import.zh.md)
 
@@ -11,7 +11,7 @@ The models page's "add group" dialog gained two modes. **Create only** keeps the
 
 ## Details
 
-- Listing rides on AgentHub 0.4.5's `listModels()` (agenthub [#183](https://github.com/Prism-Shadow/agenthub/pull/183)): core exposes a thin `listEndpointModels` wrapper over `AutoLLMClient`, and the server serves it as `POST /api/projects/:p/models/list` (owner-only, same base-URL validation and DTO discipline as `/detect`; listings are bounded at 20s).
+- Listing rides on AgentHub 0.4.5's `listModels()` (agenthub [#183](https://github.com/qiaiqian67/agenthub/pull/183)): core exposes a thin `listEndpointModels` wrapper over `AutoLLMClient`, and the server serves it as `POST /api/projects/:p/models/list` (owner-only, same base-URL validation and DTO discipline as `/detect`; listings are bounded at 20s).
 - An omitted API key follows the same environment chain as the connectivity test (`OPENAI_API_KEY` / `ANTHROPIC_API_KEY` per protocol). Keys travel only in request headers upstream and are never echoed.
 - Ids come back in the endpoint's own order. An entry is skipped and counted in the success toast when its id duplicates one already taken (within the listing, or an already-configured `(provider, model_id)` pair) or when the config could not hold it — empty, over the 200-character id bound, or carrying control characters — so one bad entry never sinks the whole import.
 - Only the id is taken from the endpoint: pricing, context window and display name stay empty rather than recording provider-reported numbers against the catalog's own pricing convention, and an imported model claims no vision support until it is probed or switched on, exactly like a model added to a user-defined group by hand.
