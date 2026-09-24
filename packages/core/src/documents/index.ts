@@ -46,6 +46,8 @@ export {
   type DocumentPreview,
 } from "./preview.js";
 export { applyCellEdits, parseAddress, type CellEdit } from "./spreadsheet-write.js";
+export { markdownToDocx } from "./docx-write.js";
+export { docxToMarkdown } from "./docx.js";
 export type { PptxSlide } from "./slides.js";
 export type { SheetGrid } from "./spreadsheet.js";
 

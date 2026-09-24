@@ -81,6 +81,25 @@ export async function docxToHtml(data: Uint8Array): Promise<{ html: string; warn
   return { html, warnings };
 }
 
+/**
+ * The document's text as Markdown, with no wrapper around it.
+ *
+ * This is the editing basis, and it is deliberately not `renderExtraction`'s output. That function
+ * frames the body for a model — a `# docx document — 1 section` title, a `## document` heading — and
+ * those frames are output, not content. Feeding them back through `markdownToDocx` writes them into
+ * the user's document as literal headings, which is how a round trip quietly grows a paragraph
+ * nobody typed.
+ *
+ * So: the tool renders, the editor edits, and only the body crosses between them.
+ */
+export async function docxToMarkdown(data: Uint8Array): Promise<string> {
+  const result = await extractDocx(data);
+  return result.units
+    .map((unit) => unit.markdown)
+    .join("\n\n")
+    .trim();
+}
+
 export async function extractDocx(data: Uint8Array): Promise<ExtractResult> {
   const { html, warnings } = await docxToHtml(data);
 
