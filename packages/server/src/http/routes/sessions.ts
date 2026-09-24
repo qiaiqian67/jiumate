@@ -24,7 +24,9 @@ import {
 import {
   applyCellEdits,
   buildDocumentPreview,
+  docxToMarkdown,
   documentFormatOf,
+  markdownToDocx,
   type CellEdit,
 } from "@prismshadow/linsight-core/documents";
 import type { OmniMessage } from "@prismshadow/linsight-core";
@@ -70,6 +72,7 @@ import {
   positiveIntParam,
   readJson,
   requireEnum,
+  requireString,
   requireValidId,
 } from "../validate.js";
 import type { AppDeps } from "../../app.js";
@@ -98,6 +101,9 @@ const STAT_MAX_PATHS = 100;
 const STAT_MAX_PATH_LEN = 512;
 /** Cap on one workbook edit request. A spreadsheet edit is a handful of cells, not a rewrite. */
 const MAX_CELL_EDITS = 500;
+
+/** Max Markdown accepted for a .docx save. The editor's own cap is far lower; this is a backstop. */
+const MAX_MARKDOWN_BYTES = 8 * 1024 * 1024;
 
 /**
  * Weak ETag for a file based on its mtimeMs (changes whenever the file is written on disk).
@@ -1527,6 +1533,138 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     }
     await deps.workspaceFiles.write(row.workspace, rel, Buffer.from(updated));
     return noContentWithEtag(row.workspace, rel);
+  });
+
+  /**
+   * GET /api/sessions/:sessionId/files/document-markdown — a .docx as Markdown, for editing.
+   *
+   * Fetched when the user asks to edit rather than shipped with every preview: the preview is HTML
+   * and a reader who only looks at a document should not download a second copy of its text in
+   * another format. What comes back is the body without the extractor's framing, which is the only
+   * form safe to feed back through the writer — see `docxToMarkdown`.
+   */
+  app.get("/:sessionId/files/document-markdown", async (c) => {
+    const row = resolveSession(c);
+    const rel = c.req.query("path") ?? "";
+    if (documentFormatOf(rel) !== "docx") {
+      throw new HttpError(415, "not_editable_document", "Only a .docx can be edited as Markdown.");
+    }
+    const { data } = await deps.workspaceFiles.read(row.workspace, rel);
+    try {
+      return c.json({ markdown: await docxToMarkdown(data) });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpError(422, "document_read_failed", message);
+    }
+  });
+
+  /**
+   * PUT /api/sessions/:sessionId/files/document-docx — turn edited Markdown into a .docx.
+   *
+   * The write half of editing a Word document. The client sends the Markdown it has been editing,
+   * not a document: the browser never held a .docx it could faithfully re-serialize, which is the
+   * same reason the cell endpoint sends coordinates. The conversion happens against the bytes on
+   * disk, on the server, where the writer lives.
+   *
+   * `targetPath` is required rather than inferred, because the choice between "new file" and
+   * "replace the original" is the user's and should not be guessed. The round trip is lossy — the
+   * theme, headers, footers and images do not survive — so the default the UI offers is a new file,
+   * and overwriting the original is an explicit request that also has to match its version.
+   *
+   * An existing target without an If-Match is refused rather than overwritten: "save as a new file"
+   * that silently clobbers another document is the failure this check exists to prevent.
+   */
+  app.put("/:sessionId/files/document-docx", async (c) => {
+    const row = resolveSession(c);
+    const rel = c.req.query("path") ?? "";
+    const body = await readJson(c);
+
+    const markdown = body.markdown;
+    if (typeof markdown !== "string") {
+      throw badRequest("markdown must be a string.");
+    }
+    if (Buffer.byteLength(markdown, "utf8") > MAX_MARKDOWN_BYTES) {
+      throw new HttpError(413, "document_too_large", "The edited document is too large to save.");
+    }
+    const targetPath = body.targetPath;
+    if (typeof targetPath !== "string" || targetPath.length === 0) {
+      throw badRequest("targetPath is required: saving as a new file or over the original.");
+    }
+    if (documentFormatOf(targetPath) !== "docx") {
+      throw badRequest("targetPath must name a .docx file.");
+    }
+
+    const ifMatch = c.req.header("if-match");
+    const [targetExists] = await deps.workspaceFiles.statExisting(row.workspace, [targetPath]);
+    if (targetExists) {
+      if (ifMatch === undefined) {
+        throw new HttpError(
+          409,
+          "file_exists",
+          `"${targetPath}" already exists. Choose another name, or reload it and overwrite.`,
+        );
+      }
+      await assertUnchanged(row.workspace, targetPath, ifMatch);
+    }
+    // Overwriting the source needs its own check: the Agent may have rewritten the document since
+    // the editor read it, and a stale save would discard that work without a word.
+    if (targetPath === rel) await assertUnchanged(row.workspace, rel, ifMatch);
+
+    let generated: Uint8Array;
+    try {
+      generated = await markdownToDocx(markdown);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpError(422, "document_write_failed", message);
+    }
+
+    await deps.workspaceFiles.write(row.workspace, targetPath, Buffer.from(generated));
+    return noContentWithEtag(row.workspace, targetPath);
+  });
+
+  /**
+   * PUT /api/sessions/:sessionId/files/document-docx — write an edited document back as a .docx.
+   *
+   * The counterpart to the workbook route: the client holds Markdown, not a file, and the server
+   * turns it into a .docx. It could not be the other way round — generating OOXML in the browser
+   * would mean shipping the writer and the whole stylesheet machinery to every client, for an
+   * action most sessions never take.
+   *
+   * `output` is required rather than optional, and that is the point. An edited .docx is a
+   * different document from the one that was read: the round trip through Markdown keeps the text
+   * and its structure and replaces the visual design, so an overwrite destroys something the user
+   * may not have realized was there. Requiring the caller to name the target makes overwriting a
+   * decision instead of a default — the UI offers a new filename first.
+   *
+   * If-Match applies only when the target is the source. Saving to a new file cannot conflict with
+   * anything; overwriting the file the Markdown came from is exactly the case where the Agent may
+   * have rewritten it since, and applying a stale edit silently is the failure this prevents.
+   */
+  app.put("/:sessionId/files/document-docx", async (c) => {
+    const row = resolveSession(c);
+    const rel = c.req.query("path") ?? "";
+    const body = await readJson(c);
+
+    if (typeof body.markdown !== "string") {
+      throw badRequest("markdown must be a string.");
+    }
+    const output = requireString(body, "output", { label: "output" });
+    if (!/\.docx$/i.test(output)) {
+      throw badRequest("output must name a .docx file.");
+    }
+
+    if (output === rel) await assertUnchanged(row.workspace, rel, c.req.header("if-match"));
+
+    let bytes: Uint8Array;
+    try {
+      bytes = await markdownToDocx(body.markdown);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new HttpError(422, "document_write_failed", message);
+    }
+
+    await deps.workspaceFiles.write(row.workspace, output, Buffer.from(bytes));
+    return noContentWithEtag(row.workspace, output);
   });
 
   /**
