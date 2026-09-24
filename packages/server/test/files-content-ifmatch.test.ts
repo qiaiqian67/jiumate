@@ -159,6 +159,29 @@ describe("files/content ETag + If-Match conflict detection", () => {
     expect(await fs.readFile(path.join(workspace, "note.md"), "utf8")).toBe("# agent wrote this\n");
   });
 
+  it("PUT with If-Match: * overwrites anyway — the conflict dialog's answer", async () => {
+    const got = await owner.get(`/api/sessions/${sessionId}/files/content?path=note.md`);
+    const stale = parseEtag(got.headers.get("etag")) - 1;
+
+    // Same race as the test above: the Agent rewrote the file while the user had it open.
+    await fs.writeFile(path.join(workspace, "note.md"), "# agent wrote this\n");
+
+    // The dialog said the file moved on and asked; this is the user saying yes. The stale ETag
+    // cannot express that — re-sending it is refused for the same reason the first attempt was,
+    // so the dialog would reopen forever. `*` is the If-Match wildcard: overwrite whatever is
+    // there. The check is opted out of explicitly, not silently.
+    const put = await putFile(
+      t,
+      ownerCookie,
+      sessionId,
+      "note.md",
+      { dataBase64: Buffer.from("# user typed this\n").toString("base64") },
+      "*",
+    );
+    expect(put.status).toBe(204);
+    expect(await fs.readFile(path.join(workspace, "note.md"), "utf8")).toBe("# user typed this\n");
+  });
+
   it("PUT with If-Match on a deleted file: 409 file_conflict, file does not get resurrected", async () => {
     const got = await owner.get(`/api/sessions/${sessionId}/files/content?path=note.md`);
     const etag = parseEtag(got.headers.get("etag"));

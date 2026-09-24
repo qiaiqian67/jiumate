@@ -645,7 +645,11 @@ export function WorkspaceBrowser({
             sourcePath,
             content,
             output,
-            output === sourcePath && etag !== undefined ? etag : undefined,
+            // `force` is the user answering the conflict dialog, so it means overwrite regardless of
+            // what is on disk — the If-Match wildcard. Re-sending the stale ETag is what made
+            // "overwrite" impossible: the server refused it for the same reason it refused the first
+            // attempt, and the dialog reopened forever.
+            opts?.force ? "*" : output === sourcePath && etag !== undefined ? etag : undefined,
           );
           setEditingMd(false);
           setDraftMd("");

@@ -1435,12 +1435,21 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
    * was a known version and that version is gone. Without that last case a force-save would
    * silently resurrect a deleted file.
    */
+  /**
+   * Refuses the write when the file on disk is not the version the caller read.
+   *
+   * `*` means "overwrite whatever is there" — the standard If-Match wildcard, and what the
+   * conflict dialog's confirm sends. Without it there was no way to ever overwrite: confirming the
+   * dialog re-sent the same stale ETag that caused the conflict, so the dialog reopened forever.
+   * The version check is for catching an Agent's rewrite, not for refusing a user who has just been
+   * told the file moved on and said yes anyway.
+   */
   const assertUnchanged = async (
     workspace: string,
     rel: string,
     ifMatch: string | undefined,
   ): Promise<void> => {
-    if (ifMatch === undefined) return;
+    if (ifMatch === undefined || ifMatch.trim() === "*") return;
     const expected = parseWeakEtag(ifMatch);
     if (expected === null) {
       throw badRequest('If-Match header must be a weak ETag like W/"<mtimeMs>".');

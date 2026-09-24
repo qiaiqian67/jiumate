@@ -1025,7 +1025,8 @@ export const documentPreview = (
  * request.
  *
  * `ifMatch` is sent when overwriting. The server refuses an existing target that has no If-Match,
- * so a "save as a new file" can never silently clobber another document.
+ * so a "save as a new file" can never silently clobber another document. Pass `"*"` to overwrite
+ * regardless — the If-Match wildcard, sent when the user has answered the conflict dialog.
  */
 export const writeDocumentDocx = (
   sessionId: string,
