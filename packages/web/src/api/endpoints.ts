@@ -1016,6 +1016,33 @@ export const documentPreview = (
  * the same contract the Markdown editor saves under, and more important here, because a stale cell
  * delta applied silently is a wrong number in a document someone may already have sent.
  */
+/**
+ * Writes edited Markdown back as a .docx.
+ *
+ * `targetPath` is required and not inferred: the choice between a new file and replacing the
+ * original belongs to the user. The round trip is lossy — the theme, headers, footers and images
+ * do not survive — so the UI offers a new file first and treats an overwrite as an explicit
+ * request.
+ *
+ * `ifMatch` is sent when overwriting. The server refuses an existing target that has no If-Match,
+ * so a "save as a new file" can never silently clobber another document.
+ */
+export const writeDocumentDocx = (
+  sessionId: string,
+  sourcePath: string,
+  markdown: string,
+  targetPath: string,
+  ifMatch?: string,
+): Promise<void> =>
+  apiFetch<void>(
+    `/api/sessions/${sessionId}/files/document-docx?path=${encodeURIComponent(sourcePath)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ markdown, targetPath }),
+      ...(ifMatch === undefined ? {} : { headers: { "if-match": ifMatch } }),
+    },
+  );
+
 export const documentCellEdits = (
   sessionId: string,
   path: string,

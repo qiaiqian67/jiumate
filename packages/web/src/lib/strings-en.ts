@@ -2360,6 +2360,25 @@ export const en: Strings = {
     editSave: "Save",
     /** Edit-mode discard action. */
     editCancel: "Cancel",
+    /** Save action on a .docx being edited through Markdown: save under a new name. */
+    docxSaveAsNew: "Save as a new file",
+    /** Save action on a .docx being edited through Markdown: replace the original. */
+    docxOverwrite: "Overwrite the original",
+    /** Modal title when saving an edited .docx. */
+    docxSaveTitle: "Save as a Word document",
+    /**
+     * The honest description of what editing a .docx does to it. The round trip keeps the text and
+     * its structure and replaces the visual design, so an overwrite is not the same document — the
+     * user has to be told before they choose, not after.
+     */
+    docxSaveWarning:
+      'Editing goes through Markdown: the text, heading levels, lists, tables, emphasis and links survive, but the original styling, theme, headers and footers and comments do not, and images become the words "[image omitted]". Overwriting the original cannot be undone, so saving under a new name is offered first.',
+    /** Secondary line under the modal title, naming the suggested new file. */
+    docxSaveNewName: (name: string): string => `New file name: ${name}`,
+    /** Toast after a .docx is written to a new path. */
+    docxSavedAs: (name: string): string => `Saved as ${name}`,
+    /** Toast after a .docx is written back over its source. */
+    docxSavedOver: "Overwrote the original",
     /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */
     editConflictBanner: "The file was modified elsewhere. Saving will overwrite the remote copy.",
     /** Confirm-modal copy for the discard path when the user has unsaved edits. */

@@ -288,6 +288,15 @@ interface Preview {
    * reader and a spreadsheet parser — none of which belong in the web bundle.
    */
   document?: DocumentPreview;
+  /**
+   * Set when this `md` preview is really a .docx being edited through Markdown.
+   *
+   * The edit flow is driven entirely by `kind === "md"`, so a .docx that wants the editor becomes
+   * one — same toolbar, same editor, same conflict modal. This field is the one thing that has to
+   * be remembered, because saving goes somewhere different: a .docx cannot be written by putting
+   * text into it.
+   */
+  docxSource?: { path: string; etag?: string };
   /** Bumped on every previewPath call; keys the isolated HTML iframe so re-opening the
    *  same path remounts it and refetches fresh content (its src alone would not change). */
   nonce: number;
@@ -376,6 +385,20 @@ export function WorkspaceBrowser({
   const [draftMd, setDraftMd] = useState("");
   /** Save in flight (disables Save button, shows busy state in the editor). */
   const [savingMd, setSavingMd] = useState(false);
+  /**
+   * Open while the user is choosing where an edited .docx goes.
+   *
+   * Saving an edited .docx is not one action but two — a new file or the original — and they are
+   * not equally safe: the round trip replaces the document's visual design, so overwriting
+   * destroys something the user may not have realized was there. The modal is where that is said
+   * out loud, before the choice rather than after it.
+   */
+  const [docxSaveChoice, setDocxSaveChoice] = useState(false);
+  /** The new file's name, editable so a collision is fixable without leaving the dialog. */
+  const [docxNewName, setDocxNewName] = useState("");
+  /** The .docx being edited, captured when the save dialog opens — the dialog outlives the
+   *  narrowing the preview is under while it is open. */
+  const [docxSourcePath, setDocxSourcePath] = useState("");
   /** Conflict modal: non-null when the server rejected save with 409 file_conflict. Carries the
    *  two user-facing resolutions (reload = discard edits; overwrite = re-send without If-Match). */
   const [mdConflict, setMdConflict] = useState<null | { path: string }>(null);
@@ -620,8 +643,43 @@ export function WorkspaceBrowser({
    * `force` skips the If-Match header, used after the user explicitly chose overwrite.
    */
   const saveMdEdit = useCallback(
-    async (content: string, opts?: { force?: boolean }): Promise<void> => {
+    async (content: string, opts?: { force?: boolean; docxOutput?: string }): Promise<void> => {
       if (!preview || preview.kind !== "md") return;
+      // A .docx cannot be written by putting text into it, so the same editor saves through a
+      // different route: the Markdown is sent and the server builds the document. `docxOutput` is
+      // chosen before this runs — by the save-choice modal — and `force` means the user confirmed
+      // an overwrite in the conflict modal.
+      if (preview.docxSource) {
+        const { path: sourcePath, etag } = preview.docxSource;
+        const output = opts?.force ? sourcePath : (opts?.docxOutput ?? sourcePath);
+        setSavingMd(true);
+        try {
+          await api.writeDocumentDocx(
+            session.sessionId,
+            sourcePath,
+            content,
+            output,
+            output === sourcePath && etag !== undefined ? etag : undefined,
+          );
+          setEditingMd(false);
+          setDraftMd("");
+          toastSuccess(
+            output === sourcePath
+              ? S.files.docxSavedOver
+              : S.files.docxSavedAs(output.split("/").pop() ?? output),
+          );
+          void previewPath(output, { refresh: true });
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 409 && output === sourcePath) {
+            setMdConflict({ path: sourcePath });
+          } else {
+            toastError(apiErrorText(err));
+          }
+        } finally {
+          setSavingMd(false);
+        }
+        return;
+      }
       setSavingMd(true);
       try {
         const dataBase64 = btoa(unescape(encodeURIComponent(content)));
@@ -661,6 +719,36 @@ export function WorkspaceBrowser({
    *  and exit edit mode. The Preview.content is left untouched on purpose — it is the
    *  source of truth for the rendered view, and a stray edit would re-mount MarkdownEditor
    *  on a stale value. */
+  /**
+   * Enter edit mode on a .docx by way of the Markdown editor.
+   *
+   * The preview already carries the editing basis — the document as Markdown, with no extractor
+   * framing — so this needs no request: it re-presents the same file as an `md` preview, which is
+   * what makes the whole existing edit flow apply unchanged. `docxSource` is the one difference,
+   * and it is what routes the save.
+   */
+  const enterDocxEdit = useCallback((): void => {
+    if (!preview || preview.kind !== "document") return;
+    const payload = preview.document;
+    if (payload?.kind !== "html") return;
+    setDraftMd(payload.markdown);
+    setEditingMd(true);
+    setRichView("edit");
+    setPreview((current) =>
+      current?.kind === "document"
+        ? {
+            ...current,
+            kind: "md",
+            content: payload.markdown,
+            docxSource: { path: current.path, etag: current.etag },
+          }
+        : current,
+    );
+  }, [preview]);
+
+  /** True while the open preview is a .docx being edited through Markdown. */
+  const editingDocx = preview?.kind === "md" && preview.docxSource !== undefined;
+
   const cancelMdEdit = useCallback((): void => {
     setEditingMd(false);
     setDraftMd("");
@@ -783,6 +871,20 @@ export function WorkspaceBrowser({
               their in-progress draft without losing keystrokes — switching between the three
               views routes the body through `draftMd` (their current text) instead of
               `preview.content` (the last-saved bytes). */}
+          {/* A converted document gets one action: edit it. The pane already holds the editing
+              basis, so this switches to the Markdown editor the workspace uses for .md files
+              rather than introducing a second editor — see `enterDocxEdit`. Only for the HTML
+              payload, which is the .docx case; a workbook has its own cell editing and a deck is
+              read-only. */}
+          {preview.kind === "document" && preview.document?.kind === "html" ? (
+            <button
+              type="button"
+              onClick={enterDocxEdit}
+              className="inline-flex shrink-0 items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              {S.files.edit}
+            </button>
+          ) : null}
           {preview.kind === "md" ? (
             <>
               <div className="flex shrink-0 rounded-md bg-gray-100 p-0.5 dark:bg-gray-800">
@@ -831,7 +933,19 @@ export function WorkspaceBrowser({
                   </button>
                   <button
                     type="button"
-                    onClick={() => void saveMdEdit(draftMd)}
+                    onClick={() => {
+                      if (!editingDocx) {
+                        void saveMdEdit(draftMd);
+                        return;
+                      }
+                      // Default the new name to a sibling of the source, so the safe path is one
+                      // click and the name is already sensible. A collision is the server's call to
+                      // refuse, and the field is editable so it is fixable without leaving here.
+                      const base = preview.name.replace(/\.docx$/i, "");
+                      setDocxNewName(`${base}-edited.docx`);
+                      setDocxSourcePath(preview.path);
+                      setDocxSaveChoice(true);
+                    }}
                     disabled={savingMd}
                     className="inline-flex shrink-0 items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
@@ -1249,6 +1363,41 @@ export function WorkspaceBrowser({
             ))}
           </ul>
         </div>
+      </ConfirmModal>
+
+      {/* Where an edited .docx goes. The body states what the round trip costs before the choice
+          is made: the text and its structure survive, the visual design does not, and images
+          become a marker. Saving under a new name is the primary action because it is the only
+          one that cannot destroy anything — the server refuses to write over a file that is not
+          the source, so a "new" save can never collide silently. */}
+      <ConfirmModal
+        open={docxSaveChoice}
+        title={S.files.docxSaveTitle}
+        tone="primary"
+        busy={savingMd}
+        confirmLabel={S.files.docxSaveAsNew}
+        secondaryLabel={S.files.docxOverwrite}
+        onClose={() => setDocxSaveChoice(false)}
+        onConfirm={() => {
+          setDocxSaveChoice(false);
+          void saveMdEdit(draftMd, { docxOutput: docxNewName });
+        }}
+        onSecondary={() => {
+          setDocxSaveChoice(false);
+          void saveMdEdit(draftMd, { docxOutput: docxSourcePath, force: true });
+        }}
+      >
+        <p className="text-sm text-gray-600 dark:text-gray-300">{S.files.docxSaveWarning}</p>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+            {S.files.docxSaveNewName(docxNewName)}
+          </span>
+          <input
+            value={docxNewName}
+            onChange={(event) => setDocxNewName(event.target.value)}
+            className="w-full rounded-md border border-gray-200 px-2 py-1 font-mono text-xs outline-none focus:border-blue-400 dark:border-gray-700 dark:bg-gray-900"
+          />
+        </label>
       </ConfirmModal>
 
       {/* Save-conflict resolution: server rejected save with 409 file_conflict. The user picks

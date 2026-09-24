@@ -2308,6 +2308,25 @@ export const zh = {
     editSave: "保存",
     /** Edit-mode discard action. */
     editCancel: "取消",
+    /** Save action on a .docx being edited through Markdown: save under a new name. */
+    docxSaveAsNew: "另存为新文件",
+    /** Save action on a .docx being edited through Markdown: replace the original. */
+    docxOverwrite: "覆盖原文件",
+    /** Modal title when saving an edited .docx. */
+    docxSaveTitle: "保存为 Word 文档",
+    /**
+     * The honest description of what editing a .docx does to it. The round trip keeps the text and
+     * its structure and replaces the visual design, so an overwrite is not the same document — the
+     * user has to be told before they choose, not after.
+     */
+    docxSaveWarning:
+      "编辑是通过 Markdown 往返完成的：文字、标题层级、列表、表格、加粗斜体与链接会保留，但原有的样式、主题、页眉页脚、批注会丢失，图片位置会变成「[image omitted]」文字。覆盖原文件不可撤销，建议先另存为新文件。",
+    /** Secondary line under the modal title, naming the suggested new file. */
+    docxSaveNewName: (name: string): string => `新文件名：${name}`,
+    /** Toast after a .docx is written to a new path. */
+    docxSavedAs: (name: string): string => `已另存为 ${name}`,
+    /** Toast after a .docx is written back over its source. */
+    docxSavedOver: "已覆盖原文件",
     /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */
     editConflictBanner: "文件已被外部修改，保存将覆盖远端内容",
     /** Confirm-modal copy for the discard path when the user has unsaved edits. */

@@ -72,7 +72,6 @@ import {
   positiveIntParam,
   readJson,
   requireEnum,
-  requireString,
   requireValidId,
 } from "../validate.js";
 import type { AppDeps } from "../../app.js";
@@ -1620,51 +1619,6 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
 
     await deps.workspaceFiles.write(row.workspace, targetPath, Buffer.from(generated));
     return noContentWithEtag(row.workspace, targetPath);
-  });
-
-  /**
-   * PUT /api/sessions/:sessionId/files/document-docx — write an edited document back as a .docx.
-   *
-   * The counterpart to the workbook route: the client holds Markdown, not a file, and the server
-   * turns it into a .docx. It could not be the other way round — generating OOXML in the browser
-   * would mean shipping the writer and the whole stylesheet machinery to every client, for an
-   * action most sessions never take.
-   *
-   * `output` is required rather than optional, and that is the point. An edited .docx is a
-   * different document from the one that was read: the round trip through Markdown keeps the text
-   * and its structure and replaces the visual design, so an overwrite destroys something the user
-   * may not have realized was there. Requiring the caller to name the target makes overwriting a
-   * decision instead of a default — the UI offers a new filename first.
-   *
-   * If-Match applies only when the target is the source. Saving to a new file cannot conflict with
-   * anything; overwriting the file the Markdown came from is exactly the case where the Agent may
-   * have rewritten it since, and applying a stale edit silently is the failure this prevents.
-   */
-  app.put("/:sessionId/files/document-docx", async (c) => {
-    const row = resolveSession(c);
-    const rel = c.req.query("path") ?? "";
-    const body = await readJson(c);
-
-    if (typeof body.markdown !== "string") {
-      throw badRequest("markdown must be a string.");
-    }
-    const output = requireString(body, "output", { label: "output" });
-    if (!/\.docx$/i.test(output)) {
-      throw badRequest("output must name a .docx file.");
-    }
-
-    if (output === rel) await assertUnchanged(row.workspace, rel, c.req.header("if-match"));
-
-    let bytes: Uint8Array;
-    try {
-      bytes = await markdownToDocx(body.markdown);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      throw new HttpError(422, "document_write_failed", message);
-    }
-
-    await deps.workspaceFiles.write(row.workspace, output, Buffer.from(bytes));
-    return noContentWithEtag(row.workspace, output);
   });
 
   /**
