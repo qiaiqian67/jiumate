@@ -2370,26 +2370,15 @@ export const en: Strings = {
      * exactly the confusion it exists to remove.
      */
     docxEditBanner:
-      'Editing a Word document as Markdown. Saving rebuilds the .docx: the text, heading levels, lists, tables, emphasis and links survive, while the original styling, theme, headers, footers and comments do not, and images become the words "[image omitted]".',
-    /** Save action on a .docx being edited through Markdown: replace the original. */
-    docxOverwrite: "Overwrite the original",
-    /** Modal title when saving an edited .docx. */
-    docxSaveTitle: "Save as a Word document",
-    /**
-     * The honest description of what editing a .docx does to it. The round trip keeps the text and
-     * its structure and replaces the visual design, so an overwrite is not the same document — the
-     * user has to be told before they choose, not after.
-     */
-    docxSaveWarning:
-      'Editing goes through Markdown: the text, heading levels, lists, tables, emphasis and links survive, but the original styling, theme, headers and footers and comments do not, and images become the words "[image omitted]". Overwriting the original cannot be undone, so saving under a new name is offered first.',
-    /** Secondary line under the modal title, naming the suggested new file. */
-    docxSaveNewName: (name: string): string => `New file name: ${name}`,
+      'Editing a Word document as Markdown. Save writes this .docx in place; use "Save as" to write a copy and leave the original alone. The text, heading levels, lists, tables, emphasis and links survive, while the original styling, theme, headers, footers and comments do not, and images become the words "[image omitted]".',
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `Saved as ${name}`,
     /** Toast after a .docx is written back over its source. */
     docxSavedOver: "Overwrote the original",
     /** Shown when Save is pressed but the preview it belongs to is gone — see `requestSave`. */
     editSaveUnavailable: "Cannot save: the preview state has changed. Reopen the file and retry.",
+    /** Shown when the save handler itself threw — otherwise the failure is invisible. */
+    editSaveFailed: (message: string): string => `Save failed: ${message}`,
     /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */
     editConflictBanner: "The file was modified elsewhere. Saving will overwrite the remote copy.",
     /** Confirm-modal copy for the discard path when the user has unsaved edits. */

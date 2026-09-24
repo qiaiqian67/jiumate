@@ -385,20 +385,6 @@ export function WorkspaceBrowser({
   const [draftMd, setDraftMd] = useState("");
   /** Save in flight (disables Save button, shows busy state in the editor). */
   const [savingMd, setSavingMd] = useState(false);
-  /**
-   * Open while the user is choosing where an edited .docx goes.
-   *
-   * Saving an edited .docx is not one action but two — a new file or the original — and they are
-   * not equally safe: the round trip replaces the document's visual design, so overwriting
-   * destroys something the user may not have realized was there. The modal is where that is said
-   * out loud, before the choice rather than after it.
-   */
-  const [docxSaveChoice, setDocxSaveChoice] = useState(false);
-  /** The new file's name, editable so a collision is fixable without leaving the dialog. */
-  const [docxNewName, setDocxNewName] = useState("");
-  /** The .docx being edited, captured when the save dialog opens — the dialog outlives the
-   *  narrowing the preview is under while it is open. */
-  const [docxSourcePath, setDocxSourcePath] = useState("");
   /** Conflict modal: non-null when the server rejected save with 409 file_conflict. Carries the
    *  two user-facing resolutions (reload = discard edits; overwrite = re-send without If-Match). */
   const [mdConflict, setMdConflict] = useState<null | { path: string }>(null);
@@ -753,20 +739,21 @@ export function WorkspaceBrowser({
    * What the Save action does — the toolbar button and the editor's Cmd/Ctrl-S both call this.
    *
    * They must not diverge, and they did: the toolbar asked where an edited .docx should go while
-   * the keymap called `saveMdEdit` with no target, which falls back to the source path. So Cmd-S
-   * overwrote the original document without asking — the exact outcome the save dialog exists to
-   * prevent, reachable by a shortcut. One entry point means the choice cannot be skipped.
+   * the keymap called `saveMdEdit` with no target, which falls back to the source path. So the same
+   * action had two behaviours, and the shortcut was the one that destroyed the original.
    *
-   * For a .docx the name is defaulted to a sibling of the source, so the safe path is one click and
-   * the name is already sensible; a collision is the server's to refuse, and the field is editable
-   * in the dialog so it is fixable without leaving the flow.
+   * A .docx saves **in place**, which is what "save" means in a document editor; the copy is the
+   * separate action (`saveDocxCopy`). That is only safe because the loss is stated before the click
+   * rather than in a dialog after it — the editor carries a banner saying what the round trip keeps
+   * and what it drops. An earlier version asked in a modal, and the modal was the part that stopped
+   * responding: it opened from a value derived from the preview, and one absent field took the whole
+   * handler down with it.
    */
   const requestSave = useCallback((): void => {
     if (!preview || preview.kind !== "md") {
       // Reached only when the toolbar is rendering a preview this handler cannot see, which is a
       // state mismatch rather than a user situation. It must not be silent: "I clicked Save and
-      // nothing happened" is the worst possible answer, and it is what a bare `return` produced
-      // here while this was being written.
+      // nothing happened" is the worst possible answer.
       toastError(S.files.editSaveUnavailable);
       return;
     }
@@ -774,11 +761,45 @@ export function WorkspaceBrowser({
       void saveMdEdit(draftMd);
       return;
     }
-    const base = preview.name.replace(/\.docx$/i, "");
-    setDocxNewName(`${base}-edited.docx`);
-    setDocxSourcePath(preview.path);
-    setDocxSaveChoice(true);
+    // Save writes the document in place — the .docx the user opened, which is what "save" means
+    // in a document editor. `output === sourcePath` is what makes `saveMdEdit` send If-Match, so
+    // the write still refuses to clobber a version the Agent changed underneath it.
+    void saveMdEdit(draftMd, { docxOutput: preview.path });
   }, [preview, draftMd, saveMdEdit]);
+
+  /**
+   * Save as: write a copy beside the original and leave that one alone.
+   *
+   * The name is derived rather than asked for. A dialog here would be the second time this flow
+   * stopped working — the first was a dialog whose open was sequenced after a value derived from
+   * the preview, and a preview field that turned out to be absent took the whole handler down with
+   * it. Nothing derived is allowed on the path to a visible effect now, and the one thing a
+   * derived name can get wrong (a collision) is refused by the server with a message that says so.
+   */
+  const saveDocxCopy = useCallback((): void => {
+    if (!preview || preview.kind !== "md" || !preview.docxSource) return;
+    const stem = (preview.name ?? "").replace(/\.docx$/i, "");
+    void saveMdEdit(draftMd, {
+      docxOutput: `${stem === "" ? "document" : stem}-edited.docx`,
+    });
+  }, [preview, draftMd, saveMdEdit]);
+
+  /**
+   * The Save button's handler.
+   *
+   * A `try`/`catch` around it is not defensive padding: an exception thrown inside a React event
+   * handler goes to `window.onerror` and nowhere else, so the button simply stops responding with
+   * no dialog, no toast and nothing in the UI to explain it. Reporting it here is the difference
+   * between a bug that can be diagnosed from a screenshot and one that has to be reproduced with a
+   * debugger attached.
+   */
+  const onSaveClick = useCallback((): void => {
+    try {
+      requestSave();
+    } catch (err) {
+      toastError(S.files.editSaveFailed(err instanceof Error ? err.message : String(err)));
+    }
+  }, [requestSave]);
 
   const cancelMdEdit = useCallback((): void => {
     setEditingMd(false);
@@ -962,9 +983,22 @@ export function WorkspaceBrowser({
                   >
                     {S.files.editCancel}
                   </button>
+                  {/* Save writes the document in place; Save as writes a copy. Two buttons rather
+                      than one button and a dialog: "save" meaning "overwrite what I opened" is what
+                      a document editor does, and the dialog was the part that stopped responding. */}
+                  {editingDocx && (
+                    <button
+                      type="button"
+                      onClick={saveDocxCopy}
+                      disabled={savingMd}
+                      className="inline-flex shrink-0 items-center rounded-md border border-transparent bg-transparent px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                    >
+                      {S.files.docxSaveAsNew}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={requestSave}
+                    onClick={onSaveClick}
                     disabled={savingMd}
                     className="inline-flex shrink-0 items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
@@ -1393,41 +1427,6 @@ export function WorkspaceBrowser({
             ))}
           </ul>
         </div>
-      </ConfirmModal>
-
-      {/* Where an edited .docx goes. The body states what the round trip costs before the choice
-          is made: the text and its structure survive, the visual design does not, and images
-          become a marker. Saving under a new name is the primary action because it is the only
-          one that cannot destroy anything — the server refuses to write over a file that is not
-          the source, so a "new" save can never collide silently. */}
-      <ConfirmModal
-        open={docxSaveChoice}
-        title={S.files.docxSaveTitle}
-        tone="primary"
-        busy={savingMd}
-        confirmLabel={S.files.docxSaveAsNew}
-        secondaryLabel={S.files.docxOverwrite}
-        onClose={() => setDocxSaveChoice(false)}
-        onConfirm={() => {
-          setDocxSaveChoice(false);
-          void saveMdEdit(draftMd, { docxOutput: docxNewName });
-        }}
-        onSecondary={() => {
-          setDocxSaveChoice(false);
-          void saveMdEdit(draftMd, { docxOutput: docxSourcePath, force: true });
-        }}
-      >
-        <p className="text-sm text-gray-600 dark:text-gray-300">{S.files.docxSaveWarning}</p>
-        <label className="mt-3 block">
-          <span className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
-            {S.files.docxSaveNewName(docxNewName)}
-          </span>
-          <input
-            value={docxNewName}
-            onChange={(event) => setDocxNewName(event.target.value)}
-            className="w-full rounded-md border border-gray-200 px-2 py-1 font-mono text-xs outline-none focus:border-blue-400 dark:border-gray-700 dark:bg-gray-900"
-          />
-        </label>
       </ConfirmModal>
 
       {/* Save-conflict resolution: server rejected save with 409 file_conflict. The user picks
