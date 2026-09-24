@@ -15,6 +15,9 @@
  * the timeout itself never holds the process open.
  */
 import { spawn } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { HttpError } from "../http/errors.js";
 
 /** Formats the service knows how to emit. The export route enforces this same set. */
@@ -137,6 +140,24 @@ export class PandocService {
    *   travels in the error message for diagnosis (the message is the only place this
    *   context is reachable, so trim hard to keep it under any reasonable log length).
    */
+  /**
+   * Convert an HTML string to a binary document. The Pandoc input format is fixed to `html`; the
+   * output format comes from `format`. The MIME / extension mapping lives in the route — keeping it
+   * here would duplicate knowledge the route already needs.
+   *
+   * **The output goes to a temporary file, not to stdout.** Pandoc refuses to write a binary
+   * format to stdout — `Cannot write docx output to stdout. Specify an output file using the -o
+   * option.` — and exits 5. docx and epub are both zip containers, so both are binary; rtf and txt
+   * are not, but every format takes the same path so that the difference cannot be forgotten. It
+   * was forgotten once: `--output -` was there from the start and the injected test runner returned
+   * canned bytes, so no test ever asked real Pandoc to do it.
+   *
+   * Errors:
+   * - 503 when no Pandoc is configured.
+   * - 400 for a format outside `SUPPORTED_FORMATS`.
+   * - 504 on timeout, 500 on a spawn failure or a non-zero exit (stderr is truncated — a Pandoc
+   *   parse error quotes the document, and this is a service, not a place to keep user text).
+   */
   async exportHtmlTo(html: string, format: PandocFormat): Promise<Buffer> {
     if (!this.opts.pandocPath) {
       throw new HttpError(503, PANDOC_UNAVAILABLE, "Pandoc is not installed on this server.");
@@ -145,23 +166,32 @@ export class PandocService {
       throw new HttpError(400, "invalid_format", `Unsupported format: ${format}`);
     }
     const timeoutMs = this.opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-    const r = await this.runOnce(
-      this.opts.pandocPath,
-      ["-f", "html", "-t", format, "--output", "-"],
-      Buffer.from(html, "utf8"),
-      timeoutMs,
-    );
-    if (r.timedOut) {
-      throw new HttpError(504, "pandoc_timeout", "Pandoc took too long to convert the document.");
+
+    // A private directory per call, so two concurrent exports cannot collide on a file name and
+    // the output never appears anywhere a workspace could serve it from.
+    const dir = await mkdtemp(path.join(tmpdir(), "linsight-pandoc-"));
+    const outPath = path.join(dir, `export.${format}`);
+    try {
+      const r = await this.runOnce(
+        this.opts.pandocPath,
+        ["-f", "html", "-t", format, "-o", outPath],
+        Buffer.from(html, "utf8"),
+        timeoutMs,
+      );
+      if (r.timedOut) {
+        throw new HttpError(504, "pandoc_timeout", "Pandoc took too long to convert the document.");
+      }
+      if (r.spawnError) {
+        throw new HttpError(500, "pandoc_failed", `Could not start pandoc: ${r.spawnError}`);
+      }
+      if (r.exitCode !== 0) {
+        const detail = r.stderr.slice(0, 1024) || "(no stderr)";
+        throw new HttpError(500, "pandoc_failed", `Pandoc exited ${r.exitCode}: ${detail}`);
+      }
+      return await readFile(outPath);
+    } finally {
+      await rm(dir, { recursive: true, force: true }).catch(() => undefined);
     }
-    if (r.spawnError) {
-      throw new HttpError(500, "pandoc_failed", `Could not start pandoc: ${r.spawnError}`);
-    }
-    if (r.exitCode !== 0) {
-      const detail = r.stderr.slice(0, 1024) || "(no stderr)";
-      throw new HttpError(500, "pandoc_failed", `Pandoc exited ${r.exitCode}: ${detail}`);
-    }
-    return r.stdout;
   }
 
   private async runOnce(path: string, args: string[], stdin: Buffer, timeoutMs: number) {

@@ -33,10 +33,17 @@ describe("files/export route (workspace file → binary export)", () => {
 
     const pandocRunner: PandocRunner = async (path, args, stdin, timeoutMs) => {
       pandocCalls.push({ path, args, stdin, timeoutMs });
+      // Behaves like Pandoc: the converted bytes go to the `-o` path, and stdout stays empty. The
+      // route test therefore fails if the service ever goes back to reading stdout, which is what
+      // shipped once — Pandoc refuses a binary format there and exits 5.
+      const outIndex = args.indexOf("-o");
+      if (outIndex >= 0 && args[outIndex + 1]) {
+        await fs.writeFile(args[outIndex + 1]!, Buffer.from(`OUT-${args[args.indexOf("-t") + 1]}`));
+      }
       return {
         exitCode: 0,
         timedOut: false,
-        stdout: Buffer.from(`OUT-${args[args.indexOf("-t") + 1]}`),
+        stdout: Buffer.from(""),
         stderr: "",
       };
     };
@@ -95,7 +102,10 @@ describe("files/export route (workspace file → binary export)", () => {
     expect(pandocCalls).toHaveLength(1);
     const call = pandocCalls[0]!;
     expect(call.path).toBe("/opt/pandoc");
-    expect(call.args).toEqual(["-f", "html", "-t", "docx", "--output", "-"]);
+    expect(call.args.slice(0, 4)).toEqual(["-f", "html", "-t", "docx"]);
+    // `-o <file>`, never `--output -`: Pandoc cannot write a binary format to stdout.
+    expect(call.args[4]).toBe("-o");
+    expect(call.args[5]).toMatch(/export\.docx$/);
     expect(call.stdin.toString("utf8")).toBe("<h1>hi</h1>");
     const body = Buffer.from(await res.arrayBuffer());
     expect(body.toString("utf8")).toBe("OUT-docx");
@@ -109,7 +119,10 @@ describe("files/export route (workspace file → binary export)", () => {
         html: "<p>x</p>",
       });
       expect(res.status).toBe(200);
-      expect(pandocCalls.at(-1)!.args).toEqual(["-f", "html", "-t", format, "--output", "-"]);
+      const call = pandocCalls.at(-1)!;
+      expect(call.args.slice(0, 4)).toEqual(["-f", "html", "-t", format]);
+      expect(call.args[4]).toBe("-o");
+      expect(call.args[5]).toMatch(new RegExp(`export\\.${format}$`));
       expect(res.headers.get("content-type")).toMatch(/^(application|text)\//);
     }
   });

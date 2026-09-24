@@ -1,8 +1,19 @@
 /**
- * pandoc-service.ts unit tests. The runner is injected (see BuildDepsOverrides.pandoc), so
- * nothing here ever spawns a process — every test scripts the runner's inputs and outcome.
+ * pandoc-service.ts unit tests. The runner is injected (see BuildDepsOverrides.pandoc), so nothing
+ * here ever spawns a process — every test scripts the runner's inputs and outcome.
+ *
+ * The output-file tests are the ones worth reading. Real Pandoc refuses to write a binary format to
+ * stdout (`Cannot write docx output to stdout`) and exits 5, so the service hands it a path via `-o`
+ * and reads the file back. These tests previously asserted `--output -` and returned canned bytes on
+ * stdout, which is how the service came to ship an invocation that could not work: the test asserted
+ * the implementation instead of the contract, and the contract is with a program the test never ran.
+ * So the fake runner now behaves like Pandoc — it writes the `-o` path and leaves stdout empty — and
+ * a service that went back to reading stdout would return nothing rather than passing.
  */
 import { describe, expect, it } from "vitest";
+import { mkdtemp, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { HttpError } from "../src/http/errors.js";
 import { PandocService } from "../src/services/pandoc-service.js";
 import type { PandocRunExit, PandocRunner } from "../src/services/pandoc-service.js";
@@ -25,6 +36,21 @@ function scriptedRunner(
     return program(path, args, stdin, timeoutMs);
   };
   return { runner, calls };
+}
+
+/** The value `-o` names, or null when the invocation did not ask for a file. */
+function outputPath(args: string[]): string | null {
+  const index = args.indexOf("-o");
+  return index >= 0 ? (args[index + 1] ?? null) : null;
+}
+
+/** A runner that behaves like Pandoc: it writes `bytes` to the `-o` path and prints nothing. */
+function pandocLikeRunner(bytes: Buffer) {
+  return scriptedRunner(async (_path, args) => {
+    const target = outputPath(args);
+    if (target !== null) await writeFile(target, bytes);
+    return { exitCode: 0, timedOut: false, stdout: Buffer.from(""), stderr: "" };
+  });
 }
 
 describe("PandocService.available", () => {
@@ -88,46 +114,63 @@ describe("PandocService.exportHtmlTo", () => {
     });
   });
 
-  it("invokes the runner with -f html -t <format> --output - and pipes HTML on stdin", async () => {
-    const { runner, calls } = scriptedRunner(async () => ({
-      exitCode: 0,
-      timedOut: false,
-      stdout: Buffer.from("DOCX-BYTES"),
-      stderr: "",
-    }));
+  it("asks Pandoc for an output file, and returns what it wrote there", async () => {
+    const { runner, calls } = pandocLikeRunner(Buffer.from("DOCX-BYTES"));
     const svc = new PandocService({ pandocPath: "/opt/pandoc/3.1/pandoc", runner });
     const out = await svc.exportHtmlTo("<h1>hi</h1>", "docx");
+
+    // The bytes come from the file, not from stdout — the fake runner leaves stdout empty, so
+    // reading it would return nothing at all.
     expect(out.toString("utf8")).toBe("DOCX-BYTES");
     expect(calls).toHaveLength(1);
     const call = calls[0]!;
     expect(call.path).toBe("/opt/pandoc/3.1/pandoc");
-    expect(call.args).toEqual(["-f", "html", "-t", "docx", "--output", "-"]);
+    expect(call.args.slice(0, 4)).toEqual(["-f", "html", "-t", "docx"]);
+    // `-o <path>`, never `--output -`: Pandoc refuses a binary format on stdout.
+    expect(outputPath(call.args)).toMatch(/export\.docx$/);
+    expect(call.args).not.toContain("-");
     expect(call.stdin.toString("utf8")).toBe("<h1>hi</h1>");
     expect(call.timeoutMs).toBe(30_000);
   });
 
-  it("accepts every supported format", async () => {
+  it("accepts every supported format, each through an output file", async () => {
     for (const format of ["docx", "epub", "rtf", "txt"] as const) {
-      const { runner, calls } = scriptedRunner(async () => ({
-        exitCode: 0,
-        timedOut: false,
-        stdout: Buffer.from(`${format}-out`),
-        stderr: "",
-      }));
+      const { runner, calls } = pandocLikeRunner(Buffer.from(`${format}-out`));
       const svc = new PandocService({ pandocPath: "/usr/bin/pandoc", runner });
       const out = await svc.exportHtmlTo("<p>x</p>", format);
       expect(out.toString("utf8")).toBe(`${format}-out`);
-      expect(calls[0]!.args).toEqual(["-f", "html", "-t", format, "--output", "-"]);
+      expect(calls[0]!.args.slice(0, 4)).toEqual(["-f", "html", "-t", format]);
+      expect(outputPath(calls[0]!.args)).toMatch(new RegExp(`export\\.${format}$`));
     }
   });
 
-  it("honors a custom timeoutMs passed through the constructor", async () => {
+  it("leaves no output file behind", async () => {
+    const { runner, calls } = pandocLikeRunner(Buffer.from("BYTES"));
+    const svc = new PandocService({ pandocPath: "/usr/bin/pandoc", runner });
+    await svc.exportHtmlTo("<p>x</p>", "docx");
+    const dir = path.dirname(outputPath(calls[0]!.args)!);
+    // The temporary directory is removed on the way out, so a conversion leaves nothing on disk.
+    // `stat` is the check — `mkdtemp` would happily create a *new* directory beside the old name
+    // and prove nothing.
+    await expect(stat(dir)).rejects.toThrow();
+    expect(dir.startsWith(tmpdir())).toBe(true);
+  });
+
+  it("leaves no output file behind when the conversion fails", async () => {
     const { runner, calls } = scriptedRunner(async () => ({
-      exitCode: 0,
+      exitCode: 23,
       timedOut: false,
       stdout: Buffer.from(""),
-      stderr: "",
+      stderr: "boom",
     }));
+    const svc = new PandocService({ pandocPath: "/usr/bin/pandoc", runner });
+    await expect(svc.exportHtmlTo("<p>x</p>", "docx")).rejects.toMatchObject({ status: 500 });
+    // A failure is the case that would otherwise accumulate: one directory per failed export.
+    await expect(stat(path.dirname(outputPath(calls[0]!.args)!))).rejects.toThrow();
+  });
+
+  it("honors a custom timeoutMs passed through the constructor", async () => {
+    const { runner, calls } = pandocLikeRunner(Buffer.from(""));
     const svc = new PandocService({
       pandocPath: "/usr/bin/pandoc",
       runner,
