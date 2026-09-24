@@ -2341,6 +2341,10 @@ export const zh = {
     },
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `已另存为 ${name}`,
+    /** Shown while the real .docx is being laid out as a page. */
+    docxPreviewLoading: "正在渲染文档…",
+    /** Shown when the .docx could not be read for display — the file's own fault, usually. */
+    docxPreviewFailed: (message: string): string => `无法渲染该文档：${message}`,
     /** Toast after a .docx is written back over its source. */
     docxSavedOver: "已覆盖原文件",
     /** Shown when Save is pressed but the preview it belongs to is gone — see `requestSave`. */

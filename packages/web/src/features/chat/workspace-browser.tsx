@@ -1258,6 +1258,8 @@ export function WorkspaceBrowser({
           ) : preview.kind === "document" && preview.document ? (
             <DocumentPreviewView
               payload={preview.document}
+              sessionId={session.sessionId}
+              path={preview.path}
               onSaveCells={async (edits) => {
                 await api.documentCellEdits(session.sessionId, preview.path, edits, preview.etag);
                 // Re-read so the grid shows what is actually on disk — the surgical write

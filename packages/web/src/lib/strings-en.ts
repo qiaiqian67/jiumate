@@ -2393,6 +2393,10 @@ export const en: Strings = {
     },
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `Saved as ${name}`,
+    /** Shown while the real .docx is being laid out as a page. */
+    docxPreviewLoading: "Rendering the document…",
+    /** Shown when the .docx could not be read for display — the file's own fault, usually. */
+    docxPreviewFailed: (message: string): string => `Could not render the document: ${message}`,
     /** Toast after a .docx is written back over its source. */
     docxSavedOver: "Overwrote the original",
     /** Shown when Save is pressed but the preview it belongs to is gone — see `requestSave`. */

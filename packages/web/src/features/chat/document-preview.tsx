@@ -17,8 +17,15 @@
  * so it is shown through the app's existing Markdown renderer instead — the caller maps it onto
  * the `md` preview it already has, and this component never sees it.
  */
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import type { DocumentPreview, SheetGrid } from "@prismshadow/linsight-core/documents";
+import { S } from "../../lib/strings";
+
+/**
+ * The real-.docx renderer, on demand. `docx-preview` is a few hundred kilobytes and the HTML
+ * fallback below covers every case that cannot use it, so it is not worth paying for at startup.
+ */
+const DocxRenderer = lazy(() => import("./docx-renderer"));
 
 /**
  * Base typography for converted document HTML.
@@ -383,19 +390,44 @@ function SlidesView({
  * read-only. That is deliberate: the preview is shown in a docked panel and a drawer that never
  * mount at once, and only one of them owns the file's ETag. A grid that saved without an ETag would
  * skip the conflict check, so the callback carries both the write and the freshness check with it.
+ *
+ * `sessionId` and `path` are what let a .docx be shown as the document it is rather than as the
+ * extractor's HTML — see `DocxRenderer`. Both are absent for the read-only drawer, which falls back
+ * to the HTML rendering rather than a page it cannot fetch.
  */
 export function DocumentPreviewView({
   payload,
+  sessionId,
+  path,
   onSaveCells,
 }: {
   payload: DocumentPreview;
+  sessionId?: string;
+  path?: string;
   onSaveCells?: (edits: CellEditDraft[]) => Promise<void>;
 }) {
   if (payload.kind === "markdown") return null;
+  // The `html` payload is the .docx case (ODF extracts to Markdown, see the file header), so a
+  // .docx with both a session and a path is shown as itself. Anything else keeps the extractor's
+  // rendering, which is a worse preview of a Word document but the only one available without the
+  // bytes.
+  const showRealDocx =
+    payload.kind === "html" &&
+    sessionId !== undefined &&
+    path !== undefined &&
+    path.toLowerCase().endsWith(".docx");
   return (
     <div className="flex h-full flex-col">
       <Warnings warnings={payload.warnings} />
-      {payload.kind === "html" ? (
+      {showRealDocx ? (
+        <Suspense
+          fallback={
+            <p className="text-sm text-gray-500 dark:text-gray-400">{S.files.docxPreviewLoading}</p>
+          }
+        >
+          <DocxRenderer sessionId={sessionId} path={path} />
+        </Suspense>
+      ) : payload.kind === "html" ? (
         <HtmlDocumentView html={payload.html} />
       ) : payload.kind === "grid" ? (
         <SheetGridView sheets={payload.sheets} onSaveCells={onSaveCells} />
