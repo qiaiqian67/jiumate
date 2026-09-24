@@ -104,7 +104,7 @@ describe("xlsx", () => {
 
   it("renders cells as a table and states the used range", async () => {
     const markdown = await render("sample.xlsx");
-    expect(markdown).toContain("Used range: A1:C5");
+    expect(markdown).toContain("Used range: A1:C6");
     expect(markdown).toContain("| Region | Revenue | Growth |");
     expect(markdown).toContain("| APAC | 4200000 | 0.24 |");
   });
@@ -220,6 +220,19 @@ describe("buildDocumentPreview", () => {
 
   // The preview is the same conversion asked by a different reader, so what matters is that it
   // keeps what the tool deliberately drops: the images, and the structure a pane can lay out.
+  it("marks the cells that hold a formula, so the grid can refuse to overwrite them", async () => {
+    const result = await preview("sample.xlsx", "xlsx");
+    expect(result.kind).toBe("grid");
+    if (result.kind !== "grid") return;
+    const summary = result.sheets.find((sheet) => sheet.name === "Summary")!;
+    // The fixture's `=SUM(B2:B4)` sits at B5. The value the reader reports for it is the cached
+    // result, so nothing but this marker distinguishes it from a typed number — and editing it
+    // would replace the formula with a literal, changing what the sheet computes.
+    expect(summary.formulaCells).toEqual(["B5"]);
+    const detail = result.sheets.find((sheet) => sheet.name === "Detail")!;
+    expect(detail.formulaCells).toEqual([]);
+  });
+
   it("keeps a docx's embedded image, which the tool drops", async () => {
     const result = await preview("sample.docx", "docx");
     expect(result.kind).toBe("html");
@@ -238,7 +251,7 @@ describe("buildDocumentPreview", () => {
     expect(result.sheets.map((s) => s.name)).toEqual(["Summary", "Detail"]);
     expect(result.sheets[0]!.rows[0]).toEqual(["Region", "Revenue", "Growth"]);
     // Rendered values, matching what the sheet shows.
-    expect(result.sheets[0]!.rows[4]![1]).toBe("2026-09-23");
+    expect(result.sheets[0]!.rows[5]![1]).toBe("2026-09-23");
   });
 
   it("returns a deck as slides in presentation order", async () => {

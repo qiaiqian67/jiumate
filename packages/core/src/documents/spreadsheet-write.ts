@@ -30,11 +30,11 @@ import {
   asArray,
   attr,
   dig,
+  formulaCellAddresses,
   parsePart,
   readArchive,
   readPart,
-  relationshipTargets,
-  resolveTarget,
+  workbookSheetParts,
 } from "./ooxml.js";
 import { DocumentExtractError } from "./types.js";
 
@@ -168,23 +168,7 @@ function editSheetXml(xml: string, edit: CellEdit): string {
 
 /** Sheet name to the archive path of its worksheet part. */
 function sheetPartPaths(archive: Record<string, Uint8Array>): Map<string, string> {
-  const workbook = parsePart(archive, "xl/workbook.xml");
-  if (workbook === null) {
-    throw new DocumentExtractError(
-      "This .xlsx file has no xl/workbook.xml, so it is not a workbook package.",
-    );
-  }
-  const rels = relationshipTargets(readPart(archive, "xl/_rels/workbook.xml.rels"));
-  const paths = new Map<string, string>();
-  for (const sheet of asArray(dig(workbook, "workbook", "sheets", "sheet"))) {
-    const name = attr(sheet, "name");
-    const relId = attr(sheet, "r:id");
-    if (name === undefined || relId === undefined) continue;
-    const target = rels.get(relId);
-    if (target === undefined) continue;
-    paths.set(name, resolveTarget(target, "xl"));
-  }
-  return paths;
+  return workbookSheetParts(archive);
 }
 
 /**

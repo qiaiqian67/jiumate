@@ -15,6 +15,7 @@
  * as a sheet that simply ends there.
  */
 import { DocumentExtractError, type ExtractResult, type ExtractedUnit } from "./types.js";
+import { formulaCellAddresses, readArchive, readPart, workbookSheetParts } from "./ooxml.js";
 
 /** Max columns rendered per sheet; beyond this the row is cut and the cut is reported. */
 const MAX_COLUMNS = 40;
@@ -25,6 +26,21 @@ const MAX_ROWS = 500;
 /** A cell as read-excel-file reports it. */
 type CellValue = string | number | boolean | Date | null;
 
+/** A sheet's cells, plus which of them hold a formula. */
+export interface SheetGrid {
+  name: string;
+  rows: string[][];
+  /**
+   * A1 addresses whose cell holds a formula.
+   *
+   * Reported because the values shown are formula *results*. Editing one of these would replace
+   * the formula with a literal — silently changing what the sheet computes, which is a worse
+   * outcome than the chart-dropping this whole path exists to avoid. The grid uses this to refuse
+   * the edit rather than let it happen quietly.
+   */
+  formulaCells: string[];
+}
+
 /**
  * Every sheet's cells as plain strings, in workbook order.
  *
@@ -32,7 +48,7 @@ type CellValue = string | number | boolean | Date | null;
  * so a sheet padded to a million rows reports its real extent. Rendered values, not raw ones: a
  * preview showing `4200000` where the sheet shows `4,200,000` would be a different document.
  */
-export async function xlsxSheets(data: Uint8Array): Promise<{ name: string; rows: string[][] }[]> {
+export async function xlsxSheets(data: Uint8Array): Promise<SheetGrid[]> {
   const { default: readXlsxFile } = await import("read-excel-file/node");
   let sheets: Awaited<ReturnType<typeof readXlsxFile>>;
   try {
@@ -43,10 +59,20 @@ export async function xlsxSheets(data: Uint8Array): Promise<{ name: string; rows
       `This .xlsx file could not be read (${message}). It may be corrupt, password-protected, or saved in the legacy .xls format instead.`,
     );
   }
-  return sheets.map(({ sheet, data: rows }) => ({
-    name: sheet,
-    rows: trimGrid(rows as CellValue[][]).map((row) => row.map(renderCell)),
-  }));
+
+  // Formula addresses come from the parts, not from the values: the reader reports what a formula
+  // evaluates to and has no way to say that a formula was there.
+  const archive = readArchive(data, ".xlsx");
+  const parts = workbookSheetParts(archive);
+  return sheets.map(({ sheet, data: rows }) => {
+    const part = parts.get(sheet);
+    const xml = part === undefined ? null : readPart(archive, part);
+    return {
+      name: sheet,
+      rows: trimGrid(rows as CellValue[][]).map((row) => row.map(renderCell)),
+      formulaCells: xml === null ? [] : formulaCellAddresses(xml),
+    };
+  });
 }
 
 /** Renders one cell for a Markdown table: pipes escaped, newlines flattened, dates as ISO days. */

@@ -18,7 +18,7 @@
  * the `md` preview it already has, and this component never sees it.
  */
 import { useState } from "react";
-import type { DocumentPreview } from "@prismshadow/linsight-core/documents";
+import type { DocumentPreview, SheetGrid } from "@prismshadow/linsight-core/documents";
 
 /**
  * Base typography for converted document HTML.
@@ -130,7 +130,7 @@ function SheetGridView({
   sheets,
   onSaveCells,
 }: {
-  sheets: { name: string; rows: string[][] }[];
+  sheets: SheetGrid[];
   onSaveCells?: (edits: CellEditDraft[]) => Promise<void>;
 }) {
   const [active, setActive] = useState(0);
@@ -259,6 +259,12 @@ function SheetGridView({
                     const value = valueAt(sheet.name, address, original);
                     const isEditing = editing?.sheet === sheet.name && editing.address === address;
                     const isDirty = drafts.has(keyOf(sheet.name, address));
+                    // A formula cell shows its result, not the formula, so editing it would
+                    // replace `=SUM(B2:B4)` with whatever number is on screen. That is a silent
+                    // change to what the sheet computes — worse than the chart-dropping this
+                    // whole path exists to avoid, because a chart is visibly gone and a formula
+                    // is not. So the cell is not editable and says why.
+                    const isFormula = sheet.formulaCells.includes(address);
                     if (isEditing) {
                       return (
                         <td
@@ -287,16 +293,23 @@ function SheetGridView({
                       <td
                         key={colIndex}
                         onClick={() => {
-                          if (onSaveCells) setEditing({ sheet: sheet.name, address });
+                          if (onSaveCells && !isFormula) setEditing({ sheet: sheet.name, address });
                         }}
                         className={
                           "max-w-[28rem] truncate border border-gray-200 px-2 py-1 dark:border-gray-700" +
-                          (onSaveCells
+                          (onSaveCells && !isFormula
                             ? " cursor-cell hover:bg-blue-50 dark:hover:bg-blue-950"
                             : "") +
+                          (isFormula ? " bg-gray-50 text-gray-500 dark:bg-gray-800" : "") +
                           (isDirty ? " bg-amber-50 font-medium dark:bg-amber-950" : "")
                         }
-                        title={onSaveCells ? `${address} — click to edit` : value}
+                        title={
+                          isFormula
+                            ? `${address} — a formula (${value}). Editing it here would replace the formula with this number, so edit the workbook instead.`
+                            : onSaveCells
+                              ? `${address} — click to edit`
+                              : value
+                        }
                       >
                         {value}
                       </td>

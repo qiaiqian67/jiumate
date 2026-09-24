@@ -110,6 +110,10 @@ def write_xlsx() -> None:
     summary.append(["APAC", 4200000, 0.24])
     summary.append(["EMEA", 3100000, 0.11])
     summary.append(["Americas", 5600000, 0.07])
+    # A formula, so the formula-cell detection has something real to find. The value openpyxl
+    # stores for it is a cached result, which is exactly the trap: a grid showing that number and
+    # letting someone edit it would replace the formula with a literal.
+    summary.append(["Total", "=SUM(B2:B4)", None])
     # A date, to pin the date handling: it must come back as a day, not a timestamp.
     summary.append(["Reported", datetime.date(2026, 9, 23), None])
 

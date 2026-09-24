@@ -194,6 +194,37 @@ export function resolveTarget(target: string, baseDir: string): string {
   return stack.join("/");
 }
 
+/** The `<c>` element addresses in a worksheet part that hold a formula. */
+export function formulaCellAddresses(xml: string): string[] {
+  const addresses: string[] = [];
+  const pattern = /<c r="([A-Za-z]+[0-9]+)"(?:\s[^>]*)?>\s*<f[\s>][\s\S]*?<\/c>/g;
+  for (const match of xml.matchAll(pattern)) {
+    if (match[1]) addresses.push(match[1].toUpperCase());
+  }
+  return addresses;
+}
+
+/** Sheet name to the archive path of its worksheet part. */
+export function workbookSheetParts(archive: Record<string, Uint8Array>): Map<string, string> {
+  const workbook = parsePart(archive, "xl/workbook.xml");
+  if (workbook === null) {
+    throw new DocumentExtractError(
+      "This .xlsx file has no xl/workbook.xml, so it is not a workbook package.",
+    );
+  }
+  const rels = relationshipTargets(readPart(archive, "xl/_rels/workbook.xml.rels"));
+  const paths = new Map<string, string>();
+  for (const sheet of asArray(dig(workbook, "workbook", "sheets", "sheet"))) {
+    const name = attr(sheet, "name");
+    const relId = attr(sheet, "r:id");
+    if (name === undefined || relId === undefined) continue;
+    const target = rels.get(relId);
+    if (target === undefined) continue;
+    paths.set(name, resolveTarget(target, "xl"));
+  }
+  return paths;
+}
+
 /** Navigates a chain of object keys, returning undefined at the first missing link. */
 export function dig(node: unknown, ...keys: string[]): unknown {
   let current: unknown = node;

@@ -47,6 +47,7 @@ export {
 } from "./preview.js";
 export { applyCellEdits, parseAddress, type CellEdit } from "./spreadsheet-write.js";
 export type { PptxSlide } from "./slides.js";
+export type { SheetGrid } from "./spreadsheet.js";
 
 /** Extraction by known format. Throws DocumentExtractError with a message fit to show the user. */
 export async function extractDocument(

@@ -27,12 +27,12 @@
 import { docxToHtml } from "./docx.js";
 import { extractOdf } from "./odf.js";
 import { pptxSlides, type PptxSlide } from "./slides.js";
-import { xlsxSheets } from "./spreadsheet.js";
+import { xlsxSheets, type SheetGrid } from "./spreadsheet.js";
 import { DocumentExtractError, type DocumentFormat } from "./types.js";
 
 export type DocumentPreview =
   | { kind: "html"; html: string; warnings: string[] }
-  | { kind: "grid"; sheets: { name: string; rows: string[][] }[]; warnings: string[] }
+  | { kind: "grid"; sheets: SheetGrid[]; warnings: string[] }
   | { kind: "slides"; slides: PptxSlide[]; warnings: string[] }
   | { kind: "markdown"; markdown: string; warnings: string[] };
 
