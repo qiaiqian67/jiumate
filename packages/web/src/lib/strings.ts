@@ -2711,6 +2711,7 @@ export const zh = {
    */
   toolNames: {
     read_file: "读取文件内容",
+    read_document: "读取文档内容（Word / PDF / Excel / PPT / ODF）",
     edit_file: "编辑现有文件",
     write_file: "写入/创建文件",
     exec_command: "执行系统命令",
