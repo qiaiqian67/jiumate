@@ -1615,9 +1615,29 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     // the editor read it, and a stale save would discard that work without a word.
     if (targetPath === rel) await assertUnchanged(row.workspace, rel, ifMatch);
 
+    // The document being edited is also the document the output should look like.
+    //
+    // Pandoc's writer takes each paragraph's formatting from named styles — `Heading1`,
+    // `FirstParagraph`, `Compact` — and those styles come from the reference file. Handing it the
+    // source is what keeps the user's fonts, colours and table borders across a save. Without a
+    // reference every save quietly replaced the document's design with Pandoc's default, which is
+    // how the preview and the export came to look like two different documents.
+    //
+    // A source that cannot be read is not a reason to refuse the save: the text is what the user
+    // typed, and losing the styling is the fallback this route had until now. So the read is
+    // best-effort and a non-.docx source simply has no reference to offer.
+    let referenceDocx: Buffer | undefined;
+    if (documentFormatOf(rel) === "docx") {
+      try {
+        referenceDocx = Buffer.from((await deps.workspaceFiles.read(row.workspace, rel)).data);
+      } catch {
+        referenceDocx = undefined;
+      }
+    }
+
     // The converter's own HttpErrors (503 with no Pandoc, 504 on timeout, 500 with Pandoc's stderr)
     // travel as they are — they say more than a generic "write failed" would.
-    const generated = await deps.pandoc.exportHtmlTo(html, "docx");
+    const generated = await deps.pandoc.exportHtmlTo(html, "docx", { referenceDocx });
 
     await deps.workspaceFiles.write(row.workspace, targetPath, Buffer.from(generated));
     return noContentWithEtag(row.workspace, targetPath);
