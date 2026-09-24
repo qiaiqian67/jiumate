@@ -80,7 +80,15 @@ Copy buttons across the app confirm at the button itself: the copy icon flips to
 
 ### Files Panel
 
-The files panel browses the Workspace tree, previews files (Markdown / HTML rendered), uploads files (≤ 14MB each), and downloads them.
+The files panel browses the Workspace tree, previews files, uploads files (≤ 14MB each), and downloads them.
+
+The preview branches by type, and **every type previews**: text and Markdown get the rendered / source / edit views; HTML renders on the isolated origin (below); images and PDF embed directly (the browser's own PDF viewer is better than any conversion). **Documents** — `.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp` — are converted server-side and presented by kind: a `.docx` becomes a page of HTML (its images inlined as data URIs, inside a sandboxed iframe with no `allow-scripts`, because the markup comes from a user-supplied document and a preview has no reason to run any), a `.xlsx` becomes a grid with row numbers and column letters (A/B/C), a `.pptx` becomes slide cards (title, lines, notes, in presentation order), and ODF renders as text. The conversion runs on the server and is the **same code `read_document` uses** (core's `/documents` subpath), so what the model reads and what the user sees come from one converter. Every kind lists what it could not represent — embedded images, charts, formulas, layout — because reading a lossy extraction as the whole document is worse than reading nothing.
+
+**Documents are editable**, by two routes split on fidelity:
+
+- **`.xlsx` cells**: click a cell to change it; saving sends **only the changed coordinates**, and the server applies them surgically to the bytes on disk — replacing one `<c>` element in the one worksheet part that owns the cell and writing every other part back byte for byte. That is deliberate: a spreadsheet holds far more than cells (charts, pivot tables, conditional formatting, freeze panes, comments, named ranges), a cell model represents none of it, and parse-modify-serialize therefore makes a user lose a chart by editing one number — silently. **Formula cells are not editable** and say why: the grid shows a formula's *result*, so changing it would replace the formula with a literal, and a lost chart is visible while a lost formula is not. Conflicts use the same If-Match dance as the Markdown editor, because the Agent may have rewritten the file and applying a stale edit silently is the failure this prevents.
+- **`.docx`**: a Markdown round trip — mammoth reads the document as Markdown (keeping the structure, dropping the styling), the user edits it in the **same editor as a `.md` file**, and the server builds a new `.docx` on save. This route is **lossy and says so**: the text, heading levels, lists, tables, emphasis and links survive, while the original styling, theme, headers, footers and comments do not, and images become the words "[image omitted]". Saving therefore **asks first**: "save as a new file" is the default (the server **refuses** to write over any existing file that is not the source, so that path cannot silently destroy another document), and overwriting the original is the deliberate choice.
+
 
 ## Agent Management (/agents)
 
