@@ -111,6 +111,35 @@ describe("files/export route (workspace file → binary export)", () => {
     expect(body.toString("utf8")).toBe("OUT-docx");
   });
 
+  it("returns a .docx source unchanged for format=docx, without calling Pandoc", async () => {
+    // A Word document exported as Word is a copy, not a conversion. Sending the preview's HTML
+    // through Pandoc produced a different document from the one on disk — the reason a preview and
+    // its export could disagree. The bytes on disk are the better answer to "give me this file".
+    const source = Buffer.from([0x50, 0x4b, 0x03, 0x04, 1, 2, 3, 4, 5]); // PK zip magic + noise
+    await fs.writeFile(path.join(workspace, "original.docx"), source);
+
+    const res = await owner.post(`/api/sessions/${sessionId}/files/export`, {
+      path: "original.docx",
+      format: "docx",
+      html: "<h1>this rendering must be ignored</h1>",
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-disposition")).toContain("original.docx");
+    expect(Buffer.from(await res.arrayBuffer()).equals(source)).toBe(true);
+    // The HTML is a rendering of the file; converting it would answer a different question.
+    expect(pandocCalls).toHaveLength(0);
+  });
+
+  it("still converts a non-docx source to docx through Pandoc", async () => {
+    const res = await owner.post(`/api/sessions/${sessionId}/files/export`, {
+      path: "report.md",
+      format: "docx",
+      html: "<h1>hi</h1>",
+    });
+    expect(res.status).toBe(200);
+    expect(pandocCalls).toHaveLength(1);
+  });
+
   it("dispatches EPUB and RTF and TXT through the same Pandoc path", async () => {
     for (const format of ["epub", "rtf", "txt"] as const) {
       const res = await owner.post(`/api/sessions/${sessionId}/files/export`, {

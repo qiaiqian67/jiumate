@@ -26,7 +26,6 @@ import {
   buildDocumentPreview,
   docxToMarkdown,
   documentFormatOf,
-  markdownToDocx,
   type CellEdit,
 } from "@prismshadow/linsight-core/documents";
 import type { OmniMessage } from "@prismshadow/linsight-core";
@@ -100,9 +99,6 @@ const STAT_MAX_PATHS = 100;
 const STAT_MAX_PATH_LEN = 512;
 /** Cap on one workbook edit request. A spreadsheet edit is a handful of cells, not a rewrite. */
 const MAX_CELL_EDITS = 500;
-
-/** Max Markdown accepted for a .docx save. The editor's own cap is far lower; this is a backstop. */
-const MAX_MARKDOWN_BYTES = 8 * 1024 * 1024;
 
 /**
  * Weak ETag for a file based on its mtimeMs (changes whenever the file is written on disk).
@@ -1567,31 +1563,32 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
   });
 
   /**
-   * PUT /api/sessions/:sessionId/files/document-docx — turn edited Markdown into a .docx.
+   * PUT /api/sessions/:sessionId/files/document-docx — turn edited HTML into a .docx.
    *
-   * The write half of editing a Word document. The client sends the Markdown it has been editing,
-   * not a document: the browser never held a .docx it could faithfully re-serialize, which is the
-   * same reason the cell endpoint sends coordinates. The conversion happens against the bytes on
-   * disk, on the server, where the writer lives.
+   * The write half of editing a Word document. The client sends the HTML the rich-text editor has
+   * been holding, not a document: the browser never held a .docx it could faithfully re-serialize.
+   * Pandoc does the conversion — **the same converter the export route uses**, which is what makes
+   * the file you get from Save and the file you get from Export the same document. They were not
+   * before: save went through a hand-written OOXML writer, export went through Pandoc, and the
+   * preview went through a third renderer, so three pipelines disagreed about the same text.
    *
    * `targetPath` is required rather than inferred, because the choice between "new file" and
-   * "replace the original" is the user's and should not be guessed. The round trip is lossy — the
-   * theme, headers, footers and images do not survive — so the default the UI offers is a new file,
-   * and overwriting the original is an explicit request that also has to match its version.
+   * "replace the original" is the user's and should not be guessed.
    *
    * An existing target without an If-Match is refused rather than overwritten: "save as a new file"
-   * that silently clobbers another document is the failure this check exists to prevent.
+   * that silently clobbers another document is the failure this check exists to prevent. `*` is the
+   * If-Match wildcard and means the user answered the conflict dialog.
    */
   app.put("/:sessionId/files/document-docx", async (c) => {
     const row = resolveSession(c);
     const rel = c.req.query("path") ?? "";
     const body = await readJson(c);
 
-    const markdown = body.markdown;
-    if (typeof markdown !== "string") {
-      throw badRequest("markdown must be a string.");
+    const html = body.html;
+    if (typeof html !== "string") {
+      throw badRequest("html must be a string.");
     }
-    if (Buffer.byteLength(markdown, "utf8") > MAX_MARKDOWN_BYTES) {
+    if (Buffer.byteLength(html, "utf8") > EXPORT_MAX_HTML_BYTES) {
       throw new HttpError(413, "document_too_large", "The edited document is too large to save.");
     }
     const targetPath = body.targetPath;
@@ -1618,13 +1615,9 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     // the editor read it, and a stale save would discard that work without a word.
     if (targetPath === rel) await assertUnchanged(row.workspace, rel, ifMatch);
 
-    let generated: Uint8Array;
-    try {
-      generated = await markdownToDocx(markdown);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      throw new HttpError(422, "document_write_failed", message);
-    }
+    // The converter's own HttpErrors (503 with no Pandoc, 504 on timeout, 500 with Pandoc's stderr)
+    // travel as they are — they say more than a generic "write failed" would.
+    const generated = await deps.pandoc.exportHtmlTo(html, "docx");
 
     await deps.workspaceFiles.write(row.workspace, targetPath, Buffer.from(generated));
     return noContentWithEtag(row.workspace, targetPath);
@@ -1670,6 +1663,27 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     const dot = stem.lastIndexOf(".");
     const fileStem = dot > 0 ? stem.slice(0, dot) : stem;
     const filename = fileStem ? `${fileStem}.${fmt}` : `export.${fmt}`;
+
+    // Word from Word is a copy, not a conversion.
+    //
+    // Asking to export a .docx as .docx used to send the preview's HTML through Pandoc, which
+    // produced a different document from the one on disk — different styles, and different again
+    // from what the preview showed. Three pipelines rendered the same text three ways. The user
+    // asked for the file they are looking at, so hand them that file, byte for byte. The HTML in
+    // the request is ignored here on purpose: it is a rendering of this document, and the document
+    // is the better source.
+    if (fmt === "docx" && documentFormatOf(rel) === "docx") {
+      const { data } = await deps.workspaceFiles.read(row.workspace, rel);
+      return new Response(new Uint8Array(data), {
+        status: 200,
+        headers: {
+          "Content-Type": EXPORT_MIME[fmt],
+          "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+          "X-Content-Type-Options": "nosniff",
+          "Cache-Control": "no-store",
+        },
+      });
+    }
     const bytes =
       fmt === "pdf"
         ? deps.desktopExportPort
