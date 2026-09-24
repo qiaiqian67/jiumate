@@ -2363,14 +2363,34 @@ export const en: Strings = {
     /** Save action on a .docx being edited through Markdown: save under a new name. */
     docxSaveAsNew: "Save as a new file",
     /**
-     * Banner above the editor when a .docx is being edited as Markdown.
+     * Banner above the editor when a .docx is being edited.
      *
-     * The editor is the same one a .md file gets, and that is a deliberate choice — but without
-     * this line the user has no way to know they are editing a Word document at all, which is
-     * exactly the confusion it exists to remove.
+     * The editor is a rich-text surface rather than a Markdown one, so this no longer has to warn
+     * that the user is about to see source. What it still owes them is the cost of the round trip:
+     * saving rebuilds the document from its text and keeps the styles it already had, so the layout
+     * a Word user would recognise — page breaks, headers, footers, comments — is not preserved.
      */
     docxEditBanner:
-      'Editing a Word document as Markdown. Save writes this .docx in place; use "Save as" to write a copy and leave the original alone. The text, heading levels, lists, tables, emphasis and links survive, while the original styling, theme, headers, footers and comments do not, and images become the words "[image omitted]".',
+      'Editing a Word document. Save writes this .docx in place; use Save as a new file to keep the original. Text, heading levels, lists, tables, emphasis and links survive, and the document keeps its own fonts, colours and table styling. Headers, footers, comments and page breaks do not, and images become the words "[image omitted]".',
+    /** Rich-text toolbar labels. Short because the bar sits beside the file name. */
+    docxToolbar: {
+      bold: "Bold",
+      italic: "Italic",
+      underline: "Underline",
+      strike: "Strikethrough",
+      heading1: "Heading 1",
+      heading2: "Heading 2",
+      heading3: "Heading 3",
+      paragraph: "Body text",
+      bulletList: "Bulleted list",
+      orderedList: "Numbered list",
+      insertTable: "Insert table",
+      insertLink: "Insert link",
+      addRow: "Insert row below",
+      addColumn: "Insert column right",
+      deleteTable: "Delete table",
+      loading: "Preparing the editor…",
+    },
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `Saved as ${name}`,
     /** Toast after a .docx is written back over its source. */

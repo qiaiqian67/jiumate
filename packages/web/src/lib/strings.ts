@@ -2311,14 +2311,34 @@ export const zh = {
     /** Save action on a .docx being edited through Markdown: save under a new name. */
     docxSaveAsNew: "另存为新文件",
     /**
-     * Banner above the editor when a .docx is being edited as Markdown.
+     * Banner above the editor when a .docx is being edited.
      *
-     * The editor is the same one a .md file gets, and that is a deliberate choice — but without
-     * this line the user has no way to know they are editing a Word document at all, which is
-     * exactly the confusion it exists to remove.
+     * The editor is a rich-text surface rather than a Markdown one, so this no longer has to warn
+     * that the user is about to see source. What it still owes them is the cost of the round trip:
+     * saving rebuilds the document from its text and keeps the styles it already had, so the layout
+     * a Word user would recognise — page breaks, headers, footers, comments — is not preserved.
      */
     docxEditBanner:
-      "正在以 Markdown 编辑 Word 文档。保存会直接改这份 .docx；如需保留原件，用「另存为」写一份副本。文字、标题层级、列表、表格、加粗斜体与链接保留，原有的样式、主题、页眉页脚、批注会丢失，图片位置会变成「[image omitted]」文字。",
+      "正在编辑 Word 文档。保存会直接改这份 .docx；如需保留原件，用「另存为」写一份副本。文字、标题层级、列表、表格、加粗斜体与链接会保留，并沿用文档原有的字体、颜色与表格样式；页眉页脚、批注与分页会丢失，图片位置会变成「[image omitted]」文字。",
+    /** Rich-text toolbar labels. Short because the bar sits beside the file name. */
+    docxToolbar: {
+      bold: "加粗",
+      italic: "斜体",
+      underline: "下划线",
+      strike: "删除线",
+      heading1: "标题 1",
+      heading2: "标题 2",
+      heading3: "标题 3",
+      paragraph: "正文",
+      bulletList: "项目符号",
+      orderedList: "编号",
+      insertTable: "插入表格",
+      insertLink: "插入链接",
+      addRow: "在下方插入行",
+      addColumn: "在右侧插入列",
+      deleteTable: "删除表格",
+      loading: "正在准备编辑器…",
+    },
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `已另存为 ${name}`,
     /** Toast after a .docx is written back over its source. */

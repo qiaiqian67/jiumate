@@ -12,7 +12,17 @@
  * got a wide allotment of space) — so the list and preview are shown mutually exclusively,
  * routed by whether the existing `preview` is null, without introducing extra state.
  */
-import { isValidElement, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  isValidElement,
+  lazy,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import { REHYPE_PLUGINS, REMARK_PLUGINS } from "../../lib/markdown-plugins";
@@ -35,6 +45,16 @@ import { MermaidBlock } from "./mermaid-block";
 import { languageForExtension } from "./code-languages";
 import { ExportMenu } from "./workspace-export";
 import { MarkdownEditor } from "./markdown-editor";
+
+/**
+ * The .docx editor, loaded on demand.
+ *
+ * TipTap brings ProseMirror and a set of extensions, several hundred kilobytes between them, and
+ * only a session that opens a Word document and asks to edit it ever needs any of it. `lazy` keeps
+ * them out of the bundle every other view pays for, the same reason CodeMirror is loaded inside
+ * MarkdownEditor rather than beside it.
+ */
+const DocxEditor = lazy(() => import("./docx-editor"));
 import { DocumentPreviewView } from "./document-preview";
 import type { CellEditDraft } from "./document-preview";
 import type { DocumentPreview } from "@prismshadow/linsight-core/documents";
@@ -383,6 +403,15 @@ export function WorkspaceBrowser({
    *  own the draft so the toolbar's Save button (and the Cmd/Ctrl-S keymap that ultimately
    *  fires MarkdownEditor's onSave) both save the same bytes. */
   const [draftMd, setDraftMd] = useState("");
+  /**
+   * The .docx editor's content, as HTML.
+   *
+   * A Word document is edited as formatted text rather than as Markdown, so its draft is HTML and
+   * it lives apart from `draftMd` — one field holding two formats would be a field whose meaning
+   * depends on which file is open, which is how the Markdown version of this went wrong. Only one
+   * of the two is ever non-empty: entering edit mode sets the one the open file calls for.
+   */
+  const [draftDocxHtml, setDraftDocxHtml] = useState("");
   /** Save in flight (disables Save button, shows busy state in the editor). */
   const [savingMd, setSavingMd] = useState(false);
   /** Conflict modal: non-null when the server rejected save with 409 file_conflict. Carries the
@@ -631,10 +660,9 @@ export function WorkspaceBrowser({
   const saveMdEdit = useCallback(
     async (content: string, opts?: { force?: boolean; docxOutput?: string }): Promise<void> => {
       if (!preview || preview.kind !== "md") return;
-      // A .docx cannot be written by putting text into it, so the same editor saves through a
-      // different route: the Markdown is sent and the server builds the document. `docxOutput` is
-      // chosen before this runs — by the save-choice modal — and `force` means the user confirmed
-      // an overwrite in the conflict modal.
+      // A .docx is saved through a different route, and `content` means something different for it:
+      // the rich-text editor hands back HTML, Pandoc reads that and rebuilds the document. `docxOutput`
+      // names where it goes, and `force` means the user confirmed an overwrite in the conflict modal.
       if (preview.docxSource) {
         const { path: sourcePath, etag } = preview.docxSource;
         const output = opts?.force ? sourcePath : (opts?.docxOutput ?? sourcePath);
@@ -653,6 +681,7 @@ export function WorkspaceBrowser({
           );
           setEditingMd(false);
           setDraftMd("");
+          setDraftDocxHtml("");
           toastSuccess(
             output === sourcePath
               ? S.files.docxSavedOver
@@ -710,18 +739,22 @@ export function WorkspaceBrowser({
    *  source of truth for the rendered view, and a stray edit would re-mount MarkdownEditor
    *  on a stale value. */
   /**
-   * Enter edit mode on a .docx by way of the Markdown editor.
+   * Enter edit mode on a .docx, with the document shown as formatted text.
    *
-   * The preview already carries the editing basis — the document as Markdown, with no extractor
-   * framing — so this needs no request: it re-presents the same file as an `md` preview, which is
-   * what makes the whole existing edit flow apply unchanged. `docxSource` is the one difference,
-   * and it is what routes the save.
+   * The preview already carries the editing basis — the document as HTML — so this needs no
+   * request: it re-presents the same file as an `md` preview holding that HTML, which is what makes
+   * the existing edit flow apply unchanged. `docxSource` is the one difference, and it is what
+   * routes the save (and what supplies the style reference the save is built against).
+   *
+   * It used to hand over the document's Markdown and mount the Markdown editor, so a user who
+   * opened a Word document was shown its source. The HTML is the same content rendered as the
+   * document reads.
    */
   const enterDocxEdit = useCallback((): void => {
     if (!preview || preview.kind !== "document") return;
     const payload = preview.document;
     if (payload?.kind !== "html") return;
-    setDraftMd(payload.markdown);
+    setDraftDocxHtml(payload.html);
     setEditingMd(true);
     setRichView("edit");
     setPreview((current) =>
@@ -729,7 +762,7 @@ export function WorkspaceBrowser({
         ? {
             ...current,
             kind: "md",
-            content: payload.markdown,
+            content: payload.html,
             docxSource: { path: current.path, etag: current.etag },
           }
         : current,
@@ -768,8 +801,8 @@ export function WorkspaceBrowser({
     // Save writes the document in place — the .docx the user opened, which is what "save" means
     // in a document editor. `output === sourcePath` is what makes `saveMdEdit` send If-Match, so
     // the write still refuses to clobber a version the Agent changed underneath it.
-    void saveMdEdit(draftMd, { docxOutput: preview.path });
-  }, [preview, draftMd, saveMdEdit]);
+    void saveMdEdit(draftDocxHtml, { docxOutput: preview.path });
+  }, [preview, draftMd, draftDocxHtml, saveMdEdit]);
 
   /**
    * Save as: write a copy beside the original and leave that one alone.
@@ -783,10 +816,10 @@ export function WorkspaceBrowser({
   const saveDocxCopy = useCallback((): void => {
     if (!preview || preview.kind !== "md" || !preview.docxSource) return;
     const stem = (preview.name ?? "").replace(/\.docx$/i, "");
-    void saveMdEdit(draftMd, {
+    void saveMdEdit(draftDocxHtml, {
       docxOutput: `${stem === "" ? "document" : stem}-edited.docx`,
     });
-  }, [preview, draftMd, saveMdEdit]);
+  }, [preview, draftDocxHtml, saveMdEdit]);
 
   /**
    * The Save button's handler.
@@ -808,6 +841,7 @@ export function WorkspaceBrowser({
   const cancelMdEdit = useCallback((): void => {
     setEditingMd(false);
     setDraftMd("");
+    setDraftDocxHtml("");
   }, []);
 
   /** Enter edit mode: prime the draft with the current rendered content and mount the
@@ -1141,38 +1175,61 @@ export function WorkspaceBrowser({
               />
             )
           ) : preview.kind === "md" && richView === "edit" && editingMd ? (
-            // Edit view: MarkdownEditor owns the body. The `key` re-mounts the editor on
-            // every new edit (different preview.nonce), which is how CodeMirror picks up the
-            // latest preview.content as its initial state — MarkdownEditor snapshots
-            // `value` on mount and ignores later changes by design (its comment). No
-            // surrounding `h-full` wrapper: the editor self-sizes (CodeMirror's own scroller
-            // caps at 60vh), so a 1-line document isn't padded out to the panel's full height
+            // Edit view. A .docx gets the rich-text editor and a .md gets the Markdown one: a Word
+            // document is shown as the document reads, and a Markdown file as the source it is.
+            // The `key` re-mounts on every new edit (different preview.nonce), which is how either
+            // editor picks up the latest content as its initial state — both snapshot `value` on
+            // mount and ignore later changes by design. No surrounding `h-full` wrapper: the
+            // editors self-size, so a 1-line document isn't padded out to the panel's full height
             // and the outer panel doesn't grow a nested scrollbar (the bug behind #41.2).
             <div className="flex min-h-0 flex-1 flex-col gap-2">
               {editingDocx && (
-                // The editor below is the same one a .md file gets, which is the design — but
-                // nothing on screen would otherwise say this is a Word document, and a user who
-                // opened one expecting a Word editor has to be told what they are looking at
-                // before they save, not after.
+                // The rich-text editor is a different surface from Word's, so what it still owes
+                // the user is the cost of the round trip: the styles survive because the save is
+                // built against this document, but the page layout does not. Saying so before the
+                // save is what makes an in-place Save safe to offer at all.
                 <p className="shrink-0 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
                   {S.files.docxEditBanner}
                 </p>
               )}
-              <MarkdownEditor
-                key={`md-edit-${preview.nonce}`}
-                value={draftMd}
-                onChange={setDraftMd}
-                onSave={requestSave}
-                onCancel={cancelMdEdit}
-                saving={savingMd}
-              />
+              {editingDocx ? (
+                <Suspense
+                  fallback={
+                    <p className="px-1 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      {S.files.docxToolbar.loading}
+                    </p>
+                  }
+                >
+                  <DocxEditor
+                    key={`docx-edit-${preview.nonce}`}
+                    value={draftDocxHtml}
+                    onChange={setDraftDocxHtml}
+                    onSave={(html) => void saveMdEdit(html, { docxOutput: preview.path })}
+                    onCancel={cancelMdEdit}
+                    saving={savingMd}
+                  />
+                </Suspense>
+              ) : (
+                <MarkdownEditor
+                  key={`md-edit-${preview.nonce}`}
+                  value={draftMd}
+                  onChange={setDraftMd}
+                  onSave={requestSave}
+                  onCancel={cancelMdEdit}
+                  saving={savingMd}
+                />
+              )}
             </div>
           ) : preview.kind === "md" && richView === "rendered" ? (
             // Markdown rendered view: prefer the in-flight draft over the on-disk content
             // so toggling to "rendered" while editing shows the user's latest keystrokes.
             // Falling back to preview.content covers the non-editing path.
             (() => {
-              const body = editingMd ? draftMd : (preview.content ?? "");
+              const body = editingDocx
+                ? draftDocxHtml
+                : editingMd
+                  ? draftMd
+                  : (preview.content ?? "");
               return (
                 <>
                   <div className="md-body text-base leading-relaxed text-gray-800 dark:text-gray-100">
@@ -1228,7 +1285,11 @@ export function WorkspaceBrowser({
               // and lands in the background; the user toggling to source right now should not
               // see yesterday's bytes).
               (() => {
-                const sourceBody = editingMd ? draftMd : preview.content;
+                const sourceBody = editingDocx
+                  ? draftDocxHtml
+                  : editingMd
+                    ? draftMd
+                    : preview.content;
                 return (
                   <>
                     <CodeBlock
@@ -1456,7 +1517,7 @@ export function WorkspaceBrowser({
           // Overwrite: re-send the same draft without If-Match. Force flag bypasses the
           // server's conflict check — once it's done the local ETag is no longer current
           // anyway, so a future If-Match would fail; that's why we drop the modal here.
-          const draft = draftMd;
+          const draft = editingDocx ? draftDocxHtml : draftMd;
           setMdConflict(null);
           void saveMdEdit(draft, { force: true });
         }}

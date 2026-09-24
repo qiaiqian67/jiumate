@@ -1017,12 +1017,17 @@ export const documentPreview = (
  * delta applied silently is a wrong number in a document someone may already have sent.
  */
 /**
- * Writes edited Markdown back as a .docx.
+ * Writes an edited document back as a .docx.
+ *
+ * `html` is what the rich-text editor produced, not Markdown: the editor shows the document as
+ * formatted text, so that is what it can faithfully hand back. Pandoc reads it and rebuilds the
+ * .docx, and the source document travels as its style reference so the result keeps the fonts,
+ * colours and table borders it had.
  *
  * `targetPath` is required and not inferred: the choice between a new file and replacing the
- * original belongs to the user. The round trip is lossy — the theme, headers, footers and images
- * do not survive — so the UI offers a new file first and treats an overwrite as an explicit
- * request.
+ * original belongs to the user. The round trip keeps the text and its structure and the styles, but
+ * not the page layout — headers, footers, comments and page breaks go — so the UI states that before
+ * the click and offers a copy as the action that cannot destroy anything.
  *
  * `ifMatch` is sent when overwriting. The server refuses an existing target that has no If-Match,
  * so a "save as a new file" can never silently clobber another document. Pass `"*"` to overwrite
@@ -1031,7 +1036,7 @@ export const documentPreview = (
 export const writeDocumentDocx = (
   sessionId: string,
   sourcePath: string,
-  markdown: string,
+  html: string,
   targetPath: string,
   ifMatch?: string,
 ): Promise<void> =>
@@ -1039,7 +1044,7 @@ export const writeDocumentDocx = (
     `/api/sessions/${sessionId}/files/document-docx?path=${encodeURIComponent(sourcePath)}`,
     {
       method: "PUT",
-      body: JSON.stringify({ markdown, targetPath }),
+      body: JSON.stringify({ html, targetPath }),
       ...(ifMatch === undefined ? {} : { headers: { "if-match": ifMatch } }),
     },
   );
