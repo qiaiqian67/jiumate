@@ -749,6 +749,37 @@ export function WorkspaceBrowser({
   /** True while the open preview is a .docx being edited through Markdown. */
   const editingDocx = preview?.kind === "md" && preview.docxSource !== undefined;
 
+  /**
+   * What the Save action does — the toolbar button and the editor's Cmd/Ctrl-S both call this.
+   *
+   * They must not diverge, and they did: the toolbar asked where an edited .docx should go while
+   * the keymap called `saveMdEdit` with no target, which falls back to the source path. So Cmd-S
+   * overwrote the original document without asking — the exact outcome the save dialog exists to
+   * prevent, reachable by a shortcut. One entry point means the choice cannot be skipped.
+   *
+   * For a .docx the name is defaulted to a sibling of the source, so the safe path is one click and
+   * the name is already sensible; a collision is the server's to refuse, and the field is editable
+   * in the dialog so it is fixable without leaving the flow.
+   */
+  const requestSave = useCallback((): void => {
+    if (!preview || preview.kind !== "md") {
+      // Reached only when the toolbar is rendering a preview this handler cannot see, which is a
+      // state mismatch rather than a user situation. It must not be silent: "I clicked Save and
+      // nothing happened" is the worst possible answer, and it is what a bare `return` produced
+      // here while this was being written.
+      toastError(S.files.editSaveUnavailable);
+      return;
+    }
+    if (!preview.docxSource) {
+      void saveMdEdit(draftMd);
+      return;
+    }
+    const base = preview.name.replace(/\.docx$/i, "");
+    setDocxNewName(`${base}-edited.docx`);
+    setDocxSourcePath(preview.path);
+    setDocxSaveChoice(true);
+  }, [preview, draftMd, saveMdEdit]);
+
   const cancelMdEdit = useCallback((): void => {
     setEditingMd(false);
     setDraftMd("");
@@ -933,19 +964,7 @@ export function WorkspaceBrowser({
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (!editingDocx) {
-                        void saveMdEdit(draftMd);
-                        return;
-                      }
-                      // Default the new name to a sibling of the source, so the safe path is one
-                      // click and the name is already sensible. A collision is the server's call to
-                      // refuse, and the field is editable so it is fixable without leaving here.
-                      const base = preview.name.replace(/\.docx$/i, "");
-                      setDocxNewName(`${base}-edited.docx`);
-                      setDocxSourcePath(preview.path);
-                      setDocxSaveChoice(true);
-                    }}
+                    onClick={requestSave}
                     disabled={savingMd}
                     className="inline-flex shrink-0 items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
@@ -1091,14 +1110,25 @@ export function WorkspaceBrowser({
             // surrounding `h-full` wrapper: the editor self-sizes (CodeMirror's own scroller
             // caps at 60vh), so a 1-line document isn't padded out to the panel's full height
             // and the outer panel doesn't grow a nested scrollbar (the bug behind #41.2).
-            <MarkdownEditor
-              key={`md-edit-${preview.nonce}`}
-              value={draftMd}
-              onChange={setDraftMd}
-              onSave={() => void saveMdEdit(draftMd)}
-              onCancel={cancelMdEdit}
-              saving={savingMd}
-            />
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
+              {editingDocx && (
+                // The editor below is the same one a .md file gets, which is the design — but
+                // nothing on screen would otherwise say this is a Word document, and a user who
+                // opened one expecting a Word editor has to be told what they are looking at
+                // before they save, not after.
+                <p className="shrink-0 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                  {S.files.docxEditBanner}
+                </p>
+              )}
+              <MarkdownEditor
+                key={`md-edit-${preview.nonce}`}
+                value={draftMd}
+                onChange={setDraftMd}
+                onSave={requestSave}
+                onCancel={cancelMdEdit}
+                saving={savingMd}
+              />
+            </div>
           ) : preview.kind === "md" && richView === "rendered" ? (
             // Markdown rendered view: prefer the in-flight draft over the on-disk content
             // so toggling to "rendered" while editing shows the user's latest keystrokes.

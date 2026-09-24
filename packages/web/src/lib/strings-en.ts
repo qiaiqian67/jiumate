@@ -2362,6 +2362,15 @@ export const en: Strings = {
     editCancel: "Cancel",
     /** Save action on a .docx being edited through Markdown: save under a new name. */
     docxSaveAsNew: "Save as a new file",
+    /**
+     * Banner above the editor when a .docx is being edited as Markdown.
+     *
+     * The editor is the same one a .md file gets, and that is a deliberate choice — but without
+     * this line the user has no way to know they are editing a Word document at all, which is
+     * exactly the confusion it exists to remove.
+     */
+    docxEditBanner:
+      'Editing a Word document as Markdown. Saving rebuilds the .docx: the text, heading levels, lists, tables, emphasis and links survive, while the original styling, theme, headers, footers and comments do not, and images become the words "[image omitted]".',
     /** Save action on a .docx being edited through Markdown: replace the original. */
     docxOverwrite: "Overwrite the original",
     /** Modal title when saving an edited .docx. */
@@ -2379,6 +2388,8 @@ export const en: Strings = {
     docxSavedAs: (name: string): string => `Saved as ${name}`,
     /** Toast after a .docx is written back over its source. */
     docxSavedOver: "Overwrote the original",
+    /** Shown when Save is pressed but the preview it belongs to is gone — see `requestSave`. */
+    editSaveUnavailable: "Cannot save: the preview state has changed. Reopen the file and retry.",
     /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */
     editConflictBanner: "The file was modified elsewhere. Saving will overwrite the remote copy.",
     /** Confirm-modal copy for the discard path when the user has unsaved edits. */
