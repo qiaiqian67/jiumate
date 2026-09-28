@@ -16,21 +16,32 @@ const DECK = `<!doctype html>
 <div id="app"></div><script>/* the runtime */</script></body></html>`;
 
 describe("isBentoDeck", () => {
-  it("keys off the document block, not the file name", () => {
-    expect(isBentoDeck(DECK)).toBe(true);
-    // Renamed by hand, still a deck.
-    expect(isBentoDeck(DECK.replace("Old", "Renamed"))).toBe(true);
+  it("keys off the document block when the content is there", () => {
+    // A deck renamed by hand keeps working: the block is what makes the file one.
+    expect(isBentoDeck("renamed.html", DECK)).toBe(true);
+    expect(isBentoDeck("renamed.html", DECK.replace("Old", "Renamed"))).toBe(true);
+  });
+
+  it("keys off the name when the content has not been fetched", () => {
+    // The case that made the Save button invisible: with a preview origin configured the panel
+    // mounts the frame straight from the file and never downloads the text, so a preview can be a
+    // deck with no content at all.
+    expect(isBentoDeck("kimi-k3-strategy.bento.html", undefined)).toBe(true);
+    expect(isBentoDeck("Deck.BENTO.HTM", undefined)).toBe(true);
+    // A plain HTML file is not one, and a name that merely contains the word is not either.
+    expect(isBentoDeck("report.html", undefined)).toBe(false);
+    expect(isBentoDeck("bento-notes.html", undefined)).toBe(false);
   });
 
   it("is false for an HTML file that is not a deck", () => {
-    expect(isBentoDeck("<html><body><h1>Report</h1></body></html>")).toBe(false);
-    expect(isBentoDeck(undefined)).toBe(false);
+    expect(isBentoDeck("report.html", "<html><body><h1>Report</h1></body></html>")).toBe(false);
+    expect(isBentoDeck("report.html", undefined)).toBe(false);
   });
 
   it("accepts single quotes around the type", () => {
-    expect(isBentoDeck(`<script type='application/bento+json' id='bento-doc'></script>`)).toBe(
-      true,
-    );
+    expect(
+      isBentoDeck("d.html", `<script type='application/bento+json' id='bento-doc'></script>`),
+    ).toBe(true);
   });
 });
 

@@ -133,12 +133,15 @@ export function withBentoBridge(html: string, storageShim: string): string {
 /**
  * Whether a file is a Bento deck.
  *
- * Reads the `#bento-doc` block rather than the `.bento.html` extension: the extension is a
- * convention, the block is what makes the file one, and a deck renamed by hand still edits. The
- * block sits near the top of the file, so this holds even for a preview whose content was
- * truncated on the way here.
+ * Two signals, because neither is sufficient on its own. The name is checked first: decks are named
+ * `<Topic>.bento.html` by convention, and the name is the only thing available when a preview origin
+ * is configured — in that mode the panel mounts the frame straight from the file and never downloads
+ * the text, so a content-only test would answer "not a deck" for every real deck. The block is
+ * checked second, for a deck renamed by hand. The block sits near the top of the file, so the content
+ * test still holds when a preview's content was truncated on the way here.
  */
-export function isBentoDeck(html: string | undefined): boolean {
+export function isBentoDeck(name: string, html: string | undefined): boolean {
+  if (/\.bento\.html?$/i.test(name)) return true;
   return typeof html === "string" && /type=["']application\/bento\+json["']/.test(html);
 }
 

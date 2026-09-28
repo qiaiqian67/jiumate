@@ -633,9 +633,13 @@ export function WorkspaceBrowser({
   // the rare case of previewIsolated flipping to false with such a preview open, which
   // strands the srcDoc fallback without content). Failure sets sourceError and touches
   // nothing else — a broken source fetch must not take down the rendered view.
+  //
+  // A deck is the exception that cannot wait for a click: its rendered view IS the injected
+  // frame, so without its content there is nothing to inject into. The name is what makes that
+  // decidable here — the content is the thing being fetched.
   useEffect(() => {
     if (preview?.kind !== "html" || preview.content !== undefined) return;
-    if (richView !== "source" && previewIsolated) return;
+    if (richView !== "source" && previewIsolated && !/\.bento\.html?$/i.test(preview.name)) return;
     const target = preview.path;
     let cancelled = false;
     setSourceError(null);
@@ -747,7 +751,7 @@ export function WorkspaceBrowser({
    * the cut.
    */
   const saveBentoDoc = useCallback((): void => {
-    if (!preview || preview.kind !== "html" || !isBentoDeck(preview.content)) return;
+    if (!preview || preview.kind !== "html" || !isBentoDeck(preview.name, preview.content)) return;
     const path = preview.path;
     const etag = preview.etag;
     setSavingBento(true);
@@ -1271,7 +1275,7 @@ export function WorkspaceBrowser({
           {/* A deck is edited in place inside the preview, and its own Save cannot reach out of the
               frame (see bento-bridge.ts), so the panel saves it. Only shown for a deck: for every
               other HTML file the rendered view is a view, and there is nothing to write back. */}
-          {isBentoDeck(preview.content) && (
+          {isBentoDeck(preview.name, preview.content) && (
             <button
               type="button"
               onClick={saveBentoDoc}
@@ -1340,24 +1344,31 @@ export function WorkspaceBrowser({
               className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 dark:border-gray-800"
             />
           ) : preview.kind === "html" && richView === "rendered" ? (
-            isBentoDeck(preview.content) ? (
-              // A Bento deck gets the frame the host can talk to, even when an isolated preview
-              // origin is available. The bridge has to be injected, and injection is only possible
-              // in the `srcDoc` path — there is nothing to attach it to when the frame loads the
-              // file itself. Nothing is lost by it: a deck is self-contained by design, so it has
-              // no relative subresources for the real base URL to resolve.
-              //
-              // `allow-scripts` without `allow-same-origin`, as in the fallback below: the deck
-              // needs to run, and this is the one frame whose document we reach into — which is a
-              // reason to keep it on an opaque origin rather than a reason to relax it.
-              <iframe
-                key={`bento-${preview.nonce}`}
-                ref={bentoFrameRef}
-                srcDoc={withBentoBridge(preview.content ?? "", STORAGE_SHIM)}
-                title={preview.name}
-                sandbox="allow-scripts"
-                className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
-              />
+            isBentoDeck(preview.name, preview.content) ? (
+              preview.content === undefined ? (
+                // The deck's text is on its way (see the source effect). A deck cannot fall back to
+                // the isolated frame: that path loads the file itself, so there is nowhere to inject
+                // the bridge, and its Save would fail exactly as it did before.
+                <SkeletonList rows={6} />
+              ) : (
+                // A Bento deck gets the frame the host can talk to, even when an isolated preview
+                // origin is available. The bridge has to be injected, and injection is only possible
+                // in the `srcDoc` path — there is nothing to attach it to when the frame loads the
+                // file itself. Nothing is lost by it: a deck is self-contained by design, so it has
+                // no relative subresources for the real base URL to resolve.
+                //
+                // `allow-scripts` without `allow-same-origin`, as in the fallback below: the deck
+                // needs to run, and this is the one frame whose document we reach into — which is a
+                // reason to keep it on an opaque origin rather than a reason to relax it.
+                <iframe
+                  key={`bento-${preview.nonce}`}
+                  ref={bentoFrameRef}
+                  srcDoc={withBentoBridge(preview.content ?? "", STORAGE_SHIM)}
+                  title={preview.name}
+                  sandbox="allow-scripts"
+                  className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
+                />
+              )
             ) : previewIsolated ? (
               // Same URL and serving path as "open in new tab": the app-origin redirect mints
               // a token and 302s to the separate preview origin, where the document has a real
