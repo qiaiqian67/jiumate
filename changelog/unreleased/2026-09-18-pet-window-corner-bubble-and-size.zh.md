@@ -18,7 +18,7 @@
 
 ## 透明
 
-- 宠物页会给 `<html>` 打上 `linsight-pet-host`，样式表在该 class 下去掉全局不透明的 `body` 背景。Electron 窗口本来就是透明的；那块不透明的 body 才是宠物背后的白色底板。
+- 宠物页会给 `<html>` 打上 `jiumate-pet-host`，样式表在该 class 下去掉全局不透明的 `body` 背景。Electron 窗口本来就是透明的；那块不透明的 body 才是宠物背后的白色底板。
 
 ## 大小
 

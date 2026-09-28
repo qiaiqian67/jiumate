@@ -28,67 +28,67 @@ function plainText(markdown: string): string {
 
 describe("a bare URL ends at the last ASCII character", () => {
   it("stops before CJK punctuation, and the punctuation stays in the sentence", () => {
-    expect(firstLink("见 https://linsight.ooo，然后继续")).toEqual([
-      "https://linsight.ooo",
-      "https://linsight.ooo",
+    expect(firstLink("见 https://jiumate.ooo，然后继续")).toEqual([
+      "https://jiumate.ooo",
+      "https://jiumate.ooo",
     ]);
-    expect(plainText("见 https://linsight.ooo，然后继续")).toContain("，然后继续");
+    expect(plainText("见 https://jiumate.ooo，然后继续")).toContain("，然后继续");
   });
 
   it("stops before CJK text with no punctuation between", () => {
-    expect(firstLink("中文https://linsight.ooo英文")).toEqual([
-      "https://linsight.ooo",
-      "https://linsight.ooo",
+    expect(firstLink("中文https://jiumate.ooo英文")).toEqual([
+      "https://jiumate.ooo",
+      "https://jiumate.ooo",
     ]);
-    expect(plainText("中文https://linsight.ooo英文")).toContain("英文");
+    expect(plainText("中文https://jiumate.ooo英文")).toContain("英文");
   });
 
   it("stops before a full-width bracket after a path with a query", () => {
-    expect(firstLink("参考 https://linsight.ooo/a/b?c=1（备注）")).toEqual([
-      "https://linsight.ooo/a/b?c=1",
-      "https://linsight.ooo/a/b?c=1",
+    expect(firstLink("参考 https://jiumate.ooo/a/b?c=1（备注）")).toEqual([
+      "https://jiumate.ooo/a/b?c=1",
+      "https://jiumate.ooo/a/b?c=1",
     ]);
   });
 
   it("stops before a full stop at the end of a sentence", () => {
-    expect(firstLink("见 https://linsight.ooo。")).toEqual([
-      "https://linsight.ooo",
-      "https://linsight.ooo",
+    expect(firstLink("见 https://jiumate.ooo。")).toEqual([
+      "https://jiumate.ooo",
+      "https://jiumate.ooo",
     ]);
   });
 });
 
 describe("what must not change", () => {
   it("leaves English alone — GFM already ends those correctly", () => {
-    expect(firstLink("see https://linsight.ooo, then")).toEqual([
-      "https://linsight.ooo",
-      "https://linsight.ooo",
+    expect(firstLink("see https://jiumate.ooo, then")).toEqual([
+      "https://jiumate.ooo",
+      "https://jiumate.ooo",
     ]);
-    expect(firstLink("docs at https://linsight.ooo/docs work")).toEqual([
-      "https://linsight.ooo/docs",
-      "https://linsight.ooo/docs",
+    expect(firstLink("docs at https://jiumate.ooo/docs work")).toEqual([
+      "https://jiumate.ooo/docs",
+      "https://jiumate.ooo/docs",
     ]);
   });
 
   it("leaves an explicit link's CJK text alone", () => {
     // The trim applies to autolinks only; here the CJK *is* the link text the author wrote.
-    expect(firstLink("[中文文档](https://linsight.ooo/docs)")).toEqual([
-      "https://linsight.ooo/docs",
+    expect(firstLink("[中文文档](https://jiumate.ooo/docs)")).toEqual([
+      "https://jiumate.ooo/docs",
       "中文文档",
     ]);
   });
 
   it("leaves a percent-encoded path alone, CJK or not", () => {
-    expect(firstLink("见 https://linsight.ooo/wiki/%E4%B8%AD%E6%96%87 完")).toEqual([
-      "https://linsight.ooo/wiki/%E4%B8%AD%E6%96%87",
-      "https://linsight.ooo/wiki/%E4%B8%AD%E6%96%87",
+    expect(firstLink("见 https://jiumate.ooo/wiki/%E4%B8%AD%E6%96%87 完")).toEqual([
+      "https://jiumate.ooo/wiki/%E4%B8%AD%E6%96%87",
+      "https://jiumate.ooo/wiki/%E4%B8%AD%E6%96%87",
     ]);
   });
 
   it("keeps a bare www. autolink working, prefix and all", () => {
-    expect(firstLink("见 www.linsight.ooo，好")).toEqual([
-      "http://www.linsight.ooo",
-      "www.linsight.ooo",
+    expect(firstLink("见 www.jiumate.ooo，好")).toEqual([
+      "http://www.jiumate.ooo",
+      "www.jiumate.ooo",
     ]);
   });
 });

@@ -22,7 +22,7 @@ import {
   agentVaultPath,
   snapshotsDir,
   systemConfigPath,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import { HttpError } from "../http/errors.js";
 import { badRequest } from "../http/validate.js";
 

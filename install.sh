@@ -1,50 +1,50 @@
 #!/bin/sh
-# Linsight one-line installer.
+# JiuMate one-line installer.
 #
-#   curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
+#   curl -fsSL https://github.com/qiaiqian67/jiumate/releases/latest/download/install.sh | sh
 #
 # Options:
-#   LINSIGHT_VERSION=vX.Y.Z    choose a version (same as --version vX.Y.Z); a published Release
+#   JIUMATE_VERSION=vX.Y.Z    choose a version (same as --version vX.Y.Z); a published Release
 #                              installer defaults to its own version, an unstamped source copy to latest
-#   LINSIGHT_INSTALL_DIR=<dir> install dir; default ~/.linsight
-#   LINSIGHT_ARCHIVE=<file>    install a local Release archive without network access (same as --archive <file>)
-#   LINSIGHT_DOWNLOAD_SOURCE=auto|oss|github choose the online source; default auto (speed-probed,
+#   JIUMATE_INSTALL_DIR=<dir> install dir; default ~/.jiumate
+#   JIUMATE_ARCHIVE=<file>    install a local Release archive without network access (same as --archive <file>)
+#   JIUMATE_DOWNLOAD_SOURCE=auto|oss|github choose the online source; default auto (speed-probed,
 #                              with the same-version other source as fallback)
-#   LINSIGHT_DOWNLOAD_SPEED_PROBE=0 disable same-version OSS/GitHub probe timing in auto mode
-#   LINSIGHT_DOWNLOAD_BASE_URL=<url> exact online asset directory selected by the stable forwarder
-#   LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL=<url> fallback for LINSIGHT_DOWNLOAD_BASE_URL
+#   JIUMATE_DOWNLOAD_SPEED_PROBE=0 disable same-version OSS/GitHub probe timing in auto mode
+#   JIUMATE_DOWNLOAD_BASE_URL=<url> exact online asset directory selected by the stable forwarder
+#   JIUMATE_DOWNLOAD_FALLBACK_BASE_URL=<url> fallback for JIUMATE_DOWNLOAD_BASE_URL
 #   --universal               install the universal package (no bundled Node runtime; needs system Node >= 24)
 #
-# Each Release attaches exactly one artifact per target: linsight-<target>.tar.gz, a shallow
+# Each Release attaches exactly one artifact per target: jiumate-<target>.tar.gz, a shallow
 # installer bundle holding this script, the program payload (payload.tar.gz) and the payload's
 # checksum. Online installs download that bundle and verify it against its published .sha256;
 # offline installs transfer the same single file, extract it once and run the bundled
 # ./install.sh, which installs the sibling payload with no network access. Both paths verify
 # the payload checksum sealed inside the bundle before anything is staged. Releases up to
-# v0.1.5 shipped the program tree directly (top-level linsight/); such archives are still
+# v0.1.5 shipped the program tree directly (top-level jiumate/); such archives are still
 # accepted, from --version pins and --archive files alike.
 #
-# The data dir (~/.linsight/data) sits under the install home but is never touched by reinstall/upgrade (which only replace bin/lib/web/node).
+# The data dir (~/.jiumate/data) sits under the install home but is never touched by reinstall/upgrade (which only replace bin/lib/web/node).
 #
-# Docs: https://linsight.ooo/docs/quickstart-cli
+# Docs: https://jiumate.ooo/docs/quickstart-cli
 set -eu
 
-REPO="https://github.com/qiaiqian67/linsight"
-OSS_ORIGIN="https://linsight-releases.oss-cn-beijing.aliyuncs.com"
+REPO="https://github.com/qiaiqian67/jiumate"
+OSS_ORIGIN="https://jiumate-releases.oss-cn-beijing.aliyuncs.com"
 OSS_RELEASE_ROOT="$OSS_ORIGIN/releases"
 GITHUB_RELEASE_ROOT="$REPO/releases/download"
 GITHUB_LATEST_BASE="$REPO/releases/latest/download"
-VERSION="${LINSIGHT_VERSION:-}"
-INSTALL_DIR="${LINSIGHT_INSTALL_DIR:-$HOME/.linsight}"
+VERSION="${JIUMATE_VERSION:-}"
+INSTALL_DIR="${JIUMATE_INSTALL_DIR:-$HOME/.jiumate}"
 BIN_DIR="$HOME/.local/bin"
 UNIVERSAL=0
-ARCHIVE="${LINSIGHT_ARCHIVE:-}"
-SOURCE_MODE="${LINSIGHT_DOWNLOAD_SOURCE:-auto}"
-DOWNLOAD_BASE_URL="${LINSIGHT_DOWNLOAD_BASE_URL:-}"
-DOWNLOAD_FALLBACK_BASE_URL="${LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL:-}"
-DOWNLOAD_SPEED_PROBE="${LINSIGHT_DOWNLOAD_SPEED_PROBE:-1}"
+ARCHIVE="${JIUMATE_ARCHIVE:-}"
+SOURCE_MODE="${JIUMATE_DOWNLOAD_SOURCE:-auto}"
+DOWNLOAD_BASE_URL="${JIUMATE_DOWNLOAD_BASE_URL:-}"
+DOWNLOAD_FALLBACK_BASE_URL="${JIUMATE_DOWNLOAD_FALLBACK_BASE_URL:-}"
+DOWNLOAD_SPEED_PROBE="${JIUMATE_DOWNLOAD_SPEED_PROBE:-1}"
 # Auto-mode source selection, one rule shared by install.sh, install.ps1 and the download page on
-# linsight.ooo (packages/landing/src/lib/download-source.ts):
+# jiumate.ooo (packages/landing/src/lib/download-source.ts):
 #
 #   1. Measure GitHub on the release's large probe file. At or above
 #      SPEED_PROBE_GITHUB_MIN_BYTES_PER_SECOND it wins outright and OSS is never touched.
@@ -70,7 +70,7 @@ SPEED_PROBE_STARTED_AT=0
 PAYLOAD_NAME="payload.tar.gz"
 # The release workflow replaces this token with the immutable tag before publishing both the
 # standalone installer and the copies sealed inside the Linux, macOS and universal bundles.
-EMBEDDED_RELEASE_VERSION="__LINSIGHT_RELEASE_VERSION__"
+EMBEDDED_RELEASE_VERSION="__JIUMATE_RELEASE_VERSION__"
 
 fail() {
   echo "error: $1" >&2
@@ -145,21 +145,21 @@ if [ "$UNIVERSAL" -eq 0 ]; then
   esac
   TARGET="$os-$arch"
 fi
-ASSET="linsight-$TARGET.tar.gz"
+ASSET="jiumate-$TARGET.tar.gz"
 
 if [ -n "$ARCHIVE" ] && [ -n "$VERSION" ]; then
-  fail "--archive/LINSIGHT_ARCHIVE cannot be combined with --version/LINSIGHT_VERSION"
+  fail "--archive/JIUMATE_ARCHIVE cannot be combined with --version/JIUMATE_VERSION"
 fi
 if [ -n "$VERSION" ]; then
   validate_release_tag "$VERSION"
 fi
 case "$SOURCE_MODE" in
   auto | oss | github) ;;
-  *) fail "LINSIGHT_DOWNLOAD_SOURCE must be auto, oss, or github" ;;
+  *) fail "JIUMATE_DOWNLOAD_SOURCE must be auto, oss, or github" ;;
 esac
 case "$DOWNLOAD_SPEED_PROBE" in
   0 | 1) ;;
-  *) fail "LINSIGHT_DOWNLOAD_SPEED_PROBE must be 0 or 1" ;;
+  *) fail "JIUMATE_DOWNLOAD_SPEED_PROBE must be 0 or 1" ;;
 esac
 RESOLVED_RELEASE_VERSION="$VERSION"
 if [ -z "$RESOLVED_RELEASE_VERSION" ] && is_release_tag "$EMBEDDED_RELEASE_VERSION"; then
@@ -167,10 +167,10 @@ if [ -z "$RESOLVED_RELEASE_VERSION" ] && is_release_tag "$EMBEDDED_RELEASE_VERSI
 fi
 if [ -n "$DOWNLOAD_BASE_URL" ]; then
   DOWNLOAD_BASE_URL="${DOWNLOAD_BASE_URL%/}"
-  validate_https_url LINSIGHT_DOWNLOAD_BASE_URL "$DOWNLOAD_BASE_URL"
+  validate_https_url JIUMATE_DOWNLOAD_BASE_URL "$DOWNLOAD_BASE_URL"
   if [ -n "$DOWNLOAD_FALLBACK_BASE_URL" ]; then
     DOWNLOAD_FALLBACK_BASE_URL="${DOWNLOAD_FALLBACK_BASE_URL%/}"
-    validate_https_url LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL "$DOWNLOAD_FALLBACK_BASE_URL"
+    validate_https_url JIUMATE_DOWNLOAD_FALLBACK_BASE_URL "$DOWNLOAD_FALLBACK_BASE_URL"
   fi
 else
   DOWNLOAD_FALLBACK_BASE_URL=""
@@ -197,7 +197,7 @@ MOVED_NEW=""
 
 # Moves one directory to a new location even when the directory inode itself cannot be renamed
 # — a mount point, a process's CWD, or a filesystem that pins in-use directories (overlayfs
-# under Docker reports EBUSY when `linsight update` replaces the very lib/ its own process runs
+# under Docker reports EBUSY when `jiumate update` replaces the very lib/ its own process runs
 # from). Strategies, in order: plain rename; per-entry renames into a fresh or existing
 # destination; per-entry copy with the source entry removed (POSIX keeps an unlinked-but-open
 # file valid for the process using it). A pinned, now-empty source directory is left in place
@@ -242,7 +242,7 @@ rollback_install() {
     echo "error: automatic rollback was incomplete; previous files remain in $OLD_DIR" >&2
     return 1
   fi
-  echo "Previous Linsight installation restored." >&2
+  echo "Previous JiuMate installation restored." >&2
 }
 
 cleanup() {
@@ -341,7 +341,7 @@ load_release_download_manifest() {
     return 1
   fi
 
-  lrdm_expected_header="$(printf 'linsight-release-download-manifest\t1\t%s' "$lrdm_tag")"
+  lrdm_expected_header="$(printf 'jiumate-release-download-manifest\t1\t%s' "$lrdm_tag")"
   [ "$(sed -n '1p' "$lrdm_manifest")" = "$lrdm_expected_header" ] || return 1
 
   SPEED_PROBE_SMALL_PROBE="$(awk -F '\t' '$1 == "probe" && $2 == "small" { print $3; exit }' "$lrdm_manifest")"
@@ -553,10 +553,10 @@ get_oss_latest_tag() {
 # --- Resolve the program payload. Three entries converge on PAYLOAD_PATH:
 #     (a) bundled offline: this script sits next to payload.tar.gz in an extracted bundle;
 #     (b) --archive <file>: a local installer bundle, or a payload/legacy program archive;
-#     (c) online: download linsight-<target>.tar.gz and verify it, then open it.
+#     (c) online: download jiumate-<target>.tar.gz and verify it, then open it.
 #     A bundle is recognized by containing payload.tar.gz at its top level; anything else is a
 #     program archive (payload.tar.gz itself, or a pre-0.1.6 release archive) whose top level
-#     is linsight/. ---
+#     is jiumate/. ---
 LOCAL_ARCHIVE=0
 ARCHIVE_SHAPE=""
 ARCHIVE_PATH=""
@@ -578,7 +578,7 @@ fi
 if [ -n "$SIBLING_PAYLOAD" ]; then
   # (a) Extracted bundle: install the sibling payload; no network access at all.
   [ -z "$VERSION" ] \
-    || fail "--version/LINSIGHT_VERSION cannot be combined with the bundled offline installer"
+    || fail "--version/JIUMATE_VERSION cannot be combined with the bundled offline installer"
   echo "Using bundled payload $SIBLING_PAYLOAD ..."
   [ -f "$SIBLING_PAYLOAD.sha256" ] \
     || fail "offline checksum file not found: $SIBLING_PAYLOAD.sha256"
@@ -686,8 +686,8 @@ fi
 #    swap keeps the previous dirs in .old.$$ until the installed command runs successfully; any
 #    move or launch failure restores them automatically. The data dir is never part of the swap. ---
 tar -xzf "$PAYLOAD_PATH" -C "$TMP"
-[ -d "$TMP/linsight" ] || fail "unexpected archive layout: top-level linsight/ missing."
-MANIFEST_PATH="$TMP/linsight/package-manifest.json"
+[ -d "$TMP/jiumate" ] || fail "unexpected archive layout: top-level jiumate/ missing."
+MANIFEST_PATH="$TMP/jiumate/package-manifest.json"
 if [ -f "$MANIFEST_PATH" ]; then
   manifest_target="$(sed -n 's/.*"target"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$MANIFEST_PATH" | head -n 1)"
   [ -n "$manifest_target" ] || fail "package manifest is malformed: target missing."
@@ -703,19 +703,19 @@ rm -rf "$STAGING"
 rm -rf "$OLD_DIR"
 mkdir -p "$STAGING"
 for d in bin lib web node; do
-  if [ -e "$TMP/linsight/$d" ]; then
-    mv "$TMP/linsight/$d" "$STAGING/$d"
+  if [ -e "$TMP/jiumate/$d" ]; then
+    mv "$TMP/jiumate/$d" "$STAGING/$d"
   fi
 done
-[ -x "$STAGING/bin/linsight" ] || fail "unexpected archive layout: bin/linsight missing."
+[ -x "$STAGING/bin/jiumate" ] || fail "unexpected archive layout: bin/jiumate missing."
 
 # The launcher resolves lib/, web/ and node/ relative to itself, so staging is a faithful
 # preflight that catches macOS execution policy and runtime/package failures before replacement.
-if candidate_version="$("$STAGING/bin/linsight" --version)"; then
-  [ -n "$candidate_version" ] || fail "candidate Linsight returned an empty version."
+if candidate_version="$("$STAGING/bin/jiumate" --version)"; then
+  [ -n "$candidate_version" ] || fail "candidate JiuMate returned an empty version."
 else
   candidate_status=$?
-  fail "candidate Linsight failed to run (exit status $candidate_status). See the error above."
+  fail "candidate JiuMate failed to run (exit status $candidate_status). See the error above."
 fi
 
 mkdir -p "$OLD_DIR"
@@ -725,7 +725,7 @@ for d in bin lib web node; do
     if relocate_dir "$INSTALL_DIR/$d" "$OLD_DIR/$d"; then
       MOVED_OLD="$MOVED_OLD $d"
     else
-      fail "could not move the existing $d directory aside (stop running linsight processes and retry); the previous installation will be restored."
+      fail "could not move the existing $d directory aside (stop running jiumate processes and retry); the previous installation will be restored."
     fi
   fi
 done
@@ -738,15 +738,15 @@ for d in bin lib web node; do
     fi
   fi
 done
-[ -x "$INSTALL_DIR/bin/linsight" ] || fail "install incomplete: $INSTALL_DIR/bin/linsight missing."
+[ -x "$INSTALL_DIR/bin/jiumate" ] || fail "install incomplete: $INSTALL_DIR/bin/jiumate missing."
 
 # Verify again from the final path before deleting the backup. Keep stderr visible so platform
 # policy, permission and runtime errors are not disguised as an "unknown" version.
-if installed_version="$("$INSTALL_DIR/bin/linsight" --version)"; then
-  [ -n "$installed_version" ] || fail "installed Linsight returned an empty version."
+if installed_version="$("$INSTALL_DIR/bin/jiumate" --version)"; then
+  [ -n "$installed_version" ] || fail "installed JiuMate returned an empty version."
 else
   version_status=$?
-  fail "installed Linsight failed to run (exit status $version_status); the previous installation will be restored. See the error above."
+  fail "installed JiuMate failed to run (exit status $version_status); the previous installation will be restored. See the error above."
 fi
 
 SWAP_ACTIVE=0
@@ -759,7 +759,7 @@ STAGING=""
 
 # --- Symlink into ~/.local/bin and check PATH only after the install is known to work. ---
 mkdir -p "$BIN_DIR"
-ln -sf "$INSTALL_DIR/bin/linsight" "$BIN_DIR/linsight"
+ln -sf "$INSTALL_DIR/bin/jiumate" "$BIN_DIR/jiumate"
 PATH_MISSING=0
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
@@ -767,7 +767,7 @@ case ":$PATH:" in
 esac
 
 echo ""
-echo "Linsight $installed_version installed to $INSTALL_DIR"
+echo "JiuMate $installed_version installed to $INSTALL_DIR"
 if [ "$PATH_MISSING" -eq 1 ]; then
   echo ""
   echo "note: installation succeeded, but $BIN_DIR is not on your PATH. Add it to your shell profile:"
@@ -780,6 +780,6 @@ if [ "$PATH_MISSING" -eq 1 ]; then
 fi
 echo ""
 echo "Get started:"
-echo "  linsight --help    # all commands"
-echo "  linsight web       # start the Web UI at http://127.0.0.1:7364 (a first-login link is printed on first start)"
-echo "  linsight server    # headless server (PORT / HOST to override)"
+echo "  jiumate --help    # all commands"
+echo "  jiumate web       # start the Web UI at http://127.0.0.1:7364 (a first-login link is printed on first start)"
+echo "  jiumate server    # headless server (PORT / HOST to override)"

@@ -1,6 +1,6 @@
 # Contributor Covenant Code of Conduct
 
-[中文版](https://github.com/qiaiqian67/linsight/blob/main/.github/CODE_OF_CONDUCT.zh.md)
+[中文版](https://github.com/qiaiqian67/jiumate/blob/main/.github/CODE_OF_CONDUCT.zh.md)
 
 ## Our Pledge
 

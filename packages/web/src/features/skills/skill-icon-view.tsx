@@ -40,7 +40,7 @@ const SKILL_COLOR_OVERRIDES: Record<string, number> = {
   "use-firecrawl": 3,
   "data-analysis": 1,
   "web-design": 2,
-  "linsight-sdk": 0,
+  "jiumate-sdk": 0,
 };
 
 export function skillTileColor(name: string): string {

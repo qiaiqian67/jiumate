@@ -8,7 +8,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import * as tar from "tar";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { agentStateDir, snapshotsDir } from "@prismshadow/linsight-core";
+import { agentStateDir, snapshotsDir } from "@prismshadow/jiumate-core";
 import type {
   AgentCreateResponse,
   AgentImportResponse,

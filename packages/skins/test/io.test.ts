@@ -24,7 +24,7 @@ import {
 let root: string;
 
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), "linsight-skins-"));
+  root = await mkdtemp(join(tmpdir(), "jiumate-skins-"));
 });
 
 afterEach(async () => {
@@ -48,7 +48,7 @@ const COLORS = {
 
 function manifest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
-    schema: "linsight.skin",
+    schema: "jiumate.skin",
     schemaVersion: 1,
     id: "sakura",
     name: "樱",
@@ -97,7 +97,7 @@ describe("coerceSkinPackage: shape", () => {
   });
 
   it("requires the schema discriminator and version", () => {
-    expect(() => coerce(manifest({ schema: "other" }))).toThrow(/schema "linsight.skin"/);
+    expect(() => coerce(manifest({ schema: "other" }))).toThrow(/schema "jiumate.skin"/);
     expect(() => coerce(manifest({ schemaVersion: 2 }))).toThrow(/schemaVersion 1/);
   });
 
@@ -208,19 +208,19 @@ describe("coerceSkinPackage: art", () => {
   });
 });
 
-describe("coerceSkinPackage: the linsight block", () => {
+describe("coerceSkinPackage: the jiumate block", () => {
   it("takes a font stack and validates it separately from colours", () => {
     expect(
-      coerce(manifest({ linsight: { font: 'Inter, "PingFang SC", sans-serif' } })).extras.font,
+      coerce(manifest({ jiumate: { font: 'Inter, "PingFang SC", sans-serif' } })).extras.font,
     ).toBe('Inter, "PingFang SC", sans-serif');
-    expect(() => coerce(manifest({ linsight: { font: "Inter; } body { x: y" } }))).toThrow(
+    expect(() => coerce(manifest({ jiumate: { font: "Inter; } body { x: y" } }))).toThrow(
       /plain font stack/,
     );
   });
 
   it("is optional", () => {
     expect(coerce(manifest()).extras.font).toBeNull();
-    expect(coerce(manifest({ linsight: {} })).extras.font).toBeNull();
+    expect(coerce(manifest({ jiumate: {} })).extras.font).toBeNull();
   });
 });
 
@@ -356,7 +356,7 @@ describe("catalog IO", () => {
 
   it("lists installed skins, skipping an unreadable one instead of failing", async () => {
     await stage("sakura", manifest());
-    await stage("broken", { schema: "linsight.skin", schemaVersion: 1 });
+    await stage("broken", { schema: "jiumate.skin", schemaVersion: 1 });
     await writeFile(join(root, "skins", "stray.txt"), "not a directory", "utf8");
     const skins = await readSkinCatalog(root);
     expect(skins.map((s) => s.id)).toEqual(["sakura"]);
@@ -443,7 +443,7 @@ describe("receipts", () => {
     // unparsable one must not take down the listing that contains it.
     const dir = join(root, "skins", "sakura");
     await mkdir(dir, { recursive: true });
-    await writeFile(join(dir, ".linsight-skin-receipt.json"), "{ not json", "utf8");
+    await writeFile(join(dir, ".jiumate-skin-receipt.json"), "{ not json", "utf8");
     expect(await readSkinReceipt(root, "sakura")).toBeNull();
   });
 
@@ -451,7 +451,7 @@ describe("receipts", () => {
     const dir = join(root, "skins", "sakura");
     await mkdir(dir, { recursive: true });
     await writeFile(
-      join(dir, ".linsight-skin-receipt.json"),
+      join(dir, ".jiumate-skin-receipt.json"),
       JSON.stringify({ schemaVersion: 99, sourceKey: "a" }),
       "utf8",
     );

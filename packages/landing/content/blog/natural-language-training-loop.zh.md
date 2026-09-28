@@ -2,10 +2,10 @@
 title: 让 Agent 来操作 Ollama、vLLM、LlamaFactory，做数据安全的模型训练自闭环
 date: 2026-07-22
 category: practice
-excerpt: Linsight 0.1.1 新增了 ollama、vllm、llamafactory 三个技能。它们不是三个要你去学的命令行工具，而是 Agent 本来就会的东西——于是「在这里部署一个模型，再把它微调到能过我的评测」变成了你说的一句话，而不是你敲的一串命令。本文主要讲的是：为什么这套 Harness 能把这三个工具用好——什么是开箱就有的、每次请求要付多少代价、以及闭环凭什么合得上。而整个过程中的数据不出你自己的环境。
+excerpt: JiuMate 0.1.1 新增了 ollama、vllm、llamafactory 三个技能。它们不是三个要你去学的命令行工具，而是 Agent 本来就会的东西——于是「在这里部署一个模型，再把它微调到能过我的评测」变成了你说的一句话，而不是你敲的一串命令。本文主要讲的是：为什么这套 Harness 能把这三个工具用好——什么是开箱就有的、每次请求要付多少代价、以及闭环凭什么合得上。而整个过程中的数据不出你自己的环境。
 ---
 
-0.1.1 带来了三个技能：`ollama`、`vllm`、`llamafactory`。最容易的误读是：Linsight 现在要你再学三个命令行工具。
+0.1.1 带来了三个技能：`ollama`、`vllm`、`llamafactory`。最容易的误读是：JiuMate 现在要你再学三个命令行工具。
 
 恰恰相反。这些技能不是写给你的，是写给 Agent 的；它们存在的全部理由，就是让你不再敲这些命令。你用一句话说清楚要什么，Agent 自己选工具、问该问的问题、执行、验证，然后把结果讲给你听。
 
@@ -27,18 +27,18 @@ excerpt: Linsight 0.1.1 新增了 ollama、vllm、llamafactory 三个技能。�
 
 **然后它把你多半会做错的那几步做对。** 缺了就装 Ollama，拉取模型，并调大上下文窗口——这一步最常被跳过，然后花一个下午排查，因为 Ollama 默认的窗口很小，而 Agent 会话不小。技能给了它两条路：在服务环境里设 `OLLAMA_CONTEXT_LENGTH`，或者用 Modelfile 把 `num_ctx` 固化成一个模型变体。
 
-**然后它先验证，再注册。** 拉下来的模型在被添加之前，对 Linsight 是不可见的，而模型配置是 CLI 的职责：
+**然后它先验证，再注册。** 拉下来的模型在被添加之前，对 JiuMate 是不可见的，而模型配置是 CLI 的职责：
 
 ```bash
 # 这是 Agent 执行过的命令，不是给你照做的清单
 curl http://localhost:11434/v1/models
 
-linsight config model add --provider custom --client-type openai \
+jiumate config model add --provider custom --client-type openai \
   --base-url http://localhost:11434/v1 --model-id qwen3.5:0.8b --api-key ollama
-linsight config model list
+jiumate config model list
 ```
 
-这条命令里的每个细节都是判断，不是模板，而 Agent 是从 `linsight-cli` 技能里学到它们的。Linsight 里的模型由 `(provider, model_id)` 二元组确定，分组**永远不**从模型 ID 推断——网关会用上游 ID 转售厂商模型，猜错就可能把你的 Key 发到别人的端点上；`custom` 是内置分组之外任何端点所属的分组。`--client-type openai --base-url <endpoint>` 是所有 OpenAI chat-completion 兼容服务的写法。而 `--api-key ollama` 不是装饰：Ollama 接受任何 Key，但这个字段必须非空。
+这条命令里的每个细节都是判断，不是模板，而 Agent 是从 `jiumate-cli` 技能里学到它们的。JiuMate 里的模型由 `(provider, model_id)` 二元组确定，分组**永远不**从模型 ID 推断——网关会用上游 ID 转售厂商模型，猜错就可能把你的 Key 发到别人的端点上；`custom` 是内置分组之外任何端点所属的分组。`--client-type openai --base-url <endpoint>` 是所有 OpenAI chat-completion 兼容服务的写法。而 `--api-key ollama` 不是装饰：Ollama 接受任何 Key，但这个字段必须非空。
 
 如果本地模型的上下文窗口很小，Agent 还有理由顺手限制输出——`--max-tokens` 是 0.1.1 新增的模型级上限，优先级高于 Agent 默认的 32,000；而这个默认值本身就塞不进 32k 窗口，更别提再加上提示词。
 
@@ -60,7 +60,7 @@ linsight config model list
 - **Ollama 的上下文。** `OLLAMA_CONTEXT_LENGTH=32768 ollama serve`，或在 Modelfile 里写 `PARAMETER num_ctx 32768` 再 `ollama create`。
 - **Ollama 已经在跑。** 11434 端口被占就复用——绝不杀死一个不是自己启动的服务进程。
 - **LlamaFactory 的合并。** 为了能独立部署要把适配器合并进基座权重，但绝不合并到量化过的基座上。
-- **把结果注册回去。** `--provider custom --client-type openai --base-url <endpoint>`；模型部署起来之后，不添加就对 Linsight 不可见。
+- **把结果注册回去。** `--provider custom --client-type openai --base-url <endpoint>`；模型部署起来之后，不添加就对 JiuMate 不可见。
 
 </details>
 
@@ -68,13 +68,13 @@ linsight config model list
 
 **其三：它操作的就是真正的 CLI，因为它手里只有这个。** 一次会话的内置工具是 `exec_command`、`input_command`、`run_subagent`、`input_subagent`，外加一个图像工具。没有读文件工具，没有写文件工具，也没有任何按厂商定制的集成：`exec_command` 自己的描述就是让模型用 Shell 去读写编辑文件、运行程序。这个约束在这里恰恰是优点。`vllm serve`、`ollama pull`、`llamafactory-cli train` 不需要谁去写一层适配，技能里写的参数就是工具真正的参数，而不是某层封装挑出来的子集；等 vLLM 下个月加了新参数，要改的是一份 Markdown，而不是发一个 Harness 的新版本。
 
-**其四：闭环合得上，是因为「注册」本身就是工作的一部分。** 把模型部署起来，和**能用上**这个模型，是两件事；而大多数「Agent 帮我搭好了」的演示，正是在这条缝上悄悄结束的。`linsight-cli` 技能把它补上了：它告诉 Agent，端点在 `linsight config model add` 注册之前是不可见的；更关键的是，要注册到**哪个**数据根目录里。Agent 在开发一个应用时，`--root` 必须指向该应用项目内自己的数据目录（`--root ./linsight_data`，也就是应用传给 `createAgent({ root })` 的那个路径），而默认根目录是留给 Linsight 自身的模型的。于是它刚刚部署好的模型，就成了它接下来可以运行其上的模型——有意为之，且落在正确的位置。演示和闭环的差别就在这里。
+**其四：闭环合得上，是因为「注册」本身就是工作的一部分。** 把模型部署起来，和**能用上**这个模型，是两件事；而大多数「Agent 帮我搭好了」的演示，正是在这条缝上悄悄结束的。`jiumate-cli` 技能把它补上了：它告诉 Agent，端点在 `jiumate config model add` 注册之前是不可见的；更关键的是，要注册到**哪个**数据根目录里。Agent 在开发一个应用时，`--root` 必须指向该应用项目内自己的数据目录（`--root ./jiumate_data`，也就是应用传给 `createAgent({ root })` 的那个路径），而默认根目录是留给 JiuMate 自身的模型的。于是它刚刚部署好的模型，就成了它接下来可以运行其上的模型——有意为之，且落在正确的位置。演示和闭环的差别就在这里。
 
 **其五：「能衡量」是随包发布的能力，不是留给读者的练习。** `benchmark-design`、`agent-evaluation`、`agent-optimization` 在同一个技能库里，用同样的方式安装。执行不等于改进；「微调到能过」这句话，得先有个东西能说出「过了」。第三部分讲的就是这三个技能做了什么。
 
 **其六：这两个故事其实是同一个故事。** Agent 之所以能驱动这些工具，正是因为它是在持有数据的那台机器上直接执行命令。中间没有一个托管的控制面，需要先看到你的数据集才能编排这次运行。「本地」不是给这套设计外挂上去的特性，它和「它能用真正的 CLI」是同一件事。
 
-**以及这六条的诚实版本。** 以上没有一条是在说别的 Agent 做不到。把同样的说明喂给任何一个会用 Shell 的强 Agent，它也能把模型部署起来。差别比一句「最强」小得多，也更可核查：在 Linsight 上，这些说明是已经装好的，代价是约 2.5 KB 的提示词，而且其中包含了那一步让模型在部署之后真正可用的注册。换到别处，得由你来知道这些——并且下一次会话还得再知道一遍。
+**以及这六条的诚实版本。** 以上没有一条是在说别的 Agent 做不到。把同样的说明喂给任何一个会用 Shell 的强 Agent，它也能把模型部署起来。差别比一句「最强」小得多，也更可核查：在 JiuMate 上，这些说明是已经装好的，代价是约 2.5 KB 的提示词，而且其中包含了那一步让模型在部署之后真正可用的注册。换到别处，得由你来知道这些——并且下一次会话还得再知道一遍。
 
 ## 三、「把这个模型微调到能过我的评测」
 
@@ -122,22 +122,22 @@ linsight config model list
 
 - **被部署的模型。** Ollama 在 `http://localhost:11434/v1` 暴露 OpenAI 兼容 API，vLLM 在 `http://localhost:8000/v1`。两者都在本机。对它们发起的 Agent 会话里，每一条提示词、工具 Schema、工具结果与补全，都留在本地回环接口上。
 - **训练。** LlamaFactory 跑在你自己的 GPU 上。数据集放在 `data/` 下、与 `data/dataset_info.json` 相邻；适配器与合并后的导出落在 `saves/`。`llamafactory-cli train` 的任何阶段都不会把你的样本发出去。
-- **评测。** Case、Statement 与 Rubric 都是你项目里的文件——一份 Rubric 的路径形如 `~/.linsight/data/default_project/agents/tool-router/benchmarks/tool-routing-v1/CASE-003-pick-the-cheaper-endpoint/rubric/README.md`——评估者从磁盘读取它们，记分板是与之相邻的一份 YAML。
-- **配置。** `linsight config model add` 写入一份隐藏的项目配置文件。它只由 CLI 管理、从不手工编辑，而且你指到哪它就待在哪。
+- **评测。** Case、Statement 与 Rubric 都是你项目里的文件——一份 Rubric 的路径形如 `~/.jiumate/data/default_project/agents/tool-router/benchmarks/tool-routing-v1/CASE-003-pick-the-cheaper-endpoint/rubric/README.md`——评估者从磁盘读取它们，记分板是与之相邻的一份 YAML。
+- **配置。** `jiumate config model add` 写入一份隐藏的项目配置文件。它只由 CLI 管理、从不手工编辑，而且你指到哪它就待在哪。
 
 **确实会经过网络的部分：** 安装包与权重，方向是**进来**。`ollama pull`、`pip install vllm`、克隆 LlamaFactory、解析一个 Hugging Face 基座模型 ID——这些都是下载，没有一项在上传你的数据。方向值得说清楚，因为「本地」这个词经常被悄悄安在会回传的方案上。
 
-**以及决定其余一切的那一项：** 驱动 Agent 的模型本身。如果 Agent 跑在托管 API 上，那么无论它调优的模型多本地，对话本身——你的指令、它读到的文件内容、它转述的工具输出——都会到达那家厂商。完全本地是你主动做的选择：用同样的 `linsight config model add ... --set-default`，把 Harness 自身的默认模型也指向本地端点，整个闭环就没有第三方参与。这是一个真实的取舍——让一个小的本地模型驱动整个闭环，和让一个前沿模型驱动它，不是同一件事——它应该是一个决定，而不是一个默认假设。
+**以及决定其余一切的那一项：** 驱动 Agent 的模型本身。如果 Agent 跑在托管 API 上，那么无论它调优的模型多本地，对话本身——你的指令、它读到的文件内容、它转述的工具输出——都会到达那家厂商。完全本地是你主动做的选择：用同样的 `jiumate config model add ... --set-default`，把 Harness 自身的默认模型也指向本地端点，整个闭环就没有第三方参与。这是一个真实的取舍——让一个小的本地模型驱动整个闭环，和让一个前沿模型驱动它，不是同一件事——它应该是一个决定，而不是一个默认假设。
 
 ## 真正改变的是什么
 
-在这个版本之前，Linsight 可以对接任何 OpenAI 兼容端点，但对这个端点从哪来只字不提。把模型部署起来、衡量它能做到什么、修补它做不到的地方，是三套工具、三套约定，中间夹着一个人做翻译。
+在这个版本之前，JiuMate 可以对接任何 OpenAI 兼容端点，但对这个端点从哪来只字不提。把模型部署起来、衡量它能做到什么、修补它做不到的地方，是三套工具、三套约定，中间夹着一个人做翻译。
 
 现在它们是同一套系统，而人的位置变了。你描述你要的结果。Agent 自己部署模型、自己跑评测、自己读失败原因、自己微调、自己重新部署、自己再测一次——每一步都由上一步的结果决定。你负责批准调用、做判断、看记分板。
 
 跑在你自己的硬件上。用你自己的权重。数据留在你放它的地方。
 
 ```bash
-curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
-linsight web
+curl -fsSL https://github.com/qiaiqian67/jiumate/releases/latest/download/install.sh | sh
+jiumate web
 ```

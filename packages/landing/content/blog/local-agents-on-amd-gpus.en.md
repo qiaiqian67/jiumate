@@ -1,18 +1,18 @@
 ---
-title: "A closer look at Linsight — and running a self-improving agent locally on an AMD GPU"
+title: "A closer look at JiuMate — and running a self-improving agent locally on an AMD GPU"
 date: 2026-07-20
 category: practice
 author: Ning Zhang (AMD), Yuyang Gao (AMD), Yaowei Zheng (PrismShadow)
-excerpt: What Linsight actually is, the ideas behind its architecture, and a real end-to-end run — a local open-weight model on an AMD GPU that fails a scored task, then recursively improves itself from a middling score to near the ceiling by diagnosing and rewriting its own files, entirely on-device.
+excerpt: What JiuMate actually is, the ideas behind its architecture, and a real end-to-end run — a local open-weight model on an AMD GPU that fails a scored task, then recursively improves itself from a middling score to near the ceiling by diagnosing and rewriting its own files, entirely on-device.
 ---
 
 *AMD × PrismShadow — by Ning Zhang, Yuyang Gao (AMD) and Yaowei Zheng (PrismShadow).*
 
-If you are new to Linsight, this post is a guided tour: what the project is, the ideas that shape its architecture, and — to make it concrete — a real run where a fully local open-weight model on an AMD GPU fails a scored task and then recursively improves itself from a middling score to near the ceiling by diagnosing and rewriting its own files, without a single byte leaving the machine.
+If you are new to JiuMate, this post is a guided tour: what the project is, the ideas that shape its architecture, and — to make it concrete — a real run where a fully local open-weight model on an AMD GPU fails a scored task and then recursively improves itself from a middling score to near the ceiling by diagnosing and rewriting its own files, without a single byte leaving the machine.
 
-## What Linsight is
+## What JiuMate is
 
-Linsight is an open-source AI Agent harness — a complete TypeScript stack for *building* and *evolving* agents, not a single app. It deploys fully locally, can run on as little as a single CPU, and reaches 1000+ online and local models through one unified gateway. Its purpose fits in one line:
+JiuMate is an open-source AI Agent harness — a complete TypeScript stack for *building* and *evolving* agents, not a single app. It deploys fully locally, can run on as little as a single CPU, and reaches 1000+ online and local models through one unified gateway. Its purpose fits in one line:
 
 > Efficient Self-Improving Harness for Everyone.
 
@@ -24,7 +24,7 @@ The word "harness" is deliberate. This is not a heavyweight framework you build 
 | **Harness for Building Agents** | Either build one programmatically with the SDK (`createAgent` → `createSession` → `run`), or have an Agent build a whole new Agent for you from a plain-language requirement. |
 | **Harness for Recursive Self-Improvement** | With Skills, an Agent evaluates and optimizes *itself*, improving recursively over time. |
 
-For the latter two, Linsight is the first open-source implementation of its kind.
+For the latter two, JiuMate is the first open-source implementation of its kind.
 
 ## The architecture, and why it is shaped this way
 
@@ -33,7 +33,7 @@ One install gives you four layers that share one data directory and one message 
 ```text
 ┌─────────────┐  ┌─────────────────────────────┐
 │   CLI       │  │  Web App (React SPA)        │
-│  (linsight)  │  │    ↑ OmniMessage over SSE   │
+│  (jiumate)  │  │    ↑ OmniMessage over SSE   │
 │             │  │  Server (Hono + SQLite)     │
 └──────┬──────┘  └──────────────┬──────────────┘
        │      session.run(...)  │        ← Human boundary
@@ -46,7 +46,7 @@ One install gives you four layers that share one data directory and one message 
 └──────────────────────────────────────────────┘
 ```
 
-The center is the execution engine in `@prismshadow/linsight-core`. The CLI, the Server, and the Web App are simply different "Human implementations" of that same engine. This single decision — one kernel, many front-ends — is what keeps the whole system coherent, and it comes from a small set of design tenets worth understanding on their own.
+The center is the execution engine in `@prismshadow/jiumate-core`. The CLI, the Server, and the Web App are simply different "Human implementations" of that same engine. This single decision — one kernel, many front-ends — is what keeps the whole system coherent, and it comes from a small set of design tenets worth understanding on their own.
 
 ### One protocol, three jobs — OmniMessage
 
@@ -83,7 +83,7 @@ The one-line summary of the layering: *what is editable or recorded lives in fil
 
 ## Simplest is the best — six tools, and why that matters
 
-The first pillar is the easiest to overlook and the one you feel most in practice: the toolset is deliberately tiny. Linsight ships exactly six built-in tools:
+The first pillar is the easiest to overlook and the one you feel most in practice: the toolset is deliberately tiny. JiuMate ships exactly six built-in tools:
 
 | Tool | Purpose |
 | --- | --- |
@@ -144,7 +144,7 @@ spurious user-facing errors without requiring manual retries.
 It even reasoned out loud about whether the change was a `fix` or a `feat` before committing to `fix` — behavior that came entirely from the AGENTS.md its parent agent had written.
 
 **Run it yourself.** The whole flow above is a self-contained, SDK-driven script in the repo:
-[`examples/build-agent-with-agent/`](https://github.com/qiaiqian67/linsight/tree/main/examples/build-agent-with-agent).
+[`examples/build-agent-with-agent/`](https://github.com/qiaiqian67/jiumate/tree/main/examples/build-agent-with-agent).
 Phase 1 uses `createAgent`/`createSession`/`run` to drive `default_agent` into building
 `commit-helper`; phase 2 loads the new agent and runs it — all on the local Ollama + qwen3.6:35b
 setup, no cloud API. See its `README.md` for the one-time Ollama configuration.
@@ -157,10 +157,10 @@ The third pillar builds on the same idea. Because agents are editable data and e
 
 Design tenets are easy to claim. Here is an end-to-end run that exercises them, entirely on fully local, open-weight infrastructure with an AMD GPU — every token generated on-device, nothing sent to a cloud API.
 
-**The setup.** An AMD GPU running ROCm, serving `qwen3.6:35b` — a capable local open-weight model (a ~24 GB MoE, 36B total parameters, Q4_K_M) — through Ollama's OpenAI-compatible endpoint. Ollama detected the AMD GPU natively (no architecture override needed) and loaded the model into GPU memory. This same path spans AMD's ROCm-supported lineup — from Radeon PRO workstation cards such as the W7900 (48 GB, RDNA3) up to datacenter Instinct accelerators. Wiring it into Linsight took a single command, precisely because the core treats any OpenAI-compatible endpoint the same way:
+**The setup.** An AMD GPU running ROCm, serving `qwen3.6:35b` — a capable local open-weight model (a ~24 GB MoE, 36B total parameters, Q4_K_M) — through Ollama's OpenAI-compatible endpoint. Ollama detected the AMD GPU natively (no architecture override needed) and loaded the model into GPU memory. This same path spans AMD's ROCm-supported lineup — from Radeon PRO workstation cards such as the W7900 (48 GB, RDNA3) up to datacenter Instinct accelerators. Wiring it into JiuMate took a single command, precisely because the core treats any OpenAI-compatible endpoint the same way:
 
 ```bash
-linsight config model add \
+jiumate config model add \
   --model-id qwen3.6:35b \
   --provider custom --client-type openai \
   --base-url http://localhost:11434/v1 \
@@ -175,7 +175,7 @@ That is the honest starting point: on local hardware, an out-of-the-box agent do
 
 ## How self-improvement actually works — and a real before/after
 
-The 4.6 / 10 above is an *evaluation* — a snapshot of the agent as it stands. The more interesting question is how Linsight turns that snapshot into progress. This is the recursive self-improvement loop, and it is worth understanding as a mechanism, because there is no magic engine code behind it — it is ordinary agent machinery, orchestrated by Skills:
+The 4.6 / 10 above is an *evaluation* — a snapshot of the agent as it stands. The more interesting question is how JiuMate turns that snapshot into progress. This is the recursive self-improvement loop, and it is worth understanding as a mechanism, because there is no magic engine code behind it — it is ordinary agent machinery, orchestrated by Skills:
 
 1. **Benchmark** — define capability cases, each with a private rubric (as above).
 2. **Evaluate** — run the agent over the cases and score against the rubrics. Each run is an ordinary, fully-traced Session.
@@ -192,7 +192,7 @@ Let's improve the exact agent from the previous section — the same `qwen3.6:35
 That is a **4.6 → 6.6 → 9.8** climb on the same model and task (numbers vary run to run), achieved purely by the agent editing a text file it reads — with the harness keeping each round only because the score strictly improved. That is the loop, self-driven: *what the agent can see, the agent can improve* — measured against a rubric, linked to a Trace, not vibes.
 
 **Run it yourself.** This whole loop is a self-contained, SDK-driven script in the repo:
-[`examples/self-improving-agent/`](https://github.com/qiaiqian67/linsight/tree/main/examples/self-improving-agent).
+[`examples/self-improving-agent/`](https://github.com/qiaiqian67/jiumate/tree/main/examples/self-improving-agent).
 It uses a deterministic, readable rubric (10 points: 5 for content, 5 for the house convention that
 lives only in `AGENTS.md`) and — because a local model is nondeterministic — averages several runs
 per version, which is exactly why real benchmarks use a `runs` count. Crucially, the script never
@@ -204,7 +204,7 @@ agent id, so your own agents are untouched.
 
 ## No AMD GPU yet? Free cloud compute from AMD + Fireworks
 
-Not everyone has an AMD GPU under their desk — and you do not need one to try this. Through the AMD AI Developer Program, AMD partners with Fireworks AI to hand eligible developers **$50 in free Fireworks credits**. Fireworks serves open-weight models over an OpenAI-compatible endpoint, so — just like the local Ollama setup above — it is a single-line change to point Linsight at it.
+Not everyone has an AMD GPU under their desk — and you do not need one to try this. Through the AMD AI Developer Program, AMD partners with Fireworks AI to hand eligible developers **$50 in free Fireworks credits**. Fireworks serves open-weight models over an OpenAI-compatible endpoint, so — just like the local Ollama setup above — it is a single-line change to point JiuMate at it.
 
 Getting the credits (approval typically takes 2–3 business days):
 
@@ -213,10 +213,10 @@ Getting the credits (approval typically takes 2–3 business days):
 3. In the form, choose **Fireworks AI** as the product needed, add at least one public profile link (GitHub, LinkedIn, etc.), and submit.
 4. AMD emails you a coupon code. Redeem it at [fireworks.ai](https://fireworks.ai/) via **Redeem Promo**, then generate an API key.
 
-Then wire it into Linsight exactly like any other endpoint:
+Then wire it into JiuMate exactly like any other endpoint:
 
 ```bash
-linsight config model add --model-id <fireworks-model-id> \
+jiumate config model add --model-id <fireworks-model-id> \
   --provider custom --client-type openai \
   --base-url https://api.fireworks.ai/inference/v1 \
   --api-key <your-fireworks-key> --set-default
@@ -233,14 +233,14 @@ Same harness, same one-line swap — whether the tokens are generated on your ow
 ## Get started
 
 ```bash
-curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/qiaiqian67/jiumate/releases/latest/download/install.sh | sh
 
 # Point at any OpenAI-compatible endpoint — a local Ollama model included
-linsight config model add --model-id <your-model> \
+jiumate config model add --model-id <your-model> \
   --provider custom --client-type openai \
   --base-url http://localhost:11434/v1 --api-key ollama --set-default
 
-linsight web   # or: linsight run --approve allow-all --message "..."
+jiumate web   # or: jiumate run --approve allow-all --message "..."
 ```
 
 Prefer to embed it in your own program? That is the SDK face of the "building agents" pillar — the core loop is three calls:
@@ -251,6 +251,6 @@ const session = await agent.createSession({ workspaceDir: process.cwd() });
 for await (const out of session.run([userText("...")], { approve: async () => "allow" })) { /* stream */ }
 ```
 
-Complete, runnable versions live in [`examples/`](https://github.com/qiaiqian67/linsight/tree/main/examples) — including an agent that builds another agent and an agent that improves itself, both on local Ollama.
+Complete, runnable versions live in [`examples/`](https://github.com/qiaiqian67/jiumate/tree/main/examples) — including an agent that builds another agent and an agent that improves itself, both on local Ollama.
 
-Whether you run frontier cloud models or open weights on your own AMD GPU, Linsight gives you the same minimal, observable, self-improving substrate. Follow us on [GitHub](https://github.com/qiaiqian67/linsight) and open your first issue.
+Whether you run frontier cloud models or open weights on your own AMD GPU, JiuMate gives you the same minimal, observable, self-improving substrate. Follow us on [GitHub](https://github.com/qiaiqian67/jiumate) and open your first issue.

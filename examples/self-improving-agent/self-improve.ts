@@ -34,7 +34,7 @@ import {
   userText,
   isCompleteModelMessage,
   type OmniMessage,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 
 const AGENT_ID = "self-improve-demo";
 const PROJECT_ID = "default_project";
@@ -69,9 +69,9 @@ When a task lists explicit rules or an exact output format, follow this discipli
    sentence count, bullet count, word count), fixing any mismatch first.
 `;
 
-/** rootDir mirrors the SDK's resolveRoot(): LINSIGHT_HOME or ~/.linsight/data. */
+/** rootDir mirrors the SDK's resolveRoot(): JIUMATE_HOME or ~/.jiumate/data. */
 function rootDir(): string {
-  return process.env.LINSIGHT_HOME ?? path.join(os.homedir(), ".linsight", "data");
+  return process.env.JIUMATE_HOME ?? path.join(os.homedir(), ".jiumate", "data");
 }
 
 function agentStateDir(): string {

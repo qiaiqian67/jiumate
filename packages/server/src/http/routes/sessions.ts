@@ -17,7 +17,7 @@ import {
   sessionScratchpadDir,
   stripLeadingMarkerBlocks,
   userText,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 // The documents subpath rather than the root entry: the root is the SDK surface every host
 // loads, and the extractors pull mammoth, pdf.js and a zip reader behind them. Nothing that
 // merely imports core should pay for them.
@@ -26,8 +26,8 @@ import {
   buildDocumentPreview,
   documentFormatOf,
   type CellEdit,
-} from "@prismshadow/linsight-core/documents";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core/documents";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 import type {
   ApprovalMode,
   FilesStatResponse,
@@ -1327,7 +1327,7 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
   // what it would grant is a preview of the victim's own file.
   //
   // With no usable preview origin (the App is reached on something other than a loopback
-  // name and LINSIGHT_PREVIEW_ORIGIN is unset), this falls back to the sandboxed
+  // name and JIUMATE_PREVIEW_ORIGIN is unset), this falls back to the sandboxed
   // same-origin preview: the page still renders, but storage and third-party embeds do
   // not. The UI flags that ahead of time via `previewIsolated` on /api/me.
   app.get("/:sessionId/files/preview-redirect", async (c) => {

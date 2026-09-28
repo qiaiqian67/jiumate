@@ -241,7 +241,7 @@ export function mergeOmniToUniMessage(messages: OmniMessage[]): UniMessage {
 // ---------------------------------------------------------------------------
 
 /**
- * Converts AgentHub `UsageMetadata` into Linsight `TokenCounts`.
+ * Converts AgentHub `UsageMetadata` into JiuMate `TokenCounts`.
  *
  * Conversion rules (AgentHub UsageMetadata → OmniMessage TokenCounts, null treated as 0):
  *   - `cache_read  = cached_tokens` (input tokens served from cache hits);
@@ -1062,7 +1062,7 @@ export class GenerativeModel implements LLMInterface {
     ) {
       this.lastWarnedCap = derived;
       process.stderr.write(
-        `[linsight] output cap clamped hard: max_tokens ${this.configuredMaxTokens} -> ${derived} ` +
+        `[jiumate] output cap clamped hard: max_tokens ${this.configuredMaxTokens} -> ${derived} ` +
           `(context_window ${this.contextWindow}, estimated input ${estimatedInput})\n`,
       );
     }

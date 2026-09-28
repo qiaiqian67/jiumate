@@ -15,7 +15,7 @@
  * from the settings pane — this component draws only the stats row, the table and its footer.
  */
 import { useEffect, useState } from "react";
-import type { UsageErrorItem, UsageErrors } from "@prismshadow/linsight-server/api";
+import type { UsageErrorItem, UsageErrors } from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { errorSourceCodeLabel } from "../../lib/error-labels";

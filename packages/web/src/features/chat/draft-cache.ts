@@ -10,7 +10,7 @@
  * succession and the key only contains the Project/Session ID, the later user would recover the
  * previous user's text, Workspace, model selection, and handoff target — a cross-account information leak.
  */
-import type { ApprovalMode } from "@prismshadow/linsight-server/api";
+import type { ApprovalMode } from "@prismshadow/jiumate-server/api";
 
 const APPROVAL_MODES: ApprovalMode[] = ["always-ask", "read-only", "allow-all", "deny-all"];
 
@@ -53,11 +53,11 @@ export interface DraftStorage {
 
 /** Cache key for a new conversation (draft page): one per "user × Project". */
 export const draftKey = (userId: string, projectId: string): string =>
-  `linsight.chatDraft.${userId}.${projectId}`;
+  `jiumate.chatDraft.${userId}.${projectId}`;
 
 /** Cache key for an existing session's input area: one per "user × Session" (only stores text and the handoff target; everything else is locked to the Session). */
 export const sessionDraftKey = (userId: string, sessionId: string): string =>
-  `linsight.chatDraft.session.${userId}.${sessionId}`;
+  `jiumate.chatDraft.session.${userId}.${sessionId}`;
 
 /**
  * A cached model reference must be a paired `{ provider, modelId }` object; anything else — the

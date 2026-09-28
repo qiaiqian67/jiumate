@@ -25,8 +25,8 @@ Copy this template:
 - **Date:** YYYY-MM-DD
 - **Type:** feature
 - **Scope:** `module`, `module`
-- **PR:** [#N](https://github.com/qiaiqian67/linsight/pull/N)
-- **Issue:** [#N](https://github.com/qiaiqian67/linsight/issues/N)
+- **PR:** [#N](https://github.com/qiaiqian67/jiumate/pull/N)
+- **Issue:** [#N](https://github.com/qiaiqian67/jiumate/issues/N)
 - **Breaking:** yes — <what breaks, in one line>
 
 [中文版](<name>.zh.md)

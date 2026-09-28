@@ -1,13 +1,13 @@
 # Third-party notices
 
-Linsight itself is licensed under Apache-2.0 (see [LICENSE](LICENSE)). Some **distributed
+JiuMate itself is licensed under Apache-2.0 (see [LICENSE](LICENSE)). Some **distributed
 release artifacts** additionally bundle third-party programs and files, which keep their own
 licenses. This file records those, and how to obtain their source.
 
 Nothing listed here is source code of this repository. The programs below are downloaded by the
 release workflow (`.github/workflows/release.yml`) and placed alongside the application inside the
 release archives; the fonts are copied out of an npm dependency into the built web assets.
-Installing from npm (`@prismshadow/linsight-cli`) bundles none of them.
+Installing from npm (`@prismshadow/jiumate-cli`) bundles none of them.
 
 What earns an entry is a third-party work redistributed **as its own file**. An npm package whose
 JavaScript is compiled and minified into the application bundle (React, Shiki, xterm.js, KaTeX's own
@@ -16,7 +16,7 @@ repeating every one of them here would be a second, staler copy of `pnpm-lock.ya
 
 ## Node.js runtime — `node/`
 
-Present in every archive except `linsight-universal.tar.gz`. Downloaded unmodified from the
+Present in every archive except `jiumate-universal.tar.gz`. Downloaded unmodified from the
 official distribution at <https://nodejs.org/dist/>. Node.js is MIT-licensed with additional
 notices for its dependencies; the full text ships inside the bundle
 (`node/LICENSE`, and on Windows `node/LICENSE`).
@@ -26,7 +26,7 @@ as `NODE_RUNTIME_VERSION` in the release workflow.
 
 ## MinGit (Git for Windows) — `git/`
 
-Present in `linsight-win32-x64.zip` only.
+Present in `jiumate-win32-x64.zip` only.
 
 The Windows package bundles **MinGit**, the minimal redistributable build of Git for Windows,
 unmodified, as published by the Git for Windows project. It supplies the POSIX shell that the

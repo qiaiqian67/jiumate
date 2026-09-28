@@ -1,6 +1,6 @@
 /**
  * Session/agent API helpers shared by the server-backed commands (run / chat / ls /
- * input / logs / schedule). DTO shapes come from `@prismshadow/linsight-server/api`
+ * input / logs / schedule). DTO shapes come from `@prismshadow/jiumate-server/api`
  * (type-only — nothing of the server is loaded at runtime).
  */
 import path from "node:path";
@@ -12,8 +12,8 @@ import type {
   SessionInfo,
   SessionResponse,
   SessionsResponse,
-} from "@prismshadow/linsight-server/api";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-server/api";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 import { resolveSessionRef, ServerClient } from "./client.js";
 import { dim } from "./render.js";
 import type { Messages } from "./i18n.js";
@@ -32,7 +32,7 @@ export function resolveWorkspace(flag: string | undefined, fallback = process.cw
 
 /**
  * The calling session's live values, when this CLI runs inside a harness agent
- * (server-driven sessions inject LINSIGHT_SESSION_ID into tool subprocesses): a session
+ * (server-driven sessions inject JIUMATE_SESSION_ID into tool subprocesses): a session
  * created here defaults each UNSPECIFIED field to the caller's — workspace, the model
  * pair, approval mode and thinking level — the same inheritance `run_subagent` applies
  * to spawned children, so the two surfaces read as one convention. Per field the
@@ -43,7 +43,7 @@ export async function callerSessionContext(
   client: ServerClient,
   t: Messages,
 ): Promise<SessionInfo | null> {
-  const sessionId = process.env.LINSIGHT_SESSION_ID?.trim();
+  const sessionId = process.env.JIUMATE_SESSION_ID?.trim();
   if (!sessionId) return null;
   try {
     return await getSessionInfo(client, sessionId);
@@ -118,7 +118,7 @@ export async function listAgentSessions(
  * ambiguous and `--json` on stdout stays parseable.
  *
  * Returns null when the agent has no sessions at all, after printing one line pointing
- * at `linsight run` / `linsight chat` and setting a non-zero exit code.
+ * at `jiumate run` / `jiumate chat` and setting a non-zero exit code.
  */
 export async function resolveSessionTarget(
   client: ServerClient,

@@ -14,7 +14,7 @@
  * vault.prompt section, mirroring the Memory tab — owner-only, like the table edits.
  */
 import { useCallback, useEffect, useState } from "react";
-import type { VaultEntryInfo, VaultUpdateRequest } from "@prismshadow/linsight-server/api";
+import type { VaultEntryInfo, VaultUpdateRequest } from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

@@ -10,10 +10,10 @@
  * lands in the gitignored staging dir packages/landing/.blog-assets/ and is then published to
  * wherever the post's `/blog-assets/<name>` paths are served from — the path in the Markdown
  * is the contract, and nothing in the renderer rewrites it (see the blog section of
- * .agents/skills/linsight-dev/SKILL.md).
+ * .agents/skills/jiumate-dev/SKILL.md).
  *
  * Two panels per suite (accuracy, cost), horizontal bars scaled linearly from zero — the
- * cost spread is ~70x, so the Linsight bar is by far the shortest. That is the
+ * cost spread is ~70x, so the JiuMate bar is by far the shortest. That is the
  * result, not a defect; a zoomed baseline would flatter everyone else. Bars are floored at
  * MIN_BAR, though: at true scale the cost bar comes out ~2.5px, which reads as "no bar" and
  * loses the series entirely. The floor keeps it visible and unmistakably smallest, and the
@@ -161,13 +161,13 @@ function suite(t, yTop, title, rows) {
 function render(theme, { DATA_BENCH, CODE_BENCH }) {
   const t = THEMES[theme];
   const alt =
-    "Benchmark: Linsight vs Claude Code vs OpenAI Codex on two suites — comparable accuracy at a small fraction of the cost";
+    "Benchmark: JiuMate vs Claude Code vs OpenAI Codex on two suites — comparable accuracy at a small fraction of the cost";
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(alt)}">
 ${text(148, 36, "Accuracy · suite total · higher is better", { fill: t.muted })}
 ${text(596, 36, "Total cost (USD) · lower is better", { fill: t.muted })}
 ${suite(t, 68, "Data analysis — 15 tasks, single run", DATA_BENCH)}
 ${suite(t, 210, "Coding — 40 tasks × 2 runs", CODE_BENCH)}
-${text(24, 338, "Each harness runs the model it is normally paired with: Linsight on DeepSeek V4 Pro, Claude Code on Claude Opus 4.8,", { fill: t.muted })}
+${text(24, 338, "Each harness runs the model it is normally paired with: JiuMate on DeepSeek V4 Pro, Claude Code on Claude Opus 4.8,", { fill: t.muted })}
 ${text(24, 356, "OpenAI Codex on GPT-5.5. Accuracy, Tokens and cost are suite totals at official pricing.", { fill: t.muted })}
 </svg>
 `;

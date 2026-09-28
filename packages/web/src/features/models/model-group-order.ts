@@ -8,7 +8,7 @@
  * intent — there is no sort toggle and no pinning, so a Project with nothing stored
  * renders exactly the catalog order it always did (an empty order is the identity).
  *
- * - **One array per Project**, keyed like its neighbour `linsight.modelsExpandedGroups`
+ * - **One array per Project**, keyed like its neighbour `jiumate.modelsExpandedGroups`
  *   — the model table is per Project, so the arrangement of its groups is too.
  * - **Unplaced groups TRAIL**, keeping their automatic order among themselves. This is
  *   the opposite of the sidebar's rule (session-order.ts's applyManualOrder surfaces an
@@ -42,9 +42,9 @@ import type { SessionOrderStorage } from "../../lib/session-order";
 /** Minimal storage interface, shared with session-order.ts; tests inject an in-memory implementation. */
 export type ModelGroupOrderStorage = SessionOrderStorage;
 
-/** Storage key of one Project's manual group order (`linsight.modelsExpandedGroups.<projectId>` naming convention). */
+/** Storage key of one Project's manual group order (`jiumate.modelsExpandedGroups.<projectId>` naming convention). */
 export const modelGroupOrderKey = (projectId: string): string =>
-  `linsight.modelsGroupOrder.${projectId}`;
+  `jiumate.modelsGroupOrder.${projectId}`;
 
 /**
  * Reads a Project's manual group order. No Project, nothing stored, or corrupted storage

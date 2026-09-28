@@ -16,7 +16,7 @@ posixOnly("the per-machine lane", () => {
   let stubBin: string;
   let originalPath: string | undefined;
   beforeEach(() => {
-    stubBin = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-lane-"));
+    stubBin = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-lane-"));
     fs.writeFileSync(path.join(stubBin, "ssh"), "#!/bin/sh\nsleep 0.2\n");
     fs.chmodSync(path.join(stubBin, "ssh"), 0o755);
     originalPath = process.env.PATH;

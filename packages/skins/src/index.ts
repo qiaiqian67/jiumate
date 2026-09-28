@@ -1,5 +1,5 @@
 /**
- * `@prismshadow/linsight-skins` — Linsight theme package IO.
+ * `@prismshadow/jiumate-skins` — JiuMate theme package IO.
  *
  * A theme is **one thing**: a palette of ten roles, an artwork, and how to frame it. That is
  * Codex Dream Skin's model, adopted rather than translated — see `roles.ts` for the contract and
@@ -7,8 +7,8 @@
  * that project imports here without a converter.
  *
  * Two sibling entry points exist for callers that must not pull in Node built-ins:
- *   - `@prismshadow/linsight-skins/css`     — role -> CSS text (the web app's `<style>`)
- *   - `@prismshadow/linsight-skins/presets` — the built-in gallery
+ *   - `@prismshadow/jiumate-skins/css`     — role -> CSS text (the web app's `<style>`)
+ *   - `@prismshadow/jiumate-skins/presets` — the built-in gallery
  */
 export type {
   SkinBackground,

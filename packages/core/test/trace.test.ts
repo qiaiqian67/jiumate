@@ -43,7 +43,7 @@ describe("Writer", () => {
   let tracesDir: string;
 
   beforeEach(async () => {
-    tracesDir = await mkdtemp(join(tmpdir(), "linsight-trace-"));
+    tracesDir = await mkdtemp(join(tmpdir(), "jiumate-trace-"));
   });
 
   afterEach(async () => {

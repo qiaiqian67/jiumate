@@ -3,7 +3,7 @@ title: 接口契约
 description: 自顶向下的接口全览：LLMInterface 与 EnvironmentInterface 的完整签名、内层类型逐字段定义，以及每一处可替换的扩展点。
 ---
 
-context_engine 依赖三个接口：Human、LLM、Environment。协议转换全部发生在接口实现内部——引擎只见 [OmniMessage](/omni-message)。本页自顶向下：先给出两大接口的完整签名与 Human 边界，再逐层展开每个接口的内部类型。类型全部由 `@prismshadow/linsight-core` 导出，源码见 `packages/core/src/interfaces/`——`llm.ts`(模型侧所需)、`environment.ts`(Environment 侧所需)、`shared.ts`(两侧确实共用的词汇)，以及 `index.ts`：`@prismshadow/linsight-core/interfaces` 子路径背后的 barrel。
+context_engine 依赖三个接口：Human、LLM、Environment。协议转换全部发生在接口实现内部——引擎只见 [OmniMessage](/omni-message)。本页自顶向下：先给出两大接口的完整签名与 Human 边界，再逐层展开每个接口的内部类型。类型全部由 `@prismshadow/jiumate-core` 导出，源码见 `packages/core/src/interfaces/`——`llm.ts`(模型侧所需)、`environment.ts`(Environment 侧所需)、`shared.ts`(两侧确实共用的词汇)，以及 `index.ts`：`@prismshadow/jiumate-core/interfaces` 子路径背后的 barrel。
 
 ## 总览
 

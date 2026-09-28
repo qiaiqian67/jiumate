@@ -172,7 +172,7 @@ describe("asar reader", () => {
   let archivePath: string;
 
   beforeEach(async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-asar-"));
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-asar-"));
     archivePath = path.join(dir, "app.asar");
     await fs.writeFile(archivePath, buildAsar(fixtureEntries()));
   });
@@ -221,7 +221,7 @@ describe("readCodexPets", () => {
   let archivePath: string;
 
   beforeEach(async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-codex-"));
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-codex-"));
     archivePath = path.join(dir, "app.asar");
   });
   afterEach(async () => {
@@ -268,7 +268,7 @@ describe("external pets api", () => {
   let petRoot: string;
 
   beforeEach(async () => {
-    workDir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-pet-ext-"));
+    workDir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-pet-ext-"));
     petRoot = path.join(workDir, "data");
     const archivePath = path.join(workDir, "codex", "app.asar");
     await fs.mkdir(path.dirname(archivePath), { recursive: true });

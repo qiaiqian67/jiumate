@@ -18,11 +18,11 @@
  *   1. this script writes into the gitignored staging dir packages/landing/.blog-assets/;
  *   2. publish those files to wherever the post's `/blog-assets/<name>` paths are served
  *      from — the path in the Markdown is the contract, and nothing in the renderer
- *      rewrites it (see the blog section of .agents/skills/linsight-dev/SKILL.md).
+ *      rewrites it (see the blog section of .agents/skills/jiumate-dev/SKILL.md).
  *
- * Prereqs: `pnpm --filter @prismshadow/linsight-{skills,core,server,web} build` and
+ * Prereqs: `pnpm --filter @prismshadow/jiumate-{skills,core,server,web} build` and
  * Playwright's chromium. Run: `node scripts/capture-blog-shots.mjs` (or
- * `pnpm --filter @prismshadow/linsight-landing blog-shots`).
+ * `pnpm --filter @prismshadow/jiumate-landing blog-shots`).
  */
 import { spawn } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
@@ -36,8 +36,8 @@ const ROOT = path.resolve(HERE, "../../..");
 // Gitignored staging dir: these images are hosted in the community repo, not committed here.
 const OUT_DIR = path.resolve(HERE, "../.blog-assets");
 const SRV_PORT = 8944; // Distinct from capture-shots.mjs (8940/8941) so both can run.
-// Pins the otherwise-random seeded admin password (LINSIGHT_SEED_ADMIN_PASSWORD below).
-const ADMIN_PASSWORD = "linsight-0000";
+// Pins the otherwise-random seeded admin password (JIUMATE_SEED_ADMIN_PASSWORD below).
+const ADMIN_PASSWORD = "jiumate-0000";
 // On loopback binds the App is canonically served on `localhost`; the 127.0.0.1
 // counterpart is the Workspace-preview host, where /api deliberately answers 401
 // (see server app.ts's canonical-host guard).
@@ -93,9 +93,9 @@ async function provisionUser(adminCookie, lang) {
   try {
     await api(cookie, "PUT", "/api/me/password", {
       oldPassword: initial,
-      newPassword: `linsight-${userId}-2026`,
+      newPassword: `jiumate-${userId}-2026`,
     });
-    password = `linsight-${userId}-2026`;
+    password = `jiumate-${userId}-2026`;
   } catch {}
   return { userId, password };
 }
@@ -104,18 +104,18 @@ async function provisionUser(adminCookie, lang) {
 // Main.
 // ---------------------------------------------------------------------------
 
-const dataRoot = mkdtempSync(path.join(os.tmpdir(), "linsight-blog-shots-"));
+const dataRoot = mkdtempSync(path.join(os.tmpdir(), "jiumate-blog-shots-"));
 mkdirSync(OUT_DIR, { recursive: true });
 
 const srv = spawn("node", [path.join(ROOT, "packages/server/dist/index.js")], {
   env: {
     ...process.env,
-    LINSIGHT_HOME: path.join(dataRoot, "home"),
-    LINSIGHT_WEB_DB: path.join(dataRoot, "web.db"),
-    LINSIGHT_WEB_DIST: path.join(ROOT, "packages/web/dist"),
+    JIUMATE_HOME: path.join(dataRoot, "home"),
+    JIUMATE_WEB_DB: path.join(dataRoot, "web.db"),
+    JIUMATE_WEB_DIST: path.join(ROOT, "packages/web/dist"),
     PORT: String(SRV_PORT),
     HOST: "127.0.0.1",
-    LINSIGHT_SEED_ADMIN_PASSWORD: ADMIN_PASSWORD,
+    JIUMATE_SEED_ADMIN_PASSWORD: ADMIN_PASSWORD,
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
@@ -164,8 +164,8 @@ try {
     });
     await context.addInitScript(
       ([t, l]) => {
-        localStorage.setItem("linsight.theme", t);
-        localStorage.setItem("linsight.lang", l);
+        localStorage.setItem("jiumate.theme", t);
+        localStorage.setItem("jiumate.lang", l);
       },
       ["light", lang],
     );

@@ -20,7 +20,7 @@ import {
   removeHook,
   libraryPlugin,
   loadPluginGroups,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   AgentHooksResponse,
   AgentPluginsInstallResponse,

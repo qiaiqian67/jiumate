@@ -1,11 +1,11 @@
 {
-  "name": "@linsight/editable-doc",
+  "name": "@jiumate/editable-doc",
   "version": "0.3.0",
   "description": "Format generated Markdown documents so a human can edit them in place afterwards — atomic sections, semantic headings, fenced diagrams and code, no mega paragraphs.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "plugins/editable-doc"
   },
   "files": [

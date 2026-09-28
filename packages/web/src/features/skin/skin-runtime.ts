@@ -19,12 +19,12 @@
  * The catalog itself — where a theme comes from and what it is called — lives in
  * `skin-service.ts`; this module only knows how to put one on screen.
  */
-import { ownsAccent, renderSkinCss, renderWallpaperCss } from "@prismshadow/linsight-skins/css";
-import type { SkinRenderInput } from "@prismshadow/linsight-skins/css";
+import { ownsAccent, renderSkinCss, renderWallpaperCss } from "@prismshadow/jiumate-skins/css";
+import type { SkinRenderInput } from "@prismshadow/jiumate-skins/css";
 import type { ThemeDescriptor } from "./skin-service";
 
 /** Id of the single `<style>` element holding the active theme's ramp and artwork. */
-export const SKIN_STYLE_ELEMENT_ID = "linsight-skin";
+export const SKIN_STYLE_ELEMENT_ID = "jiumate-skin";
 
 /**
  * True when the theme claims the accent pair, which is what makes the appearance page disable

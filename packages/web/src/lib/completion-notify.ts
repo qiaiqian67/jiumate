@@ -10,7 +10,7 @@
  * list snapshot racing the live SSE flip briefly resurrects "running" and would
  * otherwise double-notify the same finish.
  */
-import type { SessionStatus } from "@prismshadow/linsight-server/api";
+import type { SessionStatus } from "@prismshadow/jiumate-server/api";
 
 export interface ObservedSession {
   sessionId: string;

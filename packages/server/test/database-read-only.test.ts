@@ -1,5 +1,5 @@
 /**
- * The read-only opener: what `linsight server status` reads a machine's database through.
+ * The read-only opener: what `jiumate server status` reads a machine's database through.
  * The point is not that the reader happens not to write — it is that it cannot.
  */
 import fs from "node:fs";
@@ -10,7 +10,7 @@ import { openDatabase, openDatabaseReadOnly } from "../src/db/database.js";
 
 describe("openDatabaseReadOnly", () => {
   it("answers reads and refuses every write", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-ro-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-ro-"));
     const file = path.join(dir, "web.db");
     try {
       openDatabase(file).close();
@@ -29,7 +29,7 @@ describe("openDatabaseReadOnly", () => {
   });
 
   it("does not create a database that is not there", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-ro-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-ro-"));
     try {
       const file = path.join(dir, "web.db");
       expect(() => openDatabaseReadOnly(file)).toThrow();

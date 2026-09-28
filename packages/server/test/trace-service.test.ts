@@ -24,13 +24,13 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   OmniMessage,
   SessionMetaPayload,
   TokenCounts,
   StopReason,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 
 // Traces written before the stop-reason convergence carry the retired spellings; analysis
 // must keep reading them, so these fixtures write them through a cast.

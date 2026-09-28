@@ -29,7 +29,7 @@ vi.mock("node:crypto", async (importOriginal) => {
 let tmpRoot: string;
 
 beforeEach(async () => {
-  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-workspace-"));
+  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-workspace-"));
   mocked.uuids.length = 0;
 });
 

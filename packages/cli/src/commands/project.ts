@@ -1,11 +1,11 @@
 /**
- * `linsight project ls` — the projects this token/user can reach (own and shared).
+ * `jiumate project ls` — the projects this token/user can reach (own and shared).
  *
- *   linsight project ls [--json] [--server <url>]
- * Docs: /docs/cli § "linsight project".
+ *   jiumate project ls [--json] [--server <url>]
+ * Docs: /docs/cli § "jiumate project".
  */
 import type { Command } from "commander";
-import type { ProjectsResponse } from "@prismshadow/linsight-server/api";
+import type { ProjectsResponse } from "@prismshadow/jiumate-server/api";
 import { resolveConnection, ServerClient } from "../client.js";
 import { renderTable } from "../table.js";
 import type { Messages } from "../i18n.js";

@@ -2,10 +2,10 @@
 title: "Let the agent drive Ollama, vLLM and LlamaFactory: a data-safe self-closing training loop"
 date: 2026-07-22
 category: practice
-excerpt: Linsight 0.1.1 ships the ollama, vllm and llamafactory skills. They are not three more command-line tools for you to learn — they are what the agent already knows, so "serve a model here, then fine-tune it until it passes my evaluation" becomes something you say rather than something you type. This post is mostly about why this harness drives those three tools well: what ships in the box, what it costs per request, and why the loop closes at all. The data in it never leaves your environment.
+excerpt: JiuMate 0.1.1 ships the ollama, vllm and llamafactory skills. They are not three more command-line tools for you to learn — they are what the agent already knows, so "serve a model here, then fine-tune it until it passes my evaluation" becomes something you say rather than something you type. This post is mostly about why this harness drives those three tools well: what ships in the box, what it costs per request, and why the loop closes at all. The data in it never leaves your environment.
 ---
 
-Three skills landed in 0.1.1: `ollama`, `vllm`, `llamafactory`. The easy misreading is that Linsight now expects you to learn three more command-line tools.
+Three skills landed in 0.1.1: `ollama`, `vllm`, `llamafactory`. The easy misreading is that JiuMate now expects you to learn three more command-line tools.
 
 It is the opposite. The skills are not written for you — they are written for the agent, and the entire reason they exist is that you stop running the commands. You say what you want in a sentence; the agent picks the tool, asks the questions it is required to ask, runs the thing, checks that it worked, and tells you what happened.
 
@@ -27,18 +27,18 @@ That sentence is the whole input. Here is what happens on the other side of it.
 
 **Then it does the boring parts you would have gotten wrong.** It installs Ollama if missing, pulls the model, and raises the context window — the step people skip and then spend an afternoon debugging, because Ollama's default window is small and agent sessions are not. The skill gives it both ways to do that: `OLLAMA_CONTEXT_LENGTH` in the server environment, or `num_ctx` baked into a model variant with a Modelfile.
 
-**Then it verifies, and only then registers.** A pulled model is invisible to Linsight until it is added, and model configuration is the CLI's job:
+**Then it verifies, and only then registers.** A pulled model is invisible to JiuMate until it is added, and model configuration is the CLI's job:
 
 ```bash
 # what the agent ran — not a checklist for you
 curl http://localhost:11434/v1/models
 
-linsight config model add --provider custom --client-type openai \
+jiumate config model add --provider custom --client-type openai \
   --base-url http://localhost:11434/v1 --model-id qwen3.5:0.8b --api-key ollama
-linsight config model list
+jiumate config model list
 ```
 
-The details in that command are decisions, not boilerplate, and the `linsight-cli` skill is where the agent learned them. A model in Linsight is the `(provider, model_id)` pair and the group is **never** inferred from the id — gateways resell vendor models under their upstream ids, so a guess could send your key to somebody else's endpoint; `custom` is the group for any endpoint outside the built-in ones. `--client-type openai --base-url <endpoint>` is the shape for any OpenAI chat-completion compatible server. And `--api-key ollama` is not decoration: Ollama accepts any key, but the field must be non-empty.
+The details in that command are decisions, not boilerplate, and the `jiumate-cli` skill is where the agent learned them. A model in JiuMate is the `(provider, model_id)` pair and the group is **never** inferred from the id — gateways resell vendor models under their upstream ids, so a guess could send your key to somebody else's endpoint; `custom` is the group for any endpoint outside the built-in ones. `--client-type openai --base-url <endpoint>` is the shape for any OpenAI chat-completion compatible server. And `--api-key ollama` is not decoration: Ollama accepts any key, but the field must be non-empty.
 
 If the local model has a small context window, the agent also has a reason to cap its output — `--max-tokens` is a per-model cap, new in 0.1.1, that overrides the Agent default of 32,000, which on its own does not fit in a 32k window alongside any prompt at all.
 
@@ -60,7 +60,7 @@ Straight from the shipped `SKILL.md` files — this is the class of detail that 
 - **Ollama, context.** `OLLAMA_CONTEXT_LENGTH=32768 ollama serve`, or `PARAMETER num_ctx 32768` in a Modelfile plus `ollama create`.
 - **Ollama, an instance already running.** Port 11434 in use means reuse it — never kill a serving process you did not start.
 - **LlamaFactory, merging.** Merge the adapter into the base weights for standalone serving, never into a quantized base.
-- **Registering the result.** `--provider custom --client-type openai --base-url <endpoint>`; a served model is invisible to Linsight until it is added.
+- **Registering the result.** `--provider custom --client-type openai --base-url <endpoint>`; a served model is invisible to JiuMate until it is added.
 
 </details>
 
@@ -68,13 +68,13 @@ Straight from the shipped `SKILL.md` files — this is the class of detail that 
 
 **Three: it operates the real CLIs, because that is all it has.** A session's built-in tools are `exec_command`, `input_command`, `run_subagent`, `input_subagent` and one image tool. There is no read-file tool, no write-file tool, and no per-vendor integration: `exec_command`'s own description tells the model to read, write and edit files and run programs with the shell. That constraint is the feature here. `vllm serve`, `ollama pull` and `llamafactory-cli train` need no adapter written for them, the flags in the skills are the tools' real flags rather than whatever subset a wrapper exposed, and when vLLM adds a flag next month the fix is a Markdown edit, not a release of this harness.
 
-**Four: the loop closes because registration is part of the job.** Serving a model and *being able to use* it are two different facts, and the gap between them is where most "the agent set it up for me" demos quietly end. The `linsight-cli` skill closes it: it teaches the agent that an endpoint is invisible until `linsight config model add` registers it, and — the part that actually matters — *which* data root to register it into. `--root` must point at the app's own data directory (`--root ./linsight_data`, the same path the app hands `createAgent({ root })`) when the agent is building an app; the default root is for Linsight's own model. So the model the agent just served becomes a model it can then run on, deliberately, in the right place. That is the difference between a loop and a demo.
+**Four: the loop closes because registration is part of the job.** Serving a model and *being able to use* it are two different facts, and the gap between them is where most "the agent set it up for me" demos quietly end. The `jiumate-cli` skill closes it: it teaches the agent that an endpoint is invisible until `jiumate config model add` registers it, and — the part that actually matters — *which* data root to register it into. `--root` must point at the app's own data directory (`--root ./jiumate_data`, the same path the app hands `createAgent({ root })`) when the agent is building an app; the default root is for JiuMate's own model. So the model the agent just served becomes a model it can then run on, deliberately, in the right place. That is the difference between a loop and a demo.
 
 **Five: measuring is a shipped capability, not an exercise for the reader.** `benchmark-design`, `agent-evaluation` and `agent-optimization` are in the same library, installed the same way. Executing is not improving; "fine-tune it until it passes" needs something that can say *passes*. Part 3 is what those three do.
 
 **Six: the two stories are one story.** The reason the agent can drive these tools at all is that it drives them by running commands on the machine that holds the data. There is no hosted control plane in the middle that would need to see your dataset in order to orchestrate the run. "Local" is not a feature bolted onto this design; it is the same fact as "it can use the real CLI".
 
-**And the honest version of all six.** None of this says another agent cannot do these things. Give any competent shell-using agent the same instructions and it will serve the model too. The difference is smaller and checkable than a superlative: with Linsight those instructions are already installed, cost about 2.5 KB of prompt to have available, and include the registration step that makes the served model usable afterwards. Elsewhere, you are the one who has to know it — and know it again next session.
+**And the honest version of all six.** None of this says another agent cannot do these things. Give any competent shell-using agent the same instructions and it will serve the model too. The difference is smaller and checkable than a superlative: with JiuMate those instructions are already installed, cost about 2.5 KB of prompt to have available, and include the registration step that makes the served model usable afterwards. Elsewhere, you are the one who has to know it — and know it again next session.
 
 ## 3. "Now fine-tune it until it passes my evaluation"
 
@@ -122,22 +122,22 @@ This is the reason the whole arrangement is worth the trouble, so it deserves pr
 
 - **The served model.** Ollama exposes its OpenAI-compatible API on `http://localhost:11434/v1`; vLLM on `http://localhost:8000/v1`. Both are on the machine. Every prompt, tool schema, tool result and completion in an agent session against them stays on the loopback interface.
 - **The training.** LlamaFactory runs on your GPU. Your dataset sits under `data/` next to `data/dataset_info.json`; the adapter and the merged export land under `saves/`. No stage of `llamafactory-cli train` ships your examples anywhere.
-- **The evaluation.** Cases, statements and rubrics are files in your project — a rubric lives at a path like `~/.linsight/data/default_project/agents/tool-router/benchmarks/tool-routing-v1/CASE-003-pick-the-cheaper-endpoint/rubric/README.md` — and the evaluator reads them from disk. The scoreboard is a YAML file next to them.
-- **The configuration.** `linsight config model add` writes into a single hidden project config file. It is CLI-managed, never hand-edited, and it stays where you point it.
+- **The evaluation.** Cases, statements and rubrics are files in your project — a rubric lives at a path like `~/.jiumate/data/default_project/agents/tool-router/benchmarks/tool-routing-v1/CASE-003-pick-the-cheaper-endpoint/rubric/README.md` — and the evaluator reads them from disk. The scoreboard is a YAML file next to them.
+- **The configuration.** `jiumate config model add` writes into a single hidden project config file. It is CLI-managed, never hand-edited, and it stays where you point it.
 
 **What does cross the network:** installs and weights, coming *in*. `ollama pull`, `pip install vllm`, cloning LlamaFactory, resolving a Hugging Face base model id — all of them download. None of them upload your data. It is worth being clear about the direction, because "local" is often quietly claimed for setups that phone home.
 
-**And the one thing that decides everything else:** the model that drives the agent. If the agent is running on a hosted API, then the conversation itself — your instructions, the file contents it reads, the tool output it summarizes — goes to that vendor, no matter how local the model it is tuning. The fully-local configuration is a deliberate choice you make: point the harness's own default model at the local endpoint too, with the same `linsight config model add ... --set-default`, and the loop runs end to end without a third party in it. It is a real trade-off — a small local model driving the whole loop is not the same proposition as a frontier model driving it — and it should be a decision, not an assumption.
+**And the one thing that decides everything else:** the model that drives the agent. If the agent is running on a hosted API, then the conversation itself — your instructions, the file contents it reads, the tool output it summarizes — goes to that vendor, no matter how local the model it is tuning. The fully-local configuration is a deliberate choice you make: point the harness's own default model at the local endpoint too, with the same `jiumate config model add ... --set-default`, and the loop runs end to end without a third party in it. It is a real trade-off — a small local model driving the whole loop is not the same proposition as a frontier model driving it — and it should be a decision, not an assumption.
 
 ## What actually changed
 
-Before this release, Linsight could talk to any OpenAI-compatible endpoint but had nothing to say about where that endpoint came from. Standing one up, measuring what it could do, and fixing what it could not were three different tools with three sets of conventions, and a human in between translating.
+Before this release, JiuMate could talk to any OpenAI-compatible endpoint but had nothing to say about where that endpoint came from. Standing one up, measuring what it could do, and fixing what it could not were three different tools with three sets of conventions, and a human in between translating.
 
 Now they are one system, and the human's job moved. You describe the outcome. The agent serves the model, runs its own benchmark, reads its own failures, tunes, redeploys, and measures again — choosing each next step from the last result. You approve the calls, make the judgment calls, and read the scoreboard.
 
 On your hardware. On your weights. With your data staying where you put it.
 
 ```bash
-curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
-linsight web
+curl -fsSL https://github.com/qiaiqian67/jiumate/releases/latest/download/install.sh | sh
+jiumate web
 ```

@@ -15,8 +15,8 @@ import {
   toolCall,
   userText,
   withOrigin,
-} from "@prismshadow/linsight-core/omnimessage";
-import type { OmniMessage, TokenCounts } from "@prismshadow/linsight-core/omnimessage";
+} from "@prismshadow/jiumate-core/omnimessage";
+import type { OmniMessage, TokenCounts } from "@prismshadow/jiumate-core/omnimessage";
 import type {
   MessagesLiveTail,
   MessagesPageInfo,
@@ -24,7 +24,7 @@ import type {
   PendingSteeringInfo,
   ServerEvent,
   SessionStatus,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import { OLDER_UNITS, TAIL_UNITS, createStreamController } from "../src/lib/omni/stream-controller";
 import type { MessagesPageQuery, StreamController } from "../src/lib/omni/stream-controller";
 import { approvalKey, findToolCard } from "../src/lib/omni/stream-model";

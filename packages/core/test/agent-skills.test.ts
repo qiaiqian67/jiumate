@@ -25,7 +25,7 @@ import {
 let tmpRoot: string;
 
 beforeEach(async () => {
-  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-skills-"));
+  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-skills-"));
 });
 
 afterEach(async () => {
@@ -46,17 +46,17 @@ const skillIcon = (name: string) => skillFile(name, "icon.svg");
 
 describe("installSkill / removeSkill", () => {
   it("writes skills/<name>/SKILL.md verbatim with a trailing newline", async () => {
-    const skill = librarySkill("linsight-config")!.skill;
+    const skill = librarySkill("jiumate-config")!.skill;
     await install(skill.name, skill.content);
-    expect(await fs.readFile(skillMd("linsight-config"), "utf8")).toBe(skill.content);
+    expect(await fs.readFile(skillMd("jiumate-config"), "utf8")).toBe(skill.content);
 
     // Content without a trailing newline gets one appended; reinstalling overwrites.
     await install(
-      "linsight-config",
-      "---\nname: linsight-config\nversion: 2026-08-01.2\n---\n\nNew body",
+      "jiumate-config",
+      "---\nname: jiumate-config\nversion: 2026-08-01.2\n---\n\nNew body",
     );
-    expect(await fs.readFile(skillMd("linsight-config"), "utf8")).toBe(
-      "---\nname: linsight-config\nversion: 2026-08-01.2\n---\n\nNew body\n",
+    expect(await fs.readFile(skillMd("jiumate-config"), "utf8")).toBe(
+      "---\nname: jiumate-config\nversion: 2026-08-01.2\n---\n\nNew body\n",
     );
     expect((await list()).map((s) => s.version)).toEqual(["2026-08-01.2"]);
   });
@@ -65,14 +65,14 @@ describe("installSkill / removeSkill", () => {
     // Library skills carry no icon (the plugin owns it), but installSkill still accepts one —
     // for user-authored skills and zip imports. An install with an icon writes it to disk.
     const icon = "<svg><rect /></svg>";
-    await install("linsight-sdk", librarySkill("linsight-sdk")!.skill.content, icon);
-    expect(await fs.readFile(skillIcon("linsight-sdk"), "utf8")).toBe(icon);
+    await install("jiumate-sdk", librarySkill("jiumate-sdk")!.skill.content, icon);
+    expect(await fs.readFile(skillIcon("jiumate-sdk"), "utf8")).toBe(icon);
 
     // Overwrite semantics: this install has no icon -> the old icon.svg is removed, and the
     // directory matches this install's content exactly.
-    await install("linsight-sdk", "---\nname: linsight-sdk\nversion: 2\n---\n\nNew body\n");
-    await expect(fs.access(skillIcon("linsight-sdk"))).rejects.toThrow();
-    expect(await fs.readFile(skillMd("linsight-sdk"), "utf8")).toContain("New body");
+    await install("jiumate-sdk", "---\nname: jiumate-sdk\nversion: 2\n---\n\nNew body\n");
+    await expect(fs.access(skillIcon("jiumate-sdk"))).rejects.toThrow();
+    expect(await fs.readFile(skillMd("jiumate-sdk"), "utf8")).toContain("New body");
   });
 
   it("rejects invalid skill names (path traversal safety)", async () => {
@@ -119,19 +119,19 @@ describe("installSkill / removeSkill", () => {
   });
 
   it("stages the install and leaves no staging directory behind", async () => {
-    const skill = librarySkill("linsight-sdk")!.skill;
+    const skill = librarySkill("jiumate-sdk")!.skill;
     await install(skill.name, skill.content);
     const entries = await fs.readdir(skillsDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID));
-    expect(entries).toEqual(["linsight-sdk"]);
+    expect(entries).toEqual(["jiumate-sdk"]);
   });
 
   it("removeSkill deletes the whole skill directory and is idempotent", async () => {
-    const skill = librarySkill("linsight-sdk")!.skill;
+    const skill = librarySkill("jiumate-sdk")!.skill;
     await install(skill.name, skill.content);
-    await removeSkill(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "linsight-sdk");
-    await expect(fs.access(skillMd("linsight-sdk"))).rejects.toThrow();
+    await removeSkill(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "jiumate-sdk");
+    await expect(fs.access(skillMd("jiumate-sdk"))).rejects.toThrow();
     // Idempotent when it no longer exists: does not throw.
-    await removeSkill(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "linsight-sdk");
+    await removeSkill(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "jiumate-sdk");
     expect(await list()).toEqual([]);
   });
 });

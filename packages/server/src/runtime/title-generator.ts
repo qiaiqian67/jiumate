@@ -27,7 +27,7 @@ import {
   stripConversationMarkers,
   tokenUsage,
   truncateTitle,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type { ServerEvent } from "../api/types.js";
 import type { SessionsRepo } from "../db/repos/sessions.js";
 import type { ChannelHub } from "./channel.js";

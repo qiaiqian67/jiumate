@@ -22,7 +22,7 @@
  * clicking a bar scrolls to the corresponding message and pins the highlight for PIN_MS.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { OmniMessage } from "@prismshadow/linsight-core/omnimessage";
+import type { OmniMessage } from "@prismshadow/jiumate-core/omnimessage";
 import type {
   ModelsResponse,
   TraceAnalysisResponse,
@@ -30,7 +30,7 @@ import type {
   TraceOtherSpan,
   TraceTaskStats,
   TraceToolSpan,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

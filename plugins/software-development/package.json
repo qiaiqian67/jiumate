@@ -1,11 +1,11 @@
 {
-  "name": "@linsight/software-development",
+  "name": "@jiumate/software-development",
   "version": "0.3.0",
-  "description": "Software development end to end — disciplined software-engineering practice for real tasks, plus the Linsight visual language for every generated web page and app UI.",
+  "description": "Software development end to end — disciplined software-engineering practice for real tasks, plus the JiuMate visual language for every generated web page and app UI.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "plugins/software-development"
   },
   "files": [

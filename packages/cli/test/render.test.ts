@@ -19,8 +19,8 @@ import {
   partialToolCall,
   partialToolCallOutput,
   withOrigin,
-} from "@prismshadow/linsight-core";
-import type { MessageOrigin } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { MessageOrigin } from "@prismshadow/jiumate-core";
 import {
   StreamRenderer,
   formatAbort,
@@ -954,7 +954,7 @@ describe("StreamRenderer — nested (origin-tagged) subagent messages", () => {
 describe("renderHistory (resume)", () => {
   it("renders complete messages statically with interruption markers", async () => {
     const { renderHistory } = await import("../src/render.js");
-    const { userText } = await import("@prismshadow/linsight-core");
+    const { userText } = await import("@prismshadow/jiumate-core");
     const { stream, text } = collector();
     renderHistory(
       [
@@ -1038,7 +1038,7 @@ describe("tool-output collapsing (chat display; the Trace keeps the full text)",
     expect(s).not.toContain("/verbose");
   });
 
-  it("default renderer (linsight run) never collapses", () => {
+  it("default renderer (jiumate run) never collapses", () => {
     const { stream, text } = collector();
     const r = new StreamRenderer(stream, t);
     streamExec(r, 40);

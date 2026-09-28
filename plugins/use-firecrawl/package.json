@@ -1,11 +1,11 @@
 {
-  "name": "@linsight/use-firecrawl",
+  "name": "@jiumate/use-firecrawl",
   "version": "0.3.0",
   "description": "Search the web and scrape pages into clean markdown with the Firecrawl API — query-based discovery, single-URL extraction including public PDFs, driven by curl with a vault-stored API key.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "plugins/use-firecrawl"
   },
   "files": [

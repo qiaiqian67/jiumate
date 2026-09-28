@@ -3,7 +3,7 @@ title: Configuration Reference
 description: Complete field reference for environment variables, Project config, Agent config, the Vault, and Schedules.
 ---
 
-Linsight configuration has three layers: environment variables shape the deployment, the Project config manages models and credentials, and the Agent config defines a single Agent's behavior. Each Agent additionally has two kinds of state files: the Vault (private environment variables) and Schedules (timed tasks).
+JiuMate configuration has three layers: environment variables shape the deployment, the Project config manages models and credentials, and the Agent config defines a single Agent's behavior. Each Agent additionally has two kinds of state files: the Vault (private environment variables) and Schedules (timed tasks).
 
 ## Environment variables
 
@@ -11,21 +11,21 @@ The CLI and the server automatically load a `.env` file from the working directo
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `LINSIGHT_HOME` | Data root directory | `~/.linsight/data` |
+| `JIUMATE_HOME` | Data root directory | `~/.jiumate/data` |
 | `PORT` | Web service listen port | `7364` |
 | `HOST` | Web service listen address | `127.0.0.1` |
-| `LINSIGHT_WEB_DB` | Server SQLite database path | `<root>/web.db` |
-| `LINSIGHT_WEB_DIST` | Front-end static assets directory | the npm server package falls back to its bundled web-dist |
-| `LINSIGHT_PREVIEW_ORIGIN` | Origin that serves Workspace HTML previews, e.g. `https://preview.example.com` | unset — the loopback counterpart is derived per request |
-| `LINSIGHT_TRUST_PROXY` | `1` trusts the `x-forwarded-proto` header — set it behind a reverse proxy that terminates TLS (and sets/strips the header itself) so session cookies are marked `Secure` and the hot-update network gate sees HTTPS | unset — the header is ignored |
-| `LINSIGHT_SEED_ADMIN_PASSWORD` | Fixed initial password for the seeded built-in admin (automated tests / e2e) | unset — the seed generates a random password, hashed and discarded unseen; the account is claimed through the first-login link |
-| `LINSIGHT_LANG` | CLI language (`en` / `zh`), set via `linsight config lang` | `en` |
-| `LINSIGHT_UPDATE_CHECK` | `off` disables the web app's new-release check (the server's only outbound internet call) | enabled |
-| `LINSIGHT_NO_LOGIN_SHELL_ENV` | Any non-empty value stops the desktop app from importing the login shell's environment on macOS/Linux GUI launches (see [Desktop quickstart](/quickstart-desktop)) | unset — the import runs, filling only variables the launch left unset |
+| `JIUMATE_WEB_DB` | Server SQLite database path | `<root>/web.db` |
+| `JIUMATE_WEB_DIST` | Front-end static assets directory | the npm server package falls back to its bundled web-dist |
+| `JIUMATE_PREVIEW_ORIGIN` | Origin that serves Workspace HTML previews, e.g. `https://preview.example.com` | unset — the loopback counterpart is derived per request |
+| `JIUMATE_TRUST_PROXY` | `1` trusts the `x-forwarded-proto` header — set it behind a reverse proxy that terminates TLS (and sets/strips the header itself) so session cookies are marked `Secure` and the hot-update network gate sees HTTPS | unset — the header is ignored |
+| `JIUMATE_SEED_ADMIN_PASSWORD` | Fixed initial password for the seeded built-in admin (automated tests / e2e) | unset — the seed generates a random password, hashed and discarded unseen; the account is claimed through the first-login link |
+| `JIUMATE_LANG` | CLI language (`en` / `zh`), set via `jiumate config lang` | `en` |
+| `JIUMATE_UPDATE_CHECK` | `off` disables the web app's new-release check (the server's only outbound internet call) | enabled |
+| `JIUMATE_NO_LOGIN_SHELL_ENV` | Any non-empty value stops the desktop app from importing the login shell's environment on macOS/Linux GUI launches (see [Desktop quickstart](/quickstart-desktop)) | unset — the import runs, filling only variables the launch left unset |
 
-These configure Linsight itself, so `PORT`, `HOST`, `LINSIGHT_WEB_DIST` and the internal `LINSIGHT_CLI_ENTRY` are **removed from the environment of commands the Agent runs** — otherwise a dev server started by `exec_command` would read `PORT` and try to bind the port meant for Linsight instead of choosing its own. The rest of the host environment passes through, with one further exception: `GIT_EDITOR`, `GIT_TERMINAL_PROMPT`, `TERM`, `NO_COLOR`, `PAGER` and `GIT_PAGER` are always forced to fixed values, so that a command cannot hang waiting on an editor, a credential prompt or a pager. The Agent's [vault](#vault) is applied on top of the host environment — setting `PORT` there does reach commands — but not on top of those six.
+These configure JiuMate itself, so `PORT`, `HOST`, `JIUMATE_WEB_DIST` and the internal `JIUMATE_CLI_ENTRY` are **removed from the environment of commands the Agent runs** — otherwise a dev server started by `exec_command` would read `PORT` and try to bind the port meant for JiuMate instead of choosing its own. The rest of the host environment passes through, with one further exception: `GIT_EDITOR`, `GIT_TERMINAL_PROMPT`, `TERM`, `NO_COLOR`, `PAGER` and `GIT_PAGER` are always forced to fixed values, so that a command cannot hang waiting on an editor, a credential prompt or a pager. The Agent's [vault](#vault) is applied on top of the host environment — setting `PORT` there does reach commands — but not on top of those six.
 
-`LINSIGHT_PREVIEW_ORIGIN` must differ from the app's origin by **hostname**, not just port: cookies ignore ports, so a second port would still share the session cookie. Leave it unset for local use — the app is canonicalized onto `localhost` and previews are served from `127.0.0.1`, which needs no configuration and no DNS. Set it when the app is reached over a LAN address or a real domain; otherwise previews there fall back to a same-origin sandbox where `localStorage`, cookies and third-party embeds do not work. When you do set it on a real domain, keep the session cookie host-only (no `Domain=`), or a sibling subdomain shares it. An unparseable value is a startup error rather than a silent fallback.
+`JIUMATE_PREVIEW_ORIGIN` must differ from the app's origin by **hostname**, not just port: cookies ignore ports, so a second port would still share the session cookie. Leave it unset for local use — the app is canonicalized onto `localhost` and previews are served from `127.0.0.1`, which needs no configuration and no DNS. Set it when the app is reached over a LAN address or a real domain; otherwise previews there fall back to a same-origin sandbox where `localStorage`, cookies and third-party embeds do not work. When you do set it on a real domain, keep the session cookie host-only (no `Domain=`), or a sibling subdomain shares it. An unparseable value is a startup error rather than a silent fallback.
 
 ### Provider credential variables
 
@@ -91,7 +91,7 @@ output = 0.857143
 
 `pricing.unit` is currently always `usd_per_mtok` (USD per million tokens); the three buckets map onto `token_usage`'s three counters.
 
-Edit this file via the CLI (`linsight config model …`) or the Web Models page — never by hand while the service is running, and never by the model itself, which has no right to read or write it.
+Edit this file via the CLI (`jiumate config model …`) or the Web Models page — never by hand while the service is running, and never by the model itself, which has no right to read or write it.
 
 ### Command policy
 
@@ -222,14 +222,14 @@ For developers: `kernel_version` advances manually, and only on a substantive ch
 | `{{PLATFORM}}` | Runtime platform |
 | `{{OS_VERSION}}` | Operating system version |
 | `{{DATE}}` | Current date |
-| `{{PROJECT_DIR}}` | App Data Dir: the Linsight app data root (the Project directory) |
+| `{{PROJECT_DIR}}` | App Data Dir: the JiuMate app data root (the Project directory) |
 | `{{AGENT_ID}}` | Agent id |
 | `{{CWD}}` | Workspace path |
 | `{{PROVIDER}}` | Model provider group |
 | `{{MODEL_ID}}` | Upstream model id |
 | `{{SESSION_ID}}` | Session id |
 
-`{{PROJECT_DIR}}` is surfaced to the model as the **App Data Dir**: Linsight's application data root, holding every Agent's data files (`agents/<agent_id>/…`) and the project-level data — deliberately not described as a project or task directory, so the model does not mistake it for the task's working directory (`CWD`).
+`{{PROJECT_DIR}}` is surfaced to the model as the **App Data Dir**: JiuMate's application data root, holding every Agent's data files (`agents/<agent_id>/…`) and the project-level data — deliberately not described as a project or task directory, so the model does not mistake it for the task's working directory (`CWD`).
 
 On Windows, `{{PROJECT_DIR}}` and `{{CWD}}` are injected with forward slashes — like every other path core composes for the model (attachment lines, the goal-file line, truncated-output recovery paths). The model re-emits these spellings into JSON tool arguments and shell commands; forward slashes are accepted by Node's fs APIs and the package's (Git) Bash tool shell, and avoid JSON backslash-escaping mistakes.
 
@@ -263,7 +263,7 @@ agent_state/memory/
 
 `user` is a reserved directory name, safe because every generated workspace memory key is `<base>-<8 hex>` and therefore always carries a hyphen — a hyphen-free name can never be produced.
 
-The workspace memory key is `<safe-basename>-<8 hex of the real path's sha256>`. Identity is the directory itself and has nothing to do with Git: two symlinks to one directory resolve to one key, while moving or renaming a directory makes it a new Workspace (the old Memory stays on disk under the old key). A temporary Workspace — one Linsight allocated under `agents/<agent_id>/workspaces/` — gets no Workspace scope at all, a subagent inheriting one included: a temporary Workspace is allocated per Session, so no later Session would ever run there to read it back. Such a Session still gets the user scope, which is where anything it learns belongs anyway.
+The workspace memory key is `<safe-basename>-<8 hex of the real path's sha256>`. Identity is the directory itself and has nothing to do with Git: two symlinks to one directory resolve to one key, while moving or renaming a directory makes it a new Workspace (the old Memory stays on disk under the old key). A temporary Workspace — one JiuMate allocated under `agents/<agent_id>/workspaces/` — gets no Workspace scope at all, a subagent inheriting one included: a temporary Workspace is allocated per Session, so no later Session would ever run there to read it back. Such a Session still gets the user scope, which is where anything it learns belongs anyway.
 
 A topic file is a semantic subject, not one per Task, Session or date, and carries frontmatter:
 
@@ -299,7 +299,7 @@ To read, delete or ask the Agent to edit what it has saved, use the settings pag
 - Values are injected only into tool subprocess environments and never enter the model context or the Trace;
 - Only key names are disclosed in the system prompt: the template's `{{VAULT}}` placeholder expands to `vault.prompt` (carrying the `{{VAULT_KEYS}}` key-name list), editable on the Vault tab; with `vault.enabled` off the block is empty — values are still injected into subprocesses, the model just doesn't see the key-name list. A legacy template's inline `{{VAULT_KEYS}}` is still substituted under the same toggle, and the tab offers one-click migration (see "System prompt placeholders");
 - Saving through the Web/API invalidates the Agent's cached Session runtimes: the next Task on any of its Sessions re-resumes and runs with the new values; a Task already in flight keeps the values it started with (a direct CLI file edit reaches a running server only when a Session is next created or resumed);
-- Managed via `linsight config vault set/list/remove` or the Web Vault tab.
+- Managed via `jiumate config vault set/list/remove` or the Web Vault tab.
 
 ## Schedules
 

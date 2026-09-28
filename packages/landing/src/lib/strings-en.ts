@@ -6,13 +6,13 @@
 import type { Strings } from "./strings";
 
 export const en: Strings = {
-  siteName: "Linsight",
+  siteName: "JiuMate",
 
   announcement: {
     label: "Announcements",
     prev: "Previous announcement",
     next: "Next announcement",
-    flashModels: "GLM-5.3 Flash and Qwen 3.8 Flash are now available in Linsight",
+    flashModels: "GLM-5.3 Flash and Qwen 3.8 Flash are now available in JiuMate",
     fireworks: "Claim $50 in Fireworks API credits with the AMD Developer Program",
   },
 
@@ -85,8 +85,8 @@ export const en: Strings = {
     offlineNote:
       "Every GitHub Release attaches one package per target (Linux / macOS in x64 and arm64, Windows in x64) and the same file serves online and offline installation. Each package seals the program payload, its SHA256 checksum and the installer: download that one file on a networked machine, copy it to the target, extract once and install with no network at all.",
     offlineHints: {
-      linux: "On arm64 machines, use linsight-linux-arm64.tar.gz.",
-      macos: "Apple silicon uses the arm64 package; on Intel, use linsight-darwin-x64.tar.gz.",
+      linux: "On arm64 machines, use jiumate-linux-arm64.tar.gz.",
+      macos: "Apple silicon uses the arm64 package; on Intel, use jiumate-darwin-x64.tar.gz.",
       windows: "After unzipping you can also just double-click install.cmd.",
     },
     offlineRelease: "Download offline packages from GitHub Releases",
@@ -161,11 +161,11 @@ export const en: Strings = {
     eyebrow: "Three pillars",
     title: "Built for building — and evolving — agents",
     subtitle:
-      "Linsight is the first open-source harness to ship “agents building agents” and recursive self-improvement.",
-    root: "Linsight",
-    concepts: ["Linsight Message", "Linsight SDK", "Linsight Skills"],
+      "JiuMate is the first open-source harness to ship “agents building agents” and recursive self-improvement.",
+    root: "JiuMate",
+    concepts: ["JiuMate Message", "JiuMate SDK", "JiuMate Skills"],
     diagramLabel:
-      "Linsight radiates into Linsight Message, Linsight SDK and Linsight Skills, each extending into one pillar",
+      "JiuMate radiates into JiuMate Message, JiuMate SDK and JiuMate Skills, each extending into one pillar",
     items: [
       {
         title: "Simplest Is the Best",
@@ -175,12 +175,12 @@ export const en: Strings = {
       {
         title: "Harness for building agents",
         tag: "",
-        desc: "With the Linsight SDK, an agent builds complete agent applications for you — autonomously, from scratch.",
+        desc: "With the JiuMate SDK, an agent builds complete agent applications for you — autonomously, from scratch.",
       },
       {
         title: "Harness for Recursive Self-Improvement",
         tag: "",
-        desc: "With Linsight Skills, an agent evaluates and optimizes itself, improving recursively over time.",
+        desc: "With JiuMate Skills, an agent evaluates and optimizes itself, improving recursively over time.",
       },
     ],
   },
@@ -190,7 +190,7 @@ export const en: Strings = {
     title: "Building agents with agents",
     subtitle: [
       "With LangChain, you build agents by hand — at 1× speed.",
-      "With Linsight, agents build agents — at 100×.",
+      "With JiuMate, agents build agents — at 100×.",
     ],
     langchain: {
       name: "LangChain",
@@ -198,8 +198,8 @@ export const en: Strings = {
       mode: "agents built by hand",
       note: "Chains, tools and prompts written line by line — every app starts from zero.",
     },
-    linsight: {
-      name: "Linsight",
+    jiumate: {
+      name: "JiuMate",
       speed: "100×",
       mode: "agents built by agents",
       note: "One sentence in — an agent delivers scaffold, code and run instructions end to end.",
@@ -234,7 +234,7 @@ export const en: Strings = {
 
   quickstart: {
     eyebrow: "Quick start",
-    title: "Get started with Linsight in two steps",
+    title: "Get started with JiuMate in two steps",
     subtitle: "Choose how to install first. With a CLI install, then choose Web UI or CLI.",
     stepOne: "Step one",
     chooseInstall: "Choose an installation method",
@@ -252,12 +252,12 @@ export const en: Strings = {
       cta: "Choose your system and download",
       steps: [
         "Download the installer for your system",
-        "Open Linsight and follow the model setup",
+        "Open JiuMate and follow the model setup",
         "Describe your first agent app in one sentence",
       ],
     },
     install: {
-      title: "Install Linsight with one command",
+      title: "Install JiuMate with one command",
       desc: "Made for developer machines, servers, and private environments. The bundle includes its runtime and does not depend on system Node.js.",
       osLabel: "Choose an operating system",
       onlineTitle: "Online install",
@@ -269,23 +269,23 @@ export const en: Strings = {
     web: {
       title: "Use the full interface in your browser",
       desc: "This starts the local service and opens the Web UI, a good fit for servers and remote access.",
-      command: "linsight web   # opens http://127.0.0.1:7364",
+      command: "jiumate web   # opens http://127.0.0.1:7364",
       steps: [
         "Complete the command-line install",
-        "Run linsight web",
+        "Run jiumate web",
         "Follow the terminal prompt to sign in and configure a model",
       ],
     },
     cli: {
       title: "Run an agent directly from the terminal",
       desc: "Start an interactive conversation or connect a one-off task to scripts and automated workflows.",
-      command: `linsight chat
+      command: `jiumate chat
 
 # Or run one task
-linsight run --message "Analyze data.csv and summarize quarterly sales"`,
+jiumate run --message "Analyze data.csv and summarize quarterly sales"`,
     },
     localNote:
-      "Desktop, Web UI, and CLI share ~/.linsight/data; switching entry points never moves or copies your data.",
+      "Desktop, Web UI, and CLI share ~/.jiumate/data; switching entry points never moves or copies your data.",
   },
 
   cases: {
@@ -303,11 +303,11 @@ linsight run --message "Analyze data.csv and summarize quarterly sales"`,
         cost: "And generating this entire RAG app burned just $0.02 (¥0.2) of tokens — on DeepSeek V4 Pro.",
       },
       {
-        label: "2D linsight sled game",
+        label: "2D jiumate sled game",
         prompt:
-          "Build a cute Antarctic linsight sledding game: Space to jump the rocks, with speed and difficulty ramping up over time.",
+          "Build a cute Antarctic jiumate sledding game: Space to jump the rocks, with speed and difficulty ramping up over time.",
         caption:
-          "The generated mini game: an Antarctic linsight sleds and jumps rocks, with live scoring and rising difficulty",
+          "The generated mini game: an Antarctic jiumate sleds and jumps rocks, with live scoring and rising difficulty",
         cost: "",
       },
     ],
@@ -317,17 +317,17 @@ linsight run --message "Analyze data.csv and summarize quarterly sales"`,
     eyebrow: "Scenarios",
     title: "From screening centers to factory floors",
     subtitle:
-      "Production stories of teams using Linsight to build agents automatically and deploy them to production.",
+      "Production stories of teams using JiuMate to build agents automatically and deploy them to production.",
     items: [
       {
         title: "Screening-report QC",
         alt: "A CT scanner room at a health screening center",
-        body: "A health-screening group used Linsight to automatically build a report-QC agent and deploy it into its production environment on a local Qwen3 14B, so data never leaves the facility. A review round that took 30 minutes by hand now clears 30 reports a minute, with findings in line with medical experts and several times the review capacity.",
+        body: "A health-screening group used JiuMate to automatically build a report-QC agent and deploy it into its production environment on a local Qwen3 14B, so data never leaves the facility. A review round that took 30 minutes by hand now clears 30 reports a minute, with findings in line with medical experts and several times the review capacity.",
       },
       {
         title: "Production-line inspection",
         alt: "An automated semiconductor production line",
-        body: "A manufacturer used Linsight to automatically build a production-line inspection agent and deploy it across multiple live lines. The agent watches equipment around the clock and tries automated recovery first when something goes wrong; after deployment, downtime fell 65% and output roughly doubled.",
+        body: "A manufacturer used JiuMate to automatically build a production-line inspection agent and deploy it across multiple live lines. The agent watches equipment around the clock and tries automated recovery first when something goes wrong; after deployment, downtime fell 65% and output roughly doubled.",
       },
     ],
   },
@@ -336,7 +336,7 @@ linsight run --message "Analyze data.csv and summarize quarterly sales"`,
     eyebrow: "A contract for stable evolution",
     title: "CONTRACT.md",
     subtitle:
-      "Linsight treats this contract as the boundary and bedrock of evolution: capability may grow, the boundary never drifts.",
+      "JiuMate treats this contract as the boundary and bedrock of evolution: capability may grow, the boundary never drifts.",
     intro:
       "Evolution needs boundaries. The contract is the covenant between harness and agent: capability grows within; the boundary holds without.",
     items: [
@@ -472,9 +472,9 @@ linsight run --message "Analyze data.csv and summarize quarterly sales"`,
       {
         title: "AI App Development",
         skills: [
-          "linsight-sdk",
-          "linsight-config",
-          "linsight-orchestration",
+          "jiumate-sdk",
+          "jiumate-config",
+          "jiumate-orchestration",
           "unified-llm-api",
           "vllm",
           "ollama",
@@ -527,7 +527,7 @@ linsight run --message "Analyze data.csv and summarize quarterly sales"`,
   cta: {
     title: "Complex AI development, made ever simpler",
     subtitle:
-      "Through continuous evolution, Linsight gives you a more efficient, more reliable, lower-hallucination and lower-cost agent productivity engine.",
+      "Through continuous evolution, JiuMate gives you a more efficient, more reliable, lower-hallucination and lower-cost agent productivity engine.",
     download: "Download the desktop app",
     quickstart: "Get started",
     docs: "Read the docs",

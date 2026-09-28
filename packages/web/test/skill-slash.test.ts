@@ -13,7 +13,7 @@
  *   (zh/en dictionaries).
  */
 import { describe, expect, it } from "vitest";
-import type { SkillMetadataItem } from "@prismshadow/linsight-server/api";
+import type { SkillMetadataItem } from "@prismshadow/jiumate-server/api";
 import {
   filterSkills,
   localizedShortText,
@@ -78,7 +78,7 @@ describe("skillSlashItems (slash skill command item assembly)", () => {
       description: "Create agents from requirements",
       version: "2026-07-01.1",
     },
-    { name: "linsight-sdk", description: "Develop with the Linsight SDK", version: "" },
+    { name: "jiumate-sdk", description: "Develop with the JiuMate SDK", version: "" },
   ];
 
   it("one item per skill: cmd is /<skill_name>, desc follows the UI language (falling back to English without a Chinese short description)", () => {
@@ -88,7 +88,7 @@ describe("skillSlashItems (slash skill command item assembly)", () => {
         cmd: "/agent-initialization",
         desc: "Create agents from requirements",
       },
-      { name: "linsight-sdk", cmd: "/linsight-sdk", desc: "Develop with the Linsight SDK" },
+      { name: "jiumate-sdk", cmd: "/jiumate-sdk", desc: "Develop with the JiuMate SDK" },
     ]);
     expect(skillSlashItems(skills, "en")).toEqual([
       {
@@ -96,7 +96,7 @@ describe("skillSlashItems (slash skill command item assembly)", () => {
         cmd: "/agent-initialization",
         desc: "Create agents from requirements",
       },
-      { name: "linsight-sdk", cmd: "/linsight-sdk", desc: "Develop with the Linsight SDK" },
+      { name: "jiumate-sdk", cmd: "/jiumate-sdk", desc: "Develop with the JiuMate SDK" },
     ]);
   });
 
@@ -147,7 +147,7 @@ describe("filterSkills (search filter for the skill dropdown)", () => {
       description: "Create agents from requirements",
       version: "2026-07-01.1",
     },
-    { name: "linsight-sdk", description: "Develop with the Linsight SDK", version: "" },
+    { name: "jiumate-sdk", description: "Develop with the JiuMate SDK", version: "" },
   ];
 
   it("an empty query (including pure whitespace) returns everything", () => {
@@ -155,9 +155,9 @@ describe("filterSkills (search filter for the skill dropdown)", () => {
     expect(filterSkills(skills, "en", "   ")).toEqual(skills);
   });
 
-  it("filters by name substring (case-insensitive): sdk leaves only linsight-sdk", () => {
-    expect(filterSkills(skills, "en", "sdk").map((s) => s.name)).toEqual(["linsight-sdk"]);
-    expect(filterSkills(skills, "en", "SDK").map((s) => s.name)).toEqual(["linsight-sdk"]);
+  it("filters by name substring (case-insensitive): sdk leaves only jiumate-sdk", () => {
+    expect(filterSkills(skills, "en", "sdk").map((s) => s.name)).toEqual(["jiumate-sdk"]);
+    expect(filterSkills(skills, "en", "SDK").map((s) => s.name)).toEqual(["jiumate-sdk"]);
   });
 
   it("filters by display copy: zh matches the Chinese short description, en always uses English", () => {

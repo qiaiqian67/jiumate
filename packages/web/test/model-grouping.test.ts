@@ -16,7 +16,7 @@ import {
   MODEL_PROVIDERS,
   catalogEntryFor,
   effectivePricing,
-} from "@prismshadow/linsight-core/model-catalog";
+} from "@prismshadow/jiumate-core/model-catalog";
 import {
   discountedPrice,
   groupModelRows,

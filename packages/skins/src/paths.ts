@@ -1,5 +1,5 @@
 /**
- * Pure path helpers for Linsight skin packages. Every IO call takes the skins root as an
+ * Pure path helpers for JiuMate skin packages. Every IO call takes the skins root as an
  * argument so a host can swap between a workspace-scoped root and a user-global root (see
  * packages/server/src/services/skin-catalog.ts).
  */

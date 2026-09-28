@@ -15,7 +15,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { Hono } from "hono";
-import { SkinPackageError, ZIP_ARCHIVE_LIMIT } from "@prismshadow/linsight-skins";
+import { SkinPackageError, ZIP_ARCHIVE_LIMIT } from "@prismshadow/jiumate-skins";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";
 import { readJson } from "../validate.js";

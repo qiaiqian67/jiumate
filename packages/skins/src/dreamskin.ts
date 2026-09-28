@@ -143,7 +143,7 @@ export function readDreamSkinTheme(
 
   return {
     manifest: {
-      schema: "linsight.skin",
+      schema: "jiumate.skin",
       schemaVersion: 1,
       id: originalId,
       name: typeof raw["name"] === "string" ? raw["name"] : originalId,

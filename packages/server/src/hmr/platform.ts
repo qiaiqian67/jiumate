@@ -23,8 +23,8 @@
  * adding or changing an endpoint or a service needs no runtime change.
  */
 import type { WebSocket } from "ws";
-import type { Impl, Json, Park } from "@prismshadow/linsight-core/kernel";
-import { defineIface, schema, type } from "@prismshadow/linsight-core/kernel";
+import type { Impl, Json, Park } from "@prismshadow/jiumate-core/kernel";
+import { defineIface, schema, type } from "@prismshadow/jiumate-core/kernel";
 import type { PlatformBundle } from "../hmr/host.js";
 import { TerminalManager } from "../terminal/manager.js";
 import type { TerminalSession } from "../terminal/session.js";
@@ -33,12 +33,12 @@ import { bindTerminalStream } from "../terminal/stream.js";
 import { buildAppDeps, createApp, type AppDeps, type BuildDepsOverrides } from "../app.js";
 import { seamHttp } from "./hono-seam.js";
 import {
-  LINSIGHT_FAMILY,
+  JIUMATE_FAMILY,
   RESOURCE_IFACES_RESOURCE_ID,
   claimRuntimeCapabilities,
 } from "./capabilities.js";
 import type { Interfaces, MembersOf } from "./capabilities.js";
-import type { LinsightInterface } from "../extension/index.js";
+import type { JiuMateInterface } from "../extension/index.js";
 import { extensionHostFrom } from "../extension/host.js";
 import { instantiateWorkflows, WorkflowFactories } from "../extension/workflow.js";
 
@@ -101,7 +101,7 @@ interface ParkedInterfaces extends Interfaces {
 }
 
 export const DECLARED_RESOURCES: ParkedInterfaces = {
-  family: LINSIGHT_FAMILY,
+  family: JIUMATE_FAMILY,
   // A parked pty, as its adopters use it — EVERY member reached after adoption, not a
   // representative sample: the manager (id, seq, ownerUserId, alive, info, onExit, kill,
   // dispose), the routes (capture, write, rename, exit) and the stream binding
@@ -193,7 +193,7 @@ export const platformImpl: Impl<PlatformApi, PlatformCtx> = {
     // one always sees it instantiated in the App it registered into. The host is CLAIMED
     // from the registry, never imported (see extensionHostFrom).
     const extensions = extensionHostFrom(ctx.resources);
-    const extIface: LinsightInterface = {
+    const extIface: JiuMateInterface = {
       workflow: new WorkflowFactories(),
       tool: new Map(),
     };
@@ -353,5 +353,5 @@ export const packagedPlatform: PlatformBundle = {
   id: "packaged",
   iface: PlatformIface,
   impl: platformImpl,
-  context: { motd: "hello from the linsight hot platform" } satisfies PlatformCtx,
+  context: { motd: "hello from the jiumate hot platform" } satisfies PlatformCtx,
 };

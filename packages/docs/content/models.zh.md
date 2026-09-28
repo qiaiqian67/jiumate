@@ -11,11 +11,11 @@ description: 经 AgentHub 单一网关接入模型，以 (provider, model_id) �
 
 模型身份永远是 `(provider, model_id)` 成对表示：`provider` 是配置分组名，`model_id` 是原样发给上游的请求 id。二者是两个独立字段，任何环节都不允许拼接成一个字符串。
 
-所有涉及模型的接口都要求完整的二元组：CLI、HTTP API 与 SDK 都会拒绝半个引用，而不会替你补全。provider 绝不由模型 id 推断，也没有缺省值——网关会以上游 id 转售厂商模型，猜出来的分组会把该条目的凭据发往无人指定的厂商。凡是模型引用本身可省略之处（`linsight run` / `chat`、创建 Session、定时任务），可选的是整对：两半都省略即使用 Project 默认模型。
+所有涉及模型的接口都要求完整的二元组：CLI、HTTP API 与 SDK 都会拒绝半个引用，而不会替你补全。provider 绝不由模型 id 推断，也没有缺省值——网关会以上游 id 转售厂商模型，猜出来的分组会把该条目的凭据发往无人指定的厂商。凡是模型引用本身可省略之处（`jiumate run` / `chat`、创建 Session、定时任务），可选的是整对：两半都省略即使用 Project 默认模型。
 
 ## Project 模型表
 
-每个 Project 的可用模型记录在隐藏文件 `.project_config.toml` 中，由 CLI(`linsight config model add / default / list`，见 [CLI 参考](/cli))或 Web 界面维护，不手工编辑。`ModelEntry` 字段：
+每个 Project 的可用模型记录在隐藏文件 `.project_config.toml` 中，由 CLI(`jiumate config model add / default / list`，见 [CLI 参考](/cli))或 Web 界面维护，不手工编辑。`ModelEntry` 字段：
 
 | 字段 | 说明 |
 | --- | --- |
@@ -88,10 +88,10 @@ TokenDance 分组的条目记录该网关的牌价，并在有促销时记录折
 
 | 端点 | 请求头 | 取值 |
 | --- | --- | --- |
-| `openrouter.ai` | `HTTP-Referer` | `https://linsight.ooo/` |
-| `openrouter.ai` | `X-OpenRouter-Title` | `Linsight` |
+| `openrouter.ai` | `HTTP-Referer` | `https://jiumate.ooo/` |
+| `openrouter.ai` | `X-OpenRouter-Title` | `JiuMate` |
 | `openrouter.ai` | `X-OpenRouter-Categories` | `cli-agent,personal-agent` |
-| `tokendance.space` | `X-App-URL` | `https://linsight.ooo/` |
+| `tokendance.space` | `X-App-URL` | `https://jiumate.ooo/` |
 
 其余端点(所有直连厂商，以及不读归因头的网关)不会收到任何额外请求头。归因头只声明应用身份，不携带用户、Agent 或会话信息。
 
@@ -99,7 +99,7 @@ TokenDance 分组的条目记录该网关的牌价，并在有促销时记录折
 
 若某个供应商公开了授权流程，模型页的该分组头部会多出一个动作：**自动获取密钥**。内置分组中只有 TokenDance 提供。它会在你的账户下**新建**一个 key，而不是读取你已有的 key，并写入该分组下的每一个模型，覆盖这些条目当前的 key。
 
-点击后会在新标签页打开供应商的授权页。在那里完成授权，供应商会把浏览器送回 Linsight，由服务端兑换一次性授权码并保存 key；发起的那个标签页会自行报告结果。上文归因表中的同一个应用 URL 会写到这个 key 上，因此即便换用其他工具，用它发出的调用依然带着归因。
+点击后会在新标签页打开供应商的授权页。在那里完成授权，供应商会把浏览器送回 JiuMate，由服务端兑换一次性授权码并保存 key；发起的那个标签页会自行报告结果。上文归因表中的同一个应用 URL 会写到这个 key 上，因此即便换用其他工具，用它发出的调用依然带着归因。
 
 整个兑换过程都在服务端进行：PKCE 的 verifier 在服务端生成、从不进入浏览器，新建出的 key 也直接写入模型表，不经过浏览器。一次授权只能换一个 key，且十分钟后过期。
 
@@ -147,7 +147,7 @@ DeepSeek V4 只接受 `low`/`high`/`max`，服务端会把 `medium` 与 `xhigh` 
 
 ## 快速模式
 
-每个模型条目都可以选择进入厂商的快速推理档位（Web 模型弹窗中的「快速模式」开关、`linsight config model add` 的 `--fast-mode` / `--no-fast-mode`，或条目里的 `fast_mode = true`）。默认关闭；既有配置不受影响。打开开关会先弹出确认提示，因为它会改变该模型的计费。
+每个模型条目都可以选择进入厂商的快速推理档位（Web 模型弹窗中的「快速模式」开关、`jiumate config model add` 的 `--fast-mode` / `--no-fast-mode`，或条目里的 `fast_mode = true`）。默认关闭；既有配置不受影响。打开开关会先弹出确认提示，因为它会改变该模型的计费。
 
 开启后，会话请求携带 AgentHub 的 `fast_mode` 参数：OpenAI 协议 client 发送 `service_tier: "priority"`，Anthropic 协议 client 发送 `speed: "fast"` 并附带 fast-mode beta 请求头。快速档位按厂商的溢价价目计费（MiniMax 为标准价的 1.5 倍，OpenAI 与 Anthropic 另有溢价价目表），而条目记录的按 Token 单价不会随之调整——不上调三档价格的话，快速模式用量的成本统计会偏低。
 

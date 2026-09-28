@@ -14,8 +14,8 @@ import {
   imageUrlMessage,
   tokenUsage,
   userText,
-} from "@prismshadow/linsight-core";
-import type { OmniMessage, TokenCounts } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { OmniMessage, TokenCounts } from "@prismshadow/jiumate-core";
 import { openDatabase } from "../src/db/database.js";
 import { SessionsRepo } from "../src/db/repos/sessions.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";

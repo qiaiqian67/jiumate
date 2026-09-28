@@ -74,7 +74,7 @@ describe("Md pipeline: mermaid fence routing", () => {
   });
 
   it("two mermaid fences with identical code render MermaidBlock placeholders in both", () => {
-    // The internal Mermaid DOM id (`linsight-mermaid-<nonce>`) only lands once the async
+    // The internal Mermaid DOM id (`jiumate-mermaid-<nonce>`) only lands once the async
     // mermaid.render call completes in a real browser; in static markup we only get the
     // .mermaid-block placeholder. The contract tested is "both messages render through the
     // mermaid adapter" — the per-id nonce disambiguation is covered indirectly by checking

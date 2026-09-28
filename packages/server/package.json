@@ -1,12 +1,12 @@
 {
-  "name": "@prismshadow/linsight-server",
+  "name": "@prismshadow/jiumate-server",
   "version": "0.3.0",
   "type": "module",
-  "description": "Linsight web server: multi-user authentication and authorization, Session execution with SSE streaming, and usage accounting, built on @prismshadow/linsight-core.",
+  "description": "JiuMate web server: multi-user authentication and authorization, Session execution with SSE streaming, and usage accounting, built on @prismshadow/jiumate-core.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "packages/server"
   },
   "exports": {
@@ -65,7 +65,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "node ../../scripts/dev-prebuild.mjs && node ../../scripts/run-with-env.mjs LINSIGHT_HOME=~/.linsight/dev-data PORT=7368 -- tsx watch src/index.ts",
+    "dev": "node ../../scripts/dev-prebuild.mjs && node ../../scripts/run-with-env.mjs JIUMATE_HOME=~/.jiumate/dev-data PORT=7368 -- tsx watch src/index.ts",
     "start": "node --disable-warning=ExperimentalWarning dist/index.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
@@ -74,10 +74,10 @@
   "dependencies": {
     "@hono/node-server": "^2.0.5",
     "@larksuiteoapi/node-sdk": "^1.73.0",
-    "@prismshadow/linsight-core": "workspace:*",
-    "@prismshadow/linsight-inspirations": "workspace:*",
-    "@prismshadow/linsight-pets": "workspace:*",
-    "@prismshadow/linsight-skins": "workspace:*",
+    "@prismshadow/jiumate-core": "workspace:*",
+    "@prismshadow/jiumate-inspirations": "workspace:*",
+    "@prismshadow/jiumate-pets": "workspace:*",
+    "@prismshadow/jiumate-skins": "workspace:*",
     "@xterm/headless": "^5.5.0",
     "dotenv": "^17.0.0",
     "fflate": "^0.8.3",

@@ -12,7 +12,7 @@
  * pins the shape against the inline script, which cannot import this module and therefore
  * repeats it in plain JS.
  */
-export const SKIN_BOOTSTRAP_KEY = "linsight.skin.bootstrap";
+export const SKIN_BOOTSTRAP_KEY = "jiumate.skin.bootstrap";
 
 /** Bumped whenever the payload shape changes; an unrecognised version is ignored, not migrated. */
 export const SKIN_BOOTSTRAP_VERSION = 1;

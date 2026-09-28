@@ -10,7 +10,7 @@
  *
  * The line format and its placement are not defined here: they are shared with core's
  * `[attached image: …]` producer and the Web renderer that parses both
- * (`@prismshadow/linsight-core/markers` → attachment-lines.ts, plus `appendAttachmentLines`),
+ * (`@prismshadow/jiumate-core/markers` → attachment-lines.ts, plus `appendAttachmentLines`),
  * so the two conventions cannot drift apart.
  */
 import fs from "node:fs/promises";
@@ -20,8 +20,8 @@ import {
   appendAttachmentLines,
   attachedFileLine,
   modelVisiblePath,
-} from "@prismshadow/linsight-core";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 import { HttpError } from "../http/errors.js";
 import { badRequest } from "../http/validate.js";
 import type { AttachmentLimits } from "./attachment-limits.js";

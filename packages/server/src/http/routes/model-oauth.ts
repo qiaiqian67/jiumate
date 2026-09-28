@@ -43,7 +43,7 @@ const CODE_RE = /^[A-Za-z0-9._~-]{1,512}$/;
  * all work without configuration.
  *
  * `x-forwarded-proto` / `x-forwarded-host` are caller-supplied and are honoured only when
- * the deployment says a reverse proxy sets them (LINSIGHT_TRUST_PROXY=1) — the same opt-in
+ * the deployment says a reverse proxy sets them (JIUMATE_TRUST_PROXY=1) — the same opt-in
  * the hot-update network gate requires, and for the same reason: without it anyone who can
  * reach the bind could choose where the authorization lands.
  */
@@ -121,7 +121,7 @@ function credentialsChanged(deps: AppDeps, projectId: string): void {
  * It cannot require one. A loopback OAuth redirect receiver is reached by whichever browser
  * the provider redirected, which is not necessarily the one that started the flow: the
  * desktop shell hands every non-app URL to `shell.openExternal`, so the authorization page
- * opens in the *system* browser, and the system browser holds no `linsight_session` cookie
+ * opens in the *system* browser, and the system browser holds no `jiumate_session` cookie
  * for `http://localhost:<port>`. Behind the global auth middleware every desktop
  * authorization therefore ended on a bare 401 while the same flow completed in the browser,
  * where the popup is a tab of the session that opened it.
@@ -166,7 +166,7 @@ export function modelOAuthCallbackRoutes(deps: AppDeps): Hono<AppEnv> {
       return c.html(
         resultPage(
           "Authorization failed",
-          "This link is incomplete. Return to Linsight and start a new authorization.",
+          "This link is incomplete. Return to JiuMate and start a new authorization.",
         ),
         400,
       );
@@ -179,7 +179,7 @@ export function modelOAuthCallbackRoutes(deps: AppDeps): Hono<AppEnv> {
       const message =
         err instanceof HttpError
           ? err.message
-          : "Something went wrong. Return to Linsight and start a new authorization.";
+          : "Something went wrong. Return to JiuMate and start a new authorization.";
       // A refusal is a page, not an API error: every one of them answers 400, and the
       // service's own sentence is what tells the person what to do about it.
       return c.html(resultPage("Authorization failed", message), 400);
@@ -187,7 +187,7 @@ export function modelOAuthCallbackRoutes(deps: AppDeps): Hono<AppEnv> {
     return c.html(
       resultPage(
         "Authorization received",
-        "Return to Linsight — it finishes the authorization and reports the outcome there. You can close this tab.",
+        "Return to JiuMate — it finishes the authorization and reports the outcome there. You can close this tab.",
       ),
     );
   });

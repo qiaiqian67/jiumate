@@ -1,6 +1,6 @@
 # Built-in plugins
 
-The Linsight plugin library. Each plugin is its own npm package — `@linsight/<name>`, a directory under `plugins/` — with a `plugin.json` manifest (and an `icon.svg` beside it: the icon of everything the plugin ships, which its installed skills and hook package inherit) plus the content it ships: **skills** (`skills/<name>/SKILL.md`, installed into an Agent's `agent_state/skills/`) and/or a **hook package** (`hooks/*.mjs`, installed into `agent_state/hooks/<plugin>/` with a generated `hooks.json`). The loader lives in `@prismshadow/linsight-core`, which depends on these packages and reads their directories at runtime — the files are the source of truth.
+The JiuMate plugin library. Each plugin is its own npm package — `@jiumate/<name>`, a directory under `plugins/` — with a `plugin.json` manifest (and an `icon.svg` beside it: the icon of everything the plugin ships, which its installed skills and hook package inherit) plus the content it ships: **skills** (`skills/<name>/SKILL.md`, installed into an Agent's `agent_state/skills/`) and/or a **hook package** (`hooks/*.mjs`, installed into `agent_state/hooks/<plugin>/` with a generated `hooks.json`). The loader lives in `@prismshadow/jiumate-core`, which depends on these packages and reads their directories at runtime — the files are the source of truth.
 
 Versions are dates with a sequence number — `YYYY-MM-DD.N` — on the manifest and on every skill a plugin ships. Skills follow the "index first, body on demand" design: only their metadata is injected into an Agent's system prompt; the Agent reads the full `SKILL.md` via shell when it actually needs it. Hook scripts are plain Node (builtins only): the harness runs them as subprocesses at the loop's hook points with `{ hook, session_id, trace_path }` on stdin and reads their JSON answer from stdout.
 
@@ -18,15 +18,15 @@ Included plugins, by category (`PLUGIN_CATEGORIES` in `packages/core/src/plugins
 
 ## Documentation
 
-- [Skills & Plugins](https://linsight.ooo/docs/skills)
-- [Goal Mode](https://linsight.ooo/docs/goal-mode)
-- [Self-Improvement](https://linsight.ooo/docs/self-improvement)
+- [Skills & Plugins](https://jiumate.ooo/docs/skills)
+- [Goal Mode](https://jiumate.ooo/docs/goal-mode)
+- [Self-Improvement](https://jiumate.ooo/docs/self-improvement)
 
 ## Development
 
 The plugins are data, not code — there is nothing to build here. The loader, its types and their tests live in `packages/core`:
 
 ```bash
-pnpm --filter @prismshadow/linsight-core build       # includes the plugin loader
-pnpm --filter @prismshadow/linsight-core test        # loader, README tables, the hook scripts against fake Traces
+pnpm --filter @prismshadow/jiumate-core build       # includes the plugin loader
+pnpm --filter @prismshadow/jiumate-core test        # loader, README tables, the hook scripts against fake Traces
 ```

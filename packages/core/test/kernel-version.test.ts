@@ -175,7 +175,7 @@ describe("applyKernelUpdate", () => {
   let root: string;
 
   beforeEach(async () => {
-    root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-kernel-"));
+    root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-kernel-"));
   });
 
   afterEach(async () => {
@@ -380,7 +380,7 @@ describe("kernel stamping on the materialization paths", () => {
   let root: string;
 
   beforeEach(async () => {
-    root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-kernel-stamp-"));
+    root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-kernel-stamp-"));
   });
 
   afterEach(async () => {

@@ -1,8 +1,8 @@
 /**
- * Agent lifecycle: new session id format + no more `.linsight` symlink in the Workspace.
+ * Agent lifecycle: new session id format + no more `.jiumate` symlink in the Workspace.
  *
  * - sessionId looks like `session-YYYY-MM-DD-HH-mm-ss-<8-digit hex>` (local time, zero-padded fields).
- * - createSession no longer creates any `.linsight` symlink inside the Workspace, nor touches existing
+ * - createSession no longer creates any `.jiumate` symlink inside the Workspace, nor touches existing
  *   Workspace files; the model reaches Agent State and other absolute paths directly by combining the
  *   App Data Dir / Agent ID placeholders from the system prompt.
  */
@@ -21,15 +21,15 @@ let prevHome: string | undefined;
 let restoreKeys: () => void;
 
 beforeEach(async () => {
-  prevHome = process.env.LINSIGHT_HOME;
-  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-lifecycle-"));
-  process.env.LINSIGHT_HOME = tmpRoot;
+  prevHome = process.env.JIUMATE_HOME;
+  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-lifecycle-"));
+  process.env.JIUMATE_HOME = tmpRoot;
   restoreKeys = stubProviderKeys();
 });
 
 afterEach(async () => {
-  if (prevHome === undefined) delete process.env.LINSIGHT_HOME;
-  else process.env.LINSIGHT_HOME = prevHome;
+  if (prevHome === undefined) delete process.env.JIUMATE_HOME;
+  else process.env.JIUMATE_HOME = prevHome;
   restoreKeys();
   await fs.rm(tmpRoot, { recursive: true, force: true });
 });
@@ -52,7 +52,7 @@ describe("formatSessionId", () => {
   });
 });
 
-describe("Agent.createSession session id + no .linsight symlink", () => {
+describe("Agent.createSession session id + no .jiumate symlink", () => {
   it("assigns a sessionId in the new format", async () => {
     const agent = await createAgent();
     const ws = path.join(tmpRoot, "ws");
@@ -61,22 +61,22 @@ describe("Agent.createSession session id + no .linsight symlink", () => {
     expect(session.sessionId).toMatch(SESSION_ID_RE);
   });
 
-  it("does not create a .linsight entry in the workspace", async () => {
+  it("does not create a .jiumate entry in the workspace", async () => {
     const agent = await createAgent();
     const ws = path.join(tmpRoot, "ws");
     await fs.mkdir(ws, { recursive: true });
     await agent.createSession({ workspaceDir: ws });
-    await expect(fs.lstat(path.join(ws, ".linsight"))).rejects.toThrow();
+    await expect(fs.lstat(path.join(ws, ".jiumate"))).rejects.toThrow();
     // agent_state also no longer creates traces/notes symlinks.
     await expect(fs.lstat(path.join(agent.state.stateDir, "traces"))).rejects.toThrow();
     await expect(fs.lstat(path.join(agent.state.stateDir, "notes"))).rejects.toThrow();
   });
 
-  it("leaves a user's pre-existing .linsight file untouched", async () => {
+  it("leaves a user's pre-existing .jiumate file untouched", async () => {
     const agent = await createAgent();
     const ws = path.join(tmpRoot, "ws");
     await fs.mkdir(ws, { recursive: true });
-    const linkPath = path.join(ws, ".linsight");
+    const linkPath = path.join(ws, ".jiumate");
     await fs.writeFile(linkPath, "user-data", "utf8");
     await agent.createSession({ workspaceDir: ws });
     expect(await fs.readFile(linkPath, "utf8")).toBe("user-data");
@@ -105,6 +105,6 @@ describe("Agent.createSession session id + no .linsight symlink", () => {
       `App Data Dir: ${modelVisiblePath(projectDir(tmpRoot, agent.state.projectId))}`,
     );
     expect(prompt).toContain(`CWD: ${modelVisiblePath(ws)}`);
-    expect(prompt).not.toContain(".linsight");
+    expect(prompt).not.toContain(".jiumate");
   });
 });

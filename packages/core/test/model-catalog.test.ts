@@ -100,11 +100,11 @@ describe("model-catalog", () => {
     expect(oauth.authorizeUrl).toBe("https://tokendance.space/auth");
     expect(oauth.exchangeUrl).toBe("https://tokendance.space/portal/api/v1/auth/keys");
     // The key's name is also the app name the authorization page shows.
-    expect(oauth.keyName).toBe("Linsight");
+    expect(oauth.keyName).toBe("JiuMate");
   });
 
   it("the app URL a minted key is stamped with is the same one attribution headers carry", () => {
-    expect(APP_URL).toBe("https://linsight.ooo/");
+    expect(APP_URL).toBe("https://jiumate.ooo/");
     expect(attributionHeaders("https://tokendance.space/gateway/v1")).toEqual({
       "X-App-URL": APP_URL,
     });
@@ -1074,8 +1074,8 @@ describe("fastModeProtocol (which models may be offered AgentHub's fast_mode, an
 describe("attributionHeaders (how the harness names itself to the gateways that read it)", () => {
   it("OpenRouter gets its three attribution headers, on the preset base URL and on any custom one", () => {
     const expected = {
-      "HTTP-Referer": "https://linsight.ooo/",
-      "X-OpenRouter-Title": "Linsight",
+      "HTTP-Referer": "https://jiumate.ooo/",
+      "X-OpenRouter-Title": "JiuMate",
       "X-OpenRouter-Categories": "cli-agent,personal-agent",
     };
     expect(attributionHeaders(providerInfo("openrouter")!.gatewayBaseUrl)).toEqual(expected);
@@ -1090,7 +1090,7 @@ describe("attributionHeaders (how the harness names itself to the gateways that 
 
   it("TokenDance gets the single X-App-URL header", () => {
     expect(attributionHeaders(providerInfo("tokendance")!.gatewayBaseUrl)).toEqual({
-      "X-App-URL": "https://linsight.ooo/",
+      "X-App-URL": "https://jiumate.ooo/",
     });
   });
 
@@ -1111,9 +1111,9 @@ describe("attributionHeaders (how the harness names itself to the gateways that 
     for (const m of MODEL_CATALOG) {
       const headers = attributionHeaders(m.baseUrl);
       if (m.provider === "openrouter") {
-        expect(headers?.["HTTP-Referer"], m.modelId).toBe("https://linsight.ooo/");
+        expect(headers?.["HTTP-Referer"], m.modelId).toBe("https://jiumate.ooo/");
       } else if (m.provider === "tokendance") {
-        expect(headers?.["X-App-URL"], m.modelId).toBe("https://linsight.ooo/");
+        expect(headers?.["X-App-URL"], m.modelId).toBe("https://jiumate.ooo/");
       } else {
         expect(headers, `${m.provider}/${m.modelId}`).toBeUndefined();
       }

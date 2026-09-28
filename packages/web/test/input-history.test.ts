@@ -10,7 +10,7 @@ import { handoffMessage } from "../src/features/chat/agent-handoff";
 import {
   buildBackgroundTaskDoneMessage,
   buildScheduledMessage,
-} from "@prismshadow/linsight-core/markers";
+} from "@prismshadow/jiumate-core/markers";
 import {
   buildInputHistory,
   caretOnFirstLine,

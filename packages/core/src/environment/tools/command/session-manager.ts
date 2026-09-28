@@ -39,9 +39,9 @@ const HARDENED_ENV: NodeJS.ProcessEnv = {
  * checks `PORT` for presence rather than value must see nothing at all).
  *
  * `PORT` / `HOST` are stripped because they are never about the command being run. On the
- * serving paths they are the harness's own listener: `linsight web` / `linsight server` write both
+ * serving paths they are the harness's own listener: `jiumate web` / `jiumate server` write both
  * into their own `process.env` as the channel to the server module (see the CLI's `startServer`).
- * On the CLI-only paths (`linsight run`, `linsight chat`, the REPL) nothing listens at all, but the
+ * On the CLI-only paths (`jiumate run`, `jiumate chat`, the REPL) nothing listens at all, but the
  * CLI still loads `dotenv/config`, so a `PORT` there is the one the *user's own project* picked
  * for *its* server. `npm run dev`, Vite, Next and most Express templates read `PORT`, so either
  * way an inherited value makes a server the Agent starts bind a port it was never asked to take —
@@ -49,13 +49,13 @@ const HARDENED_ENV: NodeJS.ProcessEnv = {
  * a particular port should be told so in its own invocation (or through the vault), never by
  * ambient inheritance.
  *
- * `LINSIGHT_CLI_ENTRY` is internal plumbing: the CLI uses it to tell the server which script to
+ * `JIUMATE_CLI_ENTRY` is internal plumbing: the CLI uses it to tell the server which script to
  * re-run for self-update. It means nothing to any other program and leaks the install path.
  *
- * `LINSIGHT_WEB_DIST` is *not* internal — it is a documented deployment override (see the
+ * `JIUMATE_WEB_DIST` is *not* internal — it is a documented deployment override (see the
  * configuration reference and the server README) — and is stripped anyway because it names this
  * installation's front-end build. In the self-development case an Agent that starts a
- * Linsight server would otherwise serve the deployment's assets instead of the ones it just
+ * JiuMate server would otherwise serve the deployment's assets instead of the ones it just
  * built in the workspace, silently and with no error to read.
  *
  * `FORCE_COLOR` / `CLICOLOR_FORCE` are color-forcing overrides that Node (and the chalk-family
@@ -65,8 +65,8 @@ const HARDENED_ENV: NodeJS.ProcessEnv = {
  * colors on". The vault still wins, so a user who genuinely wants forced color in commands can
  * set it there.
  *
- * Every `LINSIGHT_*` variable is removed as well — see {@link HARNESS_ENV_PREFIX}. That covers
- * `LINSIGHT_HOME` and `LINSIGHT_WEB_DB`, which select the *data* an Agent-started harness works
+ * Every `JIUMATE_*` variable is removed as well — see {@link HARNESS_ENV_PREFIX}. That covers
+ * `JIUMATE_HOME` and `JIUMATE_WEB_DB`, which select the *data* an Agent-started harness works
  * against. They were once left inheriting on the grounds that the self-development case may
  * legitimately want the same data root, but inheriting them is not that decision being made — it
  * is an accident of where this process happens to be running. Whenever an Agent spawns a command
@@ -75,28 +75,28 @@ const HARDENED_ENV: NodeJS.ProcessEnv = {
  * that handed it the root.
  *
  * Any of it really wanted is asked for rather than inherited: the vault is applied after this
- * environment (see the spread in `spawn`), so a `LINSIGHT_HOME` set there reaches commands exactly
+ * environment (see the spread in `spawn`), so a `JIUMATE_HOME` set there reaches commands exactly
  * as before. Same escape hatch as `FORCE_COLOR` above.
  */
 const STRIPPED_ENV_KEYS = new Set([
   "PORT",
   "HOST",
-  "LINSIGHT_CLI_ENTRY",
-  "LINSIGHT_WEB_DIST",
+  "JIUMATE_CLI_ENTRY",
+  "JIUMATE_WEB_DIST",
   "FORCE_COLOR",
   "CLICOLOR_FORCE",
   // Desktop-mode process credentials and wiring: the shell's token authorizes the
   // server shutdown endpoint (and the claim link until redeemed), and the port file is
   // the shell's private channel — neither is a user-facing setting, and leaking them
   // into Agent-run commands would let a prompt-injected command stop the server.
-  "LINSIGHT_DESKTOP_TOKEN",
-  "LINSIGHT_PORT_FILE",
+  "JIUMATE_DESKTOP_TOKEN",
+  "JIUMATE_PORT_FILE",
   // Pinned seed password (tests/e2e): a credential, not a data-selection setting.
-  "LINSIGHT_SEED_ADMIN_PASSWORD",
+  "JIUMATE_SEED_ADMIN_PASSWORD",
 ]);
 
 /**
- * Every variable named `LINSIGHT_*` is this installation's own configuration — where its data
+ * Every variable named `JIUMATE_*` is this installation's own configuration — where its data
  * lives, which shell it resolved, which release feed it checks, which language its UI speaks —
  * and none of it describes the command an Agent is running. Stripping by prefix rather than by
  * name is the point: the harness reads two dozen of them today and gains more with each feature,
@@ -104,14 +104,14 @@ const STRIPPED_ENV_KEYS = new Set([
  * existed when this was written and a by-name list had caught seven.
  *
  * Outbound proxy settings are the deliberate exception to "the harness's environment stays out of
- * the child", and they are not `LINSIGHT_*` — they are HTTP_PROXY and friends, governed by
- * {@link PROXY_ENV_KEYS} and the host's policy just below. `LINSIGHT_TRUST_PROXY` only looks like
+ * the child", and they are not `JIUMATE_*` — they are HTTP_PROXY and friends, governed by
+ * {@link PROXY_ENV_KEYS} and the host's policy just below. `JIUMATE_TRUST_PROXY` only looks like
  * one: it decides whether the server trusts an inbound `x-forwarded-proto`, and means nothing to
  * a child.
  *
  * The vault still wins, so any single variable that is genuinely wanted can be set there.
  */
-const HARNESS_ENV_PREFIX = "LINSIGHT_";
+const HARNESS_ENV_PREFIX = "JIUMATE_";
 
 /**
  * Proxy variables removed IN ADDITION when the host supplies a proxy policy (`proxyEnv`,
@@ -137,7 +137,7 @@ function hostEnvForChild(policy: ProxyEnvPolicy | null): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
   // Matched case-insensitively rather than deleting the upper-case spellings: Windows resolves
   // environment names without regard to case but stores whatever casing was written, so a
-  // `set Port=3000` before `linsight web` would survive a `delete env.PORT` and still reach the
+  // `set Port=3000` before `jiumate web` would survive a `delete env.PORT` and still reach the
   // child as PORT. On POSIX the two are distinct names and only the exact one exists.
   for (const [key, value] of Object.entries(process.env)) {
     const name = key.toUpperCase();
@@ -204,7 +204,7 @@ export class CommandSessionManager {
    */
   private readonly proxyEnv: (() => ProxyEnvPolicy | null) | undefined;
   /**
-   * Harness-control variables (LINSIGHT_API_URL / LINSIGHT_API_TOKEN / the Session
+   * Harness-control variables (JIUMATE_API_URL / JIUMATE_API_TOKEN / the Session
    * coordinates, see {@link EnvironmentConfig.controlEnv}): injected on every spawn AFTER
    * the vault, so the host's sanctioned wiring wins over a vault entry of the same name.
    * A getter like `proxyEnv`, re-read at every spawn. Absent = nothing injected.
@@ -252,8 +252,8 @@ export class CommandSessionManager {
       //
       // The strip governs inheritance only: it runs inside hostEnvForChild and never
       // re-applies to entries spread in after it, so the vault and controlEnv carry
-      // authoritative values into the child — stripped names, LINSIGHT_* included, and all.
-      // Both guarantees hold because of that order: no LINSIGHT_* reaches a command by
+      // authoritative values into the child — stripped names, JIUMATE_* included, and all.
+      // Both guarantees hold because of that order: no JIUMATE_* reaches a command by
       // inheritance, while the control variables the host does sanction arrive as injected
       // values rather than as surviving copies. Pinned by the "an explicit injection
       // layered after the strip wins" test.

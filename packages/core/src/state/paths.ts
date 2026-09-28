@@ -1,7 +1,7 @@
 /**
  * Local directory layout for Agent State and Project config.
  *
- * Strictly follows the `~/.linsight/data/<project>/agents/<agent>/...` structure.
+ * Strictly follows the `~/.jiumate/data/<project>/agents/<agent>/...` structure.
  * This module only provides constants and pure path functions; it never creates directories or reads/writes files.
  * Docs: /docs/sessions-and-traces § "Data layout".
  */
@@ -16,12 +16,12 @@ export const DEFAULT_AGENT_ID = "default_agent";
 
 /**
  * Resolves the local data root directory.
- * Prefers the `LINSIGHT_HOME` environment variable, otherwise falls back to `~/.linsight/data`
- * (under the hidden `~/.linsight` home so it never collides with unrelated folders, and in a
- * `data/` subdir kept separate from the installer's binaries under `~/.linsight`).
+ * Prefers the `JIUMATE_HOME` environment variable, otherwise falls back to `~/.jiumate/data`
+ * (under the hidden `~/.jiumate` home so it never collides with unrelated folders, and in a
+ * `data/` subdir kept separate from the installer's binaries under `~/.jiumate`).
  */
 export function resolveRoot(): string {
-  return process.env.LINSIGHT_HOME ?? path.join(os.homedir(), ".linsight", "data");
+  return process.env.JIUMATE_HOME ?? path.join(os.homedir(), ".jiumate", "data");
 }
 
 /** `<root>/<projectId>`. */

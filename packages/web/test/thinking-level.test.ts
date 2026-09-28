@@ -17,7 +17,7 @@
  * back onto a trigger, without a test failing here.
  */
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CHAT_THINKING_LEVELS } from "@prismshadow/linsight-core";
+import { DEFAULT_CHAT_THINKING_LEVELS } from "@prismshadow/jiumate-core";
 import { en } from "../src/lib/strings-en";
 import { zh } from "../src/lib/strings";
 import {

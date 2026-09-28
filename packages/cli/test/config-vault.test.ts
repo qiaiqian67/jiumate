@@ -1,6 +1,6 @@
 /**
- * Integration tests for `linsight config vault set|list|remove` (run through commander's
- * parseAsync for the full command path, with LINSIGHT_HOME pointed at a temp directory):
+ * Integration tests for `jiumate config vault set|list|remove` (run through commander's
+ * parseAsync for the full command path, with JIUMATE_HOME pointed at a temp directory):
  * writes to a hidden .vault.toml (mode 0600), list masks values without leaking
  * plaintext, remove raises an error on a missing key, --agent-id targets a specific
  * Agent, and an invalid key name / an overlong value exit with a non-zero code.
@@ -10,7 +10,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Command } from "commander";
-import { agentVaultPath, DEFAULT_PROJECT_ID } from "@prismshadow/linsight-core";
+import { agentVaultPath, DEFAULT_PROJECT_ID } from "@prismshadow/jiumate-core";
 import { registerConfigCommand } from "../src/commands/config.js";
 import { getMessages } from "../src/i18n.js";
 
@@ -18,18 +18,18 @@ let tmpRoot: string;
 let prevHome: string | undefined;
 
 beforeEach(async () => {
-  prevHome = process.env.LINSIGHT_HOME;
-  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-cli-vault-"));
-  process.env.LINSIGHT_HOME = tmpRoot;
+  prevHome = process.env.JIUMATE_HOME;
+  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-cli-vault-"));
+  process.env.JIUMATE_HOME = tmpRoot;
 });
 
 afterEach(async () => {
-  if (prevHome === undefined) delete process.env.LINSIGHT_HOME;
-  else process.env.LINSIGHT_HOME = prevHome;
+  if (prevHome === undefined) delete process.env.JIUMATE_HOME;
+  else process.env.JIUMATE_HOME = prevHome;
   await fs.rm(tmpRoot, { recursive: true, force: true });
 });
 
-/** Runs a `linsight config vault …` command, capturing stdout/stderr and the exit code (without actually exiting the process). */
+/** Runs a `jiumate config vault …` command, capturing stdout/stderr and the exit code (without actually exiting the process). */
 async function runVault(args: string[]): Promise<{ out: string; err: string; code: number }> {
   const program = new Command();
   program.exitOverride();
@@ -47,7 +47,7 @@ async function runVault(args: string[]): Promise<{ out: string; err: string; cod
   const prevExitCode = process.exitCode;
   process.exitCode = undefined;
   try {
-    await program.parseAsync(["node", "linsight", "config", "vault", ...args]);
+    await program.parseAsync(["node", "jiumate", "config", "vault", ...args]);
     return { out: out.join(""), err: err.join(""), code: Number(process.exitCode ?? 0) };
   } finally {
     outSpy.mockRestore();
@@ -56,7 +56,7 @@ async function runVault(args: string[]): Promise<{ out: string; err: string; cod
   }
 }
 
-describe("linsight config vault", () => {
+describe("jiumate config vault", () => {
   it("set -> list (masked) -> remove full round trip; stored as hidden .vault.toml with 0600", async () => {
     const set = await runVault(["set", "--key", "MY_KEY", "--value", "vault-secret-9876"]);
     expect(set.code).toBe(0);
@@ -102,8 +102,8 @@ describe("linsight config vault", () => {
     expect(defaultList.out).toContain("The vault is empty.");
   });
 
-  it("--root picks the data root (beats LINSIGHT_HOME); set/list both target that root", async () => {
-    const otherRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-cli-vault-root-"));
+  it("--root picks the data root (beats JIUMATE_HOME); set/list both target that root", async () => {
+    const otherRoot = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-cli-vault-root-"));
     try {
       const set = await runVault([
         "set",
@@ -118,7 +118,7 @@ describe("linsight config vault", () => {
       expect(
         await fs.readFile(agentVaultPath(otherRoot, DEFAULT_PROJECT_ID, "default_agent"), "utf8"),
       ).toContain("ROOTED_KEY");
-      // The root directory pointed to by LINSIGHT_HOME is unaffected.
+      // The root directory pointed to by JIUMATE_HOME is unaffected.
       const defaultList = await runVault(["list"]);
       expect(defaultList.out).toContain("The vault is empty.");
       const rootedList = await runVault(["list", "--root", otherRoot]);

@@ -1,34 +1,34 @@
-# Linsight one-line installer for Windows.
+# JiuMate one-line installer for Windows.
 #
-#   irm https://linsight.ooo/install.ps1 | iex
+#   irm https://jiumate.ooo/install.ps1 | iex
 #
 # Options:
-#   $env:LINSIGHT_VERSION = "vX.Y.Z"     choose a version (same as -Version vX.Y.Z); a published Release
+#   $env:JIUMATE_VERSION = "vX.Y.Z"     choose a version (same as -Version vX.Y.Z); a published Release
 #                                         installer defaults to its own version, an unstamped source copy to latest
-#   $env:LINSIGHT_INSTALL_DIR = "<dir>"  install dir; default $env:USERPROFILE\.linsight
-#   $env:LINSIGHT_ARCHIVE = "<file>"     install a local Release zip without network access (same as -ArchivePath)
-#   $env:LINSIGHT_DOWNLOAD_SOURCE = "auto|oss|github" choose the online source; default auto
+#   $env:JIUMATE_INSTALL_DIR = "<dir>"  install dir; default $env:USERPROFILE\.jiumate
+#   $env:JIUMATE_ARCHIVE = "<file>"     install a local Release zip without network access (same as -ArchivePath)
+#   $env:JIUMATE_DOWNLOAD_SOURCE = "auto|oss|github" choose the online source; default auto
 #                                         (speed-probed, with the same-version other source as fallback)
-#   $env:LINSIGHT_DOWNLOAD_SPEED_PROBE = "0" disable same-version OSS/GitHub probe timing in auto mode
-#   $env:LINSIGHT_DOWNLOAD_BASE_URL = "https://..." exact online asset directory selected by the stable forwarder
-#   $env:LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL = "https://..." fallback for LINSIGHT_DOWNLOAD_BASE_URL
+#   $env:JIUMATE_DOWNLOAD_SPEED_PROBE = "0" disable same-version OSS/GitHub probe timing in auto mode
+#   $env:JIUMATE_DOWNLOAD_BASE_URL = "https://..." exact online asset directory selected by the stable forwarder
+#   $env:JIUMATE_DOWNLOAD_FALLBACK_BASE_URL = "https://..." fallback for JIUMATE_DOWNLOAD_BASE_URL
 #
-# Each Release attaches exactly one Windows artifact: linsight-win32-x64.zip, a shallow installer
+# Each Release attaches exactly one Windows artifact: jiumate-win32-x64.zip, a shallow installer
 # bundle holding install.cmd, this script, the program payload (payload.zip) and the payload's
 # checksum. Online installs download that bundle and verify it against its published .sha256;
 # offline installs transfer the same single file, extract it once (the outer layer is flat, so
 # no deep paths are created) and double-click install.cmd. Both paths verify the payload
 # checksum sealed inside the bundle, then expand the payload straight into the short staging
-# directory. Releases up to v0.1.5 shipped the program tree directly (top-level linsight\);
+# directory. Releases up to v0.1.5 shipped the program tree directly (top-level jiumate\);
 # such zips are still accepted, from -Version pins and -ArchivePath files alike.
 #
 # There is no -Universal on Windows: where the zip is unsuitable, install Node.js >= 24 and run
-# `npm install -g @prismshadow/linsight-cli` instead.
+# `npm install -g @prismshadow/jiumate-cli` instead.
 #
-# The data dir (%USERPROFILE%\.linsight\data) sits under the install home but is never touched by
+# The data dir (%USERPROFILE%\.jiumate\data) sits under the install home but is never touched by
 # reinstall/upgrade (which only replace bin/lib/web/node/git). Upgrading = re-running this installer.
 #
-# Docs: https://linsight.ooo/docs/quickstart-cli
+# Docs: https://jiumate.ooo/docs/quickstart-cli
 param(
   [string]$Version = "",
   [string]$InstallDir = "",
@@ -38,14 +38,14 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue" # Invoke-WebRequest progress rendering slows downloads massively on PS 5.1
 
-$Repo = "https://github.com/qiaiqian67/linsight"
-$OssOrigin = "https://linsight-releases.oss-cn-beijing.aliyuncs.com"
+$Repo = "https://github.com/qiaiqian67/jiumate"
+$OssOrigin = "https://jiumate-releases.oss-cn-beijing.aliyuncs.com"
 $OssReleaseRoot = "$OssOrigin/releases"
 $GitHubReleaseRoot = "$Repo/releases/download"
 $GitHubLatestBase = "$Repo/releases/latest/download"
-$Asset = "linsight-win32-x64.zip"
+$Asset = "jiumate-win32-x64.zip"
 # Auto-mode source selection, one rule shared by install.ps1, install.sh and the download page on
-# linsight.ooo (packages/landing/src/lib/download-source.ts):
+# jiumate.ooo (packages/landing/src/lib/download-source.ts):
 #
 #   1. Measure GitHub on the release's large probe file. At or above
 #      $SpeedProbeGitHubMinBytesPerSecond it wins outright and OSS is never touched.
@@ -70,10 +70,10 @@ $SpeedProbeOssSwitchRatio = 1.5
 $PayloadName = "payload.zip"
 # The release workflow replaces this token with the immutable tag before publishing both the
 # standalone installer and the copy sealed inside the Windows bundle.
-$EmbeddedReleaseVersion = "__LINSIGHT_RELEASE_VERSION__"
+$EmbeddedReleaseVersion = "__JIUMATE_RELEASE_VERSION__"
 
 function Fail([string]$Message) {
-  # `throw` rather than `exit`: the linsight.ooo forwarder runs this installer as an in-memory
+  # `throw` rather than `exit`: the jiumate.ooo forwarder runs this installer as an in-memory
   # script block (see packages/landing/public/install.ps1), where `exit` would terminate the
   # user's whole PowerShell session. `throw` aborts cleanly in both file and script-block runs.
   throw "error: $Message"
@@ -81,7 +81,7 @@ function Fail([string]$Message) {
 
 # Lists a zip's top-level entry names without extracting (PS 5.1-safe; Expand-Archive itself
 # uses the same .NET type). Used to tell an installer bundle (contains payload.zip) from a
-# program archive (payload.zip itself, or a pre-0.1.6 release zip with a top-level linsight\).
+# program archive (payload.zip itself, or a pre-0.1.6 release zip with a top-level jiumate\).
 function Get-ZipEntryNames([string]$ZipPath) {
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   $Zip = [IO.Compression.ZipFile]::OpenRead($ZipPath)
@@ -193,7 +193,7 @@ function Read-ReleaseDownloadManifest([string]$Tag, [string]$ManifestPath, [Date
 
   $Lines = [IO.File]::ReadAllLines($ManifestPath, [Text.UTF8Encoding]::new($false))
   if ($Lines.Count -lt 4) { return $null }
-  if ($Lines[0] -ne "linsight-release-download-manifest`t1`t$Tag") { return $null }
+  if ($Lines[0] -ne "jiumate-release-download-manifest`t1`t$Tag") { return $null }
 
   $SmallProbe = $null
   $LargeProbe = $null
@@ -351,31 +351,31 @@ function Restore-PreviousInstall(
 }
 
 # --- Resolve options (parameters win over env vars, mirroring install.sh's --version) ---
-if (-not $Version) { $Version = if ($env:LINSIGHT_VERSION) { $env:LINSIGHT_VERSION } else { "" } }
+if (-not $Version) { $Version = if ($env:JIUMATE_VERSION) { $env:JIUMATE_VERSION } else { "" } }
 if (-not $InstallDir) {
-  $InstallDir = if ($env:LINSIGHT_INSTALL_DIR) { $env:LINSIGHT_INSTALL_DIR } else { Join-Path $env:USERPROFILE ".linsight" }
+  $InstallDir = if ($env:JIUMATE_INSTALL_DIR) { $env:JIUMATE_INSTALL_DIR } else { Join-Path $env:USERPROFILE ".jiumate" }
 }
 if (-not $ArchivePath) {
-  $ArchivePath = if ($env:LINSIGHT_ARCHIVE) { $env:LINSIGHT_ARCHIVE } else { "" }
+  $ArchivePath = if ($env:JIUMATE_ARCHIVE) { $env:JIUMATE_ARCHIVE } else { "" }
 }
-$DownloadBaseUrl = if ($env:LINSIGHT_DOWNLOAD_BASE_URL) {
-  $env:LINSIGHT_DOWNLOAD_BASE_URL.TrimEnd('/')
+$DownloadBaseUrl = if ($env:JIUMATE_DOWNLOAD_BASE_URL) {
+  $env:JIUMATE_DOWNLOAD_BASE_URL.TrimEnd('/')
 } else {
   ""
 }
-$DownloadFallbackBaseUrl = if ($env:LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL) {
-  $env:LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL.TrimEnd('/')
+$DownloadFallbackBaseUrl = if ($env:JIUMATE_DOWNLOAD_FALLBACK_BASE_URL) {
+  $env:JIUMATE_DOWNLOAD_FALLBACK_BASE_URL.TrimEnd('/')
 } else {
   ""
 }
 if (-not $DownloadBaseUrl) { $DownloadFallbackBaseUrl = "" }
-$SourceMode = if ($env:LINSIGHT_DOWNLOAD_SOURCE) {
-  $env:LINSIGHT_DOWNLOAD_SOURCE.ToLowerInvariant()
+$SourceMode = if ($env:JIUMATE_DOWNLOAD_SOURCE) {
+  $env:JIUMATE_DOWNLOAD_SOURCE.ToLowerInvariant()
 } else {
   "auto"
 }
-$DownloadSpeedProbe = if ($env:LINSIGHT_DOWNLOAD_SPEED_PROBE) {
-  $env:LINSIGHT_DOWNLOAD_SPEED_PROBE
+$DownloadSpeedProbe = if ($env:JIUMATE_DOWNLOAD_SPEED_PROBE) {
+  $env:JIUMATE_DOWNLOAD_SPEED_PROBE
 } else {
   "1"
 }
@@ -387,16 +387,16 @@ if (-not $ArchivePath -and $PSScriptRoot) {
   if (Test-Path -LiteralPath $SiblingArchive -PathType Leaf) { $ArchivePath = $SiblingArchive }
 }
 if ($ArchivePath -and $Version) {
-  Fail "-ArchivePath/LINSIGHT_ARCHIVE cannot be combined with -Version/LINSIGHT_VERSION"
+  Fail "-ArchivePath/JIUMATE_ARCHIVE cannot be combined with -Version/JIUMATE_VERSION"
 }
 if ($Version -and -not (Test-ReleaseTag $Version)) {
   Fail "invalid release version: $Version"
 }
 if ($SourceMode -notin @("auto", "oss", "github")) {
-  Fail "LINSIGHT_DOWNLOAD_SOURCE must be auto, oss, or github"
+  Fail "JIUMATE_DOWNLOAD_SOURCE must be auto, oss, or github"
 }
 if ($DownloadSpeedProbe -notin @("0", "1")) {
-  Fail "LINSIGHT_DOWNLOAD_SPEED_PROBE must be 0 or 1"
+  Fail "JIUMATE_DOWNLOAD_SPEED_PROBE must be 0 or 1"
 }
 $ResolvedReleaseVersion = if ($Version) {
   $Version
@@ -406,15 +406,15 @@ $ResolvedReleaseVersion = if ($Version) {
   ""
 }
 if ($DownloadBaseUrl) {
-  Assert-HttpsUrl "LINSIGHT_DOWNLOAD_BASE_URL" $DownloadBaseUrl
+  Assert-HttpsUrl "JIUMATE_DOWNLOAD_BASE_URL" $DownloadBaseUrl
 }
 if ($DownloadBaseUrl -and $DownloadFallbackBaseUrl) {
-  Assert-HttpsUrl "LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL" $DownloadFallbackBaseUrl
+  Assert-HttpsUrl "JIUMATE_DOWNLOAD_FALLBACK_BASE_URL" $DownloadFallbackBaseUrl
 }
 
 # --- Platform preconditions: 64-bit Windows; the only Windows package is x64 (ARM64 runs it emulated) ---
 if (-not [Environment]::Is64BitOperatingSystem) {
-  Fail "32-bit Windows is not supported. Install Node.js >= 24 and use: npm install -g @prismshadow/linsight-cli"
+  Fail "32-bit Windows is not supported. Install Node.js >= 24 and use: npm install -g @prismshadow/jiumate-cli"
 }
 if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
   Write-Host "note: no native ARM64 package yet; installing the x64 package (runs via emulation)."
@@ -431,7 +431,7 @@ try {
 #     uses its own immutable version: auto prefers OSS and falls back only to the same GitHub
 #     tag. An unstamped source-tree installer resolves latest.json first so it also locks one
 #     version before downloading assets. ---
-$Tmp = Join-Path ([IO.Path]::GetTempPath()) "linsight-install-$PID"
+$Tmp = Join-Path ([IO.Path]::GetTempPath()) "jiumate-install-$PID"
 if (Test-Path $Tmp) { Remove-Item -Recurse -Force $Tmp }
 New-Item -ItemType Directory -Path $Tmp | Out-Null
 # Pre-declare so the finally block can read them even when an early failure skipped the
@@ -505,7 +505,7 @@ try {
 
   # --- Resolve the program payload. An installer bundle (contains payload.zip) is opened flat
   #     and its sealed payload checksum verified; a program archive (payload.zip itself, or a
-  #     pre-0.1.6 release zip with a top-level linsight\) is used directly. ---
+  #     pre-0.1.6 release zip with a top-level jiumate\) is used directly. ---
   $ArchiveShape = if ((Get-ZipEntryNames $ZipPath) -contains $PayloadName) { "bundle" } else { "program" }
   if ($ArchiveShape -eq "bundle") {
     # A local bundle is self-verifying through its sealed payload checksum; when the published
@@ -546,7 +546,7 @@ try {
 
   # --- Extract into staging, then swap by same-volume renames. Keep the previous dirs in .old.$PID
   #    until the installed command runs successfully; any move or launch failure restores them.
-  #    The data dir (%USERPROFILE%\.linsight\data) is never part of the swap. ---
+  #    The data dir (%USERPROFILE%\.jiumate\data) is never part of the swap. ---
   New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
   $Staging = Join-Path $InstallDir ".staging.$PID"
   $OldDir = Join-Path $InstallDir ".old.$PID"
@@ -556,9 +556,9 @@ try {
 
   Write-Host "Extracting ..."
   Expand-Archive -LiteralPath $ZipPath -DestinationPath $Staging -Force
-  $NewRoot = Join-Path $Staging "linsight"
-  if (-not (Test-Path $NewRoot)) { Fail "unexpected archive layout: top-level linsight\ missing." }
-  if (-not (Test-Path (Join-Path $NewRoot "bin"))) { Fail "unexpected archive layout: linsight\bin missing." }
+  $NewRoot = Join-Path $Staging "jiumate"
+  if (-not (Test-Path $NewRoot)) { Fail "unexpected archive layout: top-level jiumate\ missing." }
+  if (-not (Test-Path (Join-Path $NewRoot "bin"))) { Fail "unexpected archive layout: jiumate\bin missing." }
   $ManifestPath = Join-Path $NewRoot "package-manifest.json"
   if (Test-Path -LiteralPath $ManifestPath -PathType Leaf) {
     try {
@@ -599,24 +599,24 @@ try {
     }
 
     # --- Launcher shim: shipped in the payload; (re)generated only when missing. There is
-    #     deliberately no linsight.ps1 launcher — PowerShell would prefer it over linsight.cmd on
+    #     deliberately no jiumate.ps1 launcher — PowerShell would prefer it over jiumate.cmd on
     #     PATH, and client Windows defaults to the Restricted execution policy, so a .ps1
-    #     launcher makes the plain `linsight` command fail with "running scripts is disabled".
-    #     Batch files are policy-exempt and both PowerShell and cmd.exe resolve linsight.cmd.
-    #     (bin\ is swapped wholesale above, so upgrading also removes the linsight.ps1 that
+    #     launcher makes the plain `jiumate` command fail with "running scripts is disabled".
+    #     Batch files are policy-exempt and both PowerShell and cmd.exe resolve jiumate.cmd.
+    #     (bin\ is swapped wholesale above, so upgrading also removes the jiumate.ps1 that
     #     pre-0.1.6 payloads shipped.) ---
-    $CmdShim = Join-Path $InstallDir "bin\linsight.cmd"
+    $CmdShim = Join-Path $InstallDir "bin\jiumate.cmd"
     if (-not (Test-Path -LiteralPath $CmdShim)) {
       @(
         '@echo off'
         'setlocal'
         'set "DIR=%~dp0.."'
-        'if not defined LINSIGHT_WEB_DIST set "LINSIGHT_WEB_DIST=%DIR%\web"'
-        'if exist "%DIR%\git\usr\bin\sh.exe" set "LINSIGHT_BUNDLED_SHELL=%DIR%\git\usr\bin\sh.exe"'
+        'if not defined JIUMATE_WEB_DIST set "JIUMATE_WEB_DIST=%DIR%\web"'
+        'if exist "%DIR%\git\usr\bin\sh.exe" set "JIUMATE_BUNDLED_SHELL=%DIR%\git\usr\bin\sh.exe"'
         'if exist "%DIR%\node\node.exe" ('
-        '  "%DIR%\node\node.exe" "%DIR%\lib\dist\linsight.js" %*'
+        '  "%DIR%\node\node.exe" "%DIR%\lib\dist\jiumate.js" %*'
         ') else ('
-        '  node "%DIR%\lib\dist\linsight.js" %*'
+        '  node "%DIR%\lib\dist\jiumate.js" %*'
         ')'
         'exit /b %ERRORLEVEL%'
       ) | Set-Content -LiteralPath $CmdShim -Encoding ascii
@@ -637,17 +637,17 @@ try {
       $ErrorActionPreference = $PreviousErrorActionPreference
     }
     if ($VersionExitCode -ne 0) {
-      Fail "installed Linsight failed to run (exit code $VersionExitCode). See the error above."
+      Fail "installed JiuMate failed to run (exit code $VersionExitCode). See the error above."
     }
     $InstalledVersion = $VersionOutput | Select-Object -First 1
     if ([string]::IsNullOrWhiteSpace([string]$InstalledVersion)) {
-      Fail "installed Linsight returned an empty version."
+      Fail "installed JiuMate returned an empty version."
     }
   } catch {
     $InstallFailure = $_
     try {
       Restore-PreviousInstall -InstallDir $InstallDir -OldDir $OldDir -MovedOld $MovedOld -MovedNew $MovedNew
-      Write-Host "Previous Linsight installation restored."
+      Write-Host "Previous JiuMate installation restored."
     } catch {
       throw "error: installation failed and automatic rollback was incomplete. Original error: $($InstallFailure.Exception.Message) Rollback error: $($_.Exception.Message) Previous files may remain in $OldDir"
     }
@@ -656,7 +656,7 @@ try {
 
   Remove-Item -LiteralPath $OldDir -Recurse -Force -ErrorAction SilentlyContinue
   if (Test-Path -LiteralPath $OldDir) {
-    Write-Host "warning: could not fully remove $OldDir; delete it after closing running linsight processes."
+    Write-Host "warning: could not fully remove $OldDir; delete it after closing running jiumate processes."
   }
 } finally {
   Remove-Item -LiteralPath $Tmp -Recurse -Force -ErrorAction SilentlyContinue
@@ -695,35 +695,35 @@ if ($env:OS -eq "Windows_NT") {
       # logon. Broadcast it the way [Environment]::SetEnvironmentVariable would; best-effort,
       # a failure only means new terminals need a fresh logon to see the Path.
       try {
-        if (-not ("LinsightInstaller.NativeMethods" -as [type])) {
-          Add-Type -Namespace LinsightInstaller -Name NativeMethods -MemberDefinition @'
+        if (-not ("JiuMateInstaller.NativeMethods" -as [type])) {
+          Add-Type -Namespace JiuMateInstaller -Name NativeMethods -MemberDefinition @'
 [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
 public static extern System.IntPtr SendMessageTimeout(System.IntPtr hWnd, uint Msg, System.UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out System.UIntPtr lpdwResult);
 '@
         }
         $BroadcastResult = [UIntPtr]::Zero
         # HWND_BROADCAST (0xffff), WM_SETTINGCHANGE (0x1a), SMTO_ABORTIFHUNG (0x2), 5s timeout.
-        [LinsightInstaller.NativeMethods]::SendMessageTimeout([IntPtr]0xffff, 0x1a, [UIntPtr]::Zero,
+        [JiuMateInstaller.NativeMethods]::SendMessageTimeout([IntPtr]0xffff, 0x1a, [UIntPtr]::Zero,
           "Environment", 2, 5000, [ref]$BroadcastResult) | Out-Null
       } catch {
       }
-      $PathUpdateMessage = "note: installation succeeded and $BinDir was appended to your user Path. Open a new terminal window so 'linsight' is found (a new tab of an already-running terminal keeps the old Path)."
+      $PathUpdateMessage = "note: installation succeeded and $BinDir was appended to your user Path. Open a new terminal window so 'jiumate' is found (a new tab of an already-running terminal keeps the old Path)."
     }
   } finally {
     $EnvKey.Close()
   }
 }
-# Make `linsight` work in this session too.
+# Make `jiumate` work in this session too.
 if (($env:Path -split ";") -notcontains $BinDir) { $env:Path = "$env:Path;$BinDir" }
 
 Write-Host ""
-Write-Host "Linsight $InstalledVersion installed to $InstallDir"
+Write-Host "JiuMate $InstalledVersion installed to $InstallDir"
 if ($PathUpdateMessage) {
   Write-Host ""
   Write-Host $PathUpdateMessage
 }
 Write-Host ""
 Write-Host "Get started:"
-Write-Host "  linsight --help    # all commands"
-Write-Host "  linsight web       # start the Web UI at http://127.0.0.1:7364 (a first-login link is printed on first start)"
-Write-Host "  linsight server    # headless server (PORT / HOST to override)"
+Write-Host "  jiumate --help    # all commands"
+Write-Host "  jiumate web       # start the Web UI at http://127.0.0.1:7364 (a first-login link is printed on first start)"
+Write-Host "  jiumate server    # headless server (PORT / HOST to override)"

@@ -25,7 +25,7 @@ const client = new AutoLLMClient({ model: "<model_id>", apiKey: "<key>", baseUrl
 
 If the user's message only invokes this skill (e.g. "use agenthub-models skill") without a concrete task, ask the user what they want to build. Do not write code until the requirement is clear.
 
-**Important prerequisite — set the key up first, then develop.** When the script is an AI app you are building for the user, have them add the model API key in **this agent's key vault** (gear icon on its card, Agents page → settings → key vault tab) *before* you start, so the credential is in your shell environment. If the app stores its own model config, keep its Linsight data root **inside the CWD workspace** (`--root ./linsight_data`), never `~/.linsight`. Model ids can come from the linsight CLI catalog and the id table below.
+**Important prerequisite — set the key up first, then develop.** When the script is an AI app you are building for the user, have them add the model API key in **this agent's key vault** (gear icon on its card, Agents page → settings → key vault tab) *before* you start, so the credential is in your shell environment. If the app stores its own model config, keep its JiuMate data root **inside the CWD workspace** (`--root ./jiumate_data`), never `~/.jiumate`. Model ids can come from the jiumate CLI catalog and the id table below.
 
 Check for a usable API key before writing code — the client needs one for whichever provider you target:
 
@@ -33,11 +33,11 @@ Check for a usable API key before writing code — the client needs one for whic
 env | grep -oE "(DEEPSEEK|OPENAI|ANTHROPIC|GEMINI|ZAI|MOONSHOT|MINIMAX)_API_KEY" || echo none
 ```
 
-Vault keys also appear in your Vault Keys section. **Only two sources count as a usable key**: a vault-injected environment variable (the check above), or — when the app stores its own model config — a key already configured in the app's own data root (`linsight config model list --root <data_dir>`). Keys living in the global `~/.linsight` or any other `.linsight` directory do **not** count — a bare `linsight config model list` (no `--root`) reads the global store, because the CLI defaults to the global root unless `--root` is given, so a key showing up there proves nothing for your script and must never be used or copied.
+Vault keys also appear in your Vault Keys section. **Only two sources count as a usable key**: a vault-injected environment variable (the check above), or — when the app stores its own model config — a key already configured in the app's own data root (`jiumate config model list --root <data_dir>`). Keys living in the global `~/.jiumate` or any other `.jiumate` directory do **not** count — a bare `jiumate config model list` (no `--root`) reads the global store, because the CLI defaults to the global root unless `--root` is given, so a key showing up there proves nothing for your script and must never be used or copied.
 
 If neither counted source yields a usable key, **stop immediately and ask the user to configure one — do not write code, and do not keep calling tools to retry**: ask them to add one in the agent's **key vault** (gear icon on the agent's card, Agents page → settings → key vault tab); vault values reach your shell environment on the next task. Re-checking the environment or the vault in a loop just wastes turns — one clear check, then hand back to the user.
 
-Keep model API keys **project-local**: for an app that stores its own model config, write the key into the project under the working directory with the linsight CLI, **always passing `--root <data_dir>` for a directory inside the current working directory** (`linsight config model add --root ./linsight_data --provider <group> --model-id <id> --api-key <key>`) — without `--root` it writes to the global `~/.linsight/data` instead. `--provider` is required alongside `--model-id`: a model entry is the `(provider, model_id)` pair and the group is never inferred (use `custom` for an endpoint outside the built-in groups). Otherwise rely on vault-injected environment variables. Never read, copy or fall back to model keys stored in the user's global `~/.linsight` directory — that config belongs to the person running Linsight, not to your script.
+Keep model API keys **project-local**: for an app that stores its own model config, write the key into the project under the working directory with the jiumate CLI, **always passing `--root <data_dir>` for a directory inside the current working directory** (`jiumate config model add --root ./jiumate_data --provider <group> --model-id <id> --api-key <key>`) — without `--root` it writes to the global `~/.jiumate/data` instead. `--provider` is required alongside `--model-id`: a model entry is the `(provider, model_id)` pair and the group is never inferred (use `custom` for an endpoint outside the built-in groups). Otherwise rely on vault-injected environment variables. Never read, copy or fall back to model keys stored in the user's global `~/.jiumate` directory — that config belongs to the person running JiuMate, not to your script.
 
 ## Model IDs
 
@@ -158,7 +158,7 @@ import fs from "node:fs";
 
 const client = new AutoLLMClient({ model: "gemini-3.1-flash-image" });
 for await (const event of client.streamingResponseStateful({
-  message: { role: "user", content_items: [{ type: "text", text: "A linsight on a glacier" }] },
+  message: { role: "user", content_items: [{ type: "text", text: "A jiumate on a glacier" }] },
   config: { image_config: { aspect_ratio: "16:9", image_size: "2K" } },
 })) {
   for (const item of event.content_items) {

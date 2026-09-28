@@ -5,7 +5,7 @@ description: Complete software-engineering tasks — investigate and review code
 
 # Software Engineering
 
-This skill guides Linsight through general software-engineering work, including code investigation, reviews, bug fixes, features, refactors, and verified handoff.
+This skill guides JiuMate through general software-engineering work, including code investigation, reviews, bug fixes, features, refactors, and verified handoff.
 
 ## Before you start
 

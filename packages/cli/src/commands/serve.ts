@@ -1,29 +1,29 @@
 /**
- * `linsight server` / `linsight web` — starts the Web service.
+ * `jiumate server` / `jiumate web` — starts the Web service.
  *
- *   linsight server [--port <port>] [--host <host>]
- *   linsight server reset-admin-password        (subcommand, see reset-password.ts)
- *   linsight web [--port <port>] [--host <host>] [--no-open]
+ *   jiumate server [--port <port>] [--host <host>]
+ *   jiumate server reset-admin-password        (subcommand, see reset-password.ts)
+ *   jiumate web [--port <port>] [--host <host>] [--no-open]
  *
  * Both are entry points into the same service process: after setting PORT / HOST, it
- * dynamically imports `@prismshadow/linsight-server` (whose entry point handles dotenv
+ * dynamically imports `@prismshadow/jiumate-server` (whose entry point handles dotenv
  * loading and graceful shutdown on its own), so the two never listen on separate ports
  * in parallel. Port/host priority: command-line option > existing environment variable
- * (including .env) > default 7364 / 127.0.0.1. `linsight web` additionally polls until the
+ * (including .env) > default 7364 / 127.0.0.1. `jiumate web` additionally polls until the
  * service is ready, prints the URL, and opens a browser per-platform (`--no-open`
- * disables this). Before the import, LINSIGHT_CLI_ENTRY is exported (when node can re-run
- * this entry) so the server's admin self-update endpoint can invoke `linsight update`.
+ * disables this). Before the import, JIUMATE_CLI_ENTRY is exported (when node can re-run
+ * this entry) so the server's admin self-update endpoint can invoke `jiumate update`.
  *
  * Supervision: when plain node can re-run this entry, the service runs as a CHILD process
- * (`node <entry> server …`, marked LINSIGHT_SERVE_CHILD=1) and this process stays behind
+ * (`node <entry> server …`, marked JIUMATE_SERVE_CHILD=1) and this process stays behind
  * as its supervisor — it forwards the terminal's signals, exits with the child's code, and
  * relaunches the child when it exits with core's SERVER_RESTART_EXIT_CODE. That exit is
- * what the Web App's "restart to update" asks for once `linsight update` has replaced the
+ * what the Web App's "restart to update" asks for once `jiumate update` has replaced the
  * install: the relaunch re-resolves the same entry path, which now holds the new release.
- * The child is told a supervisor is there (LINSIGHT_SUPERVISED=1); a dev run through tsx
+ * The child is told a supervisor is there (JIUMATE_SUPERVISED=1); a dev run through tsx
  * cannot be re-spawned by node and runs in-process as before, where the server reports
  * that a restart must be done by hand.
- * Docs: /docs/cli § "linsight server / linsight web".
+ * Docs: /docs/cli § "jiumate server / jiumate web".
  */
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
@@ -32,8 +32,8 @@ import {
   DEFAULT_SERVER_PORT,
   SERVER_RESTART_EXIT_CODE,
   resolveRoot,
-} from "@prismshadow/linsight-core";
-import { liveServerLock } from "@prismshadow/linsight-server/lock";
+} from "@prismshadow/jiumate-core";
+import { liveServerLock } from "@prismshadow/jiumate-server/lock";
 import type { Command } from "commander";
 import type { Messages, WebProbeFailureKind } from "../i18n.js";
 import { registerResetPasswordCommand } from "./reset-password.js";
@@ -106,19 +106,19 @@ export function cliEntryFor(argv1: string | undefined): string | null {
  */
 /**
  * Pre-start lock check: the App URL of a live server already owning the data root this
- * process would use (same resolution as the server: LINSIGHT_HOME or the default root),
+ * process would use (same resolution as the server: JIUMATE_HOME or the default root),
  * or null. The server itself re-checks on startup (the in-process backstop); checking
- * here keeps the friendly path — `linsight server` refuses with the URL, `linsight web`
+ * here keeps the friendly path — `jiumate server` refuses with the URL, `jiumate web`
  * simply opens the existing instance. Locks live per data root, so a second server on a
- * DIFFERENT root is untouched. See @prismshadow/linsight-server/lock.
+ * DIFFERENT root is untouched. See @prismshadow/jiumate-server/lock.
  */
 async function existingInstanceUrl(): Promise<string | null> {
   const lock = await liveServerLock(resolveRoot());
   return lock === null ? null : `http://localhost:${lock.port}/`;
 }
 
-/** Marks the service child a supervising `linsight server|web` spawned: it runs the server in-process. */
-export const SERVE_CHILD_ENV = "LINSIGHT_SERVE_CHILD";
+/** Marks the service child a supervising `jiumate server|web` spawned: it runs the server in-process. */
+export const SERVE_CHILD_ENV = "JIUMATE_SERVE_CHILD";
 
 /** What the supervisor does when its child exits (pure; exported for unit tests). */
 export function supervisorDecision(
@@ -143,7 +143,7 @@ function supervise(cliEntry: string, host: string, port: number, t: Messages): v
   const spawnChild = (): void => {
     child = spawn(process.execPath, [cliEntry, "server", "--port", String(port), "--host", host], {
       stdio: "inherit",
-      env: { ...process.env, [SERVE_CHILD_ENV]: "1", LINSIGHT_SUPERVISED: "1" },
+      env: { ...process.env, [SERVE_CHILD_ENV]: "1", JIUMATE_SUPERVISED: "1" },
     });
     child.on("exit", (code, signal) => {
       const decision = supervisorDecision({ code, signal }, stopping);
@@ -185,7 +185,7 @@ async function startServer(
   // run) the variable stays unset and the endpoint reports "unsupported".
   const cliEntry = cliEntryFor(process.argv[1]);
   if (cliEntry !== null) {
-    process.env.LINSIGHT_CLI_ENTRY = cliEntry;
+    process.env.JIUMATE_CLI_ENTRY = cliEntry;
   }
   // The same re-runnable entry is what makes supervision possible: the child is exactly
   // this command again, marked as the child so it does not supervise in turn.
@@ -193,7 +193,7 @@ async function startServer(
     supervise(cliEntry, host, port, t);
     return { host, port };
   }
-  await import("@prismshadow/linsight-server");
+  await import("@prismshadow/jiumate-server");
   return { host, port };
 }
 
@@ -343,7 +343,7 @@ export function registerServeCommands(program: Command, t: Messages): void {
       }
       await startServer(opts, t);
     });
-  // Bare `linsight server` still starts the service (commander runs the action when no
+  // Bare `jiumate server` still starts the service (commander runs the action when no
   // subcommand is named); the subcommand only dispatches on an exact name match.
   registerResetPasswordCommand(server, t);
   registerStatusCommand(server, t);

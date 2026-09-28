@@ -63,7 +63,7 @@ description: 我们识别出的能力空白(A–F),以及按 T-shirt 规模分�
 |---|---|
 | 没有 tab completion、没有历史文件 | `node:readline` completer API + `node:fs` 历史 |
 | 没有 OAuth / SSO | 与 server 同步 |
-| 没有 pipeline / DAG 编排 | `linsight pipeline`(任务 DAG) |
+| 没有 pipeline / DAG 编排 | `jiumate pipeline`(任务 DAG) |
 
 ## E. 数据 / 部署 / 文档
 

@@ -2,7 +2,7 @@
  * Vite config: static landing page (React SPA + Tailwind CSS 4).
  *
  * BASE_PATH is injected by the GitHub Pages workflow ("/" — the site is served from the
- * custom apex domain https://linsight.ooo/); local dev and previews also default to "/".
+ * custom apex domain https://jiumate.ooo/); local dev and previews also default to "/".
  * Blog posts are local Markdown files imported at build time via import.meta.glob (?raw),
  * so the built site is fully static — no server or CMS involved.
  */
@@ -13,7 +13,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
   base: process.env.BASE_PATH ?? "/",
   plugins: [react(), tailwindcss()],
-  // Fixed Linsight dev port (stands alone — only the main server default is
+  // Fixed JiuMate dev port (stands alone — only the main server default is
   // shared, as DEFAULT_SERVER_PORT in core; vite configs cannot import core TS).
   server: { port: 7366 },
 });

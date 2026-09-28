@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SessionInfo } from "@prismshadow/linsight-server/api";
+import type { SessionInfo } from "@prismshadow/jiumate-server/api";
 import { sessionForProject, sessionProbeKey } from "../src/features/chat/session-project";
 
 const SESSION: SessionInfo = {

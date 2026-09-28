@@ -30,7 +30,7 @@ import type {
   SkillMetadataItem,
   SubagentRuntimeInfo,
   TaskInputPart,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import { ApiError } from "../../api/client";
 import { abortSubagent, getAgentSkills, messageSubagent, patchSession } from "../../api/endpoints";
 import { toastError } from "../../components/ui/toast";

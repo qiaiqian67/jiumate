@@ -1,8 +1,8 @@
 #!/bin/bash
 # Deb post-install (electron-builder deb.afterInstall). Overriding the option REPLACES
 # electron-builder's default template, so this file is that default (app-builder-lib
-# templates/linux/after-install.tpl, v26.15.3) verbatim, plus the marked Linsight
-# section exposing the bundled `linsight` CLI launcher on PATH. The dollar-brace forms
+# templates/linux/after-install.tpl, v26.15.3) verbatim, plus the marked JiuMate
+# section exposing the bundled `jiumate` CLI launcher on PATH. The dollar-brace forms
 # are electron-builder template macros (executable, sanitizedProductName); any other
 # all-letter dollar-brace token fails the build, so shell variables stay brace-less.
 
@@ -16,10 +16,10 @@ else
     ln -sf '/opt/${sanitizedProductName}/${executable}' '/usr/bin/${executable}'
 fi
 
-# Linsight: expose the bundled linsight CLI launcher on PATH. Never clobber a real
+# JiuMate: expose the bundled jiumate CLI launcher on PATH. Never clobber a real
 # file of that name; replacing a (possibly stale) symlink keeps re-installs idempotent.
-if [ ! -e '/usr/bin/linsight' ] || [ -L '/usr/bin/linsight' ]; then
-    ln -sf '/opt/${sanitizedProductName}/resources/app/bin/linsight' '/usr/bin/linsight'
+if [ ! -e '/usr/bin/jiumate' ] || [ -L '/usr/bin/jiumate' ]; then
+    ln -sf '/opt/${sanitizedProductName}/resources/app/bin/jiumate' '/usr/bin/jiumate'
 fi
 
 # Check if user namespaces are supported by the kernel and working with a quick test:

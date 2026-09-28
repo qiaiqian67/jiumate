@@ -3,7 +3,7 @@ title: 能力盘点与路线图
 description: 平台当前能做什么、还不能做什么、以及我们打算补齐哪些空白。本页是索引;能力盘点见 capability-inventory,空白分析与优先级见 capability-gaps,决策表见 capability-decisions。
 ---
 
-本页是 Linsight 当前能力的**索引**。原内容按生命周期拆分为独立文档,便于逐项维护与开发:
+本页是 JiuMate 当前能力的**索引**。原内容按生命周期拆分为独立文档,便于逐项维护与开发:
 
 | 文档 | 内容 |
 |---|---|
@@ -26,7 +26,7 @@ description: 平台当前能做什么、还不能做什么、以及我们打算�
 - `packages/core` — SDK 与执行引擎
 - `packages/server` — HTTP API、SSE 流转、调度器、持久化
 - `packages/web` — React 19 SPA
-- `packages/cli` — `linsight` 命令及其子命令
+- `packages/cli` — `jiumate` 命令及其子命令
 - `plugins/*` — 已交付的 12 个插件包
 - `packages/desktop` — Electron 外壳
 - `packages/landing`、`packages/docs` — 公开站点
@@ -40,5 +40,5 @@ description: 平台当前能做什么、还不能做什么、以及我们打算�
 
 - 2026-09-07 —— 首次盘点,基于对所有 package 的源码通读;首版空白分析整理完成。
 - 2026-09-08 —— 新增"协作(G) / 文档编辑(H) / 应用中心(I) / 知识库(J) / 项目级桥接与模型作用域(L) / 实时提醒(M)"六块用户输入草稿,标记为 DRAFT,待用户继续补充后统一立项。
-- 2026-09-08 —— **H.1 候选底座评估**:对 [agi-hub/AGIAgent](https://github.com/agi-hub/AGIAgent) 做尽调,结论是**不引入作底座**(架构重叠 + 栈错位 + 社区体量小),只参考其 GUI 内 Markdown / Mermaid / SVG 编辑器的 UX;Linsight 自走 Web 编辑器 + skill 约束格式 + trace hook 路径。
+- 2026-09-08 —— **H.1 候选底座评估**:对 [agi-hub/AGIAgent](https://github.com/agi-hub/AGIAgent) 做尽调,结论是**不引入作底座**(架构重叠 + 栈错位 + 社区体量小),只参考其 GUI 内 Markdown / Mermaid / SVG 编辑器的 UX;JiuMate 自走 Web 编辑器 + skill 约束格式 + trace hook 路径。
 - 2026-09-08 —— **拆分为 11 文档**:原 capability-matrix 索引页保留(本页),原"能力盘点 / 空白分析+优先级 / 决策表 / DRAFT G–M"各自独立成 10 个新文档,挂在 docs 站 design 段。维护粒度按 package / gap / draft 单项走,方便逐项开发与回归。

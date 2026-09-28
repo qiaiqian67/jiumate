@@ -49,8 +49,8 @@ export function useCompletionNotifications(): void {
         const notification = new Notification(S.notify.taskCompleteTitle, {
           body: S.notify.taskCompleteBody(title),
           // One notification per Session: a newer completion replaces the stale one.
-          tag: `linsight-task-${sessionId}`,
-          icon: "/linsight-logo.svg",
+          tag: `jiumate-task-${sessionId}`,
+          icon: "/jiumate-logo.svg",
         });
         notification.onclick = () => {
           notification.close();

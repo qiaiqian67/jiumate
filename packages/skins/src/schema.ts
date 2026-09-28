@@ -1,5 +1,5 @@
 /**
- * Schema for a Linsight theme package.
+ * Schema for a JiuMate theme package.
  *
  * The format is **Codex Dream Skin's**, adopted rather than translated: a theme declares a
  * palette of ten roles, the shells its artwork holds up under, and how to frame that artwork.
@@ -13,7 +13,7 @@
  *   colors      — the palette, ten roles. See `roles.ts`.
  *   art         — where the subject sits and how to frame it.
  *   image       — one file beside the manifest.
- *   linsight    — optional extras this host understands and upstream ignores.
+ *   jiumate    — optional extras this host understands and upstream ignores.
  *
  * ## What is *not* declared
  *
@@ -76,7 +76,7 @@ export interface SkinBackground {
  * Provenance for a theme imported from a Codex-Dream-Skin package.
  *
  * Their format carries copy for the Codex shell's own chrome (`tagline`, `projectLabel`,
- * `statusText`, …). Linsight has no surface for those strings, so they are kept here rather than
+ * `statusText`, …). JiuMate has no surface for those strings, so they are kept here rather than
  * dropped: a round-trip export can put them back, and nothing has to pretend they were consumed.
  */
 export interface SkinOrigin {

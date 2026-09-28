@@ -29,7 +29,7 @@ import type {
   MemoryImportMode,
   MemoryScopeExport,
   MemoryScopeInfo,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
@@ -97,7 +97,7 @@ const GHOST_LABEL_CLASS =
  * best-effort writes). Only collapsed keys are stored, so new scopes start expanded.
  */
 const collapsedStoreKey = (userId: string, projectId: string, agentId: string): string =>
-  `linsight.memoryCollapsed.${userId}.${projectId}.${agentId}`;
+  `jiumate.memoryCollapsed.${userId}.${projectId}.${agentId}`;
 
 function readCollapsedScopes(key: string | null): Set<string> {
   if (!key) return new Set();

@@ -25,7 +25,7 @@
  */
 
 /** Marker on every message this bridge sends or accepts, so a page's other messages are ignored. */
-const APP = "linsight";
+const APP = "jiumate";
 const TYPE_DOC = "bento-doc";
 const TYPE_READY = "bento-ready";
 const TYPE_UNAVAILABLE = "bento-unavailable";
@@ -88,7 +88,7 @@ export const BENTO_BRIDGE_SCRIPT =
   // The file's own `<title>` is `bento/slides` — the shell's name, not the deck's. The host passes
   // the file name in and it is re-applied every time the runtime reports itself, because the
   // runtime sets its own title on boot and a single write here would be overwritten.
-  "function title(){try{if(window.__linsightDeckTitle)document.title=window.__linsightDeckTitle}catch(e){}}" +
+  "function title(){try{if(window.__jiumateDeckTitle)document.title=window.__jiumateDeckTitle}catch(e){}}" +
   "var n=0,t=setInterval(function(){if(doc()){clearInterval(t);title();post({app:'" +
   APP +
   "',type:'" +
@@ -118,7 +118,7 @@ export const BENTO_BRIDGE_SCRIPT =
  */
 function titleScript(title: string): string {
   const encoded = JSON.stringify(title ?? "").replace(/</g, "\\u003c");
-  return `<script>window.__linsightDeckTitle=${encoded};</script>`;
+  return `<script>window.__jiumateDeckTitle=${encoded};</script>`;
 }
 
 /**

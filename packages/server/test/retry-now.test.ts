@@ -7,8 +7,8 @@
  *   - 404 for foreign/unknown sessions (via the shared resolveSession lookup).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { approvalDecision, assistantText, toolCall, userText } from "@prismshadow/linsight-core";
-import type { ApproveFn, OmniMessage } from "@prismshadow/linsight-core";
+import { approvalDecision, assistantText, toolCall, userText } from "@prismshadow/jiumate-core";
+import type { ApproveFn, OmniMessage } from "@prismshadow/jiumate-core";
 import type { RetryNowResponse } from "../src/api/types.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";

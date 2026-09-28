@@ -18,7 +18,7 @@ import {
   catalogEntryFor,
   effectivePricing,
   userText,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   ModelsResponse,
   ModelTestResponse,

@@ -18,7 +18,7 @@ Treat the current Agent as the **Builder**. Resolve the runtime before creating 
 - `provider` and `model_id` are one complete pair. If the user explicitly supplies both, use that pair. If the user supplies neither, inherit the current Builder Session's `Provider` and `Model ID` from the Environment. Reject a half pair.
 - `thinking_level` is independent. If the user explicitly supplies it, use that value. Otherwise read `model.thinking_level` from the Builder's own `agent_state/system_config.yaml`; when the field is absent, use the normal Agent-config default `medium`.
 
-Write the resolved `thinking_level` into a brand-new target Agent's `model.thinking_level`, preserving all other copied `model` fields. Linsight does not persist `provider` or `model_id` in Agent State, so never add either field to `system_config.yaml`. When the same request continues into Benchmark design, carry the resolved model pair forward explicitly so evaluation uses the Builder runtime instead of a Project default. When configuring an existing Agent, change `model.thinking_level` only when the user explicitly requests that runtime change.
+Write the resolved `thinking_level` into a brand-new target Agent's `model.thinking_level`, preserving all other copied `model` fields. JiuMate does not persist `provider` or `model_id` in Agent State, so never add either field to `system_config.yaml`. When the same request continues into Benchmark design, carry the resolved model pair forward explicitly so evaluation uses the Builder runtime instead of a Project default. When configuring an existing Agent, change `model.thinking_level` only when the user explicitly requests that runtime change.
 
 ## Locate the target agent
 
@@ -64,8 +64,8 @@ Write skills yourself, or fetch existing ones from the internet with shell comma
 
 Library skills can be copied from any agent that already has them (e.g. `default_agent`, which ships the whole library) — copy the entire `skills/<skill_name>/` directory. Common bundles, so you don't under-equip the target:
 
-- **App builder** (builds apps or web frontends): `linsight-sdk`, `web-design`, `agenthub-models`.
-- **Knowledge expert** (answers questions over a document set): usually **no** harness agent is needed — build a RAG app with the linsight-sdk skill instead, and configure the app's embedded agent (below).
+- **App builder** (builds apps or web frontends): `jiumate-sdk`, `web-design`, `agenthub-models`.
+- **Knowledge expert** (answers questions over a document set): usually **no** harness agent is needed — build a RAG app with the jiumate-sdk skill instead, and configure the app's embedded agent (below).
 - **Evaluation loop**: `benchmark-design`, `agent-evaluation`, `agent-optimization`.
 
 When creating a Test Agent, install only the capabilities it needs to solve ordinary tasks.
@@ -100,4 +100,4 @@ Report the target path, whether an existing Agent was configured or a new Agent 
 
 ## The embedded agent of an SDK app
 
-An app built with the linsight-sdk skill carries its own agent inside the project (`createAgent({ root })` initializes `<app>/linsight_data/default_project/agents/default_agent/` on first run). That directory has exactly the layout described here, and everything in this skill applies to it: write the app's persona into its `agent_state/AGENTS.md` (the linsight-sdk recipe keeps the source of truth in the project's `persona.md` and copies it in during ingest), and set `name`/`description` in its `system_config.yaml` so the app is recognizable. This is how "the app becomes an expert on X": the persona lives in the embedded agent's AGENTS.md, not in application code.
+An app built with the jiumate-sdk skill carries its own agent inside the project (`createAgent({ root })` initializes `<app>/jiumate_data/default_project/agents/default_agent/` on first run). That directory has exactly the layout described here, and everything in this skill applies to it: write the app's persona into its `agent_state/AGENTS.md` (the jiumate-sdk recipe keeps the source of truth in the project's `persona.md` and copies it in during ingest), and set `name`/`description` in its `system_config.yaml` so the app is recognizable. This is how "the app becomes an expert on X": the persona lives in the embedded agent's AGENTS.md, not in application code.

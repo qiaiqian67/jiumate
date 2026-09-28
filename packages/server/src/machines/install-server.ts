@@ -14,7 +14,7 @@
  *  mirror); the ssh channel carries only the installer script and the store.
  *
  * The remote is left with exactly what a local install plus a push leaves: the program
- * directory, the `~/.local/bin/linsight` symlink on POSIX, and the data root's hmr/ state.
+ * directory, the `~/.local/bin/jiumate` symlink on POSIX, and the data root's hmr/ state.
  * No sudo, no service units, no profile edits, and the rest of the data root is untouched.
  */
 import { randomBytes } from "node:crypto";
@@ -83,8 +83,8 @@ function harnessSuffix(harnessText: string): string {
  * Resolves what this server would install elsewhere.
  *
  * The base release is read from the running install's own tree — the tarball layout
- * (`<root>/lib/dist/linsight.js` under a `lib/`) or the desktop app's staged payload — the
- * same way `linsight --version` would answer. A development checkout has neither, and
+ * (`<root>/lib/dist/jiumate.js` under a `lib/`) or the desktop app's staged payload — the
+ * same way `jiumate --version` would answer. A development checkout has neither, and
  * answers null: it stands on no release the remote could download.
  */
 export function resolvePushPlan(
@@ -285,7 +285,7 @@ export async function installOnRemote(opts: {
       let where: Parameters<typeof runInstallScriptCommand>[1];
       if (identity.platform === "win32") {
         // A name of our own making: hex only, so it needs no quoting on either side.
-        const name = `linsight-${randomBytes(6).toString("hex")}.ps1`;
+        const name = `jiumate-${randomBytes(6).toString("hex")}.ps1`;
         const local = path.join(os.tmpdir(), name);
         fs.writeFileSync(local, installer);
         windowsTmp = { local, remote: `%USERPROFILE%\\${name}` };

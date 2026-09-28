@@ -3,7 +3,7 @@ title: Server 启动与子系统
 description: 从进程入口到 HTTP 监听的组装顺序、各子系统的对外表面，以及扩展在进程级与 App 级两层生命周期中的位置。
 ---
 
-`server/src/index.ts` 是一个副作用模块：import 它即启动服务——CLI 就是靠这一条契约在自己进程里跑起 server 的。启动次序写在 `main()` 里，每一步是 `LinsightServer` 的一个方法，方法名即步骤名。组装本身又拆成两个函数——`bootAppDeps(config)` 构建运行时核心、发布能力并启动平台（业务面在平台内组装），`createApp(deps)` 组装运行时壳层的 Hono 路由表但不监听——因此测试可以拿到完整的 app 直接 `app.request(...)`，不占端口，也不经过 `index.ts`。
+`server/src/index.ts` 是一个副作用模块：import 它即启动服务——CLI 就是靠这一条契约在自己进程里跑起 server 的。启动次序写在 `main()` 里，每一步是 `JiuMateServer` 的一个方法，方法名即步骤名。组装本身又拆成两个函数——`bootAppDeps(config)` 构建运行时核心、发布能力并启动平台（业务面在平台内组装），`createApp(deps)` 组装运行时壳层的 Hono 路由表但不监听——因此测试可以拿到完整的 app 直接 `app.request(...)`，不占端口，也不经过 `index.ts`。
 
 本页回答两个问题：进程从入口到监听按什么顺序把子系统立起来；每个子系统的**对外表面**（surface）是什么——即别人依赖它的方式：导出类型、HTTP 路由、事件，或扩展拿到的 context 成员。
 
@@ -12,18 +12,18 @@ description: 从进程入口到 HTTP 监听的组装顺序、各子系统的对�
 | 进入方式                              | 机制                                                                                                                                        |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | 直接运行                              | `node dist/index.js`（`server/package.json` 的 `start`）                                                                                    |
-| CLI（`linsight server` / `linsight web`）| 设好 `PORT`/`HOST` 环境变量后**同进程** `import("@prismshadow/linsight-server")`，不 fork；`linsight web` 额外轮询就绪后打开浏览器            |
-| Desktop                               | `utilityProcess.fork` 拉起**独立** server 进程，经环境变量注入 `LINSIGHT_HOME`、`PORT`、`LINSIGHT_DESKTOP_TOKEN`、`LINSIGHT_PORT_FILE`         |
+| CLI（`jiumate server` / `jiumate web`）| 设好 `PORT`/`HOST` 环境变量后**同进程** `import("@prismshadow/jiumate-server")`，不 fork；`jiumate web` 额外轮询就绪后打开浏览器            |
+| Desktop                               | `utilityProcess.fork` 拉起**独立** server 进程，经环境变量注入 `JIUMATE_HOME`、`PORT`、`JIUMATE_DESKTOP_TOKEN`、`JIUMATE_PORT_FILE`         |
 
 三种方式殊途同归：都以同一份环境变量驱动同一个模块。Server 自身的配置只来自环境变量（`server/src/config.ts`）；`system_config.yaml` 是 Agent 级状态，在 Session 运行时才被读取，与 server 启动无关。
 
 ## 启动时序
 
 ```text
-main()  —— 每行一个 LinsightServer 方法
+main()  —— 每行一个 JiuMateServer 方法
 │
 ├─ ① loadEnv · installProxy        dotenv 先行（.env 自己可能定义 HTTP_PROXY），随后全局代理接管 fetch
-├─ ② readConfig                    仅环境变量：LINSIGHT_HOME、PORT、HOST、LINSIGHT_WEB_DB …
+├─ ② readConfig                    仅环境变量：JIUMATE_HOME、PORT、HOST、JIUMATE_WEB_DB …
 ├─ ③ ensureSoleInstance            数据根被另一存活实例持有 → 退出码 3（先于开库）
 ├─ ④ loadExtensions                   读 <root>/extensions.json → import → 装进本进程唯一的 ExtensionHost
 ├─ ⑤ buildDeps = bootAppDeps      开库 → 运行时核心（auth、ChannelHub、HmrHost）→ 发布能力（db/auth/
@@ -102,7 +102,7 @@ platformImpl.create
 - **workflow 重名被拒绝**：`iface.workflow` 是一个 `set` 会抛错的注册表，名字的归属不会随 `extensions.json` 顺序改变。
 - **事件词汇表有类型且只有一处**：`ExtensionEvents` 把每个事件名映射到它的载荷——加一个事件，平台的 emit 端和所有 handler 同时获得类型。
 
-扩展契约（`Extension` / `ExtensionContext` / `ExtensionEvents` / `LinsightInterface` / `LinsightContext`）声明在 SDK 里，即 `@prismshadow/linsight-core/extension`。`LinsightContext` 与 `LinsightInterface` 是开放的：harness 通过对该模块做声明合并，贡献自己拥有的成员——`terminals`——并从 `@prismshadow/linsight-server/extension` 一并再导出。两个子路径都只产出类型。哪些扩展存在由部署的 `<root>/extensions.json` 决定，harness 自身不 import 任何扩展。
+扩展契约（`Extension` / `ExtensionContext` / `ExtensionEvents` / `JiuMateInterface` / `JiuMateContext`）声明在 SDK 里，即 `@prismshadow/jiumate-core/extension`。`JiuMateContext` 与 `JiuMateInterface` 是开放的：harness 通过对该模块做声明合并，贡献自己拥有的成员——`terminals`——并从 `@prismshadow/jiumate-server/extension` 一并再导出。两个子路径都只产出类型。哪些扩展存在由部署的 `<root>/extensions.json` 决定，harness 自身不 import 任何扩展。
 
 ## 子系统一览
 
@@ -111,7 +111,7 @@ platformImpl.create
 | 子系统               | 构建位置                                      | 对外表面                                                                                                     |
 | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | 配置                 | `config.ts` `resolveServerConfig`（②）        | `ServerConfig`；监听后唯一一次改写是回填真实端口                                                             |
-| 单实例锁             | `lock.ts`（③ 预检、⑨ 取锁）                   | 包子路径 `@prismshadow/linsight-server/lock`；CLI 与 Desktop 用它做启动前探测                                 |
+| 单实例锁             | `lock.ts`（③ 预检、⑨ 取锁）                   | 包子路径 `@prismshadow/jiumate-server/lock`；CLI 与 Desktop 用它做启动前探测                                 |
 | 数据库               | `db/database.ts` `openDatabase`（⑤ 首步）     | `db/repos/*` 仓储类；WAL、外键、增量 `ensureColumn` 迁移                                                     |
 | 认证                 | `auth/service.ts`（⑤，运行时机制）            | `/api/auth/*`、cookie `authMiddleware`、终端 WS 升级的鉴权                                                   |
 | Project / Session    | `services/*`——**App 级**（平台 create 内组装）| `/api/projects/**`、`/api/sessions/**`（路由细目见 [Server API](/server-api)）                               |

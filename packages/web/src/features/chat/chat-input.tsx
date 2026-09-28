@@ -86,7 +86,7 @@ import type {
   SessionStatus,
   SkillMetadataItem,
   TaskInputPart,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import { S } from "../../lib/strings";
 import { formatBytes, humanizeTokens } from "../../lib/format";
 import { useLocale } from "../../state/locale";
@@ -415,11 +415,11 @@ function ThinkingLevelSelect({
  * Mid-run send mode: steer (delivered mid-run as a [user_steering] input) vs follow-up
  * (queued server-side until the run ends). A remembered per-user UI preference, persisted
  * the same way as the sidebar grouping mode (validated localStorage read under a
- * `linsight.*` key); configurable from the "+" menu's settings row in draft state and active
+ * `jiumate.*` key); configurable from the "+" menu's settings row in draft state and active
  * sessions alike.
  */
 type SteerMode = "steer" | "followup";
-const STEER_MODE_KEY = "linsight.steerMode";
+const STEER_MODE_KEY = "jiumate.steerMode";
 function initialSteerMode(): SteerMode {
   return localStorage.getItem(STEER_MODE_KEY) === "followup" ? "followup" : "steer";
 }

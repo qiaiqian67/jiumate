@@ -1,5 +1,5 @@
 /**
- * Sync the browser tab title (document.title): "{title} · Linsight"
+ * Sync the browser tab title (document.title): "{title} · JiuMate"
  * when a page title is set, falling back to the app name otherwise. Called
  * at the top level of each page component, updating instantly on route
  * changes or title changes (e.g. an auto-generated Session title delivered

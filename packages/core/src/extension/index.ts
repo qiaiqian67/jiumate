@@ -2,7 +2,7 @@
  * The extension contract: what an extension package compiles against.
  *
  * Types only — the host that drives them lives in whatever embeds this SDK (for the
- * harness, `@prismshadow/linsight-server/extension`). An extension reaches this module with
+ * harness, `@prismshadow/jiumate-server/extension`). An extension reaches this module with
  * `import type`, so it carries no runtime dependency on either and stays a
  * self-contained library that happens to satisfy an interface.
  *
@@ -14,16 +14,16 @@
  * is events ({@link ExtensionEvents}), both fired at EVERY App creation — the packaged
  * boot and each hot-swap boot alike:
  *
- *   - `"initialize"` — {@link LinsightInterface}, the harness's DEFINITION view, where
+ *   - `"initialize"` — {@link JiuMateInterface}, the harness's DEFINITION view, where
  *     factories are registered.
- *   - `"create"` — {@link LinsightContext}, an INSTANCE of the harness, assembled after
+ *   - `"create"` — {@link JiuMateContext}, an INSTANCE of the harness, assembled after
  *     registration closes.
  *
  * `on(...)` and `ctx.disposables` are sealed when `activate` returns: handlers run per
  * App, so subscribing from inside one would accumulate a copy per hot swap. Sealing
  * turns that slow leak into a loud error at the packaged boot.
  *
- * {@link LinsightContext} and {@link LinsightInterface} are OPEN: an embedder contributes
+ * {@link JiuMateContext} and {@link JiuMateInterface} are OPEN: an embedder contributes
  * the members it owns by augmenting this module, which is why the harness's terminals
  * are not named here. Each layer declares what it actually provides, and no layer has
  * to be reachable from this one.
@@ -37,13 +37,13 @@ export type { WorkflowFactory, WorkflowInstance, WorkflowInstances } from "./wor
 export type ToolFactory = unknown;
 
 /** An INSTANCE of the harness. Members an embedder owns flatten on by augmentation. */
-export interface LinsightContext {
+export interface JiuMateContext {
   /** Instances built from `iface.workflow`. */
   workflows: WorkflowInstances;
 }
 
 /** The DEFINITION view of the harness: factories by name. */
-export interface LinsightInterface {
+export interface JiuMateInterface {
   /** A Map whose `set` REFUSES a duplicate name (see the harness's WorkflowFactories). */
   workflow: Map<string, WorkflowFactory>;
   /** RESERVED (see {@link ToolFactory}). */
@@ -55,8 +55,8 @@ export interface LinsightInterface {
  * platform's emit and every extension's handler at once.
  */
 export interface ExtensionEvents {
-  initialize: LinsightInterface;
-  create: LinsightContext;
+  initialize: JiuMateInterface;
+  create: JiuMateContext;
 }
 
 export interface Disposable {
@@ -65,7 +65,7 @@ export interface Disposable {
 
 /**
  * What `activate` receives — process-level, NOT the harness instance (that is
- * {@link LinsightContext}, delivered by `"create"`).
+ * {@link JiuMateContext}, delivered by `"create"`).
  */
 export interface ExtensionContext {
   /**

@@ -30,7 +30,7 @@ import type {
   UsageSeriesPoint,
 } from "../api/types.js";
 import type { ErrorFilter, ErrorsRepo } from "../db/repos/errors.js";
-import { offPeakScheduledRefs } from "@prismshadow/linsight-core/model-catalog";
+import { offPeakScheduledRefs } from "@prismshadow/jiumate-core/model-catalog";
 import type {
   UsageRepo,
   UsageModelSums,

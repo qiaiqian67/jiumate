@@ -83,7 +83,7 @@ export const SORT_MODE_ICONS: Record<SessionSortMode, string> = {
  * choice is a single user preference, not a per-page one — switching it anywhere
  * switches it everywhere.
  */
-const GROUP_MODE_KEY = "linsight.sidebarGroupMode";
+const GROUP_MODE_KEY = "jiumate.sidebarGroupMode";
 
 export function initialGroupMode(): GroupMode {
   const stored = localStorage.getItem(GROUP_MODE_KEY);

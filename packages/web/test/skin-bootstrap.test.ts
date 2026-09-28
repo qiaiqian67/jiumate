@@ -69,7 +69,7 @@ describe("the inline script and this module agree", () => {
     expect(HTML).toContain('setAttribute("data-accent", p.accent)');
     // Must match SKIN_STYLE_ELEMENT_ID in skin-runtime.ts, or the mounted pass would append a
     // second stylesheet instead of adopting the one the pre-paint pass left behind.
-    expect(HTML).toContain('style.id = "linsight-skin"');
+    expect(HTML).toContain('style.id = "jiumate-skin"');
   });
 
   it("skips data-accent when the skin owns the accent", () => {
@@ -79,7 +79,7 @@ describe("the inline script and this module agree", () => {
   });
 
   it("declares the wallpaper layer the stylesheet positions", () => {
-    expect(HTML).toContain('class="linsight-skin-background"');
+    expect(HTML).toContain('class="jiumate-skin-background"');
   });
 });
 

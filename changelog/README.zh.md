@@ -25,8 +25,8 @@
 - **Date:** YYYY-MM-DD
 - **Type:** feature
 - **Scope:** `module`, `module`
-- **PR:** [#N](https://github.com/qiaiqian67/linsight/pull/N)
-- **Issue:** [#N](https://github.com/qiaiqian67/linsight/issues/N)
+- **PR:** [#N](https://github.com/qiaiqian67/jiumate/pull/N)
+- **Issue:** [#N](https://github.com/qiaiqian67/jiumate/issues/N)
 - **Breaking:** yes — <一行说明什么被破坏了>
 
 [English](<name>.md)

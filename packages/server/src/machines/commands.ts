@@ -62,24 +62,24 @@ function connectionOptions(target: RemoteTarget): string[] {
  * Absolute, because sshd's non-login shell has no `~/.local/bin` on PATH — the symlink the
  * installer drops there is for a person at a terminal, not for us.
  *
- * `$HOME/.linsight` is where install.sh puts it (`LINSIGHT_INSTALL_DIR`, defaulting there),
+ * `$HOME/.jiumate` is where install.sh puts it (`JIUMATE_INSTALL_DIR`, defaulting there),
  * laid out as bin/ lib/ web/ node/, with the launcher exec'ing `node/bin/node lib/dist/…`
- * (scripts/launchers/linsight). A remote's own override of that variable is not visible over
+ * (scripts/launchers/jiumate). A remote's own override of that variable is not visible over
  * a non-interactive ssh, so the default is the only thing this side can assume — the same
  * assumption detect.ts makes to find the manifest.
  */
-export const REMOTE_PROGRAM_DIR = "$HOME/.linsight";
+export const REMOTE_PROGRAM_DIR = "$HOME/.jiumate";
 
 /**
  * The CLI these commands run on a machine: the one PUSHED to it, not the one installed.
  *
- * `bin/linsight` is the released program, and a release only carries the subcommands this
+ * `bin/jiumate` is the released program, and a release only carries the subcommands this
  * side asks for (`server status`, `auth token`, `server --detach`) once a release has
  * shipped them. Reaching a machine would then be impossible until the next release —
  * including for the build that introduces reaching machines at all.
  *
- * `dist/linsight-hmr.js` is the entry that loads the CLI out of that machine's own hmr store
- * (packages/cli/src/linsight-hmr.ts), which is the CLI this server pushed there. It has
+ * `dist/jiumate-hmr.js` is the entry that loads the CLI out of that machine's own hmr store
+ * (packages/cli/src/jiumate-hmr.ts), which is the CLI this server pushed there. It has
  * shipped in the archive since long before any of this, so a machine installed by any
  * release can run the current CLI. What it cannot do is run one that was never pushed: a
  * machine with an empty store answers `no CLI pushed to <root>`, and the remedy is to
@@ -89,22 +89,22 @@ export const REMOTE_PROGRAM_DIR = "$HOME/.linsight";
  * launcher for this entry. Machines installed from here always carry that runtime: the
  * install runs install.sh without `--universal`, which is the only mode that omits it.
  */
-export const REMOTE_LINSIGHT = `"${REMOTE_PROGRAM_DIR}/node/bin/node" "${REMOTE_PROGRAM_DIR}/lib/dist/linsight-hmr.js"`;
+export const REMOTE_JIUMATE = `"${REMOTE_PROGRAM_DIR}/node/bin/node" "${REMOTE_PROGRAM_DIR}/lib/dist/jiumate-hmr.js"`;
 
 /**
  * The same program directory as cmd.exe names it. A Windows sshd hands a command to cmd.exe,
  * where `$HOME` is four literal characters and the bundled runtime is `node\node.exe`
- * (scripts/launchers/linsight.cmd) — so the POSIX form above is not "not found" there, it is
+ * (scripts/launchers/jiumate.cmd) — so the POSIX form above is not "not found" there, it is
  * a different sentence. `%USERPROFILE%` is what install.ps1 defaults to.
  */
-export const REMOTE_PROGRAM_DIR_WINDOWS = "%USERPROFILE%\\.linsight";
+export const REMOTE_PROGRAM_DIR_WINDOWS = "%USERPROFILE%\\.jiumate";
 
 /** The pushed CLI, invoked in the dialect of the shell that will read the command. */
-export function remoteLinsight(platform: "linux" | "darwin" | "win32"): string {
+export function remoteJiuMate(platform: "linux" | "darwin" | "win32"): string {
   if (platform === "win32") {
-    return `"${REMOTE_PROGRAM_DIR_WINDOWS}\\node\\node.exe" "${REMOTE_PROGRAM_DIR_WINDOWS}\\lib\\dist\\linsight-hmr.js"`;
+    return `"${REMOTE_PROGRAM_DIR_WINDOWS}\\node\\node.exe" "${REMOTE_PROGRAM_DIR_WINDOWS}\\lib\\dist\\jiumate-hmr.js"`;
   }
-  return REMOTE_LINSIGHT;
+  return REMOTE_JIUMATE;
 }
 
 /** `ssh <options> <alias> <remote command>`. */
@@ -150,7 +150,7 @@ export function runInstallScriptCommand(
       scriptOnStdin: false,
     };
   }
-  return { command: `LINSIGHT_VERSION=${shQuote(versionTag)} sh -s`, scriptOnStdin: true };
+  return { command: `JIUMATE_VERSION=${shQuote(versionTag)} sh -s`, scriptOnStdin: true };
 }
 
 /**
@@ -167,10 +167,10 @@ export function runInstallScriptCommand(
  */
 export function unpackStoreCommand(platform: RemotePlatform): string {
   if (platform === "win32") {
-    const root = "%USERPROFILE%\\.linsight\\data\\hmr";
+    const root = "%USERPROFILE%\\.jiumate\\data\\hmr";
     return `(if not exist ${cmdQuote(root)} mkdir ${cmdQuote(root)}) & tar -xzf - -C ${cmdQuote(root)}`;
   }
-  const root = "$HOME/.linsight/data/hmr";
+  const root = "$HOME/.jiumate/data/hmr";
   return `mkdir -p "${root}" && tar -xzf - -C "${root}"`;
 }
 
@@ -186,7 +186,7 @@ export function startServerCommand(port: number): string {
   // it is omitted, so a login shell carrying HOST=0.0.0.0 would put that machine's server on
   // every interface. This side only ever reaches it as a channel inside the ssh session, at
   // loopback on the far end, so binding wider is exposure with nothing asking for it.
-  return `mkdir -p "${REMOTE_PROGRAM_DIR}/data" && nohup ${REMOTE_LINSIGHT} server --host 127.0.0.1 --port ${port} >> ${log} 2>&1 < /dev/null &`;
+  return `mkdir -p "${REMOTE_PROGRAM_DIR}/data" && nohup ${REMOTE_JIUMATE} server --host 127.0.0.1 --port ${port} >> ${log} 2>&1 < /dev/null &`;
 }
 
 /** The last lines of that log, for a start that did not answer. */
@@ -224,7 +224,7 @@ export function sessionArgs(target: RemoteTarget, socksPort: number): string[] {
 }
 
 /** Marker separating the resolved path from the entries in a directory listing. */
-export const DIR_LIST_MARK = "---linsight-dirs---";
+export const DIR_LIST_MARK = "---jiumate-dirs---";
 
 /**
  * Lists the subdirectories of `dir` on the far side, plus the path it actually resolved to.

@@ -14,7 +14,7 @@ import {
   tokenUsage,
   toolCall,
   emptyTokenCounts,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import { isProbeContent, probeTps, probeVerdict } from "../src/services/project-config-service.js";
 
 describe("isProbeContent", () => {

@@ -10,7 +10,7 @@ import {
 let tmp: string;
 
 beforeEach(async () => {
-  tmp = await mkdtemp(path.join(tmpdir(), "linsight-truncated-tool-output-"));
+  tmp = await mkdtemp(path.join(tmpdir(), "jiumate-truncated-tool-output-"));
 });
 
 afterEach(async () => {
@@ -186,7 +186,7 @@ describe("TruncatedToolOutputArchive", () => {
       if (result.status !== "failed") throw new Error("expected failed output");
       expect(typeof result.code).toBe("string");
       expect(stderr.join("")).toContain(
-        `[linsight] tool "tool" truncated output archive write failed (${result.code}).`,
+        `[jiumate] tool "tool" truncated output archive write failed (${result.code}).`,
       );
     } finally {
       stderrSpy.mockRestore();

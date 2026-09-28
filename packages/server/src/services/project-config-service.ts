@@ -44,15 +44,15 @@ import {
   renderProjectConfigToml,
   resolveModelEnv,
   userText,
-} from "@prismshadow/linsight-core";
-import { providerInfo } from "@prismshadow/linsight-core/model-catalog";
+} from "@prismshadow/jiumate-core";
+import { providerInfo } from "@prismshadow/jiumate-core/model-catalog";
 import type {
   CommandPolicyRule,
   LLMOutcome,
   ModelRef,
   OmniMessage,
   ProjectConfig,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   ChatDefaultsDto,
   CommandPolicyDto,

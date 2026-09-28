@@ -8,7 +8,7 @@ import { choosePort, readPreferredPort, rememberPreferredPort } from "../src/por
 let tmpDir: string | null = null;
 
 function memoryFile(): string {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-port-memory-"));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-port-memory-"));
   return path.join(tmpDir, "nested", "preferred-port");
 }
 

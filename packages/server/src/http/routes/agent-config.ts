@@ -10,8 +10,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Hono } from "hono";
-import { McpToolProvider, resolveMCPServer } from "@prismshadow/linsight-core";
-import type { MCPServerConfig } from "@prismshadow/linsight-core";
+import { McpToolProvider, resolveMCPServer } from "@prismshadow/jiumate-core";
+import type { MCPServerConfig } from "@prismshadow/jiumate-core";
 import type {
   AgentConfigResponse,
   AgentConfigUpdateRequest,
@@ -96,7 +96,7 @@ export function agentConfigRoutes(deps: AppDeps): Hono<AppEnv> {
     // A fresh empty directory stands in for the Session Workspace (a new session's
     // temporary workspace is exactly that), so a stdio server that resolves relative
     // paths behaves like it will at runtime — not like the server process's own cwd.
-    const workspaceDir = await mkdtemp(join(tmpdir(), "linsight-mcp-test-"));
+    const workspaceDir = await mkdtemp(join(tmpdir(), "jiumate-mcp-test-"));
     const provider = new McpToolProvider([entry], {
       workspaceDir,
       warn: (m) => warnings.push(m),

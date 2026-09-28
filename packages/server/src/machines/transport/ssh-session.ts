@@ -210,7 +210,7 @@ class MachineShell {
     if (this.#child !== null) return this.#child;
     const port = await freeLocalPort();
     if (port === null) throw new Error("no free local port for the session's SOCKS listener");
-    this.#mark = `--linsight-${randomBytes(9).toString("hex")}--`;
+    this.#mark = `--jiumate-${randomBytes(9).toString("hex")}--`;
     const child = spawn("ssh", sessionArgs(this.target, port), { stdio: ["pipe", "pipe", "pipe"] });
     // setEncoding, not String(chunk): a multibyte character whose bytes land in two `data`
     // events would otherwise decode to two replacement characters. The stream's decoder holds

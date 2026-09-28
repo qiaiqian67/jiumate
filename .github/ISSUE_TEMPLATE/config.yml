@@ -4,8 +4,8 @@ contact_links:
     url: https://discord.gg/eFHKqqcU3D
     about: Ask on Discord — the issue tracker is for defects and proposals.
   - name: Documentation
-    url: https://linsight.ooo/docs/
+    url: https://jiumate.ooo/docs/
     about: Installation, configuration, the CLI reference, and the architecture.
   - name: Security vulnerability
-    url: https://github.com/qiaiqian67/linsight/security/advisories/new
+    url: https://github.com/qiaiqian67/jiumate/security/advisories/new
     about: Report privately. Never in a public issue.

@@ -30,7 +30,7 @@ export function MermaidBlock({ code, nonce }: { code: string; nonce: string }) {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const id = `linsight-mermaid-${nonce}`;
+    const id = `jiumate-mermaid-${nonce}`;
     const myRenderId = ++renderIdRef.current;
     let cancelled = false;
     setError(null);

@@ -3,7 +3,7 @@
  * catalog IO.
  *
  * This barrel pulls in `io.ts` and through it `node:fs` / `node:path`, so it is **not** safe to
- * import from the browser. The web app reaches for `@prismshadow/linsight-inspirations/presets`
+ * import from the browser. The web app reaches for `@prismshadow/jiumate-inspirations/presets`
  * instead (pure data, no Node built-ins), which the web bundle's `node-free-imports` test
  * enforces.
  */

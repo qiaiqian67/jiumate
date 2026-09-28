@@ -28,7 +28,7 @@ for (const [what, rel] of [
   // one missing. Every declared package is checked, so one added to `dependencies` without
   // a `pnpm install` fails here rather than at the first library read.
   ...Object.keys(pkg.dependencies)
-    .filter((dep) => dep.startsWith("@linsight/"))
+    .filter((dep) => dep.startsWith("@jiumate/"))
     .map((dep) => [`the plugin package ${dep}`, `node_modules/${dep}/plugin.json`]),
   ["the web frontend build", "../web/dist/index.html"],
 ]) {
@@ -53,7 +53,7 @@ try {
 }
 
 if (problems.length > 0) {
-  console.error("linsight-desktop preflight failed:\n");
+  console.error("jiumate-desktop preflight failed:\n");
   for (const p of problems) console.error(`  - ${p}`);
   console.error("");
   process.exit(1);

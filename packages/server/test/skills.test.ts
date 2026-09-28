@@ -14,7 +14,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { skillsDir, librarySkill, loadPreinstalledPlugins } from "@prismshadow/linsight-core";
+import { skillsDir, librarySkill, loadPreinstalledPlugins } from "@prismshadow/jiumate-core";
 import type {
   AgentCreateResponse,
   AgentsResponse,
@@ -196,21 +196,21 @@ describe("skills api", () => {
     // Simulate stale/tampered on-disk content.
     const file = path.join(
       skillsDir(t.root, projectId, "update_agent"),
-      "linsight-config",
+      "jiumate-config",
       "SKILL.md",
     );
-    await fs.writeFile(file, "---\nname: linsight-config\nversion: 0\n---\nstale\n", "utf8");
+    await fs.writeFile(file, "---\nname: jiumate-config\nversion: 0\n---\nstale\n", "utf8");
 
     const res = await owner.post(toPlugins(url), { names: ["agent-development"] });
     expect(res.status).toBe(201);
     const body = (await res.json()) as AgentSkillsResponse;
     expect(body.skills.map((s) => s.name)).toEqual([
-      "linsight-config",
-      "linsight-orchestration",
-      "linsight-sdk",
+      "jiumate-config",
+      "jiumate-orchestration",
+      "jiumate-sdk",
       "unified-llm-api",
     ]);
-    expect(await fs.readFile(file, "utf8")).toBe(librarySkill("linsight-config")!.skill.content);
+    expect(await fs.readFile(file, "utf8")).toBe(librarySkill("jiumate-config")!.skill.content);
   });
 
   it("unknown skill 404 unknown_skill, with no half-installed state", async () => {
@@ -237,10 +237,10 @@ describe("skills api", () => {
   it("outsiders always get 404 (read, install, uninstall); a missing Agent is 404", async () => {
     const url = base("default_agent");
     expect((await outsider.get(url)).status).toBe(404);
-    expect((await outsider.post(toPlugins(url), { names: ["linsight-sdk"] })).status).toBe(404);
+    expect((await outsider.post(toPlugins(url), { names: ["jiumate-sdk"] })).status).toBe(404);
     expect((await outsider.post(`${url}/archive`, { dataBase64: "AAAA" })).status).toBe(404);
-    expect((await outsider.get(`${url}/linsight-sdk/archive`)).status).toBe(404);
-    expect((await outsider.delete(`${url}/linsight-sdk`)).status).toBe(404);
+    expect((await outsider.get(`${url}/jiumate-sdk/archive`)).status).toBe(404);
+    expect((await outsider.delete(`${url}/jiumate-sdk`)).status).toBe(404);
     // The library catalog isn't scoped under a Project prefix: any logged-in user can read it.
     expect((await outsider.get("/api/plugins")).status).toBe(200);
     // Agent doesn't exist: even a member gets 404.
@@ -304,25 +304,25 @@ describe("skills api", () => {
     // every skill of both merged plugins.
     const listed = (await (await member.get(base("seeded_agent"))).json()) as AgentSkillsResponse;
     expect(listed.skills.map((s) => s.name)).toEqual([
-      "linsight-config",
-      "linsight-orchestration",
-      "linsight-sdk",
+      "jiumate-config",
+      "jiumate-orchestration",
+      "jiumate-sdk",
       "software-engineering",
       "unified-llm-api",
       "web-design",
     ]);
     // Installed through the same writer as the Skills tab: SKILL.md is the library file verbatim.
     const onDisk = await fs.readFile(
-      path.join(skillsDir(t.root, projectId, "seeded_agent"), "linsight-sdk", "SKILL.md"),
+      path.join(skillsDir(t.root, projectId, "seeded_agent"), "jiumate-sdk", "SKILL.md"),
       "utf8",
     );
-    expect(onDisk).toBe(librarySkill("linsight-sdk")!.skill.content);
+    expect(onDisk).toBe(librarySkill("jiumate-sdk")!.skill.content);
   });
 
   it("agent create with an unknown skill is 404 unknown_skill and creates no Agent", async () => {
     const res = await owner.post(`/api/projects/${projectId}/agents`, {
       agentId: "ghost_agent",
-      plugins: ["linsight-sdk", "no-such-plugin"],
+      plugins: ["jiumate-sdk", "no-such-plugin"],
     });
     expect(res.status).toBe(404);
     expect(((await res.json()) as { error: { code: string } }).error.code).toBe("unknown_plugin");
@@ -341,7 +341,7 @@ describe("skills api", () => {
     expect(plain.skills).toEqual([]);
     const bad = await owner.post(`/api/projects/${projectId}/agents`, {
       agentId: "bad_seed",
-      plugins: "linsight-sdk",
+      plugins: "jiumate-sdk",
     });
     expect(bad.status).toBe(400);
   });
@@ -592,10 +592,10 @@ describe("skills api", () => {
 
       // Age one installed copy: the library now carries a higher version than the disk does.
       // The update is reported once, by PLUGIN, however many of its skills lag.
-      await setInstalledVersion("bare_updates", "linsight-sdk", "2000-01-01.1");
+      await setInstalledVersion("bare_updates", "jiumate-sdk", "2000-01-01.1");
       const behind = (await listAgents()).find((a) => a.agentId === "bare_updates")!;
       expect(behind.pluginUpdates).toEqual([
-        { name: "agent-development", version: librarySkill("linsight-sdk")!.plugin.version },
+        { name: "agent-development", version: librarySkill("jiumate-sdk")!.plugin.version },
       ]);
       // Reinstalling IS the update, so the badge clears with the same request the trail ends on.
       expect(
@@ -625,7 +625,7 @@ describe("skills api", () => {
 
     it("counts a directory with no readable SKILL.md as neither installed nor an update", async () => {
       await createPlainAgent("broken_updates");
-      await fs.mkdir(path.join(skillsDir(t.root, projectId, "broken_updates"), "linsight-sdk"), {
+      await fs.mkdir(path.join(skillsDir(t.root, projectId, "broken_updates"), "jiumate-sdk"), {
         recursive: true,
       });
       const agent = (await listAgents()).find((a) => a.agentId === "broken_updates")!;

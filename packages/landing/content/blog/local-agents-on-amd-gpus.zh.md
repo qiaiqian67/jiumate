@@ -1,18 +1,18 @@
 ---
-title: 深入了解 Linsight——并在 AMD GPU 上本地跑通一个自我进化的 Agent
+title: 深入了解 JiuMate——并在 AMD GPU 上本地跑通一个自我进化的 Agent
 date: 2026-07-20
 category: practice
 author: 张宁（AMD）、高钰洋（AMD）、郑耀威（PrismShadow）
-excerpt: Linsight 到底是什么、它的架构背后有哪些理念，以及一次真实的端到端运行——一个完全本地、运行在 AMD GPU 上的开源权重模型，先在一个打分任务上失败，再通过自己诊断并改写自身文件，把分数从大约半数递归自我提升到接近满分，全程数据不出本机。
+excerpt: JiuMate 到底是什么、它的架构背后有哪些理念，以及一次真实的端到端运行——一个完全本地、运行在 AMD GPU 上的开源权重模型，先在一个打分任务上失败，再通过自己诊断并改写自身文件，把分数从大约半数递归自我提升到接近满分，全程数据不出本机。
 ---
 
 *AMD × PrismShadow——张宁、高钰洋（AMD），郑耀威（PrismShadow）。*
 
-如果你是第一次接触 Linsight，这篇文章是一次完整的导览：这个项目是什么、它的架构背后有哪些设计理念，以及——为了让一切足够具体——一次真实的运行：一个完全本地、跑在 AMD GPU 上的开源权重模型，先在一个打分任务上失败，再由它自己诊断失分、改写自身文件，把分数从大约半数递归自我提升到接近满分，全程没有一个字节离开本机。
+如果你是第一次接触 JiuMate，这篇文章是一次完整的导览：这个项目是什么、它的架构背后有哪些设计理念，以及——为了让一切足够具体——一次真实的运行：一个完全本地、跑在 AMD GPU 上的开源权重模型，先在一个打分任务上失败，再由它自己诊断失分、改写自身文件，把分数从大约半数递归自我提升到接近满分，全程没有一个字节离开本机。
 
-## Linsight 是什么
+## JiuMate 是什么
 
-Linsight 是一个开源的 AI Agent Harness——一套用于*构建*和*进化* Agent 的完整 TypeScript 技术栈，而不是某一个具体应用。它可以完全本地部署，最低单 CPU 即可运行，并通过一个统一网关触达 1000+ 在线与本地模型。它的主旨只有一句话：
+JiuMate 是一个开源的 AI Agent Harness——一套用于*构建*和*进化* Agent 的完整 TypeScript 技术栈，而不是某一个具体应用。它可以完全本地部署，最低单 CPU 即可运行，并通过一个统一网关触达 1000+ 在线与本地模型。它的主旨只有一句话：
 
 > Efficient Self-Improving Harness for Everyone.（为每个人打造的、高效的自我进化 Harness。）
 
@@ -24,7 +24,7 @@ Linsight 是一个开源的 AI Agent Harness——一套用于*构建*和*进化
 | **构建 Agent 的 Harness** | 既可用 SDK 编程构建（`createAgent` → `createSession` → `run`），也可由一个 Agent 根据一句需求描述，自动造出一个全新 Agent。 |
 | **递归自我进化的 Harness** | 借助 Skills，一个 Agent 能评估并优化*它自己*，随时间递归改进。 |
 
-后两点，Linsight 是业界首个开源实现。
+后两点，JiuMate 是业界首个开源实现。
 
 ## 架构，以及它为何长成这样
 
@@ -33,7 +33,7 @@ Linsight 是一个开源的 AI Agent Harness——一套用于*构建*和*进化
 ```text
 ┌─────────────┐  ┌─────────────────────────────┐
 │   CLI       │  │  Web App (React SPA)        │
-│  (linsight)  │  │    ↑ OmniMessage over SSE   │
+│  (jiumate)  │  │    ↑ OmniMessage over SSE   │
 │             │  │  Server (Hono + SQLite)     │
 └──────┬──────┘  └──────────────┬──────────────┘
        │      session.run(...)  │        ← Human 边界
@@ -46,7 +46,7 @@ Linsight 是一个开源的 AI Agent Harness——一套用于*构建*和*进化
 └──────────────────────────────────────────────┘
 ```
 
-系统的中心是 `@prismshadow/linsight-core` 里的执行引擎。CLI、Server、Web App 只是同一个引擎的不同"Human 实现"。这一个决定——单一内核、多前端——正是让整个系统保持自洽的关键，而它源自一组值得单独理解的设计信条。
+系统的中心是 `@prismshadow/jiumate-core` 里的执行引擎。CLI、Server、Web App 只是同一个引擎的不同"Human 实现"。这一个决定——单一内核、多前端——正是让整个系统保持自洽的关键，而它源自一组值得单独理解的设计信条。
 
 ### 一套协议，三重身份——OmniMessage
 
@@ -83,7 +83,7 @@ Linsight 是一个开源的 AI Agent Harness——一套用于*构建*和*进化
 
 ## 大道至简——只有 6 个工具，以及这为何重要
 
-第一根支柱最容易被忽略，却是你在实际使用中感受最深的：工具集刻意做得极小。Linsight 只内置恰好 6 个工具：
+第一根支柱最容易被忽略，却是你在实际使用中感受最深的：工具集刻意做得极小。JiuMate 只内置恰好 6 个工具：
 
 | 工具 | 用途 |
 | --- | --- |
@@ -144,7 +144,7 @@ spurious user-facing errors without requiring manual retries.
 它甚至先"出声"权衡了这个改动到底算 `fix` 还是 `feat`，才最终定为 `fix`——这个行为完全来自它的父 Agent 为它写的 AGENTS.md。
 
 **你可以自己跑一遍。** 上面整个流程在仓库里有一个自包含、纯 SDK 驱动的脚本：
-[`examples/build-agent-with-agent/`](https://github.com/qiaiqian67/linsight/tree/main/examples/build-agent-with-agent)。
+[`examples/build-agent-with-agent/`](https://github.com/qiaiqian67/jiumate/tree/main/examples/build-agent-with-agent)。
 第一阶段用 `createAgent`/`createSession`/`run` 驱动 `default_agent` 造出 `commit-helper`；第二阶段加载这个新 Agent 并运行它——全部跑在本地 Ollama + qwen3.6:35b 上，不用任何云端 API。一次性的 Ollama 配置见其 `README.md`。
 
 ## 自我进化，一句话概括
@@ -155,10 +155,10 @@ spurious user-facing errors without requiring manual retries.
 
 设计信条说起来容易。下面是一次真正践行了这些信条的端到端运行，全程在完全本地、开源权重、AMD GPU 的环境上进行——每一个 Token 都在本机生成，不向任何云端 API 发送。
 
-**环境。** 一块 AMD GPU 运行 ROCm，通过 Ollama 的 OpenAI 兼容端点提供 `qwen3.6:35b`——一个能力不俗的本地开源权重模型（约 24 GB 的 MoE，36B 总参数，Q4_K_M 量化）。Ollama 原生识别到该 AMD GPU（无需任何架构 override），并把模型加载进显存。这条路径覆盖 AMD 受 ROCm 支持的整个产品线——从 Radeon PRO 工作站显卡（如 W7900，48 GB，RDNA3）一直到数据中心的 Instinct 加速卡。把它接入 Linsight 只需一条命令，正因为 core 对任何 OpenAI 兼容端点一视同仁：
+**环境。** 一块 AMD GPU 运行 ROCm，通过 Ollama 的 OpenAI 兼容端点提供 `qwen3.6:35b`——一个能力不俗的本地开源权重模型（约 24 GB 的 MoE，36B 总参数，Q4_K_M 量化）。Ollama 原生识别到该 AMD GPU（无需任何架构 override），并把模型加载进显存。这条路径覆盖 AMD 受 ROCm 支持的整个产品线——从 Radeon PRO 工作站显卡（如 W7900，48 GB，RDNA3）一直到数据中心的 Instinct 加速卡。把它接入 JiuMate 只需一条命令，正因为 core 对任何 OpenAI 兼容端点一视同仁：
 
 ```bash
-linsight config model add \
+jiumate config model add \
   --model-id qwen3.6:35b \
   --provider custom --client-type openai \
   --base-url http://localhost:11434/v1 \
@@ -173,7 +173,7 @@ linsight config model add \
 
 ## 自我进化到底是怎么运作的——附一次真实的前后对比
 
-上面那个 4.6 / 10 是一次*评估*——是这个 Agent 当前状态的一张快照。更有意思的问题是：Linsight 如何把这张快照变成进步。这就是递归自我进化循环，值得作为一种"机制"来理解，因为它背后没有任何魔法引擎代码——它就是由 Skills 编排的普通 Agent 机制：
+上面那个 4.6 / 10 是一次*评估*——是这个 Agent 当前状态的一张快照。更有意思的问题是：JiuMate 如何把这张快照变成进步。这就是递归自我进化循环，值得作为一种"机制"来理解，因为它背后没有任何魔法引擎代码——它就是由 Skills 编排的普通 Agent 机制：
 
 1. **Benchmark（定基准）**——定义能力 Case，每个都配一份私有 rubric（如上）。
 2. **Evaluate（评估）**——让 Agent 跑这些 Case 并按 rubric 打分。每一次运行都是一个普通的、被完整追踪的 Session。
@@ -190,20 +190,20 @@ linsight config model add \
 在同一个模型、同一个任务上，仅仅由 Agent 自己编辑一份它会读取的文本文件，分数就走出了 **4.6 → 6.6 → 9.8** 的轨迹（数字每次运行会有波动）——而且 harness 每一轮都只因分数严格提升才保留。这就是自驱动的循环：*Agent 能看到的，Agent 就能改进*——用一份 rubric 度量、关联着 Trace，不是拍脑袋。
 
 **你可以自己跑一遍。** 整个循环在仓库里有一个自包含、纯 SDK 驱动的脚本：
-[`examples/self-improving-agent/`](https://github.com/qiaiqian67/linsight/tree/main/examples/self-improving-agent)。
+[`examples/self-improving-agent/`](https://github.com/qiaiqian67/jiumate/tree/main/examples/self-improving-agent)。
 它用一份确定性的、可读的 rubric（10 分：5 分内容分、5 分只存在于 `AGENTS.md` 的内部约定分），并且——因为本地模型有随机性——对每个版本跑多次取平均分，这正是真实 benchmark 里 `runs`（多次运行）的意义所在。关键在于：脚本从不自己写那套约定；是 *Agent* 从一份通过范例里诊断出缺口，并编辑自己的 `AGENTS.md`。在我们的运行中，平均分沿着 **4.6 → 6.6 → 9.8** 走过两轮自撰改进（先学到结构、再锁定常量），harness 每一轮都只因分数严格提升才保留。它跑在同一套本地 Ollama + qwen3.6:35b 环境上，并使用一个专用 agent id，所以你自己的 Agent 不会被动到。
 
 ## 还没有 AMD GPU？来自 AMD + Fireworks 的免费云端算力
 
-不是每个人桌下都有一块 AMD GPU——而要试用这一切，你并不需要它。通过 AMD AI Developer Program，AMD 与 Fireworks AI 合作，向符合条件的开发者提供**价值 50 美元的免费 Fireworks 额度**。Fireworks 通过 OpenAI 兼容端点提供开源权重模型，因此——和上面的本地 Ollama 一样——把 Linsight 指向它也只是一行配置的事。
+不是每个人桌下都有一块 AMD GPU——而要试用这一切，你并不需要它。通过 AMD AI Developer Program，AMD 与 Fireworks AI 合作，向符合条件的开发者提供**价值 50 美元的免费 Fireworks 额度**。Fireworks 通过 OpenAI 兼容端点提供开源权重模型，因此——和上面的本地 Ollama 一样——把 JiuMate 指向它也只是一行配置的事。
 
-领取额度（审核通常需要 2–3 个工作日）可参阅 [Fireworks API 获取指南](https://linsight.ooo/blog/fireworks-credits-amd)，了解额度兑换和 API Key 获取步骤。
+领取额度（审核通常需要 2–3 个工作日）可参阅 [Fireworks API 获取指南](https://jiumate.ooo/blog/fireworks-credits-amd)，了解额度兑换和 API Key 获取步骤。
 
 
-之后像接入任何其他端点一样把它接进 Linsight：
+之后像接入任何其他端点一样把它接进 JiuMate：
 
 ```bash
-linsight config model add --model-id <fireworks-模型-id> \
+jiumate config model add --model-id <fireworks-模型-id> \
   --provider custom --client-type openai \
   --base-url https://api.fireworks.ai/inference/v1 \
   --api-key <你的-fireworks-key> --set-default
@@ -220,14 +220,14 @@ linsight config model add --model-id <fireworks-模型-id> \
 ## 立即开始
 
 ```bash
-curl -fsSL https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/qiaiqian67/jiumate/releases/latest/download/install.sh | sh
 
 # 指向任意 OpenAI 兼容端点——包括一个本地 Ollama 模型
-linsight config model add --model-id <你的模型> \
+jiumate config model add --model-id <你的模型> \
   --provider custom --client-type openai \
   --base-url http://localhost:11434/v1 --api-key ollama --set-default
 
-linsight web   # 或：linsight run --approve allow-all --message "..."
+jiumate web   # 或：jiumate run --approve allow-all --message "..."
 ```
 
 想把它嵌进自己的程序？这就是"构建 Agent"支柱的 SDK 那一面——核心循环就是三次调用：
@@ -238,6 +238,6 @@ const session = await agent.createSession({ workspaceDir: process.cwd() });
 for await (const out of session.run([userText("...")], { approve: async () => "allow" })) { /* 流式处理 */ }
 ```
 
-完整、可运行的版本见 [`examples/`](https://github.com/qiaiqian67/linsight/tree/main/examples)——包括一个"用 Agent 造 Agent"和一个"自我改进的 Agent"，都跑在本地 Ollama 上。
+完整、可运行的版本见 [`examples/`](https://github.com/qiaiqian67/jiumate/tree/main/examples)——包括一个"用 Agent 造 Agent"和一个"自我改进的 Agent"，都跑在本地 Ollama 上。
 
-无论你跑的是前沿云端模型，还是自己 AMD GPU 上的开源权重模型，Linsight 都为你提供同一套精简、可观测、可自我进化的底座。在 [GitHub](https://github.com/qiaiqian67/linsight) 关注我们，并提交你的第一个 issue。
+无论你跑的是前沿云端模型，还是自己 AMD GPU 上的开源权重模型，JiuMate 都为你提供同一套精简、可观测、可自我进化的底座。在 [GitHub](https://github.com/qiaiqian67/jiumate) 关注我们，并提交你的第一个 issue。

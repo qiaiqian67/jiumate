@@ -62,10 +62,10 @@ describe("classifyMemoryPath", () => {
   });
 
   it("tolerates Windows separators on either side", () => {
-    const winState = "C:\\linsight\\proj\\agents\\a1\\agent_state";
+    const winState = "C:\\jiumate\\proj\\agents\\a1\\agent_state";
     expect(
       classifyMemoryPath(
-        "C:\\linsight\\proj\\agents\\a1\\agent_state\\memory\\user\\prefs.md",
+        "C:\\jiumate\\proj\\agents\\a1\\agent_state\\memory\\user\\prefs.md",
         winState,
       ),
     ).toEqual({

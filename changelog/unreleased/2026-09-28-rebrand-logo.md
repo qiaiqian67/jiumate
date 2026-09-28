@@ -10,14 +10,14 @@ The product mark is replaced on all four surfaces that ship it. The new mark was
 
 ## The SVG is 2100× smaller and no longer needs a workaround
 
-The previous mark embedded its artwork as a base64 PNG inside `<image xlink:href="data:image/png;base64,…">`, because an external `xlink:href` is silently dropped when an SVG is loaded through `<img>` or as a favicon — the icon drew a blank white square. That inlining was the only reason each `linsight-logo.svg` weighed ~793 KB.
+The previous mark embedded its artwork as a base64 PNG inside `<image xlink:href="data:image/png;base64,…">`, because an external `xlink:href` is silently dropped when an SVG is loaded through `<img>` or as a favicon — the icon drew a blank white square. That inlining was the only reason each `jiumate-logo.svg` weighed ~793 KB.
 
 The new mark is pure vector, so the workaround is unnecessary and the file is **380 bytes**. It also renders sharply at every size, which is what the `<link rel="icon" type="image/svg+xml">` in `web/index.html` and the two `docs`/`landing` favicons were already asking for.
 
 ## Files
 
-- `packages/{web,landing,docs}/public/linsight-logo.svg` — byte-identical copies (verified by hash). Consumed by the `LinsightLogo` component, the favicon on all three surfaces, the notification icon, the OG share card (`landing/scripts/og-cover.html`), the landing nav/hero/footer/pillars, `HarnessLogo`, both READMEs, and the docs nav.
-- `packages/{web,landing,docs}/public/linsight-logo.png` — 1024×1024 raster master, regenerated.
+- `packages/{web,landing,docs}/public/jiumate-logo.svg` — byte-identical copies (verified by hash). Consumed by the `JiuMateLogo` component, the favicon on all three surfaces, the notification icon, the OG share card (`landing/scripts/og-cover.html`), the landing nav/hero/footer/pillars, `HarnessLogo`, both READMEs, and the docs nav.
+- `packages/{web,landing,docs}/public/jiumate-logo.png` — 1024×1024 raster master, regenerated.
 - `packages/desktop/build/icon.png` — 1024×1024 Windows master.
 - `packages/desktop/build/icon-mac.png` — 1024×1024 with the 824 px artwork centred, so Finder/Launchpad/Dock give it native optical size.
 - `packages/desktop/build/icons/{128,256,512}x{512}.png` — freedesktop set for the Linux targets.

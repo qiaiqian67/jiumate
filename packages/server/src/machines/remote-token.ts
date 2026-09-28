@@ -1,18 +1,18 @@
 /**
  * Getting a session on a machine by asking its own CLI for one.
  *
- * `linsight auth token` mints a short-lived session from the data root the ssh account
+ * `jiumate auth token` mints a short-lived session from the data root the ssh account
  * already owns. What authorizes it is that access, not a secret — anyone who can run it can
  * already read every credential on that machine by hand — so it keeps working on a machine
  * whose admin password a person has set. One command over the shared connection.
  */
 import { execFailureText } from "./transport/index.js";
-import { REMOTE_LINSIGHT } from "./commands.js";
+import { REMOTE_JIUMATE } from "./commands.js";
 import type { RemoteTarget } from "./commands.js";
 import type { ExecResult } from "./transport/index.js";
 
 /** Precedes the token on its own line — the same mark the CLI prints (cli/commands/auth.ts). */
-const TOKEN_MARK = "---linsight-auth-token---";
+const TOKEN_MARK = "---jiumate-auth-token---";
 
 type RemoteTokenOutcome =
   | { kind: "minted"; token: string }
@@ -28,7 +28,7 @@ export function authTokenCommand(ttlSeconds = 3600): string {
   if (!Number.isInteger(ttlSeconds) || ttlSeconds < 1) throw new Error(`bad ttl ${ttlSeconds}`);
   // `--mark` is what makes the output parseable: without it the CLI prints the bare token,
   // and parseToken has no anchor to find it by in a shell that may print a banner of its own.
-  return `${REMOTE_LINSIGHT} auth token --ttl-seconds ${ttlSeconds} --mark 2>&1`;
+  return `${REMOTE_JIUMATE} auth token --ttl-seconds ${ttlSeconds} --mark 2>&1`;
 }
 
 /**

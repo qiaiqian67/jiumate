@@ -20,7 +20,7 @@ Requirements:
 | Knowledge-base module UI | missing | standalone module: upload / categorize / retrieve |
 | Document normalization → Markdown | missing (anydoc as a base candidate) | anydoc covers Word, PowerPoint, Excel, OpenDocument, RTF, EPUB, CSV, PDF — 14 formats |
 | Formats beyond anydoc | missing | scanned PDFs / images need OCR; audio / video need transcription; code repos, archives, HTML mail need separate design |
-| Integration with Linsight | missing | how does the knowledge base feed an agent as context? RAG? tool call? attachment budget? |
+| Integration with JiuMate | missing | how does the knowledge base feed an agent as context? RAG? tool call? attachment budget? |
 | Retrieval layer | missing | vector / inverted index / chunking; reuse existing search path? |
 | Permission / sharing | TBD | per-project or cross-project? share with specific users? |
 | Update / re-normalize | missing | when the source file changes, how does the Markdown cache invalidate |

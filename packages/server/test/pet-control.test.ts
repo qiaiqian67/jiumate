@@ -9,7 +9,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_BUILTIN_PET_ID } from "@prismshadow/linsight-pets";
+import { DEFAULT_BUILTIN_PET_ID } from "@prismshadow/jiumate-pets";
 import { PetCatalogService } from "../src/services/pet-catalog.js";
 import { PetControlService } from "../src/services/pet-control.js";
 import type { UiPrefsRepo } from "../src/db/repos/ui-prefs.js";
@@ -54,7 +54,7 @@ describe("PetControlService", () => {
   let service: PetControlService;
 
   beforeEach(async () => {
-    root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-pet-control-"));
+    root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-pet-control-"));
     prefs = fakePrefs();
     notified = [];
     service = new PetControlService({

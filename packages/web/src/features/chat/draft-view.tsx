@@ -46,7 +46,7 @@ import type {
   SessionCreateRequest,
   SkillMetadataItem,
   TaskInputPart,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { formatMonthDay } from "../../lib/format";
@@ -58,7 +58,7 @@ import { useSessions } from "../../state/sessions";
 import { AgentAvatar } from "../../components/ui/agent-avatar";
 import { Chevron } from "../../components/ui/chevron";
 import { Dropdown } from "../../components/ui/dropdown";
-import { LinsightLogo } from "../../components/ui/linsight-logo";
+import { JiuMateLogo } from "../../components/ui/jiumate-logo";
 import { toastError } from "../../components/ui/toast";
 import { useVersionInfo } from "../../lib/use-version-info";
 import { versionBadgeFor } from "../../lib/update-flow";
@@ -102,14 +102,14 @@ const DRAFT_SAVE_DEBOUNCE_MS = 300;
 type RouteStateField = "agentId" | "workspace";
 function loadAppliedRouteKey(field: RouteStateField): string | null {
   try {
-    return sessionStorage.getItem(`linsight.chatRouteApplied.${field}`);
+    return sessionStorage.getItem(`jiumate.chatRouteApplied.${field}`);
   } catch {
     return null;
   }
 }
 function saveAppliedRouteKey(field: RouteStateField, key: string): void {
   try {
-    sessionStorage.setItem(`linsight.chatRouteApplied.${field}`, key);
+    sessionStorage.setItem(`jiumate.chatRouteApplied.${field}`, key);
   } catch {
     /* best-effort: the dedup marker falls back to the per-mount ref */
   }
@@ -695,7 +695,7 @@ export function DraftView({
             heading). The asset is square-cropped and the graphic already has a bit of built-in
             padding, so a small margin is enough to sit visually close to the title. */}
         <div className="mb-10 text-center">
-          <LinsightLogo className="mx-auto mb-1 h-36 w-36 rounded-3xl" />
+          <JiuMateLogo className="mx-auto mb-1 h-36 w-36 rounded-3xl" />
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
             {S.appName}
           </h1>

@@ -11,7 +11,7 @@
  * shipped the two installers and neither applier, leaving a hot-pushed server that could not
  * upgrade a machine or sign in to one — each dying on an ENOENT naming a path inside its own
  * store. Neither build could notice, because each list is valid on its own. Both appliers
- * have since become `linsight` subcommands the machine already has, which is the reason only
+ * have since become `jiumate` subcommands the machine already has, which is the reason only
  * the installers are left: an installer is the one thing that has to arrive BEFORE the CLI
  * does.
  *

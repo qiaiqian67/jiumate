@@ -16,7 +16,7 @@ import { Segmented } from "../../components/ui/segmented";
 import {
   DEFAULT_SKIN_BACKGROUND_DIM,
   DEFAULT_SKIN_SURFACE_ALPHA,
-} from "@prismshadow/linsight-skins/css";
+} from "@prismshadow/jiumate-skins/css";
 import { useTheme } from "../../state/theme";
 import type { FontScale, TerminalThemeMode, ThemeMode } from "../../state/theme";
 import { AccentPicker, PrefRow } from "./setting-row";

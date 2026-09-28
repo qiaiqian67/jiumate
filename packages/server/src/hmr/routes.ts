@@ -47,7 +47,7 @@ export function hmrRoutes(deps: AppDeps): Hono<AppEnv> {
       // where the caller is not a trusted party). Only a request's own URL scheme (real
       // TLS terminated by this process) counts unless the deployment explicitly says a
       // reverse proxy is in front and strips/overwrites the header itself
-      // (LINSIGHT_TRUST_PROXY=1 / config.trustProxy) — the same opt-in a real proxy setup
+      // (JIUMATE_TRUST_PROXY=1 / config.trustProxy) — the same opt-in a real proxy setup
       // requires anyway.
       const proto = deps.config.trustProxy
         ? (c.req.header("x-forwarded-proto") ?? new URL(c.req.url).protocol.replace(":", ""))
@@ -68,7 +68,7 @@ export function hmrRoutes(deps: AppDeps): Hono<AppEnv> {
       await next();
     };
     // Admin credential required. An earlier per-boot Bearer token published to
-    // $LINSIGHT_HOME/hmr/api.json was removed over the on-disk-plaintext objection
+    // $JIUMATE_HOME/hmr/api.json was removed over the on-disk-plaintext objection
     // (readable by any process of the same OS user, agent shells included, and
     // admin-equivalent). That objection has since been deliberately reversed as a
     // product decision, harness-wide: agents driving their own server through the

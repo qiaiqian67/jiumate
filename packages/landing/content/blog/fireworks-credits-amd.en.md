@@ -1,11 +1,11 @@
 ---
-title: "Partnering with the AMD Developer Program: $50 in free Fireworks credits, wired into Linsight"
+title: "Partnering with the AMD Developer Program: $50 in free Fireworks credits, wired into JiuMate"
 date: 2026-07-20
 category: news
-excerpt: We are delighted to partner with the AMD AI Developer Program to bring you free Fireworks coupon codes — apply for the $50 credits with this guide, then set them up in Linsight in three steps.
+excerpt: We are delighted to partner with the AMD AI Developer Program to bring you free Fireworks coupon codes — apply for the $50 credits with this guide, then set them up in JiuMate in three steps.
 ---
 
-We are delighted to partner with the **AMD AI Developer Program** to bring you free Fireworks redemption codes: join the program, pass the review, and you receive a Coupon Code redeemable for **$50 in Fireworks AI Credits**. Linsight ships a built-in Fireworks AI gateway group — OpenAI protocol, preset base URL, five preset models — so the credits are usable the moment they land.
+We are delighted to partner with the **AMD AI Developer Program** to bring you free Fireworks redemption codes: join the program, pass the review, and you receive a Coupon Code redeemable for **$50 in Fireworks AI Credits**. JiuMate ships a built-in Fireworks AI gateway group — OpenAI protocol, preset base URL, five preset models — so the credits are usable the moment they land.
 
 > Page content, credit amounts, and expiration dates are subject to change. Please refer to the application page and approval email for the latest information.
 
@@ -57,15 +57,15 @@ Redeem it and create an API key:
 
 ![Redeeming and creating an API key in the Fireworks console](https://github.com/user-attachments/assets/051a1e69-db7f-4867-b899-89981df15142)
 
-## Set it up in Linsight
+## Set it up in JiuMate
 
 With the API key in hand, three steps:
 
 **1. Install and launch**
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight web        # opens http://127.0.0.1:7364 (first login: admin, initial password printed on first start)
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate web        # opens http://127.0.0.1:7364 (first login: admin, initial password printed on first start)
 ```
 
 **2. Configure a Fireworks model**
@@ -81,4 +81,4 @@ Head back to Chat and hand the Agent its first task — e.g. "Analyze data.csv a
 - [AMD AI Developer Program](https://developer.amd.com/ai-developer-program/)
 - [Official AMD Cloud Credits application video tutorial](https://www.youtube.com/watch?v=masSW53JkTY)
 - Application steps and screenshots are adapted from WhatGhost's guides ([中文](https://github.com/WhatGhost/whatghost_Notebooks/blob/main/other/AMD_AI_Developer_Program_Credits_%E7%94%B3%E8%AF%B7%E6%8C%87%E5%8D%97.md) / [English](https://github.com/WhatGhost/whatghost_Notebooks/blob/main/other/AMD_AI_Developer_Program_Credits_Application_Guide_EN.md)) — thanks to the original author
-- [Linsight model configuration docs](https://linsight.ooo/docs/models)
+- [JiuMate model configuration docs](https://jiumate.ooo/docs/models)

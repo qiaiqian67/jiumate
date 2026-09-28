@@ -1,21 +1,21 @@
 ---
 title: Introduction
-description: What Linsight is, what ships in the box, and the design tenets behind it.
+description: What JiuMate is, what ships in the box, and the design tenets behind it.
 ---
 
-Linsight is an open-source AI Agent harness — a complete TypeScript stack built for constructing and evolving agents. It deploys fully locally (your data never leaves the machine), runs on as little as a single CPU, and reaches 1000+ online and local models through one unified model gateway.
+JiuMate is an open-source AI Agent harness — a complete TypeScript stack built for constructing and evolving agents. It deploys fully locally (your data never leaves the machine), runs on as little as a single CPU, and reaches 1000+ online and local models through one unified model gateway.
 
 In one line: **Efficient Self-Improving Harness for Everyone.**
 
 ## The three pillars
 
-Linsight is organized around three radiating concepts — the message protocol, the SDK, and the skill library — each carrying one pillar:
+JiuMate is organized around three radiating concepts — the message protocol, the SDK, and the skill library — each carrying one pillar:
 
 | Pillar | Meaning |
 | --- | --- |
 | **Simplest Is the Best** | A deliberately minimal toolset over clean low-level interfaces: fewer tool calls, fewer Tokens, complex tasks done efficiently. |
-| **Harness for Building Agents** | With the Linsight SDK, an Agent builds complete Agent applications for you — autonomously, from scratch. |
-| **Harness for Recursive Self-Improvement** | With Linsight Skills, an Agent evaluates and optimizes itself, improving recursively over time. |
+| **Harness for Building Agents** | With the JiuMate SDK, an Agent builds complete Agent applications for you — autonomously, from scratch. |
+| **Harness for Recursive Self-Improvement** | With JiuMate Skills, an Agent evaluates and optimizes itself, improving recursively over time. |
 
 ## What ships in the box
 
@@ -23,10 +23,10 @@ One install gives you four layers that share a single data directory and a singl
 
 | Component | Package | Description |
 | --- | --- | --- |
-| SDK | `@prismshadow/linsight-core` | The core engine: ReAct loop, the [OmniMessage protocol](/omni-message), the LLM and Environment [interface contracts](/interfaces), Agent State and Trace. |
-| CLI | `@prismshadow/linsight-cli` | The `linsight` command: interactive REPL, one-shot task runs, model and Vault configuration. |
-| Server | `@prismshadow/linsight-server` | The Web backend: HTTP [API and SSE streaming](/server-api), multi-user auth, Project authorization, usage statistics. |
-| Web App | `@prismshadow/linsight-web` | The browser UI: multi-session chat, Agent management, skill library, model configuration, Trace observability and the evaluation center. |
+| SDK | `@prismshadow/jiumate-core` | The core engine: ReAct loop, the [OmniMessage protocol](/omni-message), the LLM and Environment [interface contracts](/interfaces), Agent State and Trace. |
+| CLI | `@prismshadow/jiumate-cli` | The `jiumate` command: interactive REPL, one-shot task runs, model and Vault configuration. |
+| Server | `@prismshadow/jiumate-server` | The Web backend: HTTP [API and SSE streaming](/server-api), multi-user auth, Project authorization, usage statistics. |
+| Web App | `@prismshadow/jiumate-web` | The browser UI: multi-session chat, Agent management, skill library, model configuration, Trace observability and the evaluation center. |
 
 ## Design tenets
 
@@ -41,9 +41,9 @@ These principles run through every component; the design pages keep coming back 
 
 ## A note on naming
 
-The unified message protocol is called **OmniMessage** in technical writing (marketing materials also call it Linsight Message). This documentation uses OmniMessage throughout.
+The unified message protocol is called **OmniMessage** in technical writing (marketing materials also call it JiuMate Message). This documentation uses OmniMessage throughout.
 
 ## Next steps
 
-- Follow the [Quickstart](/quickstart): install Linsight by whichever of the three routes fits you — desktop app, CLI, or SDK — and run your first Task.
+- Follow the [Quickstart](/quickstart): install JiuMate by whichever of the three routes fits you — desktop app, CLI, or SDK — and run your first Task.
 - Start the design docs at the [Architecture](/architecture) overview to see how the pieces fit together.

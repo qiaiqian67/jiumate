@@ -21,8 +21,8 @@ import {
   catalogEntryFor,
   effectivePricing,
   offPeakAt,
-} from "@prismshadow/linsight-core/model-catalog";
-import type { ModelProviderInfo } from "@prismshadow/linsight-core/model-catalog";
+} from "@prismshadow/jiumate-core/model-catalog";
+import type { ModelProviderInfo } from "@prismshadow/jiumate-core/model-catalog";
 
 import { orderModelGroups } from "./model-group-order";
 

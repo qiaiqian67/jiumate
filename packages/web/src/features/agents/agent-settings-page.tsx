@@ -20,8 +20,8 @@ import type {
   AgentCompactionConfigDto,
   AgentKernelUpdateResponse,
   AgentModelConfigDto,
-} from "@prismshadow/linsight-server/api";
-import type { ToolDefinitionConfig, ToolPermission } from "@prismshadow/linsight-core/interfaces";
+} from "@prismshadow/jiumate-server/api";
+import type { ToolDefinitionConfig, ToolPermission } from "@prismshadow/jiumate-core/interfaces";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

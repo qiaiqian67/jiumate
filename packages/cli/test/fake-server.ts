@@ -1,9 +1,9 @@
 /**
- * In-process fake Linsight server for CLI tests: stubs `globalThis.fetch` with a
+ * In-process fake JiuMate server for CLI tests: stubs `globalThis.fetch` with a
  * handler covering exactly the endpoints the server-backed commands touch (session
  * create/get/patch, tasks/steer/compact/abort, SSE stream, messages, agents, projects,
- * usage, schedules). Connection resolution is pinned via LINSIGHT_API_URL (a loopback
- * URL, so no token gate) and LINSIGHT_HOME points at a scratch directory so nothing of
+ * usage, schedules). Connection resolution is pinned via JIUMATE_API_URL (a loopback
+ * URL, so no token gate) and JIUMATE_HOME points at a scratch directory so nothing of
  * the developer's real data root is read.
  *
  * The SSE stream is real: a ReadableStream whose frames follow the server's wire shape
@@ -135,22 +135,22 @@ export class FakeServer {
   install(): () => void {
     this.savedFetch = globalThis.fetch;
     for (const key of [
-      "LINSIGHT_API_URL",
-      "LINSIGHT_API_TOKEN",
-      "LINSIGHT_HOME",
-      "LINSIGHT_SESSION_ID",
-      "LINSIGHT_PROJECT_ID",
-      "LINSIGHT_AGENT_ID",
+      "JIUMATE_API_URL",
+      "JIUMATE_API_TOKEN",
+      "JIUMATE_HOME",
+      "JIUMATE_SESSION_ID",
+      "JIUMATE_PROJECT_ID",
+      "JIUMATE_AGENT_ID",
     ]) {
       this.savedEnv.set(key, process.env[key]);
     }
-    this.scratch = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-cli-test-"));
-    process.env.LINSIGHT_HOME = this.scratch;
-    process.env.LINSIGHT_API_URL = "http://127.0.0.1:7399";
-    delete process.env.LINSIGHT_API_TOKEN;
-    delete process.env.LINSIGHT_SESSION_ID;
-    delete process.env.LINSIGHT_PROJECT_ID;
-    delete process.env.LINSIGHT_AGENT_ID;
+    this.scratch = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-cli-test-"));
+    process.env.JIUMATE_HOME = this.scratch;
+    process.env.JIUMATE_API_URL = "http://127.0.0.1:7399";
+    delete process.env.JIUMATE_API_TOKEN;
+    delete process.env.JIUMATE_SESSION_ID;
+    delete process.env.JIUMATE_PROJECT_ID;
+    delete process.env.JIUMATE_AGENT_ID;
     globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) =>
       this.handle(input, init)) as typeof globalThis.fetch;
     return () => this.uninstall();

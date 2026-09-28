@@ -18,7 +18,7 @@ import {
 } from "react";
 import * as api from "../../api/endpoints";
 import { subscribePrefsChanged } from "./prefs-events";
-import type { UiPrefs } from "@prismshadow/linsight-server/api";
+import type { UiPrefs } from "@prismshadow/jiumate-server/api";
 
 export interface PetPrefs {
   enablePet: boolean;

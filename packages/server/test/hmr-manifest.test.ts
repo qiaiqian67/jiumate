@@ -1,6 +1,6 @@
 /**
- * hmr/manifest.ts's resolveCliBundlePath: a plain disk reader `linsight-hmr` calls with no
- * running HmrHost (see packages/cli/src/linsight-hmr.ts). It must return null — never throw —
+ * hmr/manifest.ts's resolveCliBundlePath: a plain disk reader `jiumate-hmr` calls with no
+ * running HmrHost (see packages/cli/src/jiumate-hmr.ts). It must return null — never throw —
  * for every malformed or malicious harness.json, since a crash here breaks the CLI entirely.
  */
 import fs from "node:fs/promises";
@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { readHarnessInfo, resolveCliBundlePath } from "../src/hmr/manifest.js";
 
 async function makeRoot(): Promise<string> {
-  return fs.mkdtemp(path.join(os.tmpdir(), "linsight-hmr-manifest-test-"));
+  return fs.mkdtemp(path.join(os.tmpdir(), "jiumate-hmr-manifest-test-"));
 }
 
 async function writeManifest(root: string, manifest: unknown): Promise<void> {
@@ -89,7 +89,7 @@ describe("resolveCliBundlePath", () => {
 
 /**
  * readHarnessInfo: the same disk, read for version reporting instead of for loading. It
- * feeds `linsight version --json` and GET /api/version, so like resolveCliBundlePath it must
+ * feeds `jiumate version --json` and GET /api/version, so like resolveCliBundlePath it must
  * degrade to missing fields rather than throw — a malformed store cannot be allowed to break
  * the command a user runs to find out what is wrong.
  */
@@ -117,12 +117,12 @@ describe("readHarnessInfo", () => {
       platform: { bundle: "store/platform/dead00.mjs" },
       cli: { bundle: "store/cli/abc123.mjs" },
       web: { manifest: "store/web/cafe01.webz" },
-      source: { repo: "https://example.com/linsight.git", revision: "v0.2.3-7-gabc1234-dirty" },
+      source: { repo: "https://example.com/jiumate.git", revision: "v0.2.3-7-gabc1234-dirty" },
       pushedAt: "2026-08-20T10:15:00.000Z",
     });
 
     await expect(readHarnessInfo(root)).resolves.toEqual({
-      source: { repo: "https://example.com/linsight.git", revision: "v0.2.3-7-gabc1234-dirty" },
+      source: { repo: "https://example.com/jiumate.git", revision: "v0.2.3-7-gabc1234-dirty" },
       pushedAt: "2026-08-20T10:15:00.000Z",
       bundles: {
         platform: "store/platform/dead00.mjs",
@@ -152,7 +152,7 @@ describe("readHarnessInfo", () => {
     root = await makeRoot();
     await writeManifest(root, {
       cli: { bundle: "store/cli/abc123.mjs" },
-      source: { repo: "https://example.com/linsight.git" },
+      source: { repo: "https://example.com/jiumate.git" },
     });
     await expect(readHarnessInfo(root)).resolves.toMatchObject({ source: null });
   });

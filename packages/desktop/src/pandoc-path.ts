@@ -53,7 +53,7 @@ export function pandocBinaryName(platform: NodeJS.Platform): string {
  * Returns the absolute path to the bundled pandoc binary, or `null` if no copy is on disk.
  *
  * Resolution order:
- *   1. `LINSIGHT_PANDOC` env override (lets a user / smoke harness point at their own copy).
+ *   1. `JIUMATE_PANDOC` env override (lets a user / smoke harness point at their own copy).
  *   2. Packaged app's extraResources (`<resourcesPath>/pandoc/<bin>`).
  *   3. Dev staging (`<appPath>/dist/bin/pandoc/<bin>`).
  *   4. PATH lookup (`<envPath dirs>/pandoc[.exe]`).

@@ -1,27 +1,27 @@
 ---
 title: SDK
-description: 用 @prismshadow/linsight-core 在自己的 TypeScript 程序里创建 Agent 与 Session。
+description: 用 @prismshadow/jiumate-core 在自己的 TypeScript 程序里创建 Agent 与 Session。
 ---
 
-`@prismshadow/linsight-core` 就是 CLI 与 Server 内部使用的同一个引擎，可以直接嵌进自己的程序。
+`@prismshadow/jiumate-core` 就是 CLI 与 Server 内部使用的同一个引擎，可以直接嵌进自己的程序。
 
 ## 安装
 
 需要 Node.js >= 24：
 
 ```bash
-npm install @prismshadow/linsight-core
+npm install @prismshadow/jiumate-core
 ```
 
 ## 配置模型
 
-SDK 与其他两条路线读同一个数据目录 `~/.linsight/data`，所以在[桌面端应用](/quickstart-desktop)或 [CLI](/quickstart-cli) 里配好的模型，SDK 直接可用，无需重复配置。
+SDK 与其他两条路线读同一个数据目录 `~/.jiumate/data`，所以在[桌面端应用](/quickstart-desktop)或 [CLI](/quickstart-cli) 里配好的模型，SDK 直接可用，无需重复配置。
 
 如果这台机器还没配过模型，最省事的方式是装上 CLI 配一次：
 
 ```bash
-npm install -g @prismshadow/linsight-cli
-linsight config model add --provider deepseek --model-id deepseek-v4-flash-vision-exp --api-key sk-... --set-default
+npm install -g @prismshadow/jiumate-cli
+jiumate config model add --provider deepseek --model-id deepseek-v4-flash-vision-exp --api-key sk-... --set-default
 ```
 
 也可以完全不落盘：模型条目没有内联 api_key 时，LLM 网关库 AgentHub 会读取 `DEEPSEEK_API_KEY`、`ANTHROPIC_API_KEY`、`OPENAI_API_KEY`、`GEMINI_API_KEY` 等环境变量；工作目录下的 `.env` 会被自动加载。
@@ -29,7 +29,7 @@ linsight config model add --provider deepseek --model-id deepseek-v4-flash-visio
 ## 第一个程序
 
 ```ts
-import { createAgent, isCompleteModelMessage, userText } from "@prismshadow/linsight-core";
+import { createAgent, isCompleteModelMessage, userText } from "@prismshadow/jiumate-core";
 
 const agent = await createAgent({ agentId: "default_agent" });
 const session = await agent.createSession({ workspaceDir: process.cwd() });

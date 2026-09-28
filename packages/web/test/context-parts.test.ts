@@ -3,7 +3,7 @@
  * and the palette it is zipped with.
  */
 import { describe, expect, it } from "vitest";
-import type { SessionContextResponse } from "@prismshadow/linsight-server/api";
+import type { SessionContextResponse } from "@prismshadow/jiumate-server/api";
 import { CONTEXT_PART_KEYS, contextComposition } from "../src/features/chat/context-parts";
 import { CONTEXT_PART_COLORS } from "../src/lib/category-colors";
 

@@ -142,7 +142,7 @@ jobs:
       # Windows carries MinGit under resources/git so the packaged agent shell has the
       # same deterministic POSIX bash as the npm package (release.yml bundles the
       # identical MinGit into the CLI win-x64 zip; the shell advertises it as
-      # LINSIGHT_BUNDLED_SHELL).
+      # JIUMATE_BUNDLED_SHELL).
       - name: Bundle MinGit (Windows)
         if: runner.os == 'Windows'
         shell: bash
@@ -331,10 +331,10 @@ jobs:
           }
 
           $outDir = "packages/desktop/out"
-          $installer = Join-Path $outDir "linsight-desktop-win32-x64.exe"
+          $installer = Join-Path $outDir "jiumate-desktop-win32-x64.exe"
           $latest = Join-Path $outDir "latest.yml"
           $blockmap = "$installer.blockmap"
-          $appExe = Join-Path $outDir "win-unpacked/Linsight.exe"
+          $appExe = Join-Path $outDir "win-unpacked/JiuMate.exe"
           $elevateExe = Join-Path $outDir "win-unpacked/resources/elevate.exe"
           $appUpdate = Join-Path $outDir "win-unpacked/resources/app-update.yml"
 
@@ -552,8 +552,8 @@ jobs:
           }
 
           apps=(
-            packages/desktop/out/mac-arm64/Linsight.app
-            packages/desktop/out/mac/Linsight.app
+            packages/desktop/out/mac-arm64/JiuMate.app
+            packages/desktop/out/mac/JiuMate.app
           )
           for app in "${apps[@]}"; do
             if [[ ! -d "$app" ]]; then
@@ -601,11 +601,11 @@ jobs:
           name: desktop-${{ runner.os }}
           if-no-files-found: error
           path: |
-            packages/desktop/out/linsight-desktop-*.AppImage
-            packages/desktop/out/linsight-desktop-*.deb
-            packages/desktop/out/linsight-desktop-*.dmg
-            packages/desktop/out/linsight-desktop-*.zip
-            packages/desktop/out/linsight-desktop-*.exe
+            packages/desktop/out/jiumate-desktop-*.AppImage
+            packages/desktop/out/jiumate-desktop-*.deb
+            packages/desktop/out/jiumate-desktop-*.dmg
+            packages/desktop/out/jiumate-desktop-*.zip
+            packages/desktop/out/jiumate-desktop-*.exe
             # Update metadata: electron-updater reads latest*.yml from the Release, and
             # the blockmaps are what make differential downloads possible. Without these
             # the installers ship but nothing can auto-update.

@@ -1,9 +1,9 @@
 {
-  "name": "@prismshadow/linsight-landing",
+  "name": "@prismshadow/jiumate-landing",
   "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "Linsight landing page (React + Vite + Tailwind CSS): multilingual, light/dark themes, benchmark showcase, and a local Markdown blog, deployed to GitHub Pages via GitHub Actions.",
+  "description": "JiuMate landing page (React + Vite + Tailwind CSS): multilingual, light/dark themes, benchmark showcase, and a local Markdown blog, deployed to GitHub Pages via GitHub Actions.",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/postbuild.mjs",

@@ -1,13 +1,13 @@
 <p align="center">
-  <img src="packages/landing/public/linsight-logo.svg" alt="Linsight logo" width="88" />
+  <img src="packages/landing/public/jiumate-logo.svg" alt="JiuMate logo" width="88" />
 </p>
 
-<h1 align="center">Linsight</h1>
+<h1 align="center">九川</h1>
 
 <p align="center"><strong>开源、本地的多 Agent 应用自动开发平台</strong><br />全自动<strong>创建</strong> · <strong>优化</strong> · <strong>部署</strong> AI 应用</p>
 
 <p align="center">
-  <a href="https://linsight.ooo/download">
+  <a href="https://jiumate.ooo/download">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="assets/readme/download-zh-dark.svg" />
       <img src="assets/readme/download-zh-light.svg" alt="下载应用" height="44" />
@@ -18,17 +18,17 @@
 <p align="center">1000+ 模型 · 多平台 · Apache 2.0 · Agent 自进化</p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@prismshadow/linsight-core"><img src="https://img.shields.io/npm/v/@prismshadow/linsight-core" alt="npm 版本" /></a>
-  <a href="https://github.com/qiaiqian67/linsight/actions/workflows/ci.yml"><img src="https://github.com/qiaiqian67/linsight/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://github.com/qiaiqian67/linsight/actions/workflows/pages.yml"><img src="https://github.com/qiaiqian67/linsight/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
+  <a href="https://www.npmjs.com/package/@prismshadow/jiumate-core"><img src="https://img.shields.io/npm/v/@prismshadow/jiumate-core" alt="npm 版本" /></a>
+  <a href="https://github.com/qiaiqian67/jiumate/actions/workflows/ci.yml"><img src="https://github.com/qiaiqian67/jiumate/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/qiaiqian67/jiumate/actions/workflows/pages.yml"><img src="https://github.com/qiaiqian67/jiumate/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0" /></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A5%2024-brightgreen" alt="Node >= 24" />
 </p>
 
 <p align="center">
-  <a href="https://linsight.ooo/"><img src="https://img.shields.io/badge/%E5%AE%98%E7%BD%91-linsight.ooo-1f6feb?logo=googlechrome&logoColor=white" alt="官网" /></a>
-  <a href="https://linsight.ooo/docs/"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-linsight.ooo%2Fdocs-1f6feb?logo=readthedocs&logoColor=white" alt="文档" /></a>
-  <a href="https://linsight.ooo/blog"><img src="https://img.shields.io/badge/%E5%8D%9A%E5%AE%A2-linsight.ooo%2Fblog-1f6feb?logo=rss&logoColor=white" alt="博客" /></a>
+  <a href="https://jiumate.ooo/"><img src="https://img.shields.io/badge/%E5%AE%98%E7%BD%91-jiumate.ooo-1f6feb?logo=googlechrome&logoColor=white" alt="官网" /></a>
+  <a href="https://jiumate.ooo/docs/"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-jiumate.ooo%2Fdocs-1f6feb?logo=readthedocs&logoColor=white" alt="文档" /></a>
+  <a href="https://jiumate.ooo/blog"><img src="https://img.shields.io/badge/%E5%8D%9A%E5%AE%A2-jiumate.ooo%2Fblog-1f6feb?logo=rss&logoColor=white" alt="博客" /></a>
 </p>
 
 <p align="center">
@@ -37,16 +37,16 @@
 </p>
 
 <p align="center">
-  <a href="https://www.producthunt.com/products/linsight?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-linsight" target="_blank" rel="noopener noreferrer"><img alt="Linsight - Let Agents Autonomously Build Better Agents for $0.02 | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1202577&amp;theme=light&amp;t=1784804711946" /></a>
+  <a href="https://www.producthunt.com/products/jiumate?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-jiumate" target="_blank" rel="noopener noreferrer"><img alt="JiuMate - Let Agents Autonomously Build Better Agents for $0.02 | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1202577&amp;theme=light&amp;t=1784804711946" /></a>
 </p>
 
 <p align="center"><a href="README.md">English</a> | 简体中文</p>
 
-## 为什么选择 Linsight
+## 为什么选择 JiuMate
 
-> 使用 LangChain，以 1 倍速度人工构建 Agent；<br />使用 Linsight，以 100 倍速度用 Agent 构建 Agent。
+> 使用 LangChain，以 1 倍速度人工构建 Agent；<br />使用 JiuMate，以 100 倍速度用 Agent 构建 Agent。
 
-Linsight 运行在你的电脑或服务器上，自动串联 Agent 应用的创建、评测、优化与部署。三个递进的理由定义了这个平台：
+JiuMate 运行在你的电脑或服务器上，自动串联 Agent 应用的创建、评测、优化与部署。三个递进的理由定义了这个平台：
 
 ### 1. 🏆 以几十分之一的成本，跑出优异的效果
 
@@ -55,7 +55,7 @@ Linsight 运行在你的电脑或服务器上，自动串联 Agent 应用的创�
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme/benchmark-dark.svg" />
-    <img src="assets/readme/benchmark-light.svg" alt="Benchmark：Linsight 在数据分析题库准确率最高、编程题库与 OpenAI Codex 持平，成本仅为两者的零头" width="920" />
+    <img src="assets/readme/benchmark-light.svg" alt="Benchmark：JiuMate 在数据分析题库准确率最高、编程题库与 OpenAI Codex 持平，成本仅为两者的零头" width="920" />
   </picture>
 </p>
 
@@ -63,7 +63,7 @@ Linsight 运行在你的电脑或服务器上，自动串联 Agent 应用的创�
 
 ### 2. ⚡ 一句话生成可运行的 Agent 应用
 
-用一句话描述需求，Linsight 自动构建完整的 Agent 应用——脚手架、代码、运行说明，一步到位：
+用一句话描述需求，JiuMate 自动构建完整的 Agent 应用——脚手架、代码、运行说明，一步到位：
 
 ```text
 收集 https://github.com/ericbuess/claude-code-docs 的文档，做一个化身 Claude Code 配置专家、回答带来源引用的 RAG 问答应用。
@@ -77,13 +77,13 @@ https://github.com/user-attachments/assets/604eb626-0a5d-4a62-87e3-14ebade1cd5f
 
 ### 3. 🧬 原生 Agent 自进化引擎
 
-借助 Linsight 技能库，Agent 自己评估、自己优化：跑 Benchmark、找失分点、发布 N+1 版——每轮之前自动快照，每个请求都可在轨迹观测中回放。
+借助 JiuMate 技能库，Agent 自己评估、自己优化：跑 Benchmark、找失分点、发布 N+1 版——每轮之前自动快照，每个请求都可在轨迹观测中回放。
 
 https://github.com/user-attachments/assets/aec49ae9-b743-467b-b247-37bedfeaa36e
 
 ## 内置插件库
 
-开箱内置三类插件（[文档](https://linsight.ooo/docs/skills)）——Skill，以及驱动目标模式与持续学习的会话钩子；Agent 也能编写并优化自己的 Skill：
+开箱内置三类插件（[文档](https://jiumate.ooo/docs/skills)）——Skill，以及驱动目标模式与持续学习的会话钩子；Agent 也能编写并优化自己的 Skill：
 
 | 分类        | 插件                                                                            |
 | ----------- | ------------------------------------------------------------------------------- |
@@ -118,19 +118,19 @@ https://github.com/user-attachments/assets/aec49ae9-b743-467b-b247-37bedfeaa36e
 
 ## 安装
 
-优先使用桌面端，也可以在本地电脑或服务器上安装命令行。两种方式共用 `~/.linsight/data` 目录，可自由混用：
+优先使用桌面端，也可以在本地电脑或服务器上安装命令行。两种方式共用 `~/.jiumate/data` 目录，可自由混用：
 
 - **🖥️ 桌面端应用**——双击安装：内嵌服务端，打开即已登录，全程无需终端。
-- **⌨️ 命令行**——一行命令（或 npm / 离线包）装出 `linsight` 命令，`linsight web` 即在浏览器打开完整 Web 体验 `http://127.0.0.1:7364`（多会话对话、Agent / 技能 / 模型管理、用量统计、轨迹观测、评估中心）。在线安装器自带 Node 运行时，解压即用；升级与重装不触碰数据。
+- **⌨️ 命令行**——一行命令（或 npm / 离线包）装出 `jiumate` 命令，`jiumate web` 即在浏览器打开完整 Web 体验 `http://127.0.0.1:7364`（多会话对话、Agent / 技能 / 模型管理、用量统计、轨迹观测、评估中心）。在线安装器自带 Node 运行时，解压即用；升级与重装不触碰数据。
 
 > [!NOTE]
 > 命令行安装后，服务端会以边框提示打印一条首次登录链接（在密码被设置之前每次启动都会重新打印）——打开即可认领内置管理员 `admin` 并设置密码；模型在应用内「模型」页配置。
 
 ### 🖥️ 桌面端应用
 
-完整的 Web 体验打包为独立应用：内嵌服务端，打开即已登录——无需终端、无登录页、也不用抄初始密码——并与 CLI 安装共用同一个 `~/.linsight/data` 数据目录，两者可以混用（一个数据目录同一时刻只运行一个服务端；CLI 已启动实例时，应用会直接接入它）。
+完整的 Web 体验打包为独立应用：内嵌服务端，打开即已登录——无需终端、无登录页、也不用抄初始密码——并与 CLI 安装共用同一个 `~/.jiumate/data` 数据目录，两者可以混用（一个数据目录同一时刻只运行一个服务端；CLI 已启动实例时，应用会直接接入它）。
 
-从[下载页](https://linsight.ooo/download)获取桌面端应用。下载页会自动选择可用的 OSS 加速源，安装包也附于每个 [GitHub Release](https://github.com/qiaiqian67/linsight/releases)。
+从[下载页](https://jiumate.ooo/download)获取桌面端应用。下载页会自动选择可用的 OSS 加速源，安装包也附于每个 [GitHub Release](https://github.com/qiaiqian67/jiumate/releases)。
 
 | 平台          | 安装包                       |
 | ------------- | ---------------------------- |
@@ -146,7 +146,7 @@ macOS 安装包已由 Developer ID 签名并公证，Windows 安装程序已 Aut
 浏览器下载的 AppImage 默认没有执行权限，赋权一次后即可正常启动（deb 包经包管理器安装，无此问题）：
 
 ```bash
-chmod +x linsight-desktop-linux-x86_64.AppImage
+chmod +x jiumate-desktop-linux-x86_64.AppImage
 ```
 
 </details>
@@ -154,50 +154,50 @@ chmod +x linsight-desktop-linux-x86_64.AppImage
 ### 🐧🍎 Linux / macOS（在线安装）
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight web        # 启动服务并打开 http://127.0.0.1:7364
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ```
 
 ### 🪟 Windows（在线安装，PowerShell）
 
 ```powershell
-irm https://linsight.ooo/install.ps1 | iex
-linsight web        # 启动服务并打开 http://127.0.0.1:7364
+irm https://jiumate.ooo/install.ps1 | iex
+jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ```
 
 ### 📦 npm（任意平台，需 Node >= 24）
 
 ```bash
-npm install -g @prismshadow/linsight-cli
-linsight web        # 启动服务并打开 http://127.0.0.1:7364
+npm install -g @prismshadow/jiumate-cli
+jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ```
 
 <details>
 <summary><b>📴 离线安装（无网环境）</b></summary>
 
-每个 <a href="https://github.com/qiaiqian67/linsight/releases">GitHub Release</a> 每个目标只附带一个安装包——Linux 与 macOS 各有 x64 / arm64 两种架构，Windows 为 x64，另有不带运行时的 universal 包——同一个文件同时服务在线与离线安装。包内封入程序负载、其 SHA256 校验文件与对应平台的安装器：在有网机器下载这一个文件，拷贝到目标机器，解压一次并运行包内安装器即可——全程无需联网，也不必另外携带校验文件（包内封入的 SHA256 始终强制校验）。
+每个 <a href="https://github.com/qiaiqian67/jiumate/releases">GitHub Release</a> 每个目标只附带一个安装包——Linux 与 macOS 各有 x64 / arm64 两种架构，Windows 为 x64，另有不带运行时的 universal 包——同一个文件同时服务在线与离线安装。包内封入程序负载、其 SHA256 校验文件与对应平台的安装器：在有网机器下载这一个文件，拷贝到目标机器，解压一次并运行包内安装器即可——全程无需联网，也不必另外携带校验文件（包内封入的 SHA256 始终强制校验）。
 
-**Linux（arm64 机器换用 `linsight-linux-arm64.tar.gz`）：**
+**Linux（arm64 机器换用 `jiumate-linux-arm64.tar.gz`）：**
 
 ```bash
-mkdir linsight-install
-tar -xzf linsight-linux-x64.tar.gz -C linsight-install
-./linsight-install/install.sh
+mkdir jiumate-install
+tar -xzf jiumate-linux-x64.tar.gz -C jiumate-install
+./jiumate-install/install.sh
 ```
 
-**macOS（Apple 芯片用 arm64 包，Intel 芯片换用 `linsight-darwin-x64.tar.gz`）：**
+**macOS（Apple 芯片用 arm64 包，Intel 芯片换用 `jiumate-darwin-x64.tar.gz`）：**
 
 ```bash
-mkdir linsight-install
-tar -xzf linsight-darwin-arm64.tar.gz -C linsight-install
-./linsight-install/install.sh
+mkdir jiumate-install
+tar -xzf jiumate-darwin-arm64.tar.gz -C jiumate-install
+./jiumate-install/install.sh
 ```
 
 **Windows（解压后双击 `install.cmd`，或在 PowerShell 中运行）：**
 
 ```powershell
-Expand-Archive linsight-win32-x64.zip -DestinationPath linsight-install
-cd linsight-install
+Expand-Archive jiumate-win32-x64.zip -DestinationPath jiumate-install
+cd jiumate-install
 .\install.cmd
 ```
 
@@ -208,14 +208,14 @@ cd linsight-install
 同一引擎、可脚本化——为被 Agent 驱动而生（以及让 Agent 构建 Agent）：
 
 ```bash
-linsight config model add --provider deepseek --model-id deepseek-v4-flash-vision-exp --api-key sk-... --set-default
-linsight run -m "Create hello.txt containing Hello, Linsight"   # 单次任务
-linsight chat       # 交互式 REPL（/compact、/clear、/exit、Ctrl-C 中断）
-linsight server     # 无界面服务（与 Web 应用同一套 API）
+jiumate config model add --provider deepseek --model-id deepseek-v4-flash-vision-exp --api-key sk-... --set-default
+jiumate run -m "Create hello.txt containing Hello, JiuMate"   # 单次任务
+jiumate chat       # 交互式 REPL（/compact、/clear、/exit、Ctrl-C 中断）
+jiumate server     # 无界面服务（与 Web 应用同一套 API）
 ```
 
 ```ts
-import { createAgent, isCompleteModelMessage, userText } from "@prismshadow/linsight-core";
+import { createAgent, isCompleteModelMessage, userText } from "@prismshadow/jiumate-core";
 
 const agent = await createAgent({ agentId: "default_agent" });
 const session = await agent.createSession({ workspaceDir: process.cwd() });
@@ -250,22 +250,22 @@ pnpm dev                     # 服务端 + Web 一起启动（带前缀日志，
 
 ## 贡献者
 
-感谢每一位为 Linsight 作出贡献的开发者！
+感谢每一位为 JiuMate 作出贡献的开发者！
 
 <p align="center">
-  <a href="https://github.com/qiaiqian67/linsight/graphs/contributors"><img src="https://contrib.rocks/image?repo=qiaiqian67/linsight" alt="Linsight 贡献者" /></a>
+  <a href="https://github.com/qiaiqian67/jiumate/graphs/contributors"><img src="https://contrib.rocks/image?repo=qiaiqian67/jiumate" alt="JiuMate 贡献者" /></a>
 </p>
 
 ## 引用
 
-如果 Linsight 对你的研究有帮助，请引用：
+如果 JiuMate 对你的研究有帮助，请引用：
 
 ```bibtex
-@software{linsight2026,
+@software{jiumate2026,
   author  = {{PrismShadow Team}},
-  title   = {Linsight: Efficient Self-Improving Harness for Everyone},
+  title   = {JiuMate: Efficient Self-Improving Harness for Everyone},
   year    = {2026},
-  url     = {https://github.com/qiaiqian67/linsight},
+  url     = {https://github.com/qiaiqian67/jiumate},
   license = {Apache-2.0}
 }
 ```

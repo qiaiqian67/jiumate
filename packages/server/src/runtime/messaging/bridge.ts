@@ -70,8 +70,8 @@
  * is a bad place to receive a directory. What the caps drop is named in the chat rather
  * than dropped quietly.
  */
-import { imageUrlMessage, scratchpadDir, userText } from "@prismshadow/linsight-core";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+import { imageUrlMessage, scratchpadDir, userText } from "@prismshadow/jiumate-core";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 import type { MessagingDeliveryError, MessagingRuntimeStatus } from "../../api/types.js";
 import type {
   MessagingBindingRow,
@@ -263,9 +263,9 @@ export function messagingInboundFileFailedNotice(fileName: string, reason: strin
 }
 
 export const MESSAGING_APPROVAL_NOTICE =
-  "A tool call is waiting for your approval in the Linsight web UI. 有工具调用正在等待你在网页端审批。";
+  "A tool call is waiting for your approval in the JiuMate web UI. 有工具调用正在等待你在网页端审批。";
 export const MESSAGING_TEST_MESSAGE =
-  "Linsight test message: this Session's messaging binding works. 测试消息：该会话的消息绑定工作正常。";
+  "JiuMate test message: this Session's messaging binding works. 测试消息：该会话的消息绑定工作正常。";
 
 /**
  * Per-file ceilings for a mirrored file, and how many of them one run may send.

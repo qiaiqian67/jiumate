@@ -17,14 +17,14 @@ import type {
   CompactionMode,
   OmniMessage,
   ToolCallPayload,
-} from "@prismshadow/linsight-core/omnimessage";
+} from "@prismshadow/jiumate-core/omnimessage";
 import type {
   MCPServerConfig,
   ThinkingLevelName,
   ToolDefinitionConfig,
-} from "@prismshadow/linsight-core/interfaces";
+} from "@prismshadow/jiumate-core/interfaces";
 // Build/harness identity is not an interface contract — it ships from the barrel (core's version-info.ts).
-import type { HarnessInfo, VersionReport } from "@prismshadow/linsight-core";
+import type { HarnessInfo, VersionReport } from "@prismshadow/jiumate-core";
 
 // ---------------------------------------------------------------------------
 // General
@@ -85,17 +85,17 @@ export interface MeResponse {
   user: UserInfo;
   /**
    * Whether Workspace HTML previews open on a separate origin (the loopback
-   * counterpart of the App host, or LINSIGHT_PREVIEW_ORIGIN when set). False means this
+   * counterpart of the App host, or JIUMATE_PREVIEW_ORIGIN when set). False means this
    * deployment has no usable preview origin —
    * the App is reached on something other than a loopback name and
-   * LINSIGHT_PREVIEW_ORIGIN is unset — so previews fall back to the same-origin sandbox,
+   * JIUMATE_PREVIEW_ORIGIN is unset — so previews fall back to the same-origin sandbox,
    * where `localStorage`, cookies and third-party embeds do not work. Computed per
    * request, since it depends on the host the caller is using.
    */
   previewIsolated: boolean;
   /**
    * Whether this server runs in desktop mode (spawned by the desktop shell with
-   * LINSIGHT_DESKTOP_TOKEN). The web app then hides the logout entry, the
+   * JIUMATE_DESKTOP_TOKEN). The web app then hides the logout entry, the
    * initial-password banner and the self-update entry.
    */
   desktopMode: boolean;
@@ -1172,7 +1172,7 @@ export interface MemoryTransferFile {
  */
 export interface MemoryScopeExport {
   /** Format marker, so a foreign JSON file is refused with a clear reason rather than half-imported. */
-  format: "linsight-memory-scope";
+  format: "jiumate-memory-scope";
   /** Document version. A reader accepts exactly this; a later format bumps it and states its own compatibility. */
   version: 1;
   /** The scope this was exported from. Informational: an import writes into the scope its URL names. */
@@ -3180,11 +3180,11 @@ export interface AgentPluginsInstallResponse {
 // Inspiration library
 // ---------------------------------------------------------------------------
 
-import type { InspirationCase, InspirationCategory } from "@prismshadow/linsight-inspirations";
+import type { InspirationCase, InspirationCategory } from "@prismshadow/jiumate-inspirations";
 
 /**
  * The inspiration library's case and category types come from
- * `@prismshadow/linsight-inspirations` — the same package the server stores them with and the
+ * `@prismshadow/jiumate-inspirations` — the same package the server stores them with and the
  * web app renders them from, so the wire shape has exactly one definition. Only the envelope is
  * declared here.
  */
@@ -3244,7 +3244,7 @@ export interface SkillArchiveInstallRequest {
 
 /**
  * GET /api/version: the running build's identity plus this root's pushed harness, verbatim
- * from `versionReport()` — the same record `linsight version --json` prints, so the two
+ * from `versionReport()` — the same record `jiumate version --json` prints, so the two
  * cannot drift apart. Field meanings live on {@link VersionReport} and {@link HarnessInfo};
  * the ones the web reads are `version` and `buildDate` (the stamped release date behind the
  * sidebar's "last updated", needing no network, and null for a source build or a release
@@ -3270,7 +3270,7 @@ export interface UpdateCheckResponse {
   publishedAt: string | null;
   /** When this result was produced (ISO 8601) — a cached result keeps its original timestamp. */
   checkedAt: string;
-  /** Present (true) when update checks are turned off via LINSIGHT_UPDATE_CHECK=off; no network call was made. */
+  /** Present (true) when update checks are turned off via JIUMATE_UPDATE_CHECK=off; no network call was made. */
   disabled?: true;
   /** Why the lookup failed: unreachable network / GitHub rate limit / unusable response. */
   error?: "network" | "rate_limited" | "bad_response";
@@ -3344,13 +3344,13 @@ export interface DesktopUpdaterCommandMessage {
 }
 
 /**
- * The outcome of one self-update run (`linsight update --yes` on the server host), carried
+ * The outcome of one self-update run (`jiumate update --yes` on the server host), carried
  * by {@link UpdateJobStatus.result}. `unsupported` covers both a server not launched via
  * the CLI and the CLI's own refusals (source checkout, unrecognized install layout, Windows).
  */
 export interface UpdateRunResponse {
   status: "updated" | "failed" | "unsupported";
-  /** Set when the server cannot run the CLI at all (started without `linsight server|web`). */
+  /** Set when the server cannot run the CLI at all (started without `jiumate server|web`). */
   reason?: "not_launched_via_cli";
   /** Tail of the update command's combined stdout+stderr (capped; empty when nothing ran). */
   output: string;
@@ -3389,7 +3389,7 @@ export interface UpdateJobStatus {
 
 /**
  * POST /api/version/restart (admin only): asks the process to exit with the supervisor's
- * restart code after a graceful shutdown, so `linsight server|web` relaunches it on the
+ * restart code after a graceful shutdown, so `jiumate server|web` relaunches it on the
  * installed release. `restarting: false` when nothing supervises this process — it was
  * started some other way than through the CLI, or it is a dev run — and the page shows the
  * manual restart hint instead.

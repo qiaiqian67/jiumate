@@ -50,13 +50,13 @@ const INSTALL_ONLY = process.argv.includes("--install-only");
 // Lock and stamps live in the OS temp dir keyed by the repo path (NOT under node_modules:
 // they must exist before the first install, and per-checkout isolation comes from the key).
 const KEY = createHash("sha1").update(ROOT).digest("hex").slice(0, 12);
-const LOCK_DIR = path.join(os.tmpdir(), `linsight-dev-${KEY}.lock`);
+const LOCK_DIR = path.join(os.tmpdir(), `jiumate-dev-${KEY}.lock`);
 const PID_FILE = path.join(LOCK_DIR, "pid");
-const INSTALL_STAMP = path.join(os.tmpdir(), `linsight-dev-${KEY}.install-stamp`);
-const BUILD_STAMP = path.join(os.tmpdir(), `linsight-dev-${KEY}.build-stamp`);
+const INSTALL_STAMP = path.join(os.tmpdir(), `jiumate-dev-${KEY}.install-stamp`);
+const BUILD_STAMP = path.join(os.tmpdir(), `jiumate-dev-${KEY}.build-stamp`);
 const STALE_LOCK_MS = 10 * 60 * 1000; // no install+build takes 10 minutes; older locks are leftovers
 const SKIP_WINDOW_MS = 5_000;
-const VITE_STAMP = path.join(os.tmpdir(), `linsight-dev-${KEY}.vite-stamp`);
+const VITE_STAMP = path.join(os.tmpdir(), `jiumate-dev-${KEY}.vite-stamp`);
 const WEB_VITE_CACHE = path.join(ROOT, "packages", "web", "node_modules", ".vite");
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -214,7 +214,7 @@ try {
       console.log("[dev-prebuild] building core...");
       const res = spawnSync(
         "pnpm",
-        ["--filter", "@prismshadow/linsight-core", "build"],
+        ["--filter", "@prismshadow/jiumate-core", "build"],
         // shell on Windows: pnpm is a .cmd shim there (see ensureInstalled).
         { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" },
       );

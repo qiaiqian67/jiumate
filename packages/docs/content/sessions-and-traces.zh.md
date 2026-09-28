@@ -3,7 +3,7 @@ title: Session 与 Trace
 description: 运行模型的六层结构、本地数据目录布局、Trace 文件设计与 Session 恢复机制。
 ---
 
-Linsight 的全部运行数据都落在本地文件系统：配置是可编辑文件，历史是 append-only 的 Trace。本页定义运行模型的各层概念，并说明 Trace 如何同时充当历史记录、恢复依据与统计来源。
+JiuMate 的全部运行数据都落在本地文件系统：配置是可编辑文件，历史是 append-only 的 Trace。本页定义运行模型的各层概念，并说明 Trace 如何同时充当历史记录、恢复依据与统计来源。
 
 ## 运行模型
 
@@ -22,7 +22,7 @@ Linsight 的全部运行数据都落在本地文件系统：配置是可编辑�
 
 ## 数据目录
 
-数据根目录取环境变量 `LINSIGHT_HOME`，缺省 `~/.linsight/data`。目录布局由 `packages/core/src/state/paths.ts` 统一定义：
+数据根目录取环境变量 `JIUMATE_HOME`，缺省 `~/.jiumate/data`。目录布局由 `packages/core/src/state/paths.ts` 统一定义：
 
 ```text
 <root>/<project>/
@@ -62,7 +62,7 @@ Trace 是 append-only 的 JSON Lines 文件，每行一个 OmniMessage 信封（
 一条 Trace 的开头(示意，每行一个 OmniMessage 信封):
 
 ```jsonl
-{"timestamp":"2026-07-18T03:10:22.531Z","type":"session_meta","payload":{"session_id":"session-2026-07-18-11-10-22-3f8a1c2d","provider":"deepseek","model_id":"deepseek-v4-pro","model_context_window":1000000,"system_prompt":"…","tools":[…],"agent_state":"/home/u/.linsight/data/default_project/agents/default_agent/agent_state","workspace":"/home/u/work"}}
+{"timestamp":"2026-07-18T03:10:22.531Z","type":"session_meta","payload":{"session_id":"session-2026-07-18-11-10-22-3f8a1c2d","provider":"deepseek","model_id":"deepseek-v4-pro","model_context_window":1000000,"system_prompt":"…","tools":[…],"agent_state":"/home/u/.jiumate/data/default_project/agents/default_agent/agent_state","workspace":"/home/u/work"}}
 {"timestamp":"…","type":"event_msg","payload":{"type":"request_begin"}}
 {"timestamp":"…","type":"model_msg","payload":{"type":"text","role":"user","text":"创建 hello.txt"}}
 {"timestamp":"…","type":"model_msg","payload":{"type":"tool_call","role":"assistant","name":"exec_command","arguments":"{\"cmd\":\"printf hi > hello.txt\"}","tool_call_id":"call_0"}}

@@ -14,8 +14,8 @@
  * added to session-manager's active table (state idle).
  */
 import fs from "node:fs/promises";
-import { agentsDir, createAgent, isSessionMeta } from "@prismshadow/linsight-core";
-import type { ControlEnvContext, PetControlPort, ProxyEnvPolicy } from "@prismshadow/linsight-core";
+import { agentsDir, createAgent, isSessionMeta } from "@prismshadow/jiumate-core";
+import type { ControlEnvContext, PetControlPort, ProxyEnvPolicy } from "@prismshadow/jiumate-core";
 import type {
   ApprovalMode,
   MessagingChannel,

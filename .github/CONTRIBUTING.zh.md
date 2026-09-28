@@ -1,8 +1,8 @@
-# 参与 Linsight 开发
+# 参与 JiuMate 开发
 
 [English](CONTRIBUTING.md)
 
-感谢你参与建设 Linsight！本指南涵盖工作区搭建、日常命令、质量门禁，以及仓库的工作规则。
+感谢你参与建设 JiuMate！本指南涵盖工作区搭建、日常命令、质量门禁，以及仓库的工作规则。
 
 参与本项目受 [行为准则](CODE_OF_CONDUCT.zh.md) 约束。安全问题不要开公开 issue——
 [安全策略](SECURITY.zh.md) 说明了应该发往何处。
@@ -23,7 +23,7 @@ pnpm dev:server  # 服务端，127.0.0.1:7368（不是已安装 server 的 7364�
 pnpm dev:web     # Web App（Vite），127.0.0.1:7365，/api 代理到 7368
 pnpm dev:docs    # 文档站（Vite），127.0.0.1:7367
 pnpm dev:landing # 落地页（Vite），127.0.0.1:7366
-pnpm linsight ... # 从源码运行 CLI；`linsight web` 服务在 127.0.0.1:7369
+pnpm jiumate ... # 从源码运行 CLI；`jiumate web` 服务在 127.0.0.1:7369
 pnpm desktop     # 从源码运行桌面应用（先全量构建，再启动 Electron）
 
 BASE_PATH=/ pnpm build:site   # 完全按 Pages 部署的方式组装落地页 + 文档
@@ -44,30 +44,30 @@ web/server 消费的是快照副本，只有当该包的 `build` 脚本经由 pn
 `packages/core/dist`，却把那些快照——以及任何已经填充的 Vite 依赖缓存——留在旧构建上；如果手工重建
 之后，正在运行的开发 Web App 仍在提供陈旧的 core，删掉 `packages/web/node_modules/.vite` 再重启。
 
-会触及数据的开发入口默认使用各自独立的数据根目录，与已安装 CLI/server 的 `~/.linsight/data`
+会触及数据的开发入口默认使用各自独立的数据根目录，与已安装 CLI/server 的 `~/.jiumate/data`
 分开——在仓库上折腾永远不会把状态与你真实的 Agent 混在一起。`pnpm dev`、`pnpm dev:server` 与
-`pnpm desktop` 共用 `~/.linsight/dev-data`；`pnpm linsight` 独占 `~/.linsight/dev-data-cli`，因为一个
-数据根目录同时只接纳一个 server（`<root>/server.lock`），而开发版 CLI 的 `linsight web` 恰恰就是那个
+`pnpm desktop` 共用 `~/.jiumate/dev-data`；`pnpm jiumate` 独占 `~/.jiumate/dev-data-cli`，因为一个
+数据根目录同时只接纳一个 server（`<root>/server.lock`），而开发版 CLI 的 `jiumate web` 恰恰就是那个
 随后会让 Agent 去执行 `pnpm dev` 的 harness——共用根目录时，那个 Agent 的 `dev:server` 会被 harness
 自己的锁挡住而拒绝启动（正是这种共存关系也已经为它分配了 7369 端口，见
 `packages/core/src/internal/ports.ts`）。若仍要让某条开发 CLI 命令对准 `pnpm dev` 的数据集，就为该条
-命令单独声明——`LINSIGHT_HOME=~/.linsight/dev-data pnpm linsight ...`，或在支持的子命令上使用
-`--root`。需要另一个根目录？只为需要它的那一条命令内联传入 `LINSIGHT_HOME`
-（`LINSIGHT_HOME=~/.linsight/dev-data-<topic> pnpm dev`）——绝不要把它 export 进 shell：上述默认值仅在
+命令单独声明——`JIUMATE_HOME=~/.jiumate/dev-data pnpm jiumate ...`，或在支持的子命令上使用
+`--root`。需要另一个根目录？只为需要它的那一条命令内联传入 `JIUMATE_HOME`
+（`JIUMATE_HOME=~/.jiumate/dev-data-<topic> pnpm dev`）——绝不要把它 export 进 shell：上述默认值仅在
 该变量未设置或为空时才生效（`scripts/run-with-env.mjs`），因此一个已导出的值会静默盖过全部默认值；
-而导出 `LINSIGHT_HOME=~/.linsight/data` 会把 `pnpm dev:server` 放到发行版/CLI 的根目录上，那里已经有
+而导出 `JIUMATE_HOME=~/.jiumate/data` 会把 `pnpm dev:server` 放到发行版/CLI 的根目录上，那里已经有
 一个运行中的桌面应用持有锁。桌面开发外壳还多隔离一层：未打包的运行会取一个带 dev 后缀的应用标识
-（`Linsight-Dev`），拥有自己的 userData 目录、单实例锁与固定端口，并且即使在没有该环境变量的
-情况下启动（`pnpm --dir packages/desktop start`）也默认使用 `~/.linsight/dev-data`——因此它可以与已
+（`JiuMate-Dev`），拥有自己的 userData 目录、单实例锁与固定端口，并且即使在没有该环境变量的
+情况下启动（`pnpm --dir packages/desktop start`）也默认使用 `~/.jiumate/dev-data`——因此它可以与已
 安装的发行版并排运行，两个实例互不可见。每次未打包启动都会打印它选中的这一对：
 `[shell] dev instance '<name>' on data root <root>`。
 
 这次拆分带来了两处一次性变化。此前直接执行 `pnpm --dir packages/desktop start` 跑在
-`~/.linsight/data`（发行版/CLI 根目录）上，现在跑在 `~/.linsight/dev-data`，因此那样创建的会话不再出现
-在窗口里——若要刻意对着发行版根目录工作，用 `LINSIGHT_HOME=~/.linsight/data` 启动。另外开发外壳的
+`~/.jiumate/data`（发行版/CLI 根目录）上，现在跑在 `~/.jiumate/dev-data`，因此那样创建的会话不再出现
+在窗口里——若要刻意对着发行版根目录工作，用 `JIUMATE_HOME=~/.jiumate/data` 启动。另外开发外壳的
 userData 目录随其名称一并搬家，Chromium 配置文件也跟着走，因此窗口按 origin 存储的偏好（主题、语言、
 布局）与记住的端口会重置一次。注意该标识是一个固定名称，而非每个工作副本一个：两份工作副本同时运行
-桌面外壳仍会共用它，第二次启动会聚焦到第一个窗口而不是自己开一个——换一个 `LINSIGHT_HOME` 也改变不了
+桌面外壳仍会共用它，第二次启动会聚焦到第一个窗口而不是自己开一个——换一个 `JIUMATE_HOME` 也改变不了
 这一点，因为它移动的是数据根目录，不是标识。
 
 开发环境下的模型凭据：把 `.env.example` 复制为 `.env`。
@@ -75,22 +75,22 @@ userData 目录随其名称一并搬家，Chromium 配置文件也跟着走，�
 ## 仓库结构
 
 一个 pnpm monorepo（TypeScript，Node >= 24）。一次安装交付四个层次，它们共享同一个数据目录
-（`~/.linsight/data`）与同一套消息协议（OmniMessage）：
+（`~/.jiumate/data`）与同一套消息协议（OmniMessage）：
 
 | 包                                        | 名称                          | 职责                                                                        |
 | ----------------------------------------- | ----------------------------- | --------------------------------------------------------------------------- |
-| [`packages/core`](../packages/core)       | `@prismshadow/linsight-core`   | SDK 与引擎：ReAct 循环、OmniMessage 协议、LLM/Environment 接口契约、Agent State、Trace |
-| [`packages/cli`](../packages/cli)         | `@prismshadow/linsight-cli`    | `linsight` 命令：REPL、单次运行、模型与 vault 配置、服务启动器               |
-| [`packages/server`](../packages/server)   | `@prismshadow/linsight-server` | Web 后端：HTTP API + SSE 流式传输、多用户认证、Project 鉴权、用量统计       |
-| [`packages/web`](../packages/web)         | `@prismshadow/linsight-web`    | Web App：多会话聊天，Agent/Skill/模型管理，Trace 可观测性，评测中心         |
-| [`plugins/*`](../plugins) | `@linsight/<name>` | 内置插件，一插件一 npm 包：Skill（软件开发、模型开发、Agent 开发/调优……）与会话钩子（目标模式、技能沉淀）；loader 在 `packages/core` |
+| [`packages/core`](../packages/core)       | `@prismshadow/jiumate-core`   | SDK 与引擎：ReAct 循环、OmniMessage 协议、LLM/Environment 接口契约、Agent State、Trace |
+| [`packages/cli`](../packages/cli)         | `@prismshadow/jiumate-cli`    | `jiumate` 命令：REPL、单次运行、模型与 vault 配置、服务启动器               |
+| [`packages/server`](../packages/server)   | `@prismshadow/jiumate-server` | Web 后端：HTTP API + SSE 流式传输、多用户认证、Project 鉴权、用量统计       |
+| [`packages/web`](../packages/web)         | `@prismshadow/jiumate-web`    | Web App：多会话聊天，Agent/Skill/模型管理，Trace 可观测性，评测中心         |
+| [`plugins/*`](../plugins) | `@jiumate/<name>` | 内置插件，一插件一 npm 包：Skill（软件开发、模型开发、Agent 开发/调优……）与会话钩子（目标模式、技能沉淀）；loader 在 `packages/core` |
 | [`packages/landing`](../packages/landing) | —                             | 产品落地页（本仓库的官网）                                                 |
 | [`packages/docs`](../packages/docs)       | —                             | 文档站（双语，部署在 `/docs/` 下）                                          |
 
 职责按事实来源划分：**SDK** 拥有协议与执行（消息解析、Agent 循环、工具），**Server** 拥有多用户运行时
-（认证、SSE 流式传输、定时任务），而 `~/.linsight/data` 下的**文件层**拥有一切可编辑与被记录的东西
+（认证、SSE 流式传输、定时任务），而 `~/.jiumate/data` 下的**文件层**拥有一切可编辑与被记录的东西
 （Prompt、Skill、密钥、Trace）。完整对照见
-[架构 → 职责划分](https://linsight.ooo/docs/architecture)。
+[架构 → 职责划分](https://jiumate.ooo/docs/architecture)。
 
 ## 质量门禁
 
@@ -102,7 +102,7 @@ pnpm typecheck
 pnpm test           # 每个包的单元测试
 ```
 
-用编码 Agent 在本仓库上开发：[`.agents/skills/linsight-dev/`](../.agents/skills/linsight-dev/SKILL.md)
+用编码 Agent 在本仓库上开发：[`.agents/skills/jiumate-dev/`](../.agents/skills/jiumate-dev/SKILL.md)
 收集了那些从外部看最容易搞错的约定——双仓库软链接布局、CI 同链路验证、record-and-ship 契约、模型目录的
 定价规则，以及那些有意为之的接缝。`.claude` 是指向 `.agents` 的软链接，因此 Claude Code 会话与其他任何
 Agent 读到的是同一个目录。
@@ -111,7 +111,7 @@ Agent 读到的是同一个目录。
 
 ```bash
 npx playwright install chromium                      # 一次即可
-pnpm --filter @prismshadow/linsight-web test:e2e      # 针对 mock LLM 的浏览器 e2e
+pnpm --filter @prismshadow/jiumate-web test:e2e      # 针对 mock LLM 的浏览器 e2e
 pnpm test:e2e                                        # core 的真实模型 e2e，需要 DEEPSEEK_API_KEY
 ```
 
@@ -141,9 +141,9 @@ pnpm test:e2e                                        # core 的真实模型 e2e�
 
 ## 报告缺陷或提出功能建议
 
-从 [issue 表单](https://github.com/qiaiqian67/linsight/issues/new/choose) 提交。一份缺陷报告
-附上版本（`linsight version`）、Linsight 的安装方式、操作系统，以及问题是否在全新的数据根目录上
-依然出现（`LINSIGHT_HOME=/tmp/linsight-check linsight ...`），价值会高得多——最后这一条能把代码缺陷与
+从 [issue 表单](https://github.com/qiaiqian67/jiumate/issues/new/choose) 提交。一份缺陷报告
+附上版本（`jiumate version`）、JiuMate 的安装方式、操作系统，以及问题是否在全新的数据根目录上
+依然出现（`JIUMATE_HOME=/tmp/jiumate-check jiumate ...`），价值会高得多——最后这一条能把代码缺陷与
 旧版本遗留的状态区分开。永远不要把 API Key、机器人 Token、`system_config.yaml` 或 `.env` 贴进
 issue：数据根目录以明文保存 Provider 凭据，而 issue 是公开且永久的。
 

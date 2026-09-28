@@ -26,7 +26,7 @@ import {
 const tmpRoots: string[] = [];
 
 function tmp(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-pandoc-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-pandoc-"));
   tmpRoots.push(dir);
   return dir;
 }
@@ -81,7 +81,7 @@ describe("resolvePandocPath", () => {
     expect(resolvePandocPath(baseOpts())).toBeNull();
   });
 
-  it("prefers the LINSIGHT_PANDOC override over every other source", () => {
+  it("prefers the JIUMATE_PANDOC override over every other source", () => {
     // Stage a binary at every other resolution surface so we can verify the override
     // wins against any of them.
     const packagedBin = writeBin(path.join(resourcesPath, PANDOC_RESOURCE_DIR), process.platform);

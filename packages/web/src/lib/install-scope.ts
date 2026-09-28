@@ -4,7 +4,7 @@
  * The report this exists for: a user deleted their data files, restarted, and the app came
  * back with the old Workspace still selected. `localStorage` has no relationship to the
  * data root at all — in the desktop app it lives in Electron's userData directory, so no
- * amount of deleting `LINSIGHT_HOME` touches it — and every key that names an entity names
+ * amount of deleting `JIUMATE_HOME` touches it — and every key that names an entity names
  * it with a compile-time constant (`admin`, `default_project`). A wipe-and-restart
  * re-provisions the same user and the same Project, the keys line up again, and the old
  * draft, Workspace registry, pins and seen markers all come back.
@@ -39,7 +39,7 @@
 import * as api from "../api/endpoints";
 
 /** Where this browser records the data root it last saw. Never swept — it IS the marker. */
-export const INSTALL_ID_KEY = "linsight.installId";
+export const INSTALL_ID_KEY = "jiumate.installId";
 
 /**
  * What a stored key is tied to.
@@ -58,9 +58,9 @@ export type KeyScope = "install" | "browser";
  * a key prefix that ends in `.` and covers every id-suffixed key under it.
  *
  * Plain prefix matching would be wrong twice over, which is why the distinction exists:
- * `linsight.sidebarCollapsed` (a preference) is a prefix of
- * `linsight.sidebarCollapsedGroups.<projectId>` (install-scoped), and `linsight.terminal.`
- * covers both `linsight.terminal.theme` (a preference) and `linsight.terminal.page.id`
+ * `jiumate.sidebarCollapsed` (a preference) is a prefix of
+ * `jiumate.sidebarCollapsedGroups.<projectId>` (install-scoped), and `jiumate.terminal.`
+ * covers both `jiumate.terminal.theme` (a preference) and `jiumate.terminal.page.id`
  * (a terminal id).
  */
 export interface KeyRule {
@@ -72,7 +72,7 @@ export interface KeyRule {
 }
 
 /**
- * Every `linsight.*` key the web app persists in `localStorage`, classified.
+ * Every `jiumate.*` key the web app persists in `localStorage`, classified.
  *
  * ADDING A KEY: add it here too. An unclassified key is left alone by the sweep (never
  * deleting something we do not understand is the safe default), so a forgotten
@@ -80,108 +80,108 @@ export interface KeyRule {
  * rather than asked for: install-scope.test.ts scans `packages/web/src` for key literals and
  * fails on any this table does not cover.
  *
- * Two `linsight.*` strings in the source are NOT here on purpose:
- *   - `linsight.chatRouteApplied.<field>` (features/chat/draft-view.tsx) is `sessionStorage`,
+ * Two `jiumate.*` strings in the source are NOT here on purpose:
+ *   - `jiumate.chatRouteApplied.<field>` (features/chat/draft-view.tsx) is `sessionStorage`,
  *     not `localStorage`: it is scoped to one tab's history and dies with the tab, so it
  *     cannot outlive a data root.
- *   - `linsight.ooo` (lib/remark-autolink-boundary.ts) is the product's domain inside an
+ *   - `jiumate.ooo` (lib/remark-autolink-boundary.ts) is the product's domain inside an
  *     example URL in a doc comment. It is not a storage key.
  */
 export const KEY_RULES: readonly KeyRule[] = [
   // ---------------------------------------------------------------- browser preferences
   {
     kind: "exact",
-    key: "linsight.mode",
+    key: "jiumate.mode",
     scope: "browser",
-    why: "Light/dark choice for this browser; names nothing on the server. Deliberately not `linsight.theme` — a theme is a palette plus an artwork, and the mode is not one.",
+    why: "Light/dark choice for this browser; names nothing on the server. Deliberately not `jiumate.theme` — a theme is a palette plus an artwork, and the mode is not one.",
   },
   {
     kind: "exact",
-    key: "linsight.fontScale",
+    key: "jiumate.fontScale",
     scope: "browser",
     why: "Root font size — a readability preference of this display.",
   },
   {
     kind: "exact",
-    key: "linsight.accent",
+    key: "jiumate.accent",
     scope: "browser",
     why: "Accent colour; pure appearance.",
   },
   {
     kind: "exact",
-    key: "linsight.theme",
+    key: "jiumate.theme",
     scope: "browser",
     why: "The selected theme id — the same kind of choice as the accent beside it, and the one a user would least expect a data-root wipe to reset. An id the new root does not have resolves to the built-in appearance rather than a broken one, so a stale value is inert rather than a lie.",
   },
   {
     kind: "exact",
-    key: "linsight.theme.surfaceAlpha",
+    key: "jiumate.theme.surfaceAlpha",
     scope: "browser",
     why: "How transparent the theme's declared surfaces are — an appearance preference with no server entity behind it, and one whose worst case after a wipe is a slider sitting at the default.",
   },
   {
     kind: "exact",
-    key: "linsight.theme.backgroundDim",
+    key: "jiumate.theme.backgroundDim",
     scope: "browser",
     why: "Artwork scrim strength; same reasoning as the surface alpha beside it.",
   },
   {
     kind: "exact",
-    key: "linsight.skin.bootstrap",
+    key: "jiumate.skin.bootstrap",
     scope: "browser",
     why: "The pre-paint appearance cache (dark flag, resolved skin, accent, rendered stylesheet). It describes this browser's own next first paint and names nothing on the server; a stale one is corrected on mount.",
   },
   {
     kind: "exact",
-    key: "linsight.currency",
+    key: "jiumate.currency",
     scope: "browser",
     why: "Display currency for prices; a formatting choice, prices are stored in USD either way.",
   },
   {
     kind: "exact",
-    key: "linsight.terminal.theme",
+    key: "jiumate.terminal.theme",
     scope: "browser",
     why: "Terminal appearance pin (light/dark/follow-app); appearance only.",
   },
   {
     kind: "exact",
-    key: "linsight.lang",
+    key: "jiumate.lang",
     scope: "browser",
     why: "UI language — the one preference a user would be most annoyed to lose.",
   },
   {
     kind: "exact",
-    key: "linsight.sidebarCollapsed",
+    key: "jiumate.sidebarCollapsed",
     scope: "browser",
     why: "Whether the sidebar is a narrow rail; chrome layout, holds no entity.",
   },
   {
     kind: "exact",
-    key: "linsight.panelWidth",
+    key: "jiumate.panelWidth",
     scope: "browser",
     why: "Side-panel width in px; its own module calls it a layout preference, not session data.",
   },
   {
     kind: "exact",
-    key: "linsight.sidebarGroupMode",
+    key: "jiumate.sidebarGroupMode",
     scope: "browser",
     why: "Group sessions by Workspace/Agent/time — the MODE, not the groups; valid against any root.",
   },
   {
     kind: "exact",
-    key: "linsight.sidebarSortMode",
+    key: "jiumate.sidebarSortMode",
     scope: "browser",
     why: "Recent vs manual ordering — again the mode; the manual order itself is separate and install-scoped.",
   },
   {
     kind: "exact",
-    key: "linsight.sidebarNavGroupCollapsed",
+    key: "jiumate.sidebarNavGroupCollapsed",
     scope: "browser",
     why: "Whether the static page-nav group is folded; the nav is built from a compile-time manifest.",
   },
   {
     kind: "exact",
-    key: "linsight.steerMode",
+    key: "jiumate.steerMode",
     scope: "browser",
     why: "Steer vs queue-as-follow-up when sending mid-run; a per-user input habit.",
   },
@@ -189,97 +189,97 @@ export const KEY_RULES: readonly KeyRule[] = [
   // --------------------------------------------------------------- install-scoped state
   {
     kind: "family",
-    key: "linsight.chatDraft.",
+    key: "jiumate.chatDraft.",
     scope: "install",
     why: "The new-chat and per-Session drafts: Workspace path, Agent id, model ref, Session id in the key. The reported bug.",
   },
   {
     kind: "family",
-    key: "linsight.chatDrafts.",
+    key: "jiumate.chatDrafts.",
     scope: "install",
     why: "Parked draft conversations — the same contents as an active draft, kept as a list.",
   },
   {
     kind: "family",
-    key: "linsight.sidebarWorkspaces.",
+    key: "jiumate.sidebarWorkspaces.",
     scope: "install",
     why: "Manually registered Workspace paths per Project; a new root has no such Project.",
   },
   {
     kind: "family",
-    key: "linsight.pinnedSessions.",
+    key: "jiumate.pinnedSessions.",
     scope: "install",
     why: "Pinned Session ids.",
   },
   {
     kind: "family",
-    key: "linsight.sessionOrder.",
+    key: "jiumate.sessionOrder.",
     scope: "install",
     why: "Manual Session order — an array of Session ids.",
   },
   {
     kind: "family",
-    key: "linsight.sessionSeen.",
+    key: "jiumate.sessionSeen.",
     scope: "install",
     why: "Read markers keyed by Session id; against a new root every Session is new by definition.",
   },
   {
     kind: "family",
-    key: "linsight.groupOrder.",
+    key: "jiumate.groupOrder.",
     scope: "install",
     why: "Manual group order — group keys are Agent ids and Workspace paths.",
   },
   {
     kind: "family",
-    key: "linsight.sidebarCollapsedGroups.",
+    key: "jiumate.sidebarCollapsedGroups.",
     scope: "install",
     why: "Collapsed sidebar groups, keyed by those same Agent ids and Workspace paths.",
   },
   {
     kind: "family",
-    key: "linsight.sidebarPinnedGroups.",
+    key: "jiumate.sidebarPinnedGroups.",
     scope: "install",
     why: "Pinned sidebar groups, same key space.",
   },
   {
     kind: "exact",
-    key: "linsight.lastProjectId",
+    key: "jiumate.lastProjectId",
     scope: "install",
     why: "The Project id last selected.",
   },
   {
     kind: "family",
-    key: "linsight.lastAgentId.",
+    key: "jiumate.lastAgentId.",
     scope: "install",
     why: "The Agent id last selected, per Project.",
   },
   {
     kind: "family",
-    key: "linsight.memoryCollapsed.",
+    key: "jiumate.memoryCollapsed.",
     scope: "install",
     why: "Collapsed Memory scopes, keyed by user x Project x Agent and holding scope keys.",
   },
   {
     kind: "family",
-    key: "linsight.modelsExpandedGroups.",
+    key: "jiumate.modelsExpandedGroups.",
     scope: "install",
     why: "Expanded provider groups of a Project's model table; includes user-defined group names that live in that Project's config.",
   },
   {
     kind: "family",
-    key: "linsight.modelsGroupOrder.",
+    key: "jiumate.modelsGroupOrder.",
     scope: "install",
     why: "Manual order of those same per-Project provider groups.",
   },
   {
     kind: "exact",
-    key: "linsight.dock.layout",
+    key: "jiumate.dock.layout",
     scope: "install",
     why: "Dock tab arrangements keyed by conversation, holding Session ids and terminal ids.",
   },
   {
     kind: "exact",
-    key: "linsight.terminal.page.id",
+    key: "jiumate.terminal.page.id",
     scope: "install",
     why: "The terminal (shell) id the standalone terminal page reattaches to.",
   },
@@ -443,7 +443,7 @@ export type BootAction = "mount" | "reload";
  *
  * A RECORDED SWEEP RELOADS. ES module evaluation of the entire static import graph finishes
  * before main.tsx's first statement runs, so a module that reads `localStorage` at module
- * scope — features/dock/dock-state.ts parses `linsight.dock.layout` into module state there —
+ * scope — features/dock/dock-state.ts parses `jiumate.dock.layout` into module state there —
  * is already holding a copy of keys the sweep then deletes, and its first write puts the
  * whole map back. The id matches by then, so nothing ever sweeps it again and the
  * resurrection is permanent. A reload re-evaluates every module against the cleaned store

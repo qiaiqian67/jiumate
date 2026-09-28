@@ -394,7 +394,7 @@ describe("readTraceTolerant", () => {
   let dir: string;
 
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), "linsight-tolerant-"));
+    dir = await mkdtemp(join(tmpdir(), "jiumate-tolerant-"));
   });
 
   afterEach(async () => {
@@ -456,8 +456,8 @@ describe("engine trace round-trip", () => {
   let traces: string;
 
   beforeEach(async () => {
-    workspace = await mkdtemp(join(tmpdir(), "linsight-replay-ws-"));
-    traces = await mkdtemp(join(tmpdir(), "linsight-replay-tr-"));
+    workspace = await mkdtemp(join(tmpdir(), "jiumate-replay-ws-"));
+    traces = await mkdtemp(join(tmpdir(), "jiumate-replay-tr-"));
   });
 
   afterEach(async () => {

@@ -1,10 +1,10 @@
 /**
- * Harness brand marks for the benchmark comparison: Linsight uses the product
+ * Harness brand marks for the benchmark comparison: JiuMate uses the product
  * logo asset; Claude Code and Codex use their vendors' marks (simple-icons path data,
  * rendered in currentColor so they stay neutral in both themes).
  */
 
-export type HarnessKind = "linsight" | "claude" | "codex";
+export type HarnessKind = "jiumate" | "claude" | "codex";
 
 const ANTHROPIC_PATH =
   "M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5527h3.7442L10.5359 3.541Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z";
@@ -19,10 +19,8 @@ export function HarnessLogo({
   kind: HarnessKind;
   className?: string;
 }) {
-  if (kind === "linsight") {
-    return (
-      <img src={`${import.meta.env.BASE_URL}linsight-logo.svg`} alt="" className={className} />
-    );
+  if (kind === "jiumate") {
+    return <img src={`${import.meta.env.BASE_URL}jiumate-logo.svg`} alt="" className={className} />;
   }
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>

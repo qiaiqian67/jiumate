@@ -11,7 +11,7 @@
  * selection rather than a reference — a case deleted on another host must not make the user's
  * prefs fail to save, it just stops matching anything.
  */
-import { INSPIRATION_ID_LIMIT, isInspirationSlug } from "@prismshadow/linsight-inspirations";
+import { INSPIRATION_ID_LIMIT, isInspirationSlug } from "@prismshadow/jiumate-inspirations";
 import { HttpError } from "../http/errors.js";
 
 /**

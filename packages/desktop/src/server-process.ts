@@ -1,7 +1,7 @@
 /**
- * Embedded server lifecycle: forks @prismshadow/linsight-server as an Electron
+ * Embedded server lifecycle: forks @prismshadow/jiumate-server as an Electron
  * utilityProcess (same Node runtime, isolated from the main process), learns the actual
- * port from the LINSIGHT_PORT_FILE announcement, probes HTTP readiness, and stops the
+ * port from the JIUMATE_PORT_FILE announcement, probes HTTP readiness, and stops the
  * server gracefully — shutdown endpoint first (the only graceful path on Windows, where
  * kill() is a hard TerminateProcess), then SIGTERM-equivalent kill as fallback.
  */
@@ -18,7 +18,7 @@ export interface EmbeddedServer {
   child: UtilityProcess;
   /** App origin, e.g. `http://localhost:53187` (always localhost — 127.0.0.1 is the preview host). */
   origin: string;
-  /** This launch's LINSIGHT_DESKTOP_TOKEN: one-shot for the claim link, reusable for the shutdown endpoint. */
+  /** This launch's JIUMATE_DESKTOP_TOKEN: one-shot for the claim link, reusable for the shutdown endpoint. */
   token: string;
 }
 
@@ -33,7 +33,7 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * The server bundle — forked by path. tsup emits @prismshadow/linsight-server as one
+ * The server bundle — forked by path. tsup emits @prismshadow/jiumate-server as one
  * self-contained file in this package's dist/, so a source run and a packaged app fork the
  * same artifact from the same app-path-relative location (asar is off, see
  * electron-builder.yml, so it is a plain file either way).
@@ -45,15 +45,15 @@ function serverEntryPath(): string {
 /**
  * Extra environment for the forked server. Windows packages carry MinGit under
  * resources/git (electron-builder extraResources): advertising its sh.exe as
- * LINSIGHT_BUNDLED_SHELL gives the agent shell the same deterministic POSIX behavior as
+ * JIUMATE_BUNDLED_SHELL gives the agent shell the same deterministic POSIX behavior as
  * the npm-installed package (core's shell resolver prefers a user-installed Git for
  * Windows from PATH, then this bundle, before falling back to PowerShell). An existing
  * value is respected.
  */
 function bundledShellEnv(): Record<string, string> {
-  if (process.platform !== "win32" || process.env.LINSIGHT_BUNDLED_SHELL) return {};
+  if (process.platform !== "win32" || process.env.JIUMATE_BUNDLED_SHELL) return {};
   const sh = path.join(process.resourcesPath, "git", "usr", "bin", "sh.exe");
-  return fs.existsSync(sh) ? { LINSIGHT_BUNDLED_SHELL: sh } : {};
+  return fs.existsSync(sh) ? { JIUMATE_BUNDLED_SHELL: sh } : {};
 }
 
 async function waitForPortFile(file: string, exited: () => boolean): Promise<number> {
@@ -113,7 +113,7 @@ export async function startEmbeddedServer(opts: {
   fs.rmSync(opts.portFile, { force: true });
   const requestedPort = await choosePort(readPreferredPort(opts.preferredPortFile));
   const child = utilityProcess.fork(serverEntryPath(), [], {
-    serviceName: "linsight-server",
+    serviceName: "jiumate-server",
     stdio: "pipe",
     env: {
       ...process.env,
@@ -122,12 +122,12 @@ export async function startEmbeddedServer(opts: {
       // proxy variables the environment leaves unset, never overriding existing values.
       // The server's "use system HTTP proxy" switch then governs whether they are used.
       ...(await osProxyEnv()),
-      LINSIGHT_HOME: opts.dataRoot,
-      ...(opts.webDist !== null ? { LINSIGHT_WEB_DIST: opts.webDist } : {}),
+      JIUMATE_HOME: opts.dataRoot,
+      ...(opts.webDist !== null ? { JIUMATE_WEB_DIST: opts.webDist } : {}),
       HOST: "127.0.0.1",
       PORT: String(requestedPort),
-      LINSIGHT_DESKTOP_TOKEN: token,
-      LINSIGHT_PORT_FILE: opts.portFile,
+      JIUMATE_DESKTOP_TOKEN: token,
+      JIUMATE_PORT_FILE: opts.portFile,
     },
   });
   child.stdout?.on("data", (chunk: Buffer) => opts.log(String(chunk)));

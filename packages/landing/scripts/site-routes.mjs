@@ -12,7 +12,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** Production origin, no trailing slash. Override for a staging deploy. */
-export const SITE_ORIGIN = (process.env.SITE_ORIGIN ?? "https://linsight.ooo").replace(/\/+$/, "");
+export const SITE_ORIGIN = (process.env.SITE_ORIGIN ?? "https://jiumate.ooo").replace(/\/+$/, "");
 
 /** Deploy subpath, no trailing slash ("" at the domain root, "/repo" under a Pages subpath). */
 export const BASE_PATH = (process.env.BASE_PATH ?? "/").replace(/\/+$/, "");

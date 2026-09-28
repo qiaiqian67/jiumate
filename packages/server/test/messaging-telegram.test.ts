@@ -27,8 +27,8 @@ import {
   modelVisiblePath,
   scratchpadDir,
   toolCall,
-} from "@prismshadow/linsight-core";
-import type { ApproveFn, OmniMessage } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { ApproveFn, OmniMessage } from "@prismshadow/jiumate-core";
 import type {
   FeishuBindingResponse,
   MessagingBindingsResponse,
@@ -147,7 +147,7 @@ class FakeBotClient implements TelegramBotClient {
     if (this.t.failGetMe !== null) throw new Error(this.t.failGetMe);
     return {
       id: Number(telegramBotIdOf(this.creds.botToken) ?? "0"),
-      first_name: "Linsight Test",
+      first_name: "JiuMate Test",
       ...(this.t.botUsername !== undefined ? { username: this.t.botUsername } : {}),
       ...(this.t.readsAllGroupMessages !== undefined
         ? { can_read_all_group_messages: this.t.readsAllGroupMessages }
@@ -311,7 +311,7 @@ class FakeTelegramTransport {
   /** getMe's `can_read_all_group_messages` (true = privacy mode OFF); undefined = the field is absent. */
   readsAllGroupMessages: boolean | undefined = undefined;
   /** getMe's `username`; undefined = the field is absent, which the Bot API's User allows. */
-  botUsername: string | undefined = "linsight_test_bot";
+  botUsername: string | undefined = "jiumate_test_bot";
   private nextUpdateId = 100;
 
   createClient(creds: TelegramCredentials): FakeBotClient {
@@ -827,7 +827,7 @@ describe("telegram binding routes and connector loop", () => {
     expect(draft.status).toBe(200);
     const ok = (await draft.json()) as TelegramTestResponse;
     expect(ok.ok).toBe(true);
-    expect(ok.botUsername).toBe("@linsight_test_bot");
+    expect(ok.botUsername).toBe("@jiumate_test_bot");
     expect(typeof ok.latencyMs).toBe("number");
 
     // Stored fallback: an empty body tests the saved binding.
@@ -981,10 +981,10 @@ describe("telegram binding routes and connector loop", () => {
     fake.push({
       message_id: 88,
       chat: { id: -1002233445566, type: "supergroup" },
-      text: "@linsight_test_bot ask @alice about the build",
+      text: "@jiumate_test_bot ask @alice about the build",
       entities: [
-        { type: "mention", offset: 0, length: 18 },
-        { type: "mention", offset: 23, length: 6 },
+        { type: "mention", offset: 0, length: 17 },
+        { type: "mention", offset: 22, length: 6 },
       ],
       from: { first_name: "Ada" },
     });
@@ -999,8 +999,8 @@ describe("telegram binding routes and connector loop", () => {
     fake.push({
       message_id: 89,
       chat: { id: -1002233445566, type: "supergroup" },
-      text: "@Linsight_Test_Bot deploy",
-      entities: [{ type: "mention", offset: 0, length: 18 }],
+      text: "@JiuMate_Test_Bot deploy",
+      entities: [{ type: "mention", offset: 0, length: 17 }],
       from: { first_name: "Ada" },
     });
     await waitFor(() => runs.length === 1);
@@ -1011,8 +1011,8 @@ describe("telegram binding routes and connector loop", () => {
     fake.push({
       message_id: 90,
       chat: { id: -1002233445566, type: "supergroup" },
-      text: "Linsight Test roll it back",
-      entities: [{ type: "text_mention", offset: 0, length: 14, user: { id: 7000000001 } }],
+      text: "JiuMate Test roll it back",
+      entities: [{ type: "text_mention", offset: 0, length: 13, user: { id: 7000000001 } }],
       from: { first_name: "Ada" },
     });
     await waitFor(() => runs.length === 2);
@@ -1024,28 +1024,28 @@ describe("telegram binding routes and connector loop", () => {
     fake.push({
       message_id: 92,
       chat: { id: -1002233445566, type: "supergroup" },
-      text: "@linsight_test_bot summarize what @linsight_test_bot said yesterday",
+      text: "@jiumate_test_bot summarize what @jiumate_test_bot said yesterday",
       entities: [
-        { type: "mention", offset: 0, length: 18 },
-        { type: "mention", offset: 34, length: 18 },
+        { type: "mention", offset: 0, length: 17 },
+        { type: "mention", offset: 33, length: 17 },
       ],
       from: { first_name: "Ada" },
     });
     await waitFor(() => runs.length === 1);
     // The opening handle is how a group addresses the bot; the second one is a word inside
     // the user's sentence, and cutting it would leave the model a hole to guess at.
-    expect(runs[0]![0]!.text).toBe("summarize what @linsight_test_bot said yesterday");
+    expect(runs[0]![0]!.text).toBe("summarize what @jiumate_test_bot said yesterday");
 
     // Nothing to cut here either: the sentence starts before the handle.
     fake.push({
       message_id: 93,
       chat: { id: -1002233445566, type: "supergroup" },
-      text: "what is @linsight_test_bot's status?",
-      entities: [{ type: "mention", offset: 8, length: 18 }],
+      text: "what is @jiumate_test_bot's status?",
+      entities: [{ type: "mention", offset: 8, length: 17 }],
       from: { first_name: "Ada" },
     });
     await waitFor(() => runs.length === 2);
-    expect(runs[1]![0]!.text).toBe("what is @linsight_test_bot's status?");
+    expect(runs[1]![0]!.text).toBe("what is @jiumate_test_bot's status?");
 
     // What comes first need not be words. Only whitespace ahead of the handle makes it the
     // addressing prefix — and the offset that says so is in UTF-16 code units, which is what
@@ -1053,12 +1053,12 @@ describe("telegram binding routes and connector loop", () => {
     fake.push({
       message_id: 94,
       chat: { id: -1002233445566, type: "supergroup" },
-      text: "👨‍👩‍👧 @linsight_test_bot deploy",
-      entities: [{ type: "mention", offset: 9, length: 18 }],
+      text: "👨‍👩‍👧 @jiumate_test_bot deploy",
+      entities: [{ type: "mention", offset: 9, length: 17 }],
       from: { first_name: "Ada" },
     });
     await waitFor(() => runs.length === 3);
-    expect(runs[2]![0]!.text).toBe("👨‍👩‍👧 @linsight_test_bot deploy");
+    expect(runs[2]![0]!.text).toBe("👨‍👩‍👧 @jiumate_test_bot deploy");
   });
 
   it("cuts the addressing prefix by UTF-16 code units, not code points", async () => {
@@ -1070,8 +1070,8 @@ describe("telegram binding routes and connector loop", () => {
     fake.push({
       message_id: 95,
       chat: { id: -1002233445566, type: "supergroup" },
-      text: "👨‍👩‍👧 Linsight Test deploy",
-      entities: [{ type: "text_mention", offset: 0, length: 22, user: { id: 7000000001 } }],
+      text: "👨‍👩‍👧 JiuMate Test deploy",
+      entities: [{ type: "text_mention", offset: 0, length: 21, user: { id: 7000000001 } }],
       from: { first_name: "Ada" },
     });
     await waitFor(() => runs.length === 1);
@@ -1087,8 +1087,8 @@ describe("telegram binding routes and connector loop", () => {
     fake.push({
       message_id: 4,
       chat: { id: chatId, type: "supergroup" },
-      text: "@linsight_test_bot hi",
-      entities: [{ type: "mention", offset: 0, length: 18 }],
+      text: "@jiumate_test_bot hi",
+      entities: [{ type: "mention", offset: 0, length: 17 }],
       from: { first_name: "hiyouga", username: "hiyouga" },
     });
     await waitFor(() => runs.length === 1);
@@ -1414,8 +1414,8 @@ describe("telegram binding routes and connector loop", () => {
     fake.push({
       message_id: 91,
       chat: { id: -1002233445566, type: "supergroup" },
-      text: "@linsight_test_bot",
-      entities: [{ type: "mention", offset: 0, length: 18 }],
+      text: "@jiumate_test_bot",
+      entities: [{ type: "mention", offset: 0, length: 17 }],
       from: { first_name: "Ada" },
     });
     await waitFor(() => fake.allSends().length > 0);
@@ -1479,8 +1479,8 @@ describe("telegram binding routes and connector loop", () => {
       message_id: 34,
       chat: { id: -1002233445566, type: "supergroup" },
       photo: [{ file_id: "full-1280", width: 1280, height: 960 }],
-      caption: "@linsight_test_bot what is wrong with this chart?",
-      caption_entities: [{ type: "mention", offset: 0, length: 18 }],
+      caption: "@jiumate_test_bot what is wrong with this chart?",
+      caption_entities: [{ type: "mention", offset: 0, length: 17 }],
       from: { first_name: "Ada" },
     });
     await waitFor(() => runs.length === 1);
@@ -1777,7 +1777,7 @@ describe("telegram binding routes and connector loop", () => {
     // so this is where a formatting bug would show up as a 400 and be SILENTLY downgraded to
     // plain text by the fallback — the reply would still arrive and nobody would know the
     // formatting had been lost.
-    const filePath = "/home/u/.linsight/data/scratchpad/session-2026-08-27-aa/my_report_v2.pdf";
+    const filePath = "/home/u/.jiumate/data/scratchpad/session-2026-08-27-aa/my_report_v2.pdf";
     await bindReplying(
       `I read ${attachedFileLine(filePath)}\n\nThe file \`${filePath}\` has **3** rows.`,
       "7000000016:test-secret-MD07-0007",
@@ -1948,7 +1948,7 @@ class ConflictBotClient implements TelegramBotClient {
 
   async getMe(): Promise<TelegramBotUser> {
     this.getMeCalls++;
-    return { id: 7000000001, first_name: "Linsight Test", username: "linsight_test_bot" };
+    return { id: 7000000001, first_name: "JiuMate Test", username: "jiumate_test_bot" };
   }
   async getWebhookInfo(): Promise<TelegramWebhookInfo> {
     this.webhookInfoCalls++;

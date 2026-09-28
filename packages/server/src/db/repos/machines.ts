@@ -42,7 +42,7 @@ export class MachinesRepo {
   constructor(private readonly db: DatabaseSync) {}
 
   /**
-   * This server's own id if one has been minted, WITHOUT minting one — `linsight server
+   * This server's own id if one has been minted, WITHOUT minting one — `jiumate server
    * status` runs on a data root whose server may never have started, and must not create an
    * identity as a side effect of the question.
    */

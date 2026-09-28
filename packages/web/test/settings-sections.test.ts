@@ -24,7 +24,7 @@ import {
   visibleSettingsSections,
 } from "../src/lib/settings-sections";
 
-/** Admin signed into a plain `linsight server` through the login form. */
+/** Admin signed into a plain `jiumate server` through the login form. */
 const admin = visibleSettingsSections({
   isAdmin: true,
   desktopMode: false,

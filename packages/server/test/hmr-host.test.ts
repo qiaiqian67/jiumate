@@ -612,7 +612,7 @@ describe("the store is the only place a pushed platform bundle lands", () => {
  * Provenance is the one part of a push that describes where the code came from: the bundles
  * are content-addressed, and a pushed bundle lands outside any checkout, so unless the
  * pusher's revision is committed with the version nothing on the target can name it. These
- * assert the round trip a `linsight version --json` on the target depends on.
+ * assert the round trip a `jiumate version --json` on the target depends on.
  */
 describe("upgrade provenance: recorded with the version, or not at all", () => {
   let t: TestApp | undefined;
@@ -651,7 +651,7 @@ describe("upgrade provenance: recorded with the version, or not at all", () => {
     const cookie = (await loginAdmin(t.app)).cookie;
     const before = Date.now();
     const push = await pushWithSource(t.app, cookie, {
-      repo: "https://example.com/linsight.git",
+      repo: "https://example.com/jiumate.git",
       revision: "v0.2.3-7-gabc1234-dirty",
     });
     expect(push.status).toBe(200);
@@ -659,7 +659,7 @@ describe("upgrade provenance: recorded with the version, or not at all", () => {
 
     const manifest = await manifestOf(t.root);
     expect(manifest.source).toEqual({
-      repo: "https://example.com/linsight.git",
+      repo: "https://example.com/jiumate.git",
       revision: "v0.2.3-7-gabc1234-dirty",
     });
     expect(Date.parse(manifest.pushedAt as string)).toBeGreaterThanOrEqual(before);

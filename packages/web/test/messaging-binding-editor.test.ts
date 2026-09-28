@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { MessagingChannel } from "@prismshadow/linsight-server/api";
+import type { MessagingChannel } from "@prismshadow/jiumate-server/api";
 import {
   MessagingBindingBody,
   MessagingBindingHelp,
@@ -167,7 +167,7 @@ describe("MessagingBindingBody", () => {
     // a row that already carries a switch, a label and a status word cut this one to
     // "Conflict: ter", which tells the reader nothing they can act on.
     const lastError =
-      "getUpdates failed: another program is already polling this bot — one bot token can serve only one Linsight server at a time (code 409)";
+      "getUpdates failed: another program is already polling this bot — one bot token can serve only one JiuMate server at a time (code 409)";
     const html = render(
       stateOf("telegram", {
         telegram: {
@@ -568,11 +568,11 @@ describe("telegramTestNotices", () => {
       telegramTestNotices({
         ok: true,
         latencyMs: 12,
-        botUsername: "@linsight_bot",
+        botUsername: "@jiumate_bot",
         groupPrivacy: true,
       }),
     ).toEqual([
-      { tone: "success", text: S.messaging.testOkAs("@linsight_bot", 12) },
+      { tone: "success", text: S.messaging.testOkAs("@jiumate_bot", 12) },
       { tone: "info", text: S.messaging.testPrivacyOn },
     ]);
   });

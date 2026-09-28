@@ -19,8 +19,8 @@ import {
   toolCallOutput,
   toolListReady,
   userText,
-} from "@prismshadow/linsight-core";
-import type { OmniMessage, SessionMetaPayload, ToolDefinition } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { OmniMessage, SessionMetaPayload, ToolDefinition } from "@prismshadow/jiumate-core";
 import {
   buildContextBreakdown,
   compactionThresholdFor,

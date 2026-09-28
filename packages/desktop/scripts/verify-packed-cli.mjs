@@ -1,13 +1,13 @@
 /**
- * The packed app carries a working `linsight`.
+ * The packed app carries a working `jiumate`.
  *
  * Run after `electron-builder --dir` (CI's runtime job builds exactly that tree). An
  * installed desktop app puts the CLI on the user's PATH: the deb postinst links
- * /usr/bin/linsight at install time, and the other three forms install this same launcher
- * from the shell at launch (src/cli-install.ts). Every one of them resolves <app>/bin/linsight and
- * <app>/dist/linsight.js as plain files inside the packed tree, so `bin/` dropping out of
+ * /usr/bin/jiumate at install time, and the other three forms install this same launcher
+ * from the shell at launch (src/cli-install.ts). Every one of them resolves <app>/bin/jiumate and
+ * <app>/dist/jiumate.js as plain files inside the packed tree, so `bin/` dropping out of
  * electron-builder's `files`, asar being switched on, or the bundled entry being renamed
- * would ship an app whose `linsight` command does not exist — with nothing else in the
+ * would ship an app whose `jiumate` command does not exist — with nothing else in the
  * build failing. The unit tests pin those couplings in the config files; this checks the
  * tree they produced.
  *
@@ -24,9 +24,9 @@ const pkgDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(pkgDir, "out");
 const ownPkg = JSON.parse(fs.readFileSync(path.join(pkgDir, "package.json"), "utf8"));
 const version = ownPkg.version;
-/** The plugin packages the bundled loader will look for: every @linsight/* in this package's dependencies (the one field the packaged manifest keeps). */
+/** The plugin packages the bundled loader will look for: every @jiumate/* in this package's dependencies (the one field the packaged manifest keeps). */
 const pluginNames = Object.keys(ownPkg.dependencies ?? {}).filter((name) =>
-  name.startsWith("@linsight/"),
+  name.startsWith("@jiumate/"),
 );
 
 /** Every `resources/app` directory under out/, in both platform layouts. */
@@ -49,7 +49,7 @@ function appDirs() {
 }
 
 /**
- * Whether `linsight --version` named this build. The CLI prints its identity rather than a
+ * Whether `jiumate --version` named this build. The CLI prints its identity rather than a
  * bare version number: a release build prints `v<version>`, while a build from a checkout
  * prints git's description of it — `v<version>-3-g<sha>` when a tag is reachable, and
  * `v<version>-g<sha>` when none is, which is what a shallow CI checkout produces (core's
@@ -82,9 +82,9 @@ for (const app of dirs) {
   // failing.
   const pluginFiles = pluginNames.map((name) => `node_modules/${name}/plugin.json`);
   for (const rel of [
-    "bin/linsight",
-    "bin/linsight.cmd",
-    "dist/linsight.js",
+    "bin/jiumate",
+    "bin/jiumate.cmd",
+    "dist/jiumate.js",
     "web-dist/index.html",
     ...pluginFiles,
   ]) {
@@ -93,10 +93,10 @@ for (const app of dirs) {
       problems.push(`${app}: ${rel} is missing from the packed app.`);
       continue;
     }
-    // The POSIX launcher is exec'd directly by the /usr/bin/linsight symlink a deb install
+    // The POSIX launcher is exec'd directly by the /usr/bin/jiumate symlink a deb install
     // creates; writeFileSync's mode is masked by the umask, hence the explicit chmod in
     // scripts/build-assets.mjs that this pins.
-    if (process.platform !== "win32" && rel === "bin/linsight") {
+    if (process.platform !== "win32" && rel === "bin/jiumate") {
       if ((fs.statSync(file).mode & 0o111) === 0)
         problems.push(`${app}: ${rel} is not executable.`);
     }
@@ -104,8 +104,8 @@ for (const app of dirs) {
 
   const launcher =
     process.platform === "win32"
-      ? path.join(app, "bin", "linsight.cmd")
-      : path.join(app, "bin", "linsight");
+      ? path.join(app, "bin", "jiumate.cmd")
+      : path.join(app, "bin", "jiumate");
   if (!fs.existsSync(launcher)) continue;
   // Node has refused to exec .cmd without a shell since the CVE-2024-27980 fix; the path
   // is this script's own, not user input.
@@ -126,16 +126,16 @@ for (const app of dirs) {
   }
   if (!namesThisBuild(printed)) {
     problems.push(
-      `${app}: linsight --version printed ${JSON.stringify(printed)}, want v${version} or v${version}-<git description>.`,
+      `${app}: jiumate --version printed ${JSON.stringify(printed)}, want v${version} or v${version}-<git description>.`,
     );
     continue;
   }
   ran += 1;
-  console.log(`[verify-packed-cli] ${app}: linsight --version -> ${printed}`);
+  console.log(`[verify-packed-cli] ${app}: jiumate --version -> ${printed}`);
 }
 
 if (ran === 0 && problems.length === 0) {
-  problems.push(`none of the ${dirs.length} packed app(s) produced a runnable linsight launcher.`);
+  problems.push(`none of the ${dirs.length} packed app(s) produced a runnable jiumate launcher.`);
 }
 
 if (problems.length > 0) {

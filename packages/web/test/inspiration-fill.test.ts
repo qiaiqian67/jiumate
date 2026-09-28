@@ -73,7 +73,7 @@ describe("buildInspirationFill — what lands in the skills dropdown", () => {
   it("drops skills the selected Agent has not installed", () => {
     // Pinning a Skill that isn't there is what the old auto-submit filtered out too.
     const f = fill({
-      caseSkills: ["linsight-sdk", "web-design"],
+      caseSkills: ["jiumate-sdk", "web-design"],
       installedSkills: ["web-design"],
     });
     expect(f.skills).toEqual(["web-design"]);
@@ -81,11 +81,11 @@ describe("buildInspirationFill — what lands in the skills dropdown", () => {
 
   it("joins the existing selection instead of replacing it, without duplicating", () => {
     const f = fill({
-      caseSkills: ["linsight-sdk", "web-design"],
-      installedSkills: ["linsight-sdk", "web-design", "memory"],
+      caseSkills: ["jiumate-sdk", "web-design"],
+      installedSkills: ["jiumate-sdk", "web-design", "memory"],
       selectedSkills: ["memory", "web-design"],
     });
-    expect(f.skills).toEqual(["memory", "web-design", "linsight-sdk"]);
+    expect(f.skills).toEqual(["memory", "web-design", "jiumate-sdk"]);
   });
 
   it("leaves the selection untouched for a case that pins nothing", () => {

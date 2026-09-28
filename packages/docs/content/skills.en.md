@@ -28,7 +28,7 @@ plugins/<plugin>/
 
 The plugin name is its directory name (`^[A-Za-z0-9_-]+$`); a plugin built around someone else's product carries a `use-` prefix (`use-firecrawl`), so the name says what it is for rather than claiming the product. Versions are compared by date, then by sequence number, so `2026-08-29.10` follows `2026-08-29.9`; the manifest's version is the version of everything the plugin ships. There is no other version scheme.
 
-Every plugin is its own npm package — `@linsight/<name>`, `plugins/<name>/` in the repo. The loader lives in `@prismshadow/linsight-core`: it reads the plugin names off the host package's dependency list and resolves each package through Node (the desktop app declares the same packages as dependencies, which its installer packs). At runtime the plugin files are the source of truth for library content, read on every call.
+Every plugin is its own npm package — `@jiumate/<name>`, `plugins/<name>/` in the repo. The loader lives in `@prismshadow/jiumate-core`: it reads the plugin names off the host package's dependency list and resolves each package through Node (the desktop app declares the same packages as dependencies, which its installer packs). At runtime the plugin files are the source of truth for library content, read on every call.
 
 ## Anatomy of a Skill
 
@@ -101,9 +101,9 @@ The built-in plugins, by category (`PLUGIN_CATEGORIES` in `packages/core/src/plu
 | | `goal` | The stop hook behind [goal mode](/goal-mode): keeps the session working toward an objective until it is complete, blocked, or out of token budget (preinstalled) |
 | | `continual-learning` | When a task ends after more than 30 turns, hands its condensed excerpt to a background subagent that folds the durable findings into the agent's skills (not preinstalled) |
 | | `editable-doc` | Format generated Markdown documents so a human can edit them in place afterwards — atomic sections, semantic headings, fenced diagrams and code, no mega paragraphs |
-| Software Development | `software-development` | Software development end to end — two skills: `software-engineering` (investigate, implement and validate with minimal scope) and `web-design` (the Linsight visual language for generated web UIs) |
+| Software Development | `software-development` | Software development end to end — two skills: `software-engineering` (investigate, implement and validate with minimal scope) and `web-design` (the JiuMate visual language for generated web UIs) |
 | | `use-claude-code` | Run Claude Code on a remote host over SSH — a persistent expect session, headless `-p` with the stdin fix, a tmux-driven interactive TUI and multi-turn continuity (not preinstalled: install from the library when needed) |
-| AI App Development | `agent-development` | Agent development on Linsight — four skills: `linsight-sdk` (build agent/AI/RAG apps on the SDK), `unified-llm-api` (call model APIs through `@prismshadow/agenthub`), `linsight-config` (manage model keys, defaults and Vault secrets) and `linsight-orchestration` (drive agents, sessions, costs and schedules from a shell) |
+| AI App Development | `agent-development` | Agent development on JiuMate — four skills: `jiumate-sdk` (build agent/AI/RAG apps on the SDK), `unified-llm-api` (call model APIs through `@prismshadow/agenthub`), `jiumate-config` (manage model keys, defaults and Vault secrets) and `jiumate-orchestration` (drive agents, sessions, costs and schedules from a shell) |
 | | `model-development` | Model development on your own hardware — three skills: `llamafactory` (fine-tune), `ollama` (run local models) and `vllm` (serve behind an OpenAI-compatible endpoint) |
 | | `skill-porting` | Port skills from external sources — plugin marketplaces, skills.sh registries, GitHub repos or local folders — into the agent after review and normalization |
 | | `agent-tuning` | The tuning loop as four skills: `agent-initialization` (set an agent up from a requirement), `benchmark-design` (design and calibrate a capability Benchmark), `agent-evaluation` (execute and score one isolated Case) and `agent-optimization` (improve the agent from measured results) |

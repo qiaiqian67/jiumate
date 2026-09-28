@@ -6,7 +6,7 @@
  *
  * - **The caps are duplicated across packages on purpose** — the Web App's copy drives the
  *   counters, the server's copy is the enforcement — so the parity check reads the server module
- *   as text rather than importing it: `@prismshadow/linsight-server` is a type-only dependency
+ *   as text rather than importing it: `@prismshadow/jiumate-server` is a type-only dependency
  *   here, and making it a runtime one to check three numbers would be a worse trade than a regex.
  * - **The draft picker's height must not move** when tabs are switched. The categories keep that by
  *   capping their rows (`inspiration-picker.tsx`); the user's folder cannot be capped by category,
@@ -266,7 +266,7 @@ describe("clicking a shortcut", () => {
 describe("the caps the server enforces", () => {
   it("matches the Web App's copy of them", () => {
     // Two copies on purpose: the server owns enforcement (ui_prefs is a free-form JSON column),
-    // this package owns the counters, and linsight-server is a type-only dependency here.
+    // this package owns the counters, and jiumate-server is a type-only dependency here.
     const source = read("../../server/src/services/draft-shortcuts.ts");
     const capOf = (name: string): number => {
       const m = new RegExp(`export const ${name} = (\\d+);`).exec(source);

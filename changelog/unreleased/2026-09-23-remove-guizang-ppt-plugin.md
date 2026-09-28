@@ -10,9 +10,9 @@ Removed the `use-guizang-ppt` plugin and every reference to it. The plugin packa
 
 ## Details
 
-- Deleted `plugins/use-guizang-ppt/`, and dropped `@linsight/use-guizang-ppt` from the dependency lists of `@prismshadow/linsight-core`, `@prismshadow/linsight-cli` and `@prismshadow/linsight-desktop`.
+- Deleted `plugins/use-guizang-ppt/`, and dropped `@jiumate/use-guizang-ppt` from the dependency lists of `@prismshadow/jiumate-core`, `@prismshadow/jiumate-cli` and `@prismshadow/jiumate-desktop`.
 - Removed the plugin from the `office-productivity` group in `plugins/README.md`, `README.md` / `README.zh.md`, `packages/docs/content/skills.{en,zh}.md`, and the landing page's skills section (`packages/landing/src/lib/{strings,strings-en}.ts`).
 - Removed the two `.prettierignore` entries that existed only for the plugin's vendored assets.
-- Removed the `@linsight/use-guizang-ppt` entry from `scripts/check-licenses.mjs`'s `EXCEPTIONS`, where it had been recorded as an AGPL exception.
+- Removed the `@jiumate/use-guizang-ppt` entry from `scripts/check-licenses.mjs`'s `EXCEPTIONS`, where it had been recorded as an AGPL exception.
 - Removed the four `unreleased/` changelog entries the plugin had accumulated — two announcing it and two covering the landing-page sync fix — since it never shipped in a release and both halves would otherwise appear in the same set of release notes.
 - `packages/docs/content/third-party.{en,zh}.md` record that the gate's first exception was this plugin and that it was removed.

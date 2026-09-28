@@ -12,11 +12,11 @@
  *
  * Reconnects ride Last-Event-ID: the stream keeps the last seen frame id and reopens
  * with it on a dropped connection; `resync_required` (buffer evicted) prints a dim
- * notice — the messages endpoint still holds the full history for `linsight logs`.
+ * notice — the messages endpoint still holds the full history for `jiumate logs`.
  */
-import { isEventMessage, isHookInput, isModelMessage } from "@prismshadow/linsight-core";
-import type { ApprovalDecision, OmniMessage, ToolCallPayload } from "@prismshadow/linsight-core";
-import type { GoalServerEvent } from "@prismshadow/linsight-server/api";
+import { isEventMessage, isHookInput, isModelMessage } from "@prismshadow/jiumate-core";
+import type { ApprovalDecision, OmniMessage, ToolCallPayload } from "@prismshadow/jiumate-core";
+import type { GoalServerEvent } from "@prismshadow/jiumate-server/api";
 import { ServerClient } from "./client.js";
 import type { SseFrame } from "./client.js";
 import { dim, humanizeTokens } from "./render.js";

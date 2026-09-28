@@ -37,10 +37,10 @@
  * Two `var`s of one name are legal, and inside a bundle both spell the same path anyway.
  */
 export const ESM_CJS_BANNER = [
-  'import { createRequire as __linsightCreateRequire } from "node:module";',
-  'import { fileURLToPath as __linsightFileURLToPath } from "node:url";',
-  'import { dirname as __linsightDirname } from "node:path";',
-  "var require = __linsightCreateRequire(import.meta.url);",
-  "var __filename = __linsightFileURLToPath(import.meta.url);",
-  "var __dirname = __linsightDirname(__filename);",
+  'import { createRequire as __jiumateCreateRequire } from "node:module";',
+  'import { fileURLToPath as __jiumateFileURLToPath } from "node:url";',
+  'import { dirname as __jiumateDirname } from "node:path";',
+  "var require = __jiumateCreateRequire(import.meta.url);",
+  "var __filename = __jiumateFileURLToPath(import.meta.url);",
+  "var __dirname = __jiumateDirname(__filename);",
 ].join(" ");

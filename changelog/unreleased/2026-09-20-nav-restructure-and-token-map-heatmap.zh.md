@@ -28,7 +28,7 @@
 - `ModelsPage` 拆成了一个薄页面壳（持有 `useDocumentTitle` 与 `h-full overflow-y-auto p-4 md:p-6`
   容器）和一个 `ModelsPane`（模型库本身，根节点不带 class）。这两样外壳都不属于对话框面板：
   `useDocumentTitle` 会设置 `document.title` 且从不还原，内嵌副本会在对话框关闭后把「模型库 ·
-  Linsight」留在标签页上；而第二个整高滚动容器套在对话框自己的滚动区里，会叠出两条滚动条和两份内边距。
+  JiuMate」留在标签页上；而第二个整高滚动容器套在对话框自己的滚动区里，会叠出两条滚动条和两份内边距。
 - 面板的根节点保留为元素而非 Fragment，因为它打开的对话框（新增分组、模型、OAuth、两个确认框）是它
   内容包裹层的兄弟节点——去掉根节点会把它们从返回值里摘出去。
 - 设置里新增 `models` 页，归入「个人」分组，始终可见（它属于每用户配置），图标沿用导航条目原本用的
@@ -83,7 +83,7 @@ Token Map，New chat → New session。定时任务页自己的「新建会话�
 - 「排在默认顺序首位」和「被标记为推荐」是同一个条目，有两处依赖的是这个事实而不是那个标志位：
   `defaultExpandedProviders` 展开下标 0 的那组，模型页给带 `recommended` 的条目加标签。两者仍然一致。
 - web 测试套件读 core 走的是 **pnpm 注入到 `node_modules/.pnpm` 的副本**，不是 `packages/core`。所以
-  源码改动在**通过 pnpm 构建 core** 之前对它不可见（`pnpm --filter @prismshadow/linsight-core build`，
+  源码改动在**通过 pnpm 构建 core** 之前对它不可见（`pnpm --filter @prismshadow/jiumate-core build`，
   也就是 `dev-prebuild.mjs` 跑的那条）——`npx tsup` 只写 `packages/core/dist`，不触发同步钩子，于是 web
   测试继续断言旧顺序并且**通过**。正是这个假绿暴露了 `model-grouping.test.ts` 与
   `model-group-expansion.test.ts` 里的两条顺序断言。

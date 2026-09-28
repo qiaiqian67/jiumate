@@ -38,12 +38,12 @@ import {
   saveAgentVault,
   systemConfigPath,
   THINKING_LEVEL_NAMES,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   MCPServerConfig,
   ThinkingLevelName,
   ToolDefinitionConfig,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   AgentConfigDto,
   AgentConfigUpdateRequest,

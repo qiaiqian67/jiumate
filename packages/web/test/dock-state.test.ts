@@ -286,7 +286,7 @@ describe("persistence", () => {
 
   it("degrades a malformed stored entry to empty docks", async () => {
     store.set(
-      "linsight.dock.layout",
+      "jiumate.dock.layout",
       '{"scopes": {"s": {"right": {"tabs": [42]}}}, "bottomRatio": "x"}',
     );
     vi.resetModules();

@@ -34,7 +34,7 @@ import type {
   SessionCategory,
   SessionCategoryCounts,
   SessionInfo,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { formatRelativeShort } from "../../lib/format";
@@ -202,10 +202,10 @@ const CLOSE_ICON = "M18 6L6 18M6 6l12 12";
  * mutates its value and fires `input` — a mis-aimed reorder would paste a session id
  * into the user's message. Nothing outside these rows reads this type.
  */
-const SESSION_DRAG_MIME = "application/x-linsight-session-id";
+const SESSION_DRAG_MIME = "application/x-jiumate-session-id";
 
 /** Private drag payload type of a group reorder (same reasoning as SESSION_DRAG_MIME: never text/plain). */
-const GROUP_DRAG_MIME = "application/x-linsight-group-key";
+const GROUP_DRAG_MIME = "application/x-jiumate-group-key";
 
 /**
  * Is the drag in flight one of our group reorders? `types` is readable during dragover
@@ -268,8 +268,8 @@ const menuSectionClass =
  * never collide); stray keys left by deleted Agents or Workspaces are harmless
  * (never matched) and the per-Project sets stay tiny.
  */
-const collapsedGroupsKey = (projectId: string) => `linsight.sidebarCollapsedGroups.${projectId}`;
-const pinnedGroupsKey = (projectId: string) => `linsight.sidebarPinnedGroups.${projectId}`;
+const collapsedGroupsKey = (projectId: string) => `jiumate.sidebarCollapsedGroups.${projectId}`;
+const pinnedGroupsKey = (projectId: string) => `jiumate.sidebarPinnedGroups.${projectId}`;
 /** Reads a persisted group-key set (no Project yet / corrupted storage degrade to empty). */
 function loadGroupSet(storageKey: string | null): ReadonlySet<string> {
   if (!storageKey) return new Set();

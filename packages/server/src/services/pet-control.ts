@@ -19,12 +19,12 @@ import {
   DEFAULT_BUILTIN_PET_ID,
   slugifyPetId,
   type PetPackage,
-} from "@prismshadow/linsight-pets";
+} from "@prismshadow/jiumate-pets";
 import type {
   PetControlEntry,
   PetControlPort,
   PetControlSnapshot,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type { UiPrefsRepo } from "../db/repos/ui-prefs.js";
 import type { PetCatalogService } from "./pet-catalog.js";
 

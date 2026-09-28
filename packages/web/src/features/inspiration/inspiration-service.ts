@@ -3,7 +3,7 @@
  *
  * ## Two sources, one list
  *
- * The library's built-in half ships inside `@prismshadow/linsight-inspirations/presets`, which the
+ * The library's built-in half ships inside `@prismshadow/jiumate-inspirations/presets`, which the
  * web bundle imports directly; the admin's own half lives on the server. `fetchInspirationCatalog`
  * merges them the way the theme picker merges its built-in gallery with the installed catalog:
  * built-ins first, the server's answer taking precedence by id. In practice the two can never
@@ -18,12 +18,12 @@
  * URL — is a pure function in this module, so the gallery's behaviour is testable without a DOM or
  * a server. The React layer (`inspiration-store.ts`) only holds the fetched list and calls these.
  */
-import { builtinInspirationCatalog } from "@prismshadow/linsight-inspirations/presets";
+import { builtinInspirationCatalog } from "@prismshadow/jiumate-inspirations/presets";
 import type {
   InspirationCase,
   InspirationCategory,
   InspirationKind,
-} from "@prismshadow/linsight-inspirations";
+} from "@prismshadow/jiumate-inspirations";
 import { apiFetch } from "../../api/client";
 import { S } from "../../lib/strings";
 import { localizedText } from "../chat/skill-use";

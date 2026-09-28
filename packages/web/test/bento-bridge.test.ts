@@ -101,7 +101,7 @@ describe("withBentoBridge", () => {
 
   it("declares the deck's title before the bridge, so the bridge can read it", () => {
     const out = withBentoBridge(DECK, "S", "Kimi K3.bento.html");
-    const titleAt = out.indexOf("__linsightDeckTitle");
+    const titleAt = out.indexOf("__jiumateDeckTitle");
     expect(titleAt).toBeGreaterThan(-1);
     expect(titleAt).toBeLessThan(out.indexOf(BENTO_BRIDGE_SCRIPT));
     expect(out).toContain("Kimi K3.bento.html");
@@ -165,18 +165,18 @@ describe("stripBentoCollab", () => {
 
 describe("messages", () => {
   it("recognises its own three message types and nothing else", () => {
-    expect(isBentoMessage({ app: "linsight", type: "bento-doc", rid: 1, json: "{}" })).toBe(true);
-    expect(isBentoMessage({ app: "linsight", type: "bento-ready" })).toBe(true);
-    expect(isBentoMessage({ app: "linsight", type: "bento-unavailable", rid: 1 })).toBe(true);
+    expect(isBentoMessage({ app: "jiumate", type: "bento-doc", rid: 1, json: "{}" })).toBe(true);
+    expect(isBentoMessage({ app: "jiumate", type: "bento-ready" })).toBe(true);
+    expect(isBentoMessage({ app: "jiumate", type: "bento-unavailable", rid: 1 })).toBe(true);
     // Anything else — including a same-shaped message from another app — is ignored rather than
     // trusted: the handler settles a pending save from what it accepts here.
     expect(isBentoMessage({ app: "other", type: "bento-doc", rid: 1, json: "{}" })).toBe(false);
-    expect(isBentoMessage({ app: "linsight", type: "something-else" })).toBe(false);
+    expect(isBentoMessage({ app: "jiumate", type: "something-else" })).toBe(false);
     expect(isBentoMessage(null)).toBe(false);
     expect(isBentoMessage("bento-doc")).toBe(false);
   });
 
   it("stamps the app marker on the ask", () => {
-    expect(bentoGetMessage(7)).toEqual({ app: "linsight", type: "bento-get", rid: 7 });
+    expect(bentoGetMessage(7)).toEqual({ app: "jiumate", type: "bento-get", rid: 7 });
   });
 });

@@ -2,7 +2,7 @@
 #
 # The app directory is this package itself: `pnpm build` emits self-contained bundles of
 # the shell, the server and the CLI into dist/ (see tsup.config.ts). The one dependency tree
-# electron-builder collects is the @linsight/* plugin packages this package.json
+# electron-builder collects is the @jiumate/* plugin packages this package.json
 # declares — data-only directories the bundled server's plugin loader resolves by name from
 # the app's node_modules (never imported, so bundling has nothing to absorb). Everything
 # else inside an installer is described by `files` below.
@@ -16,8 +16,8 @@
 # secrets are present. Windows release artifacts are Authenticode-signed through EVSign
 # during packaging so update metadata is generated from the final signed bytes. Unsigned
 # dry-run builds remain possible outside the release path.
-appId: com.prismshadow.linsight
-productName: Linsight
+appId: com.prismshadow.jiumate
+productName: JiuMate
 # Declaring the publish target is what makes electron-builder emit the update metadata
 # (latest.yml / latest-mac.yml / latest-linux.yml and the .blockmap files) next to the
 # installers; nothing is uploaded from here — the release workflow attaches the artifacts
@@ -25,7 +25,7 @@ productName: Linsight
 publish:
   provider: github
   owner: qiaiqian67
-  repo: linsight
+  repo: jiumate
 directories:
   output: out
 # Everything the app runs, and nothing else. The mapped entry is the web build, which the
@@ -54,8 +54,8 @@ files:
 # shell calls app.setName() before anything reads userData, so that keeps the name
 # src/app-identity.ts chooses per form.
 extraMetadata:
-  name: linsight-desktop
-  homepage: https://github.com/qiaiqian67/linsight
+  name: jiumate-desktop
+  homepage: https://github.com/qiaiqian67/jiumate
 asar: false
 # Nothing to rebuild: the only native module is node-pty, staged into dist/node_modules as
 # the binaries its npm tarball prebuilds (darwin, win32) or as the binding pnpm's install
@@ -74,11 +74,11 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.inherit.plist
   notarize: true
-  # Version-less artifact names, following the CLI bundles (linsight-darwin-arm64.tar.gz):
+  # Version-less artifact names, following the CLI bundles (jiumate-darwin-arm64.tar.gz):
   # the version lives in the Release tag and SHA256SUMS.desktop, so the download page and
   # the OSS mirror manifest can address every installer by a stable name — and GitHub's
   # `releases/latest/download/<name>` stays a working static link across releases.
-  artifactName: linsight-desktop-darwin-${arch}.${ext}
+  artifactName: jiumate-desktop-darwin-${arch}.${ext}
   target:
     - target: dmg
       arch: [arm64, x64]
@@ -98,12 +98,12 @@ win:
   # Same source PNG; electron-builder converts it to the multi-size ico embedded in the
   # exe (>=256px required).
   icon: build/icon.png
-  artifactName: linsight-desktop-win32-${arch}.${ext}
+  artifactName: jiumate-desktop-win32-${arch}.${ext}
   verifyUpdateCodeSignature: true
   signExts:
-    - Linsight.exe
+    - JiuMate.exe
     - elevate.exe
-    - linsight-desktop-win32-x64.exe
+    - jiumate-desktop-win32-x64.exe
     - .__uninstaller.exe
     - "!.exe"
   signtoolOptions:
@@ -130,14 +130,14 @@ win:
   # MinGit, downloaded by the CI job into build/minigit (empty for local non-Windows
   # builds, hence the committed .gitkeep — an extraResources source must always exist):
   # lands under resources/git, and the shell advertises git/usr/bin/sh.exe as
-  # LINSIGHT_BUNDLED_SHELL so the agent shell behaves like the npm-installed package.
+  # JIUMATE_BUNDLED_SHELL so the agent shell behaves like the npm-installed package.
   extraResources:
     - from: build/minigit
       to: git
     # Pandoc binary, downloaded by CI into build/pandoc (empty for local non-CI builds,
     # hence the committed .gitkeep — an extraResources source must always exist). The
     # shell resolves it via pandoc-path.ts; the unpacked folder lands under
-    # resources/pandoc and is what LINSIGHT_BUNDLED_PANDOC points at.
+    # resources/pandoc and is what JIUMATE_BUNDLED_PANDOC points at.
     - from: build/pandoc/win32-x64
       to: pandoc
       filter: ["**/*"]
@@ -152,12 +152,12 @@ linux:
   icon: build/icons
   # Pinned rather than derived from the app name, which the deb postinst templates also
   # interpolate (build/linux/*.tpl).
-  executableName: linsight
+  executableName: jiumate
   # ${arch} expands to each Linux target's own convention — x86_64 for AppImage, amd64
-  # for deb — so the published names are linsight-desktop-linux-x86_64.AppImage and
-  # linsight-desktop-linux-amd64.deb; the OSS mirror manifest and the landing download
+  # for deb — so the published names are jiumate-desktop-linux-x86_64.AppImage and
+  # jiumate-desktop-linux-amd64.deb; the OSS mirror manifest and the landing download
   # page name them accordingly.
-  artifactName: linsight-desktop-linux-${arch}.${ext}
+  artifactName: jiumate-desktop-linux-${arch}.${ext}
   category: Development
   maintainer: Prism Shadow <zheng@prismshadow.com>
   # Pandoc binary for Linux (x64): same shape as the Windows entry, lands under
@@ -174,8 +174,8 @@ linux:
 
 deb:
   # Extended copies of electron-builder's default scripts (overriding REPLACES them):
-  # they additionally create/remove the /usr/bin/linsight symlink to the bundled CLI
-  # launcher (resources/app/bin/linsight), so a deb install gets the `linsight` command
+  # they additionally create/remove the /usr/bin/jiumate symlink to the bundled CLI
+  # launcher (resources/app/bin/jiumate), so a deb install gets the `jiumate` command
   # on PATH without the in-app install flow the other formats use.
   afterInstall: build/linux/after-install.tpl
   afterRemove: build/linux/after-remove.tpl

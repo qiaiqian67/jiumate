@@ -98,7 +98,7 @@ describe("install id (file)", () => {
   });
 
   it("readInstallId never mints", async () => {
-    const root = path.join(os.tmpdir(), `linsight-install-id-absent-${process.pid}`);
+    const root = path.join(os.tmpdir(), `jiumate-install-id-absent-${process.pid}`);
     expect(readInstallId(root)).toBeNull();
     expect(fs.existsSync(installIdPath(root))).toBe(false);
   });

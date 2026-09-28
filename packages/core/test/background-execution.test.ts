@@ -105,7 +105,7 @@ afterEach(async () => {
 });
 
 async function makeEnv(): Promise<{ env: Environment; dir: string }> {
-  const dir = await mkdtemp(path.join(tmpdir(), "linsight-bg-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "jiumate-bg-"));
   const env = new Environment({ workspaceDir: dir, toolConfig: commandToolConfig() });
   cleanups.push(async () => {
     env.dispose();
@@ -341,7 +341,7 @@ describe("exec_command run_in_background", () => {
   });
 
   it("dispose suppresses pending completion reports", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "linsight-bg-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "jiumate-bg-"));
     cleanups.push(() => rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }));
     const env = new Environment({ workspaceDir: dir, toolConfig: commandToolConfig() });
     const events: BackgroundTaskDoneEvent[] = [];

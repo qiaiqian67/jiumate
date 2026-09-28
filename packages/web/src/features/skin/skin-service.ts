@@ -10,15 +10,15 @@
  * controls on the settings page. `appearance` is what replaces the old per-mode split: a theme
  * says which shells its artwork holds up under, and the host pins the mode to match.
  *
- * The built-in table lives in `@prismshadow/linsight-skins/presets` rather than here, because
+ * The built-in table lives in `@prismshadow/jiumate-skins/presets` rather than here, because
  * the server needs the same ids. Only the web-bundle URL shape is built here.
  */
 import { apiFetch } from "../../api/client";
-import { BUILTIN_THEMES } from "@prismshadow/linsight-skins/presets";
-import type { BuiltinTheme } from "@prismshadow/linsight-skins/presets";
-import { deriveRamps } from "@prismshadow/linsight-skins/css";
-import type { SkinRenderInput, WallpaperInput } from "@prismshadow/linsight-skins/css";
-import type { SkinPackage, ThemeAppearance, ThemeColors } from "@prismshadow/linsight-skins";
+import { BUILTIN_THEMES } from "@prismshadow/jiumate-skins/presets";
+import type { BuiltinTheme } from "@prismshadow/jiumate-skins/presets";
+import { deriveRamps } from "@prismshadow/jiumate-skins/css";
+import type { SkinRenderInput, WallpaperInput } from "@prismshadow/jiumate-skins/css";
+import type { SkinPackage, ThemeAppearance, ThemeColors } from "@prismshadow/jiumate-skins";
 
 /** Where the web bundle serves a built-in theme's artwork from. */
 const BUILTIN_THEME_BASE = "/themes";
@@ -107,7 +107,7 @@ function fromInstalled(skin: SkinPackage): ThemeDescriptor {
  * The built-in gallery, seeded so the very first render can already apply a theme.
  *
  * The derived ramp is not in this table — it is computed from `colors` by the renderer's own
- * module (`@prismshadow/linsight-skins/css`), so the bundle carries one palette per theme
+ * module (`@prismshadow/jiumate-skins/css`), so the bundle carries one palette per theme
  * rather than two ramps.
  */
 export function builtinThemes(): ThemeDescriptor[] {

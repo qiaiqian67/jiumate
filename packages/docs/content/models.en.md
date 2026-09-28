@@ -11,11 +11,11 @@ All model access goes through one gateway library: `@prismshadow/agenthub` (Auto
 
 A model's identity is always the `(provider, model_id)` pair: `provider` is a config group name, `model_id` the upstream request id sent to AgentHub unchanged. The two are independent fields — concatenating them into one string is forbidden anywhere in the pipeline.
 
-Every interface that names a model takes the complete pair: the CLI, the HTTP API, and the SDK all reject half a reference instead of completing it. The provider is never inferred from the model id and has no default, because gateways resell vendor models under their upstream ids — a guessed group would send the entry's credential to a vendor nobody named. Where a model reference is optional at all (`linsight run` / `chat`, Session creation, Schedules), the choice is between the whole pair and nothing: omit both halves to take the Project's default model.
+Every interface that names a model takes the complete pair: the CLI, the HTTP API, and the SDK all reject half a reference instead of completing it. The provider is never inferred from the model id and has no default, because gateways resell vendor models under their upstream ids — a guessed group would send the entry's credential to a vendor nobody named. Where a model reference is optional at all (`jiumate run` / `chat`, Session creation, Schedules), the choice is between the whole pair and nothing: omit both halves to take the Project's default model.
 
 ## The per-Project model table
 
-Each Project's available models are recorded in the hidden `.project_config.toml`, maintained via the CLI (`linsight config model add / default / list`, see [CLI Reference](/cli)) or the Web UI — never hand-edited. `ModelEntry` fields:
+Each Project's available models are recorded in the hidden `.project_config.toml`, maintained via the CLI (`jiumate config model add / default / list`, see [CLI Reference](/cli)) or the Web UI — never hand-edited. `ModelEntry` fields:
 
 | Field | Meaning |
 | --- | --- |
@@ -88,10 +88,10 @@ Some gateways read a request header that files a call under the app that made it
 
 | Endpoint | Header | Value |
 | --- | --- | --- |
-| `openrouter.ai` | `HTTP-Referer` | `https://linsight.ooo/` |
-| `openrouter.ai` | `X-OpenRouter-Title` | `Linsight` |
+| `openrouter.ai` | `HTTP-Referer` | `https://jiumate.ooo/` |
+| `openrouter.ai` | `X-OpenRouter-Title` | `JiuMate` |
 | `openrouter.ai` | `X-OpenRouter-Categories` | `cli-agent,personal-agent` |
-| `tokendance.space` | `X-App-URL` | `https://linsight.ooo/` |
+| `tokendance.space` | `X-App-URL` | `https://jiumate.ooo/` |
 
 Every other endpoint — every direct vendor, and every gateway that reads no such header — receives no extra headers at all. The headers state the app's identity only; they carry nothing about the user, the Agent or the Session.
 
@@ -99,7 +99,7 @@ Every other endpoint — every direct vendor, and every gateway that reads no su
 
 A provider that publishes an authorization flow puts an extra action on its group header in the models page: **Authorize key**. TokenDance is the one built-in group that does. It creates a **new** key on your account — it does not read a key you already have — and writes it to every model in that group, replacing whatever key those entries carry.
 
-Pressing it opens the provider's authorization page in a new tab. Authorize there and the provider sends the browser back to Linsight, which redeems the one-time code and saves the key; the tab you started from reports the result on its own. The same app URL the attribution table above lists is stamped onto the key, so calls made with it stay attributed even from another tool.
+Pressing it opens the provider's authorization page in a new tab. Authorize there and the provider sends the browser back to JiuMate, which redeems the one-time code and saves the key; the tab you started from reports the result on its own. The same app URL the attribution table above lists is stamped onto the key, so calls made with it stay attributed even from another tool.
 
 The exchange runs entirely on the server: the PKCE verifier is generated there and never reaches the browser, and the minted key goes straight into the model table without passing through it. An authorization is good for one key and expires in ten minutes.
 
@@ -147,7 +147,7 @@ Six levels: `none | low | medium | high | xhigh | max`, configured per Agent as 
 
 ## Fast mode
 
-Each model entry can opt into the provider's faster serving tier ("Fast mode" toggle in the Web model dialog, `--fast-mode` / `--no-fast-mode` on `linsight config model add`, `fast_mode = true` in the entry). Off by default; existing configs are unaffected. Switching it on asks for confirmation first, because it changes what the model costs.
+Each model entry can opt into the provider's faster serving tier ("Fast mode" toggle in the Web model dialog, `--fast-mode` / `--no-fast-mode` on `jiumate config model add`, `fast_mode = true` in the entry). Off by default; existing configs are unaffected. Switching it on asks for confirmation first, because it changes what the model costs.
 
 When enabled, session requests carry AgentHub's `fast_mode` flag: OpenAI-protocol clients send `service_tier: "priority"`, Anthropic-protocol clients send `speed: "fast"` with the fast-mode beta header. Fast tiers are billed at the provider's premium price list (MiniMax charges 1.5x its standard rate; OpenAI and Anthropic publish separate premium rates), and the recorded per-token pricing does not adjust for it — costs shown for fast-mode usage are underestimated unless you raise the entry's price buckets.
 

@@ -42,11 +42,11 @@ Five representative options, spanning the design space. All figures checked 2026
 | OpenAI Agents SDK | MIT | 28k | ~27 lines | — / — / — | OpenAI Dashboard | — |
 | Google ADK | Apache-2.0 | 21k | ~8 lines | `adk web` / `adk run` / `adk api_server` | — | Built in, and deep |
 | Dify | Modified Apache-2.0 | 150k | **0** | Yes / Yes / REST | — | — |
-| **Linsight** | Apache-2.0 | — | **0** | **Yes / Yes / Yes** | **Built in (Trace)** | **Built in** |
+| **JiuMate** | Apache-2.0 | — | **0** | **Yes / Yes / Yes** | **Built in (Trace)** | **Built in** |
 
 Line counts come from each project's official quickstart and are not perfectly comparable. Blank cells mean *not documented in the sources we checked*, not *impossible*.
 
-One licensing note, since "open source" is doing heavy lifting in this market: Dify ships under a **modified** Apache 2.0 that forbids multi-tenant SaaS resale and forbids removing its branding. n8n, the most-starred project in the space at 197k, uses the Sustainable Use License and is not open source at all. Linsight is plain Apache-2.0.
+One licensing note, since "open source" is doing heavy lifting in this market: Dify ships under a **modified** Apache 2.0 that forbids multi-tenant SaaS resale and forbids removing its branding. n8n, the most-starred project in the space at 197k, uses the Sustainable Use License and is not open source at all. JiuMate is plain Apache-2.0.
 
 ## 3. The field already agrees that thin won
 
@@ -68,7 +68,7 @@ LangChain itself moved its legacy chains, retrievers and hub module into a separ
 
 The category is not dying. It is admitting the abstractions were never the valuable part — which makes the assembly cost in section 1 even harder to justify.
 
-## 4. Linsight: one install, and nothing to learn
+## 4. JiuMate: one install, and nothing to learn
 
 Our answer is not a thinner framework. It is removing the assembly step and then automating the tuning loop.
 
@@ -77,8 +77,8 @@ Our answer is not a thinner framework. It is removing the assembly step and then
 One install gives you all five rows of that first table, sharing one data directory and one message protocol:
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight web        # http://127.0.0.1:7364 — first login: admin, initial password printed on first start
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate web        # http://127.0.0.1:7364 — first login: admin, initial password printed on first start
 ```
 
 Multi-session chat, agent and skill management, model configuration, usage and cost statistics, **Trace observability**, and an **evaluation center** — in the box, wired together, nothing to subscribe to and nothing to self-host separately. Every request, tool call and approval decision is already recorded; a session restores completely from its trace. There is no tracing SDK to install because there is no seam to instrument across.
@@ -86,14 +86,14 @@ Multi-session chat, agent and skill management, model configuration, usage and c
 ### 4.2 Zero lines, not fewer lines
 
 ```bash
-linsight run -m "Analyze data.csv and summarize quarterly sales"
+jiumate run -m "Analyze data.csv and summarize quarterly sales"
 ```
 
-No project, no imports, no framework. The same engine drives the REPL (`linsight chat`), a headless server (`linsight server`) and the Web App.
+No project, no imports, no framework. The same engine drives the REPL (`jiumate chat`), a headless server (`jiumate server`) and the Web App.
 
 ### 4.3 An agent builds your agent
 
-You describe what you want; an agent writes its `AGENTS.md`, installs the skills it needs, and hands you something that runs. One sentence produced a complete RAG application — ingestion, retrieval, cited sources, web UI — for **$0.02** of tokens on DeepSeek V4 Pro. The [runnable example](https://github.com/qiaiqian67/linsight/tree/main/examples/build-agent-with-agent) is an 82-line script that builds a new agent from a plain-language requirement and then runs it.
+You describe what you want; an agent writes its `AGENTS.md`, installs the skills it needs, and hands you something that runs. One sentence produced a complete RAG application — ingestion, retrieval, cited sources, web UI — for **$0.02** of tokens on DeepSeek V4 Pro. The [runnable example](https://github.com/qiaiqian67/jiumate/tree/main/examples/build-agent-with-agent) is an 82-line script that builds a new agent from a plain-language requirement and then runs it.
 
 This works because **agents are editable data, not hardcoded constants** — prompts, skills and configuration are plain files on disk.
 
@@ -107,7 +107,7 @@ On other stacks, *you* are the optimizer: you read the traces, you tune the prom
 
 Every tool call gets exactly one approval decision in one of four modes — allow-all, deny-all, read-only, always-ask — and each decision is audited to the trace. It runs fully locally on as little as a single CPU, and reaches 1000+ models through any OpenAI-protocol endpoint.
 
-## 5. When not to use Linsight
+## 5. When not to use JiuMate
 
 A comparison where one option wins every row is an advertisement, not an analysis. Two cases where you should pick something else:
 
@@ -118,13 +118,13 @@ A comparison where one option wins every row is an advertisement, not an analysi
 
 Building an agent stopped being the hard part. Assembling and learning the stack around it did not — and on the most popular option that means two libraries, an observability platform from a first or third party, an evaluation harness, and a human who becomes the optimization loop.
 
-Linsight collapses those into one install, then hands the optimization loop to the agent.
+JiuMate collapses those into one install, then hands the optimization loop to the agent.
 
 Not the smallest framework — **no framework, an agent to write the agent, and nothing left for you to learn.**
 
 ---
 
-- **Docs**: [Quickstart](https://linsight.ooo/docs/quickstart) · [Skills](https://linsight.ooo/docs/skills) · [Sessions & Traces](https://linsight.ooo/docs/sessions-and-traces)
-- **Community**: [GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **Docs**: [Quickstart](https://jiumate.ooo/docs/quickstart) · [Skills](https://jiumate.ooo/docs/skills) · [Sessions & Traces](https://jiumate.ooo/docs/sessions-and-traces)
+- **Community**: [GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **Sources** — figures checked 2026-07-22: [LangChain v1 release notes](https://docs.langchain.com/oss/python/releases/langchain-v1) · [Langfuse](https://github.com/langfuse/langfuse) · [AutoGen README](https://github.com/microsoft/autogen) · [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) · [Google ADK](https://adk.dev/) · [CrewAI](https://docs.crewai.com/en/quickstart) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/quickstart/) · [Dify LICENSE](https://github.com/langgenius/dify/blob/main/LICENSE) · [n8n LICENSE](https://github.com/n8n-io/n8n/blob/master/LICENSE.md) · [Anthropic, Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents)

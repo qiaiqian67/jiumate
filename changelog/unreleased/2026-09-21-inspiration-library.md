@@ -2,13 +2,13 @@
 
 - **Date:** 2026-09-21
 - **Type:** feature
-- **Scope:** `@prismshadow/linsight-inspirations` (new workspace package), `packages/server`, `packages/web`
+- **Scope:** `@prismshadow/jiumate-inspirations` (new workspace package), `packages/server`, `packages/web`
 
 [中文版](2026-09-21-inspiration-library.zh.md)
 
 The 灵感库 / Inspiration page was a hard-coded catalog: eleven examples in a TypeScript array, three categories in the i18n dictionaries, and no way to add anything. It is now a library — the built-in cases plus the cases an admin authors, filed into categories an admin defines, with covers, previews, favourites and search.
 
-## `@prismshadow/linsight-inspirations` — new workspace package
+## `@prismshadow/jiumate-inspirations` — new workspace package
 
 The case format, its bounds, the on-disk catalog and the built-in presets. A **case** is one starter: a prompt to fill the composer with, plus what that prompt is meant to run against — a suggested Agent, skills to preselect, tools it expects, and optionally a cover image and a preview document.
 

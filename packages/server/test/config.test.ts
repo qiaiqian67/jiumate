@@ -6,12 +6,12 @@
  * validation and bind to a random port; explicit "0" is preserved (explicit semantics
  * for a random available port); invalid values throw. This matches the CLI's
  * resolvePort semantics (packages/cli serve).
- * LINSIGHT_SEED_ADMIN_PASSWORD: unset/empty/whitespace → null (random seed password).
+ * JIUMATE_SEED_ADMIN_PASSWORD: unset/empty/whitespace → null (random seed password).
  */
 import { describe, expect, it } from "vitest";
 import { resolveServerConfig } from "../src/config.js";
 
-const base = { LINSIGHT_HOME: "/tmp/linsight-config-test" };
+const base = { JIUMATE_HOME: "/tmp/jiumate-config-test" };
 
 describe("resolveServerConfig: PORT parsing", () => {
   it("defaults to 7364; empty string treated as unset (does not fall to port 0)", () => {
@@ -36,18 +36,18 @@ describe("resolveServerConfig: desktop-mode seed password", () => {
     // Nothing pins it: the password the seed generates on its own is already unguessable, so
     // supplying one here would just be a second way to say the same thing.
     expect(
-      resolveServerConfig({ ...base, LINSIGHT_DESKTOP_TOKEN: "tok" }).seedAdminPassword,
+      resolveServerConfig({ ...base, JIUMATE_DESKTOP_TOKEN: "tok" }).seedAdminPassword,
     ).toBeNull();
   });
 
-  it("an explicit LINSIGHT_SEED_ADMIN_PASSWORD still wins in desktop mode", () => {
+  it("an explicit JIUMATE_SEED_ADMIN_PASSWORD still wins in desktop mode", () => {
     expect(
       resolveServerConfig({
         ...base,
-        LINSIGHT_DESKTOP_TOKEN: "tok",
-        LINSIGHT_SEED_ADMIN_PASSWORD: "linsight-2026",
+        JIUMATE_DESKTOP_TOKEN: "tok",
+        JIUMATE_SEED_ADMIN_PASSWORD: "jiumate-2026",
       }).seedAdminPassword,
-    ).toBe("linsight-2026");
+    ).toBe("jiumate-2026");
   });
 
   it("outside desktop mode the unpinned value stays null (the seed generates one)", () => {
@@ -55,18 +55,18 @@ describe("resolveServerConfig: desktop-mode seed password", () => {
   });
 });
 
-describe("resolveServerConfig: LINSIGHT_SEED_ADMIN_PASSWORD parsing", () => {
+describe("resolveServerConfig: JIUMATE_SEED_ADMIN_PASSWORD parsing", () => {
   it("unset/empty/whitespace → null; a value is kept trimmed", () => {
     expect(resolveServerConfig({ ...base }).seedAdminPassword).toBeNull();
     expect(
-      resolveServerConfig({ ...base, LINSIGHT_SEED_ADMIN_PASSWORD: "" }).seedAdminPassword,
+      resolveServerConfig({ ...base, JIUMATE_SEED_ADMIN_PASSWORD: "" }).seedAdminPassword,
     ).toBeNull();
     expect(
-      resolveServerConfig({ ...base, LINSIGHT_SEED_ADMIN_PASSWORD: "  " }).seedAdminPassword,
+      resolveServerConfig({ ...base, JIUMATE_SEED_ADMIN_PASSWORD: "  " }).seedAdminPassword,
     ).toBeNull();
     expect(
-      resolveServerConfig({ ...base, LINSIGHT_SEED_ADMIN_PASSWORD: " linsight-9999 " })
+      resolveServerConfig({ ...base, JIUMATE_SEED_ADMIN_PASSWORD: " jiumate-9999 " })
         .seedAdminPassword,
-    ).toBe("linsight-9999");
+    ).toBe("jiumate-9999");
   });
 });

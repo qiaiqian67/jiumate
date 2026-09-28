@@ -30,7 +30,7 @@ import {
   userSteeringText,
   userText,
   withOrigin,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   ApproveFn,
   GenerativeModelParameters,
@@ -38,7 +38,7 @@ import type {
   LLMOutcome,
   OmniMessage,
   TextPayload,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import { openDatabase } from "../src/db/database.js";
 import { HttpError } from "../src/http/errors.js";
 import { SessionsRepo } from "../src/db/repos/sessions.js";
@@ -456,7 +456,7 @@ describe("session-manager", () => {
     // what registers the notice listener). Only the LLM is scripted. This is the frontend's
     // exact feed: the channel events asserted on are what SSE relays byte-for-byte.
     sessions.updateApprovalMode("session-1", "allow-all");
-    const dir = await mkdtemp(path.join(tmpdir(), "linsight-bge2e-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "jiumate-bge2e-"));
     const environment = new Environment({
       workspaceDir: dir,
       toolConfig: {

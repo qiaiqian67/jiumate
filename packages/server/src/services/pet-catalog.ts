@@ -2,14 +2,14 @@
  * Pet catalog: list / import / delete Petdex pet packages on the host.
  *
  * Mirrors OpenBitFun's `services-core/src/pet_packages.rs`. The package
- * format itself lives in `@prismshadow/linsight-pets`; this service adds the
+ * format itself lives in `@prismshadow/jiumate-pets`; this service adds the
  * host-side concerns: anchoring the catalog under the data root, hashing
  * source paths for receipts, surfacing diagnostic strings for the picker.
  *
  * The catalog is a directory of folders, one per installed pet:
  *   <root>/pets/<slug>/pet.json
  *   <root>/pets/<slug>/<spritesheet-filename>
- *   <root>/pets/<slug>/.linsight-pet-receipt.json   (after an import)
+ *   <root>/pets/<slug>/.jiumate-pet-receipt.json   (after an import)
  *
  * Builtin presets live in the web app's public assets (separate from the user
  * catalog) and are surfaced through the picker via a separate `presets`
@@ -38,7 +38,7 @@ import {
   type PetPackage,
   type PetReceipt,
   type SpriteVersionNumber,
-} from "@prismshadow/linsight-pets";
+} from "@prismshadow/jiumate-pets";
 
 /** Maximum number of builtin presets the picker renders (a safety cap; mirrors `MAX_PACKAGES`). */
 export const MAX_BUILTIN_PRESETS = MAX_PACKAGES;

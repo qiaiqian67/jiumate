@@ -63,7 +63,7 @@ Ranked by server-side severity:
 |---|---|
 | No tab completion, no history file | `node:readline` completer API + `node:fs` for history. |
 | No OAuth / SSO | Sync with the server work. |
-| No pipeline / DAG orchestration | `linsight pipeline` (DAG of tasks). |
+| No pipeline / DAG orchestration | `jiumate pipeline` (DAG of tasks). |
 
 ## E. Data, deploy, docs
 

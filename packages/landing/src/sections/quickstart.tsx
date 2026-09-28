@@ -292,7 +292,7 @@ export function Quickstart() {
                       ))}
                     </ol>
                   </div>
-                  <CodeCard code={S.quickstart.web.command} label="linsight web" />
+                  <CodeCard code={S.quickstart.web.command} label="jiumate web" />
                 </div>
               ) : (
                 <div className="grid gap-8 p-6 sm:p-8 md:grid-cols-[0.9fr_1.1fr] md:items-center">
@@ -307,7 +307,7 @@ export function Quickstart() {
                       {S.quickstart.localNote}
                     </p>
                   </div>
-                  <CodeCard code={S.quickstart.cli.command} label="linsight" />
+                  <CodeCard code={S.quickstart.cli.command} label="jiumate" />
                 </div>
               )}
             </div>

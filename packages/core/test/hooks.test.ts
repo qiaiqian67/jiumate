@@ -132,7 +132,7 @@ describe("runStopHooks", () => {
 describe("script hooks", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-script-hook-"));
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-script-hook-"));
   });
   afterEach(async () => {
     // Windows holds a directory handle to the script's cwd (its temp dir) inside the
@@ -227,7 +227,7 @@ describe("script hooks", () => {
 describe("script pre-tool-use hooks", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-tool-script-"));
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-tool-script-"));
   });
   afterEach(async () => {
     // Windows holds a directory handle to the script's cwd (its temp dir) inside the
@@ -284,7 +284,7 @@ describe("script pre-tool-use hooks", () => {
 describe("Session user-prompt hook", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-prompt-hook-"));
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-prompt-hook-"));
   });
   afterEach(async () => {
     // Windows holds a directory handle to the script's cwd (its temp dir) inside the
@@ -351,7 +351,7 @@ describe("Session user-prompt hook", () => {
 describe("Session stop hooks", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-hooks-"));
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-hooks-"));
   });
   afterEach(async () => {
     // Windows holds a directory handle to the script's cwd (its temp dir) inside the
@@ -579,7 +579,7 @@ describe("runPreToolUseHooks", () => {
 describe("Session pre-tool-use hooks", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-tool-hooks-"));
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-tool-hooks-"));
   });
   afterEach(async () => {
     // Windows holds a directory handle to the script's cwd (its temp dir) inside the

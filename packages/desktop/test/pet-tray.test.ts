@@ -32,7 +32,7 @@ describe("petTrayLabels", () => {
 });
 
 describe("resolveTrayIcon", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-desktop-tray-"));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-desktop-tray-"));
   afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
   it("is null until the build copies a tray icon in (the tray is then skipped)", () => {

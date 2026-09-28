@@ -18,7 +18,7 @@ const SCRIPT = path.join(pkgDir, "scripts", "download-pandoc.mjs");
 
 const tmpRoots: string[] = [];
 function tmp(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-pandoc-dl-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-pandoc-dl-"));
   tmpRoots.push(dir);
   return dir;
 }

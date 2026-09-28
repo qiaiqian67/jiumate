@@ -31,8 +31,8 @@ describe("isFileDrag", () => {
     expect(isFileDrag(["text/plain"])).toBe(false);
     expect(isFileDrag(["text/uri-list", "text/html"])).toBe(false);
     // The sidebar's two reorder drags each use a private MIME precisely so nothing else reacts.
-    expect(isFileDrag(["application/x-linsight-session-id"])).toBe(false);
-    expect(isFileDrag(["application/x-linsight-group-key"])).toBe(false);
+    expect(isFileDrag(["application/x-jiumate-session-id"])).toBe(false);
+    expect(isFileDrag(["application/x-jiumate-group-key"])).toBe(false);
     expect(isFileDrag([])).toBe(false);
   });
 

@@ -67,7 +67,7 @@ const ILINK_CLIENT_VERSION = (1 << 16) | (0 << 8) | 0;
  * `User-Agent`. Observability only — it authenticates and routes nothing — and the grammar
  * is `Name/Version`, so a bare name would be dropped by the server's sanitizer.
  */
-const BOT_AGENT = "Linsight/1.0";
+const BOT_AGENT = "JiuMate/1.0";
 
 /** Overall deadline for the short calls (send, upload handle, credential probe). */
 const CALL_TIMEOUT_MS = 15_000;

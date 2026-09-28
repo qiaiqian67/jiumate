@@ -27,16 +27,16 @@ describe("initialFontScale", () => {
   it("keeps whichever tier was stored, including the old default", () => {
     // The point of the change is the *default*, not a migration: someone who picked 中 must stay
     // on 中, or this would silently resize the UI for every existing user.
-    expect(initialFontScale(store({ "linsight.fontScale": "sm" }))).toBe("sm");
-    expect(initialFontScale(store({ "linsight.fontScale": "md" }))).toBe("md");
-    expect(initialFontScale(store({ "linsight.fontScale": "lg" }))).toBe("lg");
+    expect(initialFontScale(store({ "jiumate.fontScale": "sm" }))).toBe("sm");
+    expect(initialFontScale(store({ "jiumate.fontScale": "md" }))).toBe("md");
+    expect(initialFontScale(store({ "jiumate.fontScale": "lg" }))).toBe("lg");
   });
 
   it("ignores an unrecognized stored value rather than passing it through", () => {
     // An older build's tier, or a hand-edited key: the root font-size is set from this value, so
     // a string the lookup table has no entry for would render as an invalid font-size.
-    expect(initialFontScale(store({ "linsight.fontScale": "xl" }))).toBe("sm");
-    expect(initialFontScale(store({ "linsight.fontScale": "" }))).toBe("sm");
+    expect(initialFontScale(store({ "jiumate.fontScale": "xl" }))).toBe("sm");
+    expect(initialFontScale(store({ "jiumate.fontScale": "" }))).toBe("sm");
   });
 });
 
@@ -46,14 +46,14 @@ describe("initialCurrency", () => {
   });
 
   it("keeps a stored choice either way", () => {
-    expect(initialCurrency(store({ "linsight.currency": "USD" }))).toBe("USD");
-    expect(initialCurrency(store({ "linsight.currency": "CNY" }))).toBe("CNY");
+    expect(initialCurrency(store({ "jiumate.currency": "USD" }))).toBe("USD");
+    expect(initialCurrency(store({ "jiumate.currency": "CNY" }))).toBe("CNY");
   });
 
   it("treats anything that is not the stored USD as the default", () => {
     // The read is "is USD the stored choice", not "is CNY": every other answer, including a value
     // this build does not know, has to land on the default rather than on a broken symbol.
-    expect(initialCurrency(store({ "linsight.currency": "EUR" }))).toBe("CNY");
-    expect(initialCurrency(store({ "linsight.currency": "" }))).toBe("CNY");
+    expect(initialCurrency(store({ "jiumate.currency": "EUR" }))).toBe("CNY");
+    expect(initialCurrency(store({ "jiumate.currency": "" }))).toBe("CNY");
   });
 });

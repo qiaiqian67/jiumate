@@ -91,7 +91,7 @@ That is a property of the contract, not a layer boundary.
   app could open DevTools. Rejected and reverted: the shell already ships
   Ctrl+Shift+I, so the "capability" bought nothing and cost the window's zero-preload security
   posture. An app-level convenience is never a reason to grow runtime surface.
-- **The agent could not find the `linsight` CLI** — the first fix injected `PATH` when the Electron
+- **The agent could not find the `jiumate` CLI** — the first fix injected `PATH` when the Electron
   shell forked the server. Rejected: "what environment the agent sees" is policy. It belongs in
   the platform's `boot()`, where it also reaches already-deployed machines through a normal push.
 - **New business APIs** — the HTTP seam offers every request to the booted platform, which

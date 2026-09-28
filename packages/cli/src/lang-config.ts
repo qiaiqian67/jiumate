@@ -1,21 +1,21 @@
 /**
- * Language persistence: write `LINSIGHT_LANG` into the user's shell startup file, then restart
+ * Language persistence: write `JIUMATE_LANG` into the user's shell startup file, then restart
  * the shell so it takes effect.
  *
  * A child process can't modify its parent shell's environment variables directly, so
- * `linsight config lang` uses a "write the startup file + restart the shell" approach: write
- * `export LINSIGHT_LANG=<lang>` into the shell startup file inside a marked block (idempotent,
+ * `jiumate config lang` uses a "write the startup file + restart the shell" approach: write
+ * `export JIUMATE_LANG=<lang>` into the shell startup file inside a marked block (idempotent,
  * updates in place), then open an interactive shell carrying the new language env var. New
  * terminals will read the variable from the startup file, so it persists.
  */
 import { spawn } from "node:child_process";
 import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { atomicWriteFile } from "@prismshadow/linsight-core";
+import { atomicWriteFile } from "@prismshadow/jiumate-core";
 import type { Language } from "./i18n.js";
 
-const BEGIN = "# >>> Linsight LINSIGHT_LANG >>>";
-const END = "# <<< Linsight LINSIGHT_LANG <<<";
+const BEGIN = "# >>> JiuMate JIUMATE_LANG >>>";
+const END = "# <<< JiuMate JIUMATE_LANG <<<";
 
 export type ShellKind = "zsh" | "bash" | "fish" | "unknown";
 
@@ -34,31 +34,31 @@ export function resolveShellRc(shell: string | undefined, home: string): ShellRc
     return {
       kind: "fish",
       rcPath: join(home, ".config", "fish", "config.fish"),
-      body: (lang) => `set -gx LINSIGHT_LANG ${lang}`,
+      body: (lang) => `set -gx JIUMATE_LANG ${lang}`,
     };
   }
   if (base.includes("zsh")) {
     return {
       kind: "zsh",
       rcPath: join(home, ".zshrc"),
-      body: (lang) => `export LINSIGHT_LANG=${lang}`,
+      body: (lang) => `export JIUMATE_LANG=${lang}`,
     };
   }
   if (base.includes("bash")) {
     return {
       kind: "bash",
       rcPath: join(home, ".bashrc"),
-      body: (lang) => `export LINSIGHT_LANG=${lang}`,
+      body: (lang) => `export JIUMATE_LANG=${lang}`,
     };
   }
   return {
     kind: "unknown",
     rcPath: join(home, ".profile"),
-    body: (lang) => `export LINSIGHT_LANG=${lang}`,
+    body: (lang) => `export JIUMATE_LANG=${lang}`,
   };
 }
 
-/** Insert or update the marked Linsight block in place within the text; leaves the rest of the content unchanged. */
+/** Insert or update the marked JiuMate block in place within the text; leaves the rest of the content unchanged. */
 export function upsertBlock(content: string, bodyLine: string): string {
   const block = `${BEGIN}\n${bodyLine}\n${END}`;
   const begin = content.indexOf(BEGIN);
@@ -98,7 +98,7 @@ export function restartShell(lang: Language): void {
   const shell = process.env.SHELL || "/bin/zsh";
   const child = spawn(shell, ["-i"], {
     stdio: "inherit",
-    env: { ...process.env, LINSIGHT_LANG: lang },
+    env: { ...process.env, JIUMATE_LANG: lang },
   });
   child.on("exit", (code) => process.exit(code ?? 0));
   child.on("error", () => process.exit(1));

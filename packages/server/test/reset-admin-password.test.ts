@@ -76,7 +76,7 @@ describe("resetAdminPassword", () => {
     const root = await tempRoot();
     const dbPath = await seedDatabase(root);
     // A plaintext an older build left behind must not survive the rescue.
-    fs.writeFileSync(initialAdminPasswordPath(root), "linsight-0000\n");
+    fs.writeFileSync(initialAdminPasswordPath(root), "jiumate-0000\n");
 
     const result = await resetAdminPassword(root);
     expect(result).toEqual({ outcome: "reset" });

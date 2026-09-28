@@ -1,8 +1,8 @@
-# @prismshadow/linsight-docs
+# @prismshadow/jiumate-docs
 
-The Linsight documentation site (React + Vite + Tailwind CSS 4). Its own package, sharing the landing page's visual language: bilingual pages (zh/en), light/dark themes, a sidebar + per-page table of contents, and a "Copy Markdown" button on every page.
+The JiuMate documentation site (React + Vite + Tailwind CSS 4). Its own package, sharing the landing page's visual language: bilingual pages (zh/en), light/dark themes, a sidebar + per-page table of contents, and a "Copy Markdown" button on every page.
 
-Live at <https://linsight.ooo/docs/>.
+Live at <https://jiumate.ooo/docs/>.
 
 ## Content model
 
@@ -21,9 +21,9 @@ Navigation (sections, order, prev/next) is defined once in `src/lib/nav.ts`; a v
 
 ```bash
 pnpm dev:docs                                      # http://127.0.0.1:7367 (repo root script)
-pnpm --filter @prismshadow/linsight-docs build      # dist/ + per-route shells for deep links
-pnpm --filter @prismshadow/linsight-docs typecheck
-pnpm --filter @prismshadow/linsight-docs test
+pnpm --filter @prismshadow/jiumate-docs build      # dist/ + per-route shells for deep links
+pnpm --filter @prismshadow/jiumate-docs typecheck
+pnpm --filter @prismshadow/jiumate-docs test
 ```
 
 ## Deployment
@@ -32,9 +32,9 @@ Deployed to GitHub Pages together with the landing page as one artifact: `script
 
 ```bash
 BASE_PATH=/ pnpm build:site                        # assemble locally
-pnpm --filter @prismshadow/linsight-landing preview # serve the assembled site
+pnpm --filter @prismshadow/jiumate-landing preview # serve the assembled site
 ```
 
 Deep links work without a 404 fallback: the post-build step copies the SPA shell to `dist/<slug>/index.html` for every content slug.
 
-Part of [Linsight](https://github.com/qiaiqian67/linsight) · Apache-2.0
+Part of [JiuMate](https://github.com/qiaiqian67/jiumate) · Apache-2.0

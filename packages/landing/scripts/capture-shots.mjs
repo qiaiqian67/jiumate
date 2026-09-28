@@ -11,7 +11,7 @@
  * src/assets/shots/ as <page>-<lang>-<theme>.webp (12 files, re-encoded to WebP
  * inside Chromium to keep the repo small).
  *
- * Prereqs: `pnpm --filter @prismshadow/linsight-{skills,core,server,web} build` and
+ * Prereqs: `pnpm --filter @prismshadow/jiumate-{skills,core,server,web} build` and
  * Playwright's chromium. Run: `node scripts/capture-shots.mjs`.
  */
 import http from "node:http";
@@ -30,8 +30,8 @@ const SRV_PORT = 8940;
 // `localhost`, not `127.0.0.1`: that literal address is reserved as the Workspace-preview
 // host, and the API answers 401 on it.
 const BASE = `http://localhost:${SRV_PORT}`;
-// Pins the otherwise-random seeded admin password (LINSIGHT_SEED_ADMIN_PASSWORD below).
-const ADMIN_PASSWORD = "linsight-0000";
+// Pins the otherwise-random seeded admin password (JIUMATE_SEED_ADMIN_PASSWORD below).
+const ADMIN_PASSWORD = "jiumate-0000";
 const MOCK = `http://127.0.0.1:${MOCK_PORT}`;
 
 // ---------------------------------------------------------------------------
@@ -52,7 +52,7 @@ cat > claude-code-expert/package.json <<'EOF'
   "private": true,
   "type": "module",
   "scripts": { "start": "tsx src/rag.ts" },
-  "dependencies": { "@prismshadow/linsight-core": "^0.1.0", "tsx": "^4" }
+  "dependencies": { "@prismshadow/jiumate-core": "^0.1.0", "tsx": "^4" }
 }
 EOF
 cat > claude-code-expert/src/rag.ts <<'EOF'
@@ -60,7 +60,7 @@ cat > claude-code-expert/src/rag.ts <<'EOF'
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
-import { createAgent, isModelMessage, userText } from "@prismshadow/linsight-core";
+import { createAgent, isModelMessage, userText } from "@prismshadow/jiumate-core";
 
 const walk = (d) =>
   fs.readdirSync(d, { withFileTypes: true }).flatMap((e) =>
@@ -85,7 +85,7 @@ const score = (q, i) => {
   }
   return s;
 };
-const agent = await createAgent({ root: "linsight_data" });
+const agent = await createAgent({ root: "jiumate_data" });
 
 http.createServer(async (req, res) => {
   if (req.method !== "POST") { res.end(fs.readFileSync("public/index.html")); return; }
@@ -154,13 +154,13 @@ const SCRIPTS = {
     turns: [
       {
         thinking:
-          "一句话需求，linsight-sdk 技能给出了完整配方：先采集语料，再建 BM25 索引，回答经 Session 流式生成并带 [n] 引用直达原文。",
+          "一句话需求，jiumate-sdk 技能给出了完整配方：先采集语料，再建 BM25 索引，回答经 Session 流式生成并带 [n] 引用直达原文。",
         text: "先把文档采集进语料库：",
         cmd: CMD_COLLECT,
       },
       {
         thinking:
-          "语料就绪。写应用：本地 BM25 检索（零 embedding 依赖）+ 引用回答 + Linsight 风格聊天界面，引用链接到 /corpus 原文。",
+          "语料就绪。写应用：本地 BM25 检索（零 embedding 依赖）+ 引用回答 + JiuMate 风格聊天界面，引用链接到 /corpus 原文。",
         text: "语料就绪，写检索与引用回答的应用入口：",
         cmd: CMD_APP,
       },
@@ -171,7 +171,7 @@ ${TREE}
 
 - 检索：本地 BM25 索引全部文档片段，中文提问同样支持；
 - 回答：每次提问经 Session 流式生成，引用 [1][2] 可点击直达 \`corpus/\` 原文；
-- 界面：Linsight 风格聊天页，空态内置示例问题；
+- 界面：JiuMate 风格聊天页，空态内置示例问题；
 - 运行：\`cd claude-code-expert && npm install && npm start\`，浏览器打开 http://localhost:4630。`,
       },
     ],
@@ -186,13 +186,13 @@ ${TREE}
     turns: [
       {
         thinking:
-          "One sentence is enough — the linsight-sdk skill has the full recipe: collect the corpus, build a BM25 index, answer through a Session with [n] citations linking to the originals.",
+          "One sentence is enough — the jiumate-sdk skill has the full recipe: collect the corpus, build a BM25 index, answer through a Session with [n] citations linking to the originals.",
         text: "Collecting the docs into the corpus first:",
         cmd: CMD_COLLECT,
       },
       {
         thinking:
-          "Corpus in place. Now the app: local BM25 retrieval (no embedding credential), cited answers, and a Linsight-style chat UI with citations linking to /corpus originals.",
+          "Corpus in place. Now the app: local BM25 retrieval (no embedding credential), cited answers, and a JiuMate-style chat UI with citations linking to /corpus originals.",
         text: "Corpus ready — now the retrieval and cited-answer entry:",
         cmd: CMD_APP,
       },
@@ -203,7 +203,7 @@ ${TREE}
 
 - Retrieval: a local BM25 index over every doc chunk, Chinese questions included;
 - Answers: each question streams through a Session, with [1][2] citations that link straight to the \`corpus/\` originals;
-- UI: a Linsight-style chat page with example questions in the empty state;
+- UI: a JiuMate-style chat page with example questions in the empty state;
 - Run: \`cd claude-code-expert && npm install && npm start\`, then open http://localhost:4630.`,
       },
     ],
@@ -476,9 +476,9 @@ async function provisionUser(adminCookie, lang) {
   try {
     await api(session.cookie, "PUT", "/api/me/password", {
       oldPassword: initial,
-      newPassword: `linsight-${userId}-2026`,
+      newPassword: `jiumate-${userId}-2026`,
     });
-    password = `linsight-${userId}-2026`;
+    password = `jiumate-${userId}-2026`;
   } catch {}
   session = await login(userId, password);
 
@@ -515,7 +515,7 @@ async function provisionUser(adminCookie, lang) {
 // Main.
 // ---------------------------------------------------------------------------
 
-const dataRoot = mkdtempSync(path.join(os.tmpdir(), "linsight-shots-"));
+const dataRoot = mkdtempSync(path.join(os.tmpdir(), "jiumate-shots-"));
 const wsDir = path.join(dataRoot, "workspace-apps");
 mkdirSync(wsDir, { recursive: true });
 mkdirSync(OUT_DIR, { recursive: true });
@@ -526,12 +526,12 @@ console.log(`[shots] mock LLM on ${MOCK}`);
 const srv = spawn("node", [path.join(ROOT, "packages/server/dist/index.js")], {
   env: {
     ...process.env,
-    LINSIGHT_HOME: path.join(dataRoot, "home"),
-    LINSIGHT_WEB_DB: path.join(dataRoot, "web.db"),
-    LINSIGHT_WEB_DIST: path.join(ROOT, "packages/web/dist"),
+    JIUMATE_HOME: path.join(dataRoot, "home"),
+    JIUMATE_WEB_DB: path.join(dataRoot, "web.db"),
+    JIUMATE_WEB_DIST: path.join(ROOT, "packages/web/dist"),
     PORT: String(SRV_PORT),
     HOST: "127.0.0.1",
-    LINSIGHT_SEED_ADMIN_PASSWORD: ADMIN_PASSWORD,
+    JIUMATE_SEED_ADMIN_PASSWORD: ADMIN_PASSWORD,
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
@@ -609,12 +609,12 @@ try {
       });
       await context.addInitScript(
         ([t, l]) => {
-          localStorage.setItem("linsight.theme", t);
-          localStorage.setItem("linsight.lang", l);
+          localStorage.setItem("jiumate.theme", t);
+          localStorage.setItem("jiumate.lang", l);
           // Both docks start closed (no scopes), so the chat shot is unaffected; the
           // ratio only decides how tall the bottom dock is once the Trace tab opens it.
           localStorage.setItem(
-            "linsight.dock.layout",
+            "jiumate.dock.layout",
             JSON.stringify({ scopes: {}, bottomRatio: 0.62 }),
           );
         },

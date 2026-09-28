@@ -3,8 +3,8 @@ import { extractToc, slugifyHeading } from "../src/lib/toc";
 
 describe("blog toc", () => {
   it("slugifies latin and CJK headings consistently", () => {
-    expect(slugifyHeading("Why Linsight")).toBe("why-linsight");
-    expect(slugifyHeading("为什么是 Linsight")).toBe("为什么是-linsight");
+    expect(slugifyHeading("Why JiuMate")).toBe("why-jiumate");
+    expect(slugifyHeading("为什么是 JiuMate")).toBe("为什么是-jiumate");
   });
 
   it("extracts h2/h3 headings and skips fenced code blocks", () => {

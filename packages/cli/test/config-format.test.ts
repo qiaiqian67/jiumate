@@ -6,7 +6,7 @@
  * inline; fully empty columns are omitted automatically.
  */
 import { describe, expect, it } from "vitest";
-import type { ProjectConfig } from "@prismshadow/linsight-core";
+import type { ProjectConfig } from "@prismshadow/jiumate-core";
 import { formatModelRows } from "../src/commands/config.js";
 
 describe("formatModelRows", () => {

@@ -8,8 +8,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { stringify as stringifyToml } from "smol-toml";
-import { atomicWriteFile, resolveModelRef, scheduleDir } from "@prismshadow/linsight-core";
-import type { ProjectConfig } from "@prismshadow/linsight-core";
+import { atomicWriteFile, resolveModelRef, scheduleDir } from "@prismshadow/jiumate-core";
+import type { ProjectConfig } from "@prismshadow/jiumate-core";
 import { cacheable, statMtime } from "../internal/mtime-gate.js";
 import {
   parseScheduleFile,

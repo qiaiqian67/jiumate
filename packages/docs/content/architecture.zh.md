@@ -3,14 +3,14 @@ title: 架构总览
 description: 三接口边界、context_engine 与 OmniMessage 如何把 SDK、CLI、Server、Web 组织成一个系统。
 ---
 
-Linsight 是一个 pnpm monorepo，核心是 `@prismshadow/linsight-core` 中的执行引擎；CLI、Server 与 Web App 都只是这同一个引擎的不同「Human 实现」。
+JiuMate 是一个 pnpm monorepo，核心是 `@prismshadow/jiumate-core` 中的执行引擎；CLI、Server 与 Web App 都只是这同一个引擎的不同「Human 实现」。
 
 ## 分层结构
 
 ```text
 ┌─────────────┐  ┌─────────────────────────────┐
 │   CLI       │  │  Web App (React SPA)        │
-│  (linsight)  │  │    ↑ OmniMessage over SSE   │
+│  (jiumate)  │  │    ↑ OmniMessage over SSE   │
 │             │  │  Server (Hono + SQLite)     │
 └──────┬──────┘  └──────────────┬──────────────┘
        │      session.run(...)  │        ← Human 边界
@@ -39,7 +39,7 @@ Linsight 是一个 pnpm monorepo，核心是 `@prismshadow/linsight-core` 中的
 | --- | --- | --- |
 | SDK(`core`) | 协议与执行：让消息流动起来的一切 | 持久化用户态、多用户、任何渲染 |
 | Server | 常驻进程与多用户运行时 | 引擎逻辑(全部委托给 SDK) |
-| 文件层(`~/.linsight/data`) | 一切可编辑的定义与一切被记录的历史 | 任何计算 |
+| 文件层(`~/.jiumate/data`) | 一切可编辑的定义与一切被记录的历史 | 任何计算 |
 | CLI / Web | 渲染与交互 | 业务状态 |
 
 逐项对应(设计 → 归属 → 承载文件或模块):
@@ -117,7 +117,7 @@ context_engine 是整个系统的核心，它只做两件事：维护线性消�
 
 ## 状态层
 
-引擎之下是纯文件的状态层，数据根目录为 `~/.linsight/data`(`LINSIGHT_HOME` 可改)，按 `<project>/agents/<agent>/` 组织：
+引擎之下是纯文件的状态层，数据根目录为 `~/.jiumate/data`(`JIUMATE_HOME` 可改)，按 `<project>/agents/<agent>/` 组织：
 
 - **Agent State**——`agent_state/` 目录：`system_config.yaml`、`AGENTS.md`、Skills、Vault。Agent 的全部行为定义都是可编辑文件。
 - **Project 配置**——`.project_config.toml`：模型表与凭据，模型身份恒为 `(provider, model_id)` 二元组。

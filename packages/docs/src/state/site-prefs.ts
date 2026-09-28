@@ -1,9 +1,9 @@
 /**
  * Preferences shared by the landing page and the docs site.
  *
- * The two are separate SPAs but ship to one origin (linsight.ooo and linsight.ooo/docs/),
+ * The two are separate SPAs but ship to one origin (jiumate.ooo and jiumate.ooo/docs/),
  * so a single localStorage key is all it takes for a language or theme choice to survive
- * the hop between them. They previously wrote `linsight-landing.*` and `linsight-docs.*`,
+ * the hop between them. They previously wrote `jiumate-landing.*` and `jiumate-docs.*`,
  * which is why picking dark mode on the landing page and clicking through to the docs
  * dropped you back into light.
  *
@@ -12,13 +12,13 @@
  * both sides; if they drift, the sync silently stops working with nothing failing.
  */
 
-export const THEME_KEY = "linsight-site.theme";
-export const LANG_KEY = "linsight-site.lang";
+export const THEME_KEY = "jiumate-site.theme";
+export const LANG_KEY = "jiumate-site.lang";
 
 /** Pre-unification keys, still read once so an existing visitor keeps their choice. */
 const LEGACY_KEYS: Record<string, readonly string[]> = {
-  [THEME_KEY]: ["linsight-landing.theme", "linsight-docs.theme"],
-  [LANG_KEY]: ["linsight-landing.lang", "linsight-docs.lang"],
+  [THEME_KEY]: ["jiumate-landing.theme", "jiumate-docs.theme"],
+  [LANG_KEY]: ["jiumate-landing.lang", "jiumate-docs.lang"],
 };
 
 /**

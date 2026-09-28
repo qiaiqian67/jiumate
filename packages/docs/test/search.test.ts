@@ -21,7 +21,7 @@ const docs: DocPage[] = [
     title: "产品介绍",
     description: "",
     body: [
-      "Linsight 是一个开源的 AI Agent Harness。",
+      "JiuMate 是一个开源的 AI Agent Harness。",
       "",
       "## 产品组成",
       "",
@@ -75,7 +75,8 @@ describe("docs search", () => {
   });
 
   it("merges overlapping highlight terms", () => {
-    expect(findSearchMatchRanges("linsight", "linsight linsight")).toEqual([{ start: 0, end: 8 }]);
+    // `end` is the exclusive offset of the merged run, so it tracks the term's own length.
+    expect(findSearchMatchRanges("jiumate", "jiumate jiumate")).toEqual([{ start: 0, end: 7 }]);
   });
 
   it("keeps link labels and inline code while removing Markdown syntax", () => {
@@ -86,7 +87,7 @@ describe("docs search", () => {
 
   it("preserves identifiers and angle-bracket placeholders inside code", () => {
     const markdown = [
-      "Use `event_msg`, `LINSIGHT_HOME`, and `agent_state/skills/<name>/`.",
+      "Use `event_msg`, `JIUMATE_HOME`, and `agent_state/skills/<name>/`.",
       "",
       "```ts",
       "listTools(): Promise<ToolDefinition[]>;",
@@ -95,7 +96,7 @@ describe("docs search", () => {
     ].join("\n");
 
     expect(markdownToSearchText(markdown)).toBe(
-      'Use event_msg, LINSIGHT_HOME, and agent_state/skills/<name>/. listTools(): Promise<ToolDefinition[]>; const type = "partial_tool_call_output";',
+      'Use event_msg, JIUMATE_HOME, and agent_state/skills/<name>/. listTools(): Promise<ToolDefinition[]>; const type = "partial_tool_call_output";',
     );
   });
 
@@ -106,12 +107,12 @@ describe("docs search", () => {
       "> Grant it once and the app starts normally:",
       ">",
       "> ```bash",
-      "> chmod +x linsight-desktop-linux-x86_64.AppImage",
+      "> chmod +x jiumate-desktop-linux-x86_64.AppImage",
       "> ```",
     ].join("\n");
 
     expect(markdownToSearchText(markdown)).toBe(
-      "The system blocked the first launch? Grant it once and the app starts normally: chmod +x linsight-desktop-linux-x86_64.AppImage",
+      "The system blocked the first launch? Grant it once and the app starts normally: chmod +x jiumate-desktop-linux-x86_64.AppImage",
     );
   });
 
@@ -124,10 +125,10 @@ describe("docs search", () => {
   it("removes paired formatting without changing literal identifier punctuation", () => {
     expect(
       markdownToSearchText(
-        "**Bold** __strong__ _italic_ ~~old~~ context_engine foo__bar__baz partial_* model.* ~/.linsight <name> <https://example.com>",
+        "**Bold** __strong__ _italic_ ~~old~~ context_engine foo__bar__baz partial_* model.* ~/.jiumate <name> <https://example.com>",
       ),
     ).toBe(
-      "Bold strong italic old context_engine foo__bar__baz partial_* model.* ~/.linsight <name> https://example.com",
+      "Bold strong italic old context_engine foo__bar__baz partial_* model.* ~/.jiumate <name> https://example.com",
     );
   });
 

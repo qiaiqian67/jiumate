@@ -7,7 +7,7 @@ description: A draft of product requirements captured from the user, not yet pro
 
 ## L. Project-level: messaging bridge + model scope
 
-Observation: Linsight is already a multi-project system, but the messaging bridge and model credentials are still at a mixed session / project granularity — "project as a first-class citizen" unified management is missing.
+Observation: JiuMate is already a multi-project system, but the messaging bridge and model credentials are still at a mixed session / project granularity — "project as a first-class citizen" unified management is missing.
 
 Two related-but-distinct requirements:
 

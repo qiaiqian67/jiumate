@@ -1,11 +1,11 @@
 ---
-title: 携手 AMD 开发者计划：免费领取 $50 Fireworks 额度，直连 Linsight
+title: 携手 AMD 开发者计划：免费领取 $50 Fireworks 额度，直连 JiuMate
 date: 2026-07-20
 category: news
-excerpt: 我们很高兴与 AMD AI Developer Program 合作，为大家带来 Fireworks 的免费兑换码——按本文申请 $50 Credits，再在 Linsight 里三步用起来。
+excerpt: 我们很高兴与 AMD AI Developer Program 合作，为大家带来 Fireworks 的免费兑换码——按本文申请 $50 Credits，再在 JiuMate 里三步用起来。
 ---
 
-我们很高兴与 **AMD AI Developer Program**（AMD 开发者计划）合作，为大家带来 Fireworks 的免费兑换码：加入计划并通过审核，即可获得可兑换 **$50 Fireworks AI Credits** 的 Coupon Code。Linsight 内置 Fireworks AI 网关分组——OpenAI 协议、预置 base URL 与五个模型，额度到手即刻可用。
+我们很高兴与 **AMD AI Developer Program**（AMD 开发者计划）合作，为大家带来 Fireworks 的免费兑换码：加入计划并通过审核，即可获得可兑换 **$50 Fireworks AI Credits** 的 Coupon Code。JiuMate 内置 Fireworks AI 网关分组——OpenAI 协议、预置 base URL 与五个模型，额度到手即刻可用。
 
 > 页面内容、Credits 金额与有效期可能调整，请以申请时的页面及审批邮件为准。
 
@@ -73,15 +73,15 @@ https://developer.amd.com.cn/login?source=2a6CMBw3K
 
 
 
-## 在 Linsight 中用起来
+## 在 JiuMate 中用起来
 
 拿到 API key 后，三步接入：
 
 **1. 安装并启动**
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight web        # 打开 http://127.0.0.1:7364（首次登录：admin，初始密码见首次启动输出）
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate web        # 打开 http://127.0.0.1:7364（首次登录：admin，初始密码见首次启动输出）
 ```
 
 **2. 配置 Fireworks 模型**
@@ -96,4 +96,4 @@ linsight web        # 打开 http://127.0.0.1:7364（首次登录：admin，初�
 
 - [AMD AI Developer Program 中国站](https://developer.amd.com.cn/login?source=2a6CMBw3K)
 - 申请步骤与截图整理自[AMD AI Developer Program 官方申请指南](https://acn658bi9o7j.feishu.cn/docx/T8VIdjkZXoqyDwxwNjacbcsYngd)，感谢原作者
-- [Linsight 模型配置文档](https://linsight.ooo/docs/models)
+- [JiuMate 模型配置文档](https://jiumate.ooo/docs/models)

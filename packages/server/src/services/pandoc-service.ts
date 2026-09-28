@@ -156,7 +156,7 @@ export class PandocService {
 
     // A private directory per call, so two concurrent exports cannot collide on a file name and
     // the output never appears anywhere a workspace could serve it from.
-    const dir = await mkdtemp(path.join(tmpdir(), "linsight-pandoc-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "jiumate-pandoc-"));
     const outPath = path.join(dir, `export.${format}`);
     const args = ["-f", "html", "-t", format, "-o", outPath];
     try {

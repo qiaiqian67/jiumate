@@ -4,14 +4,14 @@
  * Two servers cannot share a port, and a data root admits one server at a time
  * (`<root>/server.lock`) — so entry points meant to run at the same time must differ in
  * BOTH. The pair that carries that requirement is `pnpm dev:server` and the dev CLI's
- * `linsight web`: a harness started as `pnpm linsight web` is exactly what asks an Agent to
+ * `jiumate web`: a harness started as `pnpm jiumate web` is exactly what asks an Agent to
  * run `pnpm dev` in this repo (the allocation table lives in
  * `packages/core/src/internal/ports.ts`). The assignments themselves are run-with-env
  * defaults on package.json script lines that nothing type-checks, so this test parses
  * them back out and pins the disjointness — including against the installed server's
  * port and root, which those dev entries must never touch.
  *
- * The desktop's dev shell deliberately shares `~/.linsight/dev-data` with `dev:server`
+ * The desktop's dev shell deliberately shares `~/.jiumate/dev-data` with `dev:server`
  * (a second server on a locked root is its attach-mode case, and the two surfaces
  * sharing one dataset when used alternately is the point), and it binds no fixed port —
  * so it is pinned to that root rather than away from it.
@@ -21,7 +21,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SERVER_PORT } from "@prismshadow/linsight-core";
+import { DEFAULT_SERVER_PORT } from "@prismshadow/jiumate-core";
 
 const cliDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(cliDir, "..", "..");
@@ -57,21 +57,21 @@ const serverScripts = readScripts(path.join(repoRoot, "packages", "server", "pac
 const cliScripts = readScripts(path.join(cliDir, "package.json"));
 
 const devServer = runWithEnvDefaults(serverScripts["dev"]);
-const devCli = runWithEnvDefaults(rootScripts["linsight"]);
+const devCli = runWithEnvDefaults(rootScripts["jiumate"]);
 const devDesktop = runWithEnvDefaults(rootScripts["desktop"]);
 
-/** The installed server/CLI root, `~/.linsight/data` (core's resolveRoot() default). */
-const installedRoot = path.join(os.homedir(), ".linsight", "data");
+/** The installed server/CLI root, `~/.jiumate/data` (core's resolveRoot() default). */
+const installedRoot = path.join(os.homedir(), ".jiumate", "data");
 
 describe("dev entry point isolation (ports and data roots)", () => {
   it("dev:server and the dev CLI each declare a port and a data root", () => {
     for (const [name, defaults] of [
       ["dev:server", devServer],
-      ["linsight", devCli],
+      ["jiumate", devCli],
     ] as const) {
       expect(defaults, `${name} must set its defaults through run-with-env`).not.toBeNull();
       expect(defaults!.PORT, `${name} must pin a port`).toMatch(/^\d+$/);
-      expect(defaults!.LINSIGHT_HOME, `${name} must pin a data root`).toBeDefined();
+      expect(defaults!.JIUMATE_HOME, `${name} must pin a data root`).toBeDefined();
     }
   });
 
@@ -86,22 +86,22 @@ describe("dev entry point isolation (ports and data roots)", () => {
 
   it("no two simultaneously runnable server entries share a data root", () => {
     const roots = [
-      expandHome(devServer!.LINSIGHT_HOME!),
-      expandHome(devCli!.LINSIGHT_HOME!),
+      expandHome(devServer!.JIUMATE_HOME!),
+      expandHome(devCli!.JIUMATE_HOME!),
       path.normalize(installedRoot),
     ];
     expect(new Set(roots).size).toBe(roots.length);
   });
 
-  it("the root and packages/cli linsight scripts agree on their defaults", () => {
+  it("the root and packages/cli jiumate scripts agree on their defaults", () => {
     // Two spellings of the same entry point; a root moved in one and not the other
-    // would make `pnpm linsight` and `pnpm --dir packages/cli linsight` serve different data.
-    expect(runWithEnvDefaults(cliScripts["linsight"])).toEqual(devCli);
+    // would make `pnpm jiumate` and `pnpm --dir packages/cli jiumate` serve different data.
+    expect(runWithEnvDefaults(cliScripts["jiumate"])).toEqual(devCli);
   });
 
   it("the dev desktop shell stays on dev:server's root, by design", () => {
     expect(devDesktop).not.toBeNull();
-    expect(expandHome(devDesktop!.LINSIGHT_HOME!)).toBe(expandHome(devServer!.LINSIGHT_HOME!));
+    expect(expandHome(devDesktop!.JIUMATE_HOME!)).toBe(expandHome(devServer!.JIUMATE_HOME!));
     // No PORT: the embedded server allocates its own (PORT=0 + sticky preference).
     expect(devDesktop!.PORT).toBeUndefined();
   });

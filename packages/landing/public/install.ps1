@@ -1,4 +1,4 @@
-# https://linsight.ooo/install.ps1 - Linsight installer entry point for Windows.
+# https://jiumate.ooo/install.ps1 - JiuMate installer entry point for Windows.
 #
 # GitHub Pages cannot serve HTTP redirects, so this thin forwarder IS the
 # stable install URL. It selects an immutable OSS release when that mirror is
@@ -7,17 +7,17 @@
 # does not lock the large payload source; the real versioned installer decides
 # that for its own release. Usage:
 #
-#   irm https://linsight.ooo/install.ps1 | iex
-#   & ([scriptblock]::Create((irm https://linsight.ooo/install.ps1))) -Version v0.2.0
+#   irm https://jiumate.ooo/install.ps1 | iex
+#   & ([scriptblock]::Create((irm https://jiumate.ooo/install.ps1))) -Version v0.2.0
 #
 & {
   $ForwardedArgs = @($args)
   $ErrorActionPreference = "Stop"
   $ProgressPreference = "SilentlyContinue"
-  $OssOrigin = "https://linsight-releases.oss-cn-beijing.aliyuncs.com"
+  $OssOrigin = "https://jiumate-releases.oss-cn-beijing.aliyuncs.com"
   $OssReleaseRoot = "$OssOrigin/releases"
-  $GitHubReleaseRoot = "https://github.com/qiaiqian67/linsight/releases/download"
-  $GitHubLatestBase = "https://github.com/qiaiqian67/linsight/releases/latest/download"
+  $GitHubReleaseRoot = "https://github.com/qiaiqian67/jiumate/releases/download"
+  $GitHubLatestBase = "https://github.com/qiaiqian67/jiumate/releases/latest/download"
 
   function Fail([string]$Message) {
     throw "error: $Message"
@@ -48,12 +48,12 @@
     # .NET builds where the enum is immutable already default to TLS 1.2+.
   }
 
-  $SourceMode = if ($env:LINSIGHT_DOWNLOAD_SOURCE) { $env:LINSIGHT_DOWNLOAD_SOURCE.ToLowerInvariant() } else { "auto" }
+  $SourceMode = if ($env:JIUMATE_DOWNLOAD_SOURCE) { $env:JIUMATE_DOWNLOAD_SOURCE.ToLowerInvariant() } else { "auto" }
   if ($SourceMode -notin @("auto", "oss", "github")) {
-    Fail "LINSIGHT_DOWNLOAD_SOURCE must be auto, oss, or github"
+    Fail "JIUMATE_DOWNLOAD_SOURCE must be auto, oss, or github"
   }
 
-  $RequestedVersion = if ($env:LINSIGHT_VERSION) { $env:LINSIGHT_VERSION } else { "" }
+  $RequestedVersion = if ($env:JIUMATE_VERSION) { $env:JIUMATE_VERSION } else { "" }
   for ($i = 0; $i -lt $ForwardedArgs.Count; $i++) {
     if ([string]$ForwardedArgs[$i] -ieq "-Version" -and $i + 1 -lt $ForwardedArgs.Count) {
       $RequestedVersion = [string]$ForwardedArgs[$i + 1]
@@ -73,13 +73,13 @@
   # user has already consented to remote code by piping this forwarder into iex.
   # Neither this forwarder nor the installer calls `exit`, which in iex/script-block
   # context would terminate the user's whole PowerShell session.
-  $TmpDir = Join-Path ([IO.Path]::GetTempPath()) "linsight-forwarder-$PID"
+  $TmpDir = Join-Path ([IO.Path]::GetTempPath()) "jiumate-forwarder-$PID"
   $InstallerPath = Join-Path $TmpDir "install.ps1"
   $ManifestPath = Join-Path $TmpDir "latest.json"
   $SelectedBase = ""
   $FallbackBase = ""
-  $OriginalBase = [Environment]::GetEnvironmentVariable("LINSIGHT_DOWNLOAD_BASE_URL", "Process")
-  $OriginalFallback = [Environment]::GetEnvironmentVariable("LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL", "Process")
+  $OriginalBase = [Environment]::GetEnvironmentVariable("JIUMATE_DOWNLOAD_BASE_URL", "Process")
+  $OriginalFallback = [Environment]::GetEnvironmentVariable("JIUMATE_DOWNLOAD_FALLBACK_BASE_URL", "Process")
 
   try {
     if (Test-Path -LiteralPath $TmpDir) {
@@ -90,9 +90,9 @@
     if ($OriginalBase) {
       $SelectedBase = $OriginalBase.TrimEnd('/')
       $FallbackBase = if ($OriginalFallback) { $OriginalFallback.TrimEnd('/') } else { "" }
-      if (-not (Test-HttpsUrl $SelectedBase)) { Fail "LINSIGHT_DOWNLOAD_BASE_URL must be an absolute HTTPS URL" }
+      if (-not (Test-HttpsUrl $SelectedBase)) { Fail "JIUMATE_DOWNLOAD_BASE_URL must be an absolute HTTPS URL" }
       if ($FallbackBase -and -not (Test-HttpsUrl $FallbackBase)) {
-        Fail "LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL must be an absolute HTTPS URL"
+        Fail "JIUMATE_DOWNLOAD_FALLBACK_BASE_URL must be an absolute HTTPS URL"
       }
       if (-not (Try-DownloadFile "$SelectedBase/install.ps1" $InstallerPath 30)) {
         Fail "could not download the installer from the configured mirror."
@@ -139,29 +139,29 @@
     }
 
     if ($OriginalBase) {
-      $env:LINSIGHT_DOWNLOAD_BASE_URL = $SelectedBase
+      $env:JIUMATE_DOWNLOAD_BASE_URL = $SelectedBase
       if ($FallbackBase) {
-        $env:LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL = $FallbackBase
+        $env:JIUMATE_DOWNLOAD_FALLBACK_BASE_URL = $FallbackBase
       } else {
-        Remove-Item Env:\LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL -ErrorAction SilentlyContinue
+        Remove-Item Env:\JIUMATE_DOWNLOAD_FALLBACK_BASE_URL -ErrorAction SilentlyContinue
       }
     } else {
-      Remove-Item Env:\LINSIGHT_DOWNLOAD_BASE_URL -ErrorAction SilentlyContinue
-      Remove-Item Env:\LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL -ErrorAction SilentlyContinue
+      Remove-Item Env:\JIUMATE_DOWNLOAD_BASE_URL -ErrorAction SilentlyContinue
+      Remove-Item Env:\JIUMATE_DOWNLOAD_FALLBACK_BASE_URL -ErrorAction SilentlyContinue
     }
     $InstallerText = [IO.File]::ReadAllText($InstallerPath, [Text.UTF8Encoding]::new($false))
     $Installer = [scriptblock]::Create($InstallerText)
     & $Installer @ForwardedArgs
   } finally {
     if ($null -eq $OriginalBase) {
-      Remove-Item Env:\LINSIGHT_DOWNLOAD_BASE_URL -ErrorAction SilentlyContinue
+      Remove-Item Env:\JIUMATE_DOWNLOAD_BASE_URL -ErrorAction SilentlyContinue
     } else {
-      $env:LINSIGHT_DOWNLOAD_BASE_URL = $OriginalBase
+      $env:JIUMATE_DOWNLOAD_BASE_URL = $OriginalBase
     }
     if ($null -eq $OriginalFallback) {
-      Remove-Item Env:\LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL -ErrorAction SilentlyContinue
+      Remove-Item Env:\JIUMATE_DOWNLOAD_FALLBACK_BASE_URL -ErrorAction SilentlyContinue
     } else {
-      $env:LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL = $OriginalFallback
+      $env:JIUMATE_DOWNLOAD_FALLBACK_BASE_URL = $OriginalFallback
     }
     Remove-Item -LiteralPath $TmpDir -Recurse -Force -ErrorAction SilentlyContinue
   }

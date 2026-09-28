@@ -9,7 +9,7 @@ import { useStore } from "zustand/react";
  * column on `sessions`, and `SessionInfo` carries no such field, so a server-side marker would
  * need schema + API changes. This follows the precedent pinned-sessions.ts already set for a
  * per-Session flag the API does not model: persist it per Project in localStorage under the
- * `linsight.…` key naming, with injectable storage (vitest runs in Node, no localStorage).
+ * `jiumate.…` key naming, with injectable storage (vitest runs in Node, no localStorage).
  *
  * Consequences, deliberately accepted:
  * - per BROWSER, not per user — the same account on another device starts with its own markers;
@@ -29,8 +29,8 @@ export interface SessionSeenStorage {
   setItem(key: string, value: string): void;
 }
 
-/** Storage key of one Project's seen markers (sidebar key-naming convention, `linsight.pinnedSessions.<projectId>` &c.). */
-export const sessionSeenKey = (projectId: string): string => `linsight.sessionSeen.${projectId}`;
+/** Storage key of one Project's seen markers (sidebar key-naming convention, `jiumate.pinnedSessions.<projectId>` &c.). */
+export const sessionSeenKey = (projectId: string): string => `jiumate.sessionSeen.${projectId}`;
 
 /**
  * Cap on remembered markers per Project. Only Sessions the user actually opened get one, so

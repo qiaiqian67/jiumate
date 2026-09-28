@@ -20,7 +20,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router";
-import type { SkillMetadataItem } from "@prismshadow/linsight-server/api";
+import type { SkillMetadataItem } from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

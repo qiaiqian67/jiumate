@@ -3,7 +3,7 @@ title: 配置参考
 description: 环境变量、Project 配置、Agent 配置、Vault 与定时任务的完整字段参考。
 ---
 
-Linsight 的配置分三层：环境变量决定部署形态，Project 配置管理模型与凭证，Agent 配置定义单个 Agent 的行为。此外每个 Agent 还有 Vault（私有环境变量）与 Schedule（定时任务）两类状态文件。
+JiuMate 的配置分三层：环境变量决定部署形态，Project 配置管理模型与凭证，Agent 配置定义单个 Agent 的行为。此外每个 Agent 还有 Vault（私有环境变量）与 Schedule（定时任务）两类状态文件。
 
 ## 环境变量
 
@@ -11,21 +11,21 @@ CLI 与服务端启动时会自动加载工作目录下的 `.env` 文件。
 
 | 变量 | 说明 | 缺省值 |
 | --- | --- | --- |
-| `LINSIGHT_HOME` | 数据根目录 | `~/.linsight/data` |
+| `JIUMATE_HOME` | 数据根目录 | `~/.jiumate/data` |
 | `PORT` | Web 服务监听端口 | `7364` |
 | `HOST` | Web 服务监听地址 | `127.0.0.1` |
-| `LINSIGHT_WEB_DB` | 服务端 SQLite 数据库路径 | `<root>/web.db` |
-| `LINSIGHT_WEB_DIST` | 前端静态资源目录 | npm 安装的服务端包回退到内置 web-dist |
-| `LINSIGHT_PREVIEW_ORIGIN` | 提供 Workspace HTML 预览的独立源，如 `https://preview.example.com` | 未设置，按请求推导回环对应名 |
-| `LINSIGHT_TRUST_PROXY` | 设为 `1` 信任 `x-forwarded-proto` 请求头——在终结 TLS 的反向代理（且由代理自行设置/清除该头）之后设置，使会话 Cookie 带 `Secure` 标记、热更新网络门禁识别 HTTPS | 未设置，忽略该请求头 |
-| `LINSIGHT_SEED_ADMIN_PASSWORD` | 固定内置管理员的种子初始密码（自动化测试 / e2e 使用） | 未设置，种子时随机生成一个密码，哈希后即丢弃、无人见过；账号通过首次登录链接认领 |
-| `LINSIGHT_LANG` | CLI 语言（`en` / `zh`），用 `linsight config lang` 设置 | `en` |
-| `LINSIGHT_UPDATE_CHECK` | 设为 `off` 关闭 Web 应用的新版本检查（服务端唯一的对外网络请求） | 开启 |
-| `LINSIGHT_NO_LOGIN_SHELL_ENV` | 任意非空值可禁止桌面版在 macOS/Linux 图形界面启动时导入登录 shell 环境变量（见[桌面版速上手](/quickstart-desktop)） | 未设置，导入开启，且只补启动环境中缺失的变量 |
+| `JIUMATE_WEB_DB` | 服务端 SQLite 数据库路径 | `<root>/web.db` |
+| `JIUMATE_WEB_DIST` | 前端静态资源目录 | npm 安装的服务端包回退到内置 web-dist |
+| `JIUMATE_PREVIEW_ORIGIN` | 提供 Workspace HTML 预览的独立源，如 `https://preview.example.com` | 未设置，按请求推导回环对应名 |
+| `JIUMATE_TRUST_PROXY` | 设为 `1` 信任 `x-forwarded-proto` 请求头——在终结 TLS 的反向代理（且由代理自行设置/清除该头）之后设置，使会话 Cookie 带 `Secure` 标记、热更新网络门禁识别 HTTPS | 未设置，忽略该请求头 |
+| `JIUMATE_SEED_ADMIN_PASSWORD` | 固定内置管理员的种子初始密码（自动化测试 / e2e 使用） | 未设置，种子时随机生成一个密码，哈希后即丢弃、无人见过；账号通过首次登录链接认领 |
+| `JIUMATE_LANG` | CLI 语言（`en` / `zh`），用 `jiumate config lang` 设置 | `en` |
+| `JIUMATE_UPDATE_CHECK` | 设为 `off` 关闭 Web 应用的新版本检查（服务端唯一的对外网络请求） | 开启 |
+| `JIUMATE_NO_LOGIN_SHELL_ENV` | 任意非空值可禁止桌面版在 macOS/Linux 图形界面启动时导入登录 shell 环境变量（见[桌面版速上手](/quickstart-desktop)） | 未设置，导入开启，且只补启动环境中缺失的变量 |
 
-这些变量配置的是 Linsight 自身，因此 `PORT`、`HOST`、`LINSIGHT_WEB_DIST` 以及内部使用的 `LINSIGHT_CLI_ENTRY` **不会出现在 Agent 所执行命令的环境变量中**——否则 `exec_command` 启动的开发服务器会读到 `PORT`，去占用留给 Linsight 的端口，而不是自己另选一个。宿主环境中的其余变量原样透传，但还有一处例外：`GIT_EDITOR`、`GIT_TERMINAL_PROMPT`、`TERM`、`NO_COLOR`、`PAGER`、`GIT_PAGER` 一律被固定值覆盖，以免命令因等待编辑器、凭证输入或分页器而挂起。Agent 的 [vault](#vault) 覆盖在宿主环境之上——在 vault 里设置 `PORT` 仍然可以送达命令——但覆盖不了这六个变量。
+这些变量配置的是 JiuMate 自身，因此 `PORT`、`HOST`、`JIUMATE_WEB_DIST` 以及内部使用的 `JIUMATE_CLI_ENTRY` **不会出现在 Agent 所执行命令的环境变量中**——否则 `exec_command` 启动的开发服务器会读到 `PORT`，去占用留给 JiuMate 的端口，而不是自己另选一个。宿主环境中的其余变量原样透传，但还有一处例外：`GIT_EDITOR`、`GIT_TERMINAL_PROMPT`、`TERM`、`NO_COLOR`、`PAGER`、`GIT_PAGER` 一律被固定值覆盖，以免命令因等待编辑器、凭证输入或分页器而挂起。Agent 的 [vault](#vault) 覆盖在宿主环境之上——在 vault 里设置 `PORT` 仍然可以送达命令——但覆盖不了这六个变量。
 
-`LINSIGHT_PREVIEW_ORIGIN` 必须与应用源在**主机名**上不同，只换端口不行：Cookie 不区分端口，换端口仍然共用会话 Cookie。本地使用不必配置——App 固定在规范主机 `localhost`，预览用 `127.0.0.1`，既不需要配置也不需要 DNS。经 LAN 地址或真实域名访问时才需要设置，否则那里的预览会回退到同源沙箱，`localStorage`、Cookie 与第三方 embed 都不可用。在真实域名上设置时，会话 Cookie 必须保持 host-only（不带 `Domain=`），否则同注册域下的兄弟子域会共享它。取值无法解析时启动即报错，不会静默回退。
+`JIUMATE_PREVIEW_ORIGIN` 必须与应用源在**主机名**上不同，只换端口不行：Cookie 不区分端口，换端口仍然共用会话 Cookie。本地使用不必配置——App 固定在规范主机 `localhost`，预览用 `127.0.0.1`，既不需要配置也不需要 DNS。经 LAN 地址或真实域名访问时才需要设置，否则那里的预览会回退到同源沙箱，`localStorage`、Cookie 与第三方 embed 都不可用。在真实域名上设置时，会话 Cookie 必须保持 host-only（不带 `Domain=`），否则同注册域下的兄弟子域会共享它。取值无法解析时启动即报错，不会静默回退。
 
 ### Provider 凭证环境变量
 
@@ -91,7 +91,7 @@ output = 0.857143
 
 `pricing.unit` 目前固定为 `usd_per_mtok`（USD 每百万 Token）；三档对应 `token_usage` 的三个计数桶。
 
-该文件通过 CLI `linsight config model …` 或 Web 的 Models 页面修改——服务运行期间不要手工编辑，模型本身则永远无权读写它。
+该文件通过 CLI `jiumate config model …` 或 Web 的 Models 页面修改——服务运行期间不要手工编辑，模型本身则永远无权读写它。
 
 ### 沙箱安全策略
 
@@ -222,14 +222,14 @@ compaction:
 | `{{PLATFORM}}` | 运行平台 |
 | `{{OS_VERSION}}` | 操作系统版本 |
 | `{{DATE}}` | 当前日期 |
-| `{{PROJECT_DIR}}` | App Data Dir：Linsight 应用数据根目录（即 Project 目录） |
+| `{{PROJECT_DIR}}` | App Data Dir：JiuMate 应用数据根目录（即 Project 目录） |
 | `{{AGENT_ID}}` | Agent id |
 | `{{CWD}}` | Workspace 路径 |
 | `{{PROVIDER}}` | 模型 provider 分组 |
 | `{{MODEL_ID}}` | 上游模型 id |
 | `{{SESSION_ID}}` | Session id |
 
-`{{PROJECT_DIR}}` 在提示词中以 **App Data Dir** 名义暴露给模型：Linsight 的应用数据根目录，存放全部 Agent 的数据文件（`agents/<agent_id>/…`）与 Project 级数据——特意不以 Project/任务目录的口径描述，避免模型将其误认为本次任务的工作目录（`CWD`）。
+`{{PROJECT_DIR}}` 在提示词中以 **App Data Dir** 名义暴露给模型：JiuMate 的应用数据根目录，存放全部 Agent 的数据文件（`agents/<agent_id>/…`）与 Project 级数据——特意不以 Project/任务目录的口径描述，避免模型将其误认为本次任务的工作目录（`CWD`）。
 
 Windows 上注入的 `{{PROJECT_DIR}}` 与 `{{CWD}}` 统一使用正斜杠——与 core 产出的其他模型可见路径（附件行、Goal file 行、截断输出 recovery 路径）同一拼写。模型会把这些拼写原样带入 JSON 工具参数和 Shell 命令；正斜杠被 Node 的 fs API 与包内 (Git) Bash 工具 Shell 接受，也避免 JSON 反斜杠转义出错。
 
@@ -263,7 +263,7 @@ agent_state/memory/
 
 `user` 是保留目录名。之所以安全：生成的 workspace memory key 一律是 `<base>-<8 位十六进制>`，必然含连字符——不含连字符的名字永远不会被生成出来。
 
-workspace memory key 为 `<安全 basename>-<真实路径 sha256 的 8 位十六进制>`。身份只由实际目录决定，与 Git 无关：指向同一目录的两个软链接得到同一 key；目录移动或重命名后视为新的 Workspace（旧记忆仍以旧 key 留在磁盘上）。Linsight 自动创建的临时 Workspace（位于 `agents/<agent_id>/workspaces/` 下）没有 Workspace 作用域，子 Agent 继承该临时 Workspace 时同样没有：临时 Workspace 是每个 Session 分配一个，之后不会有任何 Session 再跑进去读它。这类会话仍然拥有用户作用域——它能学到的东西本来也属于那一层。
+workspace memory key 为 `<安全 basename>-<真实路径 sha256 的 8 位十六进制>`。身份只由实际目录决定，与 Git 无关：指向同一目录的两个软链接得到同一 key；目录移动或重命名后视为新的 Workspace（旧记忆仍以旧 key 留在磁盘上）。JiuMate 自动创建的临时 Workspace（位于 `agents/<agent_id>/workspaces/` 下）没有 Workspace 作用域，子 Agent 继承该临时 Workspace 时同样没有：临时 Workspace 是每个 Session 分配一个，之后不会有任何 Session 再跑进去读它。这类会话仍然拥有用户作用域——它能学到的东西本来也属于那一层。
 
 主题文件按语义划分，不按 Task、Session 或日期划分，并带 frontmatter：
 
@@ -299,7 +299,7 @@ frontmatter 只有这三个字段——记忆属于哪一层由所在目录表�
 - 值只注入工具子进程的环境变量，永远不进入模型上下文与 Trace；
 - 系统提示词中只披露键名：模板的 `{{VAULT}}` 占位符展开为 `vault.prompt`（内含 `{{VAULT_KEYS}}` 键名列表），提示词可在 Vault 标签页编辑；`vault.enabled` 关闭则整段为空——值照旧注入子进程，只是模型看不到键名清单。旧模板的内联 `{{VAULT_KEYS}}` 仍被替换并受同一开关控制，标签页提供一键迁移（见「系统提示词占位符」一节）；
 - 经 Web/API 保存会使该 Agent 已缓存的 Session 运行时失效：其任意 Session 的下一个任务会重新恢复（resume）并使用新值；进行中的任务保持其启动时的值（CLI 直接改文件对运行中的 server 则要等 Session 下次创建或恢复时生效）；
-- 通过 CLI `linsight config vault set/list/remove` 或 Web 的 Vault 标签页管理。
+- 通过 CLI `jiumate config vault set/list/remove` 或 Web 的 Vault 标签页管理。
 
 ## 定时任务
 

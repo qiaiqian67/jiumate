@@ -1,11 +1,11 @@
 {
-  "name": "@linsight/goal",
+  "name": "@jiumate/goal",
   "version": "0.3.0",
   "description": "Goal mode: a stop hook that keeps the session working toward an objective — re-injecting it every round and checking the goal file — until the goal is complete, blocked, or out of token budget.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "plugins/goal"
   },
   "files": [

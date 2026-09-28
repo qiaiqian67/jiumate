@@ -25,7 +25,7 @@ import { atomicWriteFile } from "../src/internal/atomic-write.js";
 let dir: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(path.join(tmpdir(), "linsight-atomic-"));
+  dir = await mkdtemp(path.join(tmpdir(), "jiumate-atomic-"));
 });
 
 afterEach(async () => {

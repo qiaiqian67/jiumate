@@ -7,8 +7,8 @@
  * touches nothing; a first sight with keys and no recorded id ADOPTS without sweeping, so
  * upgrading into this release never destroys legitimate state; an unknown id changes
  * nothing at all. Plus the two matching traps the classification exists to avoid
- * (`linsight.sidebarCollapsed` under `linsight.sidebarCollapsedGroups.`,
- * `linsight.terminal.theme` beside `linsight.terminal.page.id`), and storage that throws.
+ * (`jiumate.sidebarCollapsed` under `jiumate.sidebarCollapsedGroups.`,
+ * `jiumate.terminal.theme` beside `jiumate.terminal.page.id`), and storage that throws.
  *
  * The classification is also checked against the SOURCE rather than against a fixture: a key
  * added to the app and forgotten here is the one way this module silently stops working.
@@ -49,37 +49,36 @@ function memStorage(entries: Record<string, string> = {}): InstallScopeStorage &
 /** A representative populated store: install-scoped state on the left, preferences on the right. */
 function populated(): ReturnType<typeof memStorage> {
   return memStorage({
-    "linsight.chatDraft.admin.default_project":
-      '{"workspace":"/srv/app","agentId":"default_agent"}',
-    "linsight.chatDraft.session.admin.session-1": '{"text":"half a sentence"}',
-    "linsight.chatDrafts.admin.default_project": '[{"id":"draft-abcd1234"}]',
-    "linsight.sidebarWorkspaces.default_project": '[{"path":"/srv/app"}]',
-    "linsight.pinnedSessions.default_project": '["session-1"]',
-    "linsight.sessionOrder.default_project.workspace": '["session-1"]',
-    "linsight.sessionSeen.default_project": '{"session-1":"2026-08-26T00:00:00Z"}',
-    "linsight.groupOrder.default_project.workspace": '["/srv/app"]',
-    "linsight.sidebarCollapsedGroups.default_project": '["/srv/app"]',
-    "linsight.sidebarPinnedGroups.default_project": '["/srv/app"]',
-    "linsight.lastProjectId": "default_project",
-    "linsight.lastAgentId.default_project": "default_agent",
-    "linsight.memoryCollapsed.admin.default_project.default_agent": '["project"]',
-    "linsight.modelsExpandedGroups.default_project": '["anthropic"]',
-    "linsight.modelsGroupOrder.default_project": '["anthropic"]',
-    "linsight.dock.layout": '{"scopes":{"session-1":{}},"bottomRatio":0.4}',
-    "linsight.terminal.page.id": "term-1",
+    "jiumate.chatDraft.admin.default_project": '{"workspace":"/srv/app","agentId":"default_agent"}',
+    "jiumate.chatDraft.session.admin.session-1": '{"text":"half a sentence"}',
+    "jiumate.chatDrafts.admin.default_project": '[{"id":"draft-abcd1234"}]',
+    "jiumate.sidebarWorkspaces.default_project": '[{"path":"/srv/app"}]',
+    "jiumate.pinnedSessions.default_project": '["session-1"]',
+    "jiumate.sessionOrder.default_project.workspace": '["session-1"]',
+    "jiumate.sessionSeen.default_project": '{"session-1":"2026-08-26T00:00:00Z"}',
+    "jiumate.groupOrder.default_project.workspace": '["/srv/app"]',
+    "jiumate.sidebarCollapsedGroups.default_project": '["/srv/app"]',
+    "jiumate.sidebarPinnedGroups.default_project": '["/srv/app"]',
+    "jiumate.lastProjectId": "default_project",
+    "jiumate.lastAgentId.default_project": "default_agent",
+    "jiumate.memoryCollapsed.admin.default_project.default_agent": '["project"]',
+    "jiumate.modelsExpandedGroups.default_project": '["anthropic"]',
+    "jiumate.modelsGroupOrder.default_project": '["anthropic"]',
+    "jiumate.dock.layout": '{"scopes":{"session-1":{}},"bottomRatio":0.4}',
+    "jiumate.terminal.page.id": "term-1",
 
-    "linsight.theme": "dark",
-    "linsight.fontScale": "lg",
-    "linsight.accent": "violet",
-    "linsight.currency": "CNY",
-    "linsight.terminal.theme": "dark",
-    "linsight.lang": "en",
-    "linsight.sidebarCollapsed": "1",
-    "linsight.panelWidth": "420",
-    "linsight.sidebarGroupMode": "agent",
-    "linsight.sidebarSortMode": "manual",
-    "linsight.sidebarNavGroupCollapsed": "collapsed",
-    "linsight.steerMode": "followup",
+    "jiumate.theme": "dark",
+    "jiumate.fontScale": "lg",
+    "jiumate.accent": "violet",
+    "jiumate.currency": "CNY",
+    "jiumate.terminal.theme": "dark",
+    "jiumate.lang": "en",
+    "jiumate.sidebarCollapsed": "1",
+    "jiumate.panelWidth": "420",
+    "jiumate.sidebarGroupMode": "agent",
+    "jiumate.sidebarSortMode": "manual",
+    "jiumate.sidebarNavGroupCollapsed": "collapsed",
+    "jiumate.steerMode": "followup",
   });
 }
 
@@ -89,18 +88,18 @@ function snap(map: Map<string, string>): [string, string][] {
 }
 
 const PREFERENCE_KEYS = [
-  "linsight.theme",
-  "linsight.fontScale",
-  "linsight.accent",
-  "linsight.currency",
-  "linsight.terminal.theme",
-  "linsight.lang",
-  "linsight.sidebarCollapsed",
-  "linsight.panelWidth",
-  "linsight.sidebarGroupMode",
-  "linsight.sidebarSortMode",
-  "linsight.sidebarNavGroupCollapsed",
-  "linsight.steerMode",
+  "jiumate.theme",
+  "jiumate.fontScale",
+  "jiumate.accent",
+  "jiumate.currency",
+  "jiumate.terminal.theme",
+  "jiumate.lang",
+  "jiumate.sidebarCollapsed",
+  "jiumate.panelWidth",
+  "jiumate.sidebarGroupMode",
+  "jiumate.sidebarSortMode",
+  "jiumate.sidebarNavGroupCollapsed",
+  "jiumate.steerMode",
 ];
 
 const WEB_SRC = fileURLToPath(new URL("../src", import.meta.url));
@@ -111,17 +110,17 @@ const WEB_SRC = fileURLToPath(new URL("../src", import.meta.url));
  * recognise is left alone, which is exactly how the bug this module fixes comes back.
  */
 const UNCLASSIFIED_ON_PURPOSE: Record<string, string> = {
-  "linsight.installId": "the marker itself — it is what the comparison reads, never swept",
-  "linsight.chatRouteApplied.":
+  "jiumate.installId": "the marker itself — it is what the comparison reads, never swept",
+  "jiumate.chatRouteApplied.":
     "sessionStorage: scoped to one tab's history, so it cannot outlive a data root",
 };
 
 /**
- * Every `linsight.*` key literal in the web source, mapped to the file it was found in.
+ * Every `jiumate.*` key literal in the web source, mapped to the file it was found in.
  *
  * Block comments are stripped first, and a match must follow a quote or backtick: prose
- * names key PREFIXES (`linsight.terminal.`), a family without its dot, and the product's own
- * domain in an example URL (`linsight.ooo`), and none of those is a storage key.
+ * names key PREFIXES (`jiumate.terminal.`), a family without its dot, and the product's own
+ * domain in an example URL (`jiumate.ooo`), and none of those is a storage key.
  */
 function storageKeysInSource(): Map<string, string> {
   const found = new Map<string, string>();
@@ -132,7 +131,7 @@ function storageKeysInSource(): Map<string, string> {
         walk(full);
       } else if (/\.tsx?$/.test(entry.name)) {
         const code = fs.readFileSync(full, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-        for (const match of code.matchAll(/["'`](linsight\.[A-Za-z0-9_.]*)/g)) {
+        for (const match of code.matchAll(/["'`](jiumate\.[A-Za-z0-9_.]*)/g)) {
           const key = match[1]!;
           if (!found.has(key)) found.set(key, path.relative(WEB_SRC, full));
         }
@@ -144,7 +143,7 @@ function storageKeysInSource(): Map<string, string> {
 }
 
 describe("install-scope classification", () => {
-  it("classifies every linsight.* key the web source actually persists", () => {
+  it("classifies every jiumate.* key the web source actually persists", () => {
     const found = storageKeysInSource();
     // A scan that finds nothing would pass every assertion below without checking anything.
     expect(found.size).toBeGreaterThan(20);
@@ -172,22 +171,22 @@ describe("install-scope classification", () => {
 
   it("an exact preference is not captured by a family that shares its stem", () => {
     // The two traps plain prefix matching would fall into.
-    expect(scopeOfKey("linsight.sidebarCollapsed")).toBe("browser");
-    expect(scopeOfKey("linsight.sidebarCollapsedGroups.default_project")).toBe("install");
-    expect(scopeOfKey("linsight.terminal.theme")).toBe("browser");
-    expect(scopeOfKey("linsight.terminal.page.id")).toBe("install");
+    expect(scopeOfKey("jiumate.sidebarCollapsed")).toBe("browser");
+    expect(scopeOfKey("jiumate.sidebarCollapsedGroups.default_project")).toBe("install");
+    expect(scopeOfKey("jiumate.terminal.theme")).toBe("browser");
+    expect(scopeOfKey("jiumate.terminal.page.id")).toBe("install");
   });
 
   it("an unclassified key has no scope, so the sweep leaves it alone", () => {
-    expect(scopeOfKey("linsight.somethingAddedLater")).toBeNull();
+    expect(scopeOfKey("jiumate.somethingAddedLater")).toBeNull();
     expect(scopeOfKey("unrelated-app-key")).toBeNull();
     expect(scopeOfKey(INSTALL_ID_KEY)).toBeNull();
   });
 
-  it("rules are well formed: linsight-namespaced, families dotted, no duplicates", () => {
+  it("rules are well formed: jiumate-namespaced, families dotted, no duplicates", () => {
     const seen = new Set<string>();
     for (const rule of KEY_RULES) {
-      expect(rule.key.startsWith("linsight."), rule.key).toBe(true);
+      expect(rule.key.startsWith("jiumate."), rule.key).toBe(true);
       expect(rule.why.length, rule.key).toBeGreaterThan(0);
       if (rule.kind === "family") expect(rule.key.endsWith("."), rule.key).toBe(true);
       expect(seen.has(rule.key), rule.key).toBe(false);
@@ -209,7 +208,7 @@ describe("reconcileInstallScope", () => {
     for (const key of PREFERENCE_KEYS) {
       expect(storage.map.has(key), key).toBe(true);
     }
-    expect(storage.map.get("linsight.theme")).toBe("dark");
+    expect(storage.map.get("jiumate.theme")).toBe("dark");
     expect(storage.map.get(INSTALL_ID_KEY)).toBe("root-b");
   });
 
@@ -218,14 +217,14 @@ describe("reconcileInstallScope", () => {
     // nothing would ever read again. Walking the store is what reaches them.
     const storage = memStorage({
       [INSTALL_ID_KEY]: "root-a",
-      "linsight.chatDraft.admin.default_project": "{}",
-      "linsight.pinnedSessions.long_gone_project": '["session-9"]',
-      "linsight.sessionSeen.another_dead_project": "{}",
-      "linsight.theme": "dark",
+      "jiumate.chatDraft.admin.default_project": "{}",
+      "jiumate.pinnedSessions.long_gone_project": '["session-9"]',
+      "jiumate.sessionSeen.another_dead_project": "{}",
+      "jiumate.theme": "dark",
     });
 
     expect(reconcileInstallScope("root-b", storage)).toBe("swept");
-    expect([...storage.map.keys()].sort()).toEqual([INSTALL_ID_KEY, "linsight.theme"]);
+    expect([...storage.map.keys()].sort()).toEqual([INSTALL_ID_KEY, "jiumate.theme"]);
   });
 
   it("an unchanged install id sweeps nothing (the ordinary server restart)", () => {
@@ -302,9 +301,9 @@ describe("reconcileInstallScope", () => {
 
     // The keys still go; only the marker fails to land, so the next load compares again.
     expect(reconcileInstallScope("root-b", readOnlyMarker)).toBe("swept-unrecorded");
-    expect(storage.map.has("linsight.chatDraft.admin.default_project")).toBe(false);
+    expect(storage.map.has("jiumate.chatDraft.admin.default_project")).toBe(false);
     expect(storage.map.get(INSTALL_ID_KEY)).toBe("root-a");
-    expect(storage.map.get("linsight.theme")).toBe("dark");
+    expect(storage.map.get("jiumate.theme")).toBe("dark");
   });
 
   it("a store that throws only on enumeration sweeps nothing rather than half of it", () => {
@@ -343,8 +342,8 @@ describe("syncInstallScope", () => {
     storage.map.set(INSTALL_ID_KEY, "root-a");
 
     expect(await syncInstallScope(storage)).toBe("swept");
-    expect(storage.map.has("linsight.chatDraft.admin.default_project")).toBe(false);
-    expect(storage.map.get("linsight.theme")).toBe("dark");
+    expect(storage.map.has("jiumate.chatDraft.admin.default_project")).toBe(false);
+    expect(storage.map.get("jiumate.theme")).toBe("dark");
   });
 
   it("a server that cannot be reached sweeps nothing and never rejects", async () => {
@@ -455,7 +454,7 @@ describe("syncInstallScope", () => {
 });
 
 /**
- * The two-pass boot. dock-state.ts parses `linsight.dock.layout` into module state AT MODULE
+ * The two-pass boot. dock-state.ts parses `jiumate.dock.layout` into module state AT MODULE
  * EVALUATION, which ES semantics put before main.tsx's first statement — so these tests
  * install the storage global first and import that module dynamically, in the order a
  * browser does it.
@@ -497,8 +496,8 @@ describe("bootInstallScope", () => {
   it("a swept boot reloads instead of rendering, and the second pass cannot resurrect the dock", async () => {
     const storage = memStorage({
       [INSTALL_ID_KEY]: "root-a",
-      "linsight.dock.layout": DOCK_FROM_ROOT_A,
-      "linsight.theme": "dark",
+      "jiumate.dock.layout": DOCK_FROM_ROOT_A,
+      "jiumate.theme": "dark",
     });
     installStorageGlobal(storage);
     serverReports("root-b");
@@ -510,7 +509,7 @@ describe("bootInstallScope", () => {
     await import("../src/features/dock/dock-state");
 
     expect(await bootInstallScope()).toBe("reload");
-    expect(storage.map.has("linsight.dock.layout")).toBe(false);
+    expect(storage.map.has("jiumate.dock.layout")).toBe(false);
 
     // Pass two — the reload. Every module re-evaluates against the swept store.
     vi.resetModules();
@@ -520,10 +519,10 @@ describe("bootInstallScope", () => {
     // The first route resolution's setDockScope is what persisted the old map; here it can
     // only persist what the fresh evaluation read, which is nothing.
     dock.setDockScope("new");
-    const persisted = storage.map.get("linsight.dock.layout") ?? "";
+    const persisted = storage.map.get("jiumate.dock.layout") ?? "";
     expect(persisted).not.toContain("term-abc");
     expect(persisted).not.toContain("session-1");
-    expect(storage.map.get("linsight.theme")).toBe("dark");
+    expect(storage.map.get("jiumate.theme")).toBe("dark");
   });
 
   it("mounts on every outcome that swept nothing, and on a sweep that could not be recorded", async () => {
@@ -532,7 +531,7 @@ describe("bootInstallScope", () => {
     serverReports("root-a");
     expect(await bootInstallScope()).toBe("mount");
 
-    const firstSight = memStorage({ "linsight.theme": "dark" });
+    const firstSight = memStorage({ "jiumate.theme": "dark" });
     installStorageGlobal(firstSight);
     serverReports("root-a");
     expect(await bootInstallScope()).toBe("mount");
@@ -543,7 +542,7 @@ describe("bootInstallScope", () => {
     expect(await bootInstallScope()).toBe("mount");
 
     // The reload would otherwise repeat forever: sweep, fail to record, reload, sweep again.
-    const backing = memStorage({ [INSTALL_ID_KEY]: "root-a", "linsight.lastProjectId": "p1" });
+    const backing = memStorage({ [INSTALL_ID_KEY]: "root-a", "jiumate.lastProjectId": "p1" });
     installStorageGlobal({
       ...backing,
       get length(): number {
@@ -556,7 +555,7 @@ describe("bootInstallScope", () => {
     });
     serverReports("root-b");
     expect(await bootInstallScope()).toBe("mount");
-    expect(backing.map.has("linsight.lastProjectId")).toBe(false);
+    expect(backing.map.has("jiumate.lastProjectId")).toBe(false);
   });
 });
 
@@ -574,7 +573,7 @@ describe("a tab left open across the wipe", () => {
     for (const key of storage.map.keys()) {
       expect(scopeOfKey(key), `${key} survived the sweep`).not.toBe("install");
     }
-    expect(storage.map.get("linsight.theme")).toBe("dark");
+    expect(storage.map.get("jiumate.theme")).toBe("dark");
   });
 
   it("ignores the other tab's FIRST recording, which swept nothing itself", () => {
@@ -609,7 +608,7 @@ describe("a tab left open across the wipe", () => {
 
     expect(
       reactToInstallIdChange(
-        { key: "linsight.pinnedSessions.default_project", oldValue: "[]", newValue: '["s1"]' },
+        { key: "jiumate.pinnedSessions.default_project", oldValue: "[]", newValue: '["s1"]' },
         storage,
       ),
     ).toBe(false);

@@ -20,11 +20,7 @@ export function Footer() {
         <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
           <div className="max-w-xs">
             <div className="flex items-center gap-2">
-              <img
-                src={`${import.meta.env.BASE_URL}linsight-logo.svg`}
-                alt=""
-                className="h-7 w-7"
-              />
+              <img src={`${import.meta.env.BASE_URL}jiumate-logo.svg`} alt="" className="h-7 w-7" />
               <span className="text-[15px] font-semibold tracking-tight">{S.siteName}</span>
             </div>
             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{S.footer.tagline}</p>

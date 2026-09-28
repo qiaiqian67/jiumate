@@ -150,10 +150,10 @@ describe("resolveShell — POSIX", () => {
     expect(shell).toEqual(posix("bash", "bash"));
   });
 
-  it("LINSIGHT_SHELL still wins over the whole POSIX chain", () => {
+  it("JIUMATE_SHELL still wins over the whole POSIX chain", () => {
     const shell = resolveShell({
       platform: "linux",
-      env: { LINSIGHT_SHELL: "/usr/bin/fish", PATH: "/bin" },
+      env: { JIUMATE_SHELL: "/usr/bin/fish", PATH: "/bin" },
       exists: has("/bin/bash"),
     });
     expect(shell).toEqual(posix("/usr/bin/fish", "fish"));
@@ -163,7 +163,7 @@ describe("resolveShell — POSIX", () => {
 describe("resolveShell — POSIX, real spawn", () => {
   /** A PATH directory carrying a POSIX sh and a few coreutils, but deliberately no bash. */
   function bashlessBin(): string {
-    const bin = path.join(mkdtempSync(path.join(tmpdir(), "linsight-nobash-")), "bin");
+    const bin = path.join(mkdtempSync(path.join(tmpdir(), "jiumate-nobash-")), "bin");
     mkdirSync(bin);
     for (const tool of ["sh", "env", "cat", "echo", "printf"]) {
       try {
@@ -303,7 +303,7 @@ describe("resolveShell — output encoding preamble", () => {
     // (GBK on a Chinese install) while the session decodes stdout as UTF-8, so `目录` arrived as
     // `Ŀ¼` and the model could not read back the Chinese it had just written.
     for (const name of ["pwsh", "powershell"]) {
-      const shell = resolveShell({ platform: "win32", env: { LINSIGHT_SHELL: name } });
+      const shell = resolveShell({ platform: "win32", env: { JIUMATE_SHELL: name } });
       expect(shell.preamble).toContain("[Console]::OutputEncoding=[System.Text.Encoding]::UTF8");
       // Both knobs, and they are not the same one: the first governs what PowerShell writes, the
       // second what it hands to a native command. Setting only the first leaves `node` output
@@ -316,7 +316,7 @@ describe("resolveShell — output encoding preamble", () => {
   });
 
   it("carries the code-page switch for cmd, and nothing at all for a POSIX shell", () => {
-    expect(resolveShell({ platform: "win32", env: { LINSIGHT_SHELL: "cmd" } }).preamble).toBe(
+    expect(resolveShell({ platform: "win32", env: { JIUMATE_SHELL: "cmd" } }).preamble).toBe(
       "chcp 65001>nul\n",
     );
     // POSIX shells are UTF-8 already; prepending anything would be noise in every command.
@@ -339,7 +339,7 @@ describe("resolveShell — output encoding preamble", () => {
   it.skipIf(process.platform !== "win32")(
     "really does turn GBK PowerShell output into readable UTF-8",
     () => {
-      const shell = resolveShell({ platform: "win32", env: { LINSIGHT_SHELL: "powershell" } });
+      const shell = resolveShell({ platform: "win32", env: { JIUMATE_SHELL: "powershell" } });
       const cmd = 'Write-Output "目录: 数据来源"';
       const run = (preamble: string) =>
         spawnSync(shell.command, [...shell.args, preamble + cmd], {
@@ -359,7 +359,7 @@ describe("resolveShell — output encoding preamble", () => {
     () => {
       // The preamble is prepended to every command, so anything it perturbs is perturbed
       // everywhere. These are the two things a command session reads besides stdout.
-      const shell = resolveShell({ platform: "win32", env: { LINSIGHT_SHELL: "powershell" } });
+      const shell = resolveShell({ platform: "win32", env: { JIUMATE_SHELL: "powershell" } });
       const res = spawnSync(
         shell.command,
         [...shell.args, shell.preamble + "node -e \"console.error('错误'); process.exit(2)\""],
@@ -435,11 +435,11 @@ describe("resolveShell — PATH inheritance on Windows (ShellInvocation.env)", (
   );
 });
 
-describe("resolveShell — LINSIGHT_SHELL override", () => {
+describe("resolveShell — JIUMATE_SHELL override", () => {
   it("wins on every platform and keeps POSIX-style args for a POSIX shell path", () => {
     const shell = resolveShell({
       platform: "linux",
-      env: { LINSIGHT_SHELL: "/usr/bin/zsh" },
+      env: { JIUMATE_SHELL: "/usr/bin/zsh" },
     });
     expect(shell).toEqual(posix("/usr/bin/zsh", "zsh"));
   });
@@ -447,19 +447,19 @@ describe("resolveShell — LINSIGHT_SHELL override", () => {
   it("uses PowerShell-style args when the basename is pwsh (case/extension-insensitive)", () => {
     const shell = resolveShell({
       platform: "win32",
-      env: { LINSIGHT_SHELL: "C:\\Program Files\\PowerShell\\7\\pwsh.EXE" },
+      env: { JIUMATE_SHELL: "C:\\Program Files\\PowerShell\\7\\pwsh.EXE" },
       whichAll: which({ bash: ["C:\\Program Files\\Git\\bin\\bash.exe"] }),
     });
     expect(shell).toEqual(powershell("C:\\Program Files\\PowerShell\\7\\pwsh.EXE", "pwsh"));
   });
 
   it("uses PowerShell-style args for a bare powershell name", () => {
-    const shell = resolveShell({ platform: "win32", env: { LINSIGHT_SHELL: "powershell" } });
+    const shell = resolveShell({ platform: "win32", env: { JIUMATE_SHELL: "powershell" } });
     expect(shell).toEqual(powershell("powershell", "powershell"));
   });
 
   it("uses cmd-style args when the basename is cmd", () => {
-    const shell = resolveShell({ platform: "win32", env: { LINSIGHT_SHELL: "cmd" } });
+    const shell = resolveShell({ platform: "win32", env: { JIUMATE_SHELL: "cmd" } });
     expect(shell).toEqual({
       command: "cmd",
       args: ["/d", "/s", "/c"],
@@ -468,18 +468,18 @@ describe("resolveShell — LINSIGHT_SHELL override", () => {
     });
   });
 
-  it("ignores a blank LINSIGHT_SHELL", () => {
+  it("ignores a blank JIUMATE_SHELL", () => {
     const shell = resolveShell({
       platform: "linux",
-      env: { LINSIGHT_SHELL: "  ", PATH: "/usr/bin:/bin" },
+      env: { JIUMATE_SHELL: "  ", PATH: "/usr/bin:/bin" },
       exists: has("/bin/bash"),
     });
     expect(shell).toEqual(posix("bash", "bash"));
   });
 });
 
-describe("resolveShell — the bundled MinGit bash (LINSIGHT_BUNDLED_SHELL)", () => {
-  const BUNDLED = "C:\\Users\\u\\.linsight\\git\\usr\\bin\\sh.exe";
+describe("resolveShell — the bundled MinGit bash (JIUMATE_BUNDLED_SHELL)", () => {
+  const BUNDLED = "C:\\Users\\u\\.jiumate\\git\\usr\\bin\\sh.exe";
   /** An exists() stub answering true only for the bundled path. */
   const bundledExists = (p: string) => p === BUNDLED;
 
@@ -488,7 +488,7 @@ describe("resolveShell — the bundled MinGit bash (LINSIGHT_BUNDLED_SHELL)", ()
     // what it is and what the Skill ecosystem targets — "sh" would understate it.
     const shell = resolveShell({
       platform: "win32",
-      env: { LINSIGHT_BUNDLED_SHELL: BUNDLED },
+      env: { JIUMATE_BUNDLED_SHELL: BUNDLED },
       whichAll: which({ pwsh: ["C:\\pwsh.exe"] }),
       exists: bundledExists,
     });
@@ -498,7 +498,7 @@ describe("resolveShell — the bundled MinGit bash (LINSIGHT_BUNDLED_SHELL)", ()
   it("yields to a real Git for Windows on PATH (its MSYS userland is the fuller one)", () => {
     const shell = resolveShell({
       platform: "win32",
-      env: { LINSIGHT_BUNDLED_SHELL: BUNDLED },
+      env: { JIUMATE_BUNDLED_SHELL: BUNDLED },
       whichAll: which({ bash: ["C:\\Program Files\\Git\\bin\\bash.exe"] }),
       exists: bundledExists,
     });
@@ -508,17 +508,17 @@ describe("resolveShell — the bundled MinGit bash (LINSIGHT_BUNDLED_SHELL)", ()
   it("beats pwsh and powershell — the point of bundling is that neither is reached", () => {
     const shell = resolveShell({
       platform: "win32",
-      env: { LINSIGHT_BUNDLED_SHELL: BUNDLED },
+      env: { JIUMATE_BUNDLED_SHELL: BUNDLED },
       whichAll: which({ pwsh: ["C:\\pwsh.exe"], powershell: ["C:\\powershell.exe"] }),
       exists: bundledExists,
     });
     expect(shell.command).toBe(BUNDLED);
   });
 
-  it("still loses to an explicit LINSIGHT_SHELL", () => {
+  it("still loses to an explicit JIUMATE_SHELL", () => {
     const shell = resolveShell({
       platform: "win32",
-      env: { LINSIGHT_SHELL: "pwsh", LINSIGHT_BUNDLED_SHELL: BUNDLED },
+      env: { JIUMATE_SHELL: "pwsh", JIUMATE_BUNDLED_SHELL: BUNDLED },
       exists: bundledExists,
     });
     expect(shell).toEqual(powershell("pwsh", "pwsh"));
@@ -527,7 +527,7 @@ describe("resolveShell — the bundled MinGit bash (LINSIGHT_BUNDLED_SHELL)", ()
   it("a stale path (dir deleted) falls through to pwsh rather than spawning a missing exe", () => {
     const shell = resolveShell({
       platform: "win32",
-      env: { LINSIGHT_BUNDLED_SHELL: BUNDLED },
+      env: { JIUMATE_BUNDLED_SHELL: BUNDLED },
       whichAll: which({ pwsh: ["C:\\pwsh.exe"] }),
       exists: () => false,
     });
@@ -537,7 +537,7 @@ describe("resolveShell — the bundled MinGit bash (LINSIGHT_BUNDLED_SHELL)", ()
   it("is ignored on POSIX (npm installs and source checkouts never set it anyway)", () => {
     const shell = resolveShell({
       platform: "linux",
-      env: { LINSIGHT_BUNDLED_SHELL: BUNDLED },
+      env: { JIUMATE_BUNDLED_SHELL: BUNDLED },
       exists: bundledExists,
     });
     expect(shell).toEqual(posix("bash", "bash"));
@@ -546,7 +546,7 @@ describe("resolveShell — the bundled MinGit bash (LINSIGHT_BUNDLED_SHELL)", ()
   it("a blank value is ignored (unset-but-defined shims must not win)", () => {
     const shell = resolveShell({
       platform: "win32",
-      env: { LINSIGHT_BUNDLED_SHELL: "  " },
+      env: { JIUMATE_BUNDLED_SHELL: "  " },
       whichAll: which({ powershell: ["C:\\powershell.exe"] }),
       exists: () => true,
     });

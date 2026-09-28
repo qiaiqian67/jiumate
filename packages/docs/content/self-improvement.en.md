@@ -3,7 +3,7 @@ title: Self-Improvement
 description: The Skill-orchestrated Benchmark and optimization loop: score, improve, snapshot, roll back.
 ---
 
-Self-improvement in Linsight uses Skills to orchestrate the ordinary Agent machinery: evaluations are ordinary Sessions and optimization is ordinary file editing. Evaluation construction and optimization run in two independent top-level Sessions, while individual evaluations are delegated through the built-in `run_subagent` tool. Top-level prompts provide the Agent, Benchmark, capability, score, and round settings for the task; Skills own call relationships, calibration, Freeze, protocol, repair, rollback, and reporting.
+Self-improvement in JiuMate uses Skills to orchestrate the ordinary Agent machinery: evaluations are ordinary Sessions and optimization is ordinary file editing. Evaluation construction and optimization run in two independent top-level Sessions, while individual evaluations are delegated through the built-in `run_subagent` tool. Top-level prompts provide the Agent, Benchmark, capability, score, and round settings for the task; Skills own call relationships, calibration, Freeze, protocol, repair, rollback, and reporting.
 
 ## Roles and call relationships
 
@@ -14,7 +14,7 @@ Self-improvement in Linsight uses Skills to orchestrate the ordinary Agent machi
 | Evaluator | Leaf worker created through `run_subagent`; runs and scores one Benchmark Case run |
 | Optimizer | New top-level Agent that directly follows `agent-optimization` |
 
-The Builder and Optimizer directly follow their Skills in their own top-level Sessions. Evaluators are created through `run_subagent`; each follows `agent-evaluation` and uses the Linsight CLI to launch the specified Target Agent in an isolated Workspace identified by an absolute path. The Linsight CLI launches the Target Agent for the requested Case run.
+The Builder and Optimizer directly follow their Skills in their own top-level Sessions. Evaluators are created through `run_subagent`; each follows `agent-evaluation` and uses the JiuMate CLI to launch the specified Target Agent in an isolated Workspace identified by an absolute path. The JiuMate CLI launches the Target Agent for the requested Case run.
 
 ## Two independent steps
 

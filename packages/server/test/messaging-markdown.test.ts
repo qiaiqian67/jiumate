@@ -15,7 +15,7 @@
  * messaging-wechat.test.ts and messaging-wire.test.ts. Nothing here sends anything.
  */
 import { describe, expect, it } from "vitest";
-import { attachedFileLine } from "@prismshadow/linsight-core";
+import { attachedFileLine } from "@prismshadow/jiumate-core";
 import { MESSAGING_TEXT_CHUNK_CHARS } from "../src/runtime/messaging/bridge.js";
 import { chunkMarkdown, isSafeUrl, parseMarkdown } from "../src/runtime/messaging/markdown.js";
 import { feishuCardOf, feishuMarkdownOf } from "../src/runtime/messaging/feishu-card.js";
@@ -355,7 +355,7 @@ describe("wechatMarkdownOf", () => {
  * marker rather than a copy of it.
  */
 describe("a reply quoting an inbound file's attachment line", () => {
-  const PATH = "/home/u/.linsight/data/scratchpad/session-2026-08-27-aa/my_report_v2.pdf";
+  const PATH = "/home/u/.jiumate/data/scratchpad/session-2026-08-27-aa/my_report_v2.pdf";
   const LINE = attachedFileLine(PATH);
 
   it("keeps the marker line literal rather than reading it as a link or a reference", () => {

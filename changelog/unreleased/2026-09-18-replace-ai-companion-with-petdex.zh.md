@@ -11,7 +11,7 @@ AI 伴侣功能（SVG 狐狸 / Live2D / VRM、persona 注入、ASR 麦克风、T
 
 ## 上线内容
 
-- **`@prismshadow/linsight-pets`** — 新工作区包。Arktype 校验的 `PetPackage` schema，manifest + sprite IO 严格限制（64 KiB / 32 MiB / 64 MiB / 128 个），SHA-256 指纹，`.linsight-pet-receipt.json` 收据往返，保证重装幂等。镜像 OpenBitFun `pet_packages.rs` 的字节级约定，使 Petdex 下载在两套宿主间互通。
+- **`@prismshadow/jiumate-pets`** — 新工作区包。Arktype 校验的 `PetPackage` schema，manifest + sprite IO 严格限制（64 KiB / 32 MiB / 64 MiB / 128 个），SHA-256 指纹，`.jiumate-pet-receipt.json` 收据往返，保证重装幂等。镜像 OpenBitFun `pet_packages.rs` 的字节级约定，使 Petdex 下载在两套宿主间互通。
 - **`/api/pets`** — 服务器新增 REST 接口。`GET` 列出已安装宠物 + 诊断；`GET /api/pets/:slug/spritesheet` 下发已安装图集字节；`POST /api/pets/import` 接受 `{ path, expectedFingerprint? }` 并先校验后发布；`DELETE /api/pets/:slug` 移除已安装宠物。
 - **`PUT /api/me/prefs`** — 接收新键 `enablePet` / `activePetId` / `petWindowPosition`；遗留 `companion*` 键静默丢弃。
 - **`/pet` 路由 + 无边框宠物窗口** — 取代原 `/companion` 路由和 `companion-window.ts`。加载 `${appOrigin}/pet`，透明置顶，位置持久化，IPC 桥接 `window.pet`（含 `pickPackage` 目录导入）。

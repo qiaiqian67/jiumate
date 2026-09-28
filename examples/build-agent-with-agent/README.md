@@ -3,7 +3,7 @@
 # Example: an Agent that builds another Agent (local, on an AMD GPU via Ollama)
 
 This example is the **"Harness for Building Agents"** pillar in runnable code. Using only the
-Linsight SDK, it:
+JiuMate SDK, it:
 
 1. **builds** a brand-new agent (`commit-helper`) by driving `default_agent` with the
    `agent-initialization` skill from a plain-language requirement, then
@@ -23,22 +23,22 @@ ollama serve &          # if not already running as a service
 ollama pull qwen3.6:35b
 ```
 
-## 2. Point Linsight at it (once)
+## 2. Point JiuMate at it (once)
 
 ```bash
-linsight config model add \
+jiumate config model add \
   --model-id qwen3.6:35b \
   --provider custom --client-type openai \
   --base-url http://localhost:11434/v1 \
   --api-key ollama --set-default
 ```
 
-This writes the model into `~/.linsight/data/default_project/.project_config.toml`. The example
+This writes the model into `~/.jiumate/data/default_project/.project_config.toml`. The example
 uses the project's default model, so no model id is hard-coded in the script.
 
 ## 3. Run the example
 
-From the repo root (build the workspace first so `@prismshadow/linsight-core` resolves to its
+From the repo root (build the workspace first so `@prismshadow/jiumate-core` resolves to its
 `dist/`):
 
 ```bash

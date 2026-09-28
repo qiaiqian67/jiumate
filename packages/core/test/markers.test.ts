@@ -80,7 +80,7 @@ describe("stripConversationMarkers (whole-message title cleaning)", () => {
     // The skill-invocation block that wraps a first user message must not reach the title.
     expect(
       stripConversationMarkers(
-        "[use_skills]\nskills: linsight-sdk, web-design\n[/use_skills]\nBuild a RAG app",
+        "[use_skills]\nskills: jiumate-sdk, web-design\n[/use_skills]\nBuild a RAG app",
       ),
     ).toBe("Build a RAG app");
     // Handoff and scheduled-task markers are stripped too; ordinary bracketed text stays.
@@ -193,8 +193,8 @@ describe("[user_steering] messages", () => {
 
 describe("origin blocks ([use_skills] / [handoff_from] / [scheduled_task] / [model_switch_from])", () => {
   it("[use_skills]: builds a leading block + body and parses it back; an empty list adds nothing", () => {
-    expect(buildSkillsMessage(["linsight-sdk"], "write me a demo")).toBe(
-      "[use_skills]\nskills: linsight-sdk\n[/use_skills]\n\nwrite me a demo",
+    expect(buildSkillsMessage(["jiumate-sdk"], "write me a demo")).toBe(
+      "[use_skills]\nskills: jiumate-sdk\n[/use_skills]\n\nwrite me a demo",
     );
     expect(buildSkillsMessage(["a", "b"], "x")).toBe(
       "[use_skills]\nskills: a, b\n[/use_skills]\n\nx",

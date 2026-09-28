@@ -2,7 +2,7 @@
 title: "精简的 Harness 就够了"
 date: 2026-07-22
 category: perspectives
-excerpt: Databricks 拿自家百万行代码库里的真实 PR，评测了多个 coding agent harness。全场最高分不属于功能最全的那个 harness，而属于最简单的那个，成本还只有一半左右。本文讲清楚上下文纪律为什么胜过功能数量，以及 Linsight 怎么把这个判断写进了代码。
+excerpt: Databricks 拿自家百万行代码库里的真实 PR，评测了多个 coding agent harness。全场最高分不属于功能最全的那个 harness，而属于最简单的那个，成本还只有一半左右。本文讲清楚上下文纪律为什么胜过功能数量，以及 JiuMate 怎么把这个判断写进了代码。
 ---
 
 按直觉想，功能丰富的 Agent harness 应该赢过精简的那个：工具更多、上下文更全、脚手架更厚，决策自然更好。整个品类就是建立在这个直觉上的。
@@ -43,11 +43,11 @@ Databricks 自己很谨慎，我们也该同样谨慎：他们明确说过，这
 
 这些都不是错的想法，只是**没被定价**的想法。
 
-## 三、Linsight 是怎么做的
+## 三、JiuMate 是怎么做的
 
 在这份评测出现之前，我们就下了这个赌注，而且它写在源码里，不在宣传页上。下面每个数字都能在仓库里核对。
 
-**六个工具，而且完全没有文件工具。** Linsight 内置[六个工具](https://linsight.ooo/docs/tools)，任一会话实际只看到五个——两个图像工具按模型类别互斥。
+**六个工具，而且完全没有文件工具。** JiuMate 内置[六个工具](https://jiumate.ooo/docs/tools)，任一会话实际只看到五个——两个图像工具按模型类别互斥。
 
 | 工具 | 作用 |
 | --- | --- |
@@ -58,7 +58,7 @@ Databricks 自己很谨慎，我们也该同样谨慎：他们明确说过，这
 
 没有 read 工具，没有 write 工具，没有 edit 工具，没有 glob，也没有 grep。读、写、编辑、搜索全部走 shell，因为 shell 本来就能做这些，模型本来就会用它。当一个四工具的最小内核把 read、write、edit 三个名额花在文件系统上时，**我们只花一个**。我们不宣称绝对工具数最少（论内核，Pi 比我们还紧一个），我们宣称的是：**在"Agent 每天真正在做的事"上，我们的 schema 面积最小。**
 
-**72 行的 System Prompt。** 默认模板在变量替换前是 72 行、约 6,600 字符（[源码](https://github.com/qiaiqian67/linsight/blob/main/packages/core/src/state/default-config.ts)）。角色、成功标准、约束、停止规则、文件系统布局，外加一小段建议工作流，然后就结束了。
+**72 行的 System Prompt。** 默认模板在变量替换前是 72 行、约 6,600 字符（[源码](https://github.com/qiaiqian67/jiumate/blob/main/packages/core/src/state/default-config.ts)）。角色、成功标准、约束、停止规则、文件系统布局，外加一小段建议工作流，然后就结束了。
 
 **输出上限是默认行为。** 每次工具调用截断在 16,000 字符，由 Environment 统一执行。退出码被追加在**截断窗口之外**，所以哪怕输出中段被砍掉，那条告诉模型"命令到底成没成"的信息依然还在。
 
@@ -78,7 +78,7 @@ Databricks 自己很谨慎，我们也该同样谨慎：他们明确说过，这
 
 还有第三个更实际的理由：**可移植性**。后训练绑定的是**协议**，不是 harness。所有严肃的模型都在同一套 function calling 契约上训练。从模型的角度看，一个精简的 harness 不过是一个恰好比较短的标准请求——这就解释了为什么多家厂商的模型、加上开放权重的 GLM，在同一个精简 harness 下都表现不错，也说明精简的设计最有可能在你换模型之后依然好用。对于一个价值主张是"一套接口接 1000+ 模型"的项目，这是地基。
 
-我们自己的数字落在那个位置，也是同一个道理。复杂数据分析上，Linsight 搭配 DeepSeek V4 Pro 拿到了三者中最高的准确率（66.67%，两个对手各 53.33%），花费 **$0.55**，Claude Code 是 **$38.48**，账单约为其 1/70。编程题上，我们和 Codex 以 71.25% 打平，落后于 Claude Code 的 86.25%，但整套题我们花了 **$3.81**，它们分别是 **$220.08** 和 **$146.97**。我们不宣称在每个维度上都赢过前沿模型，我们宣称的是：**效果的差距，比价格的差距小一到两个数量级。**
+我们自己的数字落在那个位置，也是同一个道理。复杂数据分析上，JiuMate 搭配 DeepSeek V4 Pro 拿到了三者中最高的准确率（66.67%，两个对手各 53.33%），花费 **$0.55**，Claude Code 是 **$38.48**，账单约为其 1/70。编程题上，我们和 Codex 以 71.25% 打平，落后于 Claude Code 的 86.25%，但整套题我们花了 **$3.81**，它们分别是 **$220.08** 和 **$146.97**。我们不宣称在每个维度上都赢过前沿模型，我们宣称的是：**效果的差距，比价格的差距小一到两个数量级。**
 
 ## 五、精简不该牺牲什么
 
@@ -108,13 +108,13 @@ Databricks 自己很谨慎，我们也该同样谨慎：他们明确说过，这
 每一个答案，都是一个**按轮计费、贯穿整个任务生命周期**的成本项。
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight web
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate web
 ```
 
 ---
 
-- **读实现**：[工具与审批](https://linsight.ooo/docs/tools) · [Agent Loop](https://linsight.ooo/docs/agent-loop) · [Skills](https://linsight.ooo/docs/skills)
-- **来讨论**：[GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **读实现**：[工具与审批](https://jiumate.ooo/docs/tools) · [Agent Loop](https://jiumate.ooo/docs/agent-loop) · [Skills](https://jiumate.ooo/docs/skills)
+- **来讨论**：[GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**：[Databricks — Benchmarking Coding Agents on Databricks' Multi-Million Line Codebase](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase) · [Pi (earendil-works/pi)](https://github.com/earendil-works/pi) · [SaladDay《Less is More》](https://x.com/Salad95238547/status/2079508549382644194)

@@ -1,5 +1,5 @@
 /**
- * Login page: brand linsight logo above the form + centered large
+ * Login page: brand jiumate logo above the form + centered large
  * title + full-width primary button. Background is only the circuit-trace animation (the logo belongs to
  * the form area, not the background graphics); top-right corner has language and theme settings (reuses
  * global preferences, defaults to following the device). No open registration: accounts are created by
@@ -18,7 +18,7 @@ import type { ThemeMode } from "../state/theme";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { PasswordInput } from "../components/ui/password-input";
-import { LinsightLogo } from "../components/ui/linsight-logo";
+import { JiuMateLogo } from "../components/ui/jiumate-logo";
 import { Segmented } from "../components/ui/segmented";
 import { LoginCircuit } from "./login-circuit";
 
@@ -82,8 +82,8 @@ export function LoginPage() {
         </div>
       </div>
       <div className="anim-rise relative w-full max-w-sm">
-        {/* Brand linsight logo (part of the form area, not background graphics, so it doesn't clash with the trace animation) */}
-        <LinsightLogo className="mx-auto mb-3 h-16 w-16 rounded-2xl" />
+        {/* Brand jiumate logo (part of the form area, not background graphics, so it doesn't clash with the trace animation) */}
+        <JiuMateLogo className="mx-auto mb-3 h-16 w-16 rounded-2xl" />
         <h1 className="mb-6 text-center text-3xl font-semibold tracking-tight">{S.appName}</h1>
 
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">

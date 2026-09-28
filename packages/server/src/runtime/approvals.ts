@@ -20,7 +20,7 @@ import type {
   ApproveFn,
   OmniMessage,
   ToolCallPayload,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 
 export interface PendingApproval {
   toolCall: OmniMessage<ToolCallPayload>;

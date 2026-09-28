@@ -11,18 +11,18 @@ import {
 
 describe("benchmark data (unified suite totals)", () => {
   it("formats the data-analysis suite at its published precision", () => {
-    const linsight = DATA_BENCH[0]!;
-    expect(formatPct(linsight.accuracyPct)).toBe("66.67%");
-    expect(formatAccuracy(linsight.accuracyPct, 2)).toBe("66.67");
-    expect(formatTokensM(linsight.tokensM, 2)).toBe("18.04M");
-    expect(formatUsd(linsight.costUsd, 2)).toBe("$0.55");
+    const jiumate = DATA_BENCH[0]!;
+    expect(formatPct(jiumate.accuracyPct)).toBe("66.67%");
+    expect(formatAccuracy(jiumate.accuracyPct, 2)).toBe("66.67");
+    expect(formatTokensM(jiumate.tokensM, 2)).toBe("18.04M");
+    expect(formatUsd(jiumate.costUsd, 2)).toBe("$0.55");
   });
 
   it("formats the coding suite at its published precision", () => {
-    const linsight = CODE_BENCH[0]!;
-    expect(formatAccuracy(linsight.accuracyPct, 2)).toBe("71.25");
-    expect(formatTokensM(linsight.tokensM, 2)).toBe("200.00M");
-    expect(formatUsd(linsight.costUsd, 2)).toBe("$3.81");
+    const jiumate = CODE_BENCH[0]!;
+    expect(formatAccuracy(jiumate.accuracyPct, 2)).toBe("71.25");
+    expect(formatTokensM(jiumate.tokensM, 2)).toBe("200.00M");
+    expect(formatUsd(jiumate.costUsd, 2)).toBe("$3.81");
   });
 
   it("keeps every published accuracy on its suite's grid (n=15 and n=80)", () => {
@@ -34,26 +34,26 @@ describe("benchmark data (unified suite totals)", () => {
   });
 
   it("backs the copy's cost claims: 35x/70x on data analysis, 58x/39x on coding", () => {
-    const [dLinsight, dClaude, dCodex] = DATA_BENCH as [
+    const [dJiuMate, dClaude, dCodex] = DATA_BENCH as [
       (typeof DATA_BENCH)[0],
       (typeof DATA_BENCH)[0],
       (typeof DATA_BENCH)[0],
     ];
-    expect(costMultiple(dCodex, dLinsight)).toBe(35);
-    expect(costMultiple(dClaude, dLinsight)).toBe(70);
-    const [cLinsight, cClaude, cCodex] = CODE_BENCH as [
+    expect(costMultiple(dCodex, dJiuMate)).toBe(35);
+    expect(costMultiple(dClaude, dJiuMate)).toBe(70);
+    const [cJiuMate, cClaude, cCodex] = CODE_BENCH as [
       (typeof CODE_BENCH)[0],
       (typeof CODE_BENCH)[0],
       (typeof CODE_BENCH)[0],
     ];
-    expect(costMultiple(cCodex, cLinsight)).toBe(58);
-    expect(costMultiple(cClaude, cLinsight)).toBe(39);
+    expect(costMultiple(cCodex, cJiuMate)).toBe(58);
+    expect(costMultiple(cClaude, cJiuMate)).toBe(39);
   });
 
-  it("pairs each harness with its own model and emphasizes only Linsight", () => {
+  it("pairs each harness with its own model and emphasizes only JiuMate", () => {
     for (const suite of [DATA_BENCH, CODE_BENCH]) {
-      expect(suite.map((r) => r.framework)).toEqual(["Linsight", "Claude Code", "OpenAI Codex"]);
-      expect(suite.filter((r) => r.emphasized).map((r) => r.framework)).toEqual(["Linsight"]);
+      expect(suite.map((r) => r.framework)).toEqual(["JiuMate", "Claude Code", "OpenAI Codex"]);
+      expect(suite.filter((r) => r.emphasized).map((r) => r.framework)).toEqual(["JiuMate"]);
       expect(suite.map((r) => r.model)).toEqual(["DeepSeek V4 Pro", "Claude Opus 4.8", "GPT-5.5"]);
     }
   });

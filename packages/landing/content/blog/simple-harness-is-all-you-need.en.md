@@ -2,7 +2,7 @@
 title: "Simple Harness Is All You Need"
 date: 2026-07-22
 category: perspectives
-excerpt: Databricks benchmarked coding agents against real pull requests from its own multi-million-line codebase. The best score on the entire board did not belong to the most capable harness — it belonged to the simplest one, at roughly half the cost. Here is why context discipline beats feature count, and how Linsight is built around that bet.
+excerpt: Databricks benchmarked coding agents against real pull requests from its own multi-million-line codebase. The best score on the entire board did not belong to the most capable harness — it belonged to the simplest one, at roughly half the cost. Here is why context discipline beats feature count, and how JiuMate is built around that bet.
 ---
 
 You would expect a feature-rich agent harness to beat a minimal one. More tools, more context, more scaffolding, better decisions. That is the intuition the entire category was built on.
@@ -43,11 +43,11 @@ Context bloat is never one bad decision. It is four defensible ones, compounding
 
 None of these are wrong ideas. They are unpriced ones.
 
-## 3. How Linsight is built
+## 3. How JiuMate is built
 
 We made this bet before the benchmark existed, and it is visible in the source rather than the marketing. Every number below is checkable in the repo.
 
-**Six tools, and no file tools at all.** Linsight ships [six built-in tools](https://linsight.ooo/docs/tools); any session sees five, since the two image tools are mutually exclusive by model class.
+**Six tools, and no file tools at all.** JiuMate ships [six built-in tools](https://jiumate.ooo/docs/tools); any session sees five, since the two image tools are mutually exclusive by model class.
 
 | Tool | Purpose |
 | --- | --- |
@@ -58,7 +58,7 @@ We made this bet before the benchmark existed, and it is visible in the source r
 
 There is no read tool, no write tool, no edit tool, no glob, no grep. Reading, writing, editing and searching all go through the shell, because the shell already does them and the model already knows how. Where a four-tool minimal core spends read, write and edit on the filesystem, **we spend one**. We are not claiming the smallest absolute tool count — Pi's core is tighter by one — but the smallest schema surface for what agents actually do all day.
 
-**A 72-line system prompt.** The default template is 72 lines, about 6,600 characters before substitution ([source](https://github.com/qiaiqian67/linsight/blob/main/packages/core/src/state/default-config.ts)). Role, success criteria, constraints, stop rules, filesystem layout, a short list of suggested workflows — then it stops.
+**A 72-line system prompt.** The default template is 72 lines, about 6,600 characters before substitution ([source](https://github.com/qiaiqian67/jiumate/blob/main/packages/core/src/state/default-config.ts)). Role, success criteria, constraints, stop rules, filesystem layout, a short list of suggested workflows — then it stops.
 
 **Output capped by default.** Every tool call truncates at 16,000 characters, enforced centrally by the Environment. Exit codes are appended *outside* the truncation window, so the line telling the model whether the command succeeded survives even when the middle is cut.
 
@@ -78,7 +78,7 @@ The intuition that more context means better decisions is not stupid. It is wron
 
 There is a third, practical reason: **portability**. Post-training binds models to the *protocol*, not to a harness. Every serious model trains on the same function-calling contract. From the model's side, a lean harness is just a standard request that happens to be short — which is why several vendors' models plus open-weight GLM all did well through the same minimal wrapper, and why lean designs keep working when you switch models. For a project whose proposition is 1000+ models behind one interface, that is the foundation.
 
-It is also why our own numbers land where they do. On complex data analysis, Linsight on DeepSeek V4 Pro took the highest accuracy of the three harnesses we tested (66.67% against 53.33% for both) at **$0.55** against Claude Code's **$38.48** — roughly 1/70 the bill. On coding we tie Codex at 71.25% and trail Claude Code's 86.25%, but the suite cost **$3.81** against **$220.08** and **$146.97**. We do not claim to beat a frontier model on every axis. We claim the quality gap is one to two orders of magnitude smaller than the price gap.
+It is also why our own numbers land where they do. On complex data analysis, JiuMate on DeepSeek V4 Pro took the highest accuracy of the three harnesses we tested (66.67% against 53.33% for both) at **$0.55** against Claude Code's **$38.48** — roughly 1/70 the bill. On coding we tie Codex at 71.25% and trail Claude Code's 86.25%, but the suite cost **$3.81** against **$220.08** and **$146.97**. We do not claim to beat a frontier model on every axis. We claim the quality gap is one to two orders of magnitude smaller than the price gap.
 
 ## 5. What minimalism must not cost
 
@@ -103,13 +103,13 @@ If you are building agents, the audit is short. How many tools does your model s
 Every answer is a line item, charged on every turn, for the life of the task.
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight web
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate web
 ```
 
 ---
 
-- **Read the internals**: [Tools & Approval](https://linsight.ooo/docs/tools) · [The Agent Loop](https://linsight.ooo/docs/agent-loop) · [Skills](https://linsight.ooo/docs/skills)
-- **Come argue with us**: [GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **Read the internals**: [Tools & Approval](https://jiumate.ooo/docs/tools) · [The Agent Loop](https://jiumate.ooo/docs/agent-loop) · [Skills](https://jiumate.ooo/docs/skills)
+- **Come argue with us**: [GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **Sources**: [Databricks — Benchmarking Coding Agents on Databricks' Multi-Million Line Codebase](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase) · [Pi (earendil-works/pi)](https://github.com/earendil-works/pi) · [SaladDay, "Less is More"](https://x.com/Salad95238547/status/2079508549382644194)

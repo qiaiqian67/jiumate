@@ -11,7 +11,7 @@
  * stay inert.
  */
 import { describe, expect, it } from "vitest";
-import { MODEL_PROVIDERS } from "@prismshadow/linsight-core/model-catalog";
+import { MODEL_PROVIDERS } from "@prismshadow/jiumate-core/model-catalog";
 import {
   defaultExpandedProviders,
   expandedGroupsKey,

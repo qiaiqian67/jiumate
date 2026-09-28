@@ -1,5 +1,5 @@
 {
-  "name": "@prismshadow/linsight-pets",
+  "name": "@prismshadow/jiumate-pets",
   "version": "0.3.0",
   "type": "module",
   "engines": {
@@ -9,7 +9,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "packages/pets"
   },
   "exports": {

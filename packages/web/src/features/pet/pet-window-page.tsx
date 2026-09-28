@@ -46,7 +46,7 @@ import {
 } from "./pet-activity";
 import { getPetLookDirection } from "./pet-look";
 import { resolvePetById } from "./pet-service";
-import type { PetPackage } from "@prismshadow/linsight-pets";
+import type { PetPackage } from "@prismshadow/jiumate-pets";
 
 /** Pet footprint at scale 1. Mirrors `PET_WINDOW_BASE_*` in packages/desktop/src/pet-window.ts. */
 const PET_BASE_WIDTH = 96;
@@ -65,7 +65,7 @@ const WINDOW_MAX_HEIGHT = 240;
 /** Floor for a squeezed bubble, so a large pet still leaves readable text. */
 const BUBBLE_MIN_WIDTH = 132;
 /** Marks `<html>` so the app-wide opaque page background can be switched off here. */
-const PET_HOST_CLASS = "linsight-pet-host";
+const PET_HOST_CLASS = "jiumate-pet-host";
 /** A press that moves less than this is a click ("bring the app forward"), not a drag. */
 const DRAG_THRESHOLD_PX = 8;
 /** How often the shell is asked where the cursor is (see the file header). */
@@ -420,13 +420,13 @@ function PetWindowBody() {
 
   return (
     <div
-      className="linsight-pet-window"
+      className="jiumate-pet-window"
       style={{ width: windowWidth, height: windowHeight } as CSSProperties}
     >
-      <div className="linsight-pet-window__dock">
+      <div className="jiumate-pet-window__dock">
         {bubbleCount === 0 ? null : (
           <div
-            className="linsight-pet-window__bubbles"
+            className="jiumate-pet-window__bubbles"
             style={{ width: bubbleWidth, height: stackHeight }}
           >
             {visibleTasks.map((task) => (
@@ -452,7 +452,7 @@ function PetWindowBody() {
         )}
         <div
           ref={petRef}
-          className="linsight-pet-window__pet-hitbox"
+          className="jiumate-pet-window__pet-hitbox"
           style={{ width: petWidth, height: petHeight }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}

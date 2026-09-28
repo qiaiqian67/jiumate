@@ -14,8 +14,8 @@ import {
   tokenUsage,
   tracesDir,
   userText,
-} from "@prismshadow/linsight-core";
-import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@prismshadow/jiumate-core";
 import type {
   MessagesResponse,
   ProjectCreateResponse,

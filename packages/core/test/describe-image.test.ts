@@ -94,7 +94,7 @@ async function run(
 let tmp: string;
 
 beforeEach(async () => {
-  tmp = await mkdtemp(path.join(tmpdir(), "linsight-descimg-"));
+  tmp = await mkdtemp(path.join(tmpdir(), "jiumate-descimg-"));
 });
 
 afterEach(async () => {
@@ -129,7 +129,7 @@ describe("describe_image (the text-only-model variant of read_image)", () => {
 
   it("image + custom prompt is sent to the vision model in a single shot, its text comes back, the result carries no images", async () => {
     await writeFile(path.join(tmp, "a.png"), PNG_1X1);
-    const { llm, calls } = fakeLLM("The image shows a linsight.");
+    const { llm, calls } = fakeLLM("The image shows a jiumate.");
     const describer: VisionDescriberService = { modelId: "vis-1", createLLM: () => llm };
     const { messages, result, text } = await run(
       { source: "a.png", prompt: "What animal is in the image?" },
@@ -148,12 +148,12 @@ describe("describe_image (the text-only-model variant of read_image)", () => {
     expect(payloads[1]!.image_url).toBe(`data:image/png;base64,${PNG_1X1.toString("base64")}`);
 
     expect(text).toContain("described by vis-1");
-    expect(text).toContain("The image shows a linsight.");
+    expect(text).toContain("The image shows a jiumate.");
     // Streaming forward: the header line and description deltas are emitted as separate chunks (not buffered as a whole), and the complete text is not forwarded again.
     const outputs = messages.map((m) => (m.payload as { output?: string }).output ?? "");
     expect(outputs.length).toBeGreaterThanOrEqual(3); // header + >=2 description delta chunks
     expect(outputs[0]).toContain("described by vis-1");
-    expect(outputs.slice(1).join("")).toBe("The image shows a linsight.");
+    expect(outputs.slice(1).join("")).toBe("The image shows a jiumate.");
     // Text-based description: the result carries no images (images never enter session history).
     expect(result?.images).toBeUndefined();
     expect(result?.stopReason).toBeUndefined(); // defaults to completed

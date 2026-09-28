@@ -16,14 +16,14 @@ export interface PetTrayLabels {
 }
 
 const ZH: PetTrayLabels = {
-  tooltip: "Linsight",
+  tooltip: "JiuMate",
   pet: "显示桌面宠物",
   showMain: "显示主窗口",
   quit: "退出",
 };
 
 const EN: PetTrayLabels = {
-  tooltip: "Linsight",
+  tooltip: "JiuMate",
   pet: "Show desktop pet",
   showMain: "Show main window",
   quit: "Quit",

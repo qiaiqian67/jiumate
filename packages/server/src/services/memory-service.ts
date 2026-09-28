@@ -37,7 +37,7 @@ import {
   memoryScopeDir,
   parseMemoryFrontmatter,
   readWorkspaceMarker,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   MemoryFileInfo,
   MemoryFilesResponse,
@@ -57,7 +57,7 @@ import type { AgentConfigService } from "./agent-config-service.js";
 const SCOPE_KEY_PATTERN = /^[A-Za-z0-9_][A-Za-z0-9._-]*$/;
 
 /** The transfer document's format marker, checked before anything in it is believed. Typed against the DTO so the two literals cannot drift apart. */
-const SCOPE_FORMAT: MemoryScopeExport["format"] = "linsight-memory-scope";
+const SCOPE_FORMAT: MemoryScopeExport["format"] = "jiumate-memory-scope";
 
 /** The document version this reader accepts. A later format bumps it and states its own compatibility. */
 const SCOPE_FORMAT_VERSION: MemoryScopeExport["version"] = 1;

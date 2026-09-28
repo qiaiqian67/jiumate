@@ -18,7 +18,7 @@ The floating Petdex pet now behaves like the implementation it was ported from: 
 
 ## Transparency
 
-- The pet page marks `<html>` with `linsight-pet-host`, and the stylesheet drops the app-wide opaque `body` background under that class. The Electron window was already transparent; the opaque body was what showed as a white slab behind the pet.
+- The pet page marks `<html>` with `jiumate-pet-host`, and the stylesheet drops the app-wide opaque `body` background under that class. The Electron window was already transparent; the opaque body was what showed as a white slab behind the pet.
 
 ## Size
 

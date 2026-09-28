@@ -1,7 +1,7 @@
 /**
  * Version routes and update-check service tests: response shapes, the fail-soft
  * contract of /api/version/update-check (always 200, error field instead of 5xx),
- * cache TTLs with an injected clock, the LINSIGHT_UPDATE_CHECK=off opt-out, and the
+ * cache TTLs with an injected clock, the JIUMATE_UPDATE_CHECK=off opt-out, and the
  * admin gate of POST /api/version/update. Nothing here touches the network or spawns
  * a process: fetch is stubbed, and the update run is exercised only through its pure
  * classifier and the "not launched via the CLI" early exit.
@@ -9,7 +9,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { VERSION } from "@prismshadow/linsight-core";
+import { VERSION } from "@prismshadow/jiumate-core";
 import { versionReport } from "../src/version-report.js";
 import type {
   RestartResponse,
@@ -44,7 +44,7 @@ function releaseResponse(tag: string): Response {
   return new Response(
     JSON.stringify({
       tag_name: tag,
-      html_url: `https://github.com/qiaiqian67/linsight/releases/tag/${tag}`,
+      html_url: `https://github.com/qiaiqian67/jiumate/releases/tag/${tag}`,
       published_at: "2026-07-01T00:00:00Z",
     }),
     { status: 200, headers: { "content-type": "application/json" } },
@@ -70,7 +70,7 @@ describe("GET /api/version", () => {
     // Compared against the producer, never against literals. The release workflow STAMPS
     // core's constants before it builds and tests, so a hardcoded null passes everywhere
     // except the one job that matters — the npm publish — where it failed the release.
-    // This is also the contract that `linsight version --json` prints the same record: the
+    // This is also the contract that `jiumate version --json` prints the same record: the
     // route adds no field of its own and drops none.
     expect(body).toEqual(await versionReport(t.root));
     // Non-vacuous floor, in case the report itself ever comes back degenerate.
@@ -97,13 +97,13 @@ describe("GET /api/version", () => {
       path.join(hmrDir, "harness.json"),
       JSON.stringify({
         cli: { bundle: "store/cli/abc123.mjs" },
-        source: { repo: "https://example.com/linsight.git", revision: "v0.2.3-7-gabc1234" },
+        source: { repo: "https://example.com/jiumate.git", revision: "v0.2.3-7-gabc1234" },
         pushedAt: "2026-08-20T10:15:00.000Z",
       }),
     );
 
     expect((await get()).harness).toEqual({
-      source: { repo: "https://example.com/linsight.git", revision: "v0.2.3-7-gabc1234" },
+      source: { repo: "https://example.com/jiumate.git", revision: "v0.2.3-7-gabc1234" },
       pushedAt: "2026-08-20T10:15:00.000Z",
       bundles: { platform: null, cli: "store/cli/abc123.mjs", web: null },
     });
@@ -126,7 +126,7 @@ describe("GET /api/version/update-check", () => {
     expect(body.currentVersion).toBe(VERSION);
     expect(body.latestVersion).toBe("99.0.0");
     expect(body.updateAvailable).toBe(true);
-    expect(body.releaseUrl).toBe("https://github.com/qiaiqian67/linsight/releases/tag/v99.0.0");
+    expect(body.releaseUrl).toBe("https://github.com/qiaiqian67/jiumate/releases/tag/v99.0.0");
     expect(body.publishedAt).toBe("2026-07-01T00:00:00Z");
     expect(body.error).toBeUndefined();
     expect(body.disabled).toBeUndefined();
@@ -191,11 +191,11 @@ describe("UpdateCheckService", () => {
     expect(result.updateAvailable).toBe(false);
   });
 
-  it("LINSIGHT_UPDATE_CHECK=off disables the lookup without any network call", async () => {
+  it("JIUMATE_UPDATE_CHECK=off disables the lookup without any network call", async () => {
     const { impl, state } = makeFetch(() => releaseResponse("v99.0.0"));
     const service = new UpdateCheckService({
       fetchImpl: impl,
-      env: { LINSIGHT_UPDATE_CHECK: "off" },
+      env: { JIUMATE_UPDATE_CHECK: "off" },
     });
     const result = await service.check();
     expect(result.disabled).toBe(true);
@@ -266,11 +266,11 @@ describe("UpdateCheckService", () => {
     expect(state.calls).toBe(2);
   });
 
-  it("force never dials out when LINSIGHT_UPDATE_CHECK=off (the opt-out stays authoritative)", async () => {
+  it("force never dials out when JIUMATE_UPDATE_CHECK=off (the opt-out stays authoritative)", async () => {
     const { impl, state } = makeFetch(() => releaseResponse("v99.0.0"));
     const service = new UpdateCheckService({
       fetchImpl: impl,
-      env: { LINSIGHT_UPDATE_CHECK: "off" },
+      env: { JIUMATE_UPDATE_CHECK: "off" },
     });
     const result = await service.check(true);
     expect(result.disabled).toBe(true);
@@ -282,13 +282,13 @@ describe("POST /api/version/update", () => {
   let t: TestApp;
   let savedEntry: string | undefined;
   beforeEach(async () => {
-    savedEntry = process.env.LINSIGHT_CLI_ENTRY;
-    delete process.env.LINSIGHT_CLI_ENTRY;
+    savedEntry = process.env.JIUMATE_CLI_ENTRY;
+    delete process.env.JIUMATE_CLI_ENTRY;
     t = await createTestApp();
   });
   afterEach(async () => {
-    if (savedEntry === undefined) delete process.env.LINSIGHT_CLI_ENTRY;
-    else process.env.LINSIGHT_CLI_ENTRY = savedEntry;
+    if (savedEntry === undefined) delete process.env.JIUMATE_CLI_ENTRY;
+    else process.env.JIUMATE_CLI_ENTRY = savedEntry;
     await t.cleanup();
   });
 
@@ -331,7 +331,7 @@ describe("POST /api/version/update", () => {
 
 describe("POST /api/version/restart", () => {
   it("is admin-only, and refuses when nothing supervises the process", async () => {
-    // Tests boot unsupervised (LINSIGHT_SUPERVISED unset): exiting would stop a service nobody
+    // Tests boot unsupervised (JIUMATE_SUPERVISED unset): exiting would stop a service nobody
     // brings back, so the route says so instead of leaving.
     const t = await createTestApp();
     try {
@@ -363,16 +363,16 @@ describe("classifyUpdateRun", () => {
     // Literal CLI copy (packages/cli/src/i18n.ts update.sourceCheckout / unknownInstall):
     // the classifier matches fragments of these exact strings.
     const source =
-      "This linsight runs from a source checkout, so there is nothing to download — update it with `git pull` and rebuild (`pnpm install && pnpm -r build`).";
+      "This jiumate runs from a source checkout, so there is nothing to download — update it with `git pull` and rebuild (`pnpm install && pnpm -r build`).";
     expect(classifyUpdateRun(0, source).status).toBe("unsupported");
     const unknown =
-      "Cannot tell how this linsight was installed (running from /opt/linsight/cli.js), so it will not be replaced. Re-install with the official installer, or upgrade with the package manager you used.";
+      "Cannot tell how this jiumate was installed (running from /opt/jiumate/cli.js), so it will not be replaced. Re-install with the official installer, or upgrade with the package manager you used.";
     expect(classifyUpdateRun(0, unknown).status).toBe("unsupported");
   });
 
   it("a clean exit without a refusal is updated and needs a restart (up-to-date included)", () => {
     const done =
-      "Upgrade 0.1.2 -> 0.1.3\nLinsight 0.1.3 installed. Run `linsight --version` in a new shell to confirm.";
+      "Upgrade 0.1.2 -> 0.1.3\nJiuMate 0.1.3 installed. Run `jiumate --version` in a new shell to confirm.";
     expect(classifyUpdateRun(0, done)).toEqual({
       status: "updated",
       output: done,

@@ -22,9 +22,9 @@ describe("parseToken", () => {
   it("takes the first line after the marker, not a shell banner before it", () => {
     // The command runs through a shell whose profile may print anything; a banner is not a
     // credential, and taking the wrong line would send junk as a cookie.
-    expect(parseToken("Welcome to nas!\nMOTD\n---linsight-auth-token---\nabc123\n")).toBe("abc123");
-    expect(parseToken("---linsight-auth-token---\n\n  abc123  \n")).toBe("abc123");
-    expect(parseToken("command not found: linsight")).toBeNull();
+    expect(parseToken("Welcome to nas!\nMOTD\n---jiumate-auth-token---\nabc123\n")).toBe("abc123");
+    expect(parseToken("---jiumate-auth-token---\n\n  abc123  \n")).toBe("abc123");
+    expect(parseToken("command not found: jiumate")).toBeNull();
   });
 
   it("asks for a bounded lifetime, and refuses a nonsensical one", () => {
@@ -43,7 +43,7 @@ describe("mintTokenOnRemote", () => {
     // Separate from a failure on purpose: the caller still has the seeded-password path, and
     // treating this as fatal would strand every machine carrying an older build.
     const outcome = await mintTokenOnRemote({ alias: "nas", user: "me" }, async () =>
-      ok("linsight: unknown command 'auth-token'"),
+      ok("jiumate: unknown command 'auth-token'"),
     );
     expect(outcome.kind).toBe("unsupported");
   });

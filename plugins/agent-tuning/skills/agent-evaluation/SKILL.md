@@ -7,7 +7,7 @@ description: Run one specified Test Agent on one specified Benchmark Case exactl
 
 Handle one evaluation request from a `run_subagent` caller: run the specified Test Agent on one Benchmark Case once, score that execution privately, and return one protocol result.
 
-The top-level Benchmark Designer or Optimizer owns all Case and Run loops, concurrency, and follow-up handling. This worker handles no other Case or Run, launches no evaluator or subagent, modifies no Agent or Benchmark, and never writes `scoreboard.yaml`. Use the Linsight CLI only to launch the specified Test Agent; do not use it to create another phase, designer, optimizer, or evaluator.
+The top-level Benchmark Designer or Optimizer owns all Case and Run loops, concurrency, and follow-up handling. This worker handles no other Case or Run, launches no evaluator or subagent, modifies no Agent or Benchmark, and never writes `scoreboard.yaml`. Use the JiuMate CLI only to launch the specified Test Agent; do not use it to create another phase, designer, optimizer, or evaluator.
 
 Operate silently. Call tools without progress messages. Across all streamed and final responses, the only worker-authored text must be the final plain protocol YAML. Emit no narration, headings, Markdown fences, summaries, private scoring details, or other text.
 
@@ -53,18 +53,18 @@ Before launch, snapshot every file under the Case's `statement/` and `rubric/` d
 
 ## Run and verify
 
-Use an existing verified Linsight CLI or repository-local launcher. Do not install or probe a launcher. Snapshot the isolated Workspace and record the existing Trace files.
+Use an existing verified JiuMate CLI or repository-local launcher. Do not install or probe a launcher. Snapshot the isolated Workspace and record the existing Trace files.
 
-Resolve `PROJECT_DIR`, then derive and verify `PROJECT_ID`, then derive and verify `LINSIGHT_HOME`. Perform these as separate shell statements in this order. Never compress the assignments onto one command line, derive a value before its input exists, or substitute another Linsight home. Before launch, confirm that `PROJECT_ID` equals the basename of `PROJECT_DIR` and `LINSIGHT_HOME` equals its dirname.
+Resolve `PROJECT_DIR`, then derive and verify `PROJECT_ID`, then derive and verify `JIUMATE_HOME`. Perform these as separate shell statements in this order. Never compress the assignments onto one command line, derive a value before its input exists, or substitute another JiuMate home. Before launch, confirm that `PROJECT_ID` equals the basename of `PROJECT_DIR` and `JIUMATE_HOME` equals its dirname.
 
 Start one foreground execution with a fresh top-level Session. With an explicit pair, use:
 
 ```bash
 PROJECT_DIR="<app_data_dir>"   # the App Data Dir value from your Environment section is the project root
 PROJECT_ID="$(basename "$PROJECT_DIR")"
-LINSIGHT_HOME="$(dirname "$PROJECT_DIR")"
-export LINSIGHT_HOME
-linsight run \
+JIUMATE_HOME="$(dirname "$PROJECT_DIR")"
+export JIUMATE_HOME
+jiumate run \
   --message "Read README.md in the current Workspace and complete the task exactly as specified there." \
   --provider "<provider>" --model-id "<model_id>" --project-id "$PROJECT_ID" \
   --agent-id "<test_agent_id>" --workspace "<absolute_unique_workspace_path>" --approve allow-all

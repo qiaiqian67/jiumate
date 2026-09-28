@@ -16,7 +16,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { parse as parseToml } from "smol-toml";
 import { parse as parseYaml } from "yaml";
-import { benchmarksDir } from "@prismshadow/linsight-core";
+import { benchmarksDir } from "@prismshadow/jiumate-core";
 import type {
   BenchmarkCaseScore,
   BenchmarkCaseSummary,

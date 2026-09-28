@@ -28,12 +28,12 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@prismshadow/linsight-core/omnimessage";
+} from "@prismshadow/jiumate-core/omnimessage";
 import type {
   OmniMessage,
   SessionMetaPayload,
   TokenCounts,
-} from "@prismshadow/linsight-core/omnimessage";
+} from "@prismshadow/jiumate-core/omnimessage";
 import {
   approvalKey,
   buildDedupIndex,

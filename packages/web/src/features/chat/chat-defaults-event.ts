@@ -7,9 +7,9 @@
  * already holds. Same-tab only by design — other tabs (and the stripped localStorage cache)
  * pick the new defaults up on their next /chat/new mount.
  */
-import type { ChatDefaultsDto, ModelRefDto } from "@prismshadow/linsight-server/api";
+import type { ChatDefaultsDto, ModelRefDto } from "@prismshadow/jiumate-server/api";
 
-export const CHAT_DEFAULTS_CHANGED_EVENT = "linsight:chat-defaults-changed";
+export const CHAT_DEFAULTS_CHANGED_EVENT = "jiumate:chat-defaults-changed";
 
 export interface ChatDefaultsChangedDetail {
   projectId: string;

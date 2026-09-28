@@ -14,7 +14,7 @@
  */
 
 /** The `schema` discriminator every case manifest carries. */
-export const INSPIRATION_SCHEMA = "linsight.inspiration";
+export const INSPIRATION_SCHEMA = "jiumate.inspiration";
 
 /** Schema version written into `case.json`. Bump when the on-disk shape changes incompatibly. */
 export const INSPIRATION_SCHEMA_VERSION = 1;

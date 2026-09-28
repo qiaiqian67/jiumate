@@ -17,7 +17,7 @@
  * inside running prose, where it is the term of art rather than the thing being pointed at.
  */
 export const zh = {
-  appName: "Linsight",
+  appName: "九川",
 
   nav: {
     chat: "对话",
@@ -44,7 +44,7 @@ export const zh = {
   machines: {
     pageTitle: "机器",
     pageDesc:
-      "本服务端 ~/.ssh/config 里声明的主机。选一台即可把当前这套 Linsight 装上去：探测对端、按需带上匹配的 Node 运行时、复制镜像并在对端完成安装。配置文件只读不写，安装使用服务端账户自己的 ssh 密钥。",
+      "本服务端 ~/.ssh/config 里声明的主机。选一台即可把当前这套 JiuMate 装上去：探测对端、按需带上匹配的 Node 运行时、复制镜像并在对端完成安装。配置文件只读不写，安装使用服务端账户自己的 ssh 密钥。",
     /** Version line under the title; `version` is what would be pushed. */
     imageVersion: (version: string) => `将安装的版本：${version}`,
     noImage:
@@ -149,7 +149,7 @@ export const zh = {
     languageInfo: "界面语言，可跟随浏览器设置。",
     /** Application page of the settings dialog (Petdex desktop pet, …). */
     applicationTitle: "应用",
-    applicationInfo: "桌面宠物等应用级偏好；切换不影响 Linsight 的工作流。",
+    applicationInfo: "桌面宠物等应用级偏好；切换不影响 JiuMate 的工作流。",
     applicationEnablePet: "显示桌面宠物",
     applicationEnablePetInfo: "在桌面客户端打开独立的宠物窗口。",
     applicationPetPicker: "宠物外观",
@@ -320,7 +320,7 @@ export const zh = {
     checkingBody: "正在检查更新…",
     upToDate: "已是最新版本",
     checkFailed: "检查更新失败，请稍后重试",
-    checkDisabled: "更新检查已关闭（LINSIGHT_UPDATE_CHECK=off）",
+    checkDisabled: "更新检查已关闭（JIUMATE_UPDATE_CHECK=off）",
     releaseNotes: "更新说明",
     openReleases: "打开 Releases 页面",
     /** What "download and update" does, per backend. */
@@ -343,10 +343,10 @@ export const zh = {
     ready: (v: string | null) => (v !== null ? `v${v} 已就绪` : "更新已就绪"),
     readyBodyRelease: "重启服务即可运行新版本，正在运行的任务会被打断；服务回来后页面会自动刷新。",
     /** Mirrors the shell's native restart prompt: the interruption warning must not disappear on the web path. */
-    readyBodyClient: "Linsight 将重启以完成更新，正在运行的任务会被打断。",
-    /** Nothing supervises the server process (not started through linsight web / linsight server), so the restart is the user's. */
+    readyBodyClient: "JiuMate 将重启以完成更新，正在运行的任务会被打断。",
+    /** Nothing supervises the server process (not started through jiumate web / jiumate server), so the restart is the user's. */
     readyBodyManual:
-      "新版本已安装。当前服务不是由 linsight web 或 linsight server 托管，无法从这里重启：请在终端重新运行 linsight web（或 linsight server）。",
+      "新版本已安装。当前服务不是由 jiumate web 或 jiumate server 托管，无法从这里重启：请在终端重新运行 jiumate web（或 jiumate server）。",
     restartNow: "重启并更新",
     restarting: "正在重启…",
     restartingBodyRelease: "服务回来后页面会自动刷新。",
@@ -356,7 +356,7 @@ export const zh = {
     /** Why this install cannot update itself. */
     unsupportedDev: "开发运行不支持自更新",
     unsupportedNonAppImage: "Linux 上只有 AppImage 版本支持自更新——包安装请通过包管理器更新",
-    unsupportedNotViaCli: "当前服务不是通过 linsight web 或 linsight server 启动的，无法从这里更新",
+    unsupportedNotViaCli: "当前服务不是通过 jiumate web 或 jiumate server 启动的，无法从这里更新",
     unsupportedCli: "当前安装方式不支持在线更新",
     // —— toasts: outcomes that land while the modal is closed ——
     foundNew: (v: string) => `发现新版本 v${v}，打开更新入口即可下载`,
@@ -369,7 +369,7 @@ export const zh = {
     clientUpdateFailed: (detail: string) => `客户端更新失败：${detail}`,
     /** A download / restart request failed before the backend could act; `detail` is apiErrorText output. */
     requestFailed: (detail: string) => `无法执行更新操作：${detail}`,
-    restartTimedOut: "服务迟迟没有回来，请查看终端里 linsight web 的输出后手动刷新页面",
+    restartTimedOut: "服务迟迟没有回来，请查看终端里 jiumate web 的输出后手动刷新页面",
   },
 
   /**
@@ -473,7 +473,7 @@ export const zh = {
       "首次使用请打开服务端启动输出中的首次登录链接，认领内置管理员 admin 并设置密码。这里没有可输入的初始密码",
     /** Login footer line 2: the offline rescue for a forgotten admin password (other users ask the admin instead). */
     forgotAdminNote:
-      "忘记管理员密码时，停止服务后执行 linsight server reset-admin-password 重置为新的初始密码",
+      "忘记管理员密码时，停止服务后执行 jiumate server reset-admin-password 重置为新的初始密码",
   },
 
   account: {
@@ -650,7 +650,7 @@ export const zh = {
       ["{{DATE}}", "当前日期"],
       [
         "{{PROJECT_DIR}}",
-        "Linsight 应用数据根目录（存放全部 Agent 数据与项目级数据；不是本次任务的工作目录）",
+        "JiuMate 应用数据根目录（存放全部 Agent 数据与项目级数据；不是本次任务的工作目录）",
       ],
       ["{{AGENT_ID}}", "当前 Agent id"],
       ["{{CWD}}", "Workspace 绝对路径"],
@@ -1251,7 +1251,7 @@ export const zh = {
   /**
    * 灵感库（features/inspiration/*）：内置案例 + 管理员自建案例，按分类归档。
    * 内置案例的标题／描述／提示词不在这里——它们随案例本身放在
-   * `@prismshadow/linsight-inspirations/presets` 的 title/titleZh 等字段里，这样管理员自建的
+   * `@prismshadow/jiumate-inspirations/presets` 的 title/titleZh 等字段里，这样管理员自建的
    * 案例与内置案例是同一种东西。这一组只放 chrome。
    */
   inspiration: {
@@ -2272,7 +2272,7 @@ export const zh = {
     troubleConnError:
       "连接状态显示错误？检查凭证是否正确；飞书还需确认 API 域名与事件订阅方式（长连接）。",
     troubleOnePoller:
-      "Telegram 提示已有其他程序在轮询？一个 Bot Token 同一时刻只能被一个程序使用——关闭正在占用它的另一个 Linsight 服务端或机器人脚本，或为该会话单独建一个机器人。手动执行的 getUpdates（例如用 curl 查看 Telegram 那边积压了什么）同样算作「另一个程序」：跑它之前先在这里停用连接。而且手动查看也可能把它们丢掉——任何带 offset 的调用都会确认它之前的全部更新，应用自己的下一次连接也会清空积压——所以复测请重新发一条新消息，而不是指望刚才看到的那几条。",
+      "Telegram 提示已有其他程序在轮询？一个 Bot Token 同一时刻只能被一个程序使用——关闭正在占用它的另一个 JiuMate 服务端或机器人脚本，或为该会话单独建一个机器人。手动执行的 getUpdates（例如用 curl 查看 Telegram 那边积压了什么）同样算作「另一个程序」：跑它之前先在这里停用连接。而且手动查看也可能把它们丢掉——任何带 offset 的调用都会确认它之前的全部更新，应用自己的下一次连接也会清空积压——所以复测请重新发一条新消息，而不是指望刚才看到的那几条。",
     troubleGroupPrivacy:
       "在 Telegram 群里发消息，机器人毫无反应？Telegram 的 Group Privacy 默认开启，此时不担任该群管理员的机器人只能收到明确指向它的命令（如 /start@your_bot）和对它自己消息的回复，普通群消息根本不会送达，连接本身也没有任何异常。把机器人设为该群的管理员即可单独解决，管理员始终收到全部消息。也可以到 @BotFather 用 /setprivacy 关闭 Group Privacy，然后把机器人移出该群再重新拉入——已在的群不会自动生效。",
     /** WeChat has no group inbound at all — the answer to "I @-ed it in a group and nothing happened". */
@@ -2385,7 +2385,7 @@ export const zh = {
      *  so the dropdown can echo the exact capability string rather than a generic "unavailable" copy. */
     exportUnavailableReason: (reason: string): string => reason,
     previewNotIsolatedHint:
-      "当前访问地址无法提供独立预览源，页面将以沙箱模式打开：localStorage、Cookie 与第三方 embed 不可用。经 127.0.0.1 或 localhost 访问，或配置 LINSIGHT_PREVIEW_ORIGIN 即可解除。",
+      "当前访问地址无法提供独立预览源，页面将以沙箱模式打开：localStorage、Cookie 与第三方 embed 不可用。经 127.0.0.1 或 localhost 访问，或配置 JIUMATE_PREVIEW_ORIGIN 即可解除。",
     refresh: "刷新",
     root: "根目录",
     empty: "空目录",

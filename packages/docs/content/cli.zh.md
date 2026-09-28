@@ -1,63 +1,63 @@
 ---
 title: CLI 参考
-description: linsight 命令的子命令与选项完整参考。
+description: jiumate 命令的子命令与选项完整参考。
 ---
 
-CLI 由 npm 包 `@prismshadow/linsight-cli` 提供，命令为 `linsight`。不带子命令执行 `linsight` 时打印帮助；`-v, --version` 打印当前构建的单行身份，`linsight version --json` 打印其完整信息。启动时自动加载工作目录下的 `.env`。
+CLI 由 npm 包 `@prismshadow/jiumate-cli` 提供，命令为 `jiumate`。不带子命令执行 `jiumate` 时打印帮助；`-v, --version` 打印当前构建的单行身份，`jiumate version --json` 打印其完整信息。启动时自动加载工作目录下的 `.env`。
 
-CLI 是服务端的瘦客户端：所有会话相关命令（`run`、`chat`、`ls`、`input`、`logs`、`agent`、`project`、`cost`、`schedule`）都向 Linsight 服务端发 HTTP 请求并渲染回复——Task 在服务端执行，Session 记录在服务端索引里，Web App 能看到 CLI 创建的一切（反之亦然）。只有 `config` 仍直接编辑 Project 配置文件，`server` / `web` 则负责启动服务本身。
+CLI 是服务端的瘦客户端：所有会话相关命令（`run`、`chat`、`ls`、`input`、`logs`、`agent`、`project`、`cost`、`schedule`）都向 JiuMate 服务端发 HTTP 请求并渲染回复——Task 在服务端执行，Session 记录在服务端索引里，Web App 能看到 CLI 创建的一切（反之亦然）。只有 `config` 仍直接编辑 Project 配置文件，`server` / `web` 则负责启动服务本身。
 
 ## 服务器连接
 
 连接本机服务器的 CLI 无需登录。连接按以下顺序解析，先命中先用：
 
 1. `--server <url>`——显式指定目标。
-2. `LINSIGHT_API_URL`——同上，来自环境变量。服务端驱动的会话会把它（连同 `LINSIGHT_API_TOKEN`、`LINSIGHT_PROJECT_ID`、`LINSIGHT_AGENT_ID`、`LINSIGHT_SESSION_ID`）注入每个工具子进程，因此 Agent 自己执行的 `linsight` 命令天然连回运行它的那台服务器。
-3. 数据根目录（`LINSIGHT_HOME`，否则 `~/.linsight/data`）下存活的 `server.lock`：附着到本机正在运行的服务器。
+2. `JIUMATE_API_URL`——同上，来自环境变量。服务端驱动的会话会把它（连同 `JIUMATE_API_TOKEN`、`JIUMATE_PROJECT_ID`、`JIUMATE_AGENT_ID`、`JIUMATE_SESSION_ID`）注入每个工具子进程，因此 Agent 自己执行的 `jiumate` 命令天然连回运行它的那台服务器。
+3. 数据根目录（`JIUMATE_HOME`，否则 `~/.jiumate/data`）下存活的 `server.lock`：附着到本机正在运行的服务器。
 4. 自动拉起：以随机端口分离启动一个本机服务器（输出写入 `<root>/logs/server-auto-<date>.log`），等待就绪后附着。两个 CLI 竞争拉起时，输家的子进程自行退出，双方都附着到赢家。
 
-鉴权使用本机 API token：服务端每次启动都把新 token 写入 `<root>/api-token`（仅属主可读，逐次启动轮换），CLI 以 `Authorization: Bearer` 发送。`LINSIGHT_API_TOKEN` 优先于文件；文件只在目标为回环地址时读取——连接远端 `--server` 必须显式设置 `LINSIGHT_API_TOKEN`。持有该文件即等于管理员权限，这是有意设计：对数据根目录的本机文件系统访问本就等于管理员权限（与 `linsight server reset-admin-password` 同一条规则）。
+鉴权使用本机 API token：服务端每次启动都把新 token 写入 `<root>/api-token`（仅属主可读，逐次启动轮换），CLI 以 `Authorization: Bearer` 发送。`JIUMATE_API_TOKEN` 优先于文件；文件只在目标为回环地址时读取——连接远端 `--server` 必须显式设置 `JIUMATE_API_TOKEN`。持有该文件即等于管理员权限，这是有意设计：对数据根目录的本机文件系统访问本就等于管理员权限（与 `jiumate server reset-admin-password` 同一条规则）。
 
 ## 全局约定
 
 - 模型引用：模型身份始终是 `(provider, model_id)` 二元组。`--model-id` 填上游模型 id，`--provider` 填其所属分组；provider 绝不推断、绝不猜测、也没有缺省值。`run` / `chat` 上这对参数整体可选——两个都给即指定模型，两个都不给则使用 Project 默认模型——但只给其中一个是错误。
-- Project 与 Agent 缺省值：`--project-id` 依次回落到 `LINSIGHT_PROJECT_ID`、`default_project`；`--agent-id` 依次回落到 `LINSIGHT_AGENT_ID`、`default_agent`。在服务端驱动的会话内，这些环境变量即会话自身的坐标。
-- Session 引用：凡接受 session id 的地方（`input`、`logs`、`run --session`、`chat --resume`），完整 id 或任何唯一片段皆可——`linsight ls` 打印的末尾 8 位十六进制就是为此准备的简写。片段有歧义时报错并列出候选。
-- 最近会话缺省：凡 session id 可省的地方——`input [session_id]`、`logs [session_id]`、`chat --resume`——省略即指**当前 Agent 最近一次会话**（`--agent-id` 决定是哪个 Agent，回落规则同上）。`input` 与 `logs` 会在 stderr 打印一行暗色 `[latest]` 说明选中了哪个会话，目标因此从不含糊，stdout 上的 `--json` 也仍可解析。该 Agent 一个会话都没有时，打印一行指向 `linsight run` / `linsight chat` 的提示并以非零码退出。
+- Project 与 Agent 缺省值：`--project-id` 依次回落到 `JIUMATE_PROJECT_ID`、`default_project`；`--agent-id` 依次回落到 `JIUMATE_AGENT_ID`、`default_agent`。在服务端驱动的会话内，这些环境变量即会话自身的坐标。
+- Session 引用：凡接受 session id 的地方（`input`、`logs`、`run --session`、`chat --resume`），完整 id 或任何唯一片段皆可——`jiumate ls` 打印的末尾 8 位十六进制就是为此准备的简写。片段有歧义时报错并列出候选。
+- 最近会话缺省：凡 session id 可省的地方——`input [session_id]`、`logs [session_id]`、`chat --resume`——省略即指**当前 Agent 最近一次会话**（`--agent-id` 决定是哪个 Agent，回落规则同上）。`input` 与 `logs` 会在 stderr 打印一行暗色 `[latest]` 说明选中了哪个会话，目标因此从不含糊，stdout 上的 `--json` 也仍可解析。该 Agent 一个会话都没有时，打印一行指向 `jiumate run` / `jiumate chat` 的提示并以非零码退出。
 - `--json` 输出原始 JSON 而非渲染 / 表格形式；`--server <url>` 指定目标服务器（见上）。
-- 调用方上下文缺省值：在 harness Agent 内部（环境里存在 `LINSIGHT_SESSION_ID`）时，`run` / `chat` 新建会话的每个**未指定**字段都缺省取调用方会话的实时值——Workspace、模型对、审批模式与思考等级——与 `run_subagent` 派生子会话的继承是同一条约定，两个入口因此读作一套规则。逐字段优先级为显式选项 > 调用方值 > 普通缺省；查询失败打印一行暗色警告并回落普通缺省；不在 Agent 内时一切不变。（`--project-id` / `--agent-id` 保持上文的环境变量缺省。）
-- `--timeout <duration>`（`run`、`input` 与 `logs -f` 上）以软让出语义限定等待——即 `exec_command` yield 窗口的模型应用在 CLI 的等待上：到时命令干净脱开并以 0 退出，任务继续在服务端运行，之后可用 `linsight input` / `linsight logs` 接续。接受形式：`30s`、`5m`、`2h`，或表示秒数的纯整数；其余形式一律拒绝。`--timeout 0` 是窗口的退化形式——送达后立即返回（`--json` 下为 `{sessionId, status: "running"}`）：一个旋钮同时覆盖「不等待」。不带该选项 = 无限等待。（`run --background` 仍是**新建任务**的惯用「发完即走」：它为脚本打印裸 session id，在创建时刻即脱开。）
+- 调用方上下文缺省值：在 harness Agent 内部（环境里存在 `JIUMATE_SESSION_ID`）时，`run` / `chat` 新建会话的每个**未指定**字段都缺省取调用方会话的实时值——Workspace、模型对、审批模式与思考等级——与 `run_subagent` 派生子会话的继承是同一条约定，两个入口因此读作一套规则。逐字段优先级为显式选项 > 调用方值 > 普通缺省；查询失败打印一行暗色警告并回落普通缺省；不在 Agent 内时一切不变。（`--project-id` / `--agent-id` 保持上文的环境变量缺省。）
+- `--timeout <duration>`（`run`、`input` 与 `logs -f` 上）以软让出语义限定等待——即 `exec_command` yield 窗口的模型应用在 CLI 的等待上：到时命令干净脱开并以 0 退出，任务继续在服务端运行，之后可用 `jiumate input` / `jiumate logs` 接续。接受形式：`30s`、`5m`、`2h`，或表示秒数的纯整数；其余形式一律拒绝。`--timeout 0` 是窗口的退化形式——送达后立即返回（`--json` 下为 `{sessionId, status: "running"}`）：一个旋钮同时覆盖「不等待」。不带该选项 = 无限等待。（`run --background` 仍是**新建任务**的惯用「发完即走」：它为脚本打印裸 session id，在创建时刻即脱开。）
 - 参数错误按界面语言呈现：缺少参数、缺少必填选项、未知选项或命令拼错时，打印一行本地化说明，附上该命令自身的用法与 `--help` 指引，并以非零码退出。
-- 数据根目录（仅 `config`）：`--root <dir>` 覆盖数据根目录，优先级为 `--root` > 环境变量 `LINSIGHT_HOME` > `~/.linsight/data`。
+- 数据根目录（仅 `config`）：`--root <dir>` 覆盖数据根目录，优先级为 `--root` > 环境变量 `JIUMATE_HOME` > `~/.jiumate/data`。
 
-## linsight run
+## jiumate run
 
 在服务端创建（或复用）一个 Session，发送单条消息，流式渲染直至 Task 结束，打印统计行后退出。完成时退出码为 0；goal 模式仅目标 `complete` 时退出 0。
 
 ```bash
-linsight run -m "总结当前目录的代码结构"
-linsight run -m "继续" --session 402a2e24        # 用片段复用既有会话
-linsight run -m "长任务" --background            # 立即返回 session id
+jiumate run -m "总结当前目录的代码结构"
+jiumate run -m "继续" --session 402a2e24        # 用片段复用既有会话
+jiumate run -m "长任务" --background            # 立即返回 session id
 ```
 
 | 选项 | 说明 |
 | --- | --- |
 | `-m, --message <message>` | 必填，要发送的消息 |
-| `--project-id <id>` | 指定 Project（缺省依次取 `LINSIGHT_PROJECT_ID`、`default_project`） |
-| `--agent-id <id>` | 指定 Agent（缺省依次取 `LINSIGHT_AGENT_ID`、`default_agent`） |
+| `--project-id <id>` | 指定 Project（缺省依次取 `JIUMATE_PROJECT_ID`、`default_project`） |
+| `--agent-id <id>` | 指定 Agent（缺省依次取 `JIUMATE_AGENT_ID`、`default_agent`） |
 | `--workspace <path>` | Workspace 目录；相对路径按 CLI 的当前目录解析，缺省即当前目录。目录必须存在于服务器所在机器——本机默认流程里就是这台机器 |
 | `--model-id <id>` | 指定模型的上游 id，须与 `--provider` 同时给出；两者都不给时使用 Project 默认模型 |
 | `--provider <group>` | 模型所属 Provider 分组，给出 `--model-id` 时必填 |
 | `--approve <mode>` | 审批模式，见下文（缺省 `allow-all`）。与 `--session` 同用时 PATCH 该会话的粘性模式 |
 | `--thinking <level>` | 发起任务前把会话的思考等级钉为 `low` / `medium` / `high` / `xhigh` / `max`，自会话的下一次 LLM 请求起生效。省略时按会话钉定值（否则 Agent 配置）生效 |
 | `--session <sessionId>` | 复用既有 Session（完整 id 或唯一片段），不再新建；不能与 `--workspace` 及模型对同用 |
-| `--background` | 提交任务后立即退出并打印 session id（`--json` 下为 `{"sessionId"}`）；任务在服务端继续运行，可用 `linsight logs -f` 跟随 |
+| `--background` | 提交任务后立即退出并打印 session id（`--json` 下为 `{"sessionId"}`）；任务在服务端继续运行，可用 `jiumate logs -f` 跟随 |
 | `--timeout <duration>` | 软让出等待预算（见「全局约定」）：到时打印已渲染内容与一行暗色「仍在运行」提示（含 session id；`--json` 下为 `{sessionId, status: "running", text}`）并以 0 退出——任务不被中止。`--timeout 0` 在 POST 后立即返回（`--json` 下为 `{sessionId, status: "running"}`，无 `text`）。不能与 `--background` 同用 |
 | `--goal [budget]` | 目标模式：消息即目标，服务端循环直至终态；可选值为 token 预算（如 `500k`） |
 | `--json` | 输出最终的 `{sessionId, status, text}` 对象而非渲染流（`text` 为主会话各条助手文本消息拼接） |
 | `--server <url>` | 目标服务器（见「服务器连接」） |
 
-## linsight chat
+## jiumate chat
 
 交互式 REPL，每输入一行发起一个 Task。选项与 `run` 相同（除 `-m, --message` 外），另加：
 
@@ -67,7 +67,7 @@ linsight run -m "长任务" --background            # 立即返回 session id
 | `--verbose` | 显示完整工具输出；缺省折叠过长的工具输出（见下文） |
 | `--server <url>` | 目标服务器（见「服务器连接」） |
 
-使用 `--resume` 时，Workspace 与模型由原 Session 锁定，不可再用 `--workspace` / `--model-id` / `--provider` 覆盖。`--resume` 下仍接受 `--thinking`：它重新钉住该 Session，自下一次 LLM 请求起生效（中途更换会使提供商缓存失效，建议先压缩）。退出时会打印可直接复制的 `linsight chat --resume <sessionId>` 命令。
+使用 `--resume` 时，Workspace 与模型由原 Session 锁定，不可再用 `--workspace` / `--model-id` / `--provider` 覆盖。`--resume` 下仍接受 `--thinking`：它重新钉住该 Session，自下一次 LLM 请求起生效（中途更换会使提供商缓存失效，建议先压缩）。退出时会打印可直接复制的 `jiumate chat --resume <sessionId>` 命令。
 
 REPL 内命令：
 
@@ -81,7 +81,7 @@ REPL 内命令：
 | `/verbose` | 在折叠与完整工具输出之间切换 |
 | `/exit`、`/quit` | 退出 |
 
-过长的工具输出（`exec_command` 的结果、`read_file` 读回的整个文件）缺省折叠显示，避免刷屏：前 4 行照常流式打印，输出结束时打印省略标记（`……（另有 N 行，/verbose 显示完整输出）`）与最后 4 行；不超过 9 行的输出完整显示。这只是显示层截断——模型、Trace 与 Web App 收到的始终是完整输出。`/verbose`（或启动时加 `--verbose`）可关闭折叠、对后续输出生效；`--resume` 恢复的历史按同一规则折叠。`linsight run` 从不折叠：它的输出供管道与嵌套 CLI 消费。
+过长的工具输出（`exec_command` 的结果、`read_file` 读回的整个文件）缺省折叠显示，避免刷屏：前 4 行照常流式打印，输出结束时打印省略标记（`……（另有 N 行，/verbose 显示完整输出）`）与最后 4 行；不超过 9 行的输出完整显示。这只是显示层截断——模型、Trace 与 Web App 收到的始终是完整输出。`/verbose`（或启动时加 `--verbose`）可关闭折叠、对后续输出生效；`--resume` 恢复的历史按同一规则折叠。`jiumate run` 从不折叠：它的输出供管道与嵌套 CLI 消费。
 
 Ctrl-C 的行为依状态而定：
 
@@ -92,14 +92,14 @@ Ctrl-C 的行为依状态而定：
 | 输入缓冲非空 | 清空当前输入 |
 | 空闲且缓冲为空 | 显示退出确认（y/N） |
 
-## linsight ls
+## jiumate ls
 
 列出 Project 的会话——覆盖全部 Agent，或用 `--agent-id` 限定一个。列依次为：短 id（其余命令可作片段使用的末尾 8 位十六进制）、Agent、标题、运行中 / 空闲、最近活动、Workspace 尾段。已归档会话仅在 `-a` 下出现。
 
 ```bash
-linsight ls
-linsight ls --agent-id default_agent -a
-linsight ls --json
+jiumate ls
+jiumate ls --agent-id default_agent -a
+jiumate ls --json
 ```
 
 | 选项 | 说明 |
@@ -109,18 +109,18 @@ linsight ls --json
 | `--days <n>` | 只列最近 n 个自然日内活跃过的会话——今天算第 1 天，`--days 2` 即昨天加今天（与 `cost --days` 同一自然日口径）。可与 `-a`、`--json` 组合 |
 | `--json` / `--server <url>` | 同各处约定 |
 
-## linsight input
+## jiumate input
 
-向会话发送消息——或在不带 `-m` 时轮询其最近回复。session id 可以省略：省略即取当前 Agent 最近一次会话（见「全局约定」），于是裸 `linsight input` 正好回答「我的 Agent 最后说了什么」。带 `-m` 时：运行中的会话按插话（steering）送达（随下一轮交给模型），空闲会话则发起新 Task；缺省等待并渲染直至本轮结束，`--timeout` 限定等待（软让出，见「全局约定」；`--timeout 0` 在送达后立即返回）。
+向会话发送消息——或在不带 `-m` 时轮询其最近回复。session id 可以省略：省略即取当前 Agent 最近一次会话（见「全局约定」），于是裸 `jiumate input` 正好回答「我的 Agent 最后说了什么」。带 `-m` 时：运行中的会话按插话（steering）送达（随下一轮交给模型），空闲会话则发起新 Task；缺省等待并渲染直至本轮结束，`--timeout` 限定等待（软让出，见「全局约定」；`--timeout 0` 在送达后立即返回）。
 
 不带 `-m` 时是**轮询**，与 `input_subagent` 的空 prompt 语义互为镜像：打印该会话最近一条完整助手文本（取自历史尾部的幂等「最新答案」快照；跳过思考与工具输出），不排队也不插话。运行中的会话先静默等待——给出 `--timeout` 时以其为上限，`--timeout 0` 立即取快照——到时仍在运行则打印当前最新文本并附「仍在运行」提示（退出码 0）。
 
 ```bash
-linsight input 402a2e24 -m "顺便检查一下测试"
-linsight input 402a2e24 -m "排个队" --timeout 0    # 送达后立即返回
-linsight input 402a2e24                    # 轮询：打印最近一条助手回复
-linsight input                             # 轮询当前 Agent 最近一次会话
-linsight input 402a2e24 --timeout 5m       # 轮询，最多等运行中的一轮 5 分钟
+jiumate input 402a2e24 -m "顺便检查一下测试"
+jiumate input 402a2e24 -m "排个队" --timeout 0    # 送达后立即返回
+jiumate input 402a2e24                    # 轮询：打印最近一条助手回复
+jiumate input                             # 轮询当前 Agent 最近一次会话
+jiumate input 402a2e24 --timeout 5m       # 轮询，最多等运行中的一轮 5 分钟
 ```
 
 | 选项 | 说明 |
@@ -131,14 +131,14 @@ linsight input 402a2e24 --timeout 5m       # 轮询，最多等运行中的一�
 | `--agent-id <id>` | 省略 session id 时，取哪个 Agent 的最近一次会话 |
 | `--json` / `--server <url>` | 同各处约定；带 `-m` 的 `--json` 输出 `{sessionId, status, text}`（status 为 `completed` / `aborted` / `running`；`--timeout 0` 的形状不含 `text`），轮询形式输出 `{sessionId, status, text}`（status 为 `idle` / `running`，尚无回复时 text 为 `""`） |
 
-## linsight logs
+## jiumate logs
 
-用与 REPL 相同的渲染器渲染会话历史。session id 可以省略：省略即取当前 Agent 最近一次会话（见「全局约定」），裸 `linsight logs` 因此就是「刚才发生了什么」。
+用与 REPL 相同的渲染器渲染会话历史。session id 可以省略：省略即取当前 Agent 最近一次会话（见「全局约定」），裸 `jiumate logs` 因此就是「刚才发生了什么」。
 
 ```bash
-linsight logs                    # 当前 Agent 最近一次会话
-linsight logs 402a2e24 --tail 20
-linsight logs 402a2e24 -f
+jiumate logs                    # 当前 Agent 最近一次会话
+jiumate logs 402a2e24 --tail 20
+jiumate logs 402a2e24 -f
 ```
 
 | 选项 | 说明 |
@@ -150,11 +150,11 @@ linsight logs 402a2e24 -f
 | `--agent-id <id>` | 省略 session id 时，取哪个 Agent 的最近一次会话 |
 | `--json` / `--server <url>` | 同各处约定；`--json` 输出原始消息数组（`-f` 下按行追加到达的 JSON 消息） |
 
-## linsight agent
+## jiumate agent
 
 ```bash
-linsight agent ls
-linsight agent create --agent-id helper --name "Helper" --plugins software-development,goal
+jiumate agent ls
+jiumate agent create --agent-id helper --name "Helper" --plugins software-development,goal
 ```
 
 `agent ls` 列出 Project 的 Agent（id、名称、会话数、描述）。`agent create` 创建一个：
@@ -166,18 +166,18 @@ linsight agent create --agent-id helper --name "Helper" --plugins software-devel
 | `--plugins <a,b>` | 逗号分隔的插件库插件名，预装进新 Agent（各自的 Skill 与钩子包）；未知名称在创建任何东西之前即被拒绝 |
 | `--project-id <id>` / `--json` / `--server <url>` | 同各处约定 |
 
-## linsight project
+## jiumate project
 
-`linsight project ls` 列出当前账号可用的 Project（自有与被授权），含 id、显示名与角色。`--json` / `--server` 同各处约定。
+`jiumate project ls` 列出当前账号可用的 Project（自有与被授权），含 id、显示名与角色。`--json` / `--server` 同各处约定。
 
-## linsight cost
+## jiumate cost
 
 来自服务端用量聚合的 Token 用量与成本。缺省打印汇总卡片——今日 / 近 7 天 / 累计（与任何范围参数无关，恒计算）；`--by` 改为打印分组表格。
 
 ```bash
-linsight cost
-linsight cost --days 7 --by model
-linsight cost --from 2026-08-01 --to 2026-08-25 --by agent
+jiumate cost
+jiumate cost --days 7 --by model
+jiumate cost --from 2026-08-01 --to 2026-08-25 --by agent
 ```
 
 | 选项 | 说明 |
@@ -190,17 +190,17 @@ linsight cost --from 2026-08-01 --to 2026-08-25 --by agent
 
 成本后缀 `+` 表示部分和（该桶里有模型未配置价格）；`-` 表示完全没有计价用量。
 
-## linsight schedule
+## jiumate schedule
 
-`linsight schedule ls` 列出 Project 的定时任务——覆盖全部 Agent，或用 `--agent-id` 限定。列依次为：Agent、名称、启用与否、开始时刻、周期（一次性任务为「一次性」）、目标（绑定会话的短 id 或「新建会话」）、最近触发，以及非 active 状态的标记（`expired` / `done` / `missed` / `invalid`；无法解析的任务文件也会列出并标记 invalid）。`--json` / `--server` 同各处约定。
+`jiumate schedule ls` 列出 Project 的定时任务——覆盖全部 Agent，或用 `--agent-id` 限定。列依次为：Agent、名称、启用与否、开始时刻、周期（一次性任务为「一次性」）、目标（绑定会话的短 id 或「新建会话」）、最近触发，以及非 active 状态的标记（`expired` / `done` / `missed` / `invalid`；无法解析的任务文件也会列出并标记 invalid）。`--json` / `--server` 同各处约定。
 
 `add` / `update` / `rm` 经 API 管理定时任务，由 API 写入任务的 TOML 文件——**文件仍是唯一真相源**，CLI 是带校验的写入器（与模型配置、vault 同一模式：一律经系统接口更新、校验收敛在接口层，手编依然可行）。API 错误原样透出，Agent 因此获得同步校验，而非手编 TOML 时要等对账周期的滞后。
 
 ```bash
-linsight schedule add daily-report --prompt "总结今天的进展" --start-at 2026-09-01T09:00:00Z --period 1d
-linsight schedule add once-now --prompt "检查部署" --start-at now --session-id 402a2e24
-linsight schedule update daily-report --period 12h --disable
-linsight schedule rm daily-report
+jiumate schedule add daily-report --prompt "总结今天的进展" --start-at 2026-09-01T09:00:00Z --period 1d
+jiumate schedule add once-now --prompt "检查部署" --start-at now --session-id 402a2e24
+jiumate schedule update daily-report --period 12h --disable
+jiumate schedule rm daily-report
 ```
 
 | 选项 | 说明 |
@@ -226,7 +226,7 @@ linsight schedule rm daily-report
 
 交互询问时输入 `y` / `yes` 批准、`n` / `no` 拒绝；直接回车默认为批准。
 
-## linsight config
+## jiumate config
 
 管理 Project 的模型配置、Agent 级 vault 环境变量与界面语言。除 `lang` 外，以下子命令均支持 `--project-id <id>`（缺省为默认 Project）与 `--root <dir>`。
 
@@ -235,7 +235,7 @@ linsight schedule rm daily-report
 新增或更新模型条目：
 
 ```bash
-linsight config model add --provider deepseek --model-id deepseek-v4-pro --api-key sk-... --set-default
+jiumate config model add --provider deepseek --model-id deepseek-v4-pro --api-key sk-... --set-default
 ```
 
 | 选项 | 说明 |
@@ -257,10 +257,10 @@ linsight config model add --provider deepseek --model-id deepseek-v4-pro --api-k
 ### model default / model vision / model list / model remove
 
 ```bash
-linsight config model default --model-id <id> --provider <group>
-linsight config model vision --model-id <id> --provider <group>
-linsight config model list
-linsight config model remove --model-id <id> --provider <group>
+jiumate config model default --model-id <id> --provider <group>
+jiumate config model vision --model-id <id> --provider <group>
+jiumate config model list
+jiumate config model remove --model-id <id> --provider <group>
 ```
 
 - `model default` 设置 Project 默认模型；`model vision` 设置视觉代理模型。两者的 `--model-id` 与 `--provider` 均为必填，且引用必须已存在于模型列表。
@@ -272,9 +272,9 @@ linsight config model remove --model-id <id> --provider <group>
 按 Agent 存储环境变量，写入 `agent_state/.vault.toml`；值只注入工具子进程的环境变量，绝不进入模型上下文。
 
 ```bash
-linsight config vault set --key GITHUB_TOKEN --value ghp_xxx
-linsight config vault list
-linsight config vault remove --key GITHUB_TOKEN
+jiumate config vault set --key GITHUB_TOKEN --value ghp_xxx
+jiumate config vault list
+jiumate config vault remove --key GITHUB_TOKEN
 ```
 
 | 子命令 | 选项 |
@@ -286,17 +286,17 @@ linsight config vault remove --key GITHUB_TOKEN
 ### lang
 
 ```bash
-linsight config lang zh
+jiumate config lang zh
 ```
 
-设置 CLI 界面语言（`en` 或 `zh`），将 `LINSIGHT_LANG` 写入 shell 启动文件。
+设置 CLI 界面语言（`en` 或 `zh`），将 `JIUMATE_LANG` 写入 shell 启动文件。
 
-## linsight server / linsight web
+## jiumate server / jiumate web
 
 两者是同一服务进程的两个入口：`server` 为 headless 模式；`web` 额外等待服务就绪、打印 URL 并打开浏览器。
 
 ```bash
-linsight web
+jiumate web
 ```
 
 | 选项 | 说明 |
@@ -307,37 +307,37 @@ linsight web
 
 端口 / 地址优先级：命令行选项 > 环境变量 `PORT` / `HOST`（含 `.env`）> 默认值。
 
-两者都把服务作为子进程运行，自己留在后面做托管：终端的 Ctrl+C 会送达服务，命令以服务的退出码退出；当服务请求重启——`linsight update` 替换安装后，Web App 里的「重启并更新」——托管进程会在新版本上重新拉起它，并打印一行提示。经 `tsx` 的开发运行无法被普通 node 重新拉起，改为在本进程内运行服务；此时 Web App 会提示管理员手动重启。
+两者都把服务作为子进程运行，自己留在后面做托管：终端的 Ctrl+C 会送达服务，命令以服务的退出码退出；当服务请求重启——`jiumate update` 替换安装后，Web App 里的「重启并更新」——托管进程会在新版本上重新拉起它，并打印一行提示。经 `tsx` 的开发运行无法被普通 node 重新拉起，改为在本进程内运行服务；此时 Web App 会提示管理员手动重启。
 
-### linsight server status
+### jiumate server status
 
 以单行 JSON 打印本数据根目录的服务状态与本机 id。无论是否有服务在运行它都会作答——依据是数据根目录本身，而不是某个存活的进程：
 
 ```bash
-linsight server status
+jiumate server status
 # {"running":true,"port":7364,"pid":41233,"machineId":"LNrJdHAZJ91G58i0"}
 ```
 
-`running` 为真要求记录的 pid 存活**且**其端口可建立连接，因此被回收复用的 pid 不会被读成一个活着的服务。`machineId` 在本机从未启动过服务之前是 `null`——该 id 在首次启动时铸出，此后永不改变。数据根目录一如既往由 `LINSIGHT_HOME` 选定。
+`running` 为真要求记录的 pid 存活**且**其端口可建立连接，因此被回收复用的 pid 不会被读成一个活着的服务。`machineId` 在本机从未启动过服务之前是 `null`——该 id 在首次启动时铸出，此后永不改变。数据根目录一如既往由 `JIUMATE_HOME` 选定。
 
 机器页正是通过 ssh 运行这条命令来询问一台机器的状态，这也是它输出 JSON 而非人类散文的原因。
 
-### linsight server reset-admin-password
+### jiumate server reset-admin-password
 
 忘记 Web 管理员密码时的离线救援。须在服务停止后执行——数据根目录上有服务在运行时会拒绝：
 
 ```bash
-linsight server reset-admin-password
+jiumate server reset-admin-password
 ```
 
-内置 `admin` 会被恢复成未认领状态——密码随机生成且无人见过，admin 的全部会话一并吊销。重新启动服务，打开它打印的首次登录链接即可设置新密码；整个过程无需记下任何东西。其他账号由管理员在用户管理页重置，本命令只作用于 `admin`。数据根目录照常由 `LINSIGHT_HOME` 决定。
+内置 `admin` 会被恢复成未认领状态——密码随机生成且无人见过，admin 的全部会话一并吊销。重新启动服务，打开它打印的首次登录链接即可设置新密码；整个过程无需记下任何东西。其他账号由管理员在用户管理页重置，本命令只作用于 `admin`。数据根目录照常由 `JIUMATE_HOME` 决定。
 
-### linsight server stop
+### jiumate server stop
 
 停止本数据根目录上的服务，并以单行 JSON 报告结果：
 
 ```bash
-linsight server stop
+jiumate server stop
 # {"ok":true,"pid":41233}
 ```
 
@@ -345,20 +345,20 @@ linsight server stop
 
 Machines 页面重启一台机器时通过 ssh 执行它。之所以是命令而不是发给那个服务端的请求：需要被停止的机器，往往正是平台版本落后的那一台，而平台路由只有在机器已经跑上带它的构建之后才存在。
 
-## linsight version
+## jiumate version
 
 报告当前运行的是哪个构建。仅凭版本号回答不了这个问题——两次发布之间由源码 checkout 构建出来的每一个版本也都自称 `0.2.3`——因此发布版与源码构建给出的身份并不相同。
 
 ```bash
-linsight version          # v0.2.3                     （发布版）
-linsight version          # v0.2.3-14-g9e8f7d6-dirty   （源码构建）
-linsight version --json   # 完整构建信息
+jiumate version          # v0.2.3                     （发布版）
+jiumate version          # v0.2.3-14-g9e8f7d6-dirty   （源码构建）
+jiumate version --json   # 完整构建信息
 ```
 
 | 选项 | 说明 |
 | --- | --- |
 | `--json` | 输出完整版本报告而非单行：`{version, describe, channel, buildDate, commit, branch, dirty, runtime, harness}` |
-| `--root <dir>` | 以哪个数据根目录的 HMR store 作为 `harness` 上报。优先级：`--root` > `LINSIGHT_HOME` > `~/.linsight/data` |
+| `--root <dir>` | 以哪个数据根目录的 HMR store 作为 `harness` 上报。优先级：`--root` > `JIUMATE_HOME` > `~/.jiumate/data` |
 
 不带选项时输出单行；源码构建下该行即 `git describe --tags --dirty` 的结果——`v0.2.3-14-g9e8f7d6-dirty` 表示位于 `v0.2.3` 之后 14 个提交、当前提交为 `9e8f7d6`、且工作区有未提交改动。`-v, --version` 输出的是同一行。
 
@@ -372,7 +372,7 @@ JSON 与 `GET /api/version` 返回的是同一份记录，因此在 HTTP 边界�
 
 ```json
 "harness": {
-  "source": { "repo": "…/linsight", "revision": "v0.2.3-7-gabc1234-dirty" },
+  "source": { "repo": "…/jiumate", "revision": "v0.2.3-7-gabc1234-dirty" },
   "pushedAt": "2026-08-20T10:15:00.000Z",
   "bundles": { "platform": "store/platform/…", "cli": "store/cli/…", "web": "store/web/…" }
 }
@@ -380,35 +380,35 @@ JSON 与 `GET /api/version` 返回的是同一份记录，因此在 HTTP 边界�
 
 这正是单行版本无法表达的部分：推送过去的 bundle 落在任何 checkout 之外，它只能以自己被编译时的版本号自称；`source.revision`（由推送方记录，拼写方式与 `describe` 一致）是唯一能指明其背后 revision 的信息。`bundles` 是已提交产物的内容寻址指针，无论推送方声称了什么，它标识的都是被推送代码本身。
 
-它描述的是 store 而非当前进程：`linsight` 运行的是随包发布的 CLI，`linsight-hmr` 才运行 store 里的那份，因此 `harness` 非 null 并不意味着打印它的这条命令本身就是被推送的代码。若推送方未记录来源（包括在该机制存在之前推送的版本），`source` 为 null。
+它描述的是 store 而非当前进程：`jiumate` 运行的是随包发布的 CLI，`jiumate-hmr` 才运行 store 里的那份，因此 `harness` 非 null 并不意味着打印它的这条命令本身就是被推送的代码。若推送方未记录来源（包括在该机制存在之前推送的版本），`source` 为 null。
 
-已安装的 linsight 从不调用 git，只读取构建时打入的常量：发布版由发布流程打入，其余构建则由打包器把 git 位置内联进产物，因此产物离开生成它的 checkout 之后依然能说明自己的身份——位于 `<root>/hmr/store/` 下被热推送的 bundle，在既无 checkout 也未安装 git 的机器上，仍会报告它被构建时的 revision。运行时询问 git 只是兜底，用于未经打包的 `tsx` 运行；即便如此它也只问自己所在的那个 checkout，所以在无关仓库里执行 `linsight version` 报告的仍是 harness 自身的版本，而非该仓库的。
-## linsight auth
+已安装的 jiumate 从不调用 git，只读取构建时打入的常量：发布版由发布流程打入，其余构建则由打包器把 git 位置内联进产物，因此产物离开生成它的 checkout 之后依然能说明自己的身份——位于 `<root>/hmr/store/` 下被热推送的 bundle，在既无 checkout 也未安装 git 的机器上，仍会报告它被构建时的 revision。运行时询问 git 只是兜底，用于未经打包的 `tsx` 运行；即便如此它也只问自己所在的那个 checkout，所以在无关仓库里执行 `jiumate version` 报告的仍是 harness 自身的版本，而非该仓库的。
+## jiumate auth
 
-在终端里登录正在运行的 Linsight 服务。这是 CLI 里唯一以客户端身份与服务通信的部分——`config`、`run`、`chat` 都是直接操作数据根。
+在终端里登录正在运行的 JiuMate 服务。这是 CLI 里唯一以客户端身份与服务通信的部分——`config`、`run`、`chat` 都是直接操作数据根。
 
 有两种登录方式，取决于你站在哪里。
 
 ```bash
-linsight auth login                      # 用密码登录该数据根上运行的服务
-linsight auth login --server https://linsight.example --user-id alice
-linsight auth status
-linsight auth logout
-linsight auth token                      # 不需要密码：直接从数据根签发
+jiumate auth login                      # 用密码登录该数据根上运行的服务
+jiumate auth login --server https://jiumate.example --user-id alice
+jiumate auth status
+jiumate auth logout
+jiumate auth token                      # 不需要密码：直接从数据根签发
 ```
 
 `login` 需要密码，向正在运行的服务请求会话，和浏览器登录页做的事完全一样。目标默认是该数据根上正在运行的服务（从锁文件读端口），所以登录自己的服务不必写 URL。
 
-交互运行时会先问账号，再问密码，并且密码提示里写明是哪个账号的，避免把一个账号的密码输到另一个账号上。如果用非交互方式给了密码（`--password` 或 `LINSIGHT_PASSWORD`），两个问题都不会问——那是脚本，脚本没法回答。
+交互运行时会先问账号，再问密码，并且密码提示里写明是哪个账号的，避免把一个账号的密码输到另一个账号上。如果用非交互方式给了密码（`--password` 或 `JIUMATE_PASSWORD`），两个问题都不会问——那是脚本，脚本没法回答。
 
 | 选项 | 说明 |
 | --- | --- |
 | `--server <url>` | 要登录的服务；默认是该数据根上运行的那个 |
 | `--user-id <id>` | 账号；不给时会询问，直接回车即用 `admin` |
-| `--password <pw>` | 密码；也可用 `LINSIGHT_PASSWORD`，都没给时会无回显地提示输入 |
+| `--password <pw>` | 密码；也可用 `JIUMATE_PASSWORD`，都没给时会无回显地提示输入 |
 | `--print` | 同时把会话令牌打印到 stdout，便于管道使用 |
 
-优先用 `LINSIGHT_PASSWORD` 或交互输入，而不是 `--password`：命令行参数可以被 `ps` 看到。
+优先用 `JIUMATE_PASSWORD` 或交互输入，而不是 `--password`：命令行参数可以被 `ps` 看到。
 
 `token` 完全不需要密码。它把一行会话直接写进数据根的 `web.db`，其授权依据就是你能读写这个数据根——而它本来就装着这个令牌所能触及的全部凭据。因此它是**数据根属主**的工具：多用户部署时数据根属于运行服务的那个操作系统账号，其他人一律用 `auth login` 凭密码登录。适用于没有密码可给的场合：管理员密码被人改过的机器、不该持有密码的脚本，以及控制端通过 ssh 管理机器时。
 
@@ -420,13 +420,13 @@ linsight auth token                      # 不需要密码：直接从数据根�
 
 会话写入 `<root>/cli-session.json`，权限 0600；`status` 读它，`logout` 吊销并删除它。`logout` 会先告诉服务端，让会话真正失效，而不只是本地忘记；连不上服务时会明说，本地文件照样删除。
 
-## linsight update
+## jiumate update
 
 原地升级当前安装，并沿用它当初的安装方式。安装方式由运行中 CLI 的真实路径判定，不做猜测。
 
 ```bash
-linsight update --check     # 只报告版本
-linsight update             # 确认后升级到最新版
+jiumate update --check     # 只报告版本
+jiumate update             # 确认后升级到最新版
 ```
 
 | 选项 | 说明 |
@@ -437,12 +437,12 @@ linsight update             # 确认后升级到最新版
 
 目标版本参数叫 `--release` 而不是 `--version`，因为 `-v, --version` 是 CLI 自身的版本参数，会优先生效。
 
-版本发现和 tarball 下载遵循 `LINSIGHT_DOWNLOAD_SOURCE=auto|oss|github`，与稳定安装入口使用相同策略。默认的 `auto` 模式读取 OSS `latest.json`，优先选择该不可变版本，并按同一 tag 回退到 GitHub；安装包本身则由安装器测速选出的来源提供。强制 `oss` 或 `github` 时不会切换来源。`--release <tag>` 会跳过最新版查询，但仍遵循所选下载源策略。显式设置的 HTTPS `LINSIGHT_DOWNLOAD_BASE_URL` 对安装脚本和发布包下载具有最高优先级，并可通过 `LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL` 为发布包配置后备地址。
+版本发现和 tarball 下载遵循 `JIUMATE_DOWNLOAD_SOURCE=auto|oss|github`，与稳定安装入口使用相同策略。默认的 `auto` 模式读取 OSS `latest.json`，优先选择该不可变版本，并按同一 tag 回退到 GitHub；安装包本身则由安装器测速选出的来源提供。强制 `oss` 或 `github` 时不会切换来源。`--release <tag>` 会跳过最新版查询，但仍遵循所选下载源策略。显式设置的 HTTPS `JIUMATE_DOWNLOAD_BASE_URL` 对安装脚本和发布包下载具有最高优先级，并可通过 `JIUMATE_DOWNLOAD_FALLBACK_BASE_URL` 为发布包配置后备地址。
 
 | 安装方式 | 升级方式 |
 | --- | --- |
-| tarball（`install.sh`，默认 `~/.linsight`） | 重新执行官方安装脚本，并保持原安装目录以及是否内置 Node 运行时 |
-| npm/pnpm/yarn/bun 全局安装 | 用该包管理器全局安装 `@prismshadow/linsight-cli@<目标版本>`；无法确定包管理器时，只打印命令而不猜测 |
+| tarball（`install.sh`，默认 `~/.jiumate`） | 重新执行官方安装脚本，并保持原安装目录以及是否内置 Node 运行时 |
+| npm/pnpm/yarn/bun 全局安装 | 用该包管理器全局安装 `@prismshadow/jiumate-cli@<目标版本>`；无法确定包管理器时，只打印命令而不猜测 |
 | 源码检出 | 拒绝执行——请用 `git pull` 更新并重新构建 |
 
 不带 `-y` 时，命令会先打印它将要做什么——方式、目标版本与安装目录——再请求确认；当 stdin 不是终端时，它要求显式加 `--yes`，而不是卡在无人能回答的提示上。**数据目录不会被改动**：升级只替换 `bin`、`lib`、`web` 与 `node`。两条路径在 Windows 上都不做原地升级：安装脚本是 POSIX shell 脚本，而全局安装也无法由此驱动——Node 不会在没有 shell 的情况下执行 `npm`/`pnpm` 的 `.cmd` 包装脚本——因此命令会直接打印出应当由你自己执行的命令。

@@ -3,24 +3,24 @@
 # job therefore gates the release job on the tag's Release not existing yet — dispatching an
 # already-released tag skips the GitHub build/upload while still retrying the OSS mirror and npm publishing.
 # Release jobs (the release job is gated on the existence check):
-# - release: build the monorepo -> pnpm deploy a production CLI dir -> assemble linsight/ (bin + lib + web)
+# - release: build the monorepo -> pnpm deploy a production CLI dir -> assemble jiumate/ (bin + lib + web)
 #   -> one program payload per target (four platform payloads bundling the official Node runtime,
 #   a win-x64 payload with runtime + MinGit, and a runtime-less universal payload) -> wrap each
 #   payload, its checksum and the native installer into the canonical installer bundle -> validate
 #   the real bundles -> collect desktop installers/update metadata -> generate release probes and
 #   the source-neutral download manifest -> upload to the Release.
 #   Artifacts (one shape per target, serving online and offline installs alike):
-#   linsight-{linux,darwin}-{x64,arm64}.tar.gz, linsight-universal.tar.gz, linsight-win32-x64.zip,
+#   jiumate-{linux,darwin}-{x64,arm64}.tar.gz, jiumate-universal.tar.gz, jiumate-win32-x64.zip,
 #   their .sha256 files, SHA256SUMS, install.sh, install.ps1, probe-64k.bin, probe-1m.bin,
 #   release-download-manifest.tsv, and the desktop installers plus updater metadata/blockmaps;
 #   one version per tag, multiple versions coexist. Releases up to v0.1.5 shipped raw program
 #   archives under the same names plus *-offline wrappers; the installers keep accepting that
 #   legacy layout for pinned versions.
-# - publish-npm: publish the whole chain (the @linsight/* plugin packages -> @prismshadow/linsight-core
-#   -> @prismshadow/linsight-server -> @prismshadow/linsight-cli) to npm at the tag version.
-#   core serves the linsight-sdk Skill's `npm install`; server ships the built web assets inside
+# - publish-npm: publish the whole chain (the @jiumate/* plugin packages -> @prismshadow/jiumate-core
+#   -> @prismshadow/jiumate-server -> @prismshadow/jiumate-cli) to npm at the tag version.
+#   core serves the jiumate-sdk Skill's `npm install`; server ships the built web assets inside
 #   the package (web-dist/, its default web dir falls back to it), so `npm install -g
-#   @prismshadow/linsight-cli` alone yields a working `linsight` incl. the Web UI (needs Node >= 24).
+#   @prismshadow/jiumate-cli` alone yields a working `jiumate` incl. the Web UI (needs Node >= 24).
 #   The publish flow mirrors AgentHub's publish.yml: OIDC trusted publishing (environment: npm +
 #   id-token: write, no token). A Trusted Publisher can only be configured in the settings page of a
 #   package that ALREADY EXISTS on the registry, so a brand-new package cannot be first-published by
@@ -154,14 +154,14 @@ jobs:
           fi
           grep -q 'export const VERSION = "' packages/core/src/index.ts
           sed -i "s/export const VERSION = \"[^\"]*\"/export const VERSION = \"$V\"/" packages/core/src/index.ts
-          SH_MARKER='EMBEDDED_RELEASE_VERSION="__LINSIGHT_RELEASE_VERSION__"'
-          PS_MARKER='$EmbeddedReleaseVersion = "__LINSIGHT_RELEASE_VERSION__"'
+          SH_MARKER='EMBEDDED_RELEASE_VERSION="__JIUMATE_RELEASE_VERSION__"'
+          PS_MARKER='$EmbeddedReleaseVersion = "__JIUMATE_RELEASE_VERSION__"'
           if grep -Fq "$SH_MARKER" install.sh; then SH_HAS_MARKER=1; else SH_HAS_MARKER=0; fi
           if grep -Fq "$PS_MARKER" install.ps1; then PS_HAS_MARKER=1; else PS_HAS_MARKER=0; fi
           case "$SH_HAS_MARKER:$PS_HAS_MARKER" in
             1:1)
-              sed -i "s/__LINSIGHT_RELEASE_VERSION__/$TAG/g" install.sh
-              sed -i "s/__LINSIGHT_RELEASE_VERSION__/$TAG/g" install.ps1
+              sed -i "s/__JIUMATE_RELEASE_VERSION__/$TAG/g" install.sh
+              sed -i "s/__JIUMATE_RELEASE_VERSION__/$TAG/g" install.ps1
               grep -Fq "EMBEDDED_RELEASE_VERSION=\"$TAG\"" install.sh
               grep -Fq "\$EmbeddedReleaseVersion = \"$TAG\"" install.ps1
               ;;
@@ -199,14 +199,14 @@ jobs:
       # lib/: the CLI and its production deps (including workspace core/server/skills, all build outputs);
       # Use pnpm's current deploy implementation with injected workspace packages; the hoisted target layout
       # avoids deeply nested .pnpm/node_modules paths that exceed Windows PowerShell 5.1's legacy MAX_PATH limit.
-      # bin/linsight is scripts/launchers/linsight, shipped verbatim — it is the one spelling of
-      # the payload layout (lib/dist/linsight.js, web/, an optional node/), and the shape
+      # bin/jiumate is scripts/launchers/jiumate, shipped verbatim — it is the one spelling of
+      # the payload layout (lib/dist/jiumate.js, web/, an optional node/), and the shape
       # scripts/test-installer.sh pins.
-      - name: Assemble linsight/ (lib + web + bin)
+      - name: Assemble jiumate/ (lib + web + bin)
         run: |
-          pnpm --config.node-linker=hoisted --filter @prismshadow/linsight-cli --prod deploy "$PWD/out/linsight/lib"
-          cp -r packages/web/dist out/linsight/web
-          install -D -m 755 scripts/launchers/linsight out/linsight/bin/linsight
+          pnpm --config.node-linker=hoisted --filter @prismshadow/jiumate-cli --prod deploy "$PWD/out/jiumate/lib"
+          cp -r packages/web/dist out/jiumate/web
+          install -D -m 755 scripts/launchers/jiumate out/jiumate/bin/jiumate
 
       # Program payloads: linux runtimes use .tar.xz, darwin .tar.gz (nodejs.org naming);
       # node/ is only lightly trimmed (drop share/doc and share/man, keep the rest). Payloads
@@ -221,30 +221,30 @@ jobs:
             name="node-$NODE_RUNTIME_VERSION-$os-$arch"
             if [ "$os" = "linux" ]; then ext="tar.xz"; else ext="tar.gz"; fi
             curl -fsSL "https://nodejs.org/dist/$NODE_RUNTIME_VERSION/$name.$ext" -o "/tmp/$name.$ext"
-            rm -rf /tmp/node-runtime out/linsight/node
+            rm -rf /tmp/node-runtime out/jiumate/node
             mkdir -p /tmp/node-runtime
             if [ "$ext" = "tar.xz" ]; then
               tar -xJf "/tmp/$name.$ext" -C /tmp/node-runtime
             else
               tar -xzf "/tmp/$name.$ext" -C /tmp/node-runtime
             fi
-            mv "/tmp/node-runtime/$name" out/linsight/node
-            rm -rf out/linsight/node/share/doc out/linsight/node/share/man
-            printf '{"schemaVersion":1,"target":"%s"}\n' "$os-$arch" > out/linsight/package-manifest.json
-            tar -czf "payloads/$os-$arch.tar.gz" -C out linsight
+            mv "/tmp/node-runtime/$name" out/jiumate/node
+            rm -rf out/jiumate/node/share/doc out/jiumate/node/share/man
+            printf '{"schemaVersion":1,"target":"%s"}\n' "$os-$arch" > out/jiumate/package-manifest.json
+            tar -czf "payloads/$os-$arch.tar.gz" -C out jiumate
           done
           # Universal payload: no bundled runtime, requires system Node >= 24.
-          rm -rf out/linsight/node
-          printf '{"schemaVersion":1,"target":"universal"}\n' > out/linsight/package-manifest.json
-          tar -czf payloads/universal.tar.gz -C out linsight
+          rm -rf out/jiumate/node
+          printf '{"schemaVersion":1,"target":"universal"}\n' > out/jiumate/package-manifest.json
+          tar -czf payloads/universal.tar.gz -C out jiumate
 
       # Windows payload: same lib/ + web/ layout, but a .zip (the native format), the official
       # win-x64 Node runtime — whose zip has node.exe at the ARCHIVE ROOT, not bin/ — and
-      # linsight.cmd replacing the sh launcher (see scripts/launchers/linsight.cmd, including why
-      # there is deliberately no linsight.ps1).
+      # jiumate.cmd replacing the sh launcher (see scripts/launchers/jiumate.cmd, including why
+      # there is deliberately no jiumate.ps1).
       #
       # It also bundles MinGit under git\, so exec_command has a POSIX shell even on a machine
-      # with no Git for Windows: the shims advertise git\usr\bin\sh.exe as LINSIGHT_BUNDLED_SHELL
+      # with no Git for Windows: the shims advertise git\usr\bin\sh.exe as JIUMATE_BUNDLED_SHELL
       # and the resolver (core's shell.ts) uses it only when the user has no bash of their own.
       # MinGit is unpacked with its tree intact — MSYS binaries locate /etc relative to the
       # directory holding msys-2.0.dll, so `sh -lc` finds git\etc\profile and gets the usual
@@ -253,26 +253,26 @@ jobs:
         run: |
           name="node-$NODE_RUNTIME_VERSION-win-x64"
           curl -fsSL "https://nodejs.org/dist/$NODE_RUNTIME_VERSION/$name.zip" -o "/tmp/$name.zip"
-          rm -rf /tmp/node-runtime out/linsight/node
+          rm -rf /tmp/node-runtime out/jiumate/node
           mkdir -p /tmp/node-runtime
           unzip -q "/tmp/$name.zip" -d /tmp/node-runtime
-          mv "/tmp/node-runtime/$name" out/linsight/node
+          mv "/tmp/node-runtime/$name" out/jiumate/node
           # MinGit unzips flat (no top-level directory), so give it its own destination.
           mingit="MinGit-$MINGIT_VERSION-64-bit.zip"
           curl -fsSL "https://github.com/git-for-windows/git/releases/download/$MINGIT_TAG/$mingit" -o "/tmp/$mingit"
-          rm -rf out/linsight/git
-          mkdir -p out/linsight/git
-          unzip -q "/tmp/$mingit" -d out/linsight/git
+          rm -rf out/jiumate/git
+          mkdir -p out/jiumate/git
+          unzip -q "/tmp/$mingit" -d out/jiumate/git
           # Fail loudly here rather than shipping a package whose shell silently does not exist.
-          test -f out/linsight/git/usr/bin/sh.exe
-          test -f out/linsight/git/etc/profile
-          printf '{"schemaVersion":1,"target":"win32-x64"}\n' > out/linsight/package-manifest.json
-          # The Windows package ships linsight.cmd INSTEAD of the sh launcher: a bare `linsight`
+          test -f out/jiumate/git/usr/bin/sh.exe
+          test -f out/jiumate/git/etc/profile
+          printf '{"schemaVersion":1,"target":"win32-x64"}\n' > out/jiumate/package-manifest.json
+          # The Windows package ships jiumate.cmd INSTEAD of the sh launcher: a bare `jiumate`
           # on PATH would be picked up by Git Bash and run the wrong thing. The committed file
           # is CRLF (.gitattributes), the only form cmd.exe is fully reliable with.
-          rm -f out/linsight/bin/linsight
-          install -D -m 644 scripts/launchers/linsight.cmd out/linsight/bin/linsight.cmd
-          (cd out && zip -qr ../payloads/win32-x64.zip linsight)
+          rm -f out/jiumate/bin/jiumate
+          install -D -m 644 scripts/launchers/jiumate.cmd out/jiumate/bin/jiumate.cmd
+          (cd out && zip -qr ../payloads/win32-x64.zip jiumate)
 
       # The canonical artifacts: each payload is sealed with its checksum and the native
       # installer into one flat bundle per target (see scripts/package-release-bundles.sh).
@@ -299,7 +299,7 @@ jobs:
           }
 
           for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 universal; do
-            bundle="linsight-$target.tar.gz"
+            bundle="jiumate-$target.tar.gz"
             (cd "$ARTIFACT_DIR" && sha256sum -c "$bundle.sha256")
             extracted="$WORK_DIR/$target"
             mkdir -p "$extracted"
@@ -312,7 +312,7 @@ jobs:
             cmp "$PAYLOAD_DIR/$target.tar.gz" "$extracted/payload.tar.gz"
           done
 
-          bundle="linsight-win32-x64.zip"
+          bundle="jiumate-win32-x64.zip"
           (cd "$ARTIFACT_DIR" && sha256sum -c "$bundle.sha256")
           extracted="$WORK_DIR/win32-x64"
           mkdir -p "$extracted"
@@ -346,11 +346,11 @@ jobs:
         run: |
           cd desktop-artifacts
           sha256sum -- \
-            linsight-desktop-*.AppImage \
-            linsight-desktop-*.deb \
-            linsight-desktop-*.dmg \
-            linsight-desktop-*.zip \
-            linsight-desktop-*.exe \
+            jiumate-desktop-*.AppImage \
+            jiumate-desktop-*.deb \
+            jiumate-desktop-*.dmg \
+            jiumate-desktop-*.zip \
+            jiumate-desktop-*.exe \
             latest*.yml \
             *.blockmap > SHA256SUMS.desktop
 
@@ -404,11 +404,11 @@ jobs:
             dist-artifacts/SHA256SUMS
             dist-artifacts/probe-*.bin
             dist-artifacts/release-download-manifest.tsv
-            desktop-artifacts/linsight-desktop-*.AppImage
-            desktop-artifacts/linsight-desktop-*.deb
-            desktop-artifacts/linsight-desktop-*.dmg
-            desktop-artifacts/linsight-desktop-*.zip
-            desktop-artifacts/linsight-desktop-*.exe
+            desktop-artifacts/jiumate-desktop-*.AppImage
+            desktop-artifacts/jiumate-desktop-*.deb
+            desktop-artifacts/jiumate-desktop-*.dmg
+            desktop-artifacts/jiumate-desktop-*.zip
+            desktop-artifacts/jiumate-desktop-*.exe
             desktop-artifacts/latest*.yml
             desktop-artifacts/*.blockmap
             desktop-artifacts/SHA256SUMS.desktop
@@ -423,7 +423,7 @@ jobs:
           (needs.release.result == 'success' || needs.release.result == 'skipped') }}
     runs-on: ubuntu-latest
     concurrency:
-      group: linsight-oss-production
+      group: jiumate-oss-production
       cancel-in-progress: false
     permissions:
       contents: read
@@ -467,7 +467,7 @@ jobs:
         with:
           oidc-provider-arn: ${{ vars.ALIYUN_OIDC_PROVIDER_ARN }}
           role-to-assume: ${{ vars.ALIYUN_ROLE_ARN }}
-          role-session-name: linsight-oss-${{ github.run_id }}
+          role-session-name: jiumate-oss-${{ github.run_id }}
           role-session-expiration: 1800
           audience: github-actions
 
@@ -517,7 +517,7 @@ jobs:
       contents: read
     environment:
       name: npm
-      url: https://www.npmjs.com/package/@prismshadow/linsight-cli
+      url: https://www.npmjs.com/package/@prismshadow/jiumate-cli
     steps:
       - uses: actions/checkout@v5
         with:
@@ -600,17 +600,17 @@ jobs:
       # web is built here only to be copied into the server package below.
       - name: Build and test
         run: |
-          pnpm --filter @prismshadow/linsight-core build
-          pnpm --filter @prismshadow/linsight-server build
-          pnpm --filter @prismshadow/linsight-web build
-          pnpm --filter @prismshadow/linsight-cli build
-          pnpm --filter @prismshadow/linsight-core test
-          pnpm --filter @prismshadow/linsight-server test
-          pnpm --filter @prismshadow/linsight-cli test
+          pnpm --filter @prismshadow/jiumate-core build
+          pnpm --filter @prismshadow/jiumate-server build
+          pnpm --filter @prismshadow/jiumate-web build
+          pnpm --filter @prismshadow/jiumate-cli build
+          pnpm --filter @prismshadow/jiumate-core test
+          pnpm --filter @prismshadow/jiumate-server test
+          pnpm --filter @prismshadow/jiumate-cli test
 
       # Copy LICENSE into the package dirs (the files allowlist includes it, so artifacts ship the license)
       # and the built web assets into the server package (web-dist/, in its files allowlist: an npm install
-      # serves the Web UI from there without LINSIGHT_WEB_DIST).
+      # serves the Web UI from there without JIUMATE_WEB_DIST).
       # Idempotent: a version already on the registry is skipped. The check tests `npm view`'s output
       # rather than its exit code -- for a missing version of an existing package, older npm exits 0 and
       # newer npm exits 1, but the output is non-empty only when the version exists. Re-running the tag
@@ -627,10 +627,10 @@ jobs:
           done
           rm -rf packages/server/web-dist
           cp -r packages/web/dist packages/server/web-dist
-          # The @linsight/* plugin packages go first: core declares them as workspace:*
+          # The @jiumate/* plugin packages go first: core declares them as workspace:*
           # deps, rewritten to their versions at publish time, so they must exist first.
           for dir in plugins/*/; do
-            name="@linsight/$(basename "$dir")"
+            name="@jiumate/$(basename "$dir")"
             if [ -n "$(npm view "$name@$V" version 2>/dev/null || true)" ]; then
               echo "$name@$V already on the registry, skipping."
               continue
@@ -638,7 +638,7 @@ jobs:
             pnpm --filter "$name" publish --access public --no-git-checks
           done
           for pkg in core server cli; do
-            name="@prismshadow/linsight-$pkg"
+            name="@prismshadow/jiumate-$pkg"
             if [ -n "$(npm view "$name@$V" version 2>/dev/null || true)" ]; then
               echo "$name@$V already on the registry, skipping."
               continue

@@ -18,7 +18,7 @@ describe("auth sessions", () => {
   /**
    * A v0.2.0 web.db has auth_sessions WITHOUT the `via` column, and CREATE TABLE IF NOT EXISTS
    * never adds one — so without the ensureColumn migration every login, first-login mint and
-   * `linsight auth token` on an upgraded database fails "no column named via".
+   * `jiumate auth token` on an upgraded database fails "no column named via".
    */
   it("upgrades a v0.2.0 database that has auth_sessions without `via`", async () => {
     const root = await makeTempRoot();
@@ -149,7 +149,7 @@ describe("auth sessions", () => {
 
   it("a short cli token expires at its hour rather than renewing", async () => {
     // A cli token spans an hour, well under the renewal window, so being used must not top it
-    // up to the full term. Insert one directly (as `linsight auth token` does) and use it.
+    // up to the full term. Insert one directly (as `jiumate auth token` does) and use it.
     let nowMs = Date.now();
     const t = await createTestApp({ now: () => new Date(nowMs) });
     try {

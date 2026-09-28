@@ -6,15 +6,15 @@
  *
  * Builds the web dist, compiles the platform and cli entries, and pushes all three as ONE
  * atomic version to POST /api/hmr/upgrade. Authentication is an admin session established
- * per run: LINSIGHT_ADMIN_PASSWORD is read from the environment and exchanged for a cookie,
+ * per run: JIUMATE_ADMIN_PASSWORD is read from the environment and exchanged for a cookie,
  * so no credential of any kind is written to disk — a file holding an admin-equivalent
  * secret is readable by everything running as this user, agent shells included, which makes
  * the file itself the vulnerability.
  *
  * Usage:
- *   LINSIGHT_ADMIN_PASSWORD=… node scripts/deploy.mjs 53531
- *   LINSIGHT_ADMIN_PASSWORD=… node scripts/deploy.mjs 53531 --skip-web-build
- *   LINSIGHT_ADMIN_PASSWORD=… node scripts/deploy.mjs https://box.example.com
+ *   JIUMATE_ADMIN_PASSWORD=… node scripts/deploy.mjs 53531
+ *   JIUMATE_ADMIN_PASSWORD=… node scripts/deploy.mjs 53531 --skip-web-build
+ *   JIUMATE_ADMIN_PASSWORD=… node scripts/deploy.mjs https://box.example.com
  */
 import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
@@ -36,13 +36,13 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WEB_DIST = path.join(ROOT, "packages", "web", "dist");
 const PLATFORM_ENTRY = path.join(ROOT, "packages", "server", "src", "hmr", "entry.ts");
 const CLI_ENTRY = path.join(ROOT, "packages", "cli", "src", "index.ts");
-const PLATFORM_BUNDLE = path.join(os.tmpdir(), `linsight-deploy-platform-${process.pid}.mjs`);
-const CLI_BUNDLE = path.join(os.tmpdir(), `linsight-deploy-cli-${process.pid}.mjs`);
+const PLATFORM_BUNDLE = path.join(os.tmpdir(), `jiumate-deploy-platform-${process.pid}.mjs`);
+const CLI_BUNDLE = path.join(os.tmpdir(), `jiumate-deploy-cli-${process.pid}.mjs`);
 
 const log = (msg) => console.log(`[deploy] ${msg}`);
 
 /**
- * Provenance for this push, recorded with the version so `linsight version --json` on the
+ * Provenance for this push, recorded with the version so `jiumate version --json` on the
  * target can name where its harness came from — harness.json's copy, alongside the same
  * revision inlined into the bundles themselves.
  *
@@ -61,7 +61,7 @@ function pushSource() {
 function usage(problem) {
   console.error(
     `${problem}\n\n` +
-      "Usage: LINSIGHT_ADMIN_PASSWORD=… node scripts/deploy.mjs <port|url> [--skip-web-build]\n" +
+      "Usage: JIUMATE_ADMIN_PASSWORD=… node scripts/deploy.mjs <port|url> [--skip-web-build]\n" +
       "  <port>  a port on this machine (an ssh -L tunnel to the target runtime, or a local server)\n" +
       "  <url>   a full origin, when the target is not reached over loopback\n",
   );
@@ -72,8 +72,8 @@ const args = process.argv.slice(2);
 const skipWebBuild = args.includes("--skip-web-build");
 const target = args.find((a) => !a.startsWith("--"));
 if (target === undefined) usage("[deploy] no target given.");
-const ADMIN_PASSWORD = process.env.LINSIGHT_ADMIN_PASSWORD;
-if (!ADMIN_PASSWORD) usage("[deploy] LINSIGHT_ADMIN_PASSWORD is not set.");
+const ADMIN_PASSWORD = process.env.JIUMATE_ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) usage("[deploy] JIUMATE_ADMIN_PASSWORD is not set.");
 
 /** A bare port means this machine's loopback (typically an ssh -L tunnel to the real target). */
 const baseUrl = /^\d+$/.test(target) ? `http://127.0.0.1:${target}` : target.replace(/\/+$/, "");
@@ -154,10 +154,10 @@ async function compileEntry(entry, outfile) {
     logLevel: "silent",
     banner: { js: ESM_CJS_BANNER },
     alias: {
-      "@prismshadow/linsight-core/kernel": require.resolve("@prismshadow/linsight-core/kernel"),
+      "@prismshadow/jiumate-core/kernel": require.resolve("@prismshadow/jiumate-core/kernel"),
     },
     // The pushed bundle lands under `<root>/hmr/store/`, outside any checkout, so its own
-    // revision has to be inlined here or it can never be recovered: `linsight version` from
+    // revision has to be inlined here or it can never be recovered: `jiumate version` from
     // a hot-loaded CLI would otherwise report the bare version it was compiled from. This is
     // the same value the push records as `source`, reaching the target by a second route —
     // in the artifact itself rather than in harness.json.
@@ -238,7 +238,7 @@ async function main() {
     log("reusing the existing web dist");
   } else {
     log("building the web dist…");
-    execFileSync("pnpm", ["--filter", "@prismshadow/linsight-web", "build"], {
+    execFileSync("pnpm", ["--filter", "@prismshadow/jiumate-web", "build"], {
       cwd: ROOT,
       stdio: "inherit",
     });

@@ -10,24 +10,24 @@
  *
  * The origin **marker blocks** these flows produce and render — `[handoff_from]`,
  * `[scheduled_task]`, `[model_switch_from]` — are defined in core's marker module
- * (`@prismshadow/linsight-core/markers`) alongside every other message marker, and are
+ * (`@prismshadow/jiumate-core/markers`) alongside every other message marker, and are
  * re-exported below under this feature's existing names.
  */
-import { buildHandoffMessage, buildModelSwitchMessage } from "@prismshadow/linsight-core/markers";
-import type { AgentSummary } from "@prismshadow/linsight-server/api";
+import { buildHandoffMessage, buildModelSwitchMessage } from "@prismshadow/jiumate-core/markers";
+import type { AgentSummary } from "@prismshadow/jiumate-server/api";
 
 export {
   parseBackgroundTaskDoneMessage,
   parseHandoffMessage,
   parseModelSwitchMessage,
   parseScheduledMessage,
-} from "@prismshadow/linsight-core/markers";
+} from "@prismshadow/jiumate-core/markers";
 export type {
   BackgroundTaskDone,
   HandoffOrigin,
   ModelSwitchOrigin,
   ScheduledOrigin,
-} from "@prismshadow/linsight-core/markers";
+} from "@prismshadow/jiumate-core/markers";
 
 /** First message of an `/agent` handoff conversation (core's `[handoff_from]` origin block). */
 export const handoffMessage = buildHandoffMessage;

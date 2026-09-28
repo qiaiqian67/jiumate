@@ -23,7 +23,7 @@ import {
 let root: string;
 
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), "linsight-pets-"));
+  root = await mkdtemp(join(tmpdir(), "jiumate-pets-"));
 });
 
 afterEach(async () => {

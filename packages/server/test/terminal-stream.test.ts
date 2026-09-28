@@ -240,7 +240,7 @@ describePty("terminal stream handshake", () => {
     async () => {
       const terminal = await createTerminal();
       await expectRefused(terminal.id, {}, 401);
-      await expectRefused(terminal.id, { cookie: "linsight_session=not-a-real-token" }, 401);
+      await expectRefused(terminal.id, { cookie: "jiumate_session=not-a-real-token" }, 401);
     },
     TEST_TIMEOUT,
   );
@@ -266,7 +266,7 @@ describePty("terminal stream handshake", () => {
     async () => {
       // "%" is an invalid percent escape: decodeURIComponent throws, and in the `upgrade`
       // handler an uncaught throw would take down the whole server (unauthenticated DoS).
-      await expectRefused("irrelevant", { cookie: "linsight_session=%" }, 401);
+      await expectRefused("irrelevant", { cookie: "jiumate_session=%" }, 401);
     },
     TEST_TIMEOUT,
   );

@@ -11,7 +11,7 @@
  */
 import { useMemo, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
-import type { ModelInfo, ModelRefDto } from "@prismshadow/linsight-server/api";
+import type { ModelInfo, ModelRefDto } from "@prismshadow/jiumate-server/api";
 import { S } from "../../lib/strings";
 import { Badge } from "../../components/ui/badge";
 import { Dropdown } from "../../components/ui/dropdown";

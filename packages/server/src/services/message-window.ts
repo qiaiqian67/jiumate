@@ -36,13 +36,13 @@
  * prefix records (trace_files.page_stats) persist the carry so old shards are read at
  * most once ever; bump CACHE_VERSION whenever any rule in this file changes.
  */
-import { parseUserSteeringText } from "@prismshadow/linsight-core";
+import { parseUserSteeringText } from "@prismshadow/jiumate-core";
 import {
   parseBackgroundTaskDoneMessage,
   parseHandoffMessage,
   parseModelSwitchMessage,
-} from "@prismshadow/linsight-core/markers";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core/markers";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 
 /** Bump when any counting/boundary rule changes: cached page_stats records with an older version are recomputed. */
 export const CACHE_VERSION = 3;

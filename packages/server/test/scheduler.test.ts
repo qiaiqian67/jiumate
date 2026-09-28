@@ -15,7 +15,7 @@ import {
   projectConfigPath,
   saveProjectConfig,
   scheduleDir,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import { openDatabase } from "../src/db/database.js";
 import { ProjectsRepo } from "../src/db/repos/projects.js";
 import { SchedulesRepo } from "../src/db/repos/schedules.js";

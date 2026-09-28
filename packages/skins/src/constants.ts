@@ -1,5 +1,5 @@
 /**
- * Bounds, schema version, and the token allowlist for Linsight skin packages.
+ * Bounds, schema version, and the token allowlist for JiuMate skin packages.
  *
  * The package shape mirrors OpenBitFun's `AppearancePackage`
  * (`web-ui/src/infrastructure/appearance/types/index.ts`), narrowed to the one renderer
@@ -39,13 +39,13 @@ export const SKIN_AUTHOR_LIMIT = 128;
 export const SKIN_DESCRIPTION_LIMIT = 4096;
 
 /** The `schema` discriminator every native manifest carries. */
-export const SKIN_SCHEMA = "linsight.skin";
+export const SKIN_SCHEMA = "jiumate.skin";
 
 /** Schema version written into `skin.json`. */
 export const SKIN_SCHEMA_VERSION = 1;
 
 /** Conventional receipt filename written next to `skin.json` after a successful install. */
-export const RECEIPT_FILENAME = ".linsight-skin-receipt.json";
+export const RECEIPT_FILENAME = ".jiumate-skin-receipt.json";
 
 /** Schema version written into the receipt. Bump when the on-disk shape changes incompatibly. */
 export const RECEIPT_SCHEMA_VERSION = 1;

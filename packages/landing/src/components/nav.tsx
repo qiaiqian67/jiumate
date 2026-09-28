@@ -205,7 +205,7 @@ export function Nav() {
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/85 backdrop-blur dark:border-gray-800 dark:bg-gray-950/85">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2" onClick={() => setOpen(false)}>
-          <img src={`${import.meta.env.BASE_URL}linsight-logo.svg`} alt="" className="h-7 w-7" />
+          <img src={`${import.meta.env.BASE_URL}jiumate-logo.svg`} alt="" className="h-7 w-7" />
           <span className="hidden text-[15px] font-semibold tracking-tight sm:inline">
             {S.siteName}
           </span>

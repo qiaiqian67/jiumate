@@ -47,7 +47,7 @@
  * endpoint.
  *
  * App attribution (`attributionHeaders`, bottom of this file) rides alongside the protocol
- * pins: it names Linsight to the gateways that read such a header, keyed on the
+ * pins: it names JiuMate to the gateways that read such a header, keyed on the
  * endpoint host rather than on the provider group.
  *
  * This file imports no Node built-ins (type-only imports only), so it can be bundled directly
@@ -293,7 +293,7 @@ export const MODEL_PROVIDERS: ModelProviderInfo[] = [
     oauth: {
       authorizeUrl: "https://tokendance.space/auth",
       exchangeUrl: "https://tokendance.space/portal/api/v1/auth/keys",
-      keyName: "Linsight",
+      keyName: "JiuMate",
     },
   },
   { id: "custom", label: "Custom", envKey: "OPENAI_API_KEY", envBaseUrlKey: "OPENAI_BASE_URL" },
@@ -1931,14 +1931,14 @@ export function modelHomepageUrl(provider: string, modelId: string): string | un
 
 /**
  * App attribution: how the harness identifies itself to gateways that rank or report the apps
- * calling them. Both values describe Linsight itself, never a model or an account.
+ * calling them. Both values describe JiuMate itself, never a model or an account.
  *
  * `APP_URL` is also the `app_url` a provider OAuth flow stamps onto the key it mints, which is
  * why it is exported: a stable app URL is required there, and a second copy would let the two
  * attributions drift apart.
  */
-export const APP_URL = "https://linsight.ooo/";
-const APP_TITLE = "Linsight";
+export const APP_URL = "https://jiumate.ooo/";
+const APP_TITLE = "JiuMate";
 /**
  * OpenRouter marketplace categories, comma-separated. OpenRouter accepts at most **two per
  * request** from a fixed slug list and silently drops anything else, so this string is
@@ -1972,7 +1972,7 @@ function hostMatches(host: string, domain: string): boolean {
  *
  * Keyed on the endpoint host rather than on the catalog's provider group, because the group
  * is a display bucket while the headers are a property of the server being called: a `custom`
- * entry pointed at OpenRouter is still Linsight talking to OpenRouter and is attributed
+ * entry pointed at OpenRouter is still JiuMate talking to OpenRouter and is attributed
  * identically. The flip side is that an entry carrying no `base_url` of its own gets no
  * headers even when `OPENAI_BASE_URL` sends it to a gateway — that variable is read inside
  * AgentHub and never reaches this side.

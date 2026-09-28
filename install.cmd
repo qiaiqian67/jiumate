@@ -6,9 +6,9 @@ set "INSTALL_EXIT_CODE=%ERRORLEVEL%"
 
 echo.
 if "%INSTALL_EXIT_CODE%"=="0" (
-  echo Linsight offline installation completed.
+  echo JiuMate offline installation completed.
 ) else (
-  echo Linsight offline installation failed.
+  echo JiuMate offline installation failed.
 )
 
 echo.

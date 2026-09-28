@@ -3,9 +3,9 @@
  * when it exits, and the restart trigger the platform's `POST /api/version/restart` pulls
  * once a self-update is installed.
  *
- * The supervisor is `linsight server|web`, which runs the service as a child process and
+ * The supervisor is `jiumate server|web`, which runs the service as a child process and
  * respawns it on SERVER_RESTART_EXIT_CODE (core); it announces itself with
- * LINSIGHT_SUPERVISED=1. Under anything else — the server entry started directly, a dev
+ * JIUMATE_SUPERVISED=1. Under anything else — the server entry started directly, a dev
  * run, the desktop shell (which updates the whole app, not the server) — a restart request
  * is refused rather than honored: exiting would stop the service with nobody to bring it
  * back, and the page tells the user to restart by hand instead.
@@ -18,7 +18,7 @@ export class LifecycleService {
 
   constructor(private readonly supervisedFlag: boolean) {}
 
-  /** Whether a supervisor relaunches this process on the restart exit code (LINSIGHT_SUPERVISED=1). */
+  /** Whether a supervisor relaunches this process on the restart exit code (JIUMATE_SUPERVISED=1). */
   supervised(): boolean {
     return this.supervisedFlag;
   }

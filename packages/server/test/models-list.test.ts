@@ -17,7 +17,7 @@ describe("ProjectConfigService.listEndpointModels", () => {
   let service: ProjectConfigService;
 
   beforeEach(async () => {
-    root = await mkdtemp(path.join(tmpdir(), "linsight-models-list-"));
+    root = await mkdtemp(path.join(tmpdir(), "jiumate-models-list-"));
     service = new ProjectConfigService(root);
   });
   afterEach(async () => {

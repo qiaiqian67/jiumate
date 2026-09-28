@@ -1,32 +1,32 @@
 ---
 title: Quickstart
-description: Three routes — desktop app, CLI, or SDK — pick one to install Linsight and run your first Task.
+description: Three routes — desktop app, CLI, or SDK — pick one to install JiuMate and run your first Task.
 ---
 
-Linsight has three ways in. They run the same engine; they differ only in how you meet it. Pick the one that fits you — each route's page carries you all the way to a first Task:
+JiuMate has three ways in. They run the same engine; they differ only in how you meet it. Pick the one that fits you — each route's page carries you all the way to a first Task:
 
 | Route | Best for | Terminal needed? |
 | --- | --- | --- |
-| [Desktop app](/quickstart-desktop) | Using Linsight as a product, straight away | No — and it installs the `linsight` command for you |
-| [CLI and Web App](/quickstart-cli) | Servers and remote machines, or wanting the `linsight` command | Once, to install |
+| [Desktop app](/quickstart-desktop) | Using JiuMate as a product, straight away | No — and it installs the `jiumate` command for you |
+| [CLI and Web App](/quickstart-cli) | Servers and remote machines, or wanting the `jiumate` command | Once, to install |
 | [SDK](/quickstart-sdk) | Embedding the engine in your own TypeScript program | Yes |
 
 If you are unsure, take the [desktop app](/quickstart-desktop): it has the fewest steps, and moving to another route later costs you nothing. The macOS and Windows installers are signed, so only a downloaded Linux AppImage needs anything before the first launch — that page carries it.
 
 ## What all three share
 
-- **One data root**: `~/.linsight/data` (`%USERPROFILE%\.linsight\data` on Windows). Agents, model configuration and past Sessions are common to all three routes, so they can be mixed freely — a model configured in the desktop app is immediately usable from the CLI and the SDK.
-- **One server at a time**: a data root only ever runs one server process. If a CLI-started instance is already up from `linsight web`, the desktop app attaches to it instead of starting a second one.
-- **One interface**: the desktop app and `linsight web` open the same Web App; the former just embeds the server and skips the login.
+- **One data root**: `~/.jiumate/data` (`%USERPROFILE%\.jiumate\data` on Windows). Agents, model configuration and past Sessions are common to all three routes, so they can be mixed freely — a model configured in the desktop app is immediately usable from the CLI and the SDK.
+- **One server at a time**: a data root only ever runs one server process. If a CLI-started instance is already up from `jiumate web`, the desktop app attaches to it instead of starting a second one.
+- **One interface**: the desktop app and `jiumate web` open the same Web App; the former just embeds the server and skips the login.
 
 ## Before you start
 
-Linsight ships with no built-in model credentials, so a model must be configured before your first Task — an API key for one Provider is enough. Each route's page covers that step.
+JiuMate ships with no built-in model credentials, so a model must be configured before your first Task — an API key for one Provider is enough. Each route's page covers that step.
 
 A model is always referenced as a `(provider, model_id)` pair — the Provider is never inferred from the model id. See [Models & Providers](/models) for the built-in groups.
 
 ## Next steps
 
 - [Desktop app](/quickstart-desktop): a double-click install that opens already signed in.
-- [CLI and Web App](/quickstart-cli): one line installs `linsight`; includes the full installation reference.
+- [CLI and Web App](/quickstart-cli): one line installs `jiumate`; includes the full installation reference.
 - [SDK](/quickstart-sdk): create Agents and Sessions from your own program.

@@ -28,7 +28,7 @@ import electronUpdater from "electron-updater";
 import type {
   DesktopUpdateStatus,
   DesktopUpdaterCommandMessage,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import { feedUrlOverride, updateSourceConfig, updateSupport } from "./update-support.js";
 import {
   feedLabel,
@@ -47,11 +47,11 @@ const FIRST_CHECK_DELAY_MS = 20_000;
 /** Subsequent automatic checks. */
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-const RELEASES_URL = "https://github.com/qiaiqian67/linsight/releases";
+const RELEASES_URL = "https://github.com/qiaiqian67/jiumate/releases";
 const GITHUB_FEED = {
   provider: "github" as const,
   owner: "qiaiqian67",
-  repo: "linsight",
+  repo: "jiumate",
 };
 
 function log(line: string): void {
@@ -129,7 +129,7 @@ async function refreshUpdateFeedOnce(): Promise<void> {
       if (tag === null) {
         feedState = { phase: "unavailable" };
         log(
-          "LINSIGHT_UPDATE_SOURCE=oss but the OSS mirror latest.json is unavailable or invalid; updates are disabled for this check.",
+          "JIUMATE_UPDATE_SOURCE=oss but the OSS mirror latest.json is unavailable or invalid; updates are disabled for this check.",
         );
         return;
       }
@@ -314,7 +314,7 @@ export function initUpdater(getWindow: () => BrowserWindow | null): void {
       manualCheckInFlight = false;
       void dialog.showMessageBox({
         type: "info",
-        message: "Linsight is up to date.",
+        message: "JiuMate is up to date.",
         detail: `Version ${app.getVersion()} is the latest release.`,
         buttons: ["OK"],
       });
@@ -368,10 +368,10 @@ export function initUpdater(getWindow: () => BrowserWindow | null): void {
 
   const config = updateSourceConfig(process.env);
   if (config.invalidSource) {
-    log("LINSIGHT_UPDATE_SOURCE has an unsupported value; treated as auto.");
+    log("JIUMATE_UPDATE_SOURCE has an unsupported value; treated as auto.");
   }
   if (config.invalidProbe) {
-    log("LINSIGHT_UPDATE_SPEED_PROBE has an unsupported value; treated as 1.");
+    log("JIUMATE_UPDATE_SPEED_PROBE has an unsupported value; treated as 1.");
   }
 
   if (config.source === "github") {
@@ -559,7 +559,7 @@ async function promptDownload(version: string, parent: BrowserWindow | null): Pr
     type: "info" as const,
     message: `Version ${version} is available.`,
     detail:
-      "Download it now? Linsight keeps running while it downloads, and you will be asked to restart when it is ready.",
+      "Download it now? JiuMate keeps running while it downloads, and you will be asked to restart when it is ready.",
     buttons: ["Download", "Later"],
     defaultId: 0,
     cancelId: 1,
@@ -576,7 +576,7 @@ async function promptRestart(version: string, parent: BrowserWindow | null): Pro
   const options = {
     type: "info" as const,
     message: `Version ${version} is ready to install.`,
-    detail: "Linsight will restart to finish updating. Running tasks will be interrupted.",
+    detail: "JiuMate will restart to finish updating. Running tasks will be interrupted.",
     buttons: ["Restart now", "Later"],
     defaultId: 0,
     cancelId: 1,

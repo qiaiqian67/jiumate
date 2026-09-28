@@ -3,7 +3,7 @@ title: Third-Party and Open-Source Licenses
 description: What this repository will and will not ship, what enforces it, and the traps already found.
 ---
 
-Linsight distributes executables — a desktop app, a server package, a CLI. Third-party code baked into those artifacts carries its license along with it, and a license obligation is not something attention alone satisfies: it decides whether a library may be used at all, and whether it may be modified. This page states the rule, how it is enforced, and the specific conclusions already reached.
+JiuMate distributes executables — a desktop app, a server package, a CLI. Third-party code baked into those artifacts carries its license along with it, and a license obligation is not something attention alone satisfies: it decides whether a library may be used at all, and whether it may be modified. This page states the rule, how it is enforced, and the specific conclusions already reached.
 
 ## The rule
 
@@ -33,7 +33,7 @@ There is one today:
 
 - **`khroma`** — reported as `Unknown` because its package.json carries no license field; the repository states MIT. Pulled in transitively by mermaid (the web app's diagram renderer), so it is not a dependency anyone here chose directly.
 
-The first entry this gate ever produced was `@linsight/use-guizang-ppt`, an optional plugin under AGPL-3.0. It was recorded rather than silently allowed, and then removed: the license is one this project has ruled out, and `use-bento-slides` (MIT) covers the same presentation use case.
+The first entry this gate ever produced was `@jiumate/use-guizang-ppt`, an optional plugin under AGPL-3.0. It was recorded rather than silently allowed, and then removed: the license is one this project has ruled out, and `use-bento-slides` (MIT) covers the same presentation use case.
 
 ## Conclusions already reached
 

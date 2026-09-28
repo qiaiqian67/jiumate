@@ -1,12 +1,12 @@
 /**
  * Is the server this build installed on that machine running, and which machine is it?
  *
- * One ssh round trip answers both: `linsight server status` over there prints one line of
+ * One ssh round trip answers both: `jiumate server status` over there prints one line of
  * JSON (machine-status.ts). The far side has Node, so the far side formats; this side
  * carries no parser for a shell's output. ssh's own failure is not a separate condition —
  * it IS the answer "cannot reach this machine", carrying OpenSSH's diagnostic.
  */
-import { remoteLinsight } from "./commands.js";
+import { remoteJiuMate } from "./commands.js";
 import { jsonAnswer } from "./answer.js";
 import type { RemoteTarget } from "./commands.js";
 import type { RemotePlatform } from "./detect.js";
@@ -19,7 +19,7 @@ import type { MachineStatus } from "../machine-status.js";
  * which merges the streams and reports an empty stderr.
  */
 export function readServerStateCommand(platform: RemotePlatform): string {
-  return `${remoteLinsight(platform)} server status 2>&1`;
+  return `${remoteJiuMate(platform)} server status 2>&1`;
 }
 
 type MachineServerState =

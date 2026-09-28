@@ -1,6 +1,6 @@
 /**
  * API endpoint wrappers: one function per API.
- * DTO types come from @prismshadow/linsight-server/api (**type import only**, resolved via
+ * DTO types come from @prismshadow/jiumate-server/api (**type import only**, resolved via
  * tsconfig paths to the server contract file types.ts; must not be a value import — server
  * code must not enter the browser bundle).
  */
@@ -144,9 +144,9 @@ import type {
   VaultUpdateRequest,
   VersionResponse,
   WorkspaceFilesResponse,
-} from "@prismshadow/linsight-server/api";
-import type { MCPServerConfig } from "@prismshadow/linsight-core/interfaces";
-import type { DocumentPreview } from "@prismshadow/linsight-core/documents";
+} from "@prismshadow/jiumate-server/api";
+import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
+import type { DocumentPreview } from "@prismshadow/jiumate-core/documents";
 import { apiFetch, apiFetchWithMeta, postBinary } from "./client";
 // Auth & user -----------------------------------------------------------------
 
@@ -1303,7 +1303,7 @@ export const checkUpdate = (force = false) =>
 /** Admin only: the self-update job's status — polled while it runs. */
 export const getUpdateJob = () => apiFetch<UpdateJobStatus>("/api/version/update");
 
-/** Admin only: starts the self-update job (`linsight update` on the server host, in the background) and answers with its status. */
+/** Admin only: starts the self-update job (`jiumate update` on the server host, in the background) and answers with its status. */
 export const startUpdateJob = () =>
   apiFetch<UpdateJobStatus>("/api/version/update", { method: "POST", body: {} });
 

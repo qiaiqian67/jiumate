@@ -20,13 +20,13 @@ describe("apiProxyTarget", () => {
     expect(apiProxyTarget({ PORT: "9999" })).toBe("http://127.0.0.1:9999");
   });
 
-  it("LINSIGHT_API_PROXY replaces the whole target, PORT and all", () => {
-    expect(apiProxyTarget({ PORT: "9999", LINSIGHT_API_PROXY: "http://10.0.0.2:8080" })).toBe(
+  it("JIUMATE_API_PROXY replaces the whole target, PORT and all", () => {
+    expect(apiProxyTarget({ PORT: "9999", JIUMATE_API_PROXY: "http://10.0.0.2:8080" })).toBe(
       "http://10.0.0.2:8080",
     );
   });
 
-  it("an empty LINSIGHT_API_PROXY falls back instead of proxying to nowhere", () => {
-    expect(apiProxyTarget({ LINSIGHT_API_PROXY: "" })).toBe("http://127.0.0.1:7368");
+  it("an empty JIUMATE_API_PROXY falls back instead of proxying to nowhere", () => {
+    expect(apiProxyTarget({ JIUMATE_API_PROXY: "" })).toBe("http://127.0.0.1:7368");
   });
 });

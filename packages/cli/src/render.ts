@@ -40,9 +40,9 @@
  *
  * No third-party color library is used; only minimal ANSI escapes — and they are emitted at
  * all only when the output stream supports color (see `supportsColor`): piped output, e.g. a
- * nested `linsight run` driven through `exec_command`, must stay plain (#102).
+ * nested `jiumate run` driven through `exec_command`, must stay plain (#102).
  */
-import { isEventMessage, isModelMessage, parseUserSteeringText } from "@prismshadow/linsight-core";
+import { isEventMessage, isModelMessage, parseUserSteeringText } from "@prismshadow/jiumate-core";
 import type {
   AbortPayload,
   ApprovalDecision,
@@ -64,7 +64,7 @@ import type {
   ToolCallPayload,
   ToolDefinition,
   ToolListReadyPayload,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import { renderFileToolApprovalPayload, renderPartialToolCall } from "./tool-render.js";
 import { ToolOutputCollapser, collapseLines } from "./output-collapse.js";
 import { defaultMessages } from "./i18n.js";
@@ -95,7 +95,7 @@ const PLAIN_PALETTE: Palette = { dim: "", green: "", red: "", cyan: "", magenta:
  * Whether ANSI color should be emitted on `stream`: requires a TTY with `NO_COLOR`
  * unset/empty and `TERM` other than `dumb`; a non-empty `FORCE_COLOR` overrides all of that —
  * `"0"` forces plain, anything else forces color (Node's own semantics, where `FORCE_COLOR`
- * defeats `NO_COLOR`). Keeps a piped nested CLI — `linsight run` driven through
+ * defeats `NO_COLOR`). Keeps a piped nested CLI — `jiumate run` driven through
  * `exec_command` — from leaking escapes into tool output (#102).
  */
 export function supportsColor(
@@ -206,7 +206,7 @@ export interface RenderOptions {
   /**
    * Collapse long tool outputs to head/tail lines plus a dim elision marker (see
    * output-collapse.ts). Display only — the Trace keeps the full text. Default off, so
-   * `linsight run` (whose output feeds pipes and nested CLIs) stays complete; the chat
+   * `jiumate run` (whose output feeds pipes and nested CLIs) stays complete; the chat
    * REPL turns it on unless `--verbose`.
    */
   collapseToolOutput?: boolean;

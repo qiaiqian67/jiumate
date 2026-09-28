@@ -26,7 +26,7 @@
  *     (experimental; the startup script disables the ExperimentalWarning).
  *
  * The loopback merge is load-bearing in every state: the CLI's readiness probe
- * (`linsight web` imports the server in-process and polls its own root path), SSE, and
+ * (`jiumate web` imports the server in-process and polls its own root path), SSE, and
  * Workspace previews all ride the loopback names, so a proxy that intercepts loopback
  * would take the whole App down. `localhost,127.0.0.1,::1` is therefore ALWAYS appended
  * to the effective NO_PROXY, regardless of what the environment declares.

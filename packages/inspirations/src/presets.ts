@@ -1,5 +1,5 @@
 /**
- * The built-in inspiration library: the categories and cases that ship with Linsight.
+ * The built-in inspiration library: the categories and cases that ship with JiuMate.
  *
  * These are the eleven examples the draft screen used to hard-code, moved here so that one
  * catalog serves every surface — the gallery page, the draft screen's picker, and the API. Their
@@ -156,7 +156,7 @@ export const BUILTIN_INSPIRATION_CASES: readonly InspirationCaseInput[] = [
 - Keyboard shortcuts: Space play/pause, ← → previous/next, ↑ ↓ volume
 
 ## Design
-Linsight visual style (see the web-design skill), dark by default. On phones the sidebar becomes a horizontally scrolling top bar.
+JiuMate visual style (see the web-design skill), dark by default. On phones the sidebar becomes a horizontally scrolling top bar.
 
 When done, open index.html in a browser and self-test once.`,
     promptZh: `用 SoundCloud Widget API（见 https://developers.soundcloud.com/docs/api/html5-widget）做一个英雄联盟 Worlds 主题曲播放器，单文件 index.html，file:// 打开即用。
@@ -182,7 +182,7 @@ When done, open index.html in a browser and self-test once.`,
 - 键盘快捷键：空格播放暂停、← → 切歌、↑ ↓ 调音量
 
 ## 设计
-Linsight 视觉风格（见 web-design 技能），默认深色。手机端侧边栏变为顶部横向滚动。
+JiuMate 视觉风格（见 web-design 技能），默认深色。手机端侧边栏变为顶部横向滚动。
 
 完成后在浏览器打开 index.html 自测一次。`,
     agentId: null,
@@ -229,11 +229,11 @@ Linsight 视觉风格（见 web-design 技能），默认深色。手机端侧�
     title: "Conversational investment analyst",
     titleZh: "对话式投资分析助理",
     description:
-      "A conversational market Copilot on the Linsight SDK: the home page lists what is trending, with the market factors behind every call",
+      "A conversational market Copilot on the JiuMate SDK: the home page lists what is trending, with the market factors behind every call",
     descriptionZh:
-      "用 Linsight SDK 做对话式看盘 Copilot：首页列出近期走势较好的股票，每个判断都说清市场因素",
+      "用 JiuMate SDK 做对话式看盘 Copilot：首页列出近期走势较好的股票，每个判断都说清市场因素",
     prompt:
-      "Build a conversational stock-market Copilot on the Linsight SDK, along the lines of " +
+      "Build a conversational stock-market Copilot on the JiuMate SDK, along the lines of " +
       "perplexity.ai/finance: from startup it pulls live market data every 5 minutes, and the " +
       "home page lists the stocks trending strongest lately alongside how the sectors compare. " +
       "Every call has to name the market factors behind it — policy, sector news, fund flows, " +
@@ -242,13 +242,13 @@ Linsight 视觉风格（见 web-design 技能），默认深色。手机端侧�
       'stock for me": resolve a company name to its ticker itself, and when there is no match ' +
       "or the company is not listed, say so rather than inventing a quote.",
     promptZh:
-      "用 Linsight SDK 做一个对话式的股市 Copilot，形态参考 perplexity.ai/finance：启动后每 5 分钟实时抓取大盘行情，" +
+      "用 JiuMate SDK 做一个对话式的股市 Copilot，形态参考 perplexity.ai/finance：启动后每 5 分钟实时抓取大盘行情，" +
       "首页直接列出近期走势较好的股票和板块强弱，每个判断都要说清背后的市场因素——政策、行业消息、" +
       "资金流向、财报或宏观数据，而不是技术指标，" +
       "只做分析不是投资建议。它的查股工具要能答「帮我查一下智谱的股票」这类问题：" +
       "按公司名（中文也行）自己对应到股票代码，查不到或没上市就直说，不要编。",
     agentId: null,
-    skills: ["linsight-sdk", "web-design"],
+    skills: ["jiumate-sdk", "web-design"],
     tools: [],
     cover: { kind: "glyph", glyph: "📈" },
     previewFilename: null,
@@ -283,7 +283,7 @@ Linsight 视觉风格（见 web-design 技能），默认深色。手机端侧�
       "完成后运行应用，用一个中文问题和一个英文问题各自测一次，" +
       "确认两者都检索到了正确的英文文档、流式回答正常，并告诉我访问方式。",
     agentId: null,
-    skills: ["linsight-sdk", "web-design"],
+    skills: ["jiumate-sdk", "web-design"],
     tools: [],
     cover: { kind: "glyph", glyph: "📚" },
     previewFilename: null,

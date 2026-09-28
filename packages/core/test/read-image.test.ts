@@ -53,7 +53,7 @@ async function run(args: Record<string, unknown>, workspaceDir: string) {
 let tmp: string;
 
 beforeEach(async () => {
-  tmp = await mkdtemp(path.join(tmpdir(), "linsight-readimg-"));
+  tmp = await mkdtemp(path.join(tmpdir(), "jiumate-readimg-"));
 });
 
 afterEach(async () => {

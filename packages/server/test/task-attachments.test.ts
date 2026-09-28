@@ -21,8 +21,8 @@ import {
   modelVisiblePath,
   parseHandoffMessage,
   scratchpadDir,
-} from "@prismshadow/linsight-core";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";
 import { MAX_ATTACHMENT_COUNT } from "../src/services/attachment-limits.js";
@@ -504,7 +504,7 @@ describe("scratchpad directory containment", () => {
       t.deps.sessionsRepo.findById(LINK_SID)!,
       recordingFakeSession(LINK_SID, []),
     );
-    outside = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-outside-"));
+    outside = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-outside-"));
   });
   afterEach(async () => {
     await fs.rm(outside, { recursive: true, force: true });

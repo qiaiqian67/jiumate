@@ -8,7 +8,7 @@
  * `BUILTIN_TOOL_FACTORIES` — rather than to a copy of the list written out here.
  */
 import { afterEach, describe, expect, it } from "vitest";
-import { BUILTIN_TOOL_FACTORIES } from "@prismshadow/linsight-core";
+import { BUILTIN_TOOL_FACTORIES } from "@prismshadow/jiumate-core";
 import { toolLabel, toolLabelHidesId } from "../src/lib/tool-labels";
 import { setActiveStrings, zh } from "../src/lib/strings";
 import { en } from "../src/lib/strings-en";

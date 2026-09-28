@@ -2,7 +2,7 @@
  * Mints an API session by inserting a row into the root's `web.db` — no running server needed.
  * Authorized by being able to read and write that root, which already holds every credential
  * the token could reach. On a multi-user box that means the OS account running the server;
- * everyone else signs in with `linsight auth login --server <url>`.
+ * everyone else signs in with `jiumate auth login --server <url>`.
  */
 import path from "node:path";
 import fs from "node:fs";
@@ -33,12 +33,12 @@ export type MintTokenResult =
 function explain(err: unknown, dbPath: string): string {
   const message = err instanceof Error ? err.message : String(err);
   if (message.includes("no column named via")) {
-    return `${dbPath} predates this release — start the server once (\`linsight web\`) to upgrade it`;
+    return `${dbPath} predates this release — start the server once (\`jiumate web\`) to upgrade it`;
   }
   if (message.includes("unable to open database")) {
     return (
       `cannot open ${dbPath} — minting needs the data root's own OS account; ` +
-      "otherwise sign in with `linsight auth login --server <url>`"
+      "otherwise sign in with `jiumate auth login --server <url>`"
     );
   }
   return message;

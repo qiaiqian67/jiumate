@@ -124,7 +124,7 @@ describe("Environment.reconfigure with MCP Servers (a new model context's server
   let env: Environment;
 
   beforeAll(async () => {
-    dir = await realpath(await mkdtemp(path.join(tmpdir(), "linsight-mcp-reconf-")));
+    dir = await realpath(await mkdtemp(path.join(tmpdir(), "jiumate-mcp-reconf-")));
     env = new Environment({
       workspaceDir: dir,
       toolConfig: { customTools: [], mcpServers: [fixtureEntry()] },
@@ -200,7 +200,7 @@ describe("MCP over stdio through Environment", () => {
   let env: Environment;
 
   beforeAll(async () => {
-    tmp = await realpath(await mkdtemp(path.join(tmpdir(), "linsight-mcp-")));
+    tmp = await realpath(await mkdtemp(path.join(tmpdir(), "jiumate-mcp-")));
     env = new Environment({
       workspaceDir: tmp,
       toolConfig: { customTools: [], mcpServers: [fixtureEntry()] },
@@ -285,7 +285,7 @@ describe("MCP over stdio — per-server budgets and interruption", () => {
   let tmp: string;
 
   beforeAll(async () => {
-    tmp = await realpath(await mkdtemp(path.join(tmpdir(), "linsight-mcp-b-")));
+    tmp = await realpath(await mkdtemp(path.join(tmpdir(), "jiumate-mcp-b-")));
   });
 
   afterAll(async () => {
@@ -349,20 +349,20 @@ describe("MCP over stdio — per-server budgets and interruption", () => {
   it("the host's harness variables never reach a stdio server", async () => {
     // The stdio child env is the MCP SDK's safe-inherited allowlist plus the entry's own
     // env — assembled in provider.ts, apart from the command-session strip — so the
-    // serving process's LINSIGHT_HOME/PORT must be invisible here even though no strip
+    // serving process's JIUMATE_HOME/PORT must be invisible here even though no strip
     // runs on this path. Pinned locally because only the allowlist guarantees it: a
     // widened inherited base (say, spreading process.env) would leak silently otherwise.
     // The child env is captured when the server connects, i.e. at the first tool call of
     // this fresh Environment, so the pollution below is what that capture sees.
-    const saved = { LINSIGHT_HOME: process.env.LINSIGHT_HOME, PORT: process.env.PORT };
-    process.env.LINSIGHT_HOME = "leak-check-root";
+    const saved = { JIUMATE_HOME: process.env.JIUMATE_HOME, PORT: process.env.PORT };
+    process.env.JIUMATE_HOME = "leak-check-root";
     process.env.PORT = "7364";
     const env = makeEnv({ env: { FIXTURE_SECRET: "still-arrives" } });
     try {
       const final = finalPayload(await runTool(env, "mcp__fx__probe", {}));
-      const [secret, , linsightHome, port] = (final.output ?? "").split("|");
+      const [secret, , jiumateHome, port] = (final.output ?? "").split("|");
       expect(secret).toBe("still-arrives");
-      expect(linsightHome).toBe("");
+      expect(jiumateHome).toBe("");
       expect(port).toBe("");
     } finally {
       env.dispose();
@@ -392,7 +392,7 @@ describe("MCP over stdio — per-server permission override", () => {
   let tmp: string;
 
   beforeAll(async () => {
-    tmp = await realpath(await mkdtemp(path.join(tmpdir(), "linsight-mcp-p-")));
+    tmp = await realpath(await mkdtemp(path.join(tmpdir(), "jiumate-mcp-p-")));
   });
 
   afterAll(async () => {
@@ -460,7 +460,7 @@ describe("Session first-run bootstrap events", () => {
   let tmp: string;
 
   beforeAll(async () => {
-    tmp = await realpath(await mkdtemp(path.join(tmpdir(), "linsight-mcp-s-")));
+    tmp = await realpath(await mkdtemp(path.join(tmpdir(), "jiumate-mcp-s-")));
   });
 
   afterAll(async () => {
@@ -778,7 +778,7 @@ describe("MCP over Streamable HTTP", () => {
   });
 
   it("discovers and calls tools over http, sending the configured headers on every request", async () => {
-    const tmp = await mkdtemp(path.join(tmpdir(), "linsight-mcp-http-"));
+    const tmp = await mkdtemp(path.join(tmpdir(), "jiumate-mcp-http-"));
     const env = new Environment({
       workspaceDir: tmp,
       toolConfig: {
@@ -786,7 +786,7 @@ describe("MCP over Streamable HTTP", () => {
         mcpServers: [
           {
             name: "web",
-            config: { transport: "http", url, headers: { "x-linsight-test": "yes" } },
+            config: { transport: "http", url, headers: { "x-jiumate-test": "yes" } },
           },
         ],
       },
@@ -798,7 +798,7 @@ describe("MCP over Streamable HTTP", () => {
       expect(final.stop_reason).toBe("completed");
       expect(final.output).toBe("5");
       expect(seenHeaders.length).toBeGreaterThan(0);
-      expect(seenHeaders.every((h) => h["x-linsight-test"] === "yes")).toBe(true);
+      expect(seenHeaders.every((h) => h["x-jiumate-test"] === "yes")).toBe(true);
     } finally {
       env.dispose();
       await rmEventually(tmp);

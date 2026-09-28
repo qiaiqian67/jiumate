@@ -1,6 +1,6 @@
 /**
- * Default Linsight server port (internal shared constant; the barrel re-exports
- * only DEFAULT_SERVER_PORT, as the CLI `linsight server` / `linsight web` and server
+ * Default JiuMate server port (internal shared constant; the barrel re-exports
+ * only DEFAULT_SERVER_PORT, as the CLI `jiumate server` / `jiumate web` and server
  * default-port source of truth — previously each hardcoded the number). It is a
  * fallback only: the `--port` flag and the PORT environment variable override it at
  * runtime.
@@ -13,16 +13,16 @@
  *
  * | port | who                                | data root                  | where                                |
  * | ---- | ---------------------------------- | -------------------------- | ------------------------------------ |
- * | 7364 | installed server / Web UI          | `~/.linsight/data`          | `DEFAULT_SERVER_PORT` below          |
+ * | 7364 | installed server / Web UI          | `~/.jiumate/data`          | `DEFAULT_SERVER_PORT` below          |
  * | 7365 | `pnpm dev:web` (Vite)              | none (proxies to 7368)     | `packages/web/vite.config.ts`        |
  * | 7366 | `pnpm dev:landing` (Vite)          | none (static)              | `packages/landing/vite.config.ts`    |
  * | 7367 | `pnpm dev:docs` (Vite)             | none (static)              | `packages/docs/vite.config.ts`       |
- * | 7368 | `pnpm dev:server` (dev backend)    | `~/.linsight/dev-data`      | `packages/server/package.json` `dev` |
- * | 7369 | `pnpm linsight web` (dev CLI)       | `~/.linsight/dev-data-cli`  | the root and cli `linsight` scripts   |
+ * | 7368 | `pnpm dev:server` (dev backend)    | `~/.jiumate/dev-data`      | `packages/server/package.json` `dev` |
+ * | 7369 | `pnpm jiumate web` (dev CLI)       | `~/.jiumate/dev-data-cli`  | the root and cli `jiumate` scripts   |
  *
  * The desktop app binds no fixed port in either form (PORT=0 with a per-instance sticky
- * preference); its release form shares `~/.linsight/data` with the CLI by design and its
- * dev form takes `~/.linsight/dev-data` (see `packages/desktop/src/app-identity.ts`). The
+ * preference); its release form shares `~/.jiumate/data` with the CLI by design and its
+ * dev form takes `~/.jiumate/dev-data` (see `packages/desktop/src/app-identity.ts`). The
  * web e2e harness runs on 8930/8931 against a throwaway root (`packages/web/e2e/run.sh`).
  *
  * The development backend deliberately does **not** share 7364 with an installed one: the
@@ -31,7 +31,7 @@
  * the one being worked on. The dev data root is separated for the same reason.
  *
  * The dev CLI gets a third port rather than reusing the backend's 7368 because the two also
- * run at once: a harness started as `pnpm linsight web` is exactly what asks an Agent to run
+ * run at once: a harness started as `pnpm jiumate web` is exactly what asks an Agent to run
  * `pnpm dev` in this repo, and sharing the number would reintroduce that collision one step
  * to the left -- `dev:server` failing to bind, or the Vite proxy answering from the harness.
  * Its data root is split from `dev-data` for the same reason as its port: a data root

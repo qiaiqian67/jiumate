@@ -24,8 +24,8 @@
  * minutes anyway, and no key exists until the exchange runs).
  */
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { APP_URL, providerInfo } from "@prismshadow/linsight-core/model-catalog";
-import type { ModelProviderOAuth } from "@prismshadow/linsight-core/model-catalog";
+import { APP_URL, providerInfo } from "@prismshadow/jiumate-core/model-catalog";
+import type { ModelProviderOAuth } from "@prismshadow/jiumate-core/model-catalog";
 import { HttpError } from "../http/errors.js";
 import { badRequest } from "../http/validate.js";
 
@@ -307,7 +307,7 @@ export class ModelOAuthService {
       throw new HttpError(
         409,
         "model_oauth_flow_used",
-        "This authorization has already been used. Start a new one in Linsight.",
+        "This authorization has already been used. Start a new one in JiuMate.",
       );
     }
     flow.code = input.code;

@@ -122,7 +122,7 @@ describe("loadLibraryPlugins", () => {
     // Merged plugins carry several skills, each still resolvable by its own name.
     expect(librarySkill("web-design")?.plugin.name).toBe("software-development");
     expect(librarySkill("unified-llm-api")?.plugin.name).toBe("agent-development");
-    expect(librarySkill("linsight-config")?.plugin.name).toBe("agent-development");
+    expect(librarySkill("jiumate-config")?.plugin.name).toBe("agent-development");
   });
 });
 

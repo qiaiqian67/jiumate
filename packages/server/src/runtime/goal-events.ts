@@ -5,8 +5,8 @@
  * those server events rather than the hook events, so this is the only place the plugin's
  * record shape is interpreted. Round boundaries are core's `isHookInput`.
  */
-import { isEventMessage } from "@prismshadow/linsight-core";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+import { isEventMessage } from "@prismshadow/jiumate-core";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 
 /** The name the goal plugin's hook package answers under. */
 const GOAL_HOOK_NAME = "goal";

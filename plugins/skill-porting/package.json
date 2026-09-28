@@ -1,11 +1,11 @@
 {
-  "name": "@linsight/skill-porting",
+  "name": "@jiumate/skill-porting",
   "version": "0.3.0",
-  "description": "Install skills from external ecosystems into this agent's agent_state/skills/ — resolve Claude Code plugin marketplaces, the Codex plugin repo, skills.sh registry names, GitHub repos, or local folders to their skill directories, review every file, and normalize SKILL.md frontmatter to the Linsight format.",
+  "description": "Install skills from external ecosystems into this agent's agent_state/skills/ — resolve Claude Code plugin marketplaces, the Codex plugin repo, skills.sh registry names, GitHub repos, or local folders to their skill directories, review every file, and normalize SKILL.md frontmatter to the JiuMate format.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "plugins/skill-porting"
   },
   "files": [

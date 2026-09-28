@@ -1,7 +1,7 @@
 /**
  * Inspiration catalog: the built-in library merged with the cases an admin authored.
  *
- * The package format and the on-disk catalog live in `@prismshadow/linsight-inspirations`; this
+ * The package format and the on-disk catalog live in `@prismshadow/jiumate-inspirations`; this
  * service adds the host-side concerns — anchoring the library at the data root, merging the two
  * sources, enforcing the rules that span both (a category must exist, a built-in id cannot be
  * claimed, a category in use cannot be deleted), and decoding the cover image an editor uploads.
@@ -50,13 +50,13 @@ import {
   writeInspirationCategory,
   writeInspirationCover,
   writeInspirationPreview,
-} from "@prismshadow/linsight-inspirations";
+} from "@prismshadow/jiumate-inspirations";
 import type {
   InspirationCase,
   InspirationCaseInput,
   InspirationCatalog,
   InspirationCategory,
-} from "@prismshadow/linsight-inspirations";
+} from "@prismshadow/jiumate-inspirations";
 
 /** Raised for a request the catalog refuses. The message is safe to surface to a caller. */
 export class InspirationCatalogError extends Error {

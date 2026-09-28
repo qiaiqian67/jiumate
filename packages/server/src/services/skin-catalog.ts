@@ -1,16 +1,16 @@
 /**
- * Skin catalog: list / import / delete Linsight skin packages on the host.
+ * Skin catalog: list / import / delete JiuMate skin packages on the host.
  *
- * The package format itself lives in `@prismshadow/linsight-skins`; this service adds the
+ * The package format itself lives in `@prismshadow/jiumate-skins`; this service adds the
  * host-side concerns: anchoring the catalog under the data root, hashing source paths for
  * receipts, and reading the asset bytes a fingerprint has to cover.
  *
  * The catalog is a directory of folders, one per installed skin:
  *   <root>/skins/<slug>/skin.json
  *   <root>/skins/<slug>/<asset-filename>            (background and/or preview)
- *   <root>/skins/<slug>/.linsight-skin-receipt.json (after an import)
+ *   <root>/skins/<slug>/.jiumate-skin-receipt.json (after an import)
  *
- * Builtin presets live in the web bundle (see `@prismshadow/linsight-skins/presets`) and are
+ * Builtin presets live in the web bundle (see `@prismshadow/jiumate-skins/presets`) and are
  * merged with this catalog by the picker, the same way the pet picker merges its presets.
  *
  * ## Two source formats, one publish path
@@ -46,7 +46,7 @@ import {
   type SkinPackage,
   type SkinReceipt,
   type ZipEntry,
-} from "@prismshadow/linsight-skins";
+} from "@prismshadow/jiumate-skins";
 
 /** Diagnostic codes — stable strings the picker can render without surprises. */
 export type SkinDiagnostic = string;
@@ -171,7 +171,7 @@ export class SkinCatalogService {
     const os = await import("node:os");
     const path = await import("node:path");
     const sourceKey = createHash("sha256").update(archive).digest("hex");
-    const staging = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-theme-"));
+    const staging = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-theme-"));
     try {
       for (const entry of entries) {
         // The reader has already refused traversal, nesting, separators and non-ASCII, so every

@@ -4,16 +4,16 @@
  *
  *   GET  /api/version               -> versionReport(): the running build's identity plus
  *                                      this root's pushed harness, the same record
- *                                      `linsight version --json` prints
+ *                                      `jiumate version --json` prints
  *   GET  /api/version/update-check  -> UpdateCheckService (fail-soft, cached, opt-out env;
  *                                      ?force=1 bypasses the cache for the manual check)
  *   GET  /api/version/update        -> admin only: the self-update job's status
- *   POST /api/version/update        -> admin only: starts the job — `linsight update --yes`
+ *   POST /api/version/update        -> admin only: starts the job — `jiumate update --yes`
  *                                      in the background, progress readable at GET
  *                                      (services/update-job.ts owns the run)
  *   POST /api/version/restart       -> admin only: restart into the installed release
  *
- * The restart is the supervisor's job: `linsight server|web` runs this process as a child and
+ * The restart is the supervisor's job: `jiumate server|web` runs this process as a child and
  * relaunches it when it exits with core's SERVER_RESTART_EXIT_CODE, which is what the
  * lifecycle capability's trigger does after the graceful shutdown. Without a supervisor the
  * route says so (`no_supervisor`) instead of stopping a service nobody would bring back,
@@ -66,10 +66,10 @@ export function versionRoutes(deps: AppDeps): Hono<AppEnv> {
     requireAdmin(c);
     // Which release the run targets is a label for the modal, read from the server's own
     // (cached) lookup — never from the request, and never something the run depends on:
-    // `linsight update` resolves the release itself.
+    // `jiumate update` resolves the release itself.
     const check = await deps.updateCheck.check(false);
     const target = check.updateAvailable ? check.latestVersion : null;
-    const cliEntry = process.env.LINSIGHT_CLI_ENTRY ?? null;
+    const cliEntry = process.env.JIUMATE_CLI_ENTRY ?? null;
     return c.json(deps.updateJob.start(cliEntry, target) satisfies UpdateJobStatus);
   });
 

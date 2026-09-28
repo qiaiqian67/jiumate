@@ -40,9 +40,9 @@ export function PetMenu({
 }) {
   return (
     <>
-      <div className="linsight-pet-menu__backdrop" onPointerDown={onClose} />
+      <div className="jiumate-pet-menu__backdrop" onPointerDown={onClose} />
       <div
-        className="linsight-pet-menu"
+        className="jiumate-pet-menu"
         role="menu"
         style={{ right: `${anchor.right}px`, bottom: `${anchor.bottom}px` }}
       >
@@ -51,8 +51,8 @@ export function PetMenu({
             key={item.key}
             type="button"
             role="menuitem"
-            className={`linsight-pet-menu__item${
-              item.danger === true ? " linsight-pet-menu__item--danger" : ""
+            className={`jiumate-pet-menu__item${
+              item.danger === true ? " jiumate-pet-menu__item--danger" : ""
             }`}
             onClick={() => {
               onClose();

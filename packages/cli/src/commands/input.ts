@@ -1,12 +1,12 @@
 /**
- * `linsight input` — send a message into an existing session, or poll its last answer.
+ * `jiumate input` — send a message into an existing session, or poll its last answer.
  *
- *   linsight input [session_id] [-m <text>] [--timeout <duration>]
+ *   jiumate input [session_id] [-m <text>] [--timeout <duration>]
  *                 [--project-id <id>] [--agent-id <id>] [--json] [--server <url>]
  *
- * `[session_id]` accepts a full id or a unique fragment (e.g. the 8-hex tail `linsight
+ * `[session_id]` accepts a full id or a unique fragment (e.g. the 8-hex tail `jiumate
  * ls` prints); omitted, it is the agent's most recent session (announced as a dim
- * `[latest]` line on stderr — see resolveSessionTarget), which makes bare `linsight
+ * `[latest]` line on stderr — see resolveSessionTarget), which makes bare `jiumate
  * input` the answer to "what did my agent last say".
  *
  * With `-m`: a running session gets the text as steering (POST /steer, delivered between
@@ -23,12 +23,12 @@
  * before the snapshot is taken; still running at expiry prints the current latest text
  * plus the still-running note, exit 0 (`--timeout 0` snapshots immediately).
  *
- * The fragment search scopes to the project (LINSIGHT_PROJECT_ID / default_project);
+ * The fragment search scopes to the project (JIUMATE_PROJECT_ID / default_project);
  * a full session id needs no scope.
- * Docs: /docs/cli § "linsight input".
+ * Docs: /docs/cli § "jiumate input".
  */
 import type { Command } from "commander";
-import { isModelMessage, type OmniMessage } from "@prismshadow/linsight-core";
+import { isModelMessage, type OmniMessage } from "@prismshadow/jiumate-core";
 import { StreamRenderer, dim } from "../render.js";
 import { parseDurationMs } from "../duration.js";
 import { promptApproval } from "../approval.js";

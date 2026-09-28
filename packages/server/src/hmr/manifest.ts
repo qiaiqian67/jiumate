@@ -1,7 +1,7 @@
 /**
  * The harness.json shape (`<root>/hmr/harness.json`) and pure readers over it.
  *
- * Split out of host.ts so a reader never needs a running HmrHost: `linsight` is a
+ * Split out of host.ts so a reader never needs a running HmrHost: `jiumate` is a
  * separate, short-lived process per invocation (see packages/cli/src/index.ts) — it
  * has no host instance to ask, only the data root's own harness.json on disk.
  * `resolveCliBundlePath` is that reader: a plain disk read, no HTTP, no boot, no
@@ -19,7 +19,7 @@
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import type { HarnessInfo } from "@prismshadow/linsight-core";
+import type { HarnessInfo } from "@prismshadow/jiumate-core";
 
 /**
  * The committed on-disk record: a runtime restart resumes exactly this CODE (platform,
@@ -70,7 +70,7 @@ function str(value: unknown): string | null {
  * three artifact pointers. Null when nothing has ever been pushed to this root.
  *
  * Read defensively rather than cast: harness.json is written only by persistVersion, but a
- * truncated or hand-edited file must degrade a `linsight version` to missing fields, never
+ * truncated or hand-edited file must degrade a `jiumate version` to missing fields, never
  * crash it. A record missing every artifact pointer counts as nothing pushed.
  */
 export async function readHarnessInfo(root: string): Promise<HarnessInfo | null> {

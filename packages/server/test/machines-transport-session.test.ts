@@ -16,7 +16,7 @@ posixOnly("the session", () => {
   let logFile: string;
   let originalPath: string | undefined;
   beforeEach(() => {
-    stubBin = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-session-"));
+    stubBin = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-session-"));
     logFile = path.join(stubBin, "calls.log");
     // Every invocation is logged; an alias containing "refused" dies the way a wrong key
     // does; anything else asked for `sh` becomes one — commands run locally, harmlessly.

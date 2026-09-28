@@ -52,7 +52,7 @@ async function run(tool: BuiltinTool, args: Record<string, unknown>, workspaceDi
 let tmp: string;
 
 beforeEach(async () => {
-  tmp = await mkdtemp(path.join(tmpdir(), "linsight-readdoc-"));
+  tmp = await mkdtemp(path.join(tmpdir(), "jiumate-readdoc-"));
   // A real document in the workspace, so path resolution is exercised against a file that parses.
   await copyFile(path.join(fixtureDir, "sample.xlsx"), path.join(tmp, "sheet.xlsx"));
   await mkdir(path.join(tmp, "nested"), { recursive: true });

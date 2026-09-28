@@ -12,7 +12,7 @@ describe("resolveShellRc", () => {
     const zsh = resolveShellRc("/bin/zsh", "/home/u");
     expect(zsh.kind).toBe("zsh");
     expect(zsh.rcPath).toBe(join("/home/u", ".zshrc"));
-    expect(zsh.body("zh")).toBe("export LINSIGHT_LANG=zh");
+    expect(zsh.body("zh")).toBe("export JIUMATE_LANG=zh");
 
     const bash = resolveShellRc("/usr/bin/bash", "/home/u");
     expect(bash.kind).toBe("bash");
@@ -21,7 +21,7 @@ describe("resolveShellRc", () => {
     const fish = resolveShellRc("/usr/local/bin/fish", "/home/u");
     expect(fish.kind).toBe("fish");
     expect(fish.rcPath).toBe(join("/home/u", ".config", "fish", "config.fish"));
-    expect(fish.body("en")).toBe("set -gx LINSIGHT_LANG en");
+    expect(fish.body("en")).toBe("set -gx JIUMATE_LANG en");
   });
 
   it("falls back to ~/.profile for an unknown shell", () => {
@@ -33,31 +33,31 @@ describe("resolveShellRc", () => {
 
 describe("upsertBlock", () => {
   it("appends a marked block when none exists", () => {
-    const out = upsertBlock("export PATH=/x\n", "export LINSIGHT_LANG=zh");
+    const out = upsertBlock("export PATH=/x\n", "export JIUMATE_LANG=zh");
     expect(out).toContain("export PATH=/x");
-    expect(out).toContain("# >>> Linsight LINSIGHT_LANG >>>");
-    expect(out).toContain("export LINSIGHT_LANG=zh");
-    expect(out).toContain("# <<< Linsight LINSIGHT_LANG <<<");
+    expect(out).toContain("# >>> JiuMate JIUMATE_LANG >>>");
+    expect(out).toContain("export JIUMATE_LANG=zh");
+    expect(out).toContain("# <<< JiuMate JIUMATE_LANG <<<");
   });
 
   it("replaces the block in place and is idempotent", () => {
-    const first = upsertBlock("", "export LINSIGHT_LANG=zh");
-    const second = upsertBlock(first, "export LINSIGHT_LANG=en");
+    const first = upsertBlock("", "export JIUMATE_LANG=zh");
+    const second = upsertBlock(first, "export JIUMATE_LANG=en");
     // Only one block remains, with its content replaced by the latest value.
-    expect(second.match(/Linsight LINSIGHT_LANG/g)?.length).toBe(2); // begin + end markers
-    expect(second).toContain("export LINSIGHT_LANG=en");
-    expect(second).not.toContain("export LINSIGHT_LANG=zh");
+    expect(second.match(/JiuMate JIUMATE_LANG/g)?.length).toBe(2); // begin + end markers
+    expect(second).toContain("export JIUMATE_LANG=en");
+    expect(second).not.toContain("export JIUMATE_LANG=zh");
     // Writing the same value again is stable (the block does not keep growing).
-    const third = upsertBlock(second, "export LINSIGHT_LANG=en");
+    const third = upsertBlock(second, "export JIUMATE_LANG=en");
     expect(third).toBe(second);
   });
 
   it("preserves surrounding content when replacing", () => {
-    const base = "line1\n" + upsertBlock("", "export LINSIGHT_LANG=zh") + "line2\n";
-    const out = upsertBlock(base, "export LINSIGHT_LANG=en");
+    const base = "line1\n" + upsertBlock("", "export JIUMATE_LANG=zh") + "line2\n";
+    const out = upsertBlock(base, "export JIUMATE_LANG=en");
     expect(out.startsWith("line1\n")).toBe(true);
     expect(out.endsWith("line2\n")).toBe(true);
-    expect(out).toContain("export LINSIGHT_LANG=en");
+    expect(out).toContain("export JIUMATE_LANG=en");
   });
 });
 
@@ -68,26 +68,26 @@ describe("applyLanguageToRc", () => {
   });
 
   it("writes the export line to the resolved startup file", async () => {
-    home = await mkdtemp(join(tmpdir(), "linsight-lang-"));
+    home = await mkdtemp(join(tmpdir(), "jiumate-lang-"));
     const { rcPath, kind } = await applyLanguageToRc("zh", { shell: "/bin/zsh", home });
     expect(kind).toBe("zsh");
     expect(rcPath).toBe(join(home, ".zshrc"));
     const content = await readFile(rcPath, "utf8");
-    expect(content).toContain("export LINSIGHT_LANG=zh");
+    expect(content).toContain("export JIUMATE_LANG=zh");
 
     // Switching the language again updates the file in place instead of appending.
     await applyLanguageToRc("en", { shell: "/bin/zsh", home });
     const updated = await readFile(rcPath, "utf8");
-    expect(updated).toContain("export LINSIGHT_LANG=en");
-    expect(updated).not.toContain("export LINSIGHT_LANG=zh");
-    expect(updated.match(/# >>> Linsight/g)?.length).toBe(1);
+    expect(updated).toContain("export JIUMATE_LANG=en");
+    expect(updated).not.toContain("export JIUMATE_LANG=zh");
+    expect(updated.match(/# >>> JiuMate/g)?.length).toBe(1);
   });
 
   it("creates nested config dir for fish", async () => {
-    home = await mkdtemp(join(tmpdir(), "linsight-lang-"));
+    home = await mkdtemp(join(tmpdir(), "jiumate-lang-"));
     const { rcPath } = await applyLanguageToRc("en", { shell: "/usr/bin/fish", home });
     expect(rcPath).toBe(join(home, ".config", "fish", "config.fish"));
     const content = await readFile(rcPath, "utf8");
-    expect(content).toContain("set -gx LINSIGHT_LANG en");
+    expect(content).toContain("set -gx JIUMATE_LANG en");
   });
 });

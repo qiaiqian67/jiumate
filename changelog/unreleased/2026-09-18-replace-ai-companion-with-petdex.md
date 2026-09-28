@@ -11,7 +11,7 @@ The AI 伴侣 feature (SVG fox / Live2D / VRM, persona injection, ASR mic, TTS r
 
 ## What ships
 
-- **`@prismshadow/linsight-pets`** — new workspace package. Arktype-validated `PetPackage` schema, manifest + spritesheet IO with strict bounds (64 KiB / 32 MiB / 64 MiB / 128 pets), SHA-256 fingerprinting, and a `.linsight-pet-receipt.json` round-trip so a re-install is idempotent. Mirrors OpenBitFun's `pet_packages.rs` byte-for-byte so Petdex downloads round-trip between hosts.
+- **`@prismshadow/jiumate-pets`** — new workspace package. Arktype-validated `PetPackage` schema, manifest + spritesheet IO with strict bounds (64 KiB / 32 MiB / 64 MiB / 128 pets), SHA-256 fingerprinting, and a `.jiumate-pet-receipt.json` round-trip so a re-install is idempotent. Mirrors OpenBitFun's `pet_packages.rs` byte-for-byte so Petdex downloads round-trip between hosts.
 - **`/api/pets`** — new REST surface on the server. `GET` lists installed pets + diagnostics; `GET /api/pets/:slug/spritesheet` serves installed atlas bytes; `POST /api/pets/import` accepts `{ path, expectedFingerprint? }` and validates before publishing; `DELETE /api/pets/:slug` removes an installed pet.
 - **`PUT /api/me/prefs`** — accepts the new `enablePet` / `activePetId` / `petWindowPosition` keys; legacy `companion*` keys are stripped silently.
 - **`/pet` route + frameless pet window** — replaces the former `/companion` route and the old `companion-window.ts`. Loads `${appOrigin}/pet`, transparent always-on-top, position persisted in prefs, IPC bridge `window.pet` (including `pickPackage` for folder import).

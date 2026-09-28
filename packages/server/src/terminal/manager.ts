@@ -12,7 +12,7 @@
  *   whatever it is running) alive — that is the entire point of a server-side terminal.
  */
 import fsp from "node:fs/promises";
-import type { Resources } from "@prismshadow/linsight-core/kernel";
+import type { Resources } from "@prismshadow/jiumate-core/kernel";
 import path from "node:path";
 import { HttpError } from "../http/errors.js";
 import { spawnHelperHint } from "../terminal/spawn-helper.js";

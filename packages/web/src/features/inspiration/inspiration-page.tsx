@@ -52,7 +52,7 @@ import type { InspirationFilter } from "./inspiration-service";
 import { toggleFavorite, useInspirationFavorites } from "./inspiration-favorites";
 import { removeInspirationCase, useInspirationCatalog } from "./inspiration-store";
 import { useInspirationInvoke } from "./inspiration-fill";
-import type { InspirationCase } from "@prismshadow/linsight-inspirations";
+import type { InspirationCase } from "@prismshadow/jiumate-inspirations";
 
 /** The tab strip's own keys: the three fixed ones plus one per category, prefixed to stay unique. */
 type TabKey = "all" | "featured" | "favorites" | `category:${string}`;

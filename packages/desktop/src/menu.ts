@@ -1,7 +1,7 @@
 /**
  * Application menu. Electron's default menu cannot be extended, only replaced, so the
  * standard structure is rebuilt here. The custom entries are native-only shell actions:
- * installing the bundled `linsight` command, and checking for desktop updates.
+ * installing the bundled `jiumate` command, and checking for desktop updates.
  *
  * Installing this build's server onto an SSH host used to live here too; it is now the
  * Machines page in the Web App, served by the server itself (packages/server/src/machines)
@@ -11,10 +11,10 @@ import { app, Menu, shell } from "electron";
 import type { MenuItemConstructorOptions } from "electron";
 import { checkForUpdatesManually, updatesAvailableInThisForm } from "./updater.js";
 
-export const INSTALL_CLI_MENU_LABEL = "Install 'linsight' Command…";
+export const INSTALL_CLI_MENU_LABEL = "Install 'jiumate' Command…";
 
 const CHECK_FOR_UPDATES_MENU_LABEL = "Check for Updates…";
-const REPO_URL = "https://github.com/qiaiqian67/linsight";
+const REPO_URL = "https://github.com/qiaiqian67/jiumate";
 
 export function installAppMenu(opts: {
   includeCliInstall: boolean;

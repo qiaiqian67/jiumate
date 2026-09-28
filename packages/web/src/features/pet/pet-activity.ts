@@ -17,7 +17,7 @@
  */
 import type { PetMood } from "./pet-pet";
 
-export const PET_ACTIVITY_CHANNEL = "linsight-pet-activity";
+export const PET_ACTIVITY_CHANNEL = "jiumate-pet-activity";
 
 /** What the tracked session is doing, in the pet's vocabulary. */
 export type PetTaskState =

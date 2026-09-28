@@ -9,7 +9,7 @@ describe("updateSupport", () => {
   });
 
   it("supports Linux only when running as an AppImage", () => {
-    const env = { APPIMAGE: "/opt/Linsight.AppImage" };
+    const env = { APPIMAGE: "/opt/JiuMate.AppImage" };
     expect(updateSupport({ isPackaged: true, platform: "linux", env })).toEqual({
       supported: true,
     });
@@ -29,19 +29,19 @@ describe("updateSupport", () => {
 
 describe("feedUrlOverride", () => {
   it("accepts http(s) URLs and normalizes them", () => {
-    expect(feedUrlOverride({ LINSIGHT_UPDATE_FEED_URL: "http://127.0.0.1:8080/feed" })).toBe(
+    expect(feedUrlOverride({ JIUMATE_UPDATE_FEED_URL: "http://127.0.0.1:8080/feed" })).toBe(
       "http://127.0.0.1:8080/feed",
     );
-    expect(feedUrlOverride({ LINSIGHT_UPDATE_FEED_URL: " https://example.com/u " })).toBe(
+    expect(feedUrlOverride({ JIUMATE_UPDATE_FEED_URL: " https://example.com/u " })).toBe(
       "https://example.com/u",
     );
   });
 
   it("ignores unset, blank, non-http and unparseable values", () => {
     expect(feedUrlOverride({})).toBeNull();
-    expect(feedUrlOverride({ LINSIGHT_UPDATE_FEED_URL: "   " })).toBeNull();
-    expect(feedUrlOverride({ LINSIGHT_UPDATE_FEED_URL: "file:///etc/passwd" })).toBeNull();
-    expect(feedUrlOverride({ LINSIGHT_UPDATE_FEED_URL: "not a url" })).toBeNull();
+    expect(feedUrlOverride({ JIUMATE_UPDATE_FEED_URL: "   " })).toBeNull();
+    expect(feedUrlOverride({ JIUMATE_UPDATE_FEED_URL: "file:///etc/passwd" })).toBeNull();
+    expect(feedUrlOverride({ JIUMATE_UPDATE_FEED_URL: "not a url" })).toBeNull();
   });
 });
 
@@ -56,23 +56,23 @@ describe("updateSourceConfig", () => {
   });
 
   it("accepts every source and the probe switch, trimming whitespace", () => {
-    expect(updateSourceConfig({ LINSIGHT_UPDATE_SOURCE: " oss " })).toMatchObject({
+    expect(updateSourceConfig({ JIUMATE_UPDATE_SOURCE: " oss " })).toMatchObject({
       source: "oss",
       invalidSource: false,
     });
-    expect(updateSourceConfig({ LINSIGHT_UPDATE_SOURCE: "github" })).toMatchObject({
+    expect(updateSourceConfig({ JIUMATE_UPDATE_SOURCE: "github" })).toMatchObject({
       source: "github",
       invalidSource: false,
     });
-    expect(updateSourceConfig({ LINSIGHT_UPDATE_SOURCE: "auto" })).toMatchObject({
+    expect(updateSourceConfig({ JIUMATE_UPDATE_SOURCE: "auto" })).toMatchObject({
       source: "auto",
       invalidSource: false,
     });
-    expect(updateSourceConfig({ LINSIGHT_UPDATE_SPEED_PROBE: "1" })).toMatchObject({
+    expect(updateSourceConfig({ JIUMATE_UPDATE_SPEED_PROBE: "1" })).toMatchObject({
       probe: true,
       invalidProbe: false,
     });
-    expect(updateSourceConfig({ LINSIGHT_UPDATE_SPEED_PROBE: " 0 " })).toMatchObject({
+    expect(updateSourceConfig({ JIUMATE_UPDATE_SPEED_PROBE: " 0 " })).toMatchObject({
       probe: false,
       invalidProbe: false,
     });
@@ -80,7 +80,7 @@ describe("updateSourceConfig", () => {
 
   it("treats unsupported values as defaults and flags them", () => {
     expect(
-      updateSourceConfig({ LINSIGHT_UPDATE_SOURCE: "mirror", LINSIGHT_UPDATE_SPEED_PROBE: "2" }),
+      updateSourceConfig({ JIUMATE_UPDATE_SOURCE: "mirror", JIUMATE_UPDATE_SPEED_PROBE: "2" }),
     ).toEqual({ source: "auto", probe: true, invalidSource: true, invalidProbe: true });
   });
 });

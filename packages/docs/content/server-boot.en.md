@@ -3,7 +3,7 @@ title: Server Boot and Subsystems
 description: The assembly order from process entry to HTTP listen, each subsystem's external surface, and where extensions sit in the two-level process/App lifecycle.
 ---
 
-`server/src/index.ts` is a side-effecting module: importing it starts the server — the contract the CLI relies on to run a server inside its own process. The startup order is written out in `main()`, one `LinsightServer` method per step, the method name being the step name. Assembly itself is split in two — `bootAppDeps(config)` builds the runtime core, publishes its capabilities and boots the platform (the business surface is assembled inside it), while `createApp(deps)` assembles the runtime shell's Hono route table without listening — so tests can take the full app and drive it via `app.request(...)` with no port involved and without going through `index.ts` at all.
+`server/src/index.ts` is a side-effecting module: importing it starts the server — the contract the CLI relies on to run a server inside its own process. The startup order is written out in `main()`, one `JiuMateServer` method per step, the method name being the step name. Assembly itself is split in two — `bootAppDeps(config)` builds the runtime core, publishes its capabilities and boots the platform (the business surface is assembled inside it), while `createApp(deps)` assembles the runtime shell's Hono route table without listening — so tests can take the full app and drive it via `app.request(...)` with no port involved and without going through `index.ts` at all.
 
 This page answers two questions: in what order does the process bring each subsystem up, from entry to listen; and what is each subsystem's **external surface** — the way others depend on it: exported types, HTTP routes, events, or the context members extensions receive.
 
@@ -12,18 +12,18 @@ This page answers two questions: in what order does the process bring each subsy
 | Entry                                   | Mechanism                                                                                                                                        |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Direct                                  | `node dist/index.js` (`start` in `server/package.json`)                                                                                          |
-| CLI (`linsight server` / `linsight web`)  | Sets `PORT`/`HOST` env vars, then `import("@prismshadow/linsight-server")` **in the same process** — no fork; `linsight web` additionally polls for readiness and opens the browser |
-| Desktop                                 | `utilityProcess.fork` launches a **separate** server process, injecting `LINSIGHT_HOME`, `PORT`, `LINSIGHT_DESKTOP_TOKEN`, `LINSIGHT_PORT_FILE` via env |
+| CLI (`jiumate server` / `jiumate web`)  | Sets `PORT`/`HOST` env vars, then `import("@prismshadow/jiumate-server")` **in the same process** — no fork; `jiumate web` additionally polls for readiness and opens the browser |
+| Desktop                                 | `utilityProcess.fork` launches a **separate** server process, injecting `JIUMATE_HOME`, `PORT`, `JIUMATE_DESKTOP_TOKEN`, `JIUMATE_PORT_FILE` via env |
 
 All three converge: the same env vars drive the same module. The server's own configuration comes from environment variables only (`server/src/config.ts`); `system_config.yaml` is Agent-level state, read when a Session runs — it plays no part in server boot.
 
 ## Boot sequence
 
 ```text
-main()  —— one LinsightServer method per line
+main()  —— one JiuMateServer method per line
 │
 ├─ ① loadEnv · installProxy        dotenv first (.env may define HTTP_PROXY itself), then the proxy takes over fetch
-├─ ② readConfig                    env only: LINSIGHT_HOME, PORT, HOST, LINSIGHT_WEB_DB …
+├─ ② readConfig                    env only: JIUMATE_HOME, PORT, HOST, JIUMATE_WEB_DB …
 ├─ ③ ensureSoleInstance            data root held by another live instance → exit code 3 (before the DB opens)
 ├─ ④ loadExtensions                   read <root>/extensions.json → import → fill this process's one ExtensionHost
 ├─ ⑤ buildDeps = bootAppDeps      open the DB → runtime core (auth, ChannelHub, HmrHost) → publish the
@@ -104,7 +104,7 @@ Several behavioral facts follow:
 - **A duplicate workflow name is refused**: `iface.workflow` is a registry whose `set` throws, so a name cannot change owner depending on `extensions.json` ordering.
 - **The event vocabulary is typed and lives in one place**: `ExtensionEvents` maps each name to its payload — adding an event types the platform's emit and every handler at once.
 
-The extension contract (`Extension` / `ExtensionContext` / `ExtensionEvents` / `LinsightInterface` / `LinsightContext`) is declared in the SDK, at `@prismshadow/linsight-core/extension`. `LinsightContext` and `LinsightInterface` are open: the harness contributes the members it owns — `terminals` — by augmenting that module, and re-exports both halves from `@prismshadow/linsight-server/extension`. Both subpaths emit types only. Which extensions exist is the deployment's `<root>/extensions.json`; the harness itself imports no extension.
+The extension contract (`Extension` / `ExtensionContext` / `ExtensionEvents` / `JiuMateInterface` / `JiuMateContext`) is declared in the SDK, at `@prismshadow/jiumate-core/extension`. `JiuMateContext` and `JiuMateInterface` are open: the harness contributes the members it owns — `terminals` — by augmenting that module, and re-exports both halves from `@prismshadow/jiumate-server/extension`. Both subpaths emit types only. Which extensions exist is the deployment's `<root>/extensions.json`; the harness itself imports no extension.
 
 ## Subsystem inventory
 
@@ -113,7 +113,7 @@ Each subsystem's construction site and external surface (step numbers refer to t
 | Subsystem            | Constructed                                      | External surface                                                                                              |
 | -------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | Config               | `config.ts` `resolveServerConfig` (②)            | `ServerConfig`; its only post-listen mutation writes back the real port                                         |
-| Single-instance lock | `lock.ts` (③ pre-check, ⑨ acquire)               | Package subpath `@prismshadow/linsight-server/lock`; the CLI and Desktop use it for pre-launch probing           |
+| Single-instance lock | `lock.ts` (③ pre-check, ⑨ acquire)               | Package subpath `@prismshadow/jiumate-server/lock`; the CLI and Desktop use it for pre-launch probing           |
 | Database             | `db/database.ts` `openDatabase` (first step of ⑤)| Repo classes under `db/repos/*`; WAL, foreign keys, additive `ensureColumn` migrations                          |
 | Auth                 | `auth/service.ts` (⑤, runtime mechanism)          | `/api/auth/*`, the cookie `authMiddleware`, and authentication of terminal WS upgrades                          |
 | Project / Session    | `services/*` — **App-level** (assembled in create)| `/api/projects/**`, `/api/sessions/**` (route details in [Server API](/server-api))                             |

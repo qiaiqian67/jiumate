@@ -1,5 +1,5 @@
 /**
- * `linsight auth login`'s moving parts (src/auth-session.ts).
+ * `jiumate auth login`'s moving parts (src/auth-session.ts).
  *
  * The command itself is thin; what is easy to get wrong lives here, and each of these has a
  * failure that only shows up on somebody's machine:
@@ -59,19 +59,19 @@ describe("tokenFromSetCookie", () => {
   it("takes the session cookie and not its neighbours", () => {
     expect(
       tokenFromSetCookie(
-        ["other=1; Path=/", "linsight_session=abc.def; Path=/; HttpOnly", "last=2"],
-        "linsight_session",
+        ["other=1; Path=/", "jiumate_session=abc.def; Path=/; HttpOnly", "last=2"],
+        "jiumate_session",
       ),
     ).toBe("abc.def");
-    expect(tokenFromSetCookie(["other=1"], "linsight_session")).toBeNull();
-    expect(tokenFromSetCookie(undefined, "linsight_session")).toBeNull();
+    expect(tokenFromSetCookie(["other=1"], "jiumate_session")).toBeNull();
+    expect(tokenFromSetCookie(undefined, "jiumate_session")).toBeNull();
   });
 });
 
 describe("the session file", () => {
   let root: string;
   beforeEach(() => {
-    root = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-cli-auth-"));
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-cli-auth-"));
   });
   afterEach(() => {
     fs.rmSync(root, { recursive: true, force: true });
@@ -134,7 +134,7 @@ describe("the session file", () => {
       req.on("data", (c: Buffer) => chunks.push(c));
       req.on("end", () => {
         seen.body = Buffer.concat(chunks).toString("utf8");
-        res.setHeader("set-cookie", "linsight_session=tok; Path=/; HttpOnly");
+        res.setHeader("set-cookie", "jiumate_session=tok; Path=/; HttpOnly");
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ user: { userId: "admin" } }));
       });
@@ -151,7 +151,7 @@ describe("the session file", () => {
       expect(seen.host).toBe(`localhost:${port}`);
       expect(seen.body).toBe(JSON.stringify({ userId: "admin", password: "pw" }));
       const setCookie = answer.headers["set-cookie"];
-      expect(tokenFromSetCookie(setCookie as string[], "linsight_session")).toBe("tok");
+      expect(tokenFromSetCookie(setCookie as string[], "jiumate_session")).toBe("tok");
     } finally {
       server.close();
     }

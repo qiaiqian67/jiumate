@@ -19,7 +19,7 @@ describe("windowIconPathFor", () => {
 });
 
 describe("resolveWindowIcon", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-desktop-icon-"));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-desktop-icon-"));
   afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
   it("returns the path only when the file exists", () => {

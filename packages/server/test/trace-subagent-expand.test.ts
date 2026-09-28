@@ -20,8 +20,8 @@ import {
   toolCall,
   toolCallOutput,
   userText,
-} from "@prismshadow/linsight-core";
-import type { OmniMessage, SessionMetaPayload } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { OmniMessage, SessionMetaPayload } from "@prismshadow/jiumate-core";
 import type { TraceService } from "../src/services/trace-service.js";
 import { makeTraceHarness } from "./helpers.js";
 
@@ -66,7 +66,7 @@ describe("TraceService.readMessages — sub-session expansion", () => {
   let harness: ReturnType<typeof makeTraceHarness>;
 
   beforeEach(async () => {
-    root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-trace-expand-"));
+    root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-trace-expand-"));
     harness = makeTraceHarness(root);
     svc = harness.service;
   });

@@ -27,7 +27,7 @@ import type {
 import { getPetSpriteStyle } from "../pet/sprite";
 import { PET_SCALE_CHOICES, usePetStore } from "../pet/pet-store";
 import { PetPet } from "../pet/pet-pet";
-import type { PetPackage } from "@prismshadow/linsight-pets";
+import type { PetPackage } from "@prismshadow/jiumate-pets";
 
 /** Label for a size choice. Read at render time so a locale switch is picked up. */
 function petSizeText(scale: number): string {
@@ -347,7 +347,7 @@ function ExternalPetRow({ candidate, busy, disabled, onImport }: ExternalPetRowP
       data-pet-external-id={candidate.id}
     >
       <div
-        className="linsight-pet__sprite linsight-pet__sprite--static shrink-0"
+        className="jiumate-pet__sprite jiumate-pet__sprite--static shrink-0"
         aria-hidden
         style={{
           width: 36,

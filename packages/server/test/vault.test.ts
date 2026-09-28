@@ -8,7 +8,7 @@
  * Session runtimes alone (core reads the vault into each Session's next model context).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { userText } from "@prismshadow/linsight-core";
+import { userText } from "@prismshadow/jiumate-core";
 import type { ProjectCreateResponse, VaultResponse } from "../src/api/types.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";
 import { apiClient, createTestApp, provisionUser, waitFor } from "./helpers.js";

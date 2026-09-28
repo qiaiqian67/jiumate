@@ -68,7 +68,7 @@ export function AppRouter() {
         />
         {/* Pet floating window page (Electron `petWin`). Standalone surface —
             no sidebar, no Project context, just the Petdex pet. The loopback
-            origin reuses the same `linsight_session` cookie. */}
+            origin reuses the same `jiumate_session` cookie. */}
         <Route
           path="/pet"
           element={

@@ -31,8 +31,8 @@ import {
   comparePluginVersions,
   loadLibraryPlugins,
   parseSkillFrontmatter,
-} from "@prismshadow/linsight-core";
-import type { LibraryPlugin } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { LibraryPlugin } from "@prismshadow/jiumate-core";
 import type { AgentsRepo } from "../db/repos/agents.js";
 import { SEMANTIC_ID_PATTERN, SEMANTIC_ID_RULE } from "./ids.js";
 import type { AgentConfigService } from "./agent-config-service.js";

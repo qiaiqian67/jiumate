@@ -19,8 +19,8 @@ description: 用户当面提出的、还没进入空白分析或决策表的产�
 
 | 维度 | 评估 |
 |---|---|
-| 架构重叠 | AGIAgent 是另一套 agent 平台(ReAct / MCP / tool registry / memory),跟 Linsight 的 `engine/context-engine.ts` / `environment/mcp/` / `state/` 同层。集成 = 两套 runtime 并存,事件、注册表、subagent 嵌套语义都会冲突 |
-| 栈错位 | AGIAgent 是 Python 3.8+,Linsight 全栈 TypeScript / Node 24;要走 IPC 桥(sidecar),运维负担大 |
+| 架构重叠 | AGIAgent 是另一套 agent 平台(ReAct / MCP / tool registry / memory),跟 JiuMate 的 `engine/context-engine.ts` / `environment/mcp/` / `state/` 同层。集成 = 两套 runtime 并存,事件、注册表、subagent 嵌套语义都会冲突 |
+| 栈错位 | AGIAgent 是 Python 3.8+,JiuMate 全栈 TypeScript / Node 24;要走 IPC 桥(sidecar),运维负担大 |
 | 社区体量 | 266 stars,体量小,作为长期依赖风险偏高 |
 | "可编辑"的解法 | H 的核心诉求是"生成后能继续编辑"—— 这是 UX + 持久化问题,不是 agent runtime 问题。AGIAgent 解的是"如何生成",不是"如何让生成物可编辑" |
 
@@ -28,9 +28,9 @@ description: 用户当面提出的、还没进入空白分析或决策表的产�
 
 - **Markdown 可视化编辑器**:Web 端在文件 viewer 上加"编辑"按钮,挂一个 MD 编辑器(react-md-editor / TipTap)
 - **Mermaid / SVG 内嵌编辑器**:`InlineDiagramEditor` 组件,让 SVG 图表可拖拽
-- **多格式导出管线**:复用 Linsight 现有 `remark-parse` / `unified`,加 pandoc 桥接 Word / PDF 导出
+- **多格式导出管线**:复用 JiuMate 现有 `remark-parse` / `unified`,加 pandoc 桥接 Word / PDF 导出
 
-Linsight 自走路径(预估 1 个 `feat/` 分支,1–3 天):
+JiuMate 自走路径(预估 1 个 `feat/` 分支,1–3 天):
 
 1. Agent 写生成物到 `<workspace>/<name>.md` 或 `<name>.bento.html`(已有)
 2. Web 文件 viewer 加"编辑"按钮 → 切到 MD 编辑器(react-md-editor / Monaco / TipTap 三选一)

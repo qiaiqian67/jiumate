@@ -19,8 +19,8 @@ Conclusion: **do not adopt AGIAgent as a base**; treat it only as reference. Rea
 
 | Dimension | Assessment |
 |---|---|
-| Architectural overlap | AGIAgent is another agent platform (ReAct / MCP / tool registry / memory), sitting at the same layer as Linsight's `engine/context-engine.ts` / `environment/mcp/` / `state/`. Integration means two runtimes side by side — events, registries, and subagent nesting semantics all collide |
-| Stack mismatch | AGIAgent is Python 3.8+; Linsight is TypeScript / Node 24 end-to-end. Bridging requires a Python sidecar and adds operational weight |
+| Architectural overlap | AGIAgent is another agent platform (ReAct / MCP / tool registry / memory), sitting at the same layer as JiuMate's `engine/context-engine.ts` / `environment/mcp/` / `state/`. Integration means two runtimes side by side — events, registries, and subagent nesting semantics all collide |
+| Stack mismatch | AGIAgent is Python 3.8+; JiuMate is TypeScript / Node 24 end-to-end. Bridging requires a Python sidecar and adds operational weight |
 | Community size | 266 stars — small; long-term dependency risk is elevated |
 | "Editable" coverage | The core ask of H is "post-generation editing" — that is a UX + persistence problem, not an agent runtime problem. AGIAgent solves "how to generate", not "how to keep the artifact editable" |
 
@@ -28,9 +28,9 @@ UX points worth borrowing (no code reuse, just interactions):
 
 - **Markdown visual editor**: add an "Edit" button to the web file viewer; mount a Markdown editor (react-md-editor / TipTap)
 - **Mermaid / SVG inline editor**: an `InlineDiagramEditor` component to drag-edit SVG diagrams
-- **Multi-format export pipeline**: reuse Linsight's existing `remark-parse` / `unified`; add a pandoc bridge for Word / PDF export
+- **Multi-format export pipeline**: reuse JiuMate's existing `remark-parse` / `unified`; add a pandoc bridge for Word / PDF export
 
-Linsight's own path (estimated: one `feat/` branch, 1–3 days):
+JiuMate's own path (estimated: one `feat/` branch, 1–3 days):
 
 1. Agent writes artifacts to `<workspace>/<name>.md` or `<name>.bento.html` (already in place)
 2. Web file viewer adds an "Edit" button → swaps to a Markdown editor (react-md-editor / Monaco / TipTap — pick one)

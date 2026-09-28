@@ -44,7 +44,7 @@ const ARINA = {
 describe("isDreamSkinTheme", () => {
   it("recognises their shape by the absence of a `schema` field", () => {
     expect(isDreamSkinTheme(GOTHIC)).toBe(true);
-    expect(isDreamSkinTheme({ ...GOTHIC, schema: "linsight.skin" })).toBe(false);
+    expect(isDreamSkinTheme({ ...GOTHIC, schema: "jiumate.skin" })).toBe(false);
     expect(isDreamSkinTheme({ schemaVersion: 1, id: "x" })).toBe(false);
     expect(isDreamSkinTheme(null)).toBe(false);
     expect(isDreamSkinTheme("nope")).toBe(false);

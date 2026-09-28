@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Readable, Writable } from "node:stream";
-import { toolCall } from "@prismshadow/linsight-core";
-import type { OmniMessage, ToolCallPayload } from "@prismshadow/linsight-core";
+import { toolCall } from "@prismshadow/jiumate-core";
+import type { OmniMessage, ToolCallPayload } from "@prismshadow/jiumate-core";
 import { makeApprove, promptApproval, resolveApprovalMode } from "../src/approval.js";
 import { getMessages } from "../src/i18n.js";
 

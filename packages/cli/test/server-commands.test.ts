@@ -5,7 +5,7 @@
  */
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { assistantText, partialText, type OmniMessage } from "@prismshadow/linsight-core";
+import { assistantText, partialText, type OmniMessage } from "@prismshadow/jiumate-core";
 import { cli } from "../src/index.js";
 import { getMessages } from "../src/i18n.js";
 import { FakeServer } from "./fake-server.js";
@@ -51,7 +51,7 @@ afterEach(() => {
 
 const out = () => stdout.join("");
 
-describe("linsight run", () => {
+describe("jiumate run", () => {
   it("creates a Session (client:'cli'), posts the task, renders the reply, exits 0", async () => {
     server.onTask = () => streamedText("hello from the model");
     const code = await cli(["run", "-m", "say hi"]);
@@ -113,7 +113,7 @@ describe("linsight run", () => {
   });
 });
 
-describe("linsight ls", () => {
+describe("jiumate ls", () => {
   it("lists sessions of every agent with short id / state / workspace tail; -a includes archived", async () => {
     server.addSession({ sessionId: "session-2026-08-25-10-00-00-11110000", title: "First" });
     server.addSession({
@@ -141,7 +141,7 @@ describe("linsight ls", () => {
   });
 });
 
-describe("linsight input", () => {
+describe("jiumate input", () => {
   it("running session -> steer; idle -> task; --timeout 0 returns right after delivery", async () => {
     const running = server.addSession({
       sessionId: "session-2026-08-25-10-00-00-abcd0001",
@@ -172,7 +172,7 @@ describe("linsight input", () => {
   });
 });
 
-describe("linsight logs", () => {
+describe("jiumate logs", () => {
   it("renders history through the history renderer; --tail keeps the last n entries", async () => {
     server.history = [assistantText("one"), assistantText("two"), assistantText("three")];
     const s = server.addSession({ sessionId: "session-2026-08-25-10-00-00-10990001" });
@@ -187,7 +187,7 @@ describe("linsight logs", () => {
   });
 });
 
-describe("linsight agent / project", () => {
+describe("jiumate agent / project", () => {
   it("agent ls prints the table; agent create posts id/name/plugins", async () => {
     await cli(["agent", "ls"]);
     expect(out()).toContain("default_agent");
@@ -219,7 +219,7 @@ describe("linsight agent / project", () => {
   });
 });
 
-describe("linsight cost", () => {
+describe("jiumate cost", () => {
   it("default prints the summary card (today / last7d / total)", async () => {
     const code = await cli(["cost"]);
     expect(code).toBe(0);
@@ -257,7 +257,7 @@ describe("linsight cost", () => {
   });
 });
 
-describe("linsight schedule ls", () => {
+describe("jiumate schedule ls", () => {
   it("lists schedules with target and status markers; invalid files are marked", async () => {
     server.schedules = {
       schedules: [
@@ -294,7 +294,7 @@ describe("linsight schedule ls", () => {
   });
 });
 
-describe("caller-context defaults (LINSIGHT_SESSION_ID inheritance)", () => {
+describe("caller-context defaults (JIUMATE_SESSION_ID inheritance)", () => {
   it("run inherits workspace/model/approve from the calling session and pins its thinking level on the new session", async () => {
     const caller = server.addSession({
       sessionId: "session-2026-08-25-10-00-00-ca11e001",
@@ -304,7 +304,7 @@ describe("caller-context defaults (LINSIGHT_SESSION_ID inheritance)", () => {
       approvalMode: "always-ask",
       thinkingLevel: "high",
     });
-    process.env.LINSIGHT_SESSION_ID = caller.sessionId;
+    process.env.JIUMATE_SESSION_ID = caller.sessionId;
     const code = await cli(["run", "-m", "child job"]);
     expect(code).toBe(0);
     const create = server.requests.find((r) => r.method === "POST" && r.path.endsWith("/sessions"));
@@ -328,7 +328,7 @@ describe("caller-context defaults (LINSIGHT_SESSION_ID inheritance)", () => {
       approvalMode: "always-ask",
       thinkingLevel: "high",
     });
-    process.env.LINSIGHT_SESSION_ID = caller.sessionId;
+    process.env.JIUMATE_SESSION_ID = caller.sessionId;
     const code = await cli(["run", "-m", "x", "--workspace", "/elsewhere", "--thinking", "low"]);
     expect(code).toBe(0);
     const create = server.requests.find((r) => r.method === "POST" && r.path.endsWith("/sessions"));
@@ -345,7 +345,7 @@ describe("caller-context defaults (LINSIGHT_SESSION_ID inheritance)", () => {
   });
 
   it("a failed caller lookup warns (dim, stderr) and falls back to the plain defaults", async () => {
-    process.env.LINSIGHT_SESSION_ID = "session-2026-08-25-10-00-00-deadc0de"; // unknown to the server
+    process.env.JIUMATE_SESSION_ID = "session-2026-08-25-10-00-00-deadc0de"; // unknown to the server
     const code = await cli(["run", "-m", "x"]);
     expect(code).toBe(0);
     expect(stderr.join("")).toContain("session-2026-08-25-10-00-00-deadc0de");
@@ -355,7 +355,7 @@ describe("caller-context defaults (LINSIGHT_SESSION_ID inheritance)", () => {
     expect(create?.body?.approvalMode).toBeUndefined();
   });
 
-  it("outside an agent (no LINSIGHT_SESSION_ID) nothing changes", async () => {
+  it("outside an agent (no JIUMATE_SESSION_ID) nothing changes", async () => {
     await cli(["run", "-m", "x"]);
     const create = server.requests.find((r) => r.method === "POST" && r.path.endsWith("/sessions"));
     expect(create?.body?.workspace).toBe(process.cwd());
@@ -426,7 +426,7 @@ describe("--timeout soft yield", () => {
   });
 });
 
-describe("linsight input (bare poll form)", () => {
+describe("jiumate input (bare poll form)", () => {
   it("idle: prints the most recent complete assistant text (skipping user/nested messages)", async () => {
     server.history = [
       assistantText("first answer"),
@@ -563,14 +563,14 @@ describe("logs / input without a session id (the agent's most recent)", () => {
       expect(code).toBe(1);
       const errText = stderr.join("");
       expect(errText).toContain(t.client.noSessionsYet("default_agent", "default_project"));
-      expect(errText).toContain("linsight chat");
+      expect(errText).toContain("jiumate chat");
       expect(errText).not.toContain("missing required argument");
       expect(errText).not.toContain("    at "); // no stack trace
     }
   });
 });
 
-describe("linsight ls --days", () => {
+describe("jiumate ls --days", () => {
   it("keeps sessions last active within the trailing calendar window (today = day 1) and combines with -a", async () => {
     const now = new Date();
     const at = (daysAgo: number) =>
@@ -614,7 +614,7 @@ describe("linsight ls --days", () => {
   });
 });
 
-describe("linsight schedule add/update/rm (validated writer over the API)", () => {
+describe("jiumate schedule add/update/rm (validated writer over the API)", () => {
   it("add posts the full definition, ENABLED by default (the deliberate divergence); --disabled opts out", async () => {
     const code = await cli([
       "schedule",

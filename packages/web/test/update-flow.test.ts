@@ -12,7 +12,7 @@ import type {
   DesktopUpdateStatus,
   UpdateCheckResponse,
   UpdateJobStatus,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import {
   NO_LOCAL,
   clientFlow,
@@ -30,7 +30,7 @@ const check = (over: Partial<UpdateCheckResponse> = {}): UpdateCheckResponse => 
   buildDate: "2026-08-28",
   latestVersion: "0.3.0",
   updateAvailable: true,
-  releaseUrl: "https://github.com/qiaiqian67/linsight/releases/tag/v0.3.0",
+  releaseUrl: "https://github.com/qiaiqian67/jiumate/releases/tag/v0.3.0",
   publishedAt: null,
   checkedAt: "2026-08-28T00:00:00.000Z",
   ...over,

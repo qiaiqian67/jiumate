@@ -362,7 +362,7 @@ export class TruncatedToolOutputArchive {
       const rawCode = (err as { code?: unknown }).code;
       const code = typeof rawCode === "string" ? rawCode : "UNKNOWN";
       process.stderr.write(
-        `[linsight] tool "${toolName}" truncated output archive write failed (${code}).\n`,
+        `[jiumate] tool "${toolName}" truncated output archive write failed (${code}).\n`,
       );
       return { status: "failed", code };
     }

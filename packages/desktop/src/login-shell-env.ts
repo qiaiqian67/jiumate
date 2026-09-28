@@ -20,13 +20,13 @@
  *
  * Everything but the probe spawn is pure and unit-tests without Electron; the probe is
  * best-effort with a hard timeout — any failure leaves the environment untouched.
- * `LINSIGHT_NO_LOGIN_SHELL_ENV` (any non-empty value) skips the probe, the escape hatch
+ * `JIUMATE_NO_LOGIN_SHELL_ENV` (any non-empty value) skips the probe, the escape hatch
  * for a login shell that cannot run non-interactively within the timeout.
  */
 import { spawn } from "node:child_process";
 
 /** Frame marker around the probe's `env -0` output; rc-file noise falls outside the frame. */
-const SENTINEL = "__LINSIGHT_LOGIN_SHELL_ENV__";
+const SENTINEL = "__JIUMATE_LOGIN_SHELL_ENV__";
 
 /** The probe: static string, no interpolation, so no quoting hazards in any POSIX-ish shell. */
 const PROBE_COMMAND = `printf '%s' '${SENTINEL}'; env -0; printf '%s' '${SENTINEL}'`;
@@ -43,11 +43,11 @@ const PROBE_OUTPUT_CAP = 4 * 1024 * 1024;
  * `ELECTRON_RUN_AS_NODE` — importing that one would make every later relaunch of the
  * app run as plain Node instead of Electron.
  *
- * `LINSIGHT_WEB_DIST` and `LINSIGHT_CLI_ENTRY` join them because they select *code*: the
+ * `JIUMATE_WEB_DIST` and `JIUMATE_CLI_ENTRY` join them because they select *code*: the
  * embedded server reads the first for the Web App it serves and the second for the entry it
  * self-updates through, and the fork does not override either. A profile line written for a
  * repo checkout would silently retarget an installed app that the user only double-clicked.
- * Data and settings variables are not excluded — `LINSIGHT_HOME` chooses which data root the
+ * Data and settings variables are not excluded — `JIUMATE_HOME` chooses which data root the
  * app opens, which is a configuration choice a user can mean to make once for both the CLI
  * and the app.
  */
@@ -58,8 +58,8 @@ const EXCLUDED_KEYS = new Set([
   "OLDPWD",
   "TERM",
   "ELECTRON_RUN_AS_NODE",
-  "LINSIGHT_WEB_DIST",
-  "LINSIGHT_CLI_ENTRY",
+  "JIUMATE_WEB_DIST",
+  "JIUMATE_CLI_ENTRY",
 ]);
 
 /** Environment variable names as the POSIX shells define them; also drops `BASH_FUNC_f%%` exported functions. */
@@ -69,7 +69,7 @@ const KEY_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * Whether this launch should import the login shell environment: never on Windows (GUI
  * processes inherit the user environment there), never when a terminal launched us
  * (TERM set — the environment is already the shell's), and never when the escape hatch
- * `LINSIGHT_NO_LOGIN_SHELL_ENV` is set.
+ * `JIUMATE_NO_LOGIN_SHELL_ENV` is set.
  */
 export function shouldImportLoginShellEnv(opts: {
   platform: NodeJS.Platform;
@@ -77,7 +77,7 @@ export function shouldImportLoginShellEnv(opts: {
 }): boolean {
   if (opts.platform === "win32") return false;
   if (opts.env.TERM !== undefined) return false;
-  if (opts.env.LINSIGHT_NO_LOGIN_SHELL_ENV) return false;
+  if (opts.env.JIUMATE_NO_LOGIN_SHELL_ENV) return false;
   return true;
 }
 

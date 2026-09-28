@@ -6,7 +6,7 @@
  * default mode destroys nothing, and every mode that does report exactly which memories.
  */
 import { afterEach, describe, expect, it } from "vitest";
-import type { MemoryScopeExport } from "@prismshadow/linsight-server/api";
+import type { MemoryScopeExport } from "@prismshadow/jiumate-server/api";
 import { S, setActiveStrings, zh } from "../src/lib/strings";
 import { en } from "../src/lib/strings-en";
 import {
@@ -19,7 +19,7 @@ import {
 afterEach(() => setActiveStrings(zh));
 
 const doc = (names: string[], index: string | null = "# Memories\n"): MemoryScopeExport => ({
-  format: "linsight-memory-scope",
+  format: "jiumate-memory-scope",
   version: 1,
   scopeKey: "my-app-a81f32c4",
   kind: "workspace",

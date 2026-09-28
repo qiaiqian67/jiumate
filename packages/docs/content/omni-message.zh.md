@@ -3,7 +3,7 @@ title: OmniMessage 协议
 description: 一个信封、三类消息、六值 stop_reason——贯穿 SDK、Trace 与 SSE 的统一消息协议，逐字段定义。
 ---
 
-OmniMessage 是 Linsight 的统一消息协议：SDK 对外产出它，Trace 逐行存储它，Server 经 SSE 原样推送它。「流出去的」「存下来的」「模型看到的」是同一种结构，前后端与存储之间不存在第二套格式。
+OmniMessage 是 JiuMate 的统一消息协议：SDK 对外产出它，Trace 逐行存储它，Server 经 SSE 原样推送它。「流出去的」「存下来的」「模型看到的」是同一种结构，前后端与存储之间不存在第二套格式。
 
 本页自顶向下：先定义信封与三类消息，再逐字段展开每一种 payload，最后是贯穿全协议的语义(流式纪律、stop_reason、origin、保真字段)。类型源码：`packages/core/src/omnimessage/types.ts`。
 
@@ -346,7 +346,7 @@ Provider 专有的线上数据统一收拢在一个可选字段 `fidelity` 中�
 { type: "thinking", thinking: "…", fidelity: { reasoning_field: "reasoning_content" } }
 ```
 
-该负载对 Linsight 完全不透明:在整条链路上原样透传、原样存储——部分模型在历史回放时要求逐字一致，任何转写或丢失都会破坏兼容性。这是 Trace 能够无损恢复 Session 的前提之一。
+该负载对 JiuMate 完全不透明:在整条链路上原样透传、原样存储——部分模型在历史回放时要求逐字一致，任何转写或丢失都会破坏兼容性。这是 Trace 能够无损恢复 Session 的前提之一。
 
 ## 协议的三种职责
 
@@ -360,10 +360,10 @@ Provider 专有的线上数据统一收拢在一个可选字段 `fidelity` 中�
 
 ## 构造与判别
 
-`@prismshadow/linsight-core` 导出全部类型、每种消息的构造函数(`builders.ts`:`userText`、`assistantText`、`toolCall`、`toolCallOutput`、`partialText`、`tokenUsage`、`withOrigin`、`emptyTokenCounts`、`addTokenCounts` 等)与运行时判别函数(`isCompleteModelMessage`、`isPartialPayload`、`isModelMessage`、`isEventMessage`、`isSessionMeta`):
+`@prismshadow/jiumate-core` 导出全部类型、每种消息的构造函数(`builders.ts`:`userText`、`assistantText`、`toolCall`、`toolCallOutput`、`partialText`、`tokenUsage`、`withOrigin`、`emptyTokenCounts`、`addTokenCounts` 等)与运行时判别函数(`isCompleteModelMessage`、`isPartialPayload`、`isModelMessage`、`isEventMessage`、`isSessionMeta`):
 
 ```ts
-import { userText, isCompleteModelMessage } from "@prismshadow/linsight-core";
+import { userText, isCompleteModelMessage } from "@prismshadow/jiumate-core";
 
 const prompt = userText("列出当前目录的文件");
 // { timestamp: "…", type: "model_msg", payload: { type: "text", role: "user", text: "…" } }

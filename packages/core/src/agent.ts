@@ -105,7 +105,7 @@ const MAX_SUBAGENT_DEPTH = 1;
 export interface CreateAgentOptions {
   agentId?: string;
   projectId?: string;
-  /** Local data root directory; defaults to `resolveRoot()` (LINSIGHT_HOME or ~/.linsight/data). */
+  /** Local data root directory; defaults to `resolveRoot()` (JIUMATE_HOME or ~/.jiumate/data). */
   root?: string;
   /**
    * Proxy policy for exec_command subprocess environments of every Session this Agent
@@ -497,13 +497,13 @@ export class Agent {
       ref = this.projectConfig.default_model;
     } else {
       throw new Error(
-        "No modelId was specified and the Project config has no default_model. Use `linsight config model add/default` to set the default model.",
+        "No modelId was specified and the Project config has no default_model. Use `jiumate config model add/default` to set the default model.",
       );
     }
     const modelEntry = getModel(this.projectConfig, ref);
     if (!modelEntry) {
       throw new Error(
-        `Model is not in the Project config: ${formatModelRef(ref)}. Use \`linsight config model list\` to see the configured models, or \`linsight config model add\` to add one.`,
+        `Model is not in the Project config: ${formatModelRef(ref)}. Use \`jiumate config model list\` to see the configured models, or \`jiumate config model add\` to add one.`,
       );
     }
     // Credentials are inlined on the model entry (single config file); an
@@ -623,7 +623,7 @@ export class Agent {
     const modelEntry = getModel(this.projectConfig, ref);
     if (!modelEntry) {
       throw new Error(
-        `The original Session's Model is not in the Project config: ${formatModelRef(ref)}. Use \`linsight config model add\` to configure it again before resuming.`,
+        `The original Session's Model is not in the Project config: ${formatModelRef(ref)}. Use \`jiumate config model add\` to configure it again before resuming.`,
       );
     }
     const apiKey = opts.apiKey ?? modelEntry.api_key;

@@ -12,7 +12,7 @@ import { en } from "../lib/strings-en";
 export type LangPref = "zh" | "en" | "system";
 export type Locale = "zh" | "en";
 
-const STORAGE_KEY = "linsight.lang";
+const STORAGE_KEY = "jiumate.lang";
 
 interface LocaleContextValue {
   lang: LangPref;

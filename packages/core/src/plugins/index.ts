@@ -1,8 +1,8 @@
 /**
- * Linsight plugin library: the built-in plugins and the loader that reads them (part
+ * JiuMate plugin library: the built-in plugins and the loader that reads them (part
  * of core — hooks, skills and their loading all live in one SDK).
  *
- * A plugin is its own npm package (`@linsight/<name>`, `plugins/<name>/` in the repo;
+ * A plugin is its own npm package (`@jiumate/<name>`, `plugins/<name>/` in the repo;
  * resolved through Node from the host package's dependency list — see pluginRoots): a
  * directory carrying a `plugin.json` manifest, an `icon.svg` beside it (every built-in plugin
  * ships one; it is the icon of everything the plugin ships), and any of two kinds of content:
@@ -196,11 +196,11 @@ function packageRoot(): string {
 }
 const PKG_ROOT = packageRoot();
 /** npm-name prefix of the per-plugin packages (the host package's dependencies name them). */
-const PLUGIN_PKG_PREFIX = "@linsight/";
+const PLUGIN_PKG_PREFIX = "@jiumate/";
 
 /**
  * Where the plugin directories live, name → absolute root. Each plugin is its own npm package
- * (`@linsight/<name>`, `plugins/<name>/` in the repo): the host package's `dependencies`
+ * (`@jiumate/<name>`, `plugins/<name>/` in the repo): the host package's `dependencies`
  * name them (core, the CLI, and the desktop app — whose packaged manifest keeps that field
  * and nothing else, so `devDependencies` would not survive into an installer), and each is
  * resolved through Node from this module's own location, so the lookup walks the same

@@ -8,7 +8,7 @@
 import type { Strings } from "./strings";
 
 export const en: Strings = {
-  appName: "Linsight",
+  appName: "JiuMate",
 
   nav: {
     chat: "Chat",
@@ -35,7 +35,7 @@ export const en: Strings = {
   machines: {
     pageTitle: "Machines",
     pageDesc:
-      "The hosts declared in this server's own ~/.ssh/config. Pick one to install this build of Linsight on it: the machine is probed, a matching Node runtime rides along only if it needs one, and the image is copied over and installed there. The config is read, never written, and the install uses the server account's own ssh keys.",
+      "The hosts declared in this server's own ~/.ssh/config. Pick one to install this build of JiuMate on it: the machine is probed, a matching Node runtime rides along only if it needs one, and the image is copied over and installed there. The config is read, never written, and the install uses the server account's own ssh keys.",
     /** Version line under the title; `version` is what would be pushed. */
     imageVersion: (version: string) => `Installs version ${version}`,
     noImage:
@@ -135,7 +135,7 @@ export const en: Strings = {
     /** Application page of the settings dialog (Petdex desktop pet, …). */
     applicationTitle: "Application",
     applicationInfo:
-      "Application-level preferences such as the desktop pet. Switching them does not affect the Linsight workflow.",
+      "Application-level preferences such as the desktop pet. Switching them does not affect the JiuMate workflow.",
     applicationEnablePet: "Show desktop pet",
     applicationEnablePetInfo: "Opens the floating pet window in the desktop app.",
     applicationPetPicker: "Pet appearance",
@@ -313,7 +313,7 @@ export const en: Strings = {
     checkingBody: "Checking for updates…",
     upToDate: "You're on the latest version",
     checkFailed: "Update check failed — try again later",
-    checkDisabled: "Update checks are disabled (LINSIGHT_UPDATE_CHECK=off)",
+    checkDisabled: "Update checks are disabled (JIUMATE_UPDATE_CHECK=off)",
     releaseNotes: "Release notes",
     openReleases: "Open the Releases page",
     /** What "download and update" does, per backend. */
@@ -338,10 +338,10 @@ export const en: Strings = {
     readyBodyRelease:
       "Restart the service to run the new version. Running tasks will be interrupted; this page reloads once the service is back.",
     /** Mirrors the shell's native restart prompt: the interruption warning must not disappear on the web path. */
-    readyBodyClient: "Linsight will restart to finish updating. Running tasks will be interrupted.",
-    /** Nothing supervises the server process (not started through linsight web / linsight server), so the restart is the user's. */
+    readyBodyClient: "JiuMate will restart to finish updating. Running tasks will be interrupted.",
+    /** Nothing supervises the server process (not started through jiumate web / jiumate server), so the restart is the user's. */
     readyBodyManual:
-      "The new version is installed. This service is not supervised by linsight web or linsight server, so it cannot be restarted from here: re-run linsight web (or linsight server) in a terminal.",
+      "The new version is installed. This service is not supervised by jiumate web or jiumate server, so it cannot be restarted from here: re-run jiumate web (or jiumate server) in a terminal.",
     restartNow: "Restart and update",
     restarting: "Restarting…",
     restartingBodyRelease: "This page reloads once the service is back.",
@@ -353,7 +353,7 @@ export const en: Strings = {
     unsupportedNonAppImage:
       "Only the AppImage build updates itself on Linux — update a package install through your package manager",
     unsupportedNotViaCli:
-      "This service was not started through linsight web or linsight server, so it cannot be updated from here",
+      "This service was not started through jiumate web or jiumate server, so it cannot be updated from here",
     unsupportedCli: "This install cannot be updated from the web UI",
     // —— toasts: outcomes that land while the modal is closed ——
     foundNew: (v: string) => `New version v${v} found — open the update entry to download it`,
@@ -367,7 +367,7 @@ export const en: Strings = {
     /** A download / restart request failed before the backend could act; `detail` is apiErrorText output. */
     requestFailed: (detail: string) => `Could not run the update action: ${detail}`,
     restartTimedOut:
-      "The service has not come back — check linsight web's output in the terminal, then reload this page",
+      "The service has not come back — check jiumate web's output in the terminal, then reload this page",
   },
 
   /**
@@ -474,7 +474,7 @@ export const en: Strings = {
       "First run: the server prints a first-login link in its startup output — open it to claim the built-in admin “admin” and set a password. No initial password exists to type here",
     /** Login footer line 2: the offline rescue for a forgotten admin password (other users ask the admin instead). */
     forgotAdminNote:
-      "Forgot the admin password? Stop the server and run linsight server reset-admin-password to issue a fresh initial one",
+      "Forgot the admin password? Stop the server and run jiumate server reset-admin-password to issue a fresh initial one",
   },
 
   account: {
@@ -668,7 +668,7 @@ export const en: Strings = {
       ["{{DATE}}", "Current date"],
       [
         "{{PROJECT_DIR}}",
-        "Linsight app data root — all agents' data and project-level data; not the task working directory",
+        "JiuMate app data root — all agents' data and project-level data; not the task working directory",
       ],
       ["{{AGENT_ID}}", "Current agent id"],
       ["{{CWD}}", "Absolute Workspace path"],
@@ -1274,7 +1274,7 @@ export const en: Strings = {
   /**
    * Inspiration library (features/inspiration/*): the built-in cases plus the ones admins authored,
    * filed into categories. The built-in cases' own copy is NOT here — it travels with the case, as
-   * the `title`/`titleZh` fields in `@prismshadow/linsight-inspirations/presets`, which is what lets
+   * the `title`/`titleZh` fields in `@prismshadow/jiumate-inspirations/presets`, which is what lets
    * an admin's case and a built-in one be the same kind of thing. This group carries the chrome.
    */
   inspiration: {
@@ -2325,7 +2325,7 @@ export const en: Strings = {
     troubleConnError:
       "Connection status shows an error? Check the credentials; for Feishu also confirm the API domain and the long-connection event subscription.",
     troubleOnePoller:
-      "Telegram reports that another program is polling? A Bot Token serves exactly one program at a time — close the other Linsight server or bot script using it, or give this conversation a bot of its own. A getUpdates you run by hand (a curl to see what Telegram has queued) is that other program too: disable the connection here before running one. Inspecting them by hand can also discard them — any call you pass an offset to confirms everything before it, and the app's own next connect drops the backlog — so retest with a freshly sent message rather than the ones you just looked at.",
+      "Telegram reports that another program is polling? A Bot Token serves exactly one program at a time — close the other JiuMate server or bot script using it, or give this conversation a bot of its own. A getUpdates you run by hand (a curl to see what Telegram has queued) is that other program too: disable the connection here before running one. Inspecting them by hand can also discard them — any call you pass an offset to confirms everything before it, and the app's own next connect drops the backlog — so retest with a freshly sent message rather than the ones you just looked at.",
     troubleGroupPrivacy:
       "The bot ignores everything you say in a Telegram group? Telegram's Group Privacy is on by default, and under it a bot that is not an administrator of the group receives only commands addressed to it (such as /start@your_bot) and replies to its own messages — ordinary group messages are never delivered at all, and the connection itself looks perfectly healthy. Making the bot an administrator of that group fixes it on its own, since administrators always receive every message. Otherwise turn Group Privacy off with /setprivacy in @BotFather, then remove the bot from the group and add it back — a group it is already in does not pick up the change.",
     /** WeChat has no group inbound at all — the answer to "I @-ed it in a group and nothing happened". */
@@ -2437,7 +2437,7 @@ export const en: Strings = {
      *  so the dropdown can echo the exact capability string rather than a generic "unavailable" copy. */
     exportUnavailableReason: (reason: string): string => reason,
     previewNotIsolatedHint:
-      "This address has no separate preview origin, so the page opens sandboxed: localStorage, cookies and third-party embeds will not work. Reach the app over 127.0.0.1 or localhost, or set LINSIGHT_PREVIEW_ORIGIN.",
+      "This address has no separate preview origin, so the page opens sandboxed: localStorage, cookies and third-party embeds will not work. Reach the app over 127.0.0.1 or localhost, or set JIUMATE_PREVIEW_ORIGIN.",
     refresh: "Refresh",
     root: "Workspace root",
     empty: "Empty directory",

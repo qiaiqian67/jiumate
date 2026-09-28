@@ -70,7 +70,7 @@ test("keeps the shell and its screen across a reload", async ({ page }) => {
   // same shell process (not a fresh one) survived the reload.
   await run(
     page,
-    "rm -f /tmp/linsight-e2e-ticks; (for i in $(seq 1 30); do echo t >> /tmp/linsight-e2e-ticks; sleep 0.4; done &)",
+    "rm -f /tmp/jiumate-e2e-ticks; (for i in $(seq 1 30); do echo t >> /tmp/jiumate-e2e-ticks; sleep 0.4; done &)",
   );
   await run(page, "echo BEFORE_RELOAD_MARKER");
   await expect.poll(() => screenText(page), { timeout: 15000 }).toContain("BEFORE_RELOAD_MARKER");
@@ -91,9 +91,9 @@ test("keeps the shell and its screen across a reload", async ({ page }) => {
 
   // ...and the background loop kept running while no browser was attached, which it could
   // only do if the shell itself was never restarted.
-  await run(page, "echo ticks=$(wc -l < /tmp/linsight-e2e-ticks)");
+  await run(page, "echo ticks=$(wc -l < /tmp/jiumate-e2e-ticks)");
   await expect.poll(() => screenText(page), { timeout: 15000 }).toMatch(/^ticks=[2-9]\d*$/m);
-  await run(page, "pkill -f 'linsight-e2e-ticks' >/dev/null 2>&1; rm -f /tmp/linsight-e2e-ticks");
+  await run(page, "pkill -f 'jiumate-e2e-ticks' >/dev/null 2>&1; rm -f /tmp/jiumate-e2e-ticks");
 });
 
 test("New shell starts a fresh session", async ({ page }) => {

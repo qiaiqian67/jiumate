@@ -81,7 +81,7 @@ let tmp: string;
 let originalHome: string | undefined;
 
 beforeEach(async () => {
-  tmp = await mkdtemp(path.join(tmpdir(), "linsight-env-"));
+  tmp = await mkdtemp(path.join(tmpdir(), "jiumate-env-"));
   // exec_command runs via a `bash -l` login shell (product behavior): a login shell loads the
   // developer's ~/.bash_profile and similar files, whose latency (e.g. nvm taking hundreds of
   // ms) and stderr output (e.g. nvm warnings) can leak into tool output, letting the local
@@ -149,7 +149,7 @@ describe("Environment.executeTool — basic file write", () => {
     });
     const call = toolCall({
       name: "exec_command",
-      arguments: JSON.stringify({ cmd: "printf 'Hello, Linsight' > note.txt" }),
+      arguments: JSON.stringify({ cmd: "printf 'Hello, JiuMate' > note.txt" }),
       toolCallId: "call_write",
     });
 
@@ -180,8 +180,8 @@ describe("Environment.executeTool — basic file write", () => {
     expect(outPayload.tool_call_id).toBe("call_write");
     expect(outPayload.stop_reason).toBe("completed");
 
-    const written = await readFileEventually(path.join(tmp, "note.txt"), "Hello, Linsight");
-    expect(written).toBe("Hello, Linsight");
+    const written = await readFileEventually(path.join(tmp, "note.txt"), "Hello, JiuMate");
+    expect(written).toBe("Hello, JiuMate");
   });
 });
 
@@ -191,11 +191,11 @@ describe("Environment.executeTool — vault env injection", () => {
       workspaceDir: tmp,
       toolConfig: makeToolConfig(),
       // PAGER is a hardened entry (HARDENED_ENV); a same-named vault entry must not override it.
-      vault: { LINSIGHT_VAULT_TEST_KEY: "vault-secret-value", PAGER: "less" },
+      vault: { JIUMATE_VAULT_TEST_KEY: "vault-secret-value", PAGER: "less" },
     });
     const call = toolCall({
       name: "exec_command",
-      arguments: JSON.stringify({ cmd: 'echo "k=$LINSIGHT_VAULT_TEST_KEY pager=$PAGER"' }),
+      arguments: JSON.stringify({ cmd: 'echo "k=$JIUMATE_VAULT_TEST_KEY pager=$PAGER"' }),
       toolCallId: "call_vault",
     });
 
@@ -212,7 +212,7 @@ describe("Environment.executeTool — vault env injection", () => {
     const env = new Environment({
       workspaceDir: tmp,
       toolConfig: makeToolConfig(),
-      vault: { LINSIGHT_VAULT_TEST_KEY: "old-value" },
+      vault: { JIUMATE_VAULT_TEST_KEY: "old-value" },
     });
     try {
       expect((await env.listTools()).map((t) => t.name)).toEqual(["exec_command"]);
@@ -238,7 +238,7 @@ describe("Environment.executeTool — vault env injection", () => {
       // values (and only those — the replaced entry is gone, not merged).
       env.reconfigure({
         toolConfig: makeToolConfig(),
-        vault: { LINSIGHT_VAULT_TEST_KEY: "new-value", LINSIGHT_VAULT_ADDED: "added" },
+        vault: { JIUMATE_VAULT_TEST_KEY: "new-value", JIUMATE_VAULT_ADDED: "added" },
       });
       expect(env.toolPermission("exec_command")).toBe("rw");
       const messages = await collect(
@@ -246,7 +246,7 @@ describe("Environment.executeTool — vault env injection", () => {
           toolCall: toolCall({
             name: "exec_command",
             arguments: JSON.stringify({
-              cmd: 'echo "k=$LINSIGHT_VAULT_TEST_KEY added=$LINSIGHT_VAULT_ADDED"',
+              cmd: 'echo "k=$JIUMATE_VAULT_TEST_KEY added=$JIUMATE_VAULT_ADDED"',
             }),
             toolCallId: "call_revault",
           }),
@@ -261,7 +261,7 @@ describe("Environment.executeTool — vault env injection", () => {
         env.executeTool({
           toolCall: toolCall({
             name: "exec_command",
-            arguments: JSON.stringify({ cmd: 'echo "k=[$LINSIGHT_VAULT_TEST_KEY]"' }),
+            arguments: JSON.stringify({ cmd: 'echo "k=[$JIUMATE_VAULT_TEST_KEY]"' }),
             toolCallId: "call_cleared",
           }),
         }),
@@ -281,7 +281,7 @@ describe("Environment.executeTool — vault env injection", () => {
     });
     const call = toolCall({
       name: "exec_command",
-      arguments: JSON.stringify({ cmd: 'echo "k=[$LINSIGHT_VAULT_TEST_KEY]"' }),
+      arguments: JSON.stringify({ cmd: 'echo "k=[$JIUMATE_VAULT_TEST_KEY]"' }),
       toolCallId: "call_no_vault",
     });
 
@@ -581,7 +581,7 @@ describe("Environment.executeTool — maxOutputLength truncation", () => {
     expect(complete.output).toMatch(/\[output archive failed: [^\]]+\]/);
     expect(complete.stop_reason).toBe("completed");
     expect(stderr.join("")).toMatch(
-      /\[linsight\] tool "exec_command" truncated output archive write failed \([^)]+\)\./,
+      /\[jiumate\] tool "exec_command" truncated output archive write failed \([^)]+\)\./,
     );
     const streamed = messages
       .filter(

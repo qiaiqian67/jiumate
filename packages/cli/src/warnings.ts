@@ -2,17 +2,17 @@
  * Drops one Node warning, and only that one.
  *
  * `commands/serve.ts` pulls in `commands/reset-password.ts`, which imports
- * `@prismshadow/linsight-server/reset-admin-password` — that reaches `node:sqlite` while
+ * `@prismshadow/jiumate-server/reset-admin-password` — that reaches `node:sqlite` while
  * the module graph loads, so on a Node that still flags the builtin experimental every
- * `linsight` invocation prints
+ * `jiumate` invocation prints
  * `ExperimentalWarning: SQLite is an experimental feature ...`, including the ones whose
  * whole output is a usage error. Nothing in the CLI's own behavior depends on the
  * builtin's stability, and the user has no action to take.
  *
  * The filter lives in the entry module rather than in a launcher flag because both ways
- * of starting the CLI reach it: the release tarball's `bin/linsight` execs
- * `node lib/dist/linsight.js` with no flags, and the dev script runs
- * `tsx packages/cli/src/linsight.ts`. `--disable-warning=ExperimentalWarning` (what the
+ * of starting the CLI reach it: the release tarball's `bin/jiumate` execs
+ * `node lib/dist/jiumate.js` with no flags, and the dev script runs
+ * `tsx packages/cli/src/jiumate.ts`. `--disable-warning=ExperimentalWarning` (what the
  * server's `start` script uses) would have to be added to both, and would hide every
  * future experimental warning instead of this one.
  *

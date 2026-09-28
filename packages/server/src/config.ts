@@ -2,17 +2,17 @@
  * Server runtime config (ServerConfig) — parsed from environment variables.
  *
  * The data root directory is shared with the SDK / CLI (`resolveRoot()`:
- * LINSIGHT_HOME or ~/.linsight/data); the SQLite index database defaults to
- * `<root>/web.db` (overridable via LINSIGHT_WEB_DB, tests use ":memory:").
+ * JIUMATE_HOME or ~/.jiumate/data); the SQLite index database defaults to
+ * `<root>/web.db` (overridable via JIUMATE_WEB_DB, tests use ":memory:").
  * In production, the SPA is served statically once the frontend build output
- * directory (LINSIGHT_WEB_DIST, the bundled web-dist/, or ../web/dist) is
+ * directory (JIUMATE_WEB_DIST, the bundled web-dist/, or ../web/dist) is
  * detected to exist.
  * Docs: /docs/configuration § "Environment variables".
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DEFAULT_SERVER_PORT, resolveRoot } from "@prismshadow/linsight-core";
+import { DEFAULT_SERVER_PORT, resolveRoot } from "@prismshadow/jiumate-core";
 
 export interface ServerConfig {
   /** Local data root directory (shared with the SDK/CLI). */
@@ -31,7 +31,7 @@ export interface ServerConfig {
   /** Frontend static assets directory; whether it's enabled is decided by checking existence when the app is assembled. */
   webDist: string;
   /**
-   * Origin that serves Workspace HTML previews (LINSIGHT_PREVIEW_ORIGIN), e.g.
+   * Origin that serves Workspace HTML previews (JIUMATE_PREVIEW_ORIGIN), e.g.
    * `https://preview.example.com`. It must differ from the App origin by **hostname** —
    * cookies ignore ports, so a second port would still share the session cookie. Unset
    * is the norm locally: the loopback counterpart (`127.0.0.1` <-> `localhost`) is
@@ -39,7 +39,7 @@ export interface ServerConfig {
    */
   previewOrigin: string | null;
   /**
-   * Fixed initial password for the seeded built-in admin (LINSIGHT_SEED_ADMIN_PASSWORD),
+   * Fixed initial password for the seeded built-in admin (JIUMATE_SEED_ADMIN_PASSWORD),
    * used by automated tests and e2e. Null is the norm: the seed then generates a random
    * password that is hashed and discarded unseen, and the account is claimed through the
    * first-login link instead.
@@ -55,26 +55,26 @@ export interface ServerConfig {
    */
   authSessionRenewMs: number;
   /**
-   * Desktop mode (LINSIGHT_DESKTOP_TOKEN): the per-launch token minted by the desktop
+   * Desktop mode (JIUMATE_DESKTOP_TOKEN): the per-launch token minted by the desktop
    * shell. Non-null enables the one-shot claim link and the Bearer-token shutdown
    * endpoints and requires a loopback HOST — desktop mode passes the token through a
    * URL, which must never leave the machine.
    */
   desktopToken: string | null;
   /**
-   * Whether `linsight server|web` supervises this process (LINSIGHT_SUPERVISED=1) and relaunches
+   * Whether `jiumate server|web` supervises this process (JIUMATE_SUPERVISED=1) and relaunches
    * it when it exits with core's SERVER_RESTART_EXIT_CODE — what makes the web UI's "restart
    * to update" possible. False under a direct server start, a dev run, or the desktop shell.
    */
   supervised: boolean;
   /**
-   * Port announcement file (LINSIGHT_PORT_FILE): after the listener is up, the actual
+   * Port announcement file (JIUMATE_PORT_FILE): after the listener is up, the actual
    * bound port is written here — the supervising process's way to learn the port when
    * it starts the server with PORT=0.
    */
   portFile: string | null;
   /**
-   * Trust `x-forwarded-proto` from the request (LINSIGHT_TRUST_PROXY=1). Off by default:
+   * Trust `x-forwarded-proto` from the request (JIUMATE_TRUST_PROXY=1). Off by default:
    * the header is caller-supplied, so on a non-loopback bind an untrusted caller could
    * set it to `https` to walk through the hot-update network gate (hmr/routes.ts) while
    * actually speaking plaintext — or get session cookies stamped `Secure` over plain HTTP,
@@ -86,7 +86,7 @@ export interface ServerConfig {
   trustProxy: boolean;
   /**
    * Absolute path to the Pandoc binary, or null when none was found. Resolution
-   * honours LINSIGHT_PANDOC (absolute path or a name resolvable on PATH) and falls
+   * honours JIUMATE_PANDOC (absolute path or a name resolvable on PATH) and falls
    * back to scanning PATH for `pandoc`. Null means DOCX/EPUB/RTF/TXT exports are
    * disabled — the capabilities endpoint reports it as `pandoc.available = false`
    * and the menu greys those entries out.
@@ -111,7 +111,7 @@ function defaultWebDist(): string {
 }
 
 /**
- * Validates LINSIGHT_PREVIEW_ORIGIN into a bare origin, or throws. An unparseable value
+ * Validates JIUMATE_PREVIEW_ORIGIN into a bare origin, or throws. An unparseable value
  * is a hard failure rather than a silent fallback: falling back would quietly serve
  * previews same-origin, which is the configuration this variable exists to avoid.
  */
@@ -121,17 +121,17 @@ function normalizePreviewOrigin(raw: string | undefined): string | null {
   try {
     url = new URL(raw.trim());
   } catch {
-    throw new Error(`Invalid LINSIGHT_PREVIEW_ORIGIN=${raw} (expected an absolute origin)`);
+    throw new Error(`Invalid JIUMATE_PREVIEW_ORIGIN=${raw} (expected an absolute origin)`);
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new Error(`Invalid LINSIGHT_PREVIEW_ORIGIN=${raw} (only http/https are supported)`);
+    throw new Error(`Invalid JIUMATE_PREVIEW_ORIGIN=${raw} (only http/https are supported)`);
   }
   return url.origin;
 }
 
-/** Parses server config from environment variables (PORT / HOST / LINSIGHT_HOME / LINSIGHT_WEB_DIST / LINSIGHT_WEB_DB / LINSIGHT_PREVIEW_ORIGIN / LINSIGHT_SEED_ADMIN_PASSWORD / LINSIGHT_DESKTOP_TOKEN / LINSIGHT_PORT_FILE / LINSIGHT_TRUST_PROXY). */
+/** Parses server config from environment variables (PORT / HOST / JIUMATE_HOME / JIUMATE_WEB_DIST / JIUMATE_WEB_DB / JIUMATE_PREVIEW_ORIGIN / JIUMATE_SEED_ADMIN_PASSWORD / JIUMATE_DESKTOP_TOKEN / JIUMATE_PORT_FILE / JIUMATE_TRUST_PROXY). */
 export function resolveServerConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
-  const root = env.LINSIGHT_HOME ?? resolveRoot();
+  const root = env.JIUMATE_HOME ?? resolveRoot();
   // An empty PORT string is treated as unset (the common `.env` case of an empty
   // `PORT=`): Number("") === 0 would pass the range check and bind to a random
   // port; this matches the CLI's resolvePort convention.
@@ -140,7 +140,7 @@ export function resolveServerConfig(env: NodeJS.ProcessEnv = process.env): Serve
     throw new Error(`Invalid port configuration PORT=${env.PORT}`);
   }
   const host = env.HOST ?? "127.0.0.1";
-  const desktopToken = env.LINSIGHT_DESKTOP_TOKEN?.trim() || null;
+  const desktopToken = env.JIUMATE_DESKTOP_TOKEN?.trim() || null;
   // Desktop mode redeems its token through a URL: never allow it off loopback.
   if (desktopToken !== null && host !== "127.0.0.1" && host !== "localhost") {
     throw new Error(`Desktop mode requires a loopback HOST (got HOST=${host})`);
@@ -149,24 +149,24 @@ export function resolveServerConfig(env: NodeJS.ProcessEnv = process.env): Serve
     root,
     host,
     port,
-    dbPath: env.LINSIGHT_WEB_DB ?? path.join(root, "web.db"),
-    webDist: env.LINSIGHT_WEB_DIST ?? defaultWebDist(),
-    previewOrigin: normalizePreviewOrigin(env.LINSIGHT_PREVIEW_ORIGIN),
+    dbPath: env.JIUMATE_WEB_DB ?? path.join(root, "web.db"),
+    webDist: env.JIUMATE_WEB_DIST ?? defaultWebDist(),
+    previewOrigin: normalizePreviewOrigin(env.JIUMATE_PREVIEW_ORIGIN),
     // An empty/whitespace value is treated as unset, which leaves the seed to generate one.
-    seedAdminPassword: env.LINSIGHT_SEED_ADMIN_PASSWORD?.trim() || null,
+    seedAdminPassword: env.JIUMATE_SEED_ADMIN_PASSWORD?.trim() || null,
     authSessionTtlMs: 30 * DAY_MS,
     authSessionRenewMs: 29 * DAY_MS,
     desktopToken,
-    portFile: env.LINSIGHT_PORT_FILE?.trim() || null,
-    trustProxy: env.LINSIGHT_TRUST_PROXY === "1",
-    supervised: env.LINSIGHT_SUPERVISED === "1",
+    portFile: env.JIUMATE_PORT_FILE?.trim() || null,
+    trustProxy: env.JIUMATE_TRUST_PROXY === "1",
+    supervised: env.JIUMATE_SUPERVISED === "1",
     pandocPath: resolvePandocPath(env),
   };
 }
 
 /**
  * Locate the Pandoc binary. Resolution order:
- *   1. `LINSIGHT_PANDOC` — if absolute and exists, used as-is; otherwise treated as a name
+ *   1. `JIUMATE_PANDOC` — if absolute and exists, used as-is; otherwise treated as a name
  *      and resolved against PATH.
  *   2. PATH scan for the literal name `pandoc` (with `.exe` on Windows).
  *
@@ -174,7 +174,7 @@ export function resolveServerConfig(env: NodeJS.ProcessEnv = process.env): Serve
  * hard failure: the server still starts, and the capabilities endpoint tells the UI so.
  */
 function resolvePandocPath(env: NodeJS.ProcessEnv): string | null {
-  const override = env.LINSIGHT_PANDOC?.trim();
+  const override = env.JIUMATE_PANDOC?.trim();
   if (override) {
     if (path.isAbsolute(override) && fs.existsSync(override)) return override;
     const resolved = whichOnPath(override, env.PATH);

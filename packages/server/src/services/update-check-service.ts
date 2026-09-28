@@ -8,7 +8,7 @@
  * a normal response with `error` set and `latestVersion` null. Outcomes are cached
  * in-memory (success for 1 hour, failure for 10 minutes) so a sidebar that opens on every
  * page load cannot hammer GitHub's unauthenticated rate limit; concurrent requests share
- * one in-flight lookup. `LINSIGHT_UPDATE_CHECK=off` disables the lookup entirely (no
+ * one in-flight lookup. `JIUMATE_UPDATE_CHECK=off` disables the lookup entirely (no
  * network call), for air-gapped or privacy-sensitive deployments.
  *
  * The request mirrors the CLI's fetchLatestVersion (packages/cli/src/commands/update.ts):
@@ -16,11 +16,11 @@
  * cannot import the CLI package (the dependency runs the other way), hence the small
  * duplication. fetch and the clock are injectable so tests never touch the network.
  */
-import { BUILD_DATE, VERSION, compareVersions, normalizeVersion } from "@prismshadow/linsight-core";
+import { BUILD_DATE, VERSION, compareVersions, normalizeVersion } from "@prismshadow/jiumate-core";
 import type { UpdateCheckResponse } from "../api/types.js";
 
 /** Repository the released artifacts come from (same slug as cli/update.ts's REPO_SLUG). */
-const REPO_SLUG = "qiaiqian67/linsight";
+const REPO_SLUG = "qiaiqian67/jiumate";
 /** Releases API endpoint for the newest published release. */
 export const LATEST_RELEASE_API = `https://api.github.com/repos/${REPO_SLUG}/releases/latest`;
 
@@ -34,7 +34,7 @@ export interface UpdateCheckServiceOptions {
   fetchImpl?: typeof fetch;
   /** Injectable clock for TTL determinism in tests. */
   now?: () => Date;
-  /** Environment to read LINSIGHT_UPDATE_CHECK from (defaults to process.env). */
+  /** Environment to read JIUMATE_UPDATE_CHECK from (defaults to process.env). */
   env?: Record<string, string | undefined>;
 }
 
@@ -58,12 +58,12 @@ export class UpdateCheckService {
    * exists to shield GitHub's unauthenticated rate limit from *passive* checks fired
    * by every sidebar open, and an explicit user click is rare enough to press through
    * it. Everything else is unchanged: the opt-out stays authoritative (force never
-   * dials out under LINSIGHT_UPDATE_CHECK=off), the outcome lands in the same cache
+   * dials out under JIUMATE_UPDATE_CHECK=off), the outcome lands in the same cache
    * (subsequent passive checks reuse it), and concurrent callers — forced or not —
    * still share one in-flight lookup.
    */
   async check(force = false): Promise<UpdateCheckResponse> {
-    if (this.env["LINSIGHT_UPDATE_CHECK"] === "off") {
+    if (this.env["JIUMATE_UPDATE_CHECK"] === "off") {
       return {
         currentVersion: VERSION,
         buildDate: BUILD_DATE,
@@ -113,7 +113,7 @@ export class UpdateCheckService {
     let res: Response;
     try {
       res = await this.fetchImpl(LATEST_RELEASE_API, {
-        headers: { accept: "application/vnd.github+json", "user-agent": "linsight-server" },
+        headers: { accept: "application/vnd.github+json", "user-agent": "jiumate-server" },
         signal: AbortSignal.timeout(15_000),
       });
     } catch {

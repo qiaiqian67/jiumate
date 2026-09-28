@@ -27,7 +27,7 @@ import type { ReactNode } from "react";
 import * as api from "../api/endpoints";
 import { subscribePrefsChanged } from "../features/pet/prefs-events";
 import { applyTheme, themeOwnsAccent } from "../features/skin/skin-runtime";
-import { DEFAULT_SKIN_SURFACE_ALPHA } from "@prismshadow/linsight-skins/css";
+import { DEFAULT_SKIN_SURFACE_ALPHA } from "@prismshadow/jiumate-skins/css";
 import { SKIN_BOOTSTRAP_VERSION, writeSkinBootstrap } from "../features/skin/skin-bootstrap";
 import { builtinThemes, listThemes, resolveThemeIn } from "../features/skin/skin-service";
 import type { ThemeDescriptor } from "../features/skin/skin-service";
@@ -54,18 +54,18 @@ export type Currency = "USD" | "CNY";
 /** 1 USD ≈ 7 CNY (fixed conversion rate). */
 export const USD_TO_CNY = 7;
 
-const MODE_KEY = "linsight.mode";
-const FONT_KEY = "linsight.fontScale";
-const ACCENT_KEY = "linsight.accent";
-const SKIN_ALPHA_KEY = "linsight.theme.surfaceAlpha";
-const SKIN_DIM_KEY = "linsight.theme.backgroundDim";
+const MODE_KEY = "jiumate.mode";
+const FONT_KEY = "jiumate.fontScale";
+const ACCENT_KEY = "jiumate.accent";
+const SKIN_ALPHA_KEY = "jiumate.theme.surfaceAlpha";
+const SKIN_DIM_KEY = "jiumate.theme.backgroundDim";
 /**
  * The selected theme. One key, because a theme is one thing: it carries its own palette and its
  * own artwork, and `appearance` says which shell it holds up under.
  */
-const THEME_KEY = "linsight.theme";
-const CURRENCY_KEY = "linsight.currency";
-const TERMINAL_KEY = "linsight.terminal.theme";
+const THEME_KEY = "jiumate.theme";
+const CURRENCY_KEY = "jiumate.currency";
+const TERMINAL_KEY = "jiumate.terminal.theme";
 
 /** Font size tier → root font-size (px): overall slightly larger than the system default for readability. */
 const FONT_PX: Record<FontScale, string> = { sm: "16px", md: "18px", lg: "20px" };

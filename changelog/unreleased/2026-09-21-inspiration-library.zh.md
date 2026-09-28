@@ -2,13 +2,13 @@
 
 - **Date:** 2026-09-21
 - **Type:** feature
-- **Scope:** `@prismshadow/linsight-inspirations`（新增工作区包）, `packages/server`, `packages/web`
+- **Scope:** `@prismshadow/jiumate-inspirations`（新增工作区包）, `packages/server`, `packages/web`
 
 [English](2026-09-21-inspiration-library.md)
 
 原来的「灵感库 / Inspiration」页是一个写死的清单：十一个案例放在一个 TypeScript 数组里，三个分类放在 i18n 字典里，没有任何添加的入口。现在它是一个真正的库——内置案例，加上管理员自己写的案例，按管理员自定义的分类归档，带封面、预览、收藏与搜索。
 
-## `@prismshadow/linsight-inspirations`——新增工作区包
+## `@prismshadow/jiumate-inspirations`——新增工作区包
 
 案例格式、字段上限、磁盘目录与内置预设。一个**案例**就是一个起点：一段填进输入框的提示词，以及这段提示词要跑在什么之上——建议的智能体、要预选的技能、它依赖的工具，以及可选的封面图与预览文档。
 

@@ -5,19 +5,15 @@
  * the boot a hot swap performs.
  */
 import { describe, expect, it, vi } from "vitest";
-import { boot, initialDoc } from "@prismshadow/linsight-core/kernel";
+import { boot, initialDoc } from "@prismshadow/jiumate-core/kernel";
 import { HotResources } from "../src/hmr/resources.js";
 import { packagedPlatform } from "../src/hmr/platform.js";
-import { LINSIGHT_FAMILY, RUNTIME_INTERFACES_RESOURCE_ID } from "../src/hmr/capabilities.js";
+import { JIUMATE_FAMILY, RUNTIME_INTERFACES_RESOURCE_ID } from "../src/hmr/capabilities.js";
 import { EXTENSIONS_RESOURCE_ID, ExtensionHost, extensionHostFrom } from "../src/extension/host.js";
-import type {
-  LinsightContext,
-  LinsightInterface,
-  WorkflowFactory,
-} from "../src/extension/index.js";
+import type { JiuMateContext, JiuMateInterface, WorkflowFactory } from "../src/extension/index.js";
 import { instantiateWorkflows, WorkflowFactories } from "../src/extension/workflow.js";
 
-function emptyIface(): LinsightInterface {
+function emptyIface(): JiuMateInterface {
   // The registry, not a bare Map: that IS the surface an extension gets (see platform.ts).
   return { workflow: new WorkflowFactories(), tool: new Map() };
 }
@@ -30,7 +26,7 @@ function emptyIface(): LinsightInterface {
  */
 function bareKernel(): HotResources {
   const r = new HotResources();
-  r.register(RUNTIME_INTERFACES_RESOURCE_ID, { family: LINSIGHT_FAMILY });
+  r.register(RUNTIME_INTERFACES_RESOURCE_ID, { family: JIUMATE_FAMILY });
   return r;
 }
 
@@ -54,8 +50,8 @@ describe("extension host", () => {
     const host = new ExtensionHost();
     const log: string[] = [];
     let activations = 0;
-    let seenIface: LinsightInterface | null = null;
-    let seenCtx: LinsightContext | null = null;
+    let seenIface: JiuMateInterface | null = null;
+    let seenCtx: JiuMateContext | null = null;
     await host.use({
       activate(extCtx) {
         activations++;
@@ -73,7 +69,7 @@ describe("extension host", () => {
 
     const iface = emptyIface();
     host.emit("initialize", iface);
-    const ctx = { workflows: instantiateWorkflows(iface.workflow) } as LinsightContext;
+    const ctx = { workflows: instantiateWorkflows(iface.workflow) } as JiuMateContext;
     host.emit("create", ctx);
     const iface2 = emptyIface();
     host.emit("initialize", iface2);
@@ -90,13 +86,13 @@ describe("extension host", () => {
     await host.use({ activate: () => {} });
     expect(() => {
       host.emit("initialize", emptyIface());
-      host.emit("create", {} as LinsightContext);
+      host.emit("create", {} as JiuMateContext);
     }).not.toThrow();
   });
 
   it("the subscription window seals when activate settles", async () => {
     const host = new ExtensionHost();
-    let leaked: ((event: "create", handler: (ctx: LinsightContext) => void) => void) | null = null;
+    let leaked: ((event: "create", handler: (ctx: JiuMateContext) => void) => void) | null = null;
     await host.use({
       activate(extCtx) {
         leaked = (event, handler) => extCtx.on(event, handler);
@@ -172,7 +168,7 @@ describe("extension host — activation is transactional", () => {
       }),
     ).rejects.toThrow(/async boom/);
     // The failed extension is not published, so nothing it registered is ever delivered.
-    host.emit("create", {} as LinsightContext);
+    host.emit("create", {} as JiuMateContext);
     expect(order).toEqual([]);
   });
 
@@ -206,7 +202,7 @@ describe("extension host — activation is transactional", () => {
             throw new Error("would-be unhandled");
           }),
       });
-      expect(() => host.emit("create", {} as LinsightContext)).toThrow(
+      expect(() => host.emit("create", {} as JiuMateContext)).toThrow(
         /handler for 'create' returned a promise/,
       );
       // The refusal claims the promise, so the boot failure above is the ONLY signal —
@@ -275,7 +271,7 @@ describe("extensionHostFrom", () => {
   });
 
   it("falls back to an empty host when nothing was published", () => {
-    const iface: LinsightInterface = emptyIface();
+    const iface: JiuMateInterface = emptyIface();
     // No throw, and nothing registers into the iface: no published host means no extensions.
     extensionHostFrom(new HotResources()).emit("initialize", iface);
     expect(iface.workflow.size).toBe(0);
@@ -293,7 +289,7 @@ describe("extension seam on the real platform", () => {
   });
 
   it("every App creation re-delivers both events, and the context carries what it registered", async () => {
-    const contexts: LinsightContext[] = [];
+    const contexts: JiuMateContext[] = [];
     let initializes = 0;
     const host = new ExtensionHost();
     await host.use({

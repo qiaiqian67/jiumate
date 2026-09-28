@@ -1,7 +1,7 @@
 /**
- * `linsight chat` — interactive REPL over the server.
+ * `jiumate chat` — interactive REPL over the server.
  *
- *   linsight chat [--project-id <id>] [--agent-id <id>] [--workspace <path>]
+ *   jiumate chat [--project-id <id>] [--agent-id <id>] [--workspace <path>]
  *                [--model-id <id> --provider <group>] [--approve <mode>]
  *                [--thinking <level>] [--resume [sessionId]] [--verbose] [--server <url>]
  *
@@ -18,13 +18,13 @@
  * agent's most recent Session) and first renders its history from GET /messages.
  * Ctrl-C behavior (state-dependent): buffer has content -> clear it; awaiting approval
  * -> deny; running -> abort the current turn; empty buffer -> y/N exit confirmation.
- * Docs: /docs/cli § "linsight chat".
+ * Docs: /docs/cli § "jiumate chat".
  */
 import { createInterface, type Interface } from "node:readline";
 import type { Command } from "commander";
-import { VERSION } from "@prismshadow/linsight-core";
-import type { ApprovalDecision, OmniMessage, ToolCallPayload } from "@prismshadow/linsight-core";
-import type { SessionInfo } from "@prismshadow/linsight-server/api";
+import { VERSION } from "@prismshadow/jiumate-core";
+import type { ApprovalDecision, OmniMessage, ToolCallPayload } from "@prismshadow/jiumate-core";
+import type { SessionInfo } from "@prismshadow/jiumate-server/api";
 import { StreamRenderer, dim, renderHistory } from "../render.js";
 import { parseGoalCommand } from "../goal-command.js";
 import { parseThinkingCommand, resolveThinkingLevel } from "../thinking-command.js";
@@ -449,7 +449,7 @@ export function registerChatCommand(program: Command, t: Messages): void {
       // The copy-pastable resume command for one Session: includes this run's Project /
       // Agent options so it works as-is.
       const resumeCommand = (sessionId: string): string =>
-        `linsight chat --resume ${sessionId}` +
+        `jiumate chat --resume ${sessionId}` +
         (opts.projectId ? ` --project-id ${opts.projectId}` : "") +
         (opts.agentId ? ` --agent-id ${opts.agentId}` : "");
 

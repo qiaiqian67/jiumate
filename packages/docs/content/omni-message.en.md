@@ -3,7 +3,7 @@ title: The OmniMessage Protocol
 description: One envelope, three message types, a six-value stop_reason — the unified protocol behind the SDK, the Trace and SSE, field by field.
 ---
 
-OmniMessage is Linsight's unified message protocol: the SDK yields it, the Trace stores it line by line, and the Server pushes it verbatim over SSE. What streams, what is stored and what the model sees are one structure — there is no second format between front end, back end and storage.
+OmniMessage is JiuMate's unified message protocol: the SDK yields it, the Trace stores it line by line, and the Server pushes it verbatim over SSE. What streams, what is stored and what the model sees are one structure — there is no second format between front end, back end and storage.
 
 This page goes top-down: the envelope and the three message types first, then every payload field by field, then the protocol-wide semantics (streaming discipline, stop_reason, origin, fidelity fields). Type source: `packages/core/src/omnimessage/types.ts`.
 
@@ -356,7 +356,7 @@ Provider-specific wire data travels in a single optional field, `fidelity` — a
 { type: "thinking", thinking: "…", fidelity: { reasoning_field: "reasoning_content" } }
 ```
 
-The payload is opaque to Linsight: it passes through and persists verbatim end to end — some models require it byte-for-byte when history is replayed, and any rewriting (or loss) would break compatibility. This is one of the preconditions for lossless Session recovery from the Trace.
+The payload is opaque to JiuMate: it passes through and persists verbatim end to end — some models require it byte-for-byte when history is replayed, and any rewriting (or loss) would break compatibility. This is one of the preconditions for lossless Session recovery from the Trace.
 
 ## Three jobs, one protocol
 
@@ -370,10 +370,10 @@ How messages travel along these surfaces — and every ordering guarantee — is
 
 ## Builders and guards
 
-`@prismshadow/linsight-core` exports all types, a builder per message kind (`builders.ts`: `userText`, `assistantText`, `toolCall`, `toolCallOutput`, `partialText`, `tokenUsage`, `withOrigin`, `emptyTokenCounts`, `addTokenCounts`, …) and runtime guards (`isCompleteModelMessage`, `isPartialPayload`, `isModelMessage`, `isEventMessage`, `isSessionMeta`):
+`@prismshadow/jiumate-core` exports all types, a builder per message kind (`builders.ts`: `userText`, `assistantText`, `toolCall`, `toolCallOutput`, `partialText`, `tokenUsage`, `withOrigin`, `emptyTokenCounts`, `addTokenCounts`, …) and runtime guards (`isCompleteModelMessage`, `isPartialPayload`, `isModelMessage`, `isEventMessage`, `isSessionMeta`):
 
 ```ts
-import { userText, isCompleteModelMessage } from "@prismshadow/linsight-core";
+import { userText, isCompleteModelMessage } from "@prismshadow/jiumate-core";
 
 const prompt = userText("List the files in the current directory");
 // { timestamp: "…", type: "model_msg", payload: { type: "text", role: "user", text: "…" } }

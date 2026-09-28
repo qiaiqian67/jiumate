@@ -2,7 +2,7 @@
  * LangChain comparison: the 1x/100x story as two cards with a looping
  * "construction" animation — on a shared cycle, the LangChain side lays one
  * block at a time (still unfinished when the cycle resets) while the
- * Linsight side raises a whole skyline almost instantly and holds it.
+ * JiuMate side raises a whole skyline almost instantly and holds it.
  * Reduced-motion users see both skylines complete.
  */
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
@@ -126,7 +126,7 @@ export function Compare() {
         <CompareCard {...S.compare.langchain}>
           <SlowBuild key={`slow-${cycle}`} />
         </CompareCard>
-        <CompareCard {...S.compare.linsight} emphasized>
+        <CompareCard {...S.compare.jiumate} emphasized>
           <FastBuild key={`fast-${cycle}`} />
         </CompareCard>
       </div>

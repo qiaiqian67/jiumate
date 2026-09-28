@@ -13,7 +13,7 @@ import { EXTENSIONS_FILE, loadExtensions, readExtensionList } from "../src/exten
 let root: string;
 
 beforeEach(async () => {
-  root = await mkdtemp(path.join(tmpdir(), "linsight-extensions-"));
+  root = await mkdtemp(path.join(tmpdir(), "jiumate-extensions-"));
 });
 afterEach(async () => {
   await rm(root, { recursive: true, force: true });

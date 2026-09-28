@@ -14,7 +14,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { skillsDir, librarySkill } from "@prismshadow/linsight-core";
+import { skillsDir, librarySkill } from "@prismshadow/jiumate-core";
 import type {
   AgentCreateResponse,
   AgentSkillsResponse,
@@ -66,7 +66,7 @@ describe("directory skills api", () => {
       })
     ).json()) as ProjectCreateResponse;
     projectId = created.project.projectId;
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-dirskills-"));
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-dirskills-"));
   });
 
   afterEach(async () => {
@@ -241,20 +241,20 @@ describe("directory skills api", () => {
   });
 
   it("lets a directory Skill shadow a library Skill of the same name", async () => {
-    await writeSkill(".agents/skills", "linsight-sdk", { description: "the checkout's own" });
+    await writeSkill(".agents/skills", "jiumate-sdk", { description: "the checkout's own" });
     const created = await owner.post(`/api/projects/${projectId}/agents`, {
       agentId: "shadow_agent",
-      skills: ["linsight-sdk"],
+      skills: ["jiumate-sdk"],
       skillsDirectory: dir,
-      directorySkills: ["linsight-sdk"],
+      directorySkills: ["jiumate-sdk"],
     });
     expect(created.status).toBe(201);
     const onDisk = await fs.readFile(
-      path.join(skillsDir(t.root, projectId, "shadow_agent"), "linsight-sdk", "SKILL.md"),
+      path.join(skillsDir(t.root, projectId, "shadow_agent"), "jiumate-sdk", "SKILL.md"),
       "utf8",
     );
-    expect(onDisk).toBe(skillMd("linsight-sdk", "the checkout's own"));
-    expect(onDisk).not.toBe(librarySkill("linsight-sdk")!.skill.content);
+    expect(onDisk).toBe(skillMd("jiumate-sdk", "the checkout's own"));
+    expect(onDisk).not.toBe(librarySkill("jiumate-sdk")!.skill.content);
   });
 
   it("is 404 with no Agent created when a picked directory Skill is gone", async () => {

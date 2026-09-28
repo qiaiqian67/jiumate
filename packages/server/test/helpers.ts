@@ -7,7 +7,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { Hono } from "hono";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 import { bootAppDeps, createRuntimeApp } from "../src/app.js";
 import type { AppDeps, BuildDepsOverrides } from "../src/app.js";
 import { openDatabase } from "../src/db/database.js";
@@ -22,13 +22,13 @@ import type { ServerConfig } from "../src/config.js";
 import type { UserInfo } from "../src/api/types.js";
 
 export async function makeTempRoot(): Promise<string> {
-  return fs.mkdtemp(path.join(os.tmpdir(), "linsight-server-test-"));
+  return fs.mkdtemp(path.join(os.tmpdir(), "jiumate-server-test-"));
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Fixed seeded-admin password injected into every test app (in production the seed generates a random one). */
-export const TEST_ADMIN_PASSWORD = "linsight-0000";
+export const TEST_ADMIN_PASSWORD = "jiumate-0000";
 
 /**
  * scrypt work factor for test apps: the lowest legal one. Nearly every case here seeds an
@@ -138,7 +138,7 @@ export async function desktopLoginCookie(app: Hono<AppEnv>): Promise<string> {
   return setCookie.split(";")[0]!;
 }
 
-/** Logs in and returns the session cookie (`linsight_session=...`). */
+/** Logs in and returns the session cookie (`jiumate_session=...`). */
 export async function loginUser(
   app: Hono<AppEnv>,
   userId: string,

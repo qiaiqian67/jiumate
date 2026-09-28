@@ -4,7 +4,7 @@
  * Dev server listens on 7365; `/api` is proxied to the **development** backend (127.0.0.1:7368 --
  * `pnpm dev:server`, deliberately not the installed server's 7364, which is routinely running at the
  * same time). Honors PORT so overriding the backend port moves the proxy with it, and
- * LINSIGHT_API_PROXY overrides the whole target. SSE (text/event-stream) passes through http-proxy
+ * JIUMATE_API_PROXY overrides the whole target. SSE (text/event-stream) passes through http-proxy
  * transparently, no special config needed.
  * The vitest config is kept separate in vitest.config.ts (its embedded vite 5 types conflict with this
  * package's vite 7 plugin types, hence the separate file to avoid the clash).
@@ -15,7 +15,7 @@ import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 
 /**
- * Resolves the `/api` proxy target: LINSIGHT_API_PROXY replaces it outright, otherwise the
+ * Resolves the `/api` proxy target: JIUMATE_API_PROXY replaces it outright, otherwise the
  * development backend on PORT — the same variable `pnpm dev:server` binds — defaulting to 7368.
  *
  * Empty counts as unset, as everywhere else PORT is read in this repo (server/src/config.ts,
@@ -28,7 +28,7 @@ import type { Plugin } from "vite";
  * `server.proxy` cannot be exercised without starting a dev server).
  */
 export function apiProxyTarget(env: Record<string, string | undefined> = process.env): string {
-  return env.LINSIGHT_API_PROXY || `http://127.0.0.1:${env.PORT || "7368"}`;
+  return env.JIUMATE_API_PROXY || `http://127.0.0.1:${env.PORT || "7368"}`;
 }
 
 /**
@@ -55,7 +55,7 @@ export function dropNonWoff2FontSources(css: string): string {
  */
 function katexWoff2Only(): Plugin {
   return {
-    name: "linsight:katex-woff2-only",
+    name: "jiumate:katex-woff2-only",
     enforce: "pre",
     transform(code, id) {
       if (!id.includes("/katex/dist/") || !id.includes(".css")) return null;
@@ -68,7 +68,7 @@ function katexWoff2Only(): Plugin {
 export default defineConfig({
   plugins: [react(), tailwindcss(), katexWoff2Only()],
   server: {
-    // Fixed Linsight dev port (stands alone — vite configs cannot import core TS,
+    // Fixed JiuMate dev port (stands alone — vite configs cannot import core TS,
     // so the numbers are literals here; the allocation table lives in core's internal/ports.ts).
     port: 7365,
     proxy: {

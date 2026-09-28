@@ -94,8 +94,8 @@ export interface NavCollapseStorage {
   setItem(key: string, value: string): void;
 }
 
-/** The single global key (`linsight.…` naming convention); holds "collapsed" / "expanded". */
-export const NAV_GROUP_COLLAPSED_KEY = "linsight.sidebarNavGroupCollapsed";
+/** The single global key (`jiumate.…` naming convention); holds "collapsed" / "expanded". */
+export const NAV_GROUP_COLLAPSED_KEY = "jiumate.sidebarNavGroupCollapsed";
 
 /**
  * Reads the persisted choice; only an explicit "collapsed" collapses — anything else

@@ -16,7 +16,7 @@ describe("code highlighting", () => {
 
   it("registers a second grammar without disturbing the first", async () => {
     expect(await highlight("const port: number = 7376;", "ts")).toContain("<span");
-    expect(await highlight("linsight web", "shell")).toContain("<span");
+    expect(await highlight("jiumate web", "shell")).toContain("<span");
   });
 
   it("leaves a language with no grammar unhighlighted", async () => {

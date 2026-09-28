@@ -92,24 +92,24 @@ describe("the report", () => {
     const proxy = machinesProxy(async () => ({
       agent: new http.Agent(),
       port,
-      cookie: "linsight_session=minted",
+      cookie: "jiumate_session=minted",
     }));
     await proxy(
       new Request(`http://app.local${SERVER_PROXY_PREFIX}${A}/api/me`, {
-        headers: { authorization: "Bearer this-server's-token", cookie: "linsight_session=local" },
+        headers: { authorization: "Bearer this-server's-token", cookie: "jiumate_session=local" },
       }),
     );
 
     expect(got).not.toBeNull();
     expect(got!.authorization).toBeUndefined();
-    expect(got!.cookie).toBe("linsight_session=minted");
+    expect(got!.cookie).toBe("jiumate_session=minted");
   });
 
   it("says the machine answered on any HTTP answer, refusals included", async () => {
     const port = await listen();
     const seen: [string, { ok: boolean }][] = [];
     const proxy = machinesProxy(
-      async () => ({ agent: new http.Agent(), port, cookie: "linsight_session=x" }),
+      async () => ({ agent: new http.Agent(), port, cookie: "jiumate_session=x" }),
       (machineId, outcome) => seen.push([machineId, outcome]),
     );
     const response = await proxy(request(A));
@@ -123,7 +123,7 @@ describe("the report", () => {
     upstream = null;
     const seen: [string, { ok: boolean; detail?: string }][] = [];
     const proxy = machinesProxy(
-      async () => ({ agent: new http.Agent(), port, cookie: "linsight_session=x" }),
+      async () => ({ agent: new http.Agent(), port, cookie: "jiumate_session=x" }),
       (machineId, outcome) => seen.push([machineId, outcome]),
     );
     const response = await proxy(request(A));

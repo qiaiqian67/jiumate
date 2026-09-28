@@ -75,15 +75,15 @@ let prevHome: string | undefined;
 let restoreKeys: () => void;
 
 beforeEach(async () => {
-  prevHome = process.env.LINSIGHT_HOME;
-  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-"));
-  process.env.LINSIGHT_HOME = tmpRoot;
+  prevHome = process.env.JIUMATE_HOME;
+  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-"));
+  process.env.JIUMATE_HOME = tmpRoot;
   restoreKeys = stubProviderKeys();
 });
 
 afterEach(async () => {
-  if (prevHome === undefined) delete process.env.LINSIGHT_HOME;
-  else process.env.LINSIGHT_HOME = prevHome;
+  if (prevHome === undefined) delete process.env.JIUMATE_HOME;
+  else process.env.JIUMATE_HOME = prevHome;
   restoreKeys();
   await fs.rm(tmpRoot, { recursive: true, force: true });
 });
@@ -1089,7 +1089,7 @@ describe("Agent model contexts are assembled from the Agent State on disk, at ev
       await patchSystemConfig((cfg) => {
         cfg.tools = {
           ...(cfg.tools ?? {}),
-          mcpServers: [{ name: "ghost", config: { command: "linsight-no-such-mcp-server" } }],
+          mcpServers: [{ name: "ghost", config: { command: "jiumate-no-such-mcp-server" } }],
         };
       });
 

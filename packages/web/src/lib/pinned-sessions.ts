@@ -7,7 +7,7 @@
  * Persistence is frontend-side: `SessionInfo` carries no pinned field and
  * `SessionPatchRequest` accepts none, so a server route would need schema + API
  * changes — deliberately out of scope here. Instead the ids persist per Project in
- * localStorage (`linsight.…` key naming, matching the sidebar's collapsed/pinned group
+ * localStorage (`jiumate.…` key naming, matching the sidebar's collapsed/pinned group
  * sets), with injectable storage (model-group-expansion.ts convention: vitest runs in
  * Node, no localStorage). Deleting a Session prunes its id via removePinnedSession;
  * ids orphaned by deletions elsewhere (another browser/device) stay inert — a pin is
@@ -20,9 +20,9 @@ export interface PinnedSessionsStorage {
   setItem(key: string, value: string): void;
 }
 
-/** Storage key of one Project's pinned-session id set (sidebar key-naming convention, `linsight.sidebarPinnedGroups.<projectId>` &c.). */
+/** Storage key of one Project's pinned-session id set (sidebar key-naming convention, `jiumate.sidebarPinnedGroups.<projectId>` &c.). */
 export const pinnedSessionsKey = (projectId: string): string =>
-  `linsight.pinnedSessions.${projectId}`;
+  `jiumate.pinnedSessions.${projectId}`;
 
 /**
  * Reads a Project's persisted pinned ids; no Project yet, nothing stored, or corrupted

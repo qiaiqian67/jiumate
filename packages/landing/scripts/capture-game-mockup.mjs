@@ -1,7 +1,7 @@
 /**
- * Render the landing Cases tab's "linsight sled game" finished-product shot.
+ * Render the landing Cases tab's "jiumate sled game" finished-product shot.
  *
- * Same pattern as capture-readme-demo.mjs: linsight-game-mockup.html is a static,
+ * Same pattern as capture-readme-demo.mjs: jiumate-game-mockup.html is a static,
  * dependency-free mockup of the example game's play screen, captured per language
  * (zh / en) and theme (light = polar day / dark = polar night) into
  * packages/landing/src/assets as game-<lang>-<theme>.webp.
@@ -16,7 +16,7 @@ import { chromium } from "@playwright/test";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.resolve(HERE, "../src/assets");
-const PAGE = pathToFileURL(path.join(HERE, "linsight-game-mockup.html")).href;
+const PAGE = pathToFileURL(path.join(HERE, "jiumate-game-mockup.html")).href;
 
 const pngDirArg = process.argv.indexOf("--png-dir");
 const PNG_DIR = pngDirArg >= 0 ? process.argv[pngDirArg + 1] : null;

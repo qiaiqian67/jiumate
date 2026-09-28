@@ -3,7 +3,7 @@
  * real HTTPS. `x-forwarded-proto` is caller-supplied — trusting it unconditionally would
  * let ANY client walk through the gate over plaintext just by setting a header, which is
  * exactly the case the gate exists to block. It is honored only when the deployment
- * explicitly opts in (`trustProxy` / LINSIGHT_TRUST_PROXY=1), same as a real reverse-proxy
+ * explicitly opts in (`trustProxy` / JIUMATE_TRUST_PROXY=1), same as a real reverse-proxy
  * setup requires.
  */
 import { afterEach, describe, expect, it } from "vitest";

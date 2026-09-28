@@ -15,7 +15,7 @@ Start a goal from any of the three surfaces:
 | --- | --- |
 | Web App | The composer's `+` menu → **Goal mode** (or type `/goal`); the chip takes an optional token budget (`500k`, `2m`, empty = unlimited). Skills selected in the composer prefix the first round's message as a `[use_skills]` block, exactly like a normal send |
 | CLI chat | `/goal[:<budget>] <objective>`, e.g. `/goal:500k make all tests pass` |
-| CLI one-shot | `linsight run --goal [budget] -m "<objective>"`; exit code 0 only when the goal completes |
+| CLI one-shot | `jiumate run --goal [budget] -m "<objective>"`; exit code 0 only when the goal completes |
 | Server API | `POST /api/sessions/:id/tasks` with `{ input, goal: { budget } }` (budget `-1` or omitted = unlimited) |
 
 Under the hood the server asks the Session to run the goal package's `user_prompt` hook — the installed `agent_state/hooks/goal/start.mjs`, fed `{ hook: "user_prompt", session_id, scratchpad_dir, prompt, budget }` on stdin — and starts the goal run with your message exactly as typed followed by the `{ context }` it prints, stamped `sender: "harness"`; the stop hook takes it from there. In the SDK, a goal is therefore a plain `session.run` on an Agent with the plugin installed, started by writing the goal file the same way (`Session.runUserPromptHook("goal", …)`, or the script directly).

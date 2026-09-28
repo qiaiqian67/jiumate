@@ -1247,9 +1247,7 @@ export class ContextEngine {
                 hooked = await preToolUse(tc);
               } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
-                process.stderr.write(
-                  `[linsight] preToolUse consult threw: ${message}; ignoring.\n`,
-                );
+                process.stderr.write(`[jiumate] preToolUse consult threw: ${message}; ignoring.\n`);
               }
               if (hooked) {
                 for (const ev of hooked.events) {
@@ -1273,7 +1271,7 @@ export class ContextEngine {
                 decision = await approve(tc);
               } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
-                process.stderr.write(`[linsight] approve callback threw: ${message}; denying.\n`);
+                process.stderr.write(`[jiumate] approve callback threw: ${message}; denying.\n`);
                 decision = "deny";
               }
             }
@@ -1400,7 +1398,7 @@ export class ContextEngine {
       const message = err instanceof Error ? err.message : String(err);
       if (completed) {
         // Thrown only after the complete output was ready: pairing is intact, so just warn.
-        process.stderr.write(`[linsight] environment threw after tool output: ${message}\n`);
+        process.stderr.write(`[jiumate] environment threw after tool output: ${message}\n`);
         return;
       }
       const failed = toolCallOutput({

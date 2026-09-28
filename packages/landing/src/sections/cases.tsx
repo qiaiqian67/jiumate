@@ -1,7 +1,7 @@
 /**
- * Use-case gallery as switchable tabs — the RAG docs expert and the linsight sled
+ * Use-case gallery as switchable tabs — the RAG docs expert and the jiumate sled
  * game under their condensed one-sentence prompts. Video entries use a matching
- * Linsight run as their poster; still-only entries show the finished product.
+ * JiuMate run as their poster; still-only entries show the finished product.
  * Tab order follows S.cases.tabs; CASE_STILLS is index-aligned with it. A tab may carry a `cost`
  * line (the RAG one does) — an emphasized token-cost hook under the caption.
  */

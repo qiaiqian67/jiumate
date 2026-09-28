@@ -1,5 +1,5 @@
 /**
- * Local IO for Linsight skin packages.
+ * Local IO for JiuMate skin packages.
  *
  * The package format is host-supplied: callers pass in the root path (`<root>/skins/`) and
  * every read/write is anchored to that root. No process-wide constant, no env lookup — the
@@ -171,7 +171,7 @@ export function coerceSkinPackage(value: unknown, ctx: { packagePath: string }):
   const background = coerceBackground(raw["image"], art, ctx.packagePath);
   const preview = coercePreview(raw["preview"], ctx.packagePath);
   const origin = coerceOrigin(raw["origin"]);
-  const extras = coerceExtras(raw["linsight"]);
+  const extras = coerceExtras(raw["jiumate"]);
 
   return {
     id,
@@ -329,7 +329,7 @@ export async function deleteSkinPackage(root: string, slug: string): Promise<voi
 // internals
 // ---------------------------------------------------------------------------
 
-/** The on-disk manifest shape. Upstream's, plus the `linsight` block and the asset name. */
+/** The on-disk manifest shape. Upstream's, plus the `jiumate` block and the asset name. */
 function toCanonicalManifest(skin: SkinPackage): Record<string, unknown> {
   return {
     schema: SKIN_SCHEMA,
@@ -355,7 +355,7 @@ function toCanonicalManifest(skin: SkinPackage): Record<string, unknown> {
     },
     ...(skin.background === null ? {} : { image: skin.background.filename }),
     ...(skin.previewPath === null ? {} : { preview: posix(basename(skin.previewPath)) }),
-    ...(skin.extras.font === null ? {} : { linsight: { font: skin.extras.font } }),
+    ...(skin.extras.font === null ? {} : { jiumate: { font: skin.extras.font } }),
     ...(skin.origin === null ? {} : { origin: skin.origin }),
   };
 }
@@ -449,24 +449,24 @@ function coerceTaskMode(value: unknown): ThemeTaskMode | null {
 }
 
 /**
- * Read the optional `linsight` block — the fields this host understands and upstream does not.
+ * Read the optional `jiumate` block — the fields this host understands and upstream does not.
  *
  * Kept in its own object rather than added to the top level so a theme stays importable into the
  * project this format came from, whose validator rejects unknown keys outright.
  */
 function coerceExtras(value: unknown): SkinExtras {
   if (value === undefined || value === null) return { font: null };
-  const raw = asObject(value, "`linsight` must be an object");
+  const raw = asObject(value, "`jiumate` must be an object");
   const font = raw["font"];
   if (font === undefined || font === null) return { font: null };
   if (typeof font !== "string" || font.length === 0) {
-    throw new SkinPackageError("`linsight.font` must be a non-empty string");
+    throw new SkinPackageError("`jiumate.font` must be a non-empty string");
   }
   if (font.length > TOKEN_VALUE_LIMIT) {
-    throw new SkinPackageError(`\`linsight.font\` exceeds ${TOKEN_VALUE_LIMIT} characters`);
+    throw new SkinPackageError(`\`jiumate.font\` exceeds ${TOKEN_VALUE_LIMIT} characters`);
   }
   if (!FONT_STACK_PATTERN.test(font)) {
-    throw new SkinPackageError("`linsight.font` must be a plain font stack");
+    throw new SkinPackageError("`jiumate.font` must be a plain font stack");
   }
   return { font };
 }

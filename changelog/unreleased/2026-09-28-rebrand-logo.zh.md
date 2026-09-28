@@ -10,14 +10,14 @@
 
 ## SVG 缩小约 2100 倍，且不再需要那个绕法
 
-旧标识把图形以 base64 PNG 内联在 `<image xlink:href="data:image/png;base64,…">` 里，因为当 SVG 通过 `<img>` 或作为 favicon 加载时，外部 `xlink:href` 会被浏览器静默丢弃 —— 图标会画成一个空白的白色方块。那次内联正是每个 `linsight-logo.svg` 有约 793 KB 的唯一原因。
+旧标识把图形以 base64 PNG 内联在 `<image xlink:href="data:image/png;base64,…">` 里，因为当 SVG 通过 `<img>` 或作为 favicon 加载时，外部 `xlink:href` 会被浏览器静默丢弃 —— 图标会画成一个空白的白色方块。那次内联正是每个 `jiumate-logo.svg` 有约 793 KB 的唯一原因。
 
 新标识是纯矢量，因此这个绕法不再需要，文件只有 **380 字节**。它在任何尺寸下都清晰，而这正是 `web/index.html` 和 `docs`/`landing` 两处 favicon 里 `<link rel="icon" type="image/svg+xml">` 本来就想达到的。
 
 ## 文件
 
-- `packages/{web,landing,docs}/public/linsight-logo.svg` —— 三份字节一致（已用哈希核对）。使用方包括 `LinsightLogo` 组件、三个界面的 favicon、通知图标、OG 分享卡（`landing/scripts/og-cover.html`）、landing 的导航/首屏/页脚/支柱、`HarnessLogo`、两个 README，以及 docs 导航。
-- `packages/{web,landing,docs}/public/linsight-logo.png` —— 1024×1024 栅格母版，已重新生成。
+- `packages/{web,landing,docs}/public/jiumate-logo.svg` —— 三份字节一致（已用哈希核对）。使用方包括 `JiuMateLogo` 组件、三个界面的 favicon、通知图标、OG 分享卡（`landing/scripts/og-cover.html`）、landing 的导航/首屏/页脚/支柱、`HarnessLogo`、两个 README，以及 docs 导航。
+- `packages/{web,landing,docs}/public/jiumate-logo.png` —— 1024×1024 栅格母版，已重新生成。
 - `packages/desktop/build/icon.png` —— 1024×1024 Windows 母版。
 - `packages/desktop/build/icon-mac.png` —— 1024×1024，824 px 图形居中，使 Finder/Launchpad/Dock 中的视觉尺寸与原生图标一致。
 - `packages/desktop/build/icons/{128,256,512}x{512}.png` —— Linux 目标用的 freedesktop 图标集。

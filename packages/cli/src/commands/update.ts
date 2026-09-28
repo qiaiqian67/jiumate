@@ -1,24 +1,24 @@
 /**
- * `linsight update` — upgrades an existing install in place.
+ * `jiumate update` — upgrades an existing install in place.
  *
- *   linsight update [--check] [--release <tag>] [-y|--yes]
+ *   jiumate update [--check] [--release <tag>] [-y|--yes]
  *
  * There is no single upgrade mechanism, because there is no single install mechanism: the
  * documented path is the tarball installer (install.sh unpacks bin/lib/web/node into
- * LINSIGHT_INSTALL_DIR, default ~/.linsight), some users have a global npm install of
- * @prismshadow/linsight-cli, and developers run out of a source checkout. This command works out
+ * JIUMATE_INSTALL_DIR, default ~/.jiumate), some users have a global npm install of
+ * @prismshadow/jiumate-cli, and developers run out of a source checkout. This command works out
  * which one it is from the real path of the running CLI and upgrades the way that install was
  * made — never by guessing. A source checkout is refused outright: overwriting a working tree
  * would destroy uncommitted work.
  *
  * Release discovery and installer download use the same environment contract as the public
- * installer entry point: an explicit LINSIGHT_DOWNLOAD_BASE_URL has highest download priority;
+ * installer entry point: an explicit JIUMATE_DOWNLOAD_BASE_URL has highest download priority;
  * otherwise auto prefers the OSS latest pointer and immutable release when fetching the versioned
  * installer, then lets that installer choose the large payload source for the same tag. The
  * target-a-specific-release flag is spelled
  * `--release <tag>` rather than `--version <tag>`: commander's program-level
  * `-v, --version` intercepts a subcommand's own `--version` when it is written with a space, so
- * `linsight update --version 0.1.2` would silently print the CLI version and do nothing. A flag that
+ * `jiumate update --version 0.1.2` would silently print the CLI version and do nothing. A flag that
  * works only in its `--version=0.1.2` form is a trap, so it got an unambiguous name.
  *
  * Self-replacement hazard, and how it is handled: for a tarball install the installer deletes and
@@ -30,7 +30,7 @@
  * therefore fully loaded before any action runs, every message it will print is resolved up front,
  * and after the child exits it only removes its own temp directory, writes already-computed
  * strings and sets an exit code. It never `import()`s anything (the CLI's only dynamic import is
- * `@prismshadow/linsight-server`, reachable solely from the serve commands), and never re-reads a
+ * `@prismshadow/jiumate-server`, reachable solely from the serve commands), and never re-reads a
  * file. On POSIX an unlinked file stays valid for whoever has it open, so the running process is
  * unaffected.
  *
@@ -50,9 +50,9 @@
  * which would interpolate a user-supplied release tag into a command line — both cases are refused
  * up front with the command the user should run themselves.
  *
- * The data root (~/.linsight/data) is never touched — the installer only replaces bin/lib/web/node
+ * The data root (~/.jiumate/data) is never touched — the installer only replaces bin/lib/web/node
  * — and the confirmation prompt says so, because that is the thing users worry about.
- * Docs: /docs/cli § "linsight update".
+ * Docs: /docs/cli § "jiumate update".
  */
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
@@ -60,7 +60,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync, realpathSync } from "no
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { VERSION, compareVersions, normalizeVersion } from "@prismshadow/linsight-core";
+import { VERSION, compareVersions, normalizeVersion } from "@prismshadow/jiumate-core";
 import type { Command } from "commander";
 import type { InstallerSource, Messages } from "../i18n.js";
 
@@ -70,11 +70,11 @@ import type { InstallerSource, Messages } from "../i18n.js";
 export { compareVersions, normalizeVersion };
 
 /** Repository the released artifacts come from — the same repo install.sh downloads from. */
-export const REPO_SLUG = "qiaiqian67/linsight";
+export const REPO_SLUG = "qiaiqian67/jiumate";
 /** Releases API endpoint for the newest published release. */
 export const LATEST_RELEASE_API = `https://api.github.com/repos/${REPO_SLUG}/releases/latest`;
 /** Public roots shared with the stable installer entry point. */
-export const OSS_ORIGIN = "https://linsight-releases.oss-cn-beijing.aliyuncs.com";
+export const OSS_ORIGIN = "https://jiumate-releases.oss-cn-beijing.aliyuncs.com";
 export const OSS_RELEASE_ROOT = `${OSS_ORIGIN}/releases`;
 export const GITHUB_RELEASE_ROOT = `https://github.com/${REPO_SLUG}/releases/download`;
 
@@ -102,7 +102,7 @@ export type InstallKind = "tarball" | "npm" | "source" | "desktop" | "unknown";
 
 export interface InstallInfo {
   kind: InstallKind;
-  /** Tarball only: the install dir that holds bin/lib/web/node (i.e. LINSIGHT_INSTALL_DIR). */
+  /** Tarball only: the install dir that holds bin/lib/web/node (i.e. JIUMATE_INSTALL_DIR). */
   installDir?: string;
   /** npm only: the global `node_modules` root that owns the package, used to identify the manager. */
   globalRoot?: string;
@@ -122,11 +122,11 @@ function segments(p: string): string[] {
  * Pure and shape-based on purpose: it touches neither the filesystem nor the environment beyond
  * what is passed in, so every branch is unit-testable. The three layouts are unambiguous:
  *
- * - desktop app — the CLI bundled into the Linsight desktop app, which runs it on the
+ * - desktop app — the CLI bundled into the JiuMate desktop app, which runs it on the
  *   app's own Electron runtime as Node and updates it with the app;
  * - source checkout — `…/packages/cli/{src,dist}/index.{ts,js}` (also how a `pnpm link`-ed dev
  *   build looks once the bin symlink is resolved);
- * - npm global — the path runs through `node_modules/@prismshadow/linsight-cli/`;
+ * - npm global — the path runs through `node_modules/@prismshadow/jiumate-cli/`;
  * - tarball — `<installDir>/lib/dist/index.js`, the layout install.sh unpacks.
  *
  * Order matters: a checkout is checked first so a repo that happens to live under a directory
@@ -152,10 +152,10 @@ export function detectInstall(modulePath: string, runtime?: { electron: boolean 
     return { kind: "source" };
   }
 
-  // …/node_modules/@prismshadow/linsight-cli/…
+  // …/node_modules/@prismshadow/jiumate-cli/…
   const nmIdx = parts.findIndex(
     (seg, i) =>
-      seg === "node_modules" && parts[i + 1] === "@prismshadow" && parts[i + 2] === "linsight-cli",
+      seg === "node_modules" && parts[i + 1] === "@prismshadow" && parts[i + 2] === "jiumate-cli",
   );
   if (nmIdx >= 0) {
     return { kind: "npm", globalRoot: join(nmIdx + 1) };
@@ -194,7 +194,7 @@ export function globalInstallCommand(
   manager: PackageManager,
   version: string,
 ): { command: string; args: string[] } {
-  const spec = `@prismshadow/linsight-cli@${version}`;
+  const spec = `@prismshadow/jiumate-cli@${version}`;
   if (manager === "pnpm") return { command: "pnpm", args: ["add", "-g", spec] };
   if (manager === "yarn") return { command: "yarn", args: ["global", "add", spec] };
   if (manager === "bun") return { command: "bun", args: ["add", "-g", spec] };
@@ -205,11 +205,11 @@ export function globalInstallCommand(
  * Builds the argv and environment for re-running install.sh, preserving the shape of the install
  * being upgraded rather than the defaults:
  *
- * - `LINSIGHT_INSTALL_DIR` is passed whenever the install is not at the default `~/.linsight`, or
+ * - `JIUMATE_INSTALL_DIR` is passed whenever the install is not at the default `~/.jiumate`, or
  *   the upgrade would silently relocate it;
  * - `--universal` is passed when the current install has no bundled `node/` directory, or the user
  *   would silently gain a runtime they deliberately did not install (and lose it in reverse);
- * - `LINSIGHT_VERSION` pins the target when `--release` was given;
+ * - `JIUMATE_VERSION` pins the target when `--release` was given;
  * - download base values are passed only when the caller deliberately sets them; empty strings
  *   explicitly clear inherited values so install.sh can choose the large payload source itself.
  *
@@ -229,12 +229,12 @@ export function buildInstallerInvocation(opts: {
   if (!opts.hasBundledNode) args.push("--universal");
   const env: Record<string, string> = {};
   if (path.resolve(opts.installDir) !== path.resolve(opts.defaultInstallDir)) {
-    env.LINSIGHT_INSTALL_DIR = opts.installDir;
+    env.JIUMATE_INSTALL_DIR = opts.installDir;
   }
-  if (opts.version) env.LINSIGHT_VERSION = `v${normalizeVersion(opts.version)}`;
-  if (opts.downloadBaseUrl !== undefined) env.LINSIGHT_DOWNLOAD_BASE_URL = opts.downloadBaseUrl;
+  if (opts.version) env.JIUMATE_VERSION = `v${normalizeVersion(opts.version)}`;
+  if (opts.downloadBaseUrl !== undefined) env.JIUMATE_DOWNLOAD_BASE_URL = opts.downloadBaseUrl;
   if (opts.downloadFallbackBaseUrl !== undefined)
-    env.LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL = opts.downloadFallbackBaseUrl;
+    env.JIUMATE_DOWNLOAD_FALLBACK_BASE_URL = opts.downloadFallbackBaseUrl;
   return { args, env };
 }
 
@@ -322,7 +322,7 @@ export async function fetchLatestVersion(t: Messages, fetcher: FetchLike = fetch
   let res: Response;
   try {
     res = await fetcher(LATEST_RELEASE_API, {
-      headers: { accept: "application/vnd.github+json", "user-agent": "linsight-cli" },
+      headers: { accept: "application/vnd.github+json", "user-agent": "jiumate-cli" },
       signal: AbortSignal.timeout(15_000),
     });
   } catch {
@@ -458,7 +458,7 @@ function run(command: string, args: string[], env: Record<string, string>): Prom
   });
 }
 
-/** The real path of this module, with the ~/.local/bin/linsight symlink resolved. */
+/** The real path of this module, with the ~/.local/bin/jiumate symlink resolved. */
 function selfPath(): string {
   const p = fileURLToPath(import.meta.url);
   try {
@@ -505,7 +505,7 @@ export function planUpdate(input: {
   install: InstallInfo;
   modulePath: string;
   platform: string;
-  /** `~/.linsight`, passed in rather than read, so the tarball branch stays pure. */
+  /** `~/.jiumate`, passed in rather than read, so the tarball branch stays pure. */
   defaultInstallDir: string;
 }): UpdatePlan {
   const { current, target, install } = input;
@@ -564,12 +564,12 @@ export function registerUpdateCommand(program: Command, t: Messages): void {
     .option("-y, --yes", t.update.yes)
     .action(async (opts: { check?: boolean; release?: string; yes?: boolean }) => {
       const current = VERSION;
-      const source = parseDownloadSource(process.env.LINSIGHT_DOWNLOAD_SOURCE);
+      const source = parseDownloadSource(process.env.JIUMATE_DOWNLOAD_SOURCE);
       if (!source) throw new Error(t.update.invalidDownloadSource());
       const release = await resolveRelease(source, opts.release, t);
       const target = release.version;
       const modulePath = selfPath();
-      const defaultInstallDir = path.join(homedir(), ".linsight");
+      const defaultInstallDir = path.join(homedir(), ".jiumate");
       const plan = planUpdate({
         current,
         target,
@@ -616,20 +616,18 @@ export function registerUpdateCommand(program: Command, t: Messages): void {
       );
       if (!(await confirmUpgrade(opts.yes, t))) return;
 
-      const explicitBaseValue = process.env.LINSIGHT_DOWNLOAD_BASE_URL;
-      const explicitFallbackValue = process.env.LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL;
+      const explicitBaseValue = process.env.JIUMATE_DOWNLOAD_BASE_URL;
+      const explicitFallbackValue = process.env.JIUMATE_DOWNLOAD_FALLBACK_BASE_URL;
       let candidates: InstallerCandidate[];
       if (explicitBaseValue) {
         const explicitBase = normalizeHttpsBaseUrl(explicitBaseValue);
         if (!explicitBase)
-          throw new Error(t.update.downloadBaseMustBeHttps("LINSIGHT_DOWNLOAD_BASE_URL"));
+          throw new Error(t.update.downloadBaseMustBeHttps("JIUMATE_DOWNLOAD_BASE_URL"));
         let explicitFallback: string | undefined;
         if (explicitFallbackValue) {
           const normalizedFallback = normalizeHttpsBaseUrl(explicitFallbackValue);
           if (!normalizedFallback)
-            throw new Error(
-              t.update.downloadBaseMustBeHttps("LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL"),
-            );
+            throw new Error(t.update.downloadBaseMustBeHttps("JIUMATE_DOWNLOAD_FALLBACK_BASE_URL"));
           explicitFallback = normalizedFallback;
         }
         candidates = [configuredInstallerCandidate(explicitBase, explicitFallback)];
@@ -650,7 +648,7 @@ export function registerUpdateCommand(program: Command, t: Messages): void {
       // existing entry rather than inheriting its mode and owner. It is outside installDir on
       // purpose — the installer replaces that tree, and a shell script deleted mid-execution is
       // not something to rely on.
-      const scriptDir = mkdtempSync(path.join(tmpdir(), "linsight-update-"));
+      const scriptDir = mkdtempSync(path.join(tmpdir(), "jiumate-update-"));
       const scriptPath = path.join(scriptDir, "install.sh");
       writeFileSync(scriptPath, downloaded.script, { mode: 0o700, flag: "wx" });
 

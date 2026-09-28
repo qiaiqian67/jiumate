@@ -31,7 +31,7 @@ import type {
   DesktopUpdateStatus,
   DesktopUpdaterCommandMessage,
   DesktopUpdaterStatusMessage,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 
 /** electron-updater's events, reduced to what the status needs. */
 export type UpdaterEvent =

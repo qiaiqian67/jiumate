@@ -11,7 +11,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import type { DatabaseSync } from "node:sqlite";
-import type { OmniMessage, SessionTitleResult } from "@prismshadow/linsight-core";
+import type { OmniMessage, SessionTitleResult } from "@prismshadow/jiumate-core";
 import { openDatabase } from "../src/db/database.js";
 import { SessionsRepo } from "../src/db/repos/sessions.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";
@@ -310,7 +310,7 @@ describe("title-generator", () => {
   });
 
   describe("fallbackTitle attachment material", () => {
-    const filePath = "/home/someone/.linsight/agents/default_agent/scratchpad/s-1/report.pdf";
+    const filePath = "/home/someone/.jiumate/agents/default_agent/scratchpad/s-1/report.pdf";
 
     it("gives an attachment-only message no fallback rather than a truncated path", () => {
       // The composer sends a file with no typed text as a message whose whole body is the

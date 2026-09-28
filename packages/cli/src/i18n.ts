@@ -1,7 +1,7 @@
 /**
  * CLI text internationalization (i18n).
  *
- * Language comes from the `LINSIGHT_LANG` env var (`en` / `zh`), defaulting to English (en) —
+ * Language comes from the `JIUMATE_LANG` env var (`en` / `zh`), defaulting to English (en) —
  * independent of Project config or CLI options. This module centralizes all user-visible text:
  * command/option help descriptions and runtime output, one implementation per language.
  */
@@ -18,7 +18,7 @@ export type WebProbeFailureKind =
 
 /** Resolve the language from the env var; `zh` matches exactly, everything else falls back to English (see comment #2). */
 export function resolveLanguage(): Language {
-  const v = (process.env.LINSIGHT_LANG ?? "").trim().toLowerCase();
+  const v = (process.env.JIUMATE_LANG ?? "").trim().toLowerCase();
   return v === "zh" ? "zh" : "en";
 }
 
@@ -32,7 +32,7 @@ export interface Messages {
     modelId: string;
     /** run/chat's --provider: must be given together with --model-id (the group is never inferred). */
     provider: string;
-    /** Data root directory option (priority: --root > LINSIGHT_HOME > ~/.linsight/data). */
+    /** Data root directory option (priority: --root > JIUMATE_HOME > ~/.jiumate/data). */
     root: string;
     workspace: string;
     approve: string;
@@ -40,7 +40,7 @@ export interface Messages {
     thinking: string;
     /** Machine-readable output (raw JSON instead of the rendered/tabular form). */
     json: string;
-    /** --server: explicit server URL (overrides LINSIGHT_API_URL, the local lock and auto-start). */
+    /** --server: explicit server URL (overrides JIUMATE_API_URL, the local lock and auto-start). */
     server: string;
     /** --timeout: soft-yield wait budget on run/input/logs -f (30s / 5m / 2h / bare seconds). */
     timeout: string;
@@ -119,7 +119,7 @@ export interface Messages {
     /** chat's --verbose: start with full tool output (collapsing off). */
     verbose: string;
   };
-  /** `linsight ls`: session listing. */
+  /** `jiumate ls`: session listing. */
   ls: {
     desc: string;
     /** -a/--all: include archived sessions. */
@@ -137,14 +137,14 @@ export interface Messages {
     stateIdle(): string;
     stateRunning(): string;
   };
-  /** `linsight input`: send a message into an existing session (steer when running, task when idle). */
+  /** `jiumate input`: send a message into an existing session (steer when running, task when idle). */
   input: {
     desc: string;
     message: string;
     /** Poll form on a session that has produced no assistant text yet. */
     noReplyYet(): string;
   };
-  /** `linsight logs`: render a session's history, optionally following the live stream. */
+  /** `jiumate logs`: render a session's history, optionally following the live stream. */
   logs: {
     desc: string;
     tail: string;
@@ -153,7 +153,7 @@ export interface Messages {
     /** --timeout without -f: there is no wait to bound. */
     timeoutNeedsFollow(): string;
   };
-  /** `linsight agent`: agent listing and creation. */
+  /** `jiumate agent`: agent listing and creation. */
   agent: {
     desc: string;
     lsDesc: string;
@@ -169,7 +169,7 @@ export interface Messages {
     colSessions(): string;
     colDescription(): string;
   };
-  /** `linsight project`: project listing. */
+  /** `jiumate project`: project listing. */
   project: {
     desc: string;
     lsDesc: string;
@@ -177,7 +177,7 @@ export interface Messages {
     colName(): string;
     colRole(): string;
   };
-  /** `linsight cost`: token/cost aggregates. */
+  /** `jiumate cost`: token/cost aggregates. */
   cost: {
     desc: string;
     days: string;
@@ -198,7 +198,7 @@ export interface Messages {
     colCost(): string;
     colGroup(dimension: string): string;
   };
-  /** `linsight schedule`: scheduled-task listing and management (a validated writer over the schedules API; the TOML file stays the single source of truth). */
+  /** `jiumate schedule`: scheduled-task listing and management (a validated writer over the schedules API; the TOML file stays the single source of truth). */
   schedule: {
     desc: string;
     lsDesc: string;
@@ -246,7 +246,7 @@ export interface Messages {
   /** Server-connection layer: resolution, auto-start, tokens, streams. */
   client: {
     invalidServerUrl(value: string): string;
-    /** --server names a non-loopback URL and no LINSIGHT_API_TOKEN is set (the local token file must not travel). */
+    /** --server names a non-loopback URL and no JIUMATE_API_TOKEN is set (the local token file must not travel). */
     remoteNeedsToken(url: string): string;
     /** No server reachable and auto-start was disabled by the caller. */
     noServer(): string;
@@ -270,7 +270,7 @@ export interface Messages {
     timeoutInvalid(value: string): string;
     /** Soft-yield detach: the wait budget expired, the task keeps running server-side. */
     stillRunning(shortId: string): string;
-    /** Caller-context lookup failed (LINSIGHT_SESSION_ID names a session this server cannot answer for): plain defaults apply. */
+    /** Caller-context lookup failed (JIUMATE_SESSION_ID names a session this server cannot answer for): plain defaults apply. */
     callerDefaultsFailed(sessionId: string): string;
     /** Dim stderr note naming the session a bare `logs` / `input` resolved to (the agent's most recent). */
     latestSession(sessionId: string): string;
@@ -288,7 +288,7 @@ export interface Messages {
     /** Printed by the supervising process as it relaunches the service on a restart request (the web UI's "restart to update"). */
     restarting: string;
   };
-  /** `linsight server reset-admin-password`: help text and every line the command can print. */
+  /** `jiumate server reset-admin-password`: help text and every line the command can print. */
   auth: {
     desc: string;
     loginDesc: string;
@@ -322,12 +322,12 @@ export interface Messages {
     noServer(root: string): string;
     failed(detail: string): string;
   };
-  /** `linsight server status`: help text. */
+  /** `jiumate server status`: help text. */
   serverStatus: {
-    /** One-line description in `linsight server --help`. */
+    /** One-line description in `jiumate server --help`. */
     desc: string;
   };
-  /** `linsight server stop`: help text. */
+  /** `jiumate server stop`: help text. */
   serverStop: {
     desc: string;
   };
@@ -344,12 +344,12 @@ export interface Messages {
     /** Hint printed below the notice. */
     next(): string;
   };
-  /** `linsight version`: help text only — the command's output is data, never prose. */
+  /** `jiumate version`: help text only — the command's output is data, never prose. */
   version: {
     description: string;
     json: string;
   };
-  /** `linsight update`: help text and every line the command can print. */
+  /** `jiumate update`: help text and every line the command can print. */
   update: {
     desc: string;
     check: string;
@@ -536,13 +536,13 @@ export interface Messages {
   vaultKeyMissing(key: string): string;
   vaultListTitle(): string;
   vaultListEmpty(): string;
-  /** URL prompt once the `linsight web` service is ready. */
+  /** URL prompt once the `jiumate web` service is ready. */
   webReady(url: string): string;
-  /** Refusal when `linsight server` finds a live server on the same data root. */
+  /** Refusal when `jiumate server` finds a live server on the same data root. */
   serverAlreadyRunning(url: string): string;
-  /** Notice when `linsight web` finds a live server on the same data root (it opens that instance instead). */
+  /** Notice when `jiumate web` finds a live server on the same data root (it opens that instance instead). */
   webAlreadyRunning(url: string): string;
-  /** Diagnostic shown after the `linsight web` ready-poll times out (15s). */
+  /** Diagnostic shown after the `jiumate web` ready-poll times out (15s). */
   webProbeFailed(url: string, detail: string, kind: WebProbeFailureKind, port: number): string;
 }
 
@@ -554,7 +554,7 @@ function headerEn(
   model: string,
 ): string {
   return [
-    `Linsight ${kind} v${version}`,
+    `JiuMate ${kind} v${version}`,
     `Agent: ${agentId}`,
     `Workspace: ${workspace}`,
     `Model: ${model}`,
@@ -569,7 +569,7 @@ function headerZh(
   model: string,
 ): string {
   return [
-    `Linsight ${kind} v${version}`,
+    `JiuMate ${kind} v${version}`,
     `Agent：${agentId}`,
     `Workspace：${workspace}`,
     `模型：${model}`,
@@ -577,7 +577,7 @@ function headerZh(
 }
 
 const en: Messages = {
-  cliDescription: "Linsight CLI",
+  cliDescription: "JiuMate CLI",
   versionDesc: "output the version number",
   common: {
     projectId: "Project id",
@@ -585,7 +585,7 @@ const en: Messages = {
     modelId: "Model to use (upstream model id; defaults to the Project default model)",
     provider:
       "Provider group of --model-id; required whenever --model-id is given (the group is never inferred)",
-    root: "Data root directory (overrides LINSIGHT_HOME and ~/.linsight/data)",
+    root: "Data root directory (overrides JIUMATE_HOME and ~/.jiumate/data)",
     workspace: "Workspace directory; must already exist (defaults to the current directory)",
     approve:
       "Approval mode: allow-all (auto-approve, default), deny-all (auto-reject), read-only (auto-approve read-only tools, prompt for the rest), always-ask (prompt per tool)",
@@ -593,7 +593,7 @@ const en: Messages = {
       "Thinking level for this session: low, medium, high, xhigh, or max (defaults to the Agent's configured level)",
     json: "Print raw JSON instead of the rendered output",
     server:
-      "Server URL to connect to (defaults to LINSIGHT_API_URL, then the local running server, then auto-start)",
+      "Server URL to connect to (defaults to JIUMATE_API_URL, then the local running server, then auto-start)",
     timeout:
       "Wait at most this long (30s / 5m / 2h, or bare seconds), then detach and leave the task running (exit 0)",
     latestAgentId: "Agent whose most recent session is used when no session id is given",
@@ -636,11 +636,11 @@ const en: Messages = {
     defaultDesc: "Set the Project default model",
     visionDesc: "Set the vision model used by read_image for non-vision session models",
     refModelId: "Upstream model id; forms the (provider, model_id) pair reference with --provider",
-    refProvider: "Provider group of the referenced entry (see `linsight config model list`)",
+    refProvider: "Provider group of the referenced entry (see `jiumate config model list`)",
     listDesc: "List the Project's models (API keys hidden)",
     removeDesc: "Remove a model from the Project (clears the default / vision pointers naming it)",
     langDesc:
-      "Set the interface language (en|zh); persists LINSIGHT_LANG to your shell startup file",
+      "Set the interface language (en|zh); persists JIUMATE_LANG to your shell startup file",
     langArg: "Language: en or zh",
     vaultDesc: "Manage an Agent's vault (environment variables injected into its shell commands)",
     vaultSetDesc: "Set a vault environment variable (added or overwritten)",
@@ -775,35 +775,35 @@ const en: Messages = {
   client: {
     invalidServerUrl: (value) => `Invalid server URL "${value}": expected http(s)://host[:port].`,
     remoteNeedsToken: (url) =>
-      `${url} is not this machine: set LINSIGHT_API_TOKEN to authenticate against a remote server (the local api-token file never leaves its own data root).`,
+      `${url} is not this machine: set JIUMATE_API_TOKEN to authenticate against a remote server (the local api-token file never leaves its own data root).`,
     noServer: () => "No running server found for this data root.",
     autoStartUnavailable: () =>
-      "No running server found, and this CLI entry cannot auto-start one (development run). Start it yourself with `linsight server`.",
+      "No running server found, and this CLI entry cannot auto-start one (development run). Start it yourself with `jiumate server`.",
     autoStartFailed: (logPath) =>
       `The auto-started server did not come up. Its output is in ${logPath}.`,
     autoStarted: (url, logPath) => `Started a local server at ${url} (log: ${logPath}).`,
     noToken: (url, tokenPath) =>
-      `${url} rejected the request (401) and no API token is available: set LINSIGHT_API_TOKEN, or make sure the server's token file is readable at ${tokenPath}.`,
+      `${url} rejected the request (401) and no API token is available: set JIUMATE_API_TOKEN, or make sure the server's token file is readable at ${tokenPath}.`,
     authFailed: (url) =>
-      `${url} rejected the API token (401). If the server restarted, its token rotated — check LINSIGHT_API_TOKEN, or let the CLI read the current api-token file.`,
+      `${url} rejected the API token (401). If the server restarted, its token rotated — check JIUMATE_API_TOKEN, or let the CLI read the current api-token file.`,
     httpError: (status, code, message) =>
       `Server error ${status} (${code})${message ? `: ${message}` : ""}`,
     sessionNotFound: (ref, projectId) =>
-      `No session matching "${ref}" in project ${projectId} (try \`linsight ls\`).`,
+      `No session matching "${ref}" in project ${projectId} (try \`jiumate ls\`).`,
     sessionAmbiguous: (ref, candidates) =>
       `"${ref}" matches ${candidates.length} sessions:\n  ${candidates.join("\n  ")}\nUse a longer fragment or the full id.`,
     streamLost: (detail) => `Lost the server stream and reconnecting failed: ${detail}`,
     streamResynced: () =>
-      "[stream] reconnected past the server's replay buffer; some output may be missing here (linsight logs shows the full history)",
+      "[stream] reconnected past the server's replay buffer; some output may be missing here (jiumate logs shows the full history)",
     timeoutInvalid: (value) =>
       `Invalid --timeout value "${value}": expected 30s, 5m, 2h, or a bare number of seconds.`,
     stillRunning: (shortId) =>
-      `[still running] session ${shortId} continues on the server — follow with \`linsight logs -f ${shortId}\` or poll with \`linsight input ${shortId}\``,
+      `[still running] session ${shortId} continues on the server — follow with \`jiumate logs -f ${shortId}\` or poll with \`jiumate input ${shortId}\``,
     callerDefaultsFailed: (sessionId) =>
       `[caller context] could not read calling session ${sessionId}; using the plain defaults`,
     latestSession: (sessionId) => `[latest] session ${sessionId}`,
     noSessionsYet: (agentId, projectId) =>
-      `Agent ${agentId} has no sessions in project ${projectId} yet: start one with \`linsight run -m "..."\` or \`linsight chat\`.`,
+      `Agent ${agentId} has no sessions in project ${projectId} yet: start one with \`jiumate run -m "..."\` or \`jiumate chat\`.`,
   },
   chatThinkingConfigured: () => "agent default",
   serve: {
@@ -816,13 +816,13 @@ const en: Messages = {
     restarting: "Restarting the service to apply the update…",
   },
   auth: {
-    desc: "Sign in to a Linsight server from the terminal",
+    desc: "Sign in to a JiuMate server from the terminal",
     loginDesc: "Sign in with a password and remember the session",
     statusDesc: "Show the remembered session, if there is one",
     logoutDesc: "Revoke the remembered session and forget it",
     server: "Server URL (default: the server running on this data root)",
     userId: "Account to sign in as (asked for when omitted; default admin)",
-    password: "Password (also read from LINSIGHT_PASSWORD; prompted when neither is given)",
+    password: "Password (also read from JIUMATE_PASSWORD; prompted when neither is given)",
     print: "Also print the session token to stdout",
     accountPrompt: (fallback) => `Account [${fallback}]: `,
     prompt: (userId) => `Password for ${userId}: `,
@@ -860,32 +860,32 @@ const en: Messages = {
   resetPassword: {
     desc: "Reset the Web admin password to a fresh initial password (the server must be stopped)",
     serverRunning: (url) =>
-      `A Linsight server is running on this data root: ${url}\n` +
-      `Stop it first, then run \`linsight server reset-admin-password\` again.`,
+      `A JiuMate server is running on this data root: ${url}\n` +
+      `Stop it first, then run \`jiumate server reset-admin-password\` again.`,
     noDatabase: (dbPath) =>
       `No Web database at ${dbPath} — nothing to reset. ` +
-      `Start the service once (\`linsight web\`) to create the admin account.`,
+      `Start the service once (\`jiumate web\`) to create the admin account.`,
     noAdmin: () =>
       "The Web database has no admin account yet — nothing to reset. " +
-      "Start the service once (`linsight web`) to seed it.",
+      "Start the service once (`jiumate web`) to seed it.",
     done: (root) =>
       `The admin account on data root ${root} was returned to its unclaimed state, and all of its sign-in sessions were revoked.`,
     next: () =>
-      "Start the service (`linsight web`): it will print a sign-in link that claims the account — usable until a password is set.",
+      "Start the service (`jiumate web`): it will print a sign-in link that claims the account — usable until a password is set.",
   },
   version: {
     description: "Show which build is running",
     json: "Print the full build info as JSON (the body of GET /api/version)",
   },
   update: {
-    desc: "Upgrade this Linsight install in place",
+    desc: "Upgrade this JiuMate install in place",
     check: "Only report the current and latest versions; change nothing",
     releaseOpt:
       "Target a specific release tag instead of the latest (e.g. v0.1.2 or 0.1.2); named --release because -v/--version is the CLI's own version flag",
     yes: "Skip the confirmation prompt",
     checkReport: (current, latest) => `Installed ${current} · latest ${latest}`,
     upgradeAvailable: (target) =>
-      `An upgrade is available: run \`linsight update\` to install ${target}.`,
+      `An upgrade is available: run \`jiumate update\` to install ${target}.`,
     upToDate: (current) => `Already on the latest version (${current}); nothing to do.`,
     targetIsOlder: (target) =>
       `${target} is older than the installed version — this would be a downgrade.`,
@@ -908,21 +908,21 @@ const en: Messages = {
       "Not running in a terminal, so the confirmation cannot be answered. Re-run with --yes to upgrade non-interactively.",
     cancelled: () => "Cancelled; nothing was changed.",
     done: (version) =>
-      `Linsight ${version} installed. Run \`linsight --version\` in a new shell to confirm.`,
+      `JiuMate ${version} installed. Run \`jiumate --version\` in a new shell to confirm.`,
     failed: () => "Upgrade failed; the previous install was left in place where possible.",
     sourceCheckout: () =>
-      "This linsight runs from a source checkout, so there is nothing to download — update it with `git pull` and rebuild (`pnpm install && pnpm -r build`).",
+      "This jiumate runs from a source checkout, so there is nothing to download — update it with `git pull` and rebuild (`pnpm install && pnpm -r build`).",
     desktopApp: () =>
-      "This linsight ships inside the Linsight desktop app and is replaced when the app updates — check for updates from the application menu.",
+      "This jiumate ships inside the JiuMate desktop app and is replaced when the app updates — check for updates from the application menu.",
     unknownInstall: (modulePath) =>
-      `Cannot tell how this linsight was installed (running from ${modulePath}), so it will not be replaced. Re-install with the official installer, or upgrade with the package manager you used.`,
+      `Cannot tell how this jiumate was installed (running from ${modulePath}), so it will not be replaced. Re-install with the official installer, or upgrade with the package manager you used.`,
     npmUnknownManager: (globalRoot, target) =>
-      `This is a global install under ${globalRoot}, but the package manager that owns it could not be identified. Upgrade it yourself with that manager, e.g. \`npm install -g @prismshadow/linsight-cli@${target}\`.`,
+      `This is a global install under ${globalRoot}, but the package manager that owns it could not be identified. Upgrade it yourself with that manager, e.g. \`npm install -g @prismshadow/jiumate-cli@${target}\`.`,
     windowsUnsupported: () =>
       "The official installer is a POSIX shell script and does not run on Windows. Re-install from the GitHub Releases page, or use a global npm install instead.",
     windowsGlobalInstall: (command) =>
       [
-        "On Windows, linsight cannot run your package manager for you: Node will not execute an npm/pnpm/yarn `.cmd` shim without a shell.",
+        "On Windows, jiumate cannot run your package manager for you: Node will not execute an npm/pnpm/yarn `.cmd` shim without a shell.",
         "Run this yourself in a terminal, then reopen it:",
         `  ${command}`,
       ].join("\n"),
@@ -932,7 +932,7 @@ const en: Messages = {
     apiFailed: (status) => `The GitHub release lookup failed with HTTP ${status}.`,
     apiMalformed: () =>
       "The GitHub release lookup returned an unexpected response with no usable version tag.",
-    invalidDownloadSource: () => "LINSIGHT_DOWNLOAD_SOURCE must be auto, oss, or github.",
+    invalidDownloadSource: () => "JIUMATE_DOWNLOAD_SOURCE must be auto, oss, or github.",
     downloadBaseMustBeHttps: (name) => `${name} must be an absolute HTTPS URL.`,
     ossUnavailable: () => "The OSS mirror is unavailable or its release metadata is invalid.",
     installerFetchFailed: (sources) =>
@@ -950,7 +950,7 @@ const en: Messages = {
   header: headerEn,
   chatHints: () =>
     "Type a message to start a conversation; end a line with \\; typing while a task runs steers the agent; /goal runs a goal to completion; /compact to compact the context; /clear to start a fresh session; /thinking changes the thinking level; /verbose toggles full tool output; /exit to quit; and Ctrl-C interrupts the current conversation.",
-  confirmExit: () => "Exit linsight? [y/N] ",
+  confirmExit: () => "Exit jiumate? [y/N] ",
   taskInterrupted: () => "[current conversation interrupted]",
   steerQueued: (text) => `» steering queued (delivered with the next turn): ${text}`,
   steerLinePrefix: () => "↪ user: ",
@@ -1060,9 +1060,9 @@ const en: Messages = {
   resumeHint: (command) => `To continue this conversation: ${command}`,
   langInvalid: (value) => `Invalid language "${value}". Use en or zh.`,
   langWindowsUnsupported: (lang) =>
-    `linsight config lang persists via POSIX shell startup files, which Windows does not have.\n` +
-    `Set the user environment variable instead: setx LINSIGHT_LANG ${lang} (new terminals pick it up).`,
-  langSet: (lang, rcPath) => `Language set to ${lang}; wrote LINSIGHT_LANG to ${rcPath}.`,
+    `jiumate config lang persists via POSIX shell startup files, which Windows does not have.\n` +
+    `Set the user environment variable instead: setx JIUMATE_LANG ${lang} (new terminals pick it up).`,
+  langSet: (lang, rcPath) => `Language set to ${lang}; wrote JIUMATE_LANG to ${rcPath}.`,
   langRestartConfirm: () => "Open a new shell now to apply? [y/N] ",
   langRestart: () => "Opening a new shell with the new language (type exit to return)…",
   langRestartHint: (rcPath) => `Open a new terminal, or run: source ${rcPath}`,
@@ -1074,25 +1074,25 @@ const en: Messages = {
   modelNotConfigured: (model) => `Model ${model} is not in the Project config.`,
   visionModelCleared: () => "It was also the vision model; that setting is now unset.",
   modelListTitle: () => "Configured models:",
-  modelListEmpty: () => "No models configured yet. Add one with `linsight config model add`.",
+  modelListEmpty: () => "No models configured yet. Add one with `jiumate config model add`.",
   vaultSet: (key) =>
     `Saved vault entry ${key}. New conversations pick it up right away; running ones after their next compaction.`,
   vaultRemoved: (key) =>
     `Removed vault entry ${key}. New conversations pick it up right away; running ones after their next compaction.`,
   vaultKeyMissing: (key) => `Vault entry ${key} does not exist.`,
   vaultListTitle: () => "Vault environment variables (values masked):",
-  vaultListEmpty: () => "The vault is empty. Add one with `linsight config vault set`.",
+  vaultListEmpty: () => "The vault is empty. Add one with `jiumate config vault set`.",
   webReady: (url) => `Web UI ready: ${url}`,
   serverAlreadyRunning: (url) =>
-    `A Linsight server is already running on this data root: ${url}\n` +
-    `Stop it first, or point LINSIGHT_HOME at a separate data root.`,
+    `A JiuMate server is already running on this data root: ${url}\n` +
+    `Stop it first, or point JIUMATE_HOME at a separate data root.`,
   webAlreadyRunning: (url) =>
     `Already running on this data root — opening the existing instance: ${url}`,
   webProbeFailed: (url, detail, kind, port) => {
     const hint = {
       timeout:
         `The connection timed out. Check whether a firewall or security application is blocking it. ` +
-        `Allow Linsight to communicate on local port ${port}.`,
+        `Allow JiuMate to communicate on local port ${port}.`,
       refused:
         "Nothing accepted the connection. Check whether the server exited or HOST/PORT points somewhere else.",
       reset:
@@ -1107,20 +1107,20 @@ const en: Messages = {
 };
 
 const zh: Messages = {
-  cliDescription: "Linsight CLI",
+  cliDescription: "JiuMate CLI",
   versionDesc: "输出版本号",
   common: {
     projectId: "Project id",
     agentId: "Agent id",
     modelId: "本次使用的模型（上游模型 id；默认 Project 默认模型）",
     provider: "--model-id 的 provider 分组；给出 --model-id 时必须一并给出（分组不作任何推断）",
-    root: "数据根目录（优先于 LINSIGHT_HOME 与 ~/.linsight/data）",
+    root: "数据根目录（优先于 JIUMATE_HOME 与 ~/.jiumate/data）",
     workspace: "Workspace 目录，须为已存在目录（默认当前目录）",
     approve:
       "审批模式：allow-all（全部放行，缺省）、deny-all（全部拒绝）、read-only（自动放行只读工具，其余仍逐个询问）、always-ask（逐个询问）",
     thinking: "本会话的思考等级：low、medium、high、xhigh 或 max（缺省用 Agent 配置的等级）",
     json: "输出原始 JSON，不做渲染",
-    server: "要连接的服务器地址（缺省依次取 LINSIGHT_API_URL、本机运行中的服务器、自动拉起）",
+    server: "要连接的服务器地址（缺省依次取 JIUMATE_API_URL、本机运行中的服务器、自动拉起）",
     timeout:
       "最长等待时长（30s / 5m / 2h，或纯数字秒数）；到时脱开、任务继续在服务端运行（退出码 0）",
     latestAgentId: "省略 session id 时，取哪个 Agent 的最近一次会话",
@@ -1160,10 +1160,10 @@ const zh: Messages = {
     defaultDesc: "设置 Project 的默认模型",
     visionDesc: "设置 read_image 代读用的视觉模型（供不支持图片的会话模型读图）",
     refModelId: "上游模型 id；与 --provider 构成 (provider, model_id) 成对引用",
-    refProvider: "引用条目的 provider 分组（见 `linsight config model list`）",
+    refProvider: "引用条目的 provider 分组（见 `jiumate config model list`）",
     listDesc: "列出当前 Project 的模型（API key 隐藏）",
     removeDesc: "从当前 Project 删除一个模型（指向它的默认模型 / 视觉模型设置一并清空）",
-    langDesc: "设置界面语言（en|zh）；将 LINSIGHT_LANG 写入 shell 启动文件并持久化",
+    langDesc: "设置界面语言（en|zh）；将 JIUMATE_LANG 写入 shell 启动文件并持久化",
     langArg: "语言：en 或 zh",
     vaultDesc: "管理 Agent vault（注入该 Agent shell 命令的环境变量）",
     vaultSetDesc: "写入一个 vault 环境变量（不存在则新增，存在则覆盖）",
@@ -1292,33 +1292,33 @@ const zh: Messages = {
   client: {
     invalidServerUrl: (value) => `服务器地址「${value}」无效：应为 http(s)://host[:port]。`,
     remoteNeedsToken: (url) =>
-      `${url} 不是本机：连接远端服务器须设置 LINSIGHT_API_TOKEN（本机的 api-token 文件不会发往其它主机）。`,
+      `${url} 不是本机：连接远端服务器须设置 JIUMATE_API_TOKEN（本机的 api-token 文件不会发往其它主机）。`,
     noServer: () => "该数据根目录没有正在运行的服务器。",
     autoStartUnavailable: () =>
-      "没有正在运行的服务器，且当前 CLI 入口无法自动拉起（开发态运行）。请自行执行 `linsight server`。",
+      "没有正在运行的服务器，且当前 CLI 入口无法自动拉起（开发态运行）。请自行执行 `jiumate server`。",
     autoStartFailed: (logPath) => `自动启动的服务器未能就绪，输出见 ${logPath}。`,
     autoStarted: (url, logPath) => `已在本机启动服务器 ${url}（日志：${logPath}）。`,
     noToken: (url, tokenPath) =>
-      `${url} 拒绝了请求（401），且没有可用的 API token：请设置 LINSIGHT_API_TOKEN，或确认服务器的 token 文件可读（${tokenPath}）。`,
+      `${url} 拒绝了请求（401），且没有可用的 API token：请设置 JIUMATE_API_TOKEN，或确认服务器的 token 文件可读（${tokenPath}）。`,
     authFailed: (url) =>
-      `${url} 拒绝了 API token（401）。服务器重启会轮换 token——检查 LINSIGHT_API_TOKEN，或让 CLI 读取最新的 api-token 文件。`,
+      `${url} 拒绝了 API token（401）。服务器重启会轮换 token——检查 JIUMATE_API_TOKEN，或让 CLI 读取最新的 api-token 文件。`,
     httpError: (status, code, message) =>
       `服务器错误 ${status}（${code}）${message ? `：${message}` : ""}`,
     sessionNotFound: (ref, projectId) =>
-      `Project ${projectId} 中没有匹配「${ref}」的会话（可用 \`linsight ls\` 查看）。`,
+      `Project ${projectId} 中没有匹配「${ref}」的会话（可用 \`jiumate ls\` 查看）。`,
     sessionAmbiguous: (ref, candidates) =>
       `「${ref}」匹配到 ${candidates.length} 个会话：\n  ${candidates.join("\n  ")}\n请使用更长的片段或完整 id。`,
     streamLost: (detail) => `与服务器的输出流断开且重连失败：${detail}`,
     streamResynced: () =>
-      "[stream] 重连时已超出服务端回放缓冲，此处可能缺少部分输出（linsight logs 可查看完整历史）",
+      "[stream] 重连时已超出服务端回放缓冲，此处可能缺少部分输出（jiumate logs 可查看完整历史）",
     timeoutInvalid: (value) => `--timeout 值「${value}」无效：应为 30s、5m、2h 或纯数字秒数。`,
     stillRunning: (shortId) =>
-      `[仍在运行] 会话 ${shortId} 继续在服务端执行——可用 \`linsight logs -f ${shortId}\` 跟随，或 \`linsight input ${shortId}\` 轮询`,
+      `[仍在运行] 会话 ${shortId} 继续在服务端执行——可用 \`jiumate logs -f ${shortId}\` 跟随，或 \`jiumate input ${shortId}\` 轮询`,
     callerDefaultsFailed: (sessionId) =>
       `[调用方上下文] 无法读取调用方会话 ${sessionId}，改用普通缺省值`,
     latestSession: (sessionId) => `[latest] 会话 ${sessionId}`,
     noSessionsYet: (agentId, projectId) =>
-      `Agent ${agentId} 在 Project ${projectId} 下还没有任何会话：先用 \`linsight run -m "..."\` 或 \`linsight chat\` 开始一个。`,
+      `Agent ${agentId} 在 Project ${projectId} 下还没有任何会话：先用 \`jiumate run -m "..."\` 或 \`jiumate chat\` 开始一个。`,
   },
   chatThinkingConfigured: () => "Agent 配置值",
   serve: {
@@ -1331,13 +1331,13 @@ const zh: Messages = {
     restarting: "正在重启服务以应用更新…",
   },
   auth: {
-    desc: "在终端里登录 Linsight 服务",
+    desc: "在终端里登录 JiuMate 服务",
     loginDesc: "用密码登录并记住会话",
     statusDesc: "显示已记住的会话",
     logoutDesc: "吊销并忘记已记住的会话",
     server: "服务地址（默认：该数据根上正在运行的服务）",
     userId: "登录的账号（不给时会询问；默认 admin）",
-    password: "密码（也可用 LINSIGHT_PASSWORD；都没给时会提示输入）",
+    password: "密码（也可用 JIUMATE_PASSWORD；都没给时会提示输入）",
     print: "同时把会话令牌打印到 stdout",
     accountPrompt: (fallback) => `账号 [${fallback}]：`,
     prompt: (userId) => `${userId} 的密码：`,
@@ -1373,28 +1373,28 @@ const zh: Messages = {
   resetPassword: {
     desc: "把 Web 管理员密码重置为新的初始密码（须先停止服务）",
     serverRunning: (url) =>
-      `该数据根目录已有 Linsight 服务在运行：${url}\n` +
-      `请先停止它，再重新执行 \`linsight server reset-admin-password\`。`,
+      `该数据根目录已有 JiuMate 服务在运行：${url}\n` +
+      `请先停止它，再重新执行 \`jiumate server reset-admin-password\`。`,
     noDatabase: (dbPath) =>
-      `${dbPath} 处没有 Web 数据库，无可重置。请先执行 \`linsight web\` 启动一次服务以创建管理员账号。`,
+      `${dbPath} 处没有 Web 数据库，无可重置。请先执行 \`jiumate web\` 启动一次服务以创建管理员账号。`,
     noAdmin: () =>
-      "Web 数据库中尚无管理员账号，无可重置。请先执行 `linsight web` 启动一次服务完成种子创建。",
+      "Web 数据库中尚无管理员账号，无可重置。请先执行 `jiumate web` 启动一次服务完成种子创建。",
     done: (root) => `数据根目录 ${root} 的管理员账号已退回未认领状态，其全部登录会话已吊销。`,
     next: () =>
-      "启动服务（`linsight web`），它会打印一条登录链接用于认领该账号——在密码被设置之前一直有效。",
+      "启动服务（`jiumate web`），它会打印一条登录链接用于认领该账号——在密码被设置之前一直有效。",
   },
   version: {
     description: "显示当前运行的是哪个构建",
     json: "以 JSON 输出完整构建信息（即 GET /api/version 的响应体）",
   },
   update: {
-    desc: "原地升级当前的 Linsight 安装",
+    desc: "原地升级当前的 JiuMate 安装",
     check: "只报告当前版本与最新版本，不做任何修改",
     releaseOpt:
       "指定目标版本而不是最新版（如 v0.1.2 或 0.1.2）；之所以叫 --release，是因为 -v/--version 是 CLI 自身的版本参数",
     yes: "跳过确认提示",
     checkReport: (current, latest) => `已安装 ${current} · 最新 ${latest}`,
-    upgradeAvailable: (target) => `有可用升级：执行 \`linsight update\` 安装 ${target}。`,
+    upgradeAvailable: (target) => `有可用升级：执行 \`jiumate update\` 安装 ${target}。`,
     upToDate: (current) => `已是最新版本（${current}），无需升级。`,
     targetIsOlder: (target) => `${target} 低于当前已安装的版本——这将是一次降级。`,
     planTarball: (current, target, installDir, universal) =>
@@ -1415,21 +1415,21 @@ const zh: Messages = {
     needsYes: () => "当前不在终端中，无法回答确认提示。请加 --yes 以非交互方式升级。",
     cancelled: () => "已取消，未做任何修改。",
     done: (version) =>
-      `Linsight ${version} 安装完成。在新 shell 中执行 \`linsight --version\` 确认。`,
+      `JiuMate ${version} 安装完成。在新 shell 中执行 \`jiumate --version\` 确认。`,
     failed: () => "升级失败；在可能的情况下已保留原有安装。",
     sourceCheckout: () =>
-      "当前 linsight 运行自源码检出，无需下载——请用 `git pull` 更新并重新构建（`pnpm install && pnpm -r build`）。",
+      "当前 jiumate 运行自源码检出，无需下载——请用 `git pull` 更新并重新构建（`pnpm install && pnpm -r build`）。",
     desktopApp: () =>
-      "当前 linsight 随 Linsight 桌面应用一同分发，会在应用更新时一并替换——请从应用菜单检查更新。",
+      "当前 jiumate 随 JiuMate 桌面应用一同分发，会在应用更新时一并替换——请从应用菜单检查更新。",
     unknownInstall: (modulePath) =>
-      `无法判断当前 linsight 的安装方式（运行自 ${modulePath}），因此不会替换它。请用官方安装脚本重新安装，或用你当初使用的包管理器升级。`,
+      `无法判断当前 jiumate 的安装方式（运行自 ${modulePath}），因此不会替换它。请用官方安装脚本重新安装，或用你当初使用的包管理器升级。`,
     npmUnknownManager: (globalRoot, target) =>
-      `这是位于 ${globalRoot} 的全局安装，但无法确定是哪个包管理器安装的。请自行用该包管理器升级，例如 \`npm install -g @prismshadow/linsight-cli@${target}\`。`,
+      `这是位于 ${globalRoot} 的全局安装，但无法确定是哪个包管理器安装的。请自行用该包管理器升级，例如 \`npm install -g @prismshadow/jiumate-cli@${target}\`。`,
     windowsUnsupported: () =>
       "官方安装脚本是 POSIX shell 脚本，无法在 Windows 上运行。请从 GitHub Releases 页面重新安装，或改用 npm 全局安装。",
     windowsGlobalInstall: (command) =>
       [
-        "在 Windows 上，linsight 无法代你调用包管理器：Node 不会在没有 shell 的情况下执行 npm/pnpm/yarn 的 `.cmd` 包装脚本。",
+        "在 Windows 上，jiumate 无法代你调用包管理器：Node 不会在没有 shell 的情况下执行 npm/pnpm/yarn 的 `.cmd` 包装脚本。",
         "请在终端里自行执行下面的命令，然后重新打开终端：",
         `  ${command}`,
       ].join("\n"),
@@ -1438,7 +1438,7 @@ const zh: Messages = {
       "GitHub 对版本查询做了限流。请等待几分钟后重试，或用 --release <tag> 跳过查询。",
     apiFailed: (status) => `GitHub 版本查询失败，HTTP ${status}。`,
     apiMalformed: () => "GitHub 版本查询返回了非预期的响应，其中没有可用的版本号。",
-    invalidDownloadSource: () => "LINSIGHT_DOWNLOAD_SOURCE 必须是 auto、oss 或 github。",
+    invalidDownloadSource: () => "JIUMATE_DOWNLOAD_SOURCE 必须是 auto、oss 或 github。",
     downloadBaseMustBeHttps: (name) => `${name} 必须是绝对 HTTPS URL。`,
     ossUnavailable: () => "OSS 镜像不可用，或其版本元数据无效。",
     installerFetchFailed: (sources) => {
@@ -1456,7 +1456,7 @@ const zh: Messages = {
   header: headerZh,
   chatHints: () =>
     "输入消息发起对话；行尾 \\ 续行；运行中输入可插话引导；/goal 以目标模式运行至完成；/compact 压缩上下文；/clear 开启全新会话；/thinking 调整思考等级；/verbose 切换完整工具输出；/exit 退出；Ctrl-C 中断对话。",
-  confirmExit: () => "确认退出 linsight？[y/N] ",
+  confirmExit: () => "确认退出 jiumate？[y/N] ",
   taskInterrupted: () => "[已中断当前对话]",
   steerQueued: (text) => `» 插话已排队（随下一轮送达）：${text}`,
   steerLinePrefix: () => "↪ 用户: ",
@@ -1556,9 +1556,9 @@ const zh: Messages = {
   resumeHint: (command) => `继续本次对话：${command}`,
   langInvalid: (value) => `无效的语言 "${value}"。请使用 en 或 zh。`,
   langWindowsUnsupported: (lang) =>
-    `linsight config lang 通过 POSIX shell 启动文件持久化语言，Windows 上没有对应机制。\n` +
-    `请改为设置用户环境变量：setx LINSIGHT_LANG ${lang}（新终端生效）。`,
-  langSet: (lang, rcPath) => `语言已设为 ${lang}；已将 LINSIGHT_LANG 写入 ${rcPath}。`,
+    `jiumate config lang 通过 POSIX shell 启动文件持久化语言，Windows 上没有对应机制。\n` +
+    `请改为设置用户环境变量：setx JIUMATE_LANG ${lang}（新终端生效）。`,
+  langSet: (lang, rcPath) => `语言已设为 ${lang}；已将 JIUMATE_LANG 写入 ${rcPath}。`,
   langRestartConfirm: () => "现在打开新 shell 使其生效？[y/N] ",
   langRestart: () => "正在打开使用新语言的新 shell（输入 exit 可返回）……",
   langRestartHint: (rcPath) => `请打开新终端，或执行：source ${rcPath}`,
@@ -1570,20 +1570,20 @@ const zh: Messages = {
   modelNotConfigured: (model) => `模型 ${model} 不在当前 Project 配置中。`,
   visionModelCleared: () => "它同时是视觉模型，该设置已一并清空。",
   modelListTitle: () => "已配置的模型：",
-  modelListEmpty: () => "尚未配置任何模型。用 `linsight config model add` 添加。",
+  modelListEmpty: () => "尚未配置任何模型。用 `jiumate config model add` 添加。",
   vaultSet: (key) => `已保存 vault 条目 ${key}。新对话立即生效；进行中的对话在下一次压缩后生效。`,
   vaultRemoved: (key) =>
     `已删除 vault 条目 ${key}。新对话立即生效；进行中的对话在下一次压缩后生效。`,
   vaultKeyMissing: (key) => `vault 条目 ${key} 不存在。`,
   vaultListTitle: () => "vault 环境变量（值已掩码）：",
-  vaultListEmpty: () => "vault 为空。用 `linsight config vault set` 添加。",
+  vaultListEmpty: () => "vault 为空。用 `jiumate config vault set` 添加。",
   webReady: (url) => `Web 界面已就绪：${url}`,
   serverAlreadyRunning: (url) =>
-    `该数据根目录已有 Linsight 服务在运行：${url}\n请先停止它，或用 LINSIGHT_HOME 指定另一个数据根目录。`,
+    `该数据根目录已有 JiuMate 服务在运行：${url}\n请先停止它，或用 JIUMATE_HOME 指定另一个数据根目录。`,
   webAlreadyRunning: (url) => `该数据根目录已有服务在运行，打开既有实例：${url}`,
   webProbeFailed: (url, detail, kind, port) => {
     const hint = {
-      timeout: `连接超时。请检查防火墙或安全软件是否拦截。请允许 Linsight 在本机端口 ${port} 上通信。`,
+      timeout: `连接超时。请检查防火墙或安全软件是否拦截。请允许 JiuMate 在本机端口 ${port} 上通信。`,
       refused: "没有进程接受连接。请检查服务是否已经退出，或 HOST/PORT 是否指向了其他地址。",
       reset: "连接在收到 HTTP 响应前已关闭。请检查本机安全软件后重试。",
       permission: "操作系统拒绝了连接。请检查防火墙或安全策略权限。",

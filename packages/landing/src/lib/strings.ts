@@ -7,13 +7,13 @@
  * established casing of Workspace, Token, Task, Skill, Trace, and other product terms.
  */
 export const zh = {
-  siteName: "Linsight",
+  siteName: "JiuMate",
 
   announcement: {
     label: "公告",
     prev: "上一条公告",
     next: "下一条公告",
-    flashModels: "GLM-5.3 Flash 与 Qwen 3.8 Flash 现已在 Linsight 可用",
+    flashModels: "GLM-5.3 Flash 与 Qwen 3.8 Flash 现已在 JiuMate 可用",
     fireworks: "携手 AMD 开发者计划：$50 Fireworks API 额度免费领取中",
   },
 
@@ -87,8 +87,8 @@ export const zh = {
     offlineNote:
       "每个 GitHub Release 每个目标只附带一个安装包（Linux / macOS 各 x64 与 arm64，Windows 为 x64），同一个文件同时服务在线与离线安装。包内封入程序负载、SHA256 校验文件与安装器：在有网机器下载这一个文件，拷贝到目标机器解压安装，全程无需联网。",
     offlineHints: {
-      linux: "arm64 机器换用 linsight-linux-arm64.tar.gz。",
-      macos: "Apple 芯片用 arm64 包，Intel 芯片换用 linsight-darwin-x64.tar.gz。",
+      linux: "arm64 机器换用 jiumate-linux-arm64.tar.gz。",
+      macos: "Apple 芯片用 arm64 包，Intel 芯片换用 jiumate-darwin-x64.tar.gz。",
       windows: "解压后也可直接双击 install.cmd 完成安装。",
     },
     offlineRelease: "前往 GitHub Releases 下载离线安装包",
@@ -156,11 +156,11 @@ export const zh = {
   pillars: {
     eyebrow: "三大特色",
     title: "为构建与进化 Agent 而生",
-    subtitle: "Linsight 率先把「Agent 构建 Agent」与「递归自我进化」带入开源 Harness。",
-    root: "Linsight",
-    concepts: ["Linsight Message", "Linsight SDK", "Linsight Skills"],
+    subtitle: "JiuMate 率先把「Agent 构建 Agent」与「递归自我进化」带入开源 Harness。",
+    root: "JiuMate",
+    concepts: ["JiuMate Message", "JiuMate SDK", "JiuMate Skills"],
     diagramLabel:
-      "Linsight 辐射出 Linsight Message、Linsight SDK 与 Linsight Skills，分别延展出三大特色",
+      "JiuMate 辐射出 JiuMate Message、JiuMate SDK 与 JiuMate Skills，分别延展出三大特色",
     items: [
       {
         title: "Simplest Is the Best",
@@ -170,12 +170,12 @@ export const zh = {
       {
         title: "Harness for Building Agents",
         tag: "",
-        desc: "通过 Linsight SDK，让 Agent 从零自主完成 Agent 应用的构建。",
+        desc: "通过 JiuMate SDK，让 Agent 从零自主完成 Agent 应用的构建。",
       },
       {
         title: "Harness for Recursive Self-Improvement",
         tag: "",
-        desc: "通过 Linsight Skills，Agent 以自我评估与自我优化实现递归式自我提升。",
+        desc: "通过 JiuMate Skills，Agent 以自我评估与自我优化实现递归式自我提升。",
       },
     ],
   },
@@ -185,7 +185,7 @@ export const zh = {
     title: "用 Agent 构建 Agent",
     subtitle: [
       "使用 LangChain，以 1 倍速度人工构建 Agent；",
-      "使用 Linsight，以 100 倍速度用 Agent 构建 Agent。",
+      "使用 JiuMate，以 100 倍速度用 Agent 构建 Agent。",
     ],
     langchain: {
       name: "LangChain",
@@ -193,8 +193,8 @@ export const zh = {
       mode: "人工构建 Agent",
       note: "逐行编写链路、工具与提示词，每个应用都从零开始。",
     },
-    linsight: {
-      name: "Linsight",
+    jiumate: {
+      name: "JiuMate",
       speed: "100×",
       mode: "Agent 构建 Agent",
       note: "一句话需求，Agent 端到端交付脚手架、代码与运行说明。",
@@ -228,7 +228,7 @@ export const zh = {
 
   quickstart: {
     eyebrow: "快速开始",
-    title: "分两步开始使用 Linsight",
+    title: "分两步开始使用 JiuMate",
     subtitle: "先选择安装方式；使用命令行安装时，再选择 Web UI 或 CLI 启动。",
     stepOne: "第一步",
     chooseInstall: "选择安装方式",
@@ -246,12 +246,12 @@ export const zh = {
       cta: "选择系统并下载",
       steps: [
         "下载适合当前系统的安装包",
-        "打开 Linsight，按引导配置模型",
+        "打开 JiuMate，按引导配置模型",
         "输入一句话，创建第一个 Agent 应用",
       ],
     },
     install: {
-      title: "一行命令安装 Linsight",
+      title: "一行命令安装 JiuMate",
       desc: "适合开发机、服务器和私有化环境。安装包自带运行时，不依赖系统里的 Node.js。",
       osLabel: "选择操作系统",
       onlineTitle: "在线安装",
@@ -262,18 +262,18 @@ export const zh = {
     web: {
       title: "在浏览器里使用完整界面",
       desc: "命令会启动本地服务并自动打开 Web UI，适合服务器部署和远程访问。",
-      command: "linsight web   # 打开 http://127.0.0.1:7364",
-      steps: ["先完成命令行安装", "运行 linsight web", "按终端提示登录并配置模型"],
+      command: "jiumate web   # 打开 http://127.0.0.1:7364",
+      steps: ["先完成命令行安装", "运行 jiumate web", "按终端提示登录并配置模型"],
     },
     cli: {
       title: "直接从终端运行 Agent",
       desc: "进入交互式对话，或把单次任务接入脚本和自动化工作流。",
-      command: `linsight chat
+      command: `jiumate chat
 
 # 或执行单次任务
-linsight run --message "分析 data.csv，输出季度销售额"`,
+jiumate run --message "分析 data.csv，输出季度销售额"`,
     },
-    localNote: "桌面端、Web UI 与 CLI 共用 ~/.linsight/data；切换入口不会迁移或复制数据。",
+    localNote: "桌面端、Web UI 与 CLI 共用 ~/.jiumate/data；切换入口不会迁移或复制数据。",
   },
 
   cases: {
@@ -300,17 +300,17 @@ linsight run --message "分析 data.csv，输出季度销售额"`,
   scenarios: {
     eyebrow: "应用场景",
     title: "从体检中心到工厂车间",
-    subtitle: "企业使用 Linsight 自动开发 Agent，并部署到生产环境的真实案例。",
+    subtitle: "企业使用 JiuMate 自动开发 Agent，并部署到生产环境的真实案例。",
     items: [
       {
         title: "体检报告质控",
         alt: "体检中心的 CT 检查室",
-        body: "一家体检机构使用 Linsight 自动开发了报告质控 Agent，并将它部署到院内生产环境，接入本地 Qwen3 14B，数据不出机房。过去一轮人工复核要 30 分钟，现在每分钟自动核查 30 份报告，结论与医学专家基本一致，审核产能提升数倍。",
+        body: "一家体检机构使用 JiuMate 自动开发了报告质控 Agent，并将它部署到院内生产环境，接入本地 Qwen3 14B，数据不出机房。过去一轮人工复核要 30 分钟，现在每分钟自动核查 30 份报告，结论与医学专家基本一致，审核产能提升数倍。",
       },
       {
         title: "产线设备巡检",
         alt: "自动化半导体生产线",
-        body: "一家制造企业使用 Linsight 自动开发了产线巡检 Agent，并将它部署到多条流水线的生产环境。Agent 全天候监测设备状态，发现异常后优先尝试自动恢复；上线后停机时间减少 65%，产出提升约 2 倍。",
+        body: "一家制造企业使用 JiuMate 自动开发了产线巡检 Agent，并将它部署到多条流水线的生产环境。Agent 全天候监测设备状态，发现异常后优先尝试自动恢复；上线后停机时间减少 65%，产出提升约 2 倍。",
       },
     ],
   },
@@ -318,7 +318,7 @@ linsight run --message "分析 data.csv，输出季度销售额"`,
   contract: {
     eyebrow: "稳定进化的契约",
     title: "CONTRACT.md",
-    subtitle: "Linsight 以这份契约作为进化的边界和基石：能力可以生长，边界永不漂移。",
+    subtitle: "JiuMate 以这份契约作为进化的边界和基石：能力可以生长，边界永不漂移。",
     intro: "进化需要边界。契约是 Harness 与 Agent 之间的约定：能力生长于内，边界固守于外。",
     items: [
       {
@@ -453,9 +453,9 @@ linsight run --message "分析 data.csv，输出季度销售额"`,
       {
         title: "AI 应用开发",
         skills: [
-          "linsight-sdk",
-          "linsight-config",
-          "linsight-orchestration",
+          "jiumate-sdk",
+          "jiumate-config",
+          "jiumate-orchestration",
           "unified-llm-api",
           "vllm",
           "ollama",
@@ -508,7 +508,7 @@ linsight run --message "分析 data.csv，输出季度销售额"`,
   cta: {
     title: "让复杂的 AI 开发越来越简单",
     subtitle:
-      "通过不断进化，Linsight 为你提供更高效、更可靠、更低幻觉、更低成本的 Agent 生产力引擎。",
+      "通过不断进化，JiuMate 为你提供更高效、更可靠、更低幻觉、更低成本的 Agent 生产力引擎。",
     download: "下载桌面版",
     quickstart: "快速开始",
     docs: "阅读文档",

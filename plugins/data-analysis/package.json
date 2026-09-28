@@ -1,11 +1,11 @@
 {
-  "name": "@linsight/data-analysis",
+  "name": "@jiumate/data-analysis",
   "version": "0.3.0",
   "description": "Complete data-analysis tasks with bounded inspection, correct data semantics, native artifact handling, complete delivery, and risk-based verification.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "plugins/data-analysis"
   },
   "files": [

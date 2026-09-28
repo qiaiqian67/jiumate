@@ -126,7 +126,7 @@
      a reload show the right wallpaper without a flash of the built-in appearance.
      `zoom` scales from the focal point, which is what makes it read as "zoom into the subject"
      rather than "enlarge the picture around its middle". */
-  .linsight-skin-background {
+  .jiumate-skin-background {
     position: fixed;
     inset: 0;
     z-index: -1;
@@ -140,7 +140,7 @@
   }
   /* The dimming layer. A separate box rather than a second background so the alpha comes from
      one variable and the image needs no colour-mix support from the renderer. */
-  .linsight-skin-background::after {
+  .jiumate-skin-background::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -645,15 +645,15 @@ html.dark .shiki span {
    sprite. */
 
 /* The app-wide `body { @apply bg-white … }` (above) paints this window opaque.
-   The pet page marks <html> with `linsight-pet-host` on mount to switch that off;
+   The pet page marks <html> with `jiumate-pet-host` on mount to switch that off;
    the Electron window is already transparent, so the opaque body was what showed
    up as a white slab behind the pet. */
-html.linsight-pet-host,
-html.linsight-pet-host body {
+html.jiumate-pet-host,
+html.jiumate-pet-host body {
   background: transparent !important;
 }
 
-.linsight-pet-window {
+.jiumate-pet-window {
   position: relative;
   margin: 0;
   overflow: hidden;
@@ -663,7 +663,7 @@ html.linsight-pet-host body {
 }
 
 /* Holds the dock against the bottom-right corner the shell anchors to. */
-.linsight-pet-window__dock {
+.jiumate-pet-window__dock {
   position: absolute;
   right: 0;
   bottom: 0;
@@ -676,7 +676,7 @@ html.linsight-pet-host body {
   max-height: 100%;
 }
 
-.linsight-pet-window__pet-hitbox {
+.jiumate-pet-window__pet-hitbox {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
@@ -685,11 +685,11 @@ html.linsight-pet-host body {
   -webkit-user-drag: none;
 }
 
-.linsight-pet-window__pet-hitbox:active {
+.jiumate-pet-window__pet-hitbox:active {
   cursor: grabbing;
 }
 
-.linsight-pet-window__bubbles {
+.jiumate-pet-window__bubbles {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -711,22 +711,22 @@ html.linsight-pet-host body {
   scrollbar-width: none;
 }
 
-.linsight-pet-window__bubbles::-webkit-scrollbar {
+.jiumate-pet-window__bubbles::-webkit-scrollbar {
   display: none;
 }
 
 /* Keeps every bubble at its row height instead of flex-shrinking the stack to fit. */
-.linsight-pet-window__bubbles > * {
+.jiumate-pet-window__bubbles > * {
   flex: 0 0 auto;
 }
 
-.linsight-pet-window__bubbles > *:first-child {
+.jiumate-pet-window__bubbles > *:first-child {
   margin-top: auto;
 }
 
 /* Speech bubble: reports what one tracked session is doing. Clicking it opens
    that session; right-clicking offers to dismiss it. */
-.linsight-pet-bubble {
+.jiumate-pet-bubble {
   @apply box-border w-full overflow-hidden rounded-[10px] border border-gray-200 bg-white px-2.5 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100;
   border-bottom-right-radius: 2px;
   position: relative;
@@ -742,39 +742,39 @@ html.linsight-pet-host body {
   transition: border-color 120ms ease;
 }
 
-.linsight-pet-bubble--single {
+.jiumate-pet-bubble--single {
   height: 100%;
 }
 
-.linsight-pet-bubble:focus-visible {
+.jiumate-pet-bubble:focus-visible {
   outline: 2px solid var(--accent-bg);
   outline-offset: 1px;
 }
 
 /* Status accents, one per task state. Running is the quiet default; anything
    that wants the user's attention is warm, anything settled is cool. */
-.linsight-pet-bubble--running {
+.jiumate-pet-bubble--running {
   @apply border-brand-300 dark:border-brand-700;
 }
 
-.linsight-pet-bubble--waiting,
-.linsight-pet-bubble--attention {
+.jiumate-pet-bubble--waiting,
+.jiumate-pet-bubble--attention {
   @apply border-amber-400 dark:border-amber-600;
 }
 
-.linsight-pet-bubble--completed {
+.jiumate-pet-bubble--completed {
   @apply border-green-400 dark:border-green-700;
 }
 
-.linsight-pet-bubble--failed {
+.jiumate-pet-bubble--failed {
   @apply border-red-400 dark:border-red-700;
 }
 
-.linsight-pet-bubble--interrupted {
+.jiumate-pet-bubble--interrupted {
   @apply border-gray-300 dark:border-gray-600;
 }
 
-.linsight-pet-bubble__title {
+.jiumate-pet-bubble__title {
   display: block;
   overflow: hidden;
   white-space: nowrap;
@@ -784,7 +784,7 @@ html.linsight-pet-host body {
   font-weight: 600;
 }
 
-.linsight-pet-bubble__status {
+.jiumate-pet-bubble__status {
   display: block;
   margin-top: 2px;
   overflow: hidden;
@@ -797,7 +797,7 @@ html.linsight-pet-host body {
 
 /* Two lines, clipped: the bubble's height is tied to the pet's, so the output
    gets a fixed budget rather than growing the window on every streamed token. */
-.linsight-pet-bubble__output {
+.jiumate-pet-bubble__output {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -809,7 +809,7 @@ html.linsight-pet-host body {
 }
 
 /* Typewriter caret while the output is still catching up. */
-.linsight-pet-bubble__output--typing::after {
+.jiumate-pet-bubble__output--typing::after {
   content: "▍";
   margin-left: 1px;
   opacity: 0.7;
@@ -830,7 +830,7 @@ html.linsight-pet-host body {
 
 /* Reply affordance: a corner button revealed on hover, so the bubble stays a
    read-only status line until the user reaches for it. */
-.linsight-pet-bubble__reply {
+.jiumate-pet-bubble__reply {
   position: absolute;
   right: 4px;
   bottom: 4px;
@@ -850,23 +850,23 @@ html.linsight-pet-host body {
   @apply text-gray-500 dark:text-gray-400;
 }
 
-.linsight-pet-bubble:hover .linsight-pet-bubble__reply,
-.linsight-pet-bubble:focus-within .linsight-pet-bubble__reply {
+.jiumate-pet-bubble:hover .jiumate-pet-bubble__reply,
+.jiumate-pet-bubble:focus-within .jiumate-pet-bubble__reply {
   opacity: 1;
 }
 
-.linsight-pet-bubble__reply:hover {
+.jiumate-pet-bubble__reply:hover {
   @apply bg-gray-100 dark:bg-gray-800;
 }
 
 /* The bubble itself becomes the composer: no extra panel, and the window keeps
    the size it already had. */
-.linsight-pet-bubble--composing {
+.jiumate-pet-bubble--composing {
   cursor: default;
   height: 116px;
 }
 
-.linsight-pet-bubble__composer {
+.jiumate-pet-bubble__composer {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -874,7 +874,7 @@ html.linsight-pet-host body {
   padding-top: 6px;
 }
 
-.linsight-pet-bubble__composer-input {
+.jiumate-pet-bubble__composer-input {
   flex: 1 1 auto;
   min-width: 0;
   padding: 3px 6px;
@@ -886,13 +886,13 @@ html.linsight-pet-host body {
   @apply border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800;
 }
 
-.linsight-pet-bubble__composer-input:focus {
+.jiumate-pet-bubble__composer-input:focus {
   outline: none;
   border-color: var(--accent-bg);
 }
 
-.linsight-pet-bubble__composer-send,
-.linsight-pet-bubble__composer-cancel {
+.jiumate-pet-bubble__composer-send,
+.jiumate-pet-bubble__composer-cancel {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
@@ -908,32 +908,32 @@ html.linsight-pet-host body {
   @apply text-gray-500 dark:text-gray-400;
 }
 
-.linsight-pet-bubble__composer-send:disabled {
+.jiumate-pet-bubble__composer-send:disabled {
   opacity: 0.4;
   cursor: default;
 }
 
-.linsight-pet-bubble__composer-send:not(:disabled):hover,
-.linsight-pet-bubble__composer-cancel:hover {
+.jiumate-pet-bubble__composer-send:not(:disabled):hover,
+.jiumate-pet-bubble__composer-cancel:hover {
   @apply bg-gray-100 dark:bg-gray-800;
 }
 
 /* Context menu (the pet itself, and each bubble). Anchored to the window's
    bottom-right corner so it survives the resize that opening it triggers. */
-.linsight-pet-menu__backdrop {
+.jiumate-pet-menu__backdrop {
   position: fixed;
   inset: 0;
   z-index: 10;
 }
 
-.linsight-pet-menu {
+.jiumate-pet-menu {
   @apply rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900;
   position: fixed;
   z-index: 11;
   min-width: 96px;
 }
 
-.linsight-pet-menu__item {
+.jiumate-pet-menu__item {
   @apply w-full px-3 py-1 text-left text-xs text-gray-700 dark:text-gray-200;
   display: block;
   background: none;
@@ -941,16 +941,16 @@ html.linsight-pet-host body {
   cursor: pointer;
 }
 
-.linsight-pet-menu__item:hover {
+.jiumate-pet-menu__item:hover {
   @apply bg-gray-100 dark:bg-gray-800;
 }
 
-.linsight-pet-menu__item--danger {
+.jiumate-pet-menu__item--danger {
   @apply text-red-600 dark:text-red-400;
 }
 
 /* Y selects the mood row, X steps across frames via --pet-end. */
-.linsight-pet__sprite {
+.jiumate-pet__sprite {
   display: block;
   background-repeat: no-repeat;
   background-position-x: 0%;
@@ -961,44 +961,44 @@ html.linsight-pet-host body {
     pet-state-breathe 6s ease-in-out infinite;
 }
 
-.linsight-pet__sprite--rest {
+.jiumate-pet__sprite--rest {
   animation:
     pet-state-walk 2.4s steps(var(--pet-frames)) infinite,
     pet-state-breathe 6.4s ease-in-out infinite;
 }
 
-.linsight-pet__sprite--analyzing {
+.jiumate-pet__sprite--analyzing {
   animation:
     pet-state-walk 1.5s steps(var(--pet-frames)) infinite,
     pet-state-breathe 5.2s ease-in-out infinite;
 }
 
-.linsight-pet__sprite--waiting {
+.jiumate-pet__sprite--waiting {
   animation:
     pet-state-walk 1.6s steps(var(--pet-frames)) infinite,
     pet-state-breathe 5.2s ease-in-out infinite;
 }
 
-.linsight-pet__sprite--working {
+.jiumate-pet__sprite--working {
   animation:
     pet-state-walk 1.16s steps(var(--pet-frames)) infinite,
     pet-state-work 0.56s linear infinite;
 }
 
-.linsight-pet__sprite--hover {
+.jiumate-pet__sprite--hover {
   animation:
     pet-state-walk 1.44s steps(var(--pet-frames)) infinite,
     pet-state-hover 1.9s ease-in-out infinite;
 }
 
-.linsight-pet__sprite--dragging {
+.jiumate-pet__sprite--dragging {
   animation:
     pet-state-walk 0.96s steps(var(--pet-frames)) infinite,
     pet-state-dragging 0.48s linear infinite;
 }
 
 /* Settings thumbnails: one idle frame, no motion. */
-.linsight-pet__sprite--static {
+.jiumate-pet__sprite--static {
   animation: none;
 }
 
@@ -1061,35 +1061,35 @@ html.linsight-pet-host body {
 
 /* Reduced motion keeps the mood row (state is still legible) and drops movement. */
 @media (prefers-reduced-motion: reduce) {
-  .linsight-pet__sprite {
+  .jiumate-pet__sprite {
     animation: none !important;
     transform: none !important;
     background-position-x: 0%;
   }
 }
 
-.linsight-pet__panda {
+.jiumate-pet__panda {
   display: block;
   width: 100%;
   height: 100%;
 }
-.linsight-pet__panda-body {
+.jiumate-pet__panda-body {
   fill: currentColor;
   opacity: 0.85;
 }
-.linsight-pet__panda-face {
+.jiumate-pet__panda-face {
   fill: white;
 }
-.linsight-pet__panda-eye {
+.jiumate-pet__panda-eye {
   fill: currentColor;
 }
-.linsight-pet__panda-nose {
+.jiumate-pet__panda-nose {
   fill: currentColor;
 }
-.linsight-pet__sweat-drop {
+.jiumate-pet__sweat-drop {
   fill: #4ea1ff;
 }
-.linsight-pet__zzz {
+.jiumate-pet__zzz {
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-size: 22px;
   font-weight: 600;

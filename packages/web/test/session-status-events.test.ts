@@ -12,7 +12,7 @@
  * same function the sidebar row calls, so the glyph assertions are the real rule, not a copy.
  */
 import { describe, expect, it } from "vitest";
-import type { ServerEvent, SessionInfo, SessionStatus } from "@prismshadow/linsight-server/api";
+import type { ServerEvent, SessionInfo, SessionStatus } from "@prismshadow/jiumate-server/api";
 import { applyUserEvent, createSessionsStore } from "../src/state/sessions";
 import { isSessionUnread, markSessionSeen } from "../src/lib/session-seen";
 import type { SessionSeenState } from "../src/lib/session-seen";

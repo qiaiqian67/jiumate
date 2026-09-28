@@ -27,7 +27,7 @@ import {
   userText,
   isCompleteModelMessage,
   type OmniMessage,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 
 const AGENT_ID = "self-improve-demo";
 const PROJECT_ID = "default_project";
@@ -91,7 +91,7 @@ Reviewed-by: Aurora Team
 `;
 
 function rootDir(): string {
-  return process.env.LINSIGHT_HOME ?? path.join(os.homedir(), ".linsight", "data");
+  return process.env.JIUMATE_HOME ?? path.join(os.homedir(), ".jiumate", "data");
 }
 function agentStateDir(): string {
   return path.join(rootDir(), PROJECT_ID, "agents", AGENT_ID, "agent_state");

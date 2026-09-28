@@ -27,7 +27,7 @@ import type {
   ScheduleStatus,
   ScheduleUpsertRequest,
   SessionInfo,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

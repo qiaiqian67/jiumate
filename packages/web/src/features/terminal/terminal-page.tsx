@@ -27,7 +27,7 @@ import {
   type TerminalStatus,
 } from "./terminal-view";
 
-const STORAGE_KEY = "linsight.terminal.page.id";
+const STORAGE_KEY = "jiumate.terminal.page.id";
 
 export interface TerminalPageParams {
   id: string | null;

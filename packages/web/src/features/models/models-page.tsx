@@ -40,7 +40,7 @@ import type {
   ModelTestRequest,
   ModelUpdateEntry,
   ModelVisionDetectRequest,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
@@ -73,8 +73,8 @@ import {
   modelHomepageUrl,
   providerInfo,
   resolveModelEnv,
-} from "@prismshadow/linsight-core/model-catalog";
-import type { FastModeProtocol, ModelProviderInfo } from "@prismshadow/linsight-core/model-catalog";
+} from "@prismshadow/jiumate-core/model-catalog";
+import type { FastModeProtocol, ModelProviderInfo } from "@prismshadow/jiumate-core/model-catalog";
 import {
   allGroupKeys,
   discountedPrice,
@@ -488,7 +488,7 @@ export function detectedEnvKeys(rows: readonly RowState[]): Set<string> {
  * client rejects `fast_mode` — or the id routes to no client at all — so arming the switch
  * could only produce a turn-killing error, and it is not offered. `show` adds the one
  * exception: a row that already stores fast mode keeps its switch regardless, because a
- * value that arrived another way (a hand-edited config, `linsight config model add
+ * value that arrived another way (a hand-edited config, `jiumate config model add
  * --fast-mode`, or an upstream id renamed afterwards) has to remain switchable off — the
  * runtime rejection tells the user to turn it off in the model settings, and that has to be
  * true. `protocol` also picks the warning copy: only Anthropic's fast mode is a gated
@@ -585,7 +585,7 @@ export function rowToEntry(row: RowState): ModelUpdateEntry {
  * group dragged out of the conversation list paint a drop line here (and vice versa) —
  * two unrelated orders that happen to be dragged the same way.
  */
-const MODEL_GROUP_DRAG_MIME = "application/x-linsight-model-group";
+const MODEL_GROUP_DRAG_MIME = "application/x-jiumate-model-group";
 
 /**
  * Is the drag in flight one of our group reorders? `types` is readable during dragover
@@ -605,7 +605,7 @@ const DRAG_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
  *
  * The library itself is `ModelsPane`, because System settings hosts the same content in a pane
  * (Personal → Models) and neither piece of that chrome belongs there: `useDocumentTitle` sets
- * the tab title and never restores it, so an embedded copy would leave "模型库 · Linsight" in the
+ * the tab title and never restores it, so an embedded copy would leave "模型库 · JiuMate" in the
  * tab after the dialog closed, and a second `h-full overflow-y-auto` inside the dialog's own
  * scroll container would nest two scrollbars with two sets of padding.
  */

@@ -60,8 +60,8 @@ function scripted(script: Script): MachineChannel & { calls: Call[] } {
     if (command.includes("PROCESSOR_ARCHITECTURE")) return ok(identity());
     if (command.includes("sh -s") || command.includes("powershell")) {
       ran = true;
-      onLine?.("Linsight 0.2.4 installed");
-      return { ...ok("Linsight 0.2.4 installed\n"), code: script.installExit ?? 0 };
+      onLine?.("JiuMate 0.2.4 installed");
+      return { ...ok("JiuMate 0.2.4 installed\n"), code: script.installExit ?? 0 };
     }
     return ok("");
   };
@@ -109,7 +109,7 @@ describe("installOnRemote", () => {
   const assets = () => path.resolve(__dirname, "..", "..", "..");
 
   beforeEach(() => {
-    work = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-push-test-"));
+    work = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-push-test-"));
   });
   afterEach(() => {
     fs.rmSync(work, { recursive: true, force: true });
@@ -119,8 +119,8 @@ describe("installOnRemote", () => {
 
   it("probes, installs and replicates over the ONE session, then asks what the machine now has", async () => {
     const channel = scripted({
-      probe: "Linux x86_64\\n---linsight---\\n---linsight---\\n",
-      afterInstall: `Linux x86_64\\n---linsight---\\n{"version":"0.2.4"}\\n---linsight---\\n${HARNESS}`,
+      probe: "Linux x86_64\\n---jiumate---\\n---jiumate---\\n",
+      afterInstall: `Linux x86_64\\n---jiumate---\\n{"version":"0.2.4"}\\n---jiumate---\\n${HARNESS}`,
     });
     const progress: string[] = [];
     const outcome = await installOnRemote({
@@ -138,18 +138,18 @@ describe("installOnRemote", () => {
     expect(calls[0]!.command).toContain("uname -s -m"); // identity first
     // The release is downloaded ON THE REMOTE, pinned to this server's own base, the
     // installer riding the session's stdin.
-    expect(calls[1]!.command).toContain("LINSIGHT_VERSION='v0.2.4' sh -s");
+    expect(calls[1]!.command).toContain("JIUMATE_VERSION='v0.2.4' sh -s");
     expect(calls[1]!.input?.toString("utf8").startsWith("#!/")).toBe(true);
     // The hmr state crosses the same stdin as a tarball, into the hmr directory it was
     // tarred from.
-    expect(calls[2]!.command).toContain('tar -xzf - -C "$HOME/.linsight/data/hmr"');
+    expect(calls[2]!.command).toContain('tar -xzf - -C "$HOME/.jiumate/data/hmr"');
     expect(calls[2]!.input?.subarray(0, 2)).toEqual(Buffer.from([0x1f, 0x8b])); // gzip
     // And the machine is asked what it ended up with, which is the only step that can tell
     // an install that took from one that ran cleanly and changed nothing.
     expect(calls[3]!.command).toContain("uname -s -m");
     expect(progress).toContain("linux-x64.");
     // The far side's own output is relayed as it arrives, not withheld until exit.
-    expect(progress).toContain("Linsight 0.2.4 installed");
+    expect(progress).toContain("JiuMate 0.2.4 installed");
   });
 
   it("calls an install that ran cleanly and changed nothing a failure", async () => {
@@ -158,7 +158,7 @@ describe("installOnRemote", () => {
     // this version — so without asking afterwards this is a success recorded at OUR version,
     // and syncOutOfDate filters on exactly that: the machine is excluded from the sweep that
     // would have tried again. A false success here seals itself in.
-    const channel = scripted({ probe: "Linux x86_64\\n---linsight---\\n---linsight---\\n" });
+    const channel = scripted({ probe: "Linux x86_64\\n---jiumate---\\n---jiumate---\\n" });
     const outcome = await installOnRemote({ target, plan: plan(), assets, channel });
 
     expect(outcome).toMatchObject({ kind: "failed", step: "verify the install" });
@@ -172,8 +172,8 @@ describe("installOnRemote", () => {
     // syncOutOfDate filters on that record, so the machine would be left out of the very
     // sweep that would have pushed again.
     const channel = scripted({
-      probe: "Linux x86_64\\n---linsight---\\n---linsight---\\n",
-      afterInstall: 'Linux x86_64\\n---linsight---\\n{"version":"0.2.4"}\\n---linsight---\\n',
+      probe: "Linux x86_64\\n---jiumate---\\n---jiumate---\\n",
+      afterInstall: 'Linux x86_64\\n---jiumate---\\n{"version":"0.2.4"}\\n---jiumate---\\n',
     });
     const outcome = await installOnRemote({ target, plan: plan(), assets, channel });
 
@@ -183,8 +183,8 @@ describe("installOnRemote", () => {
 
   it("a Windows host has no session to hold: the probe, a copied script and the store each get their own connection", async () => {
     const channel = scripted({
-      probe: "Windows_NT AMD64\\n---linsight---\\n---linsight---\\n",
-      afterInstall: `Windows_NT AMD64\\n---linsight---\\n{"version":"0.2.4"}\\n---linsight---\\n${HARNESS}`,
+      probe: "Windows_NT AMD64\\n---jiumate---\\n---jiumate---\\n",
+      afterInstall: `Windows_NT AMD64\\n---jiumate---\\n{"version":"0.2.4"}\\n---jiumate---\\n${HARNESS}`,
       windows: true,
     });
     const outcome = await installOnRemote({ target, plan: plan(), assets, channel });
@@ -200,9 +200,9 @@ describe("installOnRemote", () => {
     // PowerShell cannot take the script on stdin, so a Windows remote gets a copy — scp'd to
     // the home directory, with the delete chained onto the command that runs it.
     expect(calls[2]!.verb).toBe("copyTo");
-    expect(calls[2]!.command).toMatch(/^linsight-[0-9a-f]+\.ps1 -> \.$/);
+    expect(calls[2]!.command).toMatch(/^jiumate-[0-9a-f]+\.ps1 -> \.$/);
     expect(calls[3]!.verb).toBe("oneShot");
-    expect(calls[3]!.command).toContain('-File "%USERPROFILE%\\linsight-');
+    expect(calls[3]!.command).toContain('-File "%USERPROFILE%\\jiumate-');
     expect(calls[3]!.command).toContain('-Version "v0.2.4"');
     expect(calls[3]!.command).toContain("& del /q");
     // The store, as stdin to a one-shot tar.
@@ -218,7 +218,7 @@ describe("installOnRemote", () => {
     // default and keeps serving, so from here the restart reads as a success. The caller sends
     // this down the machine's own update channel, which answers.
     const channel = scripted({
-      probe: 'Linux x86_64\\n---linsight---\\n{"version":"0.2.4"}\\n---linsight---\\n',
+      probe: 'Linux x86_64\\n---jiumate---\\n{"version":"0.2.4"}\\n---jiumate---\\n',
     });
     const outcome = await installOnRemote({ target, plan: plan(), assets, channel });
     expect(outcome).toMatchObject({ kind: "state-only" });
@@ -228,7 +228,7 @@ describe("installOnRemote", () => {
 
   it("does nothing when the remote already matches base AND pushed state", async () => {
     const channel = scripted({
-      probe: `Linux x86_64\\n---linsight---\\n{"version":"0.2.4"}\\n---linsight---\\n${HARNESS}\\n`,
+      probe: `Linux x86_64\\n---jiumate---\\n{"version":"0.2.4"}\\n---jiumate---\\n${HARNESS}\\n`,
     });
     const outcome = await installOnRemote({ target, plan: plan(), assets, channel });
     expect(outcome).toMatchObject({ kind: "already-installed", version: "0.2.4+hmr.cafe01234567" });
@@ -237,8 +237,8 @@ describe("installOnRemote", () => {
 
   it("a bare release plan streams nothing", async () => {
     const channel = scripted({
-      probe: "Linux x86_64\\n---linsight---\\n---linsight---\\n",
-      afterInstall: 'Linux x86_64\\n---linsight---\\n{"version":"0.2.4"}\\n---linsight---\\n',
+      probe: "Linux x86_64\\n---jiumate---\\n---jiumate---\\n",
+      afterInstall: 'Linux x86_64\\n---jiumate---\\n{"version":"0.2.4"}\\n---jiumate---\\n',
     });
     const outcome = await installOnRemote({
       target,
@@ -252,12 +252,12 @@ describe("installOnRemote", () => {
 
   it("reports the installer's own output on failure", async () => {
     const channel = scripted({
-      probe: 'Linux x86_64\\n---linsight---\\n{"version":"0.0.1"}\\n---linsight---\\n',
+      probe: 'Linux x86_64\\n---jiumate---\\n{"version":"0.0.1"}\\n---jiumate---\\n',
       installExit: 3,
     });
     const outcome = await installOnRemote({ target, plan: plan(), assets, channel });
     expect(outcome).toMatchObject({ kind: "failed", step: "install" });
-    expect((outcome as { detail: string }).detail).toContain("Linsight 0.2.4 installed");
+    expect((outcome as { detail: string }).detail).toContain("JiuMate 0.2.4 installed");
   });
 
   it("reports ssh's own words when the session cannot be opened", async () => {
@@ -277,8 +277,8 @@ describe("installOnRemote", () => {
 
   it("refuses a base that cannot name a release", async () => {
     const channel = scripted({
-      probe: "Linux x86_64\\n---linsight---\\n---linsight---\\n",
-      afterInstall: 'Linux x86_64\\n---linsight---\\n{"version":"0.2.4"}\\n---linsight---\\n',
+      probe: "Linux x86_64\\n---jiumate---\\n---jiumate---\\n",
+      afterInstall: 'Linux x86_64\\n---jiumate---\\n{"version":"0.2.4"}\\n---jiumate---\\n',
     });
     const outcome = await installOnRemote({
       target,

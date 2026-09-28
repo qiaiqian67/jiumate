@@ -26,7 +26,7 @@ afterEach(() => {
 });
 
 /**
- * Runs `linsight chat` end to end over a PassThrough stdin, capturing stdout. Each input
+ * Runs `jiumate chat` end to end over a PassThrough stdin, capturing stdout. Each input
  * line is written only once the REPL has printed the matching `> ` prompt (the non-TTY
  * REPL writes the prompt when — and only when — it is ready for the next line).
  */
@@ -56,7 +56,7 @@ async function driveChat(lines: string[], argv: string[] = []): Promise<string> 
     const program = new Command();
     program.exitOverride();
     registerChatCommand(program, getMessages("en"));
-    const done = program.parseAsync(["node", "linsight", "chat", ...argv]);
+    const done = program.parseAsync(["node", "jiumate", "chat", ...argv]);
     for (let i = 0; i < lines.length; i++) {
       // Racing against `done` keeps a REPL that errors out early from hanging the test.
       await Promise.race([waitForPrompt(i + 1), done]);
@@ -96,9 +96,9 @@ describe("chat /clear (fresh Session in place, server-backed)", () => {
     expect(creates.every((r) => r.body?.client === "cli")).toBe(true);
     // /clear advertised the old Session's resume command before switching over, and the
     // exit hint names the new one.
-    expect(out).toContain(`linsight chat --resume ${first!.sessionId}`);
+    expect(out).toContain(`jiumate chat --resume ${first!.sessionId}`);
     expect(out).toContain(getMessages("en").clearDone());
-    expect(out).toContain(`linsight chat --resume ${second!.sessionId}`);
+    expect(out).toContain(`jiumate chat --resume ${second!.sessionId}`);
     // No DELETE / dispose call exists for a server Session — nothing was deleted.
     expect(server.requests.some((r) => r.method === "DELETE")).toBe(false);
   });

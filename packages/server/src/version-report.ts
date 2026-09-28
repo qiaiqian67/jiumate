@@ -1,5 +1,5 @@
 /**
- * The one assembler behind `linsight version --json` and GET /api/version.
+ * The one assembler behind `jiumate version --json` and GET /api/version.
  *
  * The report has two halves that no single layer can produce. Core knows the artifact this
  * process is executing and nothing about data roots; the HMR store knows what harness was
@@ -11,8 +11,8 @@
  * (see ./hmr/manifest.ts), and is exported as its own entry point so the CLI can reach it
  * without pulling in a server: the module graph here is core plus a `node:fs` read.
  */
-import { buildInfo } from "@prismshadow/linsight-core";
-import type { VersionReport } from "@prismshadow/linsight-core";
+import { buildInfo } from "@prismshadow/jiumate-core";
+import type { VersionReport } from "@prismshadow/jiumate-core";
 import { readHarnessInfo } from "./hmr/manifest.js";
 
 /**

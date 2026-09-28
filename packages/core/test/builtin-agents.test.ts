@@ -32,16 +32,16 @@ let tmpRoot: string;
 let prevHome: string | undefined;
 
 beforeEach(async () => {
-  prevHome = process.env.LINSIGHT_HOME;
-  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-builtin-"));
-  process.env.LINSIGHT_HOME = tmpRoot;
+  prevHome = process.env.JIUMATE_HOME;
+  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-builtin-"));
+  process.env.JIUMATE_HOME = tmpRoot;
 });
 
 afterEach(async () => {
   if (prevHome === undefined) {
-    delete process.env.LINSIGHT_HOME;
+    delete process.env.JIUMATE_HOME;
   } else {
-    process.env.LINSIGHT_HOME = prevHome;
+    process.env.JIUMATE_HOME = prevHome;
   }
   await fs.rm(tmpRoot, { recursive: true, force: true });
 });
@@ -97,8 +97,8 @@ describe("provisionProjectAgents", () => {
     const installed = await listInstalledSkills(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID);
     expect(installed.map((s) => s.name).sort()).toEqual(preinstalledSkillNames());
     // On-disk content matches the library's SKILL.md verbatim (install copies the full text).
-    const sdkMd = await fs.readFile(skillMdPath(DEFAULT_AGENT_ID, "linsight-sdk"), "utf8");
-    expect(sdkMd).toBe(librarySkill("linsight-sdk")!.skill.content);
+    const sdkMd = await fs.readFile(skillMdPath(DEFAULT_AGENT_ID, "jiumate-sdk"), "utf8");
+    expect(sdkMd).toBe(librarySkill("jiumate-sdk")!.skill.content);
   });
 
   it("provision is idempotent: running it again does not change the result", async () => {
@@ -130,7 +130,7 @@ describe("provisionProjectAgents", () => {
 });
 
 describe("App Data Dir / Agent ID placeholders", () => {
-  it("assembleSystemPrompt injects App Data Dir and Agent ID (Skill lookup uses app-data-dir-relative paths, no .linsight dependency)", async () => {
+  it("assembleSystemPrompt injects App Data Dir and Agent ID (Skill lookup uses app-data-dir-relative paths, no .jiumate dependency)", async () => {
     const state = await loadAgentState({ init: {}, agentId: "env_agent" });
     // Skill data provided (an empty list) so the {{SKILLS}} section — home of the skill
     // lookup path convention this test pins — renders.
@@ -155,8 +155,8 @@ describe("App Data Dir / Agent ID placeholders", () => {
     expect(prompt).toContain("App Data Dir: /tmp/proj");
     expect(prompt).not.toContain("{{AGENT_ID}}");
     expect(prompt).not.toContain("{{PROJECT_DIR}}");
-    // Skill execution conventions are built from app-data-dir-relative paths (no longer reference .linsight).
-    expect(prompt).not.toContain(".linsight");
+    // Skill execution conventions are built from app-data-dir-relative paths (no longer reference .jiumate).
+    expect(prompt).not.toContain(".jiumate");
     // Agent State, scratchpad and Skills are addressed under the App Data Dir's agents/ container.
     expect(prompt).toContain("<app_data_dir>/agents/<agent_id>/agent_state/");
     expect(prompt).toContain("<app_data_dir>/agents/<agent_id>/agent_state/skills/");

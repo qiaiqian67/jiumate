@@ -35,7 +35,7 @@ export const MAX_PACKAGES = 128;
 export const MAX_PIXEL_AREA = 16_000_000;
 
 /** Conventional receipt filename written next to `pet.json` after a successful install. */
-export const RECEIPT_FILENAME = ".linsight-pet-receipt.json";
+export const RECEIPT_FILENAME = ".jiumate-pet-receipt.json";
 
 /** Schema version written into the receipt. Bump when the on-disk shape changes incompatibly. */
 export const RECEIPT_SCHEMA_VERSION = 1;

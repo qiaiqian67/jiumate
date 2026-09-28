@@ -77,13 +77,13 @@ const STDERR_TAIL_LIMIT = 2048;
  * a top-level read would hit the temporal dead zone.
  */
 function clientInfo(): { name: string; version: string } {
-  return { name: "linsight", version: VERSION };
+  return { name: "jiumate", version: VERSION };
 }
 
 export interface McpToolProviderOptions {
   /** Session Workspace: the default working directory for stdio server processes. */
   workspaceDir?: string;
-  /** Warning sink; defaults to a `[linsight]`-prefixed stderr line. */
+  /** Warning sink; defaults to a `[jiumate]`-prefixed stderr line. */
   warn?: (message: string) => void;
 }
 
@@ -184,7 +184,7 @@ export class McpToolProvider {
     this.servers = resolved.servers;
     this.configWarnings = resolved.warnings;
     this.workspaceDir = options?.workspaceDir;
-    this.warn = options?.warn ?? ((message) => process.stderr.write(`[linsight] ${message}\n`));
+    this.warn = options?.warn ?? ((message) => process.stderr.write(`[jiumate] ${message}\n`));
   }
 
   /** Connects the pending servers (once per phase) and returns the LLM-facing definitions of every discovered MCP tool. */
@@ -396,7 +396,7 @@ export class McpToolProvider {
         // vault is deliberately NOT injected into MCP server processes (unlike command
         // subprocesses); a variable a server needs must be listed in the entry's env.
         // The SDK defaults are an allowlist (HOME/PATH/SHELL-class names only), so the
-        // harness's own configuration — every LINSIGHT_* variable, PORT/HOST and the rest —
+        // harness's own configuration — every JIUMATE_* variable, PORT/HOST and the rest —
         // never reaches a server: the same outcome the command-session strip enforces,
         // by the opposite mechanism. Widening this base (e.g. to process.env) would undo
         // that; the "harness variables never reach a stdio server" test pins it.

@@ -9,7 +9,7 @@
  */
 import { createHash } from "node:crypto";
 import { Hono } from "hono";
-import { isValidId } from "@prismshadow/linsight-core";
+import { isValidId } from "@prismshadow/jiumate-core";
 import type { ScheduleItem, ScheduleStatus, SchedulesResponse } from "../../api/types.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";

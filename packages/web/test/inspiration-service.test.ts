@@ -10,10 +10,10 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { builtinInspirationCatalog } from "@prismshadow/linsight-inspirations/presets";
-import { TITLE_LIMIT as PACKAGE_TITLE_LIMIT } from "@prismshadow/linsight-inspirations/schema";
+import { builtinInspirationCatalog } from "@prismshadow/jiumate-inspirations/presets";
+import { TITLE_LIMIT as PACKAGE_TITLE_LIMIT } from "@prismshadow/jiumate-inspirations/schema";
 import { S } from "../src/lib/strings";
-import type { InspirationCase, InspirationCategory } from "@prismshadow/linsight-inspirations";
+import type { InspirationCase, InspirationCategory } from "@prismshadow/jiumate-inspirations";
 import {
   builtinCatalogView,
   categoryLabel,
@@ -534,7 +534,7 @@ describe("favourites", () => {
   });
 
   it("keeps the Web App's cap in step with the server's", () => {
-    // Two copies on purpose, and linsight-server is a type-only dependency here — so the check
+    // Two copies on purpose, and jiumate-server is a type-only dependency here — so the check
     // reads the server module as text rather than importing it.
     const source = readFileSync(
       fileURLToPath(new URL("../../server/src/services/inspiration-favorites.ts", import.meta.url)),

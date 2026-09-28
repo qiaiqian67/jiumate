@@ -1,5 +1,5 @@
 #!/bin/sh
-# https://linsight.ooo/install.sh - Linsight installer entry point.
+# https://jiumate.ooo/install.sh - JiuMate installer entry point.
 #
 # GitHub Pages cannot serve HTTP redirects, so this thin forwarder IS the
 # stable install URL. It selects an immutable OSS release when that mirror is
@@ -8,14 +8,14 @@
 # does not lock the large payload source; the real versioned installer decides
 # that for its own release. Usage:
 #
-#   curl -fsSL https://linsight.ooo/install.sh | sh
-#   curl -fsSL https://linsight.ooo/install.sh | sh -s -- --universal
+#   curl -fsSL https://jiumate.ooo/install.sh | sh
+#   curl -fsSL https://jiumate.ooo/install.sh | sh -s -- --universal
 #
 set -eu
-OSS_ORIGIN="https://linsight-releases.oss-cn-beijing.aliyuncs.com"
+OSS_ORIGIN="https://jiumate-releases.oss-cn-beijing.aliyuncs.com"
 OSS_RELEASE_ROOT="$OSS_ORIGIN/releases"
-GITHUB_RELEASE_ROOT="https://github.com/qiaiqian67/linsight/releases/download"
-SOURCE_MODE="${LINSIGHT_DOWNLOAD_SOURCE:-auto}"
+GITHUB_RELEASE_ROOT="https://github.com/qiaiqian67/jiumate/releases/download"
+SOURCE_MODE="${JIUMATE_DOWNLOAD_SOURCE:-auto}"
 
 fail() {
   echo "error: $1" >&2
@@ -46,10 +46,10 @@ validate_release_tag() {
 
 case "$SOURCE_MODE" in
   auto | oss | github) ;;
-  *) fail "LINSIGHT_DOWNLOAD_SOURCE must be auto, oss, or github" ;;
+  *) fail "JIUMATE_DOWNLOAD_SOURCE must be auto, oss, or github" ;;
 esac
 
-REQUESTED_VERSION="${LINSIGHT_VERSION:-}"
+REQUESTED_VERSION="${JIUMATE_VERSION:-}"
 expect_version=0
 for arg in "$@"; do
   if [ "$expect_version" -eq 1 ]; then
@@ -83,20 +83,20 @@ use_github() {
   if [ -n "$1" ]; then
     SELECTED_BASE="$GITHUB_RELEASE_ROOT/$1"
   else
-    SELECTED_BASE="https://github.com/qiaiqian67/linsight/releases/latest/download"
+    SELECTED_BASE="https://github.com/qiaiqian67/jiumate/releases/latest/download"
   fi
   FALLBACK_BASE=""
   download_installer "$SELECTED_BASE" \
     || fail "could not download the installer from GitHub. Check your network, then retry."
 }
 
-EXPLICIT_BASE="${LINSIGHT_DOWNLOAD_BASE_URL:-}"
+EXPLICIT_BASE="${JIUMATE_DOWNLOAD_BASE_URL:-}"
 if [ -n "$EXPLICIT_BASE" ]; then
   SELECTED_BASE="${EXPLICIT_BASE%/}"
-  FALLBACK_BASE="${LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL:-}"
+  FALLBACK_BASE="${JIUMATE_DOWNLOAD_FALLBACK_BASE_URL:-}"
   FALLBACK_BASE="${FALLBACK_BASE%/}"
-  validate_https_url LINSIGHT_DOWNLOAD_BASE_URL "$SELECTED_BASE"
-  [ -z "$FALLBACK_BASE" ] || validate_https_url LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL "$FALLBACK_BASE"
+  validate_https_url JIUMATE_DOWNLOAD_BASE_URL "$SELECTED_BASE"
+  [ -z "$FALLBACK_BASE" ] || validate_https_url JIUMATE_DOWNLOAD_FALLBACK_BASE_URL "$FALLBACK_BASE"
   download_installer "$SELECTED_BASE" \
     || fail "could not download the installer from the configured mirror."
 elif [ "$SOURCE_MODE" = "github" ]; then
@@ -133,15 +133,15 @@ fi
 rc=0
 (
   if [ -n "$EXPLICIT_BASE" ]; then
-    export LINSIGHT_DOWNLOAD_BASE_URL="$SELECTED_BASE"
+    export JIUMATE_DOWNLOAD_BASE_URL="$SELECTED_BASE"
     if [ -n "$FALLBACK_BASE" ]; then
-      export LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL="$FALLBACK_BASE"
+      export JIUMATE_DOWNLOAD_FALLBACK_BASE_URL="$FALLBACK_BASE"
     else
-      unset LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL
+      unset JIUMATE_DOWNLOAD_FALLBACK_BASE_URL
     fi
   else
-    unset LINSIGHT_DOWNLOAD_BASE_URL
-    unset LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL
+    unset JIUMATE_DOWNLOAD_BASE_URL
+    unset JIUMATE_DOWNLOAD_FALLBACK_BASE_URL
   fi
   sh "$INSTALLER" "$@"
 ) || rc=$?

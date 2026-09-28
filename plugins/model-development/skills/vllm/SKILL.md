@@ -28,8 +28,8 @@ The model must fit the available VRAM — model size and context length drive th
 2. Pick the engine the user prefers: vLLM for high-throughput GPU serving; Ollama is the simple default and the choice on macOS or CPU-only machines.
 3. Serve on a free port, with the tool-calling flags whenever agents will call it (see below).
 4. Verify with `curl http://localhost:8000/v1/models`.
-5. Register the endpoint: `linsight config model add ... --client-type openai-chat --base-url http://localhost:8000/v1` — a served model is not visible to Linsight until added.
-6. Confirm the new entry with `linsight config model list`.
+5. Register the endpoint: `jiumate config model add ... --client-type openai-chat --base-url http://localhost:8000/v1` — a served model is not visible to JiuMate until added.
+6. Confirm the new entry with `jiumate config model list`.
 
 ## Install
 
@@ -59,7 +59,7 @@ If the port is taken, pick a free one — never kill a process already listening
 
 ## Tool calling — required for agents
 
-Agent harnesses (Linsight included) send `tools` with their requests. vLLM must opt in at startup:
+Agent harnesses (JiuMate included) send `tools` with their requests. vLLM must opt in at startup:
 
 ```bash
 vllm serve Qwen/Qwen3.5-0.8B --enable-auto-tool-choice --tool-call-parser hermes
@@ -73,14 +73,14 @@ Choose the parser for the model family — e.g. `hermes` for Qwen models, `llama
 curl http://localhost:8000/v1/models
 ```
 
-## Register with Linsight
+## Register with JiuMate
 
-Model configuration is the linsight CLI's job — `linsight config model add` registers an endpoint and `linsight config model list` shows what has been registered. A served model is not visible to Linsight until you add it:
+Model configuration is the jiumate CLI's job — `jiumate config model add` registers an endpoint and `jiumate config model list` shows what has been registered. A served model is not visible to JiuMate until you add it:
 
 ```bash
-linsight config model add --provider custom --client-type openai-chat \
+jiumate config model add --provider custom --client-type openai-chat \
   --base-url http://localhost:8000/v1 --model-id <served-model-name> --api-key <key>
-linsight config model list   # the new entry should now be listed
+jiumate config model list   # the new entry should now be listed
 ```
 
 ## Troubleshooting

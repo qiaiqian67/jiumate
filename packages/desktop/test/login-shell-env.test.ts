@@ -17,7 +17,7 @@ import {
   shouldImportLoginShellEnv,
 } from "../src/login-shell-env.js";
 
-const SENTINEL = "__LINSIGHT_LOGIN_SHELL_ENV__";
+const SENTINEL = "__JIUMATE_LOGIN_SHELL_ENV__";
 
 describe("shouldImportLoginShellEnv", () => {
   it("imports only on a GUI launch of a POSIX platform", () => {
@@ -32,9 +32,9 @@ describe("shouldImportLoginShellEnv", () => {
     );
   });
 
-  it("honors the LINSIGHT_NO_LOGIN_SHELL_ENV escape hatch", () => {
+  it("honors the JIUMATE_NO_LOGIN_SHELL_ENV escape hatch", () => {
     expect(
-      shouldImportLoginShellEnv({ platform: "linux", env: { LINSIGHT_NO_LOGIN_SHELL_ENV: "1" } }),
+      shouldImportLoginShellEnv({ platform: "linux", env: { JIUMATE_NO_LOGIN_SHELL_ENV: "1" } }),
     ).toBe(false);
   });
 });
@@ -111,13 +111,13 @@ describe("mergeLoginShellEnv", () => {
     const patch = mergeLoginShellEnv(
       {},
       {
-        LINSIGHT_WEB_DIST: "/home/user/src/linsight/packages/web/dist",
-        LINSIGHT_CLI_ENTRY: "/home/user/src/linsight/packages/cli/dist/linsight.js",
+        JIUMATE_WEB_DIST: "/home/user/src/jiumate/packages/web/dist",
+        JIUMATE_CLI_ENTRY: "/home/user/src/jiumate/packages/cli/dist/jiumate.js",
         // Data root, by contrast, is a configuration choice and does travel.
-        LINSIGHT_HOME: "/home/user/.linsight",
+        JIUMATE_HOME: "/home/user/.jiumate",
       },
     );
-    expect(patch).toEqual({ LINSIGHT_HOME: "/home/user/.linsight" });
+    expect(patch).toEqual({ JIUMATE_HOME: "/home/user/.jiumate" });
   });
 
   it("merges PATH with the login shell's ordering first and current-only entries appended", () => {
@@ -135,7 +135,7 @@ describe("mergeLoginShellEnv", () => {
 });
 
 describe.skipIf(process.platform === "win32")("resolveLoginShellEnv (fake shells)", () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "linsight-login-shell-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "jiumate-login-shell-"));
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
   function fakeShell(name: string, script: string): string {

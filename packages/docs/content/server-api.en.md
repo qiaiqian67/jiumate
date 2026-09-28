@@ -3,12 +3,12 @@ title: Server API
 description: HTTP API reference — authentication, routes, the SSE streaming protocol, and DTO type imports.
 ---
 
-The Linsight server exposes a same-origin HTTP API used by the bundled Web App and by any other HTTP client. This page is the reference: authentication, route tables, and the SSE streaming protocol. For starting the server, see the [Quickstart](/quickstart).
+The JiuMate server exposes a same-origin HTTP API used by the bundled Web App and by any other HTTP client. This page is the reference: authentication, route tables, and the SSE streaming protocol. For starting the server, see the [Quickstart](/quickstart).
 
 ## Overview
 
 - Stack: Hono + @hono/node-server, requires Node >= 24;
-- Storage: SQLite (built-in `node:sqlite`, WAL mode) holds only indexes and aggregates — users, auth sessions, Project authorization, Agent / Session indexes, usage, UI preferences, error records, and Schedule state; all Agent, Trace, and Workspace data stays as files under `~/.linsight/data`, shared with the CLI / SDK — see the [Configuration Reference](/configuration);
+- Storage: SQLite (built-in `node:sqlite`, WAL mode) holds only indexes and aggregates — users, auth sessions, Project authorization, Agent / Session indexes, usage, UI preferences, error records, and Schedule state; all Agent, Trace, and Workspace data stays as files under `~/.jiumate/data`, shared with the CLI / SDK — see the [Configuration Reference](/configuration);
 - Binding: defaults to `127.0.0.1:7364`, adjustable via the `PORT` / `HOST` environment variables;
 - Request bodies: writes accept JSON only (Content-Type check, one of the CSRF defenses), capped at a size **derived from the attachment budget** rather than fixed — attachments ride the request as base64 `data:` URLs (4/3 inflation), so the cap is `base64(attachmentTotalMb) + headroom for one inline image and the JSON framing`, about 190MB at the default 120MB total and falling again if an admin lowers it. It is counted as the body is read, so a request that declares no length (chunked) is capped just the same;
 - Errors share a single shape:
@@ -33,9 +33,9 @@ packages/server/src
 
 ## Authentication
 
-- Cookie session: `linsight_session` (HttpOnly, SameSite=Lax), valid for 30 days with sliding renewal;
+- Cookie session: `jiumate_session` (HttpOnly, SameSite=Lax), valid for 30 days with sliding renewal;
 - Passwords are stored as scrypt hashes. A session is a row in `auth_sessions` keyed by the sha256 of a random cookie token (the raw token is never stored); it survives a restart, renews in place, and logout deletes the row;
-- No open registration: the built-in admin `admin` is seeded at startup with a random password that is hashed and discarded unseen. Until a password is actually set, every start prints a first-login link that claims the account (`LINSIGHT_SEED_ADMIN_PASSWORD` pins a known password instead, for automation). All other accounts are created by an admin;
+- No open registration: the built-in admin `admin` is seeded at startup with a random password that is hashed and discarded unseen. Until a password is actually set, every start prints a first-login link that claims the account (`JIUMATE_SEED_ADMIN_PASSWORD` pins a known password instead, for automation). All other accounts are created by an admin;
 - Same-origin only — no CORS middleware is enabled.
 
 ```bash
@@ -50,13 +50,13 @@ curl -c cookies.txt -H "Content-Type: application/json" \
 Every protected route also accepts `Authorization: Bearer <token>` carrying the **local API token** — the machine-local credential the CLI (and agents driving the harness through it) use instead of a login:
 
 - The server mints a fresh token at every boot and writes it to `<root>/api-token` (owner-only permissions, `0600`); the previous boot's token stops working the moment a new one is minted.
-- A valid Bearer authenticates as the built-in `admin`. That equivalence is the authorization model, not an accident: local filesystem access to the data root already **is** admin authority — whoever can read `api-token` can read `web.db` next to it, and it is the same rule `linsight server reset-admin-password` stands on.
-- Server-driven sessions inject the current token into every tool subprocess as `LINSIGHT_API_TOKEN` (together with `LINSIGHT_API_URL`, `LINSIGHT_PROJECT_ID`, `LINSIGHT_AGENT_ID`, `LINSIGHT_SESSION_ID`), which is how an agent's own `linsight` / API calls are sanctioned to reach the server that runs them.
+- A valid Bearer authenticates as the built-in `admin`. That equivalence is the authorization model, not an accident: local filesystem access to the data root already **is** admin authority — whoever can read `api-token` can read `web.db` next to it, and it is the same rule `jiumate server reset-admin-password` stands on.
+- Server-driven sessions inject the current token into every tool subprocess as `JIUMATE_API_TOKEN` (together with `JIUMATE_API_URL`, `JIUMATE_PROJECT_ID`, `JIUMATE_AGENT_ID`, `JIUMATE_SESSION_ID`), which is how an agent's own `jiumate` / API calls are sanctioned to reach the server that runs them.
 - SSE endpoints accept the header like any other route (consume them with `fetch`, not `EventSource` — the latter cannot send headers).
 - The JSON-only Content-Type check on writes still applies to Bearer requests.
 
 ```bash
-curl -H "Authorization: Bearer $(cat ~/.linsight/data/api-token)" \
+curl -H "Authorization: Bearer $(cat ~/.jiumate/data/api-token)" \
   http://127.0.0.1:7364/api/me
 ```
 
@@ -133,7 +133,7 @@ Admin only on a personal server as much as a multi-user one: the install spawns 
 
 `status` is `{state, checkedAt, port?, detail?}` with `state` one of `running` / `stopped` / `unreachable`, or `null` when that machine has not been probed. There is no separate ssh status: ssh is the transport, so a machine it cannot reach is `unreachable` and carries OpenSSH's own message in `detail`. `GET` never probes — it reports the last answer — because a probe is an ssh round trip per machine while the list itself is only the config's text. `POST /api/machines/probe` is what spends them, and only on machines something was installed on.
 
-A connected machine's API is reachable at `/server/<machineId>/api/…` on THIS origin, dialled through the one ssh session this server holds to it — a channel inside that session, via its SOCKS port, never a second connection. Addressed by the machine's own id rather than the ssh alias it was reached through: an alias lives in one config file, so keying on it would change a machine's URLs the moment someone renamed a host — and being base64url, an id needs no percent-encoding in a path. **Admin only**, and one identity: the request is made over there as that machine's admin, with a session this server mints through its own ssh access (`linsight auth token` on the machine) — the browser's cookies never cross, and the machine's never come back. Only `/api` is forwarded — the frontend stays local.
+A connected machine's API is reachable at `/server/<machineId>/api/…` on THIS origin, dialled through the one ssh session this server holds to it — a channel inside that session, via its SOCKS port, never a second connection. Addressed by the machine's own id rather than the ssh alias it was reached through: an alias lives in one config file, so keying on it would change a machine's URLs the moment someone renamed a host — and being base64url, an id needs no percent-encoding in a path. **Admin only**, and one identity: the request is made over there as that machine's admin, with a session this server mints through its own ssh access (`jiumate auth token` on the machine) — the browser's cookies never cross, and the machine's never come back. Only `/api` is forwarded — the frontend stays local.
 
 An install is a job, not a request: it probes the far side, may fetch and verify a Node runtime, and copies an image over scp — minutes in the bad case. `POST` starts it and returns at once; the client polls `GET` for `job.log`, which carries the far side's own words (ssh's diagnostics, the remote installer's output). A connect (`POST …/connect`) and a restart (`POST …/restart`) are jobs of the same shape, `job.kind` (`install` / `connect` / `restart`) telling them apart. `job.result` is `null` while running, then `{ok: true, installed: "installed" | "already-installed", version}` for an install, `{ok: true, connected: true}` for a connect or a restart, or `{ok: false, step, message, canReplaceProgram?}` — `canReplaceProgram` marks a failure whose next step is installing the program anyway (`POST …/install` with `{replaceProgram: true}`), offered rather than done because it restarts a server other people may be using. One job at a time; the job lives in memory and does not survive a hot push or a restart, and re-running is the recovery — every step is idempotent.
 
@@ -143,13 +143,13 @@ Refusals decided before any ssh runs have their own codes: `409` `install_runnin
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | /api/version | Identity of the running build plus this root's pushed harness: `{version, describe, channel, buildDate, commit, branch, dirty, runtime, harness}` — the same record `linsight version --json` prints. `harness` describes the data root's HMR store (`{source, pushedAt, bundles}`, where `source` is the pushing checkout's `{repo, revision}`) and is null when nothing was ever pushed there. `describe` is the one-line identity (`v0.2.3` for a release, `v0.2.3-14-g9e8f7d6-dirty` for a build from a checkout); `channel` is `release` or `source`; `buildDate` (UTC yyyy-mm-dd) and `commit` are stamped at build time, so no network is needed, and are null in a source build or a release predating the stamping; `branch` and `dirty` carry a source build's git position and are null for a release |
+| GET | /api/version | Identity of the running build plus this root's pushed harness: `{version, describe, channel, buildDate, commit, branch, dirty, runtime, harness}` — the same record `jiumate version --json` prints. `harness` describes the data root's HMR store (`{source, pushedAt, bundles}`, where `source` is the pushing checkout's `{repo, revision}`) and is null when nothing was ever pushed there. `describe` is the one-line identity (`v0.2.3` for a release, `v0.2.3-14-g9e8f7d6-dirty` for a build from a checkout); `channel` is `release` or `source`; `buildDate` (UTC yyyy-mm-dd) and `commit` are stamped at build time, so no network is needed, and are null in a source build or a release predating the stamping; `branch` and `dirty` carry a source build's git position and are null for a release |
 | GET | /api/version/update-check | Compares the newest GitHub release with the running version: `{currentVersion, latestVersion, updateAvailable, releaseUrl, publishedAt, checkedAt, disabled?, error?}`; `?force=1` (the manual "check for updates" action) bypasses the TTL cache, and the outcome is cached as usual |
 | GET | /api/version/update | **Admin only.** The self-update job's status: `{state: idle \| running \| done, targetVersion, phase?, percent?, output, result?, startedAt?, finishedAt?}` — `phase` (`resolving` / `downloading` / `installing`) and `percent` (read off the installer's progress bar) while running; `result` (`{status, reason?, output, needsRestart}`) once done. Polled by the update dialog while a run is in flight |
-| POST | /api/version/update | **Admin only.** Starts the self-update job — `linsight update --yes` on the server host, in the background — unless one is running (then it is joined); answers with the status exactly as GET does. A finished run may be started again (a retry) |
-| POST | /api/version/restart | **Admin only.** Asks the process to exit with the supervisor's restart code after a graceful shutdown, so `linsight server \| linsight web` relaunches it on the installed release: `{restarting: true}`; `{restarting: false, reason: "no_supervisor"}` when nothing supervises the process |
+| POST | /api/version/update | **Admin only.** Starts the self-update job — `jiumate update --yes` on the server host, in the background — unless one is running (then it is joined); answers with the status exactly as GET does. A finished run may be started again (a retry) |
+| POST | /api/version/restart | **Admin only.** Asks the process to exit with the supervisor's restart code after a graceful shutdown, so `jiumate server \| jiumate web` relaunches it on the installed release: `{restarting: true}`; `{restarting: false, reason: "no_supervisor"}` when nothing supervises the process |
 
-`update-check` is the server's only outbound internet call and is strictly fail-soft: a failed lookup still returns 200 with `error` set (`network` / `rate_limited` / `bad_response`) and `latestVersion: null`, results are cached in memory (success 1 h, failure 10 min), and setting `LINSIGHT_UPDATE_CHECK=off` disables the lookup entirely (`disabled: true`, no network call). The update `status` is `updated` (restart the service to run the new version), `failed`, or `unsupported` — the latter both when the server was not started via `linsight server|web` (`reason: "not_launched_via_cli"`) and when the CLI refuses (source checkout, unrecognized install layout, Windows); `output` carries the tail of the CLI's own output.
+`update-check` is the server's only outbound internet call and is strictly fail-soft: a failed lookup still returns 200 with `error` set (`network` / `rate_limited` / `bad_response`) and `latestVersion: null`, results are cached in memory (success 1 h, failure 10 min), and setting `JIUMATE_UPDATE_CHECK=off` disables the lookup entirely (`disabled: true`, no network call). The update `status` is `updated` (restart the service to run the new version), `failed`, or `unsupported` — the latter both when the server was not started via `jiumate server|web` (`reason: "not_launched_via_cli"`) and when the CLI refuses (source checkout, unrecognized install layout, Windows); `output` carries the tail of the CLI's own output.
 
 ### Projects and Members
 
@@ -385,9 +385,9 @@ GET  /api/sessions/:sessionId/files/preview-redirect?path=index.html
 GET  /preview/<token>/<relative path>          (unauthenticated; the token is the credential)
 ```
 
-- **Why a separate origin.** The page needs a real origin to have working storage, cookies and third-party embeds — but it must not be the app's origin, or Agent-written HTML would run with the session cookie. Locally the app is canonicalized onto `localhost` and previews are served from `127.0.0.1`; cookies are keyed by host and ignore port, so those are separate cookie jars while a second port would not be. Otherwise `LINSIGHT_PREVIEW_ORIGIN` applies; with neither (a wildcard or non-loopback bind, or the variable unset), the redirect falls back to the same-origin sandbox above and `previewIsolated` on `GET /api/me` reports `false` so the UI can say so first.
+- **Why a separate origin.** The page needs a real origin to have working storage, cookies and third-party embeds — but it must not be the app's origin, or Agent-written HTML would run with the session cookie. Locally the app is canonicalized onto `localhost` and previews are served from `127.0.0.1`; cookies are keyed by host and ignore port, so those are separate cookie jars while a second port would not be. Otherwise `JIUMATE_PREVIEW_ORIGIN` applies; with neither (a wildcard or non-loopback bind, or the variable unset), the redirect falls back to the same-origin sandbox above and `previewIsolated` on `GET /api/me` reports `false` so the UI can say so first.
 - **In-app rendering rides the same URL.** The Files panel embeds the redirect URL in an iframe sandboxed with `allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads` — `allow-same-origin` grants the preview origin's identity, not the App's, so this stays strictly tighter than the sandbox-free new tab. Without a separate preview origin the panel instead falls back to inline `srcdoc` rendering (`allow-scripts` only, plus an in-memory storage shim), where relative subresources cannot load. Note that some browsers partition or block storage inside a cross-site iframe, so a page may behave slightly differently in the panel than in the top-level tab.
-- **The preview host serves only `/preview/*`.** It is the same process as the app, so it answers `/api` with `401` and `302`s every other route to the canonical app host. A session cookie is therefore never set or honored on the preview host, and Agent HTML there cannot reach the API same-origin. (For a deployed `LINSIGHT_PREVIEW_ORIGIN`, the reverse proxy must enforce the equivalent: route only `/preview/*` to the app on that origin.)
+- **The preview host serves only `/preview/*`.** It is the same process as the app, so it answers `/api` with `401` and `302`s every other route to the canonical app host. A session cookie is therefore never set or honored on the preview host, and Agent HTML there cannot reach the API same-origin. (For a deployed `JIUMATE_PREVIEW_ORIGIN`, the reverse proxy must enforce the equivalent: route only `/preview/*` to the app on that origin.)
 - **Path-based, not a query parameter**, so a page's relative subresources (`app.js`, `style.css`, images) resolve against the document and load under the same token.
 - **The token binds the Session, the preview host and an expiry.** The host binding is load-bearing: the same process also answers on the app origin, so `/preview/...` refuses to serve there — otherwise it would be a same-origin XSS. Access is read-only and scoped to that Session's Workspace, and the path is re-resolved server-side, so `..` and symlink escapes are rejected as before.
 - **Responses carry `Referrer-Policy: no-referrer`**, or the token-bearing URL would leak through `Referer` to every third party the page embeds — a risk that exists precisely because embeds now work.
@@ -483,8 +483,8 @@ The order the bundled Web App uses:
 
 ## Type Imports
 
-All DTO types are importable type-only from the server package's `@prismshadow/linsight-server/api` subpath:
+All DTO types are importable type-only from the server package's `@prismshadow/jiumate-server/api` subpath:
 
 ```ts
-import type { ServerEvent, SessionInfo } from "@prismshadow/linsight-server/api";
+import type { ServerEvent, SessionInfo } from "@prismshadow/jiumate-server/api";
 ```

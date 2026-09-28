@@ -7,7 +7,7 @@
  *   - DELETE /api/skins/:slug              (removes the install; its asset then 404s)
  *   - PUT    /api/me/prefs                 (activeTheme, bounds enforced)
  *
- * The manifest/palette validation itself lives in `@prismshadow/linsight-skins` and is covered
+ * The manifest/palette validation itself lives in `@prismshadow/jiumate-skins` and is covered
  * by its own unit suite; these tests pin the HTTP + prefs contract on top.
  */
 import fs from "node:fs/promises";
@@ -37,7 +37,7 @@ const COLORS = {
  * discriminator that tells the two apart — see `isDreamSkinTheme`.
  */
 const MANIFEST = {
-  schema: "linsight.skin",
+  schema: "jiumate.skin",
   schemaVersion: 1,
   id: "sakura",
   name: "樱",
@@ -480,7 +480,7 @@ describe("skins api", () => {
 
     // The manifest and the receipt are in the directory but are not assets.
     expect((await client.get("/api/skins/sakura/asset/skin.json")).status).toBe(404);
-    expect((await client.get("/api/skins/sakura/asset/.linsight-skin-receipt.json")).status).toBe(
+    expect((await client.get("/api/skins/sakura/asset/.jiumate-skin-receipt.json")).status).toBe(
       404,
     );
     // Neither is an undeclared image the directory happens to hold.

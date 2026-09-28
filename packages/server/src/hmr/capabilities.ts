@@ -21,7 +21,7 @@
  * registry.
  */
 import type { DatabaseSync } from "node:sqlite";
-import type { Resources } from "@prismshadow/linsight-core/kernel";
+import type { Resources } from "@prismshadow/jiumate-core/kernel";
 import type { ServerConfig } from "../config.js";
 import type { AuthRuntimeState } from "../auth/runtime-state.js";
 import { newAuthRuntimeState } from "../auth/runtime-state.js";
@@ -48,11 +48,11 @@ import type { LifecycleService } from "../services/lifecycle-service.js";
  *
  * `family` names whose vocabulary these interface names belong to. Two descriptors of
  * different families share nothing — the same name means something else over there — so a
- * platform that does not want to inherit linsight's interfaces changes its family and
+ * platform that does not want to inherit jiumate's interfaces changes its family and
  * inherits none of them, rather than having to disagree with each entry one by one.
  */
 export interface Interfaces {
-  /** Whose vocabulary the names below belong to; {@link LINSIGHT_FAMILY} for this build. */
+  /** Whose vocabulary the names below belong to; {@link JIUMATE_FAMILY} for this build. */
   family: string;
   /** The members a consumer of that interface depends on. */
   [name: string]: string | readonly string[];
@@ -72,7 +72,7 @@ export interface Interfaces {
 export type MembersOf<T> = readonly (keyof T & string)[];
 
 /** The family the interfaces this repo defines belong to. */
-export const LINSIGHT_FAMILY = "linsight";
+export const JIUMATE_FAMILY = "jiumate";
 
 /**
  * The interfaces the RUNTIME publishes for a platform to claim: per `runtime:*`
@@ -95,7 +95,7 @@ interface RuntimeInterfaces extends Interfaces {
 }
 
 export const RUNTIME_INTERFACES: RuntimeInterfaces = {
-  family: LINSIGHT_FAMILY,
+  family: JIUMATE_FAMILY,
   config: [
     "root",
     "host",

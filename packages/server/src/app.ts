@@ -133,7 +133,7 @@ import {
 } from "./services/preview-token.js";
 import type { PreviewTokenSigner } from "./services/preview-token.js";
 
-import type { ControlEnvContext, ProxyEnvPolicy } from "@prismshadow/linsight-core";
+import type { ControlEnvContext, ProxyEnvPolicy } from "@prismshadow/jiumate-core";
 import { declined } from "./hmr/hono-seam.js";
 import { AgentsRepo } from "./db/repos/agents.js";
 import { MembersRepo } from "./db/repos/members.js";
@@ -211,7 +211,7 @@ export interface AppDeps {
   skinCatalog: SkinCatalogService;
   /** Inspiration library (built-in cases + the admin's own). Anchored at `config.root`. */
   inspirationCatalog: InspirationCatalogService;
-  /** The admin self-update run in the background (`linsight update --yes`), with its progress for the update modal. */
+  /** The admin self-update run in the background (`jiumate update --yes`), with its progress for the update modal. */
   updateJob: UpdateJobService;
   workspaceFiles: WorkspaceFilesService;
   /** Signs/verifies short-lived Workspace preview tokens (separate preview origin). */
@@ -235,7 +235,7 @@ export interface AppDeps {
   sessionSources: SessionSources;
   /** Error persistence (shared by app.onError and various background capture points; the process-level fallback is in index.ts). */
   errors: ErrorRecorder;
-  /** Desktop mode (LINSIGHT_DESKTOP_TOKEN): one-shot login + shutdown token holder; null outside desktop mode. */
+  /** Desktop mode (JIUMATE_DESKTOP_TOKEN): one-shot login + shutdown token holder; null outside desktop mode. */
   desktop: DesktopService | null;
   /** Process lifecycle: whether a supervisor relaunches this process, and the restart trigger (the "restart to update" step). */
   lifecycle: LifecycleService;
@@ -272,7 +272,7 @@ export interface BuildDepsOverrides {
   titles?: TitleNotifier;
   /** Test double: update-check service with a stubbed fetch/clock (avoids real network calls). */
   updateCheck?: UpdateCheckService;
-  /** Tests: a job service over a scripted runner, so no real `linsight update` is ever spawned. */
+  /** Tests: a job service over a scripted runner, so no real `jiumate update` is ever spawned. */
   updateJob?: UpdateJobService;
   /** Test double: the Feishu connector's SDK factory (avoids real Lark network / long connections). */
   feishuSdk?: FeishuSdk;
@@ -440,7 +440,7 @@ export function createRuntimeApp(deps: AppDeps): Hono<AppEnv> {
   // cookie had ever been set on that host — act as the user. So the preview host serves ONLY
   // /preview/*: /api answers 401 (it never sets or honors a cookie there, closing both the
   // login and the stale-cookie paths), and everything else 302s to the canonical App host.
-  // Off when LINSIGHT_PREVIEW_ORIGIN is set: previews then
+  // Off when JIUMATE_PREVIEW_ORIGIN is set: previews then
   // use that origin rather than the loopback counterpart, so 127.0.0.1 is an ordinary App
   // access point and must not be locked down — deployments enforce the equivalent at the
   // reverse proxy (route only /preview/* to the App on the preview origin).
@@ -889,11 +889,11 @@ export function buildAppDeps(
   const controlEnv = (ctx: ControlEnvContext): Record<string, string> => {
     const token = authService.localApiToken();
     return {
-      LINSIGHT_API_URL: canonicalApiUrl(),
-      ...(token !== null ? { LINSIGHT_API_TOKEN: token } : {}),
-      LINSIGHT_PROJECT_ID: ctx.projectId,
-      LINSIGHT_AGENT_ID: ctx.agentId,
-      LINSIGHT_SESSION_ID: ctx.sessionId,
+      JIUMATE_API_URL: canonicalApiUrl(),
+      ...(token !== null ? { JIUMATE_API_TOKEN: token } : {}),
+      JIUMATE_PROJECT_ID: ctx.projectId,
+      JIUMATE_AGENT_ID: ctx.agentId,
+      JIUMATE_SESSION_ID: ctx.sessionId,
     };
   };
   const schedulesRepo = new SchedulesRepo(db);

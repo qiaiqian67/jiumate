@@ -1,5 +1,5 @@
 /**
- * `linsight update`'s pure pieces: install-kind detection over the three real layouts, package-
+ * `jiumate update`'s pure pieces: install-kind detection over the three real layouts, package-
  * manager identification for global installs, version normalisation/comparison, the installer
  * argv/env built for each combination of install dir and bundled runtime, and the decision the
  * command makes before it touches anything (planUpdate) plus its confirmation gate.
@@ -31,60 +31,60 @@ import {
 import { getMessages } from "../src/i18n.js";
 
 // POSIX-only: the fixtures are POSIX install layouts and detectInstall normalizes through
-// path.* (backslashes on Windows) — where in-place `linsight update` is refused anyway
+// path.* (backslashes on Windows) — where in-place `jiumate update` is refused anyway
 // (the documented Windows upgrade path is re-running install.ps1).
 describe.skipIf(process.platform === "win32")(
   "detectInstall (how this CLI was installed, from its own real path)",
   () => {
     it("tarball: <installDir>/lib/dist/index.js, the layout install.sh unpacks", () => {
-      expect(detectInstall("/home/me/.linsight/lib/dist/index.js")).toEqual({
+      expect(detectInstall("/home/me/.jiumate/lib/dist/index.js")).toEqual({
         kind: "tarball",
-        installDir: "/home/me/.linsight",
+        installDir: "/home/me/.jiumate",
       });
     });
 
-    it("tarball: a non-default LINSIGHT_INSTALL_DIR is read off the path, not the environment", () => {
-      expect(detectInstall("/opt/tools/linsight/lib/dist/index.js")).toEqual({
+    it("tarball: a non-default JIUMATE_INSTALL_DIR is read off the path, not the environment", () => {
+      expect(detectInstall("/opt/tools/jiumate/lib/dist/index.js")).toEqual({
         kind: "tarball",
-        installDir: "/opt/tools/linsight",
+        installDir: "/opt/tools/jiumate",
       });
     });
 
     it("npm global: npm's own prefix layout", () => {
       expect(
-        detectInstall("/usr/local/lib/node_modules/@prismshadow/linsight-cli/dist/index.js"),
+        detectInstall("/usr/local/lib/node_modules/@prismshadow/jiumate-cli/dist/index.js"),
       ).toEqual({ kind: "npm", globalRoot: "/usr/local/lib/node_modules" });
     });
 
     it("npm global: pnpm's global store, through the .pnpm virtual dir", () => {
       const p =
-        "/home/me/.local/share/pnpm/global/5/node_modules/.pnpm/@prismshadow+linsight-cli@0.1.1/node_modules/@prismshadow/linsight-cli/dist/index.js";
+        "/home/me/.local/share/pnpm/global/5/node_modules/.pnpm/@prismshadow+jiumate-cli@0.1.1/node_modules/@prismshadow/jiumate-cli/dist/index.js";
       const info = detectInstall(p);
       expect(info.kind).toBe("npm");
       expect(info.globalRoot).toContain(".pnpm");
     });
 
     it("source checkout: the built dist inside the monorepo", () => {
-      expect(detectInstall("/home/me/code/linsight/packages/cli/dist/index.js")).toEqual({
+      expect(detectInstall("/home/me/code/jiumate/packages/cli/dist/index.js")).toEqual({
         kind: "source",
       });
     });
 
     it("source checkout: tsx running src directly", () => {
-      expect(detectInstall("/home/me/code/linsight/packages/cli/src/index.ts")).toEqual({
+      expect(detectInstall("/home/me/code/jiumate/packages/cli/src/index.ts")).toEqual({
         kind: "source",
       });
     });
 
     it("a checkout wins over the tarball shape, so a repo under a lib/ dir is never mistaken for an install", () => {
-      expect(detectInstall("/srv/lib/linsight/packages/cli/dist/index.js")).toEqual({
+      expect(detectInstall("/srv/lib/jiumate/packages/cli/dist/index.js")).toEqual({
         kind: "source",
       });
     });
 
     it("anything else is unknown rather than guessed", () => {
       expect(detectInstall("/random/place/index.js").kind).toBe("unknown");
-      expect(detectInstall("/home/me/.linsight/bin/linsight").kind).toBe("unknown");
+      expect(detectInstall("/home/me/.jiumate/bin/jiumate").kind).toBe("unknown");
     });
   },
 );
@@ -114,19 +114,19 @@ describe("globalInstallCommand", () => {
   it("uses each manager's own global-install spelling", () => {
     expect(globalInstallCommand("pnpm", "0.1.2")).toEqual({
       command: "pnpm",
-      args: ["add", "-g", "@prismshadow/linsight-cli@0.1.2"],
+      args: ["add", "-g", "@prismshadow/jiumate-cli@0.1.2"],
     });
     expect(globalInstallCommand("npm", "0.1.2")).toEqual({
       command: "npm",
-      args: ["install", "-g", "@prismshadow/linsight-cli@0.1.2"],
+      args: ["install", "-g", "@prismshadow/jiumate-cli@0.1.2"],
     });
     expect(globalInstallCommand("yarn", "0.1.2")).toEqual({
       command: "yarn",
-      args: ["global", "add", "@prismshadow/linsight-cli@0.1.2"],
+      args: ["global", "add", "@prismshadow/jiumate-cli@0.1.2"],
     });
     expect(globalInstallCommand("bun", "0.1.2")).toEqual({
       command: "bun",
-      args: ["add", "-g", "@prismshadow/linsight-cli@0.1.2"],
+      args: ["add", "-g", "@prismshadow/jiumate-cli@0.1.2"],
     });
   });
 });
@@ -172,19 +172,19 @@ describe("normalizeVersion / compareVersions", () => {
 describe("installerUrl", () => {
   it("resolves the latest release when no version is pinned", () => {
     expect(installerUrl()).toBe(
-      "https://github.com/qiaiqian67/linsight/releases/latest/download/install.sh",
+      "https://github.com/qiaiqian67/jiumate/releases/latest/download/install.sh",
     );
   });
   it("pins a tag, normalising the v prefix", () => {
-    const expected = "https://github.com/qiaiqian67/linsight/releases/download/v0.1.2/install.sh";
+    const expected = "https://github.com/qiaiqian67/jiumate/releases/download/v0.1.2/install.sh";
     expect(installerUrl("0.1.2")).toBe(expected);
     expect(installerUrl("v0.1.2")).toBe(expected);
   });
 });
 
 describe("release source selection", () => {
-  const ossOrigin = "https://linsight-releases.oss-cn-beijing.aliyuncs.com";
-  const githubApi = "https://api.github.com/repos/qiaiqian67/linsight/releases/latest";
+  const ossOrigin = "https://jiumate-releases.oss-cn-beijing.aliyuncs.com";
+  const githubApi = "https://api.github.com/repos/qiaiqian67/jiumate/releases/latest";
   const manifest = {
     schemaVersion: 1,
     tag: "v0.2.1",
@@ -305,8 +305,8 @@ describe("release source selection", () => {
       },
       {
         source: "github",
-        baseUrl: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
-        url: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0/install.sh",
+        baseUrl: "https://github.com/qiaiqian67/jiumate/releases/download/v0.2.0",
+        url: "https://github.com/qiaiqian67/jiumate/releases/download/v0.2.0/install.sh",
       },
     ]);
   });
@@ -348,73 +348,73 @@ describe("release source selection", () => {
 
 describe("buildInstallerInvocation (preserves the shape of the install being upgraded)", () => {
   const base = {
-    scriptPath: "/tmp/linsight-install-1.sh",
-    defaultInstallDir: "/home/me/.linsight",
+    scriptPath: "/tmp/jiumate-install-1.sh",
+    defaultInstallDir: "/home/me/.jiumate",
   };
 
   it("default dir + bundled runtime: no flags, no env", () => {
     expect(
       buildInstallerInvocation({
         ...base,
-        installDir: "/home/me/.linsight",
+        installDir: "/home/me/.jiumate",
         hasBundledNode: true,
       }),
-    ).toEqual({ args: ["/tmp/linsight-install-1.sh"], env: {} });
+    ).toEqual({ args: ["/tmp/jiumate-install-1.sh"], env: {} });
   });
 
   it("no bundled node/ means the universal package: pass --universal so the runtime is not silently added", () => {
     expect(
       buildInstallerInvocation({
         ...base,
-        installDir: "/home/me/.linsight",
+        installDir: "/home/me/.jiumate",
         hasBundledNode: false,
       }),
-    ).toEqual({ args: ["/tmp/linsight-install-1.sh", "--universal"], env: {} });
+    ).toEqual({ args: ["/tmp/jiumate-install-1.sh", "--universal"], env: {} });
   });
 
   it("a non-default install dir is passed through, or the upgrade would relocate the install", () => {
     expect(
       buildInstallerInvocation({
         ...base,
-        installDir: "/opt/linsight",
+        installDir: "/opt/jiumate",
         hasBundledNode: true,
       }),
     ).toEqual({
-      args: ["/tmp/linsight-install-1.sh"],
-      env: { LINSIGHT_INSTALL_DIR: "/opt/linsight" },
+      args: ["/tmp/jiumate-install-1.sh"],
+      env: { JIUMATE_INSTALL_DIR: "/opt/jiumate" },
     });
   });
 
-  it("a pinned version becomes LINSIGHT_VERSION, always v-prefixed for the release tag", () => {
+  it("a pinned version becomes JIUMATE_VERSION, always v-prefixed for the release tag", () => {
     expect(
       buildInstallerInvocation({
         ...base,
-        installDir: "/home/me/.linsight",
+        installDir: "/home/me/.jiumate",
         hasBundledNode: true,
         version: "0.1.2",
       }).env,
-    ).toEqual({ LINSIGHT_VERSION: "v0.1.2" });
+    ).toEqual({ JIUMATE_VERSION: "v0.1.2" });
     expect(
       buildInstallerInvocation({
         ...base,
-        installDir: "/home/me/.linsight",
+        installDir: "/home/me/.jiumate",
         hasBundledNode: true,
         version: "v0.1.2",
       }).env,
-    ).toEqual({ LINSIGHT_VERSION: "v0.1.2" });
+    ).toEqual({ JIUMATE_VERSION: "v0.1.2" });
   });
 
   it("all three at once: custom dir, universal package, pinned version", () => {
     expect(
       buildInstallerInvocation({
         ...base,
-        installDir: "/opt/linsight",
+        installDir: "/opt/jiumate",
         hasBundledNode: false,
         version: "v0.2.0",
       }),
     ).toEqual({
-      args: ["/tmp/linsight-install-1.sh", "--universal"],
-      env: { LINSIGHT_INSTALL_DIR: "/opt/linsight", LINSIGHT_VERSION: "v0.2.0" },
+      args: ["/tmp/jiumate-install-1.sh", "--universal"],
+      env: { JIUMATE_INSTALL_DIR: "/opt/jiumate", JIUMATE_VERSION: "v0.2.0" },
     });
   });
 
@@ -422,18 +422,18 @@ describe("buildInstallerInvocation (preserves the shape of the install being upg
     expect(
       buildInstallerInvocation({
         ...base,
-        installDir: "/home/me/.linsight",
+        installDir: "/home/me/.jiumate",
         hasBundledNode: true,
         version: "0.2.0",
-        downloadBaseUrl: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
-        downloadFallbackBaseUrl: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
+        downloadBaseUrl: "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
+        downloadFallbackBaseUrl: "https://github.com/qiaiqian67/jiumate/releases/download/v0.2.0",
       }).env,
     ).toEqual({
-      LINSIGHT_VERSION: "v0.2.0",
-      LINSIGHT_DOWNLOAD_BASE_URL:
-        "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
-      LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL:
-        "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
+      JIUMATE_VERSION: "v0.2.0",
+      JIUMATE_DOWNLOAD_BASE_URL:
+        "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
+      JIUMATE_DOWNLOAD_FALLBACK_BASE_URL:
+        "https://github.com/qiaiqian67/jiumate/releases/download/v0.2.0",
     });
   });
 
@@ -441,29 +441,29 @@ describe("buildInstallerInvocation (preserves the shape of the install being upg
     expect(
       buildInstallerInvocation({
         ...base,
-        installDir: "/home/me/.linsight",
+        installDir: "/home/me/.jiumate",
         hasBundledNode: true,
         version: "0.2.0",
         downloadBaseUrl: "",
         downloadFallbackBaseUrl: "",
       }).env,
     ).toEqual({
-      LINSIGHT_VERSION: "v0.2.0",
-      LINSIGHT_DOWNLOAD_BASE_URL: "",
-      LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL: "",
+      JIUMATE_VERSION: "v0.2.0",
+      JIUMATE_DOWNLOAD_BASE_URL: "",
+      JIUMATE_DOWNLOAD_FALLBACK_BASE_URL: "",
     });
   });
 
   it("keeps explicit mirrors strict but delegates non-explicit payload source selection", () => {
     const candidate = {
       source: "oss" as const,
-      baseUrl: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
-      url: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0/install.sh",
-      fallbackBaseUrl: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
+      baseUrl: "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
+      url: "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0/install.sh",
+      fallbackBaseUrl: "https://github.com/qiaiqian67/jiumate/releases/download/v0.2.0",
     };
     expect(payloadSourceEnv(candidate, true)).toEqual({
-      downloadBaseUrl: "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
-      downloadFallbackBaseUrl: "https://github.com/qiaiqian67/linsight/releases/download/v0.2.0",
+      downloadBaseUrl: "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.2.0",
+      downloadFallbackBaseUrl: "https://github.com/qiaiqian67/jiumate/releases/download/v0.2.0",
     });
     expect(payloadSourceEnv(candidate, false)).toEqual({
       downloadBaseUrl: "",
@@ -494,11 +494,11 @@ describe("planUpdate (what the command decides before it touches anything)", () 
   const base = {
     current: "0.1.1",
     target: "0.1.2",
-    modulePath: "/home/me/.linsight/lib/dist/index.js",
+    modulePath: "/home/me/.jiumate/lib/dist/index.js",
     platform: "linux",
-    defaultInstallDir: "/home/me/.linsight",
+    defaultInstallDir: "/home/me/.jiumate",
   };
-  const tarball = { kind: "tarball", installDir: "/home/me/.linsight" } as const;
+  const tarball = { kind: "tarball", installDir: "/home/me/.jiumate" } as const;
   const npmGlobal = { kind: "npm", globalRoot: "/usr/local/lib/node_modules" } as const;
 
   it("--check reports the comparison and never upgrades, even when one is available", () => {
@@ -559,7 +559,7 @@ describe("planUpdate (what the command decides before it touches anything)", () 
       action: "npm",
       manager: "npm",
       command: "npm",
-      args: ["install", "-g", "@prismshadow/linsight-cli@0.1.2"],
+      args: ["install", "-g", "@prismshadow/jiumate-cli@0.1.2"],
     });
   });
 
@@ -575,15 +575,15 @@ describe("planUpdate (what the command decides before it touches anything)", () 
   it("a tarball install re-runs the installer at the dir it was detected in", () => {
     expect(planUpdate({ ...base, install: tarball })).toEqual({
       action: "tarball",
-      installDir: "/home/me/.linsight",
+      installDir: "/home/me/.jiumate",
     });
     expect(
-      planUpdate({ ...base, install: { kind: "tarball", installDir: "/opt/linsight" } }),
-    ).toEqual({ action: "tarball", installDir: "/opt/linsight" });
+      planUpdate({ ...base, install: { kind: "tarball", installDir: "/opt/jiumate" } }),
+    ).toEqual({ action: "tarball", installDir: "/opt/jiumate" });
     // No installDir on the info (shouldn't happen, but the fallback is the default install dir).
     expect(planUpdate({ ...base, install: { kind: "tarball" } })).toEqual({
       action: "tarball",
-      installDir: "/home/me/.linsight",
+      installDir: "/home/me/.jiumate",
     });
   });
 
@@ -600,7 +600,7 @@ describe("planUpdate (what the command decides before it touches anything)", () 
     expect(planUpdate({ ...base, platform: "win32", install: npmGlobal })).toEqual({
       action: "refuse",
       reason: "windows-global",
-      command: "npm install -g @prismshadow/linsight-cli@0.1.2",
+      command: "npm install -g @prismshadow/jiumate-cli@0.1.2",
     });
   });
 

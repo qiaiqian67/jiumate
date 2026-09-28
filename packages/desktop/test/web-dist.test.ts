@@ -15,13 +15,13 @@ describe("webDistFor", () => {
     expect(webDistFor({ isPackaged: false, appPath: "/src/packages/desktop", env: {} })).toBeNull();
   });
 
-  it("an explicit LINSIGHT_WEB_DIST wins in both forms; blank counts as unset", () => {
+  it("an explicit JIUMATE_WEB_DIST wins in both forms; blank counts as unset", () => {
     for (const isPackaged of [true, false]) {
-      expect(
-        webDistFor({ isPackaged, appPath: "/x", env: { LINSIGHT_WEB_DIST: "/srv/web" } }),
-      ).toBe("/srv/web");
+      expect(webDistFor({ isPackaged, appPath: "/x", env: { JIUMATE_WEB_DIST: "/srv/web" } })).toBe(
+        "/srv/web",
+      );
     }
-    expect(webDistFor({ isPackaged: true, appPath: "/x", env: { LINSIGHT_WEB_DIST: "  " } })).toBe(
+    expect(webDistFor({ isPackaged: true, appPath: "/x", env: { JIUMATE_WEB_DIST: "  " } })).toBe(
       path.join("/x", "web-dist"),
     );
   });

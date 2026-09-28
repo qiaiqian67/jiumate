@@ -29,7 +29,7 @@ import type {
   MessagingBindingInfo,
   WeChatBindingInfo,
   WeChatScanPollResponse,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { apiErrorText } from "../../lib/api-error";
 import { S } from "../../lib/strings";

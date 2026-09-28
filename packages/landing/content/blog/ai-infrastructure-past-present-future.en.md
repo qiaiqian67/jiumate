@@ -2,7 +2,7 @@
 title: "AI Infrastructure: Past, Present, and Future"
 date: 2026-07-22
 category: perspectives
-excerpt: PyTorch, vLLM, Ollama and LlamaFactory were all designed for a human who reads the docs, watches the logs and remembers what is already running. Increasingly the thing driving them is an agent. Here is what changes — and what Linsight ships today to make it work.
+excerpt: PyTorch, vLLM, Ollama and LlamaFactory were all designed for a human who reads the docs, watches the logs and remembers what is already running. Increasingly the thing driving them is an agent. Here is what changes — and what JiuMate ships today to make it work.
 ---
 
 The infrastructure we use to build AI was designed for people. PyTorch assumes someone reading a tutorial. vLLM assumes an engineer who knows how much VRAM the card has. LlamaFactory assumes a researcher who will read the training curve and decide whether it is going well. Ollama assumes you remember whether the service is already running.
@@ -35,7 +35,7 @@ Stripe measured what this costs when they benchmarked whether agents could build
 
 The good news is that AI infrastructure is, by accident, better suited to agents than most software. It is already command-line tools, YAML configs and Python files — text in, text out, composable. There is no need to wrap `nvidia-smi` in anything. An agent with a shell can already drive the entire stack.
 
-That is why Linsight exposes the shell as its universal interface — `exec_command` is the whole filesystem and process interface, and there are no separate file tools. Driving vLLM is not an integration; it is a command.
+That is why JiuMate exposes the shell as its universal interface — `exec_command` is the whole filesystem and process interface, and there are no separate file tools. Driving vLLM is not an integration; it is a command.
 
 ### 2.2 What actually needs building: the operating knowledge
 
@@ -52,7 +52,7 @@ What is in them is more interesting than that they exist, because each one encod
 1. **Check the world before changing it.** The `ollama` skill has the agent run `ollama --version` and `ollama ps` first, and then states the rule plainly: if port 11434 is already serving, reuse that instance — *never kill an existing Ollama process*. A human knows not to kill their colleague's server. An agent has to be told.
 2. **Preflight the constraint that actually binds.** The `vllm` skill confirms hardware with `nvidia-smi` (or `rocm-smi` on AMD) before anything else, because model size and context length are bounded by VRAM. The buried sentence in the tutorial becomes step zero.
 3. **Verify, do not assume.** Both serving skills end with a real check — `curl http://localhost:8000/v1/models` — before the job counts as done. This is the direct answer to the Stripe failure mode: the definition of success is an observation, not the absence of a crash.
-4. **Finish the job.** A served model is invisible to Linsight until it is registered, so the skills close the loop with `linsight config model add --client-type openai --base-url ...` and then confirm with `linsight config model list`. Starting a server is not the task. Having a usable model is.
+4. **Finish the job.** A served model is invisible to JiuMate until it is registered, so the skills close the loop with `jiumate config model add --client-type openai --base-url ...` and then confirm with `jiumate config model list`. Starting a server is not the task. Having a usable model is.
 5. **Ask instead of guessing.** Every skill opens the same way: if the request names a skill but no concrete goal, ask first and run nothing. Engine choice, for instance, follows the user's preference rather than a hardcoded default — vLLM for high-throughput GPU serving, Ollama as the simple default and the only option on macOS or CPU-only machines.
 
 ### 2.3 Two runtime pieces, because AI work is not shaped like web work
@@ -84,13 +84,13 @@ AI infrastructure did not need to be reinvented for agents — it was already te
 That is what our skills encode, on top of a shell, a two-phase process model for long jobs, and errors that come back as readable text.
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight run -m "Serve Qwen3.5-0.8B with Ollama and register it with Linsight"
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate run -m "Serve Qwen3.5-0.8B with Ollama and register it with JiuMate"
 ```
 
 ---
 
-- **Docs**: [Skills](https://linsight.ooo/docs/skills) · [Tools & Approval](https://linsight.ooo/docs/tools) · [Models & Providers](https://linsight.ooo/docs/models)
-- **Community**: [GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **Docs**: [Skills](https://jiumate.ooo/docs/skills) · [Tools & Approval](https://jiumate.ooo/docs/tools) · [Models & Providers](https://jiumate.ooo/docs/models)
+- **Community**: [GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **Sources**: [vLLM](https://docs.vllm.ai/) · [Ollama](https://ollama.com/) · [LlamaFactory](https://github.com/hiyouga/LlamaFactory) · [Stripe, Can AI agents build real Stripe integrations?](https://stripe.com/blog/can-ai-agents-build-real-stripe-integrations) · [Anthropic, Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)

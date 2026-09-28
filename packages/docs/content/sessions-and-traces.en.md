@@ -3,7 +3,7 @@ title: Sessions & Traces
 description: The six-level run model, local data directory layout, Trace file design, and Session recovery.
 ---
 
-All Linsight runtime data lives on the local file system: configuration is editable files, history is append-only Traces. This page defines each level of the run model and explains how the Trace serves as history, recovery source, and statistics source at once.
+All JiuMate runtime data lives on the local file system: configuration is editable files, history is append-only Traces. This page defines each level of the run model and explains how the Trace serves as history, recovery source, and statistics source at once.
 
 ## Run model
 
@@ -22,7 +22,7 @@ See the [Architecture](/architecture) page for how the levels cooperate, and the
 
 ## Data layout
 
-The data root is the `LINSIGHT_HOME` environment variable, defaulting to `~/.linsight/data`. The layout is defined in one place, `packages/core/src/state/paths.ts`:
+The data root is the `JIUMATE_HOME` environment variable, defaulting to `~/.jiumate/data`. The layout is defined in one place, `packages/core/src/state/paths.ts`:
 
 ```text
 <root>/<project>/
@@ -64,7 +64,7 @@ See `packages/core/src/trace/writer.ts` for the implementation.
 The head of a Trace (illustrative; one OmniMessage envelope per line):
 
 ```jsonl
-{"timestamp":"2026-07-18T03:10:22.531Z","type":"session_meta","payload":{"session_id":"session-2026-07-18-11-10-22-3f8a1c2d","provider":"deepseek","model_id":"deepseek-v4-pro","model_context_window":1000000,"system_prompt":"…","tools":[…],"agent_state":"/home/u/.linsight/data/default_project/agents/default_agent/agent_state","workspace":"/home/u/work"}}
+{"timestamp":"2026-07-18T03:10:22.531Z","type":"session_meta","payload":{"session_id":"session-2026-07-18-11-10-22-3f8a1c2d","provider":"deepseek","model_id":"deepseek-v4-pro","model_context_window":1000000,"system_prompt":"…","tools":[…],"agent_state":"/home/u/.jiumate/data/default_project/agents/default_agent/agent_state","workspace":"/home/u/work"}}
 {"timestamp":"…","type":"event_msg","payload":{"type":"request_begin"}}
 {"timestamp":"…","type":"model_msg","payload":{"type":"text","role":"user","text":"Create hello.txt"}}
 {"timestamp":"…","type":"model_msg","payload":{"type":"tool_call","role":"assistant","name":"exec_command","arguments":"{\"cmd\":\"printf hi > hello.txt\"}","tool_call_id":"call_0"}}

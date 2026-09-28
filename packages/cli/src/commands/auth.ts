@@ -1,10 +1,10 @@
 /**
- * `linsight auth` — signing in to a Linsight server from a terminal.
+ * `jiumate auth` — signing in to a JiuMate server from a terminal.
  *
- *   linsight auth login  [--server <url>] [--user-id <id>] [--password <pw>] [--print] [--root <dir>]
- *   linsight auth status [--root <dir>]
- *   linsight auth logout [--root <dir>]
- *   linsight auth token  [--user-id <id>] [--ttl-seconds <n>] [--root <dir>]
+ *   jiumate auth login  [--server <url>] [--user-id <id>] [--password <pw>] [--print] [--root <dir>]
+ *   jiumate auth status [--root <dir>]
+ *   jiumate auth logout [--root <dir>]
+ *   jiumate auth token  [--user-id <id>] [--ttl-seconds <n>] [--root <dir>]
  *
  * `login` takes a password and asks a RUNNING server, so it works against a remote URL too.
  * `token` takes none: it mints from the data root on THIS machine, authorized by being able
@@ -12,10 +12,10 @@
  * controller reaching a managed machine over ssh (`--mark`).
  *
  * The session lands in `<root>/cli-session.json` (0600) rather than a shell's history.
- * Docs: /docs/cli § "linsight auth".
+ * Docs: /docs/cli § "jiumate auth".
  */
-import { mintApiToken } from "@prismshadow/linsight-server/auth-token";
-import { liveServerLock } from "@prismshadow/linsight-server/lock";
+import { mintApiToken } from "@prismshadow/jiumate-server/auth-token";
+import { liveServerLock } from "@prismshadow/jiumate-server/lock";
 import type { Command } from "commander";
 import {
   call,
@@ -31,7 +31,7 @@ import { resolveRootOption } from "../root-option.js";
 import type { Messages } from "../i18n.js";
 
 /** Must match the server's SESSION_COOKIE — it is the name a login's Set-Cookie carries. */
-const SESSION_COOKIE = "linsight_session";
+const SESSION_COOKIE = "jiumate_session";
 
 /** The built-in account every server has; on a personal or desktop server it is the only one. */
 const DEFAULT_USER = "admin";
@@ -41,7 +41,7 @@ const DEFAULT_USER = "admin";
  * anchors on this rather than on position, so nothing the shell prints on its own can be
  * mistaken for a credential.
  */
-export const TOKEN_MARK = "---linsight-auth-token---";
+export const TOKEN_MARK = "---jiumate-auth-token---";
 
 /**
  * One line for the terminal out of text the TARGET SERVER chose: whitespace collapsed, C0
@@ -116,7 +116,7 @@ export function registerAuthCommand(program: Command, t: Messages): void {
         if (server === null) return fail(t.auth.noServer(root));
         // A script cannot answer a prompt, so a non-interactive password suppresses both
         // questions; the account is only asked for when the password will be too.
-        const given = opts.password ?? process.env.LINSIGHT_PASSWORD;
+        const given = opts.password ?? process.env.JIUMATE_PASSWORD;
         const userId =
           opts.userId ??
           (given === undefined && process.stdin.isTTY === true
@@ -221,11 +221,11 @@ export function registerAuthCommand(program: Command, t: Messages): void {
       }
       const root = resolveRootOption(opts.root);
       // A session row written straight into web.db (auth-token.ts); no server needed, and safe
-      // while one runs. LINSIGHT_WEB_DB honored as everywhere else, or the token would be
+      // while one runs. JIUMATE_WEB_DB honored as everywhere else, or the token would be
       // minted into a file the live server never reads.
       const result = mintApiToken(root, {
         userId: opts.userId,
-        ...(process.env.LINSIGHT_WEB_DB ? { dbPath: process.env.LINSIGHT_WEB_DB } : {}),
+        ...(process.env.JIUMATE_WEB_DB ? { dbPath: process.env.JIUMATE_WEB_DB } : {}),
         ...(ttl === undefined ? {} : { ttlMs: ttl * 1000 }),
       });
       if (result.outcome === "no_server") {
@@ -246,7 +246,7 @@ export function registerAuthCommand(program: Command, t: Messages): void {
           expiresAt: result.expiresAt,
         });
       }
-      // Bare so `TOKEN=$(linsight auth token)` works. `--mark` prefixes a fixed line for a
+      // Bare so `TOKEN=$(jiumate auth token)` works. `--mark` prefixes a fixed line for a
       // caller parsing this out of a shell whose banner would otherwise be the last line.
       if (opts.mark) process.stdout.write(TOKEN_MARK + "\n");
       process.stdout.write(result.token + "\n");

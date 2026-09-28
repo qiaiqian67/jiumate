@@ -13,7 +13,7 @@
  */
 import { useEffect, useRef } from "react";
 import { createStore, useStore } from "zustand";
-import type { UpdateJobStatus } from "@prismshadow/linsight-server/api";
+import type { UpdateJobStatus } from "@prismshadow/jiumate-server/api";
 import * as api from "../api/endpoints";
 import { S } from "./strings";
 import { apiErrorText } from "./api-error";
@@ -335,7 +335,7 @@ export function useUpdateFlowOwner(): void {
       // The deadline is checked on every tick, not only on a failed one. A poll that keeps
       // SUCCEEDING is the case that hangs: the restart window fell between two ticks and
       // the relaunched server reports the same version (the update was already installed,
-      // so `linsight update` only reinstalled it), or the restart never happened at all —
+      // so `jiumate update` only reinstalled it), or the restart never happened at all —
       // `sawDown` then stays false and nothing here would ever end the wait.
       if (Date.now() - startedAt > RESTART_TIMEOUT_MS) {
         giveUp();

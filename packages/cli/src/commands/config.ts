@@ -1,16 +1,16 @@
 /**
- * `linsight config` — manages a Project's model credentials, default model, model list,
+ * `jiumate config` — manages a Project's model credentials, default model, model list,
  * Agent-level vault environment variables, and UI language.
  *
- *   linsight config model add --model-id <upstream id> --provider <group> [--api-key <key>] [--context-window <n>] [--max-tokens <n>] [--set-default] [--root <dir>]
- *   linsight config model default --model-id <upstream id> --provider <group> [--root <dir>]
- *   linsight config model vision --model-id <upstream id> --provider <group> [--root <dir>]
- *   linsight config model list [--root <dir>]
- *   linsight config model remove --model-id <upstream id> --provider <group> [--root <dir>]
- *   linsight config vault set --key <name> --value <value> [--agent-id <id>] [--root <dir>]
- *   linsight config vault list [--agent-id <id>] [--root <dir>]
- *   linsight config vault remove --key <name> [--agent-id <id>] [--root <dir>]
- *   linsight config lang <en|zh>
+ *   jiumate config model add --model-id <upstream id> --provider <group> [--api-key <key>] [--context-window <n>] [--max-tokens <n>] [--set-default] [--root <dir>]
+ *   jiumate config model default --model-id <upstream id> --provider <group> [--root <dir>]
+ *   jiumate config model vision --model-id <upstream id> --provider <group> [--root <dir>]
+ *   jiumate config model list [--root <dir>]
+ *   jiumate config model remove --model-id <upstream id> --provider <group> [--root <dir>]
+ *   jiumate config vault set --key <name> --value <value> [--agent-id <id>] [--root <dir>]
+ *   jiumate config vault list [--agent-id <id>] [--root <dir>]
+ *   jiumate config vault remove --key <name> [--agent-id <id>] [--root <dir>]
+ *   jiumate config lang <en|zh>
  *
  * `--model-id` always takes the **upstream id** (the request id sent to AgentHub verbatim),
  * which together with `--provider` forms a `(provider, model_id)` paired reference —
@@ -23,10 +23,10 @@
  * found in models; `model remove` reports the same condition itself, since removal is
  * idempotent in core, and clears the default / vision pointers that named the removed entry.
  * `--root` specifies the data root directory (priority: option >
- * LINSIGHT_HOME > ~/.linsight/data). The UI language is controlled by the LINSIGHT_LANG
+ * JIUMATE_HOME > ~/.jiumate/data). The UI language is controlled by the JIUMATE_LANG
  * environment variable; `config lang` writes it into the shell startup file and restarts
  * the shell to take effect.
- * Docs: /docs/cli § "linsight config".
+ * Docs: /docs/cli § "jiumate config".
  */
 import { homedir } from "node:os";
 import path from "node:path";
@@ -52,7 +52,7 @@ import {
   setDefaultModel,
   setVaultEntry,
   setVisionModel,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import { parseApprovalAnswer } from "../approval.js";
 import { resolveRootOption } from "../root-option.js";
 import { getMessages, maskApiKey, type Messages } from "../i18n.js";

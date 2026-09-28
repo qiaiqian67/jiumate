@@ -46,10 +46,10 @@ describe("selectDownloadSource", () => {
 
 const TAG = "v1.2.3";
 const MANIFEST = [
-  `linsight-release-download-manifest\t1\t${TAG}`,
+  `jiumate-release-download-manifest\t1\t${TAG}`,
   "probe\tsmall\tprobe-64k.bin\t65536\t" + "a".repeat(64),
   "probe\tlarge\tprobe-1m.bin\t1048576\t" + "b".repeat(64),
-  "asset\tlinsight-desktop-win32-x64.exe\t104857600\t" + "c".repeat(64),
+  "asset\tjiumate-desktop-win32-x64.exe\t104857600\t" + "c".repeat(64),
   "",
 ].join("\n");
 

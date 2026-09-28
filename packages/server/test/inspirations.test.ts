@@ -9,7 +9,7 @@
  *   - GET    /api/inspirations/:id/asset/:name (the cover, and nothing else)
  *   - PUT    /api/me/prefs                     (inspirationFavorites, bounds enforced)
  *
- * The manifest/coercion rules themselves live in `@prismshadow/linsight-inspirations` and are
+ * The manifest/coercion rules themselves live in `@prismshadow/jiumate-inspirations` and are
  * covered by its own unit suite; these tests pin the HTTP contract and the merge on top — in
  * particular that the built-in half cannot be written to, and that a non-admin cannot write at all.
  */

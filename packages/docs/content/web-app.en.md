@@ -3,13 +3,13 @@ title: Web App Guide
 description: A page-by-page guide to the Web App — login, chat, Agent management, models, usage, and traces.
 ---
 
-Linsight ships with a ready-to-use Web App: multi-user login, streaming chat, Agent configuration, model and usage management all happen in the browser. This guide walks through the app page by page. For installation and first launch, see the [Quickstart](/quickstart).
+JiuMate ships with a ready-to-use Web App: multi-user login, streaming chat, Agent configuration, model and usage management all happen in the browser. This guide walks through the app page by page. For installation and first launch, see the [Quickstart](/quickstart).
 
 ## Source layout
 
 ```text
 packages/web/src
-├── api/          # fetch wrapper · one function per API (DTOs type-only from @prismshadow/linsight-server/api) · SSE wrapper
+├── api/          # fetch wrapper · one function per API (DTOs type-only from @prismshadow/jiumate-server/api) · SSE wrapper
 ├── state/        # auth / project / sessions / theme / locale contexts
 ├── lib/omni/     # OmniMessage stream → view-model reducer; connect-first + dedup stream controller
 ├── components/   # ui primitives (modal / drawer / select …) and the app layout
@@ -19,11 +19,11 @@ packages/web/src
 ## Startup and Login
 
 ```bash
-linsight web
+jiumate web
 # open http://127.0.0.1:7364
 ```
 
-The initial account is `admin`, and it starts with no password of its own: the server prints a first-login link in a framed notice on every start until one is set, and opening that link signs the browser in to set it. The link stays usable — and identical — until the password exists. There is no self-registration: accounts are created by an admin on the user-management page, and every new user automatically gets an independent initial Project named `<userId>-default_project`. While the initial password is still in use, a banner prompts the user to change it. A forgotten password is reset by the admin on the user-management page; a forgotten **admin** password is reset offline with `linsight server reset-admin-password` (server stopped), which returns the account to the unclaimed state and brings the first-login link back.
+The initial account is `admin`, and it starts with no password of its own: the server prints a first-login link in a framed notice on every start until one is set, and opening that link signs the browser in to set it. The link stays usable — and identical — until the password exists. There is no self-registration: accounts are created by an admin on the user-management page, and every new user automatically gets an independent initial Project named `<userId>-default_project`. While the initial password is still in use, a banner prompts the user to change it. A forgotten password is reset by the admin on the user-management page; a forgotten **admin** password is reset offline with `jiumate server reset-admin-password` (server stopped), which returns the account to the unclaimed state and brings the first-login link back.
 
 Logins persist for 30 days with sliding renewal; an admin password reset invalidates all of that user's login sessions.
 
@@ -167,7 +167,7 @@ Two numbers are deliberately not exposed. The per-message file **count** stays a
 
 Updating works the way an app updater does, from one dialog. Two entries open it: the row directly under **System settings** in the sidebar user menu, and the small "New version available" superscript on the new-chat page's version line (`vX.Y.Z · Last updated Jul 26` — the date is stamped into the build by the release workflow and shown without any network access; dev builds and releases predating the stamping, v0.1.2 and earlier, have no date). The row names where things stand — "Check for updates", "Checking…", "New version vX available", "Downloading vX 42%", "Restart to update to vX" — with the running version muted on its right, and every state opens the dialog.
 
-The dialog walks the update through: opening it with nothing known runs a check (the app also checks GitHub once per load, and the manual check bypasses the cached result); a newer release is offered with its release-notes link and a **Download and update** button, and nothing is fetched until you press it; a progress bar follows the download, and **Continue in background** closes the dialog without cancelling anything — the row keeps showing the percentage, a dot on the user button appears once the release is ready, and a toast announces it; then **Restart and update** finishes the job. On a server the download is `linsight update` running in the background (the data directory is untouched), the bar reads the installer's own progress, and the restart is real when the service runs under `linsight web` or `linsight server`, which supervise it: the service comes back on the new release and the page reloads by itself. A service started some other way is told to restart by hand instead. Non-admins can read the release notes but cannot run the update. A failed download shows the update command's own output and offers a retry; an install that cannot update itself (a source checkout, an unrecognized layout, Windows) says why. Set `LINSIGHT_UPDATE_CHECK=off` to disable the update check entirely — see the [Configuration Reference](/configuration).
+The dialog walks the update through: opening it with nothing known runs a check (the app also checks GitHub once per load, and the manual check bypasses the cached result); a newer release is offered with its release-notes link and a **Download and update** button, and nothing is fetched until you press it; a progress bar follows the download, and **Continue in background** closes the dialog without cancelling anything — the row keeps showing the percentage, a dot on the user button appears once the release is ready, and a toast announces it; then **Restart and update** finishes the job. On a server the download is `jiumate update` running in the background (the data directory is untouched), the bar reads the installer's own progress, and the restart is real when the service runs under `jiumate web` or `jiumate server`, which supervise it: the service comes back on the new release and the page reloads by itself. A service started some other way is told to restart by hand instead. Non-admins can read the release notes but cannot run the update. A failed download shows the update command's own output and offers a retry; an install that cannot update itself (a source checkout, an unrecognized layout, Windows) says why. Set `JIUMATE_UPDATE_CHECK=off` to disable the update check entirely — see the [Configuration Reference](/configuration).
 
 **In the desktop app** the same dialog drives the app's own updater — in the shell's own window only, where the server release never appears. The shell checks on its own schedule but never downloads on its own: a found release shows up as the dot and the row, the download starts from the dialog, its percentage is the updater's real progress, and **Restart and update** restarts into the downloaded build (the shell's native "Check for Updates…" menu item offers the same download-then-restart steps in native dialogs). A browser signed into the same desktop-mode server with a password gets no update entry at all: it can neither read that machine's updater state nor restart its window, and it cannot run the CLI self-update on that server either. Forms that cannot replace themselves — a Linux install owned by the system package manager (`.deb`), and a development run — say so in the dialog; the [Desktop app guide](/quickstart-desktop) covers the installers.
 
@@ -177,4 +177,4 @@ The sidebar provides a Project switcher and supports creating new Projects. Memb
 
 ## Production Deployment
 
-The server hosts the built SPA itself (same origin, SPA fallback), so a single `linsight web` or `linsight server` process is all production needs. The npm package bundles the frontend build; to serve a custom static directory, override it with `LINSIGHT_WEB_DIST` — see the [Configuration Reference](/configuration).
+The server hosts the built SPA itself (same origin, SPA fallback), so a single `jiumate web` or `jiumate server` process is all production needs. The npm package bundles the frontend build; to serve a custom static directory, override it with `JIUMATE_WEB_DIST` — see the [Configuration Reference](/configuration).

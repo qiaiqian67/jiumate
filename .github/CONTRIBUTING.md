@@ -1,8 +1,8 @@
-# Contributing to Linsight
+# Contributing to JiuMate
 
 [中文版](CONTRIBUTING.zh.md)
 
-Thanks for helping build Linsight! This guide covers the workspace setup, daily
+Thanks for helping build JiuMate! This guide covers the workspace setup, daily
 commands, quality gates, and the repo's working rules.
 
 Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). A security
@@ -25,7 +25,7 @@ pnpm dev:server  # backend at 127.0.0.1:7368 (not the installed server's 7364)
 pnpm dev:web     # web app (Vite) at 127.0.0.1:7365, /api proxied to 7368
 pnpm dev:docs    # docs site (Vite) at 127.0.0.1:7367
 pnpm dev:landing # landing page (Vite) at 127.0.0.1:7366
-pnpm linsight ... # CLI from source; `linsight web` serves at 127.0.0.1:7369
+pnpm jiumate ... # CLI from source; `jiumate web` serves at 127.0.0.1:7369
 pnpm desktop     # desktop app from source (builds everything first, then Electron)
 
 BASE_PATH=/ pnpm build:site   # assemble landing + docs exactly like the Pages deploy
@@ -52,38 +52,38 @@ cache — on the old build; if a running dev web app still serves stale core aft
 rebuild, delete `packages/web/node_modules/.vite` and restart.
 
 Dev entry points that touch data default to separate data roots, kept apart from the
-installed CLI/server's `~/.linsight/data` — hacking on the repo never mixes state with
+installed CLI/server's `~/.jiumate/data` — hacking on the repo never mixes state with
 your real agents. `pnpm dev`, `pnpm dev:server` and `pnpm desktop` share
-`~/.linsight/dev-data`; `pnpm linsight` takes its own `~/.linsight/dev-data-cli`, because a
+`~/.jiumate/dev-data`; `pnpm jiumate` takes its own `~/.jiumate/dev-data-cli`, because a
 data root admits one server at a time (`<root>/server.lock`) and the dev CLI's
-`linsight web` is exactly the harness that then asks an Agent to run `pnpm dev` — on a
+`jiumate web` is exactly the harness that then asks an Agent to run `pnpm dev` — on a
 shared root that Agent's `dev:server` would refuse to start, blocked by the harness's
 own lock (the same coexistence that already gives it port 7369, see
 `packages/core/src/internal/ports.ts`). To aim a dev CLI command at the `pnpm dev`
-dataset anyway, say so per command — `LINSIGHT_HOME=~/.linsight/dev-data pnpm linsight ...`,
+dataset anyway, say so per command — `JIUMATE_HOME=~/.jiumate/dev-data pnpm jiumate ...`,
 or `--root` where the subcommand takes it. Need a different root?
-Pass `LINSIGHT_HOME` inline, for the single
-command that needs it (`LINSIGHT_HOME=~/.linsight/dev-data-<topic> pnpm dev`) — never export
+Pass `JIUMATE_HOME` inline, for the single
+command that needs it (`JIUMATE_HOME=~/.jiumate/dev-data-<topic> pnpm dev`) — never export
 it into your shell: those defaults apply only when the variable is unset or empty
 (`scripts/run-with-env.mjs`), so an exported value silently wins over all of them, and an
-exported `LINSIGHT_HOME=~/.linsight/data` puts `pnpm dev:server` on the release/CLI root
+exported `JIUMATE_HOME=~/.jiumate/data` puts `pnpm dev:server` on the release/CLI root
 where a running desktop app already holds the lock. The desktop dev shell isolates one
-step further: an unpackaged run takes a dev-suffixed app identity (`Linsight-Dev`)
+step further: an unpackaged run takes a dev-suffixed app identity (`JiuMate-Dev`)
 with its own userData directory, single-instance lock, and sticky port, and defaults to
-`~/.linsight/dev-data` even when launched without the env var
+`~/.jiumate/dev-data` even when launched without the env var
 (`pnpm --dir packages/desktop start`) — so it runs side by side with an installed release
 build, with neither instance seeing the other. Every unpackaged launch prints which pair
 it picked: `[shell] dev instance '<name>' on data root <root>`.
 
 Two one-time moves came with that split. A bare `pnpm --dir packages/desktop start` used
-to run on `~/.linsight/data` (the release/CLI root) and now runs on `~/.linsight/dev-data`,
+to run on `~/.jiumate/data` (the release/CLI root) and now runs on `~/.jiumate/dev-data`,
 so sessions made that way are no longer in the window — run it with
-`LINSIGHT_HOME=~/.linsight/data` to work against the release root on purpose. And the dev
+`JIUMATE_HOME=~/.jiumate/data` to work against the release root on purpose. And the dev
 shell's userData directory moved with its name, taking the Chromium profile along, so the
 window's origin-scoped preferences (theme, language, layout) and its remembered port
 start fresh once. Note the identity is one fixed name, not one per checkout: two working
 copies both running the desktop shell still share it, and the second launch focuses the
-first one's window instead of opening its own — a distinct `LINSIGHT_HOME` does not change
+first one's window instead of opening its own — a distinct `JIUMATE_HOME` does not change
 that, because it moves the data root, not the identity.
 
 Copy `.env.example` to `.env` for model credentials in development.
@@ -91,23 +91,23 @@ Copy `.env.example` to `.env` for model credentials in development.
 ## Repo layout
 
 A pnpm monorepo (TypeScript, Node >= 24). One install ships four layers that share a
-single data directory (`~/.linsight/data`) and a single message protocol (OmniMessage):
+single data directory (`~/.jiumate/data`) and a single message protocol (OmniMessage):
 
 | Package                                   | Name                          | Role                                                                                                    |
 | ----------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------- |
-| [`packages/core`](../packages/core)       | `@prismshadow/linsight-core`   | SDK & engine: ReAct loop, OmniMessage protocol, LLM/Environment interface contracts, Agent State, Trace |
-| [`packages/cli`](../packages/cli)         | `@prismshadow/linsight-cli`    | The `linsight` command: REPL, one-shot runs, model & vault config, service launcher                      |
-| [`packages/server`](../packages/server)   | `@prismshadow/linsight-server` | Web backend: HTTP API + SSE streaming, multi-user auth, Project authorization, usage stats              |
-| [`packages/web`](../packages/web)         | `@prismshadow/linsight-web`    | Web App: multi-session chat, Agent/skill/model management, Trace observability, evaluation center       |
-| [`plugins/*`](../plugins) | `@linsight/<name>` | The built-in plugins, one npm package each: skills (software development, model development, agent development/tuning, …) and session hooks (goal mode, skill summaries); the loader lives in `packages/core` |
+| [`packages/core`](../packages/core)       | `@prismshadow/jiumate-core`   | SDK & engine: ReAct loop, OmniMessage protocol, LLM/Environment interface contracts, Agent State, Trace |
+| [`packages/cli`](../packages/cli)         | `@prismshadow/jiumate-cli`    | The `jiumate` command: REPL, one-shot runs, model & vault config, service launcher                      |
+| [`packages/server`](../packages/server)   | `@prismshadow/jiumate-server` | Web backend: HTTP API + SSE streaming, multi-user auth, Project authorization, usage stats              |
+| [`packages/web`](../packages/web)         | `@prismshadow/jiumate-web`    | Web App: multi-session chat, Agent/skill/model management, Trace observability, evaluation center       |
+| [`plugins/*`](../plugins) | `@jiumate/<name>` | The built-in plugins, one npm package each: skills (software development, model development, agent development/tuning, …) and session hooks (goal mode, skill summaries); the loader lives in `packages/core` |
 | [`packages/landing`](../packages/landing) | —                             | Product landing page (this repo's website)                                                              |
 | [`packages/docs`](../packages/docs)       | —                             | Documentation site (bilingual, deployed under `/docs/`)                                                 |
 
 Responsibilities split by source of truth: the **SDK** owns protocol and execution
 (message parsing, the agent loop, tools), the **Server** owns the multi-user runtime
-(auth, SSE streaming, scheduled tasks), and the **file layer** under `~/.linsight/data`
+(auth, SSE streaming, scheduled tasks), and the **file layer** under `~/.jiumate/data`
 owns everything editable and recorded (prompts, Skills, secrets, Traces). The full map
-is in [Architecture → Division of responsibilities](https://linsight.ooo/docs/architecture).
+is in [Architecture → Division of responsibilities](https://jiumate.ooo/docs/architecture).
 
 ## Quality gates
 
@@ -119,7 +119,7 @@ pnpm typecheck
 pnpm test           # unit suites for every package
 ```
 
-Working on this repo with a coding agent: [`.agents/skills/linsight-dev/`](../.agents/skills/linsight-dev/SKILL.md)
+Working on this repo with a coding agent: [`.agents/skills/jiumate-dev/`](../.agents/skills/jiumate-dev/SKILL.md)
 collects the conventions that are easy to get wrong from the outside — the two-repo symlink
 layout, the CI-parity chain, the record-and-ship contract, the model catalog's pricing rules,
 and the seams that are intentional. `.claude` is a symlink to `.agents`, so a Claude Code
@@ -129,7 +129,7 @@ End-to-end suites (optional locally, slower):
 
 ```bash
 npx playwright install chromium                      # once
-pnpm --filter @prismshadow/linsight-web test:e2e      # browser e2e against a mock LLM
+pnpm --filter @prismshadow/jiumate-web test:e2e      # browser e2e against a mock LLM
 pnpm test:e2e                                        # core live-model e2e, needs DEEPSEEK_API_KEY
 ```
 
@@ -165,10 +165,10 @@ pnpm test:e2e                                        # core live-model e2e, need
 
 ## Reporting a bug or proposing a feature
 
-Open an issue from the [issue forms](https://github.com/qiaiqian67/linsight/issues/new/choose).
-A bug report is worth far more with the version (`linsight version`), how Linsight
+Open an issue from the [issue forms](https://github.com/qiaiqian67/jiumate/issues/new/choose).
+A bug report is worth far more with the version (`jiumate version`), how JiuMate
 was installed, the OS, and whether the problem survives a fresh data root
-(`LINSIGHT_HOME=/tmp/linsight-check linsight ...`) — that last one separates a code defect
+(`JIUMATE_HOME=/tmp/jiumate-check jiumate ...`) — that last one separates a code defect
 from a state left behind by an earlier version. Never paste an API key, a bot token,
 `system_config.yaml`, or a `.env` into an issue: the data root holds provider credentials
 in plain text, and an issue is public and permanent.

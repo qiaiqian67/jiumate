@@ -2,7 +2,7 @@
 title: "AI 基础设施：过去、现在与未来"
 date: 2026-07-22
 category: perspectives
-excerpt: PyTorch、vLLM、Ollama、LlamaFactory，都是照着"一个会读文档、会看日志、记得自己启过什么服务的人"来设计的。可现在，越来越多地在驱动它们的是 Agent。这个变化意味着什么，Linsight 今天又为它准备了什么。
+excerpt: PyTorch、vLLM、Ollama、LlamaFactory，都是照着"一个会读文档、会看日志、记得自己启过什么服务的人"来设计的。可现在，越来越多地在驱动它们的是 Agent。这个变化意味着什么，JiuMate 今天又为它准备了什么。
 ---
 
 我们用来构建 AI 的这套基础设施，是照着人来设计的。PyTorch 默认有人在读教程；vLLM 默认工程师清楚自己显卡有多少显存；LlamaFactory 默认研究者会盯着 loss 曲线判断训练正不正常；Ollama 则默认你记得服务是不是已经起来了。
@@ -35,7 +35,7 @@ Stripe 评测 Agent 能不能基于他们的 API 做出真实集成时，把这�
 
 好消息是，AI 基础设施其实比大多数软件都更适合 Agent，而且属于无心插柳：它本来就是命令行工具、YAML 配置和 Python 文件，文本进、文本出，天然可组合。没必要给 `nvidia-smi` 再包一层什么，**一个拿着 shell 的 Agent 已经能把整个栈跑通了。**
 
-这正是 Linsight 把 shell 当作通用接口的理由：`exec_command` 就是全部的文件与进程接口，没有另外的文件工具。**驱动 vLLM 不算一次"集成"，它就是一条命令。**
+这正是 JiuMate 把 shell 当作通用接口的理由：`exec_command` 就是全部的文件与进程接口，没有另外的文件工具。**驱动 vLLM 不算一次"集成"，它就是一条命令。**
 
 ### 2.2 真正需要补的，是操作经验
 
@@ -52,7 +52,7 @@ Stripe 评测 Agent 能不能基于他们的 API 做出真实集成时，把这�
 1. **动手之前，先看清楚现场。** `ollama` 技能会让 Agent 先跑 `ollama --version` 和 `ollama ps`，然后把规矩挑明：如果 11434 端口上已经有服务，就复用它，**绝不去杀已经存在的 Ollama 进程**。人当然知道不该动同事的服务，Agent 却必须被明确告知。
 2. **先确认真正卡住你的那条约束。** `vllm` 技能在做任何事之前，先用 `nvidia-smi`（AMD 上是 `rocm-smi`）确认硬件，因为模型规模和上下文长度都被显存卡着。**教程里那句被埋起来的话，在这里被提到了第 0 步。**
 3. **要验证，别想当然。** 两个服务类技能都以一次真实检查收尾——`curl http://localhost:8000/v1/models`——过了才算完成。这正好回答了 Stripe 那个失败模式：**"成功"得由一次观测来定义，而不是"没崩就算成了"。**
-4. **把活干完，别只起个头。** 模型启动之后，不注册进来 Linsight 是看不见它的，所以技能会用 `linsight config model add --client-type openai --base-url ...` 把这一步闭上，再用 `linsight config model list` 确认一遍。**起一个服务不叫完成任务，拿到一个能用的模型才叫。**
+4. **把活干完，别只起个头。** 模型启动之后，不注册进来 JiuMate 是看不见它的，所以技能会用 `jiumate config model add --client-type openai --base-url ...` 把这一步闭上，再用 `jiumate config model list` 确认一遍。**起一个服务不叫完成任务，拿到一个能用的模型才叫。**
 5. **拿不准就问，别猜。** 每个技能开头都是同一句话：如果对方只点了技能名却没说具体要干什么，先问清楚，一条命令都别跑。比如引擎选哪个就听用户的，而不是写死一个默认值——vLLM 用于高吞吐 GPU 服务，Ollama 更省事，也是 macOS 和纯 CPU 机器上的唯一选择。
 
 ### 2.3 还有两块运行时能力，因为 AI 的活跟 Web 不是一个形状
@@ -84,13 +84,13 @@ Agent 能读 `nvidia-smi`，但没有标准办法去预留显存、排队等另�
 这就是我们的 Skills 写下来的东西。底下垫着的，是一个 shell、一套面向长任务的两阶段进程模型，以及以可读文本返回的错误。
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight run -m "用 Ollama 启动 Qwen3.5-0.8B 并注册到 Linsight"
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate run -m "用 Ollama 启动 Qwen3.5-0.8B 并注册到 JiuMate"
 ```
 
 ---
 
-- **文档**：[Skills](https://linsight.ooo/docs/skills) · [工具与审批](https://linsight.ooo/docs/tools) · [模型与供应商](https://linsight.ooo/docs/models)
-- **社区**：[GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **文档**：[Skills](https://jiumate.ooo/docs/skills) · [工具与审批](https://jiumate.ooo/docs/tools) · [模型与供应商](https://jiumate.ooo/docs/models)
+- **社区**：[GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**：[vLLM](https://docs.vllm.ai/) · [Ollama](https://ollama.com/) · [LlamaFactory](https://github.com/hiyouga/LlamaFactory) · [Stripe, Can AI agents build real Stripe integrations?](https://stripe.com/blog/can-ai-agents-build-real-stripe-integrations) · [Anthropic, Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)

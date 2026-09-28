@@ -22,7 +22,7 @@ import { createHash } from "node:crypto";
  * change without it moving. (The reverse — moving it with no default change — is inert rather
  * than an error: nothing is keyed by version, so there is no table to fall out of sync with.)
  */
-export const KERNEL_VERSION = "2026-09-23";
+export const KERNEL_VERSION = "2026-09-28";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -208,13 +208,17 @@ export function isKernelOutdated(kernelVersion: string | null | undefined): bool
  *   model to write the syntax of the shell it is already in rather than spawning a second copy
  *   of it, which on PowerShell re-parses the command and expands the inner `$variables` to
  *   nothing before the inner shell ever sees them.
- * - `2026-09-23` (current) — `read_document` joined the set, giving the model a built-in way to
+ * - `2026-09-23` — `read_document` joined the set, giving the model a built-in way to
  *   read .docx / .pdf / .xlsx / .pptx / .odt / .ods / .odp. It is the same problem the `pet` entry
  *   above describes from the other side: a model handed a .docx had no tool for it, so it went and
  *   installed one mid-task. The tools tab moved; every other tab is unchanged.
+ * - `2026-09-28` (current) — the brand rename `Linsight` → `JiuMate` reached
+ *   `DEFAULT_SYSTEM_PROMPT`'s `You are ...` line, the second time a rename has done so and the
+ *   reason the 2026-09-07 entry above exists. The prompt tab moved; the runtime, tools, skills,
+ *   memory, vault and schedules tabs are unchanged.
  */
 export const KERNEL_DEFAULT_TAB_HASHES: Readonly<Record<KernelTab, string>> = {
-  prompt: "b2d1ae6362da73666a83b007a8fef1f995102d30c18d14af3f1e5a43608b460a",
+  prompt: "8e8cea5706a281e5944eae60ce9930eead848ce3f97d361e5b31f32ca46f9f2f",
   runtime: "5dfea06a5e801950c24f44f5527e62435ae4facc311a6587e53aa69983ab0346",
   tools: "3fc74b9382421b9a0b92e8e87764bbd8f1b45a4d636516e32f5ae4c74ef7ee49",
   skills: "7e343aa692e5eaeadfc8add6bb375fb50ac33ef81ebe460490fc219b0f3d707f",
@@ -243,7 +247,7 @@ export const KERNEL_SUPERSEDED_TAB_HASHES: KernelSupersededTabHashes = {
     // brand rename: PenguinHarness / Harness → Linsight in the default system_prompt.
     "048198c37b8d7840352c225fdfcb15baf2679973c6eab4bf400d492daf6ce254",
     // The 2026-09-07 reconstruction of the pre-toggles era reads `system_prompt` from the
-    // current default (already Linsight) and only swaps the sections back to the LEGACY
+    // current default (already JiuMate) and only swaps the sections back to the LEGACY
     // text, so its hash sits between the LEGACY one and the new current — it never
     // appears on a real user's disk (a pre-#257 file predates this code path), but the
     // in-process reconstruction in `kernel-version.test.ts` lands here.
@@ -264,6 +268,13 @@ export const KERNEL_SUPERSEDED_TAB_HASHES: KernelSupersededTabHashes = {
     // The re-anchor of the in-process reconstruction for that same change. Same caveat as the
     // two entries above: derived from the current prompt, so it moves with every prompt change.
     "e80b6cfc15648be3ea47d90c0fb9b4a20c7428a5fe6e6700e3d0a11a69ba2530",
+    // What shipped before the 2026-09-28 brand rename: the same shape of change as the
+    // 2026-09-07 entry above, one generation later. Superseded by the `You are ...` line
+    // naming JiuMate instead of Linsight.
+    "b2d1ae6362da73666a83b007a8fef1f995102d30c18d14af3f1e5a43608b460a",
+    // The re-anchor of the in-process reconstruction for the same rename. Same caveat as the
+    // three entries above: derived from the current prompt, so it moves with every prompt change.
+    "3326c5cad608c3bb367fa798d8ace17d67719c2e6b10bd9ffb5a1f0dfcb2a86d",
   ],
   runtime: [
     "808ae1d1b544f46daff4f59f1e62357b89a61f60803061e86b10635616e0102c", // compaction.max_context_length was 128000, before the rise to 256000

@@ -37,7 +37,7 @@
  */
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
-import type { SessionContextResponse } from "@prismshadow/linsight-server/api";
+import type { SessionContextResponse } from "@prismshadow/jiumate-server/api";
 import { getSessionContext } from "../../api/endpoints";
 import { usePortalPanel } from "../../components/ui/use-portal-panel";
 import { resolveContextWindow } from "../../lib/context";

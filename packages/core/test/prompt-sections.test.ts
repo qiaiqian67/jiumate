@@ -42,7 +42,7 @@ let root: string;
 let restoreKeys: () => void;
 
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-sections-"));
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-sections-"));
   restoreKeys = stubProviderKeys();
 });
 
@@ -68,7 +68,7 @@ const SESSION_ENVIRONMENT = {
   sessionId: "session-2026-08-01-00-00-00-0000abcd",
   cwd: "/tmp/workspace",
   agentId: DEFAULT_AGENT_ID,
-  projectDir: "/tmp/linsight",
+  projectDir: "/tmp/jiumate",
   provider: "anthropic",
   modelId: "claude-sonnet-4-5",
   platform: "linux",

@@ -98,8 +98,8 @@ describe("frontmatter mapping (author / pinned / category)", () => {
       const posts = postsFor(locale);
       expect(posts.length).toBe(19);
       // The launch post stays the single pinned post; newer posts sort under it by date.
-      expect(posts.filter((p) => p.pinned).map((p) => p.slug)).toEqual(["introducing-linsight"]);
-      expect(posts[0]?.slug).toBe("introducing-linsight");
+      expect(posts.filter((p) => p.pinned).map((p) => p.slug)).toEqual(["introducing-jiumate"]);
+      expect(posts[0]?.slug).toBe("introducing-jiumate");
       // Pinning beats recency: the runner-up is strictly newer than the pinned post. Asserted
       // as a relation rather than a slug, because the newest date is shared by several posts
       // and the slug tie-break makes any single winner churn whenever a post is added.
@@ -109,7 +109,7 @@ describe("frontmatter mapping (author / pinned / category)", () => {
 
   it("filters by the practice category, newest first", () => {
     expect(postsFor("en", "practice").map((p) => p.slug)).toEqual([
-      "linsight-self-improvement-with-amd-gpu",
+      "jiumate-self-improvement-with-amd-gpu",
       "natural-language-training-loop",
       "local-agents-on-amd-gpus",
     ]);
@@ -117,17 +117,17 @@ describe("frontmatter mapping (author / pinned / category)", () => {
 
   it("filters by the news category, newest first", () => {
     expect(postsFor("en", "news").map((p) => p.slug)).toEqual([
-      "introducing-linsight",
-      "linsight-0-2-6",
-      "linsight-0-2-4",
-      "linsight-0-2-3",
-      "linsight-0-2-2",
-      "linsight-0-2-1",
-      "linsight-0-2-0",
-      "linsight-0-1-5",
-      "linsight-0-1-4",
-      "free-models-in-linsight",
-      "gemini-3-6-in-linsight",
+      "introducing-jiumate",
+      "jiumate-0-2-6",
+      "jiumate-0-2-4",
+      "jiumate-0-2-3",
+      "jiumate-0-2-2",
+      "jiumate-0-2-1",
+      "jiumate-0-2-0",
+      "jiumate-0-1-5",
+      "jiumate-0-1-4",
+      "free-models-in-jiumate",
+      "gemini-3-6-in-jiumate",
       "fireworks-credits-amd",
     ]);
   });

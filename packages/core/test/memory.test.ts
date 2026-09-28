@@ -42,7 +42,7 @@ let workspace: string;
 let restoreKeys: () => void;
 
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-memory-"));
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-memory-"));
   workspace = path.join(root, "projects", "my-app");
   await fs.mkdir(workspace, { recursive: true });
   restoreKeys = stubProviderKeys();

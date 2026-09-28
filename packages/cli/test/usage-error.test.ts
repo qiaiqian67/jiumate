@@ -19,7 +19,7 @@ let priorLang: string | undefined;
 beforeEach(() => {
   stdout = [];
   stderr = [];
-  priorLang = process.env.LINSIGHT_LANG;
+  priorLang = process.env.JIUMATE_LANG;
   outSpy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
     return true;
@@ -32,8 +32,8 @@ beforeEach(() => {
 afterEach(() => {
   outSpy.mockRestore();
   errSpy.mockRestore();
-  if (priorLang === undefined) delete process.env.LINSIGHT_LANG;
-  else process.env.LINSIGHT_LANG = priorLang;
+  if (priorLang === undefined) delete process.env.JIUMATE_LANG;
+  else process.env.JIUMATE_LANG = priorLang;
 });
 
 const err = () => stderr.join("");
@@ -41,13 +41,13 @@ const err = () => stderr.join("");
 describe("missing positional argument", () => {
   it("names the argument and the command's usage, in each language", async () => {
     for (const lang of ["en", "zh"] as const) {
-      process.env.LINSIGHT_LANG = lang;
+      process.env.JIUMATE_LANG = lang;
       stderr.length = 0;
       const t = getMessages(lang);
       const code = await cli(["schedule", "rm"]);
       expect(code).toBe(1);
       expect(err()).toContain(t.usage.missingArgument("name"));
-      expect(err()).toContain("linsight schedule rm");
+      expect(err()).toContain("jiumate schedule rm");
       // Commander's own English wording never reaches the terminal.
       expect(err()).not.toContain("missing required argument 'name'");
     }
@@ -55,43 +55,43 @@ describe("missing positional argument", () => {
 });
 
 describe("missing required option", () => {
-  it("LINSIGHT_LANG=zh explains `schedule add` in Chinese", async () => {
-    process.env.LINSIGHT_LANG = "zh";
+  it("JIUMATE_LANG=zh explains `schedule add` in Chinese", async () => {
+    process.env.JIUMATE_LANG = "zh";
     const t = getMessages("zh");
     const code = await cli(["schedule", "add", "daily"]);
     expect(code).toBe(1);
     expect(err()).toContain(t.usage.missingOption("--prompt <text>"));
     // The usage line quotes the failing subcommand, not the program.
-    expect(err()).toContain("linsight schedule add");
+    expect(err()).toContain("jiumate schedule add");
     expect(err()).toContain("--help");
     expect(err()).not.toContain("required option");
   });
 
   it("says the same thing in English", async () => {
-    process.env.LINSIGHT_LANG = "en";
+    process.env.JIUMATE_LANG = "en";
     const t = getMessages("en");
     const code = await cli(["schedule", "add", "daily"]);
     expect(code).toBe(1);
     expect(err()).toContain(t.usage.missingOption("--prompt <text>"));
-    expect(err()).toContain("linsight schedule add");
+    expect(err()).toContain("jiumate schedule add");
   });
 });
 
 describe("unknown option and unknown command", () => {
   it("both are localized and carry a usage line", async () => {
     for (const lang of ["en", "zh"] as const) {
-      process.env.LINSIGHT_LANG = lang;
+      process.env.JIUMATE_LANG = lang;
       const t = getMessages(lang);
 
       stderr.length = 0;
       expect(await cli(["ls", "--nope"])).toBe(1);
       expect(err()).toContain(t.usage.unknownOption("--nope"));
-      expect(err()).toContain("linsight ls");
+      expect(err()).toContain("jiumate ls");
 
       stderr.length = 0;
       expect(await cli(["nosuchthing"])).toBe(1);
       expect(err()).toContain(t.usage.unknownCommand("nosuchthing"));
-      expect(err()).toContain("linsight");
+      expect(err()).toContain("jiumate");
     }
   });
 });
@@ -99,7 +99,7 @@ describe("unknown option and unknown command", () => {
 describe("what must not change", () => {
   it("--help and --version print their own output and exit 0", async () => {
     expect(await cli(["--help"])).toBe(0);
-    expect(stdout.join("")).toContain("linsight");
+    expect(stdout.join("")).toContain("jiumate");
     expect(err()).toBe("");
     stdout.length = 0;
     expect(await cli(["--version"])).toBe(0);
@@ -107,7 +107,7 @@ describe("what must not change", () => {
     expect(err()).toBe("");
   });
 
-  it("bare `linsight` still prints help, not an error", async () => {
+  it("bare `jiumate` still prints help, not an error", async () => {
     expect(await cli([])).toBe(0);
     expect(stdout.join("")).toContain("Usage:");
     expect(err()).toBe("");
@@ -115,7 +115,7 @@ describe("what must not change", () => {
 });
 
 describe("commandForArgv", () => {
-  const program = new Command().name("linsight");
+  const program = new Command().name("jiumate");
   const schedule = program.command("schedule");
   const add = schedule.command("add <name>");
   const ls = program.command("ls");

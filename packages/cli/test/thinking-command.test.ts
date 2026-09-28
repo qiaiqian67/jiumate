@@ -6,7 +6,7 @@ import {
 } from "../src/thinking-command.js";
 import type { ThinkingConfigSource } from "../src/thinking-command.js";
 import { getMessages } from "../src/i18n.js";
-import { DEFAULT_CHAT_THINKING_LEVELS } from "@prismshadow/linsight-core";
+import { DEFAULT_CHAT_THINKING_LEVELS } from "@prismshadow/jiumate-core";
 
 describe("parseThinkingLevel", () => {
   it("accepts every selectable tier (trimmed, case-insensitive)", () => {

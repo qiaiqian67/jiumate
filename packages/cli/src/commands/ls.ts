@@ -1,19 +1,19 @@
 /**
- * `linsight ls` — list the project's sessions.
+ * `jiumate ls` — list the project's sessions.
  *
- *   linsight ls [--project-id <id>] [--agent-id <id>] [-a|--all] [--days <n>] [--json] [--server <url>]
+ *   jiumate ls [--project-id <id>] [--agent-id <id>] [-a|--all] [--days <n>] [--json] [--server <url>]
  *
  * All agents of the project unless `--agent-id` narrows it (the API lists per agent, so
  * the command iterates GET /agents then per-agent sessions). Columns: short id (the
- * 8-hex tail `linsight input` / `linsight logs` accept as a fragment), agent, title,
+ * 8-hex tail `jiumate input` / `jiumate logs` accept as a fragment), agent, title,
  * running/idle, last active, workspace tail. Archived sessions appear only with `-a`.
  * `--days <n>` keeps sessions whose lastActiveAt falls within the last n calendar days
  * (today is day 1, so `--days 2` covers yesterday and today — the `cost --days`
  * calendar semantics); it combines with `-a` and `--json`.
- * Docs: /docs/cli § "linsight ls".
+ * Docs: /docs/cli § "jiumate ls".
  */
 import type { Command } from "commander";
-import type { SessionInfo } from "@prismshadow/linsight-server/api";
+import type { SessionInfo } from "@prismshadow/jiumate-server/api";
 import {
   resolveAgentId,
   resolveConnection,

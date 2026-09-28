@@ -85,7 +85,7 @@ let tmp: string;
 let env: Environment;
 
 beforeEach(async () => {
-  tmp = await mkdtemp(path.join(tmpdir(), "linsight-exec-session-"));
+  tmp = await mkdtemp(path.join(tmpdir(), "jiumate-exec-session-"));
   env = new Environment({ workspaceDir: tmp, toolConfig: sessionConfig() });
 });
 
@@ -153,10 +153,10 @@ describe("exec_command — long-running command sessions", () => {
 
     const res = await runTool(env, "input_command", {
       process_id: pid,
-      chars: "linsight\n",
+      chars: "jiumate\n",
       yield_time_ms: 2000,
     });
-    expect(res.output).toContain("got:linsight");
+    expect(res.output).toContain("got:jiumate");
     expect(res.stopReason).toBe("completed");
   });
 
@@ -297,45 +297,45 @@ describe("harness environment variables never reach a spawned command", () => {
   const KEYS = [
     "PORT",
     "HOST",
-    "LINSIGHT_CLI_ENTRY",
-    "LINSIGHT_WEB_DIST",
-    "LINSIGHT_DESKTOP_TOKEN",
-    "LINSIGHT_PORT_FILE",
-    "LINSIGHT_SEED_ADMIN_PASSWORD",
-    "LINSIGHT_HOME",
-    "LINSIGHT_WEB_DB",
-    // A sample of the LINSIGHT_* the prefix rule covers that no by-name list ever named: the
+    "JIUMATE_CLI_ENTRY",
+    "JIUMATE_WEB_DIST",
+    "JIUMATE_DESKTOP_TOKEN",
+    "JIUMATE_PORT_FILE",
+    "JIUMATE_SEED_ADMIN_PASSWORD",
+    "JIUMATE_HOME",
+    "JIUMATE_WEB_DB",
+    // A sample of the JIUMATE_* the prefix rule covers that no by-name list ever named: the
     // resolved shell, the release feed, the UI language and the install location. Whether these
     // specific ones are set at run time is beside the point — the rule is the prefix, and a new
     // variable added next release has to be covered without anyone remembering this file.
-    "LINSIGHT_SHELL",
-    "LINSIGHT_UPDATE_FEED_URL",
-    "LINSIGHT_LANG",
-    "LINSIGHT_INSTALL_DIR",
+    "JIUMATE_SHELL",
+    "JIUMATE_UPDATE_FEED_URL",
+    "JIUMATE_LANG",
+    "JIUMATE_INSTALL_DIR",
   ] as const;
   const saved: Partial<Record<(typeof KEYS)[number], string | undefined>> = {};
 
   beforeEach(() => {
-    // `linsight web` writes PORT/HOST into its own process env as the channel to the server
+    // `jiumate web` writes PORT/HOST into its own process env as the channel to the server
     // module, so this is exactly the state a real serving process is in.
     for (const k of KEYS) saved[k] = process.env[k];
     process.env.PORT = "7364";
     process.env.HOST = "127.0.0.1";
-    process.env.LINSIGHT_CLI_ENTRY = "/opt/linsight/lib/dist/index.js";
-    process.env.LINSIGHT_WEB_DIST = "/opt/linsight/web";
+    process.env.JIUMATE_CLI_ENTRY = "/opt/jiumate/lib/dist/index.js";
+    process.env.JIUMATE_WEB_DIST = "/opt/jiumate/web";
     // The desktop shell's process credentials: a leaked token
     // would let an Agent-run command call the server's shutdown endpoint.
-    process.env.LINSIGHT_DESKTOP_TOKEN = "secret-desktop-token";
-    process.env.LINSIGHT_PORT_FILE = "/tmp/port-file";
-    process.env.LINSIGHT_SEED_ADMIN_PASSWORD = "linsight-0000";
+    process.env.JIUMATE_DESKTOP_TOKEN = "secret-desktop-token";
+    process.env.JIUMATE_PORT_FILE = "/tmp/port-file";
+    process.env.JIUMATE_SEED_ADMIN_PASSWORD = "jiumate-0000";
     // The data roots this very process is serving from. Inherited, they aim an Agent-started
     // harness at the running one's data — where the lock is already held, so it cannot start.
-    process.env.LINSIGHT_HOME = "/home/someone/.linsight/data";
-    process.env.LINSIGHT_WEB_DB = "/home/someone/.linsight/data/web.db";
-    process.env.LINSIGHT_SHELL = "/opt/linsight/bin/bash";
-    process.env.LINSIGHT_UPDATE_FEED_URL = "https://example.invalid/feed";
-    process.env.LINSIGHT_LANG = "zh";
-    process.env.LINSIGHT_INSTALL_DIR = "/opt/linsight";
+    process.env.JIUMATE_HOME = "/home/someone/.jiumate/data";
+    process.env.JIUMATE_WEB_DB = "/home/someone/.jiumate/data/web.db";
+    process.env.JIUMATE_SHELL = "/opt/jiumate/bin/bash";
+    process.env.JIUMATE_UPDATE_FEED_URL = "https://example.invalid/feed";
+    process.env.JIUMATE_LANG = "zh";
+    process.env.JIUMATE_INSTALL_DIR = "/opt/jiumate";
   });
   afterEach(() => {
     for (const k of KEYS) {
@@ -359,7 +359,7 @@ describe("harness environment variables never reach a spawned command", () => {
 
   it("a differently-cased spelling is stripped too, for Windows' sake", async () => {
     // Windows looks environment names up without regard to case but stores the casing that was
-    // written, so `set Port=3000` before `linsight web` reaches a child as PORT — invisible to a
+    // written, so `set Port=3000` before `jiumate web` reaches a child as PORT — invisible to a
     // strip that only removes the upper-case name. POSIX keeps `Port` and `PORT` apart, which is
     // what lets this run here at all: without the case-insensitive match it passes through.
     process.env.Port = "3000";
@@ -374,7 +374,7 @@ describe("harness environment variables never reach a spawned command", () => {
   });
 
   it("inherited FORCE_COLOR is removed, so the NO_COLOR=1 hardening actually wins", async () => {
-    // Node deliberately lets FORCE_COLOR defeat NO_COLOR, so a nested `linsight run` under a
+    // Node deliberately lets FORCE_COLOR defeat NO_COLOR, so a nested `jiumate run` under a
     // color-forcing parent (issue #102 observed FORCE_COLOR=3, NO_COLOR=1, TERM=dumb at once)
     // would keep emitting ANSI escapes unless the inherited override is removed outright.
     const saved = {
@@ -397,7 +397,7 @@ describe("harness environment variables never reach a spawned command", () => {
   });
 
   it("the rest of the host environment still passes through", async () => {
-    // Deliberately not a LINSIGHT_* name any more. This case asserts that stripping is narrow —
+    // Deliberately not a JIUMATE_* name any more. This case asserts that stripping is narrow —
     // that a variable the user's own project relies on survives — and a harness-prefixed name
     // can no longer stand for that, since the prefix is itself the rule.
     process.env.MY_PROJECT_TEST_PASSTHROUGH = "kept";
@@ -427,21 +427,21 @@ describe("harness environment variables never reach a spawned command", () => {
     }
   });
 
-  it("a LINSIGHT_* nobody has invented yet is stripped, because the rule is the prefix", async () => {
+  it("a JIUMATE_* nobody has invented yet is stripped, because the rule is the prefix", async () => {
     // The point of matching on the prefix: this variable exists in no list, and a feature that
     // adds one next release inherits the protection without anyone editing this file.
-    process.env.LINSIGHT_SOME_FUTURE_SETTING = "leaked";
+    process.env.JIUMATE_SOME_FUTURE_SETTING = "leaked";
     try {
       const res = await runTool(env, "exec_command", {
-        cmd: `node -e "console.log('X=[' + (process.env.LINSIGHT_SOME_FUTURE_SETTING ?? '') + ']')"`,
+        cmd: `node -e "console.log('X=[' + (process.env.JIUMATE_SOME_FUTURE_SETTING ?? '') + ']')"`,
       });
       expect(res.output).toContain("X=[]");
     } finally {
-      delete process.env.LINSIGHT_SOME_FUTURE_SETTING;
+      delete process.env.JIUMATE_SOME_FUTURE_SETTING;
     }
   });
 
-  it("the vault can put LINSIGHT_HOME back, which is how a shared data root is asked for", async () => {
+  it("the vault can put JIUMATE_HOME back, which is how a shared data root is asked for", async () => {
     // Sharing a root with the running harness is a legitimate config decision; inheriting it from
     // whichever process happens to be serving is not. The vault is where that decision is made.
     // The value is deliberately not path-shaped. Git Bash's MSYS layer rewrites POSIX-looking
@@ -452,40 +452,40 @@ describe("harness environment variables never reach a spawned command", () => {
     const vaultEnv = new Environment({
       workspaceDir: tmp,
       toolConfig: sessionConfig(),
-      vault: { LINSIGHT_HOME: "vault-supplied-root" },
+      vault: { JIUMATE_HOME: "vault-supplied-root" },
     });
     try {
       const res = await runTool(vaultEnv, "exec_command", {
-        cmd: `node -e "console.log('LINSIGHT_HOME=[' + (process.env.LINSIGHT_HOME ?? '') + ']')"`,
+        cmd: `node -e "console.log('JIUMATE_HOME=[' + (process.env.JIUMATE_HOME ?? '') + ']')"`,
       });
-      expect(res.output).toContain("LINSIGHT_HOME=[vault-supplied-root]");
+      expect(res.output).toContain("JIUMATE_HOME=[vault-supplied-root]");
     } finally {
       vaultEnv.dispose();
     }
   });
 
-  it("an explicit injection layered after the strip wins, for any LINSIGHT_* name", async () => {
+  it("an explicit injection layered after the strip wins, for any JIUMATE_* name", async () => {
     // The strip governs inheritance only — it runs while the host env is copied and never
     // re-applies to entries spread in after it. That seam is what every injection layer
     // relies on (the vault stands in for all of them here): the host's copy of the name is
     // set to a different value to prove the child's value came from the injection, not
     // through inheritance.
-    const savedInherited = process.env.LINSIGHT_API_URL;
-    process.env.LINSIGHT_API_URL = "http://inherited.invalid";
+    const savedInherited = process.env.JIUMATE_API_URL;
+    process.env.JIUMATE_API_URL = "http://inherited.invalid";
     const vaultEnv = new Environment({
       workspaceDir: tmp,
       toolConfig: sessionConfig(),
-      vault: { LINSIGHT_API_URL: "http://injected.example" },
+      vault: { JIUMATE_API_URL: "http://injected.example" },
     });
     try {
       const res = await runTool(vaultEnv, "exec_command", {
-        cmd: `node -e "console.log('A=[' + (process.env.LINSIGHT_API_URL ?? '') + ']')"`,
+        cmd: `node -e "console.log('A=[' + (process.env.JIUMATE_API_URL ?? '') + ']')"`,
       });
       expect(res.output).toContain("A=[http://injected.example]");
     } finally {
       vaultEnv.dispose();
-      if (savedInherited === undefined) delete process.env.LINSIGHT_API_URL;
-      else process.env.LINSIGHT_API_URL = savedInherited;
+      if (savedInherited === undefined) delete process.env.JIUMATE_API_URL;
+      else process.env.JIUMATE_API_URL = savedInherited;
     }
   });
 });
@@ -613,28 +613,28 @@ describe("proxyEnv policy governs the proxy variables commands inherit", () => {
 describe("controlEnv injects the host's harness-control variables into commands", () => {
   // The hosting server threads a controlEnv getter through Environment ->
   // CommandSessionManager so commands the Agent runs can drive the harness back through
-  // the CLI/API (LINSIGHT_API_URL / LINSIGHT_API_TOKEN / the Session coordinates).
+  // the CLI/API (JIUMATE_API_URL / JIUMATE_API_TOKEN / the Session coordinates).
 
-  it("injected LINSIGHT_* variables reach the child even though inherited ones are stripped", async () => {
-    // The host process's own LINSIGHT_API_URL must NOT leak through inheritance; the same
+  it("injected JIUMATE_* variables reach the child even though inherited ones are stripped", async () => {
+    // The host process's own JIUMATE_API_URL must NOT leak through inheritance; the same
     // name from controlEnv must arrive — injection happens after the prefix strip.
-    process.env.LINSIGHT_API_URL = "http://inherited.example:1";
+    process.env.JIUMATE_API_URL = "http://inherited.example:1";
     const controlled = new Environment({
       workspaceDir: tmp,
       toolConfig: sessionConfig(),
       controlEnv: () => ({
-        LINSIGHT_API_URL: "http://localhost:7364",
-        LINSIGHT_SESSION_ID: "session-x",
+        JIUMATE_API_URL: "http://localhost:7364",
+        JIUMATE_SESSION_ID: "session-x",
       }),
     });
     try {
       const res = await runTool(controlled, "exec_command", {
-        cmd: `node -e "console.log('U=[' + (process.env.LINSIGHT_API_URL ?? '') + '] S=[' + (process.env.LINSIGHT_SESSION_ID ?? '') + ']')"`,
+        cmd: `node -e "console.log('U=[' + (process.env.JIUMATE_API_URL ?? '') + '] S=[' + (process.env.JIUMATE_SESSION_ID ?? '') + ']')"`,
       });
       expect(res.output).toContain("U=[http://localhost:7364] S=[session-x]");
     } finally {
       controlled.dispose();
-      delete process.env.LINSIGHT_API_URL;
+      delete process.env.JIUMATE_API_URL;
     }
   });
 
@@ -642,12 +642,12 @@ describe("controlEnv injects the host's harness-control variables into commands"
     const controlled = new Environment({
       workspaceDir: tmp,
       toolConfig: sessionConfig(),
-      vault: { LINSIGHT_API_TOKEN: "vault-token", KEEP_ME: "vault-kept" },
-      controlEnv: () => ({ LINSIGHT_API_TOKEN: "boot-token" }),
+      vault: { JIUMATE_API_TOKEN: "vault-token", KEEP_ME: "vault-kept" },
+      controlEnv: () => ({ JIUMATE_API_TOKEN: "boot-token" }),
     });
     try {
       const res = await runTool(controlled, "exec_command", {
-        cmd: `node -e "console.log('T=[' + (process.env.LINSIGHT_API_TOKEN ?? '') + '] K=[' + (process.env.KEEP_ME ?? '') + ']')"`,
+        cmd: `node -e "console.log('T=[' + (process.env.JIUMATE_API_TOKEN ?? '') + '] K=[' + (process.env.KEEP_ME ?? '') + ']')"`,
       });
       expect(res.output).toContain("T=[boot-token] K=[vault-kept]");
     } finally {
@@ -660,10 +660,10 @@ describe("controlEnv injects the host's harness-control variables into commands"
     const controlled = new Environment({
       workspaceDir: tmp,
       toolConfig: sessionConfig(),
-      controlEnv: () => ({ LINSIGHT_API_TOKEN: token }),
+      controlEnv: () => ({ JIUMATE_API_TOKEN: token }),
     });
     try {
-      const read = `node -e "console.log('T=[' + (process.env.LINSIGHT_API_TOKEN ?? '') + ']')"`;
+      const read = `node -e "console.log('T=[' + (process.env.JIUMATE_API_TOKEN ?? '') + ']')"`;
       expect((await runTool(controlled, "exec_command", { cmd: read })).output).toContain(
         "T=[first]",
       );

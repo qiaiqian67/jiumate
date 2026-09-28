@@ -3,12 +3,12 @@ title: Server API
 description: HTTP API 参考：认证机制、路由列表、SSE 流式协议与 DTO 类型导入。
 ---
 
-Linsight Server 提供一套同源 HTTP API，自带的 Web App 与其他 HTTP 客户端都通过它访问。本文是接口参考：认证机制、路由列表与 SSE 流式协议。服务启动方式见[快速开始](/quickstart)。
+JiuMate Server 提供一套同源 HTTP API，自带的 Web App 与其他 HTTP 客户端都通过它访问。本文是接口参考：认证机制、路由列表与 SSE 流式协议。服务启动方式见[快速开始](/quickstart)。
 
 ## 总览
 
 - 技术栈：Hono + @hono/node-server，要求 Node >= 24；
-- 存储：SQLite（内置 `node:sqlite`，WAL 模式）仅存放索引与聚合数据——用户、登录会话、Project 授权、Agent / Session 索引、用量、UI 偏好、错误记录与 Schedule 状态；Agent、Trace 与 Workspace 数据全部以文件形式存放在 `~/.linsight/data` 下，与 CLI / SDK 共享，见[配置参考](/configuration)；
+- 存储：SQLite（内置 `node:sqlite`，WAL 模式）仅存放索引与聚合数据——用户、登录会话、Project 授权、Agent / Session 索引、用量、UI 偏好、错误记录与 Schedule 状态；Agent、Trace 与 Workspace 数据全部以文件形式存放在 `~/.jiumate/data` 下，与 CLI / SDK 共享，见[配置参考](/configuration)；
 - 监听：默认 `127.0.0.1:7364`，可用环境变量 `PORT` / `HOST` 调整；
 - 请求体：写请求仅接受 JSON（Content-Type 校验，CSRF 防线之一），其上限**由附件预算推导**而非固定值——附件以 base64 `data:` URL 随请求送达（膨胀 4/3），故上限为 `base64(attachmentTotalMb) + 一张内嵌图片与 JSON 外壳的余量`，在默认 120MB 合计下约 190MB，管理员调低附件上限时随之回落。按读取到的字节数统计，未声明长度（分块传输）的请求同样受限；
 - 错误响应统一为：
@@ -33,9 +33,9 @@ packages/server/src
 
 ## 认证
 
-- Cookie 会话：`linsight_session`（HttpOnly、SameSite=Lax），有效期 30 天，滑动续期；
+- Cookie 会话：`jiumate_session`（HttpOnly、SameSite=Lax），有效期 30 天，滑动续期；
 - 密码以 scrypt 哈希存储；会话是 `auth_sessions` 表中的一行，以随机 Cookie 令牌的 sha256 为键（原始令牌从不落库）；它跨重启存活、原地续期，logout 删除该行；
-- 不开放注册：启动时种子化内置管理员 `admin`，其初始密码随机生成、哈希后即丢弃，无人见过。在真正设置密码之前，每次启动都会打印一条首次登录链接用于认领账号（自动化场景可用 `LINSIGHT_SEED_ADMIN_PASSWORD` 固定一个已知密码）。其余账号由管理员创建；
+- 不开放注册：启动时种子化内置管理员 `admin`，其初始密码随机生成、哈希后即丢弃，无人见过。在真正设置密码之前，每次启动都会打印一条首次登录链接用于认领账号（自动化场景可用 `JIUMATE_SEED_ADMIN_PASSWORD` 固定一个已知密码）。其余账号由管理员创建；
 - 仅限同源访问，未启用 CORS 中间件。
 
 ```bash
@@ -50,13 +50,13 @@ curl -c cookies.txt -H "Content-Type: application/json" \
 所有受保护路由同时接受携带**本机 API token** 的 `Authorization: Bearer <token>`——这是 CLI（以及经 CLI 驱动 harness 的 Agent）用来替代登录的本机凭据：
 
 - 服务端每次启动铸造新 token 并写入 `<root>/api-token`（仅属主可读，`0600`）；新 token 铸造的那一刻，上一次启动的 token 即失效。
-- 有效的 Bearer 即以内置 `admin` 身份通过认证。这个等价关系是授权模型本身，不是疏漏：对数据根目录的本机文件系统访问本就等于管理员权限——能读 `api-token` 的人也能读旁边的 `web.db`，与 `linsight server reset-admin-password` 是同一条规则。
-- 服务端驱动的会话把当前 token 以 `LINSIGHT_API_TOKEN` 注入每个工具子进程（连同 `LINSIGHT_API_URL`、`LINSIGHT_PROJECT_ID`、`LINSIGHT_AGENT_ID`、`LINSIGHT_SESSION_ID`），Agent 自己的 `linsight` / API 调用由此获得连回运行它的服务器的授权。
+- 有效的 Bearer 即以内置 `admin` 身份通过认证。这个等价关系是授权模型本身，不是疏漏：对数据根目录的本机文件系统访问本就等于管理员权限——能读 `api-token` 的人也能读旁边的 `web.db`，与 `jiumate server reset-admin-password` 是同一条规则。
+- 服务端驱动的会话把当前 token 以 `JIUMATE_API_TOKEN` 注入每个工具子进程（连同 `JIUMATE_API_URL`、`JIUMATE_PROJECT_ID`、`JIUMATE_AGENT_ID`、`JIUMATE_SESSION_ID`），Agent 自己的 `jiumate` / API 调用由此获得连回运行它的服务器的授权。
 - SSE 端点与其它路由一样接受该请求头（用 `fetch` 消费，不要用 `EventSource`——后者无法携带请求头）。
 - 写请求的 JSON-only Content-Type 检查对 Bearer 请求同样生效。
 
 ```bash
-curl -H "Authorization: Bearer $(cat ~/.linsight/data/api-token)" \
+curl -H "Authorization: Bearer $(cat ~/.jiumate/data/api-token)" \
   http://127.0.0.1:7364/api/me
 ```
 
@@ -133,7 +133,7 @@ curl -H "Authorization: Bearer $(cat ~/.linsight/data/api-token)" \
 
 `status` 为 `{state, checkedAt, port?, detail?}`，`state` 取 `running` / `stopped` / `unreachable` 之一；该机器尚未被探测时为 `null`。没有单独的 ssh 状态：ssh 是传输方式，因此连不上的机器就是 `unreachable`，并在 `detail` 中保留 OpenSSH 自己的原话。`GET` 从不发起探测——它只报告最近一次的答案——因为一次探测是每台机器一次 ssh 往返，而列表本身只是配置文件的文本。真正花费这些往返的是 `POST /api/machines/probe`，且只针对安装过的机器。
 
-已连接机器的 API 可通过本源上的 `/server/<machineId>/api/…` 访问，经由本服务端持有的那一条 ssh 会话拨达——是该会话内部的一个 channel（走它的 SOCKS 端口），从不是第二条连接。以机器自身的 id 而非它被访问时所用的 ssh 别名寻址：别名只存在于某一份配置文件中，若以它为键，一旦有人重命名主机，该机器的 URL 就会随之改变；而 id 是 base64url，放在路径中无需任何百分号编码。**仅限管理员**，且只有一个身份：请求在对端以那台机器的管理员身份发出，会话由本服务端通过自己的 ssh 权限铸造（在机器上执行 `linsight auth token`）——浏览器的 cookie 不会过去，机器的 cookie 也不会回来。只有 `/api` 会被转发——前端始终是本地的。
+已连接机器的 API 可通过本源上的 `/server/<machineId>/api/…` 访问，经由本服务端持有的那一条 ssh 会话拨达——是该会话内部的一个 channel（走它的 SOCKS 端口），从不是第二条连接。以机器自身的 id 而非它被访问时所用的 ssh 别名寻址：别名只存在于某一份配置文件中，若以它为键，一旦有人重命名主机，该机器的 URL 就会随之改变；而 id 是 base64url，放在路径中无需任何百分号编码。**仅限管理员**，且只有一个身份：请求在对端以那台机器的管理员身份发出，会话由本服务端通过自己的 ssh 权限铸造（在机器上执行 `jiumate auth token`）——浏览器的 cookie 不会过去，机器的 cookie 也不会回来。只有 `/api` 会被转发——前端始终是本地的。
 
 安装是任务而非请求：它要探测对端，可能下载并校验一份 Node 运行时，再经 scp 复制镜像——最坏情况以分钟计。`POST` 启动后立即返回，客户端轮询 `GET` 读取 `job.log`，其中是对端自己的原话（ssh 的诊断、远端安装器的输出）。连接（`POST …/connect`）与重启（`POST …/restart`）是同一形状的任务，以 `job.kind`（`install` / `connect` / `restart`）区分。运行期间 `job.result` 为 `null`，结束后安装为 `{ok: true, installed: "installed" | "already-installed", version}`、连接与重启为 `{ok: true, connected: true}`，失败为 `{ok: false, step, message, canReplaceProgram?}`——`canReplaceProgram` 标记一种下一步是「无论如何都安装程序」的失败（`POST …/install` 带 `{replaceProgram: true}`），只提供选项而不自动执行，因为它会重启一个别人可能正在用的服务端。同一时刻只允许一个任务；任务存于内存，热推与重启都不保留，重跑即是恢复手段——每一步都是幂等的。
 
@@ -143,13 +143,13 @@ curl -H "Authorization: Bearer $(cat ~/.linsight/data/api-token)" \
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | /api/version | 当前运行构建的身份，外加该根目录被推送的 harness：`{version, describe, channel, buildDate, commit, branch, dirty, runtime, harness}`，与 `linsight version --json` 输出同一份记录。`harness` 描述该数据根目录的 HMR store（`{source, pushedAt, bundles}`，其中 `source` 为推送方 checkout 的 `{repo, revision}`），从未被推送过时为 null。`describe` 是单行身份（发布版为 `v0.2.3`，源码构建为 `v0.2.3-14-g9e8f7d6-dirty`）；`channel` 取 `release` 或 `source`；`buildDate`（UTC yyyy-mm-dd）与 `commit` 在构建时打入、无需联网，源码构建以及打入机制之前的发布版为 null；`branch` 与 `dirty` 记录源码构建的 git 位置，发布版为 null |
+| GET | /api/version | 当前运行构建的身份，外加该根目录被推送的 harness：`{version, describe, channel, buildDate, commit, branch, dirty, runtime, harness}`，与 `jiumate version --json` 输出同一份记录。`harness` 描述该数据根目录的 HMR store（`{source, pushedAt, bundles}`，其中 `source` 为推送方 checkout 的 `{repo, revision}`），从未被推送过时为 null。`describe` 是单行身份（发布版为 `v0.2.3`，源码构建为 `v0.2.3-14-g9e8f7d6-dirty`）；`channel` 取 `release` 或 `source`；`buildDate`（UTC yyyy-mm-dd）与 `commit` 在构建时打入、无需联网，源码构建以及打入机制之前的发布版为 null；`branch` 与 `dirty` 记录源码构建的 git 位置，发布版为 null |
 | GET | /api/version/update-check | 对比 GitHub 最新 Release 与当前版本：`{currentVersion, latestVersion, updateAvailable, releaseUrl, publishedAt, checkedAt, disabled?, error?}`；`?force=1`（手动「检查更新」）绕过 TTL 缓存，结果照常写入缓存 |
 | GET | /api/version/update | **仅管理员。**在线更新任务的状态：`{state: idle \| running \| done, targetVersion, phase?, percent?, output, result?, startedAt?, finishedAt?}`——运行中带 `phase`（`resolving` / `downloading` / `installing`）与 `percent`（从安装器的进度条读出）；结束后带 `result`（`{status, reason?, output, needsRestart}`）。更新弹窗在任务运行期间轮询它 |
-| POST | /api/version/update | **仅管理员。**启动在线更新任务——在服务器上后台运行 `linsight update --yes`——已有任务在跑则并入；应答与 GET 完全一致。已结束的任务可以再次启动（即重试） |
-| POST | /api/version/restart | **仅管理员。**请求进程在优雅关闭后以托管进程约定的重启退出码退出，由 `linsight server \| linsight web` 在已安装的版本上重新拉起：`{restarting: true}`；没有托管进程时为 `{restarting: false, reason: "no_supervisor"}` |
+| POST | /api/version/update | **仅管理员。**启动在线更新任务——在服务器上后台运行 `jiumate update --yes`——已有任务在跑则并入；应答与 GET 完全一致。已结束的任务可以再次启动（即重试） |
+| POST | /api/version/restart | **仅管理员。**请求进程在优雅关闭后以托管进程约定的重启退出码退出，由 `jiumate server \| jiumate web` 在已安装的版本上重新拉起：`{restarting: true}`；没有托管进程时为 `{restarting: false, reason: "no_supervisor"}` |
 
-`update-check` 是服务端唯一的对外网络请求，并且严格失败兜底：查询失败仍返回 200，只是设置 `error`（`network` / `rate_limited` / `bad_response`）且 `latestVersion` 为 null；结果在内存中缓存（成功 1 小时、失败 10 分钟）；设置 `LINSIGHT_UPDATE_CHECK=off` 可完全关闭该查询（返回 `disabled: true`，不发起任何网络请求）。更新的 `status` 为 `updated`（需重启服务才能运行新版本）、`failed` 或 `unsupported` —— 后者包括服务不是通过 `linsight server|web` 启动（`reason: "not_launched_via_cli"`），以及 CLI 自身拒绝执行（源码运行、无法识别的安装方式、Windows）；`output` 携带 CLI 输出的末尾片段。
+`update-check` 是服务端唯一的对外网络请求，并且严格失败兜底：查询失败仍返回 200，只是设置 `error`（`network` / `rate_limited` / `bad_response`）且 `latestVersion` 为 null；结果在内存中缓存（成功 1 小时、失败 10 分钟）；设置 `JIUMATE_UPDATE_CHECK=off` 可完全关闭该查询（返回 `disabled: true`，不发起任何网络请求）。更新的 `status` 为 `updated`（需重启服务才能运行新版本）、`failed` 或 `unsupported` —— 后者包括服务不是通过 `jiumate server|web` 启动（`reason: "not_launched_via_cli"`），以及 CLI 自身拒绝执行（源码运行、无法识别的安装方式、Windows）；`output` 携带 CLI 输出的末尾片段。
 
 ### Project 与成员
 
@@ -384,9 +384,9 @@ GET  /api/sessions/:sessionId/files/preview-redirect?path=index.html
 GET  /preview/<token>/<相对路径>              （不鉴权，令牌即凭证）
 ```
 
-- **为什么要独立源。** 页面需要一个真实的源，才能有可用的 storage、Cookie 与第三方 embed；但它不能是应用自己的源，否则 Agent 写出来的 HTML 就带着会话 Cookie 在跑。本地把 App 固定在规范主机 `localhost`，预览用 `127.0.0.1`——Cookie 按主机划分且不区分端口，所以这两者天然是两个 Cookie jar，而只换端口做不到。其余情况用 `LINSIGHT_PREVIEW_ORIGIN`；两者都没有时（通配或非回环绑定，或变量未设）回退到上面的同源沙箱，并由 `GET /api/me` 的 `previewIsolated` 返回 `false`，界面据此提前说明。
+- **为什么要独立源。** 页面需要一个真实的源，才能有可用的 storage、Cookie 与第三方 embed；但它不能是应用自己的源，否则 Agent 写出来的 HTML 就带着会话 Cookie 在跑。本地把 App 固定在规范主机 `localhost`，预览用 `127.0.0.1`——Cookie 按主机划分且不区分端口，所以这两者天然是两个 Cookie jar，而只换端口做不到。其余情况用 `JIUMATE_PREVIEW_ORIGIN`；两者都没有时（通配或非回环绑定，或变量未设）回退到上面的同源沙箱，并由 `GET /api/me` 的 `previewIsolated` 返回 `false`，界面据此提前说明。
 - **面板内渲染共用同一 URL。** Files 面板把该跳转 URL 嵌入 iframe，沙箱为 `allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads`——`allow-same-origin` 赋予的是预览源而非应用源的身份，因此仍严格紧于不带沙箱的新标签页。没有独立预览源时，面板回退为内联 `srcdoc` 渲染（仅 `allow-scripts`，附内存版 storage 垫片），相对子资源在那里无法加载。另注意部分浏览器会对跨站 iframe 内的 storage 做分区或屏蔽，页面在面板内的行为可能与顶层标签页略有差异。
-- **预览主机只服务 `/preview/*`。** 它与 App 是同一个进程，故其 `/api` 一律 401，其余路径一律 302 回规范 App 主机——会话 Cookie 因此永远不会落在预览主机上，也不被其接受，那里的 Agent HTML 无法同源调用 API。（部署 `LINSIGHT_PREVIEW_ORIGIN` 时，反向代理须做等价保证：该源上只把 `/preview/*` 路由到 App。）
+- **预览主机只服务 `/preview/*`。** 它与 App 是同一个进程，故其 `/api` 一律 401，其余路径一律 302 回规范 App 主机——会话 Cookie 因此永远不会落在预览主机上，也不被其接受，那里的 Agent HTML 无法同源调用 API。（部署 `JIUMATE_PREVIEW_ORIGIN` 时，反向代理须做等价保证：该源上只把 `/preview/*` 路由到 App。）
 - **路径式而非查询参数**，页面里的相对子资源（`app.js`、`style.css`、图片）才能相对文档解析，并在同一个令牌下加载。
 - **令牌绑定 Session、预览主机与过期时间。** 其中主机绑定是承重的：同一个进程也在应用源上应答，因此 `/preview/...` 在应用源上一律拒绝服务——否则那就是一个同源 XSS。权限只读、限定该 Session 的 Workspace，路径仍在服务端重新解析，`..` 与符号链接逃逸照旧拒绝。
 - **响应带 `Referrer-Policy: no-referrer`**，否则带令牌的 URL 会经 `Referer` 泄漏给页面内嵌的每一个第三方——而这个风险恰恰是因为 embed 现在能用了才出现的。
@@ -480,8 +480,8 @@ export type ServerEvent =
 
 ## 类型导入
 
-全部 DTO 类型可从服务端包的子路径 `@prismshadow/linsight-server/api` 以 type-only 方式导入：
+全部 DTO 类型可从服务端包的子路径 `@prismshadow/jiumate-server/api` 以 type-only 方式导入：
 
 ```ts
-import type { ServerEvent, SessionInfo } from "@prismshadow/linsight-server/api";
+import type { ServerEvent, SessionInfo } from "@prismshadow/jiumate-server/api";
 ```

@@ -42,11 +42,11 @@ LangChain 是这个领域用得最多的方案，也是多数团队的默认选�
 | OpenAI Agents SDK | MIT | 28k | 约 27 行 | — / — / — | 官方 Dashboard | — |
 | Google ADK | Apache-2.0 | 21k | 约 8 行 | `adk web` / `adk run` / `adk api_server` | — | 内置，且做得很深 |
 | Dify | 修改版 Apache-2.0 | 150k | **0** | 有 / 有 / REST | — | — |
-| **Linsight** | Apache-2.0 | — | **0** | **有 / 有 / 有** | **内置（Trace）** | **内置** |
+| **JiuMate** | Apache-2.0 | — | **0** | **有 / 有 / 有** | **内置（Trace）** | **内置** |
 
 代码行数取自各项目官方 quickstart，彼此并不完全可比。空白格的意思是**我们查到的资料里没有写**，不是"做不到"。
 
-关于协议还得补一句，因为"开源"这个词在这个市场里被用得太宽。Dify 用的是**修改版** Apache 2.0，禁止多租户 SaaS 转售，也禁止把前端的品牌标识去掉；n8n 是这个领域星标最高的项目，197k，但它用的是 Sustainable Use License，**根本算不上开源**。Linsight 是标准 Apache-2.0。
+关于协议还得补一句，因为"开源"这个词在这个市场里被用得太宽。Dify 用的是**修改版** Apache 2.0，禁止多租户 SaaS 转售，也禁止把前端的品牌标识去掉；n8n 是这个领域星标最高的项目，197k，但它用的是 Sustainable Use License，**根本算不上开源**。JiuMate 是标准 Apache-2.0。
 
 ## 三、这个领域自己已经承认：薄的那一方赢了
 
@@ -62,7 +62,7 @@ LangChain 自己也把遗留的 chain、retriever 和 hub 模块挪进了独立�
 
 这个品类没有死，它只是承认了一件事：**真正有价值的从来不是那些抽象**。而这也让第一节那笔拼装成本更难自圆其说。
 
-## 四、Linsight：装一次，然后不用再学
+## 四、JiuMate：装一次，然后不用再学
 
 我们的答案不是"做一个更薄的框架"，而是**把拼装这一步取消掉，再把调优那个循环也自动化掉**。
 
@@ -71,8 +71,8 @@ LangChain 自己也把遗留的 chain、retriever 和 hub 模块挪进了独立�
 装一次，第一张表里的五行就都有了，而且共用同一份数据目录、同一套消息协议：
 
 ```bash
-curl -fsSL https://linsight.ooo/install.sh | sh
-linsight web        # http://127.0.0.1:7364 — 首次登录：admin，初始密码见首次启动输出
+curl -fsSL https://jiumate.ooo/install.sh | sh
+jiumate web        # http://127.0.0.1:7364 — 首次登录：admin，初始密码见首次启动输出
 ```
 
 多会话对话、Agent 与技能管理、模型配置、用量与成本统计、**Trace 可观测**、**评测中心**，开箱即有，彼此已经打通，**不用订阅什么，也不用另外自建什么**。每个请求、每次工具调用、每个审批决策都已经记下来了，会话可以从 Trace 完整恢复。**这里没有追踪 SDK 要接，因为根本不存在需要跨越的接缝。**
@@ -80,14 +80,14 @@ linsight web        # http://127.0.0.1:7364 — 首次登录：admin，初始密
 ### 4.2 是零行，不是"更少的行"
 
 ```bash
-linsight run -m "分析 data.csv 并总结季度销售情况"
+jiumate run -m "分析 data.csv 并总结季度销售情况"
 ```
 
-不用建工程，不用写 import，也没有框架要学。同一套引擎还驱动着 REPL（`linsight chat`）、无头服务（`linsight server`）和 Web App。
+不用建工程，不用写 import，也没有框架要学。同一套引擎还驱动着 REPL（`jiumate chat`）、无头服务（`jiumate server`）和 Web App。
 
 ### 4.3 让 Agent 来写你的 Agent
 
-你把想要的东西描述出来，剩下的交给一个 Agent：它来写目标 Agent 的 `AGENTS.md`，装好需要的技能，最后把一个能跑的成品交给你。我们用一句话生成过一个完整的 RAG 应用——文档摄取、检索、带出处的引用、Web 界面一应俱全，在 DeepSeek V4 Pro 上的 token 成本是 **$0.02**。[可运行示例](https://github.com/qiaiqian67/linsight/tree/main/examples/build-agent-with-agent)是一个 82 行的脚本：从一句自然语言需求造出新 Agent，然后跑起来验证它。
+你把想要的东西描述出来，剩下的交给一个 Agent：它来写目标 Agent 的 `AGENTS.md`，装好需要的技能，最后把一个能跑的成品交给你。我们用一句话生成过一个完整的 RAG 应用——文档摄取、检索、带出处的引用、Web 界面一应俱全，在 DeepSeek V4 Pro 上的 token 成本是 **$0.02**。[可运行示例](https://github.com/qiaiqian67/jiumate/tree/main/examples/build-agent-with-agent)是一个 82 行的脚本：从一句自然语言需求造出新 Agent，然后跑起来验证它。
 
 这件事能成立，靠的是一条设计原则：**Agent 是可编辑的数据，不是硬编码的常量**。提示词、技能、配置，全都是磁盘上的普通文件。
 
@@ -101,7 +101,7 @@ linsight run -m "分析 data.csv 并总结季度销售情况"
 
 每次工具调用恰好触发一次审批决策，四种模式可选：全部允许、全部拒绝、只读放行、每次询问，每个决策都写进 Trace 留档。整套东西完全本地运行，单核 CPU 也带得动；通过任意 OpenAI 协议端点接得上 1000+ 模型。
 
-## 五、什么时候**不该**用 Linsight
+## 五、什么时候**不该**用 JiuMate
 
 一份每一行都自己赢的对比是广告，不是分析。有两种情况，你该选别的：
 
@@ -112,13 +112,13 @@ linsight run -m "分析 data.csv 并总结季度销售情况"
 
 **难的早就不是构建 Agent 本身，而是把它周围那套栈拼起来、学明白。** 在最流行的那个选项上，这意味着两个库、一个自家或第三方的观测平台、一套评估体系，外加一个人肉充当的优化循环。
 
-Linsight 把这些收进一次安装，然后**把优化循环交给 Agent 自己**。
+JiuMate 把这些收进一次安装，然后**把优化循环交给 Agent 自己**。
 
 我们做的不是最小的框架。**是没有框架，有一个替你写 Agent 的 Agent，以及一份不再需要你去学的清单。**
 
 ---
 
-- **文档**：[快速开始](https://linsight.ooo/docs/quickstart) · [Skills](https://linsight.ooo/docs/skills) · [会话与 Trace](https://linsight.ooo/docs/sessions-and-traces)
-- **社区**：[GitHub](https://github.com/qiaiqian67/linsight) · [Discord](https://discord.gg/eFHKqqcU3D)
+- **文档**：[快速开始](https://jiumate.ooo/docs/quickstart) · [Skills](https://jiumate.ooo/docs/skills) · [会话与 Trace](https://jiumate.ooo/docs/sessions-and-traces)
+- **社区**：[GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**（数据均于 2026-07-22 核对）：[LangChain v1 发布说明](https://docs.langchain.com/oss/python/releases/langchain-v1) · [Langfuse](https://github.com/langfuse/langfuse) · [AutoGen README](https://github.com/microsoft/autogen) · [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) · [Google ADK](https://adk.dev/) · [CrewAI](https://docs.crewai.com/en/quickstart) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/quickstart/) · [Dify LICENSE](https://github.com/langgenius/dify/blob/main/LICENSE) · [n8n LICENSE](https://github.com/n8n-io/n8n/blob/master/LICENSE.md) · [Anthropic, Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents)

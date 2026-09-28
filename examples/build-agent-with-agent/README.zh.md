@@ -2,7 +2,7 @@
 
 # 示例：用一个 Agent 构建另一个 Agent（本地，经 Ollama 跑在 AMD GPU 上）
 
-这个示例是 **“构建 Agent 的 Harness”** 支柱的可运行版本。仅用 Linsight SDK，它会：
+这个示例是 **“构建 Agent 的 Harness”** 支柱的可运行版本。仅用 JiuMate SDK，它会：
 
 1. **构建**一个全新的 Agent（`commit-helper`）——用 `agent-initialization` skill 驱动 `default_agent`，
    根据一句大白话需求把它搭建出来；然后
@@ -22,22 +22,22 @@ ollama serve &          # 若尚未作为服务运行
 ollama pull qwen3.6:35b
 ```
 
-## 2. 把 Linsight 指向它（一次即可）
+## 2. 把 JiuMate 指向它（一次即可）
 
 ```bash
-linsight config model add \
+jiumate config model add \
   --model-id qwen3.6:35b \
   --provider custom --client-type openai \
   --base-url http://localhost:11434/v1 \
   --api-key ollama --set-default
 ```
 
-这会把模型写进 `~/.linsight/data/default_project/.project_config.toml`。示例使用项目的默认模型，
+这会把模型写进 `~/.jiumate/data/default_project/.project_config.toml`。示例使用项目的默认模型，
 所以脚本里没有硬编码任何 model id。
 
 ## 3. 运行示例
 
-从仓库根目录（先构建 workspace，好让 `@prismshadow/linsight-core` 解析到它的 `dist/`）：
+从仓库根目录（先构建 workspace，好让 `@prismshadow/jiumate-core` 解析到它的 `dist/`）：
 
 ```bash
 pnpm install

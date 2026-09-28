@@ -58,7 +58,7 @@ describe("minting an API session", () => {
         const r = mintApiToken(root, { dbPath });
         expect(r.outcome).toBe("failed");
         if (r.outcome !== "failed") return;
-        expect(r.detail).toContain("linsight auth login");
+        expect(r.detail).toContain("jiumate auth login");
       } finally {
         fs.chmodSync(dbPath, 0o600);
       }
@@ -67,7 +67,7 @@ describe("minting an API session", () => {
 
   /**
    * A caller-supplied lifetime must not exceed an ordinary session's. `--ttl-seconds` only
-   * rejects values <= 0, so without the clamp `linsight auth token --ttl-seconds 315360000`
+   * rejects values <= 0, so without the clamp `jiumate auth token --ttl-seconds 315360000`
    * writes a ten-year row — and because its span passes the renewal window it would slide
    * forever, turning a leaked cli-session.json into a permanent credential.
    */

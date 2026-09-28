@@ -64,23 +64,23 @@ command -v jq >/dev/null 2>&1 || {
 }
 
 BUNDLES="
-linsight-linux-x64.tar.gz
-linsight-linux-arm64.tar.gz
-linsight-darwin-x64.tar.gz
-linsight-darwin-arm64.tar.gz
-linsight-universal.tar.gz
-linsight-win32-x64.zip
+jiumate-linux-x64.tar.gz
+jiumate-linux-arm64.tar.gz
+jiumate-darwin-x64.tar.gz
+jiumate-darwin-arm64.tar.gz
+jiumate-universal.tar.gz
+jiumate-win32-x64.zip
 "
 # Desktop installers carry version-less names (see packages/desktop/electron-builder.yml)
 # and are verified as a set through SHA256SUMS.desktop instead of per-file .sha256 twins.
 DESKTOP_INSTALLERS="
-linsight-desktop-darwin-arm64.dmg
-linsight-desktop-darwin-arm64.zip
-linsight-desktop-darwin-x64.dmg
-linsight-desktop-darwin-x64.zip
-linsight-desktop-linux-x86_64.AppImage
-linsight-desktop-linux-amd64.deb
-linsight-desktop-win32-x64.exe
+jiumate-desktop-darwin-arm64.dmg
+jiumate-desktop-darwin-arm64.zip
+jiumate-desktop-darwin-x64.dmg
+jiumate-desktop-darwin-x64.zip
+jiumate-desktop-linux-x86_64.AppImage
+jiumate-desktop-linux-amd64.deb
+jiumate-desktop-win32-x64.exe
 "
 DESKTOP_UPDATE_METADATA="
 latest.yml
@@ -88,9 +88,9 @@ latest-mac.yml
 latest-linux.yml
 "
 EXPECTED_DESKTOP_UPDATE_BLOCKMAPS="
-linsight-desktop-darwin-arm64.zip.blockmap
-linsight-desktop-darwin-x64.zip.blockmap
-linsight-desktop-win32-x64.exe.blockmap
+jiumate-desktop-darwin-arm64.zip.blockmap
+jiumate-desktop-darwin-x64.zip.blockmap
+jiumate-desktop-win32-x64.exe.blockmap
 "
 
 if [ -f "$RELEASE_DIR/release-download-manifest.tsv" ]; then
@@ -133,12 +133,12 @@ PRESENT_DESKTOP_UPDATE_BLOCKMAPS="$(
 )"
 
 FILES="$BUNDLES
-linsight-linux-x64.tar.gz.sha256
-linsight-linux-arm64.tar.gz.sha256
-linsight-darwin-x64.tar.gz.sha256
-linsight-darwin-arm64.tar.gz.sha256
-linsight-universal.tar.gz.sha256
-linsight-win32-x64.zip.sha256
+jiumate-linux-x64.tar.gz.sha256
+jiumate-linux-arm64.tar.gz.sha256
+jiumate-darwin-x64.tar.gz.sha256
+jiumate-darwin-arm64.tar.gz.sha256
+jiumate-universal.tar.gz.sha256
+jiumate-win32-x64.zip.sha256
 SHA256SUMS
 $DESKTOP_INSTALLERS
 $PRESENT_DESKTOP_UPDATE_METADATA
@@ -205,7 +205,7 @@ validate_release_download_manifest() {
   manifest="$RELEASE_DIR/release-download-manifest.tsv"
   [ -f "$manifest" ] || return 0
 
-  expected_header="$(printf 'linsight-release-download-manifest\t1\t%s' "$TAG")"
+  expected_header="$(printf 'jiumate-release-download-manifest\t1\t%s' "$TAG")"
   tab="$(printf '\t')"
   line_no=0
   while IFS= read -r line || [ -n "$line" ]; do

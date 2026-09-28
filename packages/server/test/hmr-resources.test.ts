@@ -13,15 +13,15 @@ import {
   schema,
   type,
   upgrade,
-} from "@prismshadow/linsight-core/kernel";
-import type { Json } from "@prismshadow/linsight-core/kernel";
+} from "@prismshadow/jiumate-core/kernel";
+import type { Json } from "@prismshadow/jiumate-core/kernel";
 import { HotResources } from "../src/hmr/resources.js";
 import { TerminalManager } from "../src/terminal/manager.js";
 import type { TerminalSession } from "../src/terminal/session.js";
 import { DECLARED_RESOURCES as PARKED, packagedPlatform } from "../src/hmr/platform.js";
 import {
   RESOURCE_IFACES_RESOURCE_ID,
-  LINSIGHT_FAMILY,
+  JIUMATE_FAMILY,
   RUNTIME_INTERFACES,
   RUNTIME_INTERFACES_RESOURCE_ID,
   RUNTIME_LIFECYCLE_RESOURCE_ID,
@@ -41,7 +41,7 @@ import {
  * is refused, which is the rule the last describe in this file drives.
  */
 async function bootPlatform(r: HotResources, context?: { terminals?: string[] }) {
-  r.register(RUNTIME_INTERFACES_RESOURCE_ID, { family: LINSIGHT_FAMILY });
+  r.register(RUNTIME_INTERFACES_RESOURCE_ID, { family: JIUMATE_FAMILY });
   const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
   try {
     return await boot(
@@ -132,7 +132,7 @@ describe("resource-interface reconciliation at create()", () => {
     const r = new HotResources();
     const dispose = vi.fn();
     r.register(RESOURCE_IFACES_RESOURCE_ID, {
-      family: LINSIGHT_FAMILY,
+      family: JIUMATE_FAMILY,
       terminal: ["id"],
       platform: PARKED.platform,
     });
@@ -336,7 +336,7 @@ describe("runtime capability handshake", () => {
     // Offering NOTHING, in the same document every host describes itself in, is the
     // honest statement "no business runtime stands behind me" — terminals-only is legal.
     const r = new HotResources();
-    r.register(RUNTIME_INTERFACES_RESOURCE_ID, { family: LINSIGHT_FAMILY });
+    r.register(RUNTIME_INTERFACES_RESOURCE_ID, { family: JIUMATE_FAMILY });
     expect(claimRuntimeCapabilities(r)).toEqual({ kind: "bare" });
   });
 

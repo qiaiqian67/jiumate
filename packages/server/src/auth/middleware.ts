@@ -20,7 +20,7 @@ import type { UserRow } from "../db/repos/users.js";
 import type { AuthService, SessionVia } from "./service.js";
 
 /** Session cookie name. */
-export const SESSION_COOKIE = "linsight_session";
+export const SESSION_COOKIE = "jiumate_session";
 
 /**
  * Session cookie attributes, shared by every path that sets one. `maxAge` comes from the

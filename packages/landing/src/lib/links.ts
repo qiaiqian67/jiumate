@@ -1,7 +1,7 @@
 /** External links and language-independent constants used across the landing page. */
 
-export const REPO_URL = "https://github.com/qiaiqian67/linsight";
-export const REPO_API_URL = "https://api.github.com/repos/qiaiqian67/linsight";
+export const REPO_URL = "https://github.com/qiaiqian67/jiumate";
+export const REPO_API_URL = "https://api.github.com/repos/qiaiqian67/jiumate";
 export const RELEASES_URL = `${REPO_URL}/releases`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 
@@ -14,16 +14,16 @@ export const DOCS_URL = `${import.meta.env.BASE_URL}docs/`;
 
 /**
  * One-line installer (Linux / macOS, x64 / arm64, bundled Node runtime).
- * linsight.ooo/install.sh is this site's own public/install.sh — a thin forwarder
+ * jiumate.ooo/install.sh is this site's own public/install.sh — a thin forwarder
  * to the latest GitHub release installer (Pages cannot serve real redirects).
  */
-export const INSTALL_CMD = "curl -fsSL https://linsight.ooo/install.sh | sh";
+export const INSTALL_CMD = "curl -fsSL https://jiumate.ooo/install.sh | sh";
 
 /**
  * One-line installer for Windows (PowerShell 5.1+, x64, bundled Node runtime).
- * linsight.ooo/install.ps1 is public/install.ps1 — the same thin-forwarder design.
+ * jiumate.ooo/install.ps1 is public/install.ps1 — the same thin-forwarder design.
  */
-export const INSTALL_CMD_WINDOWS = "irm https://linsight.ooo/install.ps1 | iex";
+export const INSTALL_CMD_WINDOWS = "irm https://jiumate.ooo/install.ps1 | iex";
 
 /**
  * Offline install commands, per OS tab of the install switcher. Each Release attaches one
@@ -33,14 +33,14 @@ export const INSTALL_CMD_WINDOWS = "irm https://linsight.ooo/install.ps1 | iex";
  * one-liners above.
  */
 export const OFFLINE_INSTALL_CMDS: Record<"linux" | "macos" | "windows", string> = {
-  linux: `mkdir linsight-install
-tar -xzf linsight-linux-x64.tar.gz -C linsight-install
-./linsight-install/install.sh`,
-  macos: `mkdir linsight-install
-tar -xzf linsight-darwin-arm64.tar.gz -C linsight-install
-./linsight-install/install.sh`,
-  windows: `Expand-Archive linsight-win32-x64.zip -DestinationPath linsight-install
-cd linsight-install
+  linux: `mkdir jiumate-install
+tar -xzf jiumate-linux-x64.tar.gz -C jiumate-install
+./jiumate-install/install.sh`,
+  macos: `mkdir jiumate-install
+tar -xzf jiumate-darwin-arm64.tar.gz -C jiumate-install
+./jiumate-install/install.sh`,
+  windows: `Expand-Archive jiumate-win32-x64.zip -DestinationPath jiumate-install
+cd jiumate-install
 .\\install.cmd`,
 };
 
@@ -54,14 +54,14 @@ export interface CliInstaller {
 /** Direct offline-install downloads shown under the selected command-line platform. */
 export const CLI_INSTALLERS: Record<"linux" | "macos" | "windows", CliInstaller[]> = {
   linux: [
-    { file: "linsight-linux-x64.tar.gz", variant: "x64" },
-    { file: "linsight-linux-arm64.tar.gz", variant: "arm64" },
+    { file: "jiumate-linux-x64.tar.gz", variant: "x64" },
+    { file: "jiumate-linux-arm64.tar.gz", variant: "arm64" },
   ],
   macos: [
-    { file: "linsight-darwin-arm64.tar.gz", variant: "Apple Silicon" },
-    { file: "linsight-darwin-x64.tar.gz", variant: "Intel" },
+    { file: "jiumate-darwin-arm64.tar.gz", variant: "Apple Silicon" },
+    { file: "jiumate-darwin-x64.tar.gz", variant: "Intel" },
   ],
-  windows: [{ file: "linsight-win32-x64.zip", variant: "x64" }],
+  windows: [{ file: "jiumate-win32-x64.zip", variant: "x64" }],
 };
 
 /** API key consoles (same URLs the in-app Models page links to). */
@@ -78,7 +78,7 @@ export const OPENROUTER_KEYS_URL = "https://openrouter.ai/workspaces/default/key
  * falls back to the GitHub links when that fetch fails (e.g. CORS not configured, or the
  * mirror unreachable).
  */
-export const OSS_ORIGIN = "https://linsight-releases.oss-cn-beijing.aliyuncs.com";
+export const OSS_ORIGIN = "https://jiumate-releases.oss-cn-beijing.aliyuncs.com";
 export const OSS_LATEST_JSON_URL = `${OSS_ORIGIN}/latest.json`;
 export const GITHUB_LATEST_DOWNLOAD = `${REPO_URL}/releases/latest/download`;
 
@@ -91,18 +91,18 @@ export interface DesktopInstaller {
 
 /** Named separately: the first-launch FAQ's chmod command quotes this exact file name. */
 const LINUX_APPIMAGE: DesktopInstaller = {
-  file: "linsight-desktop-linux-x86_64.AppImage",
+  file: "jiumate-desktop-linux-x86_64.AppImage",
   variant: "AppImage",
 };
 
 /** Installers per platform card, in display order. */
 export const DESKTOP_INSTALLERS: Record<"mac" | "windows" | "linux", DesktopInstaller[]> = {
   mac: [
-    { file: "linsight-desktop-darwin-arm64.dmg", variant: "Apple Silicon" },
-    { file: "linsight-desktop-darwin-x64.dmg", variant: "Intel" },
+    { file: "jiumate-desktop-darwin-arm64.dmg", variant: "Apple Silicon" },
+    { file: "jiumate-desktop-darwin-x64.dmg", variant: "Intel" },
   ],
-  windows: [{ file: "linsight-desktop-win32-x64.exe", variant: "x64" }],
-  linux: [LINUX_APPIMAGE, { file: "linsight-desktop-linux-amd64.deb", variant: "deb" }],
+  windows: [{ file: "jiumate-desktop-win32-x64.exe", variant: "x64" }],
+  linux: [LINUX_APPIMAGE, { file: "jiumate-desktop-linux-amd64.deb", variant: "deb" }],
 };
 
 /** Checksum list covering every desktop installer of a release. */

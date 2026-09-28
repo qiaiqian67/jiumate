@@ -17,7 +17,7 @@ import {
   USER_SCOPE_KEY,
   memoryDir,
   memoryScopeDir,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   AgentConfigResponse,
   MemoryFileResponse,
@@ -354,7 +354,7 @@ describe("memory scope export/import", () => {
 
   /** A transfer document carrying the given files; its index links each of them unless one is given. */
   const document = (files: MemoryTransferFile[], index?: string | null): MemoryScopeExport => ({
-    format: "linsight-memory-scope",
+    format: "jiumate-memory-scope",
     version: 1,
     scopeKey: WORKSPACE_KEY,
     kind: "workspace",
@@ -400,7 +400,7 @@ describe("memory scope export/import", () => {
       new RegExp(`filename="default_agent-${WORKSPACE_KEY}-memory-\\d{8}-\\d{4}\\.json"`),
     );
     const doc = (await res.json()) as MemoryScopeExport;
-    expect(doc.format).toBe("linsight-memory-scope");
+    expect(doc.format).toBe("jiumate-memory-scope");
     expect(doc.version).toBe(1);
     expect(doc.kind).toBe("workspace");
     expect(doc.workspacePath).toBe("/home/dev/my-app");

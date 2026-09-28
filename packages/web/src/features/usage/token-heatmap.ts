@@ -13,7 +13,7 @@
  * darkest, which is the opposite of informative. Quantiles put the same number of days in each of
  * the four shades, so the year's shape is what the eye reads.
  */
-import type { UsageSeriesPoint } from "@prismshadow/linsight-server/api";
+import type { UsageSeriesPoint } from "@prismshadow/jiumate-server/api";
 
 /** A day's cell: `null` where the grid reaches outside the year (the leading/trailing week stubs). */
 export interface HeatmapCell {

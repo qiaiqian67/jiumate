@@ -1,10 +1,10 @@
 /**
  * The web bundle must never import a *value* from a Node-only barrel.
  *
- * `@prismshadow/linsight-skins` and `@prismshadow/linsight-pets` publish their barrel as the
+ * `@prismshadow/jiumate-skins` and `@prismshadow/jiumate-pets` publish their barrel as the
  * Node entry point: it pulls in `io.ts`, and through it `node:fs` / `node:crypto` / `node:path`.
  * The web app is meant to reach the Node-free siblings instead (`/css`, `/presets`). The same goes
- * for `@prismshadow/linsight-inspirations`, whose barrel adds `io.ts` and whose siblings are
+ * for `@prismshadow/jiumate-inspirations`, whose barrel adds `io.ts` and whose siblings are
  * `/presets` (the built-in catalog) and `/schema` (the types, the bounds and the id rule).
  *
  * Nothing else catches a mistake here. `tsc` is happy because the barrel really does export the
@@ -23,9 +23,9 @@ const WEB_SRC = path.join(import.meta.dirname, "..", "src");
 
 /** Barrels that are Node-only, and the sibling entry a browser-safe import should use. */
 const NODE_ONLY_BARRELS: Record<string, string> = {
-  "@prismshadow/linsight-skins": "@prismshadow/linsight-skins/css or /presets",
-  "@prismshadow/linsight-pets": "@prismshadow/linsight-pets/presets",
-  "@prismshadow/linsight-inspirations": "@prismshadow/linsight-inspirations/presets or /schema",
+  "@prismshadow/jiumate-skins": "@prismshadow/jiumate-skins/css or /presets",
+  "@prismshadow/jiumate-pets": "@prismshadow/jiumate-pets/presets",
+  "@prismshadow/jiumate-inspirations": "@prismshadow/jiumate-inspirations/presets or /schema",
 };
 
 const SPECIFIER_ALTERNATION = Object.keys(NODE_ONLY_BARRELS)
@@ -88,23 +88,23 @@ describe("the scanner", () => {
   it("catches a value import from a barrel", () => {
     expect(
       runtimeBarrelImportsIn(
-        `import { DEFAULT_SKIN_SURFACE_ALPHA } from "@prismshadow/linsight-skins";`,
+        `import { DEFAULT_SKIN_SURFACE_ALPHA } from "@prismshadow/jiumate-skins";`,
       ),
     ).toHaveLength(1);
     expect(
-      runtimeBarrelImportsIn(`export { withAlpha } from "@prismshadow/linsight-skins";`),
+      runtimeBarrelImportsIn(`export { withAlpha } from "@prismshadow/jiumate-skins";`),
     ).toHaveLength(1);
   });
 
   it("allows a type-only import, however it is spelled", () => {
     expect(
-      runtimeBarrelImportsIn(`import type { SkinMode } from "@prismshadow/linsight-skins";`),
+      runtimeBarrelImportsIn(`import type { SkinMode } from "@prismshadow/jiumate-skins";`),
     ).toEqual([]);
     expect(
-      runtimeBarrelImportsIn(`import { type SkinMode } from "@prismshadow/linsight-skins";`),
+      runtimeBarrelImportsIn(`import { type SkinMode } from "@prismshadow/jiumate-skins";`),
     ).toEqual([]);
     expect(
-      runtimeBarrelImportsIn(`import type SkinMode from "@prismshadow/linsight-skins";`),
+      runtimeBarrelImportsIn(`import type SkinMode from "@prismshadow/jiumate-skins";`),
     ).toEqual([]);
   });
 
@@ -112,19 +112,17 @@ describe("the scanner", () => {
     // The shape that would otherwise hide behind a `type` in the same clause.
     expect(
       runtimeBarrelImportsIn(
-        `import { type SkinMode, renderSkinCss } from "@prismshadow/linsight-skins";`,
+        `import { type SkinMode, renderSkinCss } from "@prismshadow/jiumate-skins";`,
       ),
     ).toHaveLength(1);
   });
 
   it("allows the Node-free sibling entries", () => {
     expect(
-      runtimeBarrelImportsIn(`import { withAlpha } from "@prismshadow/linsight-skins/css";`),
+      runtimeBarrelImportsIn(`import { withAlpha } from "@prismshadow/jiumate-skins/css";`),
     ).toEqual([]);
     expect(
-      runtimeBarrelImportsIn(
-        `import { BUILTIN_SKINS } from "@prismshadow/linsight-skins/presets";`,
-      ),
+      runtimeBarrelImportsIn(`import { BUILTIN_SKINS } from "@prismshadow/jiumate-skins/presets";`),
     ).toEqual([]);
   });
 
@@ -132,15 +130,15 @@ describe("the scanner", () => {
     // The regression this scanner shipped with: the lazy clause spanned statements, so a real
     // violation on the last line was reported against the value import at the top.
     const code = [
-      `import { BUILTIN_SKINS } from "@prismshadow/linsight-skins/presets";`,
-      `import type { BuiltinSkinPreset } from "@prismshadow/linsight-skins/presets";`,
-      `import type { SkinMode, SkinPackage } from "@prismshadow/linsight-skins";`,
+      `import { BUILTIN_SKINS } from "@prismshadow/jiumate-skins/presets";`,
+      `import type { BuiltinSkinPreset } from "@prismshadow/jiumate-skins/presets";`,
+      `import type { SkinMode, SkinPackage } from "@prismshadow/jiumate-skins";`,
     ].join("\n");
     expect(runtimeBarrelImportsIn(code)).toEqual([]);
   });
 
   it("finds a violation written across several lines", () => {
-    const code = ["import {", "  renderSkinCss,", `} from "@prismshadow/linsight-skins";`].join(
+    const code = ["import {", "  renderSkinCss,", `} from "@prismshadow/jiumate-skins";`].join(
       "\n",
     );
     expect(runtimeBarrelImportsIn(code)).toHaveLength(1);

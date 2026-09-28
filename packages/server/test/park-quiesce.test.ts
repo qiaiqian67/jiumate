@@ -7,12 +7,12 @@
  * terminals-only there), with fake ptys standing in for delivered resources.
  */
 import { describe, expect, it, vi } from "vitest";
-import { boot, initialDoc, upgrade } from "@prismshadow/linsight-core/kernel";
+import { boot, initialDoc, upgrade } from "@prismshadow/jiumate-core/kernel";
 import { HotResources } from "../src/hmr/resources.js";
 import { packagedPlatform } from "../src/hmr/platform.js";
 import type { PlatformApi } from "../src/hmr/platform.js";
-import type { Instance } from "@prismshadow/linsight-core/kernel";
-import { LINSIGHT_FAMILY, RUNTIME_INTERFACES_RESOURCE_ID } from "../src/hmr/capabilities.js";
+import type { Instance } from "@prismshadow/jiumate-core/kernel";
+import { JIUMATE_FAMILY, RUNTIME_INTERFACES_RESOURCE_ID } from "../src/hmr/capabilities.js";
 import { TerminalManager } from "../src/terminal/manager.js";
 import type { TerminalSession } from "../src/terminal/session.js";
 import { waitFor } from "./helpers.js";
@@ -48,7 +48,7 @@ function bareKernel(): HotResources {
   const r = new HotResources();
   // The bare-kernel declaration IS an interface descriptor: right family, no
   // capabilities offered — "there is no business runtime behind me".
-  r.register(RUNTIME_INTERFACES_RESOURCE_ID, { family: LINSIGHT_FAMILY });
+  r.register(RUNTIME_INTERFACES_RESOURCE_ID, { family: JIUMATE_FAMILY });
   return r;
 }
 

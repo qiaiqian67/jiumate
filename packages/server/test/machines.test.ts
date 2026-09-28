@@ -88,18 +88,18 @@ describe("machineIdentity", () => {
 describe("identity probe", () => {
   it("asks in each shell's own dialect — sh cannot read the Windows one and vice versa", () => {
     expect(POSIX_PROBE).toContain("uname -s -m");
-    expect(POSIX_PROBE).toContain('"$HOME/.linsight/lib/package.json"');
-    expect(POSIX_PROBE).toContain(".linsight/data/hmr/harness.json");
+    expect(POSIX_PROBE).toContain('"$HOME/.jiumate/lib/package.json"');
+    expect(POSIX_PROBE).toContain(".jiumate/data/hmr/harness.json");
     expect(WINDOWS_PROBE).toContain("%PROCESSOR_ARCHITECTURE%");
-    expect(WINDOWS_PROBE).toContain("%USERPROFILE%\\.linsight\\lib\\package.json");
-    expect(WINDOWS_PROBE).toContain("%USERPROFILE%\\.linsight\\data\\hmr\\harness.json");
+    expect(WINDOWS_PROBE).toContain("%USERPROFILE%\\.jiumate\\lib\\package.json");
+    expect(WINDOWS_PROBE).toContain("%USERPROFILE%\\.jiumate\\data\\hmr\\harness.json");
     expect(WINDOWS_PROBE).not.toContain(";");
   });
 
   it("reads identity, installed version and pushed state from the three sections", () => {
     expect(
       parseProbeOutput(
-        'Linux x86_64\n---linsight---\n{"name":"x","version":"0.2.2"}\n---linsight---\n{"platform":{}}\n',
+        'Linux x86_64\n---jiumate---\n{"name":"x","version":"0.2.2"}\n---jiumate---\n{"platform":{}}\n',
       ),
     ).toEqual({
       platform: "linux",
@@ -110,7 +110,7 @@ describe("identity probe", () => {
   });
 
   it("a machine with nothing installed answers empty sections", () => {
-    expect(parseProbeOutput("Linux x86_64\n---linsight---\n---linsight---\n")).toMatchObject({
+    expect(parseProbeOutput("Linux x86_64\n---jiumate---\n---jiumate---\n")).toMatchObject({
       installedVersion: null,
       harness: null,
     });
@@ -118,20 +118,20 @@ describe("identity probe", () => {
 
   it("skips a login banner before the identity line", () => {
     expect(
-      parseProbeOutput("Welcome to build-box!\nLinux x86_64\n---linsight---\n---linsight---\n"),
+      parseProbeOutput("Welcome to build-box!\nLinux x86_64\n---jiumate---\n---jiumate---\n"),
     ).toMatchObject({ platform: "linux", arch: "x64" });
   });
 
   it("recognizes every platform-arch pair the release targets name", () => {
-    expect(parseProbeOutput("Windows_NT AMD64\n---linsight---\n")).toMatchObject({
+    expect(parseProbeOutput("Windows_NT AMD64\n---jiumate---\n")).toMatchObject({
       platform: "win32",
       arch: "x64",
     });
-    expect(parseProbeOutput("Darwin arm64\n---linsight---\n")).toMatchObject({
+    expect(parseProbeOutput("Darwin arm64\n---jiumate---\n")).toMatchObject({
       platform: "darwin",
       arch: "arm64",
     });
-    expect(parseProbeOutput("Linux aarch64\n---linsight---\n")).toMatchObject({
+    expect(parseProbeOutput("Linux aarch64\n---jiumate---\n")).toMatchObject({
       platform: "linux",
       arch: "arm64",
     });
@@ -145,7 +145,7 @@ describe("identity probe", () => {
   });
 
   it("a damaged manifest reads as nothing installed", () => {
-    expect(parseProbeOutput("Linux x86_64\n---linsight---\nnot json at all")).toMatchObject({
+    expect(parseProbeOutput("Linux x86_64\n---jiumate---\nnot json at all")).toMatchObject({
       installedVersion: null,
     });
   });
@@ -232,8 +232,8 @@ describe("ssh / scp invocations", () => {
   });
 
   it("leaves the scp destination unquoted — modern scp transfers over SFTP, taking it literally", () => {
-    const args = scpArgs(target, ["/local/image.pack"], "/tmp/linsight-abc123");
-    expect(args.at(-1)).toBe("build-box:/tmp/linsight-abc123");
+    const args = scpArgs(target, ["/local/image.pack"], "/tmp/jiumate-abc123");
+    expect(args.at(-1)).toBe("build-box:/tmp/jiumate-abc123");
   });
 
   it("quotes per shell: single quotes for sh, double for cmd.exe", () => {
@@ -244,7 +244,7 @@ describe("ssh / scp invocations", () => {
 
   it("takes the installer on stdin, so a POSIX install costs ONE ssh handshake", () => {
     expect(runInstallScriptCommand("v0.2.4", { platform: "linux" })).toEqual({
-      command: "LINSIGHT_VERSION='v0.2.4' sh -s",
+      command: "JIUMATE_VERSION='v0.2.4' sh -s",
       scriptOnStdin: true,
     });
   });
@@ -253,12 +253,12 @@ describe("ssh / scp invocations", () => {
     expect(
       runInstallScriptCommand("v0.2.4", {
         platform: "win32",
-        scriptPath: "%USERPROFILE%\\linsight-ab12.ps1",
+        scriptPath: "%USERPROFILE%\\jiumate-ab12.ps1",
       }),
     ).toEqual({
       command:
-        'powershell -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\\linsight-ab12.ps1"' +
-        ' -Version "v0.2.4" & del /q "%USERPROFILE%\\linsight-ab12.ps1"',
+        'powershell -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\\jiumate-ab12.ps1"' +
+        ' -Version "v0.2.4" & del /q "%USERPROFILE%\\jiumate-ab12.ps1"',
       scriptOnStdin: false,
     });
   });
@@ -269,26 +269,26 @@ describe("ssh / scp invocations", () => {
     // hmr/host.ts reads them: the machine keeps answering with whatever it already had, and
     // the replication reports success while achieving nothing.
     expect(unpackStoreCommand("linux")).toBe(
-      'mkdir -p "$HOME/.linsight/data/hmr" && tar -xzf - -C "$HOME/.linsight/data/hmr"',
+      'mkdir -p "$HOME/.jiumate/data/hmr" && tar -xzf - -C "$HOME/.jiumate/data/hmr"',
     );
     expect(unpackStoreCommand("win32")).toBe(
-      '(if not exist "%USERPROFILE%\\.linsight\\data\\hmr" mkdir "%USERPROFILE%\\.linsight\\data\\hmr") & tar -xzf - -C "%USERPROFILE%\\.linsight\\data\\hmr"',
+      '(if not exist "%USERPROFILE%\\.jiumate\\data\\hmr" mkdir "%USERPROFILE%\\.jiumate\\data\\hmr") & tar -xzf - -C "%USERPROFILE%\\.jiumate\\data\\hmr"',
     );
   });
 });
 
 describe("resolvePushPlan", () => {
-  const manifest = JSON.stringify({ name: "@prismshadow/linsight-cli", version: "0.2.4" });
+  const manifest = JSON.stringify({ name: "@prismshadow/jiumate-cli", version: "0.2.4" });
 
   it("tarball install: the base release, with no pushed state", () => {
-    const work = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-plan-"));
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-plan-"));
     try {
-      const root = path.join(work, "linsight");
+      const root = path.join(work, "jiumate");
       fs.mkdirSync(path.join(root, "lib", "dist"), { recursive: true });
-      fs.writeFileSync(path.join(root, "lib", "dist", "linsight.js"), "//\n");
+      fs.writeFileSync(path.join(root, "lib", "dist", "jiumate.js"), "//\n");
       fs.writeFileSync(path.join(root, "lib", "package.json"), manifest);
 
-      const plan = resolvePushPlan(work, path.join(root, "lib", "dist", "linsight.js"));
+      const plan = resolvePushPlan(work, path.join(root, "lib", "dist", "jiumate.js"));
       expect(plan).toMatchObject({ baseVersion: "0.2.4", harness: null, version: "0.2.4" });
     } finally {
       fs.rmSync(work, { recursive: true, force: true });
@@ -296,11 +296,11 @@ describe("resolvePushPlan", () => {
   });
 
   it("a pushed server adds its hmr state, sha-suffixed", () => {
-    const work = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-plan-"));
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-plan-"));
     try {
-      const root = path.join(work, "linsight");
+      const root = path.join(work, "jiumate");
       fs.mkdirSync(path.join(root, "lib", "dist"), { recursive: true });
-      fs.writeFileSync(path.join(root, "lib", "dist", "linsight.js"), "//\n");
+      fs.writeFileSync(path.join(root, "lib", "dist", "jiumate.js"), "//\n");
       fs.writeFileSync(path.join(root, "lib", "package.json"), manifest);
       const hmrDir = path.join(work, "data", "hmr");
       fs.mkdirSync(hmrDir, { recursive: true });
@@ -311,7 +311,7 @@ describe("resolvePushPlan", () => {
 
       const plan = resolvePushPlan(
         path.join(work, "data"),
-        path.join(root, "lib", "dist", "linsight.js"),
+        path.join(root, "lib", "dist", "jiumate.js"),
       );
       expect(plan).toMatchObject({
         baseVersion: "0.2.4",
@@ -325,13 +325,13 @@ describe("resolvePushPlan", () => {
   });
 
   it("packaged desktop app: its own manifest names the release it shipped under", () => {
-    const work = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-plan-"));
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-plan-"));
     try {
       const appDir = path.join(work, "resources", "app");
       fs.mkdirSync(path.join(appDir, "dist"), { recursive: true });
       fs.writeFileSync(
         path.join(appDir, "package.json"),
-        JSON.stringify({ name: "@prismshadow/linsight-desktop", version: "0.2.4" }),
+        JSON.stringify({ name: "@prismshadow/jiumate-desktop", version: "0.2.4" }),
       );
 
       const plan = resolvePushPlan(null, path.join(appDir, "dist", "server.js"));
@@ -342,13 +342,13 @@ describe("resolvePushPlan", () => {
   });
 
   it("a desktop SOURCE run stands on no release: packages/desktop is not under resources/", () => {
-    const work = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-plan-"));
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-plan-"));
     try {
       const pkgDir = path.join(work, "packages", "desktop");
       fs.mkdirSync(path.join(pkgDir, "dist"), { recursive: true });
       fs.writeFileSync(
         path.join(pkgDir, "package.json"),
-        JSON.stringify({ name: "@prismshadow/linsight-desktop", version: "0.2.4" }),
+        JSON.stringify({ name: "@prismshadow/jiumate-desktop", version: "0.2.4" }),
       );
 
       expect(resolvePushPlan(null, path.join(pkgDir, "dist", "server.js"))).toBeNull();
@@ -377,7 +377,7 @@ describe("shipping the installers", () => {
   });
 });
 
-describe("asking `linsight server status` in the machine's own dialect", () => {
+describe("asking `jiumate server status` in the machine's own dialect", () => {
   const target = { alias: "nas", user: "deploy" };
   const answered = {
     code: 0,
@@ -385,7 +385,7 @@ describe("asking `linsight server status` in the machine's own dialect", () => {
     stderr: "",
     timedOut: false,
   };
-  // What cmd.exe says to `"$HOME/.linsight/node/bin/node"`: not "no such command", a path
+  // What cmd.exe says to `"$HOME/.jiumate/node/bin/node"`: not "no such command", a path
   // with four literal characters in it.
   const cmdSaid = {
     code: 1,
@@ -396,10 +396,10 @@ describe("asking `linsight server status` in the machine's own dialect", () => {
 
   it("speaks cmd.exe to a Windows machine: no $HOME, node.exe, backslashes", () => {
     const command = readServerStateCommand("win32");
-    expect(command).toContain("%USERPROFILE%\\.linsight\\node\\node.exe");
-    expect(command).toContain("lib\\dist\\linsight-hmr.js");
+    expect(command).toContain("%USERPROFILE%\\.jiumate\\node\\node.exe");
+    expect(command).toContain("lib\\dist\\jiumate-hmr.js");
     expect(command).not.toContain("$HOME");
-    expect(readServerStateCommand("linux")).toContain("$HOME/.linsight/node/bin/node");
+    expect(readServerStateCommand("linux")).toContain("$HOME/.jiumate/node/bin/node");
   });
 
   it("a machine whose platform is on record is asked once, in that dialect", async () => {
@@ -446,7 +446,7 @@ describe("asking `linsight server status` in the machine's own dialect", () => {
   });
 });
 
-describe("reading what `linsight server status` answered", () => {
+describe("reading what `jiumate server status` answered", () => {
   const answer = (o: Record<string, unknown>) => JSON.stringify(o);
 
   it("takes the state and the id out of the machine's own JSON", () => {
@@ -489,7 +489,7 @@ describe("readPushedBuild", () => {
   it("hands on the native assets and the provenance, not only the three bundles", () => {
     // A platform resolves node-pty out of its assets directory and nowhere else; a hand-over
     // without them left every terminal on the machine failing with "no assets directory".
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-handover-"));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-handover-"));
     try {
       const hmr = path.join(root, "hmr");
       const assets = path.join(hmr, "store", "assets", "abc");
@@ -553,7 +553,7 @@ describe("readPushedBuild", () => {
   });
 
   it("still hands on a build that was pushed without assets", () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-handover-"));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-handover-"));
     try {
       const hmr = path.join(root, "hmr");
       fs.mkdirSync(path.join(hmr, "s"), { recursive: true });

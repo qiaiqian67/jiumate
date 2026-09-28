@@ -688,7 +688,7 @@ export class Environment implements EnvironmentInterface {
         } else {
           // Other message types without origin: protocol misuse, ignore and warn (keep the parent stream clean).
           process.stderr.write(
-            `[linsight] tool "${name}" yielded unexpected message type "${p.type}"; ignored.\n`,
+            `[jiumate] tool "${name}" yielded unexpected message type "${p.type}"; ignored.\n`,
           );
         }
       }

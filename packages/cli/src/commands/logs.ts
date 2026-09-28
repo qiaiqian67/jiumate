@@ -1,17 +1,17 @@
 /**
- * `linsight logs` — render a session's history (and optionally follow it live).
+ * `jiumate logs` — render a session's history (and optionally follow it live).
  *
- *   linsight logs [session_id] [--tail <n>] [-f|--follow] [--json] [--server <url>]
+ *   jiumate logs [session_id] [--tail <n>] [-f|--follow] [--json] [--server <url>]
  *
  * `[session_id]` is a full id or a unique fragment; omitted, it is the agent's most
  * recent session (announced as a dim `[latest]` line on stderr — see
- * resolveSessionTarget), so a bare `linsight logs` shows what just happened.
+ * resolveSessionTarget), so a bare `jiumate logs` shows what just happened.
  *
  * History comes from GET /messages and renders through the same history renderer the
  * REPL's `--resume` uses; `--tail n` keeps the last n entries. `-f` keeps the command
  * attached: after the history it subscribes to the session's SSE stream and renders new
  * messages as they arrive (read-only — Ctrl-C detaches without touching the session).
- * Docs: /docs/cli § "linsight logs".
+ * Docs: /docs/cli § "jiumate logs".
  */
 import type { Command } from "commander";
 import { StreamRenderer, dim, renderHistory } from "../render.js";
@@ -25,7 +25,7 @@ import {
 } from "../client.js";
 import { getSessionMessages, resolveSessionTarget } from "../server-session.js";
 import { SessionStream, nextFrameOrDeadline } from "../server-task.js";
-import type { OmniMessage } from "@prismshadow/linsight-core";
+import type { OmniMessage } from "@prismshadow/jiumate-core";
 import type { Messages } from "../i18n.js";
 
 export function registerLogsCommand(program: Command, t: Messages): void {

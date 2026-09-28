@@ -1,21 +1,21 @@
 /**
- * The `linsight` command an installed desktop app provides: PATH exposure for the bundled
- * CLI launcher (`<app>/bin/linsight`, generated at stage time; see launcher.ts).
+ * The `jiumate` command an installed desktop app provides: PATH exposure for the bundled
+ * CLI launcher (`<app>/bin/jiumate`, generated at stage time; see launcher.ts).
  *
  * It installs itself, at every launch, without asking — the CLI is part of what the app
  * is, and an update that left a stale command behind would point an old client at a new
- * server. Per platform (deb is absent on purpose: its postinst ships /usr/bin/linsight, see
+ * server. Per platform (deb is absent on purpose: its postinst ships /usr/bin/jiumate, see
  * build/linux/after-install.tpl):
- * - macOS: symlink /usr/local/bin/linsight → <app>/bin/linsight. The unprivileged write is
+ * - macOS: symlink /usr/local/bin/jiumate → <app>/bin/jiumate. The unprivileged write is
  *   tried first and an administrator prompt appears only where it actually fails, which on
  *   a Mac without Homebrew is where /usr/local/bin has to be created.
  * - Windows: append <app>\bin to the user PATH (HKCU\Environment) via reg.exe, idempotently
  *   and append-only; new terminals pick it up. No elevation is involved.
- * - Linux AppImage: write an executable ~/.local/bin/linsight wrapper that runs the AppImage
+ * - Linux AppImage: write an executable ~/.local/bin/jiumate wrapper that runs the AppImage
  *   itself as Node (see launcher.ts appImageWrapperScript).
  *
  * Two rules follow from doing this silently, both enforced in cli-link.ts:
- * - A `linsight` this app did not write is never replaced. `install.sh` puts its own symlink
+ * - A `jiumate` this app did not write is never replaced. `install.sh` puts its own symlink
  *   at the very path the AppImage form uses, and the user may have one from anywhere else.
  *   Such a target is skipped and the reason recorded.
  * - Nothing is installed from a location that will not persist — a macOS bundle still on
@@ -79,18 +79,18 @@ interface Attempt {
   declined?: boolean;
 }
 
-/** macOS: /usr/local/bin/linsight symlink, escalating via osascript only on EACCES/EPERM. */
+/** macOS: /usr/local/bin/jiumate symlink, escalating via osascript only on EACCES/EPERM. */
 async function attemptDarwin(force: boolean): Promise<Attempt> {
   const appPath = app.getAppPath();
   if (isVolatileAppLocation(appPath, process.platform)) {
     return {
       ok: false,
       result: "deferred",
-      detail: `The app is running from ${appPath}, which will not stay there. Move Linsight to your Applications folder and open it from there; the command installs itself on that launch.`,
+      detail: `The app is running from ${appPath}, which will not stay there. Move JiuMate to your Applications folder and open it from there; the command installs itself on that launch.`,
     };
   }
-  const desired = path.join(binDir(), "linsight");
-  const link = path.join(MAC_LINK_DIR, "linsight");
+  const desired = path.join(binDir(), "jiumate");
+  const link = path.join(MAC_LINK_DIR, "jiumate");
   try {
     const synced = syncSymlink(link, desired, force);
     if (synced.action === "current") return { ok: true, result: "current", detail: synced.detail };
@@ -110,14 +110,14 @@ async function attemptDarwin(force: boolean): Promise<Attempt> {
         ok: false,
         result: "failed",
         declined: true,
-        detail: `Administrator authorization was cancelled or failed, so ${link} was not created. Use "Install 'linsight' Command…" in the application menu to try again.\n${String(escalated)}`,
+        detail: `Administrator authorization was cancelled or failed, so ${link} was not created. Use "Install 'jiumate' Command…" in the application menu to try again.\n${String(escalated)}`,
       };
     }
   }
   return {
     ok: true,
     result: "installed",
-    detail: `${link} now points at the app's bundled CLI. Run 'linsight' from any terminal.`,
+    detail: `${link} now points at the app's bundled CLI. Run 'jiumate' from any terminal.`,
   };
 }
 
@@ -158,16 +158,16 @@ async function attemptWindows(): Promise<Attempt> {
   } catch (err) {
     return { ok: false, result: "failed", detail: String(err) };
   }
-  // Nothing on disk is touched here: the entry is appended, so another `linsight` earlier in
+  // Nothing on disk is touched here: the entry is appended, so another `jiumate` earlier in
   // PATH keeps winning and no other software's entry is rewritten.
   return {
     ok: true,
     result: "installed",
-    detail: `${dir} was added to your user PATH. Open a NEW terminal (existing ones keep the old PATH) and run 'linsight'.`,
+    detail: `${dir} was added to your user PATH. Open a NEW terminal (existing ones keep the old PATH) and run 'jiumate'.`,
   };
 }
 
-/** Linux AppImage: executable ~/.local/bin/linsight wrapper invoking the AppImage as Node. */
+/** Linux AppImage: executable ~/.local/bin/jiumate wrapper invoking the AppImage as Node. */
 function attemptAppImage(force: boolean): Attempt {
   const appImage = process.env.APPIMAGE;
   if (!appImage) {
@@ -177,7 +177,7 @@ function attemptAppImage(force: boolean): Attempt {
       detail: "APPIMAGE is not set; this build cannot install the command.",
     };
   }
-  const target = path.join(os.homedir(), ".local", "bin", "linsight");
+  const target = path.join(os.homedir(), ".local", "bin", "jiumate");
   let script: string;
   try {
     script = appImageWrapperScript(appImage);
@@ -195,7 +195,7 @@ function attemptAppImage(force: boolean): Attempt {
   return {
     ok: true,
     result: "installed",
-    detail: `${target} now runs the CLI bundled in this AppImage. Make sure ~/.local/bin is on your PATH (most distributions add it at login), then run 'linsight' from a new terminal.`,
+    detail: `${target} now runs the CLI bundled in this AppImage. Make sure ~/.local/bin is on your PATH (most distributions add it at login), then run 'jiumate' from a new terminal.`,
   };
 }
 
@@ -250,10 +250,10 @@ export async function ensureCliCommand(): Promise<void> {
 function showResult(win: BrowserWindow | null, ok: boolean, detail: string): void {
   const opts = {
     type: ok ? ("info" as const) : ("error" as const),
-    title: "Linsight",
+    title: "JiuMate",
     message: ok
-      ? "The 'linsight' command is installed."
-      : "Could not install the 'linsight' command.",
+      ? "The 'jiumate' command is installed."
+      : "Could not install the 'jiumate' command.",
     detail,
   };
   void (win !== null ? dialog.showMessageBox(win, opts) : dialog.showMessageBox(opts));
@@ -261,7 +261,7 @@ function showResult(win: BrowserWindow | null, ok: boolean, detail: string): voi
 
 /**
  * The menu item. Same install, but it reports every outcome and it is the one place a
- * `linsight` this app did not write can be replaced — with the user looking at what is
+ * `jiumate` this app did not write can be replaced — with the user looking at what is
  * about to be overwritten. Invoking it also clears a previously declined prompt.
  */
 export async function installCliCommand(win: BrowserWindow | null): Promise<void> {
@@ -274,8 +274,8 @@ export async function installCliCommand(win: BrowserWindow | null): Promise<void
   if (outcome.result === "foreign") {
     const opts = {
       type: "warning" as const,
-      title: "Linsight",
-      message: "Something else already provides the 'linsight' command.",
+      title: "JiuMate",
+      message: "Something else already provides the 'jiumate' command.",
       detail: `${outcome.detail}\n\nReplace it with this app's command? The file it replaces is not backed up.`,
       buttons: ["Replace", "Cancel"],
       defaultId: 1,

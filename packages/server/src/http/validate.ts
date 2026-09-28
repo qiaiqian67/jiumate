@@ -7,7 +7,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { Context } from "hono";
-import { isValidId } from "@prismshadow/linsight-core";
+import { isValidId } from "@prismshadow/jiumate-core";
 import { HttpError } from "./errors.js";
 
 export function badRequest(message: string): HttpError {

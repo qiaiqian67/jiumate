@@ -1,7 +1,7 @@
 /**
- * `linsight run` — send a single Task through the server and render its stream.
+ * `jiumate run` — send a single Task through the server and render its stream.
  *
- *   linsight run -m <msg> [--project-id <id>] [--agent-id <id>] [--workspace <path>]
+ *   jiumate run -m <msg> [--project-id <id>] [--agent-id <id>] [--workspace <path>]
  *               [--model-id <id> --provider <group>] [--approve <mode>]
  *               [--thinking <level>] [--session <session_id>] [--background]
  *               [--goal [budget]] [--json] [--server <url>]
@@ -11,7 +11,7 @@
  * ends, then prints the stats line. Exit 0 on completed; a goal run exits 0 only when
  * the goal outcome is `complete`.
  *
- * - Defaults: project/agent from LINSIGHT_PROJECT_ID / LINSIGHT_AGENT_ID (else
+ * - Defaults: project/agent from JIUMATE_PROJECT_ID / JIUMATE_AGENT_ID (else
  *   default_project / default_agent); Workspace = the CLI's cwd (resolved locally —
  *   server and CLI share the machine in the default flow); model = the Project default;
  *   approval mode allow-all (the historical run default).
@@ -23,10 +23,10 @@
  *   where `text` joins the main session's assistant text messages of this task.
  * - Ctrl-C: during an approval prompt → deny that call; otherwise POST /abort and let
  *   the stream wind down (the abort event maps to exit code 1).
- * Docs: /docs/cli § "linsight run".
+ * Docs: /docs/cli § "jiumate run".
  */
 import type { Command } from "commander";
-import { VERSION } from "@prismshadow/linsight-core";
+import { VERSION } from "@prismshadow/jiumate-core";
 import { StreamRenderer, dim } from "../render.js";
 import { parseDurationMs } from "../duration.js";
 import { parseTokenBudget, UNLIMITED_BUDGET } from "../goal-command.js";
@@ -172,8 +172,8 @@ export function registerRunCommand(program: Command, t: Messages): void {
       };
 
       if (opts.background === true) {
-        // POST and leave: the task runs on the server; the id is what `linsight input` /
-        // `linsight logs` address later.
+        // POST and leave: the task runs on the server; the id is what `jiumate input` /
+        // `jiumate logs` address later.
         await client.request("POST", `/api/sessions/${session.sessionId}/tasks`, taskBody);
         process.stdout.write(
           json ? `${JSON.stringify({ sessionId: session.sessionId })}\n` : `${session.sessionId}\n`,

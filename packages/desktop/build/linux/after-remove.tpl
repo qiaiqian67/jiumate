@@ -1,8 +1,8 @@
 #!/bin/bash
 # Deb post-remove (electron-builder deb.afterRemove). Overriding the option REPLACES
 # electron-builder's default template, so this file is that default (app-builder-lib
-# templates/linux/after-remove.tpl, v26.15.3) verbatim, plus the marked Linsight
-# section removing the `linsight` CLI launcher link installed by after-install.tpl.
+# templates/linux/after-remove.tpl, v26.15.3) verbatim, plus the marked JiuMate
+# section removing the `jiumate` CLI launcher link installed by after-install.tpl.
 
 # Delete the link to the binary
 # update-alternatives --remove <name> <path>: 'path' must be the registered alternative binary,
@@ -13,9 +13,9 @@ else
     rm -f '/usr/bin/${executable}'
 fi
 
-# Linsight: remove the linsight CLI launcher link, but only if it is ours.
-if [ -L '/usr/bin/linsight' ] && [ "`readlink '/usr/bin/linsight'`" = '/opt/${sanitizedProductName}/resources/app/bin/linsight' ]; then
-    rm -f '/usr/bin/linsight'
+# JiuMate: remove the jiumate CLI launcher link, but only if it is ours.
+if [ -L '/usr/bin/jiumate' ] && [ "`readlink '/usr/bin/jiumate'`" = '/opt/${sanitizedProductName}/resources/app/bin/jiumate' ]; then
+    rm -f '/usr/bin/jiumate'
 fi
 
 APPARMOR_PROFILE_DEST='/etc/apparmor.d/${executable}'

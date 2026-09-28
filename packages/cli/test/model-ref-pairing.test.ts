@@ -1,5 +1,5 @@
 /**
- * `linsight run` / `linsight chat`: a model reference is always an explicit
+ * `jiumate run` / `jiumate chat`: a model reference is always an explicit
  * (provider, model_id) pair. Commander can only mark each option required on its own, so
  * the "both or neither" rule is enforced inside the action — supplying exactly one of
  * --model-id / --provider is a usage error (never a lookup against the configured models),
@@ -15,19 +15,19 @@ import { registerRunCommand } from "../src/commands/run.js";
 import { getMessages } from "../src/i18n.js";
 
 // The --resume case below reaches createAgent, which initializes Agent state on disk; point
-// the data root at a throwaway directory so no test ever writes to the real ~/.linsight/data.
+// the data root at a throwaway directory so no test ever writes to the real ~/.jiumate/data.
 let tmpHome: string;
 let prevHome: string | undefined;
 
 beforeEach(async () => {
-  prevHome = process.env.LINSIGHT_HOME;
-  tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-cli-pairing-"));
-  process.env.LINSIGHT_HOME = tmpHome;
+  prevHome = process.env.JIUMATE_HOME;
+  tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-cli-pairing-"));
+  process.env.JIUMATE_HOME = tmpHome;
 });
 
 afterEach(async () => {
-  if (prevHome === undefined) delete process.env.LINSIGHT_HOME;
-  else process.env.LINSIGHT_HOME = prevHome;
+  if (prevHome === undefined) delete process.env.JIUMATE_HOME;
+  else process.env.JIUMATE_HOME = prevHome;
   await fs.rm(tmpHome, { recursive: true, force: true });
 });
 
@@ -52,7 +52,7 @@ async function runCommand(
   const prevExitCode = process.exitCode;
   process.exitCode = undefined;
   try {
-    await program.parseAsync(["node", "linsight", ...args]);
+    await program.parseAsync(["node", "jiumate", ...args]);
     return { out: out.join(""), err: err.join(""), code: Number(process.exitCode ?? 0) };
   } catch (e) {
     const exitCode = (e as { exitCode?: number }).exitCode;

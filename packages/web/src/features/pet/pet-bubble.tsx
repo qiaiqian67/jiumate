@@ -48,12 +48,12 @@ export function PetBubble({
 
   const body = (
     <>
-      <span className="linsight-pet-bubble__title">{task.title}</span>
-      <span className="linsight-pet-bubble__status">{task.label}</span>
+      <span className="jiumate-pet-bubble__title">{task.title}</span>
+      <span className="jiumate-pet-bubble__status">{task.label}</span>
       {task.output === "" ? null : (
         <span
-          className={`linsight-pet-bubble__output${
-            typing ? " linsight-pet-bubble__output--typing" : ""
+          className={`jiumate-pet-bubble__output${
+            typing ? " jiumate-pet-bubble__output--typing" : ""
           }`}
           data-testid="pet-bubble-output"
         >
@@ -76,19 +76,19 @@ export function PetBubble({
   if (composing) {
     return (
       <div
-        className={`linsight-pet-bubble linsight-pet-bubble--${task.state}${
-          single ? " linsight-pet-bubble--single" : ""
-        } linsight-pet-bubble--composing`}
+        className={`jiumate-pet-bubble jiumate-pet-bubble--${task.state}${
+          single ? " jiumate-pet-bubble--single" : ""
+        } jiumate-pet-bubble--composing`}
         data-pet-session-id={task.sessionId}
         data-pet-state={task.state}
         onContextMenu={(event) => event.stopPropagation()}
       >
         {body}
-        <div className="linsight-pet-bubble__composer">
+        <div className="jiumate-pet-bubble__composer">
           <input
             autoFocus
             type="text"
-            className="linsight-pet-bubble__composer-input"
+            className="jiumate-pet-bubble__composer-input"
             value={composer.value}
             placeholder={S.pet.composerPlaceholder}
             aria-label={S.pet.composerPlaceholder}
@@ -110,7 +110,7 @@ export function PetBubble({
           />
           <button
             type="button"
-            className="linsight-pet-bubble__composer-send"
+            className="jiumate-pet-bubble__composer-send"
             title={S.pet.composerSend}
             aria-label={S.pet.composerSend}
             disabled={composer.busy || composer.value.trim() === ""}
@@ -120,7 +120,7 @@ export function PetBubble({
           </button>
           <button
             type="button"
-            className="linsight-pet-bubble__composer-cancel"
+            className="jiumate-pet-bubble__composer-cancel"
             title={S.pet.composerCancel}
             aria-label={S.pet.composerCancel}
             onClick={() => composer.onCancel()}
@@ -134,8 +134,8 @@ export function PetBubble({
 
   return (
     <div
-      className={`linsight-pet-bubble linsight-pet-bubble--${task.state}${
-        single ? " linsight-pet-bubble--single" : ""
+      className={`jiumate-pet-bubble jiumate-pet-bubble--${task.state}${
+        single ? " jiumate-pet-bubble--single" : ""
       }`}
       role="button"
       tabIndex={0}
@@ -150,7 +150,7 @@ export function PetBubble({
       {task.canReply ? (
         <button
           type="button"
-          className="linsight-pet-bubble__reply"
+          className="jiumate-pet-bubble__reply"
           title={S.pet.composerOpen}
           aria-label={S.pet.composerOpen}
           onClick={(event) => {

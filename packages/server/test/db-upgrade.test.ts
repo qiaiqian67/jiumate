@@ -29,7 +29,7 @@ const sqlite = process.getBuiltinModule("node:sqlite");
 let dir: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(path.join(tmpdir(), "linsight-db-upgrade-"));
+  dir = await mkdtemp(path.join(tmpdir(), "jiumate-db-upgrade-"));
 });
 afterEach(async () => {
   // maxRetries for the same reason helpers.ts documents: on Windows a handle that is

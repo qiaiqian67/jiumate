@@ -2,8 +2,8 @@
 # Wrap each program payload with its checksum and native installer into the canonical Release
 # artifact — the only package shape a Release publishes:
 #
-#   linsight-<target>.tar.gz  = install.sh + payload.tar.gz + payload.tar.gz.sha256
-#   linsight-win32-x64.zip    = install.cmd + install.ps1 + payload.zip + payload.zip.sha256
+#   jiumate-<target>.tar.gz  = install.sh + payload.tar.gz + payload.tar.gz.sha256
+#   jiumate-win32-x64.zip    = install.cmd + install.ps1 + payload.zip + payload.zip.sha256
 #
 # The same bundle serves online installs (downloaded, outer-verified and opened by install.sh /
 # install.ps1) and offline installs (transfer one file, extract once, run the bundled
@@ -67,7 +67,7 @@ mkdir -p "$OUTPUT_DIR"
 
 for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 universal; do
   payload="$target.tar.gz"
-  output="$OUTPUT_DIR/linsight-$target.tar.gz"
+  output="$OUTPUT_DIR/jiumate-$target.tar.gz"
   bundle="$WORK_DIR/$target"
   require_payload "$payload"
   mkdir -p "$bundle"
@@ -82,7 +82,7 @@ for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 universal; do
 done
 
 payload="win32-x64.zip"
-output="$OUTPUT_DIR/linsight-win32-x64.zip"
+output="$OUTPUT_DIR/jiumate-win32-x64.zip"
 bundle="$WORK_DIR/win32-x64"
 require_payload "$payload"
 mkdir -p "$bundle"

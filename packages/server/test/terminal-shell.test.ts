@@ -26,15 +26,15 @@ describe("resolveDefaultShell", () => {
     expect(resolveDefaultShell({}, "win32", NO_PATH)).toBe("C:\\Windows\\System32\\cmd.exe");
   });
 
-  it("honours LINSIGHT_SHELL on every platform, without probing", () => {
-    const env = { LINSIGHT_SHELL: "C:\\Program Files\\Git\\bin\\bash.exe", SHELL: "/bin/zsh" };
+  it("honours JIUMATE_SHELL on every platform, without probing", () => {
+    const env = { JIUMATE_SHELL: "C:\\Program Files\\Git\\bin\\bash.exe", SHELL: "/bin/zsh" };
     const explode = {
       onPath: (): boolean => {
         throw new Error("must not probe");
       },
     };
-    expect(resolveDefaultShell(env, "win32", explode)).toBe(env.LINSIGHT_SHELL);
-    expect(resolveDefaultShell(env, "linux", explode)).toBe(env.LINSIGHT_SHELL);
+    expect(resolveDefaultShell(env, "win32", explode)).toBe(env.JIUMATE_SHELL);
+    expect(resolveDefaultShell(env, "linux", explode)).toBe(env.JIUMATE_SHELL);
   });
 });
 

@@ -35,27 +35,27 @@ describe("appIdentity", () => {
     expect(dev.name).not.toBe(appIdentity(true).name);
     expect(dev.appUserModelId).not.toBe(appIdentity(true).appUserModelId);
     expect(dev).toEqual({
-      name: "Linsight-Dev",
-      appUserModelId: "com.prismshadow.linsight.dev",
+      name: "JiuMate-Dev",
+      appUserModelId: "com.prismshadow.jiumate.dev",
     });
   });
 });
 
 describe("devDataRoot", () => {
-  it("is ~/.linsight/dev-data, apart from the release/CLI ~/.linsight/data", () => {
-    expect(devDataRoot("/home/dev")).toBe(path.join("/home/dev", ".linsight", "dev-data"));
-    expect(devDataRoot("/home/dev")).not.toBe(path.join("/home/dev", ".linsight", "data"));
+  it("is ~/.jiumate/dev-data, apart from the release/CLI ~/.jiumate/data", () => {
+    expect(devDataRoot("/home/dev")).toBe(path.join("/home/dev", ".jiumate", "dev-data"));
+    expect(devDataRoot("/home/dev")).not.toBe(path.join("/home/dev", ".jiumate", "data"));
   });
 });
 
 /**
  * The precedence rule #292 turns on. These pin the RULE, not the constants: flipping the
- * packaged branch, dropping the LINSIGHT_HOME precedence, or letting either form fall into
+ * packaged branch, dropping the JIUMATE_HOME precedence, or letting either form fall into
  * the other's root has to fail here.
  */
 describe("desktopDataRoot", () => {
-  const releaseRoot = path.join("/home/dev", ".linsight", "data");
-  const devRoot = path.join("/home/dev", ".linsight", "dev-data");
+  const releaseRoot = path.join("/home/dev", ".jiumate", "data");
+  const devRoot = path.join("/home/dev", ".jiumate", "dev-data");
   /** Stands in for core's resolveRoot, and records whether the rule consulted it. */
   function stubRelease(): (() => string) & { calls: number } {
     const fn = (): string => {
@@ -66,7 +66,7 @@ describe("desktopDataRoot", () => {
     return fn;
   }
 
-  it("an explicit LINSIGHT_HOME wins in both forms", () => {
+  it("an explicit JIUMATE_HOME wins in both forms", () => {
     for (const isPackaged of [true, false]) {
       const release = stubRelease();
       expect(
@@ -82,7 +82,7 @@ describe("desktopDataRoot", () => {
     }
   });
 
-  it("a packaged build with no LINSIGHT_HOME shares the CLI's root via core's resolver", () => {
+  it("a packaged build with no JIUMATE_HOME shares the CLI's root via core's resolver", () => {
     const release = stubRelease();
     expect(
       desktopDataRoot({
@@ -92,11 +92,11 @@ describe("desktopDataRoot", () => {
         releaseRoot: release,
       }),
     ).toBe(releaseRoot);
-    // Delegated rather than re-derived, so ~/.linsight/data keeps one definition point.
+    // Delegated rather than re-derived, so ~/.jiumate/data keeps one definition point.
     expect(release.calls).toBe(1);
   });
 
-  it("an unpackaged run with no LINSIGHT_HOME takes the dev root, never the release one", () => {
+  it("an unpackaged run with no JIUMATE_HOME takes the dev root, never the release one", () => {
     const release = stubRelease();
     const root = desktopDataRoot({
       envHome: undefined,

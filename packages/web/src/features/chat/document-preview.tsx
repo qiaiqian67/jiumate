@@ -18,7 +18,7 @@
  * the `md` preview it already has, and this component never sees it.
  */
 import { Suspense, lazy, useState } from "react";
-import type { DocumentPreview, SheetGrid } from "@prismshadow/linsight-core/documents";
+import type { DocumentPreview, SheetGrid } from "@prismshadow/jiumate-core/documents";
 import { S } from "../../lib/strings";
 
 /**

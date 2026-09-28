@@ -1,17 +1,17 @@
 /**
- * `linsight agent` — list and create agents through the server.
+ * `jiumate agent` — list and create agents through the server.
  *
- *   linsight agent ls [--project-id <id>] [--json] [--server <url>]
- *   linsight agent create --agent-id <id> [--name <s>] [--description <s>]
+ *   jiumate agent ls [--project-id <id>] [--json] [--server <url>]
+ *   jiumate agent create --agent-id <id> [--name <s>] [--description <s>]
  *                        [--plugins <a,b>] [--project-id <id>] [--json] [--server <url>]
  *
  * `create` mirrors the Web dialog's fields: id (required), display name, description,
  * and library plugins to seed (comma-separated names; unknown names are rejected by the
  * server before anything is created).
- * Docs: /docs/cli § "linsight agent".
+ * Docs: /docs/cli § "jiumate agent".
  */
 import type { Command } from "commander";
-import type { AgentCreateResponse, AgentSummary } from "@prismshadow/linsight-server/api";
+import type { AgentCreateResponse, AgentSummary } from "@prismshadow/jiumate-server/api";
 import { resolveConnection, resolveProjectId, ServerClient } from "../client.js";
 import { listAgents } from "../server-session.js";
 import { renderTable } from "../table.js";

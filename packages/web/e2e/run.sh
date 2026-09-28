@@ -22,9 +22,9 @@ trap cleanup EXIT
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "== build core/server/web =="
   (cd "$ROOT" \
-    && pnpm --filter @prismshadow/linsight-core build \
-    && pnpm --filter @prismshadow/linsight-server build \
-    && pnpm --filter @prismshadow/linsight-web build) || { echo "BUILD FAILED"; exit 1; }
+    && pnpm --filter @prismshadow/jiumate-core build \
+    && pnpm --filter @prismshadow/jiumate-server build \
+    && pnpm --filter @prismshadow/jiumate-web build) || { echo "BUILD FAILED"; exit 1; }
 fi
 
 echo "== start mock LLM =="
@@ -32,11 +32,11 @@ MOCK_PORT=$MOCK_PORT node "$HERE/mock-llm.mjs" &
 MOCK_PID=$!
 
 echo "== start server =="
-# LINSIGHT_SEED_ADMIN_PASSWORD pins the otherwise-random seeded admin password to the
+# JIUMATE_SEED_ADMIN_PASSWORD pins the otherwise-random seeded admin password to the
 # constant the specs use (ADMIN_PASSWORD in auth.mjs).
-LINSIGHT_HOME="$DATA" PORT=$SRV_PORT HOST=127.0.0.1 LINSIGHT_WEB_DB="$DATA/web.db" \
-  LINSIGHT_WEB_DIST="$ROOT/packages/web/dist" \
-  LINSIGHT_SEED_ADMIN_PASSWORD=linsight-2026 \
+JIUMATE_HOME="$DATA" PORT=$SRV_PORT HOST=127.0.0.1 JIUMATE_WEB_DB="$DATA/web.db" \
+  JIUMATE_WEB_DIST="$ROOT/packages/web/dist" \
+  JIUMATE_SEED_ADMIN_PASSWORD=jiumate-2026 \
   node "$ROOT/packages/server/dist/index.js" &
 SRV_PID=$!
 

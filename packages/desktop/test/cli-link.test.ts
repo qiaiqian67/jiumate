@@ -29,7 +29,7 @@ let tmp: string;
 const itPosix = it.skipIf(process.platform === "win32");
 
 beforeEach(() => {
-  tmp = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-cli-link-"));
+  tmp = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-cli-link-"));
 });
 
 afterEach(() => {
@@ -40,7 +40,7 @@ afterEach(() => {
 function packApp(name: string): string {
   const appDir = path.join(tmp, name, "Contents", "Resources", "app");
   fs.mkdirSync(path.join(appDir, "bin"), { recursive: true });
-  const launcher = path.join(appDir, "bin", "linsight");
+  const launcher = path.join(appDir, "bin", "jiumate");
   fs.writeFileSync(launcher, posixLauncherScript(), { mode: 0o755 });
   return launcher;
 }
@@ -49,8 +49,8 @@ function packApp(name: string): string {
 // block would fail with a bare EPERM before the launcher logic runs, so it skips there.
 describe.skipIf(process.platform === "win32")("syncSymlink (the macOS form)", () => {
   it("installs when nothing is there", () => {
-    const desired = packApp("Linsight.app");
-    const link = path.join(tmp, "usr-local-bin", "linsight");
+    const desired = packApp("JiuMate.app");
+    const link = path.join(tmp, "usr-local-bin", "jiumate");
 
     expect(syncSymlink(link, desired, false)).toEqual({
       action: "installed",
@@ -60,8 +60,8 @@ describe.skipIf(process.platform === "win32")("syncSymlink (the macOS form)", ()
   });
 
   it("does nothing when it already points at this app", () => {
-    const desired = packApp("Linsight.app");
-    const link = path.join(tmp, "bin", "linsight");
+    const desired = packApp("JiuMate.app");
+    const link = path.join(tmp, "bin", "jiumate");
     syncSymlink(link, desired, false);
     const before = fs.lstatSync(link).mtimeMs;
 
@@ -72,11 +72,11 @@ describe.skipIf(process.platform === "win32")("syncSymlink (the macOS form)", ()
   itPosix("repairs a link left dangling by a moved or updated app", () => {
     // What a launch from the dmg used to leave behind, and what an app moved out of a
     // previous location leaves behind: the link is ours, and its target is gone.
-    const link = path.join(tmp, "bin", "linsight");
+    const link = path.join(tmp, "bin", "jiumate");
     fs.mkdirSync(path.dirname(link), { recursive: true });
-    fs.symlinkSync("/Volumes/Linsight/Linsight.app/Contents/Resources/app/bin/linsight", link);
+    fs.symlinkSync("/Volumes/JiuMate/JiuMate.app/Contents/Resources/app/bin/jiumate", link);
     expect(fs.existsSync(link)).toBe(false); // dangling
-    const desired = packApp("Linsight.app");
+    const desired = packApp("JiuMate.app");
 
     expect(syncSymlink(link, desired, false).action).toBe("installed");
     expect(fs.readlinkSync(link)).toBe(desired);
@@ -84,18 +84,18 @@ describe.skipIf(process.platform === "win32")("syncSymlink (the macOS form)", ()
 
   it("repairs a link pointing at an older install of this app", () => {
     const stale = packApp("Old.app");
-    const link = path.join(tmp, "bin", "linsight");
+    const link = path.join(tmp, "bin", "jiumate");
     fs.mkdirSync(path.dirname(link), { recursive: true });
     fs.symlinkSync(stale, link);
-    const desired = packApp("Linsight.app");
+    const desired = packApp("JiuMate.app");
 
     expect(syncSymlink(link, desired, false).action).toBe("installed");
     expect(fs.readlinkSync(link)).toBe(desired);
   });
 
-  it("never replaces a linsight this app did not write", () => {
-    const desired = packApp("Linsight.app");
-    const link = path.join(tmp, "bin", "linsight");
+  it("never replaces a jiumate this app did not write", () => {
+    const desired = packApp("JiuMate.app");
+    const link = path.join(tmp, "bin", "jiumate");
     fs.mkdirSync(path.dirname(link), { recursive: true });
     // A regular file: an npm global install, a Homebrew shim, the user's own script.
     fs.writeFileSync(link, "#!/bin/sh\necho not ours\n", { mode: 0o755 });
@@ -108,11 +108,11 @@ describe.skipIf(process.platform === "win32")("syncSymlink (the macOS form)", ()
   });
 
   it("never follows a foreign symlink either", () => {
-    const desired = packApp("Linsight.app");
-    const theirs = path.join(tmp, "dot-linsight", "bin", "linsight");
+    const desired = packApp("JiuMate.app");
+    const theirs = path.join(tmp, "dot-jiumate", "bin", "jiumate");
     fs.mkdirSync(path.dirname(theirs), { recursive: true });
     fs.writeFileSync(theirs, "#!/bin/sh\necho tarball\n", { mode: 0o755 });
-    const link = path.join(tmp, "bin", "linsight");
+    const link = path.join(tmp, "bin", "jiumate");
     fs.mkdirSync(path.dirname(link), { recursive: true });
     fs.symlinkSync(theirs, link);
 
@@ -121,8 +121,8 @@ describe.skipIf(process.platform === "win32")("syncSymlink (the macOS form)", ()
   });
 
   it("replaces a foreign command only when forced, which only the menu item does", () => {
-    const desired = packApp("Linsight.app");
-    const link = path.join(tmp, "bin", "linsight");
+    const desired = packApp("JiuMate.app");
+    const link = path.join(tmp, "bin", "jiumate");
     fs.mkdirSync(path.dirname(link), { recursive: true });
     fs.writeFileSync(link, "#!/bin/sh\necho not ours\n", { mode: 0o755 });
 
@@ -132,10 +132,10 @@ describe.skipIf(process.platform === "win32")("syncSymlink (the macOS form)", ()
 });
 
 describe("syncWrapper (the Linux AppImage form)", () => {
-  const script = appImageWrapperScript("/home/u/Apps/linsight-desktop-linux-x86_64.AppImage");
+  const script = appImageWrapperScript("/home/u/Apps/jiumate-desktop-linux-x86_64.AppImage");
 
   it("installs a wrapper when nothing is there", () => {
-    const target = path.join(tmp, "local-bin", "linsight");
+    const target = path.join(tmp, "local-bin", "jiumate");
 
     expect(syncWrapper(target, script, false).action).toBe("installed");
     expect(fs.readFileSync(target, "utf8")).toBe(script);
@@ -144,21 +144,21 @@ describe("syncWrapper (the Linux AppImage form)", () => {
   });
 
   itPosix("installs it executable, or nothing on PATH can run it", () => {
-    const target = path.join(tmp, "local-bin", "linsight");
+    const target = path.join(tmp, "local-bin", "jiumate");
     syncWrapper(target, script, false);
 
     expect(fs.statSync(target).mode & 0o111).not.toBe(0);
   });
 
   it("does nothing when the wrapper already runs this AppImage", () => {
-    const target = path.join(tmp, "local-bin", "linsight");
+    const target = path.join(tmp, "local-bin", "jiumate");
     syncWrapper(target, script, false);
 
     expect(syncWrapper(target, script, false).action).toBe("current");
   });
 
   it("rewrites its own wrapper when the AppImage moved", () => {
-    const target = path.join(tmp, "local-bin", "linsight");
+    const target = path.join(tmp, "local-bin", "jiumate");
     syncWrapper(target, appImageWrapperScript("/old/path.AppImage"), false);
 
     expect(syncWrapper(target, script, false).action).toBe("installed");
@@ -168,12 +168,12 @@ describe("syncWrapper (the Linux AppImage form)", () => {
   it.skipIf(process.platform === "win32")(
     "never replaces the symlink install.sh puts at this exact path",
     () => {
-      // install.sh does `ln -sf ~/.linsight/bin/linsight ~/.local/bin/linsight`, unconditionally,
+      // install.sh does `ln -sf ~/.jiumate/bin/jiumate ~/.local/bin/jiumate`, unconditionally,
       // at the very path this form uses. Ours is the side that has to give way.
-      const theirs = path.join(tmp, "dot-linsight", "bin", "linsight");
+      const theirs = path.join(tmp, "dot-jiumate", "bin", "jiumate");
       fs.mkdirSync(path.dirname(theirs), { recursive: true });
       fs.writeFileSync(theirs, "#!/bin/sh\necho tarball\n", { mode: 0o755 });
-      const target = path.join(tmp, "local-bin", "linsight");
+      const target = path.join(tmp, "local-bin", "jiumate");
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.symlinkSync(theirs, target);
 
@@ -185,16 +185,16 @@ describe("syncWrapper (the Linux AppImage form)", () => {
   );
 
   it("never replaces a foreign regular file", () => {
-    const target = path.join(tmp, "local-bin", "linsight");
+    const target = path.join(tmp, "local-bin", "jiumate");
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, "#!/usr/bin/env node\n// somebody else's linsight\n", { mode: 0o755 });
+    fs.writeFileSync(target, "#!/usr/bin/env node\n// somebody else's jiumate\n", { mode: 0o755 });
 
     expect(syncWrapper(target, script, false).action).toBe("skipped");
-    expect(fs.readFileSync(target, "utf8")).toContain("somebody else's linsight");
+    expect(fs.readFileSync(target, "utf8")).toContain("somebody else's jiumate");
   });
 
   it("does not read a large binary sitting at the target", () => {
-    const target = path.join(tmp, "local-bin", "linsight");
+    const target = path.join(tmp, "local-bin", "jiumate");
     fs.mkdirSync(path.dirname(target), { recursive: true });
     // The marker sits past the size cap on purpose: what makes this foreign has to be the
     // refusal to read the file, not the absence of the text.
@@ -209,15 +209,15 @@ describe("inspect helpers", () => {
   it("recognises a launcher from an older release by its marker", () => {
     // The marker text has shipped unchanged since 0.2.2, which is what lets an install made
     // by an older version be repaired rather than treated as somebody else's command.
-    const target = path.join(tmp, "linsight");
+    const target = path.join(tmp, "jiumate");
     fs.writeFileSync(target, posixLauncherScript());
     expect(inspectWrapperTarget(target, "different script").kind).toBe("ours");
   });
 
   it("reports an unreadable target as foreign rather than guessing", () => {
-    const dir = path.join(tmp, "linsight");
+    const dir = path.join(tmp, "jiumate");
     fs.mkdirSync(dir);
-    expect(inspectSymlinkTarget(dir, "/x/bin/linsight").kind).toBe("foreign");
+    expect(inspectSymlinkTarget(dir, "/x/bin/jiumate").kind).toBe("foreign");
     expect(inspectWrapperTarget(dir, "script").kind).toBe("foreign");
   });
 });
@@ -225,7 +225,7 @@ describe("inspect helpers", () => {
 describe("isVolatileAppLocation", () => {
   it("refuses to install from a mounted dmg", () => {
     expect(
-      isVolatileAppLocation("/Volumes/Linsight/Linsight.app/Contents/Resources/app", "darwin"),
+      isVolatileAppLocation("/Volumes/JiuMate/JiuMate.app/Contents/Resources/app", "darwin"),
     ).toBe(true);
   });
 
@@ -234,7 +234,7 @@ describe("isVolatileAppLocation", () => {
     // link into it dies with the session.
     expect(
       isVolatileAppLocation(
-        "/private/var/folders/x/AppTranslocation/1B2C/d/Linsight.app/Contents/Resources/app",
+        "/private/var/folders/x/AppTranslocation/1B2C/d/JiuMate.app/Contents/Resources/app",
         "darwin",
       ),
     ).toBe(true);
@@ -242,7 +242,7 @@ describe("isVolatileAppLocation", () => {
 
   it("installs normally from Applications", () => {
     expect(
-      isVolatileAppLocation("/Applications/Linsight.app/Contents/Resources/app", "darwin"),
+      isVolatileAppLocation("/Applications/JiuMate.app/Contents/Resources/app", "darwin"),
     ).toBe(false);
   });
 

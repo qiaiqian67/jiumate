@@ -38,7 +38,7 @@ import type { InspirationCaseInput } from "../src/schema.js";
 let root: string;
 
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), "linsight-inspiration-"));
+  root = await mkdtemp(join(tmpdir(), "jiumate-inspiration-"));
 });
 
 afterEach(async () => {
@@ -140,9 +140,9 @@ describe("coerceInspirationCaseInput", () => {
   it("deduplicates and caps the referenced names", () => {
     const one = coerceInspirationCaseInput({
       ...input(),
-      skills: ["web-design", "web-design", "  linsight-sdk  "],
+      skills: ["web-design", "web-design", "  jiumate-sdk  "],
     });
-    expect(one.skills).toEqual(["web-design", "linsight-sdk"]);
+    expect(one.skills).toEqual(["web-design", "jiumate-sdk"]);
     expect(() =>
       coerceInspirationCaseInput({
         ...input(),
@@ -187,7 +187,7 @@ describe("case IO", () => {
       string,
       unknown
     >;
-    expect(body["schema"]).toBe("linsight.inspiration");
+    expect(body["schema"]).toBe("jiumate.inspiration");
     expect(body["schemaVersion"]).toBe(1);
     expect(body["id"]).toBe("sample");
     // `preview` is the on-disk key; `previewFilename` is the in-memory one.

@@ -11,7 +11,7 @@ export default defineConfig({
   // admin-password rescue); "./secret-file" is the shared symlink-safe writer;
   // "./hmr/manifest" is the host-less harness.json reader the CLI's thin loader
   // resolves the current cli bundle through, and "./version-report" is the shared
-  // assembler `linsight version` and GET /api/version both render (core plus that
+  // assembler `jiumate version` and GET /api/version both render (core plus that
   // same reader — no server). There is deliberately no
   // "./platform" subpath: src/hmr/entry.ts (this package's platform artifact
   // compile target — see its own module doc) is compiled straight from source by
@@ -21,7 +21,7 @@ export default defineConfig({
     index: "src/index.ts",
     "api/types": "src/api/types.ts",
     lock: "src/lock.ts",
-    // "./machine-status": what `linsight server status` prints. A CONTROLLER runs that command
+    // "./machine-status": what `jiumate server status` prints. A CONTROLLER runs that command
     // over ssh to ask a machine what it is, so the reader has to be importable without a
     // server — see src/machine-status.ts.
     "machine-status": "src/machine-status.ts",
@@ -48,7 +48,7 @@ export default defineConfig({
   sourcemap: true,
   // Scripts that run somewhere else, as REAL files beside the bundles: the release installers
   // a remote install feeds to the far side (the one thing that has to arrive before the CLI
-  // does; everything after is a `linsight` subcommand the machine already has). Each is
+  // does; everything after is a `jiumate` subcommand the machine already has). Each is
   // resolved next to this module at runtime, so each has to exist in dist/ —
   // which `files: ["dist"]` is what npm ships. tsup only emits its entries, and these are
   // copied and never imported, so nothing in the module graph would pull them along. A

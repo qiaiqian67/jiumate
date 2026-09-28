@@ -63,9 +63,9 @@
  * session_meta hasn't arrived yet) falls back to the parent ctx. projectId is always
  * taken from the parent — a subagent is necessarily in the same Project.
  */
-import { isEventMessage, isModelMessage, isSessionMeta } from "@prismshadow/linsight-core";
+import { isEventMessage, isModelMessage, isSessionMeta } from "@prismshadow/jiumate-core";
 import path from "node:path";
-import type { OmniMessage, SessionMetaMessage, StopReason } from "@prismshadow/linsight-core";
+import type { OmniMessage, SessionMetaMessage, StopReason } from "@prismshadow/jiumate-core";
 import { MESSAGE_MAX } from "./error-recorder.js";
 import type { ErrorContext, ErrorKind, ErrorSink } from "./error-recorder.js";
 

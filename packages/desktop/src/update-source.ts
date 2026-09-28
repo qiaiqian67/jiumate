@@ -13,9 +13,9 @@
  */
 import { createHash } from "node:crypto";
 
-export const OSS_ORIGIN = "https://linsight-releases.oss-cn-beijing.aliyuncs.com";
+export const OSS_ORIGIN = "https://jiumate-releases.oss-cn-beijing.aliyuncs.com";
 export const OSS_RELEASE_ROOT = `${OSS_ORIGIN}/releases`;
-export const GITHUB_RELEASE_ROOT = "https://github.com/qiaiqian67/linsight/releases/download";
+export const GITHUB_RELEASE_ROOT = "https://github.com/qiaiqian67/jiumate/releases/download";
 export const OSS_LATEST_JSON_URL = `${OSS_ORIGIN}/latest.json`;
 
 /** Same contract as the release installers (install.sh / install.ps1). */
@@ -57,13 +57,13 @@ export interface ReleaseDownloadManifest {
 /** The update asset electron-updater replaces on this platform (dmg is manual-only). */
 export function desktopUpdateAssetName(platform: NodeJS.Platform, arch: string): string | null {
   if (platform === "darwin") {
-    return arch === "arm64" || arch === "x64" ? `linsight-desktop-darwin-${arch}.zip` : null;
+    return arch === "arm64" || arch === "x64" ? `jiumate-desktop-darwin-${arch}.zip` : null;
   }
   if (platform === "win32") {
-    return arch === "x64" ? "linsight-desktop-win32-x64.exe" : null;
+    return arch === "x64" ? "jiumate-desktop-win32-x64.exe" : null;
   }
   if (platform === "linux") {
-    return arch === "x64" ? "linsight-desktop-linux-x86_64.AppImage" : null;
+    return arch === "x64" ? "jiumate-desktop-linux-x86_64.AppImage" : null;
   }
   return null;
 }
@@ -159,7 +159,7 @@ export async function loadReleaseDownloadManifest(opts: {
   const lines = text.split(/\r?\n/);
   if (lines.at(-1) === "") lines.pop();
   if (lines.length < 4) return null;
-  if (lines[0] !== `linsight-release-download-manifest\t1\t${tag}`) return null;
+  if (lines[0] !== `jiumate-release-download-manifest\t1\t${tag}`) return null;
 
   let smallProbe: ReleaseProbe | null = null;
   let largeProbe: ReleaseProbe | null = null;

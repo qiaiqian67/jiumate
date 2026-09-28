@@ -28,8 +28,8 @@ If port 11434 is already serving, reuse that instance — never kill an existing
 2. Pick the engine the user prefers: Ollama is the default; vLLM covers high-throughput GPU serving.
 3. Install Ollama if missing, then `ollama pull qwen3.5:0.8b`.
 4. Verify with `curl http://localhost:11434/v1/models`.
-5. Register the endpoint: `linsight config model add ... --client-type openai-chat --base-url http://localhost:11434/v1` — a pulled Ollama model is not visible to Linsight until added.
-6. Confirm the new entry with `linsight config model list`.
+5. Register the endpoint: `jiumate config model add ... --client-type openai-chat --base-url http://localhost:11434/v1` — a pulled Ollama model is not visible to JiuMate until added.
+6. Confirm the new entry with `jiumate config model list`.
 
 ## Install
 
@@ -76,12 +76,12 @@ PARAMETER num_ctx 32768
 ollama create qwen3.5-32k -f Modelfile
 ```
 
-## Register with Linsight
+## Register with JiuMate
 
-Model configuration is the linsight CLI's job — `linsight config model add` registers an endpoint and `linsight config model list` shows what has been registered. A pulled Ollama model is not visible to Linsight until you add it:
+Model configuration is the jiumate CLI's job — `jiumate config model add` registers an endpoint and `jiumate config model list` shows what has been registered. A pulled Ollama model is not visible to JiuMate until you add it:
 
 ```bash
-linsight config model add --provider custom --client-type openai-chat \
+jiumate config model add --provider custom --client-type openai-chat \
   --base-url http://localhost:11434/v1 --model-id qwen3.5:0.8b --api-key ollama
-linsight config model list   # the new entry should now be listed
+jiumate config model list   # the new entry should now be listed
 ```

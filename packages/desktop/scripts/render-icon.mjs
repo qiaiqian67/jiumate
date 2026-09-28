@@ -1,5 +1,5 @@
 /**
- * Render the app icon PNGs from the brand mark (packages/web/public/linsight-logo.svg,
+ * Render the app icon PNGs from the brand mark (packages/web/public/jiumate-logo.svg,
  * treated as immutable — landing/docs carry byte-identical copies).
  *
  * Outputs (COMMITTED — regenerate only when the SVG changes):
@@ -26,7 +26,7 @@ import { fileURLToPath } from "node:url";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PKG_DIR = path.resolve(HERE, "..");
 const REPO_ROOT = path.resolve(PKG_DIR, "..", "..");
-const SVG_PATH = path.join(REPO_ROOT, "packages", "web", "public", "linsight-logo.svg");
+const SVG_PATH = path.join(REPO_ROOT, "packages", "web", "public", "jiumate-logo.svg");
 const BUILD_DIR = path.join(PKG_DIR, "build");
 const ICON_SET_DIR = path.join(BUILD_DIR, "icons");
 

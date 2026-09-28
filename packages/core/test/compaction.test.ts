@@ -178,7 +178,7 @@ describe("context compaction", () => {
   let traces: string;
 
   beforeEach(async () => {
-    traces = await mkdtemp(join(tmpdir(), "linsight-compaction-"));
+    traces = await mkdtemp(join(tmpdir(), "jiumate-compaction-"));
   });
 
   afterEach(async () => {
@@ -1901,7 +1901,7 @@ describe("context compaction", () => {
       // What agent.resumeSession derives from the Trace: three completed turns of history.
       metaAlreadyWritten: true,
       initialEngineState: { sessionTurns: 3, lastRequestTotal: 80 },
-      imagesDir: "/tmp/linsight-test-scratch",
+      imagesDir: "/tmp/jiumate-test-scratch",
       modelHasVision: true,
     });
 
@@ -1938,7 +1938,7 @@ describe("context compaction", () => {
       },
       openNextContext: () => ({ llm: new ScriptedLLM([]) }),
       compaction: settings(),
-      imagesDir: "/tmp/linsight-test-scratch",
+      imagesDir: "/tmp/jiumate-test-scratch",
       modelHasVision: true,
     });
 
@@ -1991,7 +1991,7 @@ describe("compaction summary streaming (issue #290)", () => {
   let traces: string;
 
   beforeEach(async () => {
-    traces = await mkdtemp(join(tmpdir(), "linsight-compaction-s-"));
+    traces = await mkdtemp(join(tmpdir(), "jiumate-compaction-s-"));
   });
 
   afterEach(async () => {

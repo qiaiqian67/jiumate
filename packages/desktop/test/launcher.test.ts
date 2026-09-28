@@ -66,7 +66,7 @@ describe("windowsLauncherScript", () => {
 });
 
 describe("appImageWrapperScript", () => {
-  const appImage = "/home/user/Apps/linsight-desktop-linux-x86_64.AppImage";
+  const appImage = "/home/user/Apps/jiumate-desktop-linux-x86_64.AppImage";
   const script = appImageWrapperScript(appImage);
 
   it("bakes in the AppImage path and guards against it disappearing", () => {
@@ -77,7 +77,7 @@ describe("appImageWrapperScript", () => {
   it("invokes the AppImage as Node with the bootstrap and forwards arguments", () => {
     expect(script).toContain("export ELECTRON_RUN_AS_NODE=1");
     // The -- is load-bearing: without it Node swallows leading-dash arguments
-    // (linsight --help) as its own flags instead of passing them to the CLI.
+    // (jiumate --help) as its own flags instead of passing them to the CLI.
     expect(script).toContain(`exec "$APPIMAGE_PATH" -e '${appImageBootstrapJs()}' -- "$@"`);
   });
 
@@ -119,13 +119,13 @@ describe("appImageBootstrapJs", () => {
 
 describe("LAUNCHER_MARKER", () => {
   it("appears in every generated launcher", () => {
-    // cli-link.ts recognises a `linsight` this app wrote by this text, and skips anything
+    // cli-link.ts recognises a `jiumate` this app wrote by this text, and skips anything
     // that lacks it. A launcher that stopped carrying it would be classified as somebody
     // else's command and the install would silently stop repairing itself.
     for (const script of [
       posixLauncherScript(),
       windowsLauncherScript(),
-      appImageWrapperScript("/home/user/Apps/linsight.AppImage"),
+      appImageWrapperScript("/home/user/Apps/jiumate.AppImage"),
     ]) {
       expect(script).toContain(LAUNCHER_MARKER);
     }
@@ -134,7 +134,7 @@ describe("LAUNCHER_MARKER", () => {
 
 describe("shellQuote", () => {
   it("wraps a plain value in single quotes", () => {
-    expect(shellQuote("/Applications/Linsight.app")).toBe("'/Applications/Linsight.app'");
+    expect(shellQuote("/Applications/JiuMate.app")).toBe("'/Applications/JiuMate.app'");
   });
 
   it("splices embedded single quotes so the word never closes early", () => {
@@ -153,8 +153,8 @@ describe("appleScriptString", () => {
 });
 
 describe("adminSymlinkAppleScript", () => {
-  const target = "/Applications/Linsight.app/Contents/Resources/app/bin/linsight";
-  const link = "/usr/local/bin/linsight";
+  const target = "/Applications/JiuMate.app/Contents/Resources/app/bin/jiumate";
+  const link = "/usr/local/bin/jiumate";
 
   /** The shell command osascript would run: the AppleScript literal, unescaped. */
   function shellCommandOf(script: string): string {
@@ -174,17 +174,17 @@ describe("adminSymlinkAppleScript", () => {
     // What a user gets by keeping the app in a folder named with an apostrophe — and what
     // an attacker gets to write if the two escapers are not applied, since this command
     // runs with administrator privileges.
-    const evil = "/Users/anne/Anne's Apps'; touch /tmp/pwned; '/Linsight.app/bin/linsight";
+    const evil = "/Users/anne/Anne's Apps'; touch /tmp/pwned; '/JiuMate.app/bin/jiumate";
     const command = shellCommandOf(adminSymlinkAppleScript(evil, link));
     expect(command).toBe(`mkdir -p '/usr/local/bin' && ln -sf ${shellQuote(evil)} '${link}'`);
     // The injected segment survives only as literal text inside the quoted word.
     expect(command).not.toContain("&& touch");
-    expect(command).not.toContain("; touch /tmp/pwned; '/Linsight");
+    expect(command).not.toContain("; touch /tmp/pwned; '/JiuMate");
   });
 });
 
 describe("mergeWindowsUserPath", () => {
-  const bin = "C:\\Program Files\\Linsight\\resources\\app\\bin";
+  const bin = "C:\\Program Files\\JiuMate\\resources\\app\\bin";
 
   it("appends to an existing value with a semicolon", () => {
     expect(mergeWindowsUserPath("C:\\other", bin)).toBe(`C:\\other;${bin}`);
@@ -205,9 +205,7 @@ describe("mergeWindowsUserPath", () => {
   });
 
   it("matches case-insensitively and ignores quotes and trailing slashes", () => {
-    expect(
-      mergeWindowsUserPath(`c:\\program files\\linsight\\RESOURCES\\app\\BIN`, bin),
-    ).toBeNull();
+    expect(mergeWindowsUserPath(`c:\\program files\\jiumate\\RESOURCES\\app\\BIN`, bin)).toBeNull();
     expect(mergeWindowsUserPath(`"${bin}"`, bin)).toBeNull();
     expect(mergeWindowsUserPath(`${bin}\\`, bin)).toBeNull();
   });
@@ -233,7 +231,7 @@ describe("cliInstallKind", () => {
     );
   });
 
-  it("on Linux only the AppImage form installs (deb ships /usr/bin/linsight itself)", () => {
+  it("on Linux only the AppImage form installs (deb ships /usr/bin/jiumate itself)", () => {
     expect(cliInstallKind({ packaged: true, platform: "linux", appImagePath: null })).toBeNull();
     expect(cliInstallKind({ packaged: true, platform: "linux", appImagePath: "" })).toBeNull();
     expect(
@@ -243,7 +241,7 @@ describe("cliInstallKind", () => {
 });
 
 /**
- * The couplings that make an installed desktop app carry a working `linsight`. They span
+ * The couplings that make an installed desktop app carry a working `jiumate`. They span
  * three files nothing else compares: the constants above, the packaging decisions in
  * electron-builder.yml, and the deb postinst templates. Each is load-bearing at run time
  * and silent at build time — a packed app with no CLI in it builds, signs and ships
@@ -255,13 +253,13 @@ describe("packaged CLI", () => {
     fs.readFileSync(path.join(pkgDir, ...rel.split("/")), "utf8");
   const builderConfig = read("electron-builder.yml");
   /** The deb link target, spelled identically by the install and remove templates. */
-  const debTarget = "/opt/${sanitizedProductName}/resources/app/bin/linsight";
+  const debTarget = "/opt/${sanitizedProductName}/resources/app/bin/jiumate";
 
-  it("ships bin/, which is the only reason <app>/bin/linsight exists in an install", () => {
+  it("ships bin/, which is the only reason <app>/bin/jiumate exists in an install", () => {
     expect(builderConfig).toContain("- bin/**/*");
   });
 
-  it("keeps asar off — inside an archive there is no bin/linsight to exec", () => {
+  it("keeps asar off — inside an archive there is no bin/jiumate to exec", () => {
     expect(builderConfig).toMatch(/^asar: false$/m);
   });
 
@@ -276,20 +274,20 @@ describe("packaged CLI", () => {
   it("bundles the CLI at the entry the launchers run", () => {
     const entry = CLI_ENTRY_RELPATH.replace(/^dist\//, "").replace(/\.js$/, "");
     expect(read("tsup.config.ts")).toMatch(
-      new RegExp(`^\\s*"?${entry}"?: "\\.\\./cli/dist/linsight\\.js",$`, "m"),
+      new RegExp(`^\\s*"?${entry}"?: "\\.\\./cli/dist/jiumate\\.js",$`, "m"),
     );
   });
 
-  it("deb creates /usr/bin/linsight itself: it is the one form the shell does not install", () => {
+  it("deb creates /usr/bin/jiumate itself: it is the one form the shell does not install", () => {
     // cliInstallKind returns null for it, so nothing else would ever put the CLI on PATH.
     expect(cliInstallKind({ packaged: true, platform: "linux", appImagePath: null })).toBeNull();
     expect(builderConfig).toMatch(
       /^deb:\n(?: .*\n|#.*\n)*? {2}afterInstall: build\/linux\/after-install\.tpl$/m,
     );
     const afterInstall = read("build/linux/after-install.tpl");
-    expect(afterInstall).toContain(`ln -sf '${debTarget}' '/usr/bin/linsight'`);
+    expect(afterInstall).toContain(`ln -sf '${debTarget}' '/usr/bin/jiumate'`);
     // Never over a real file of that name — a CLI installed by install.sh, say.
-    expect(afterInstall).toContain(`if [ ! -e '/usr/bin/linsight' ] || [ -L '/usr/bin/linsight' ]`);
+    expect(afterInstall).toContain(`if [ ! -e '/usr/bin/jiumate' ] || [ -L '/usr/bin/jiumate' ]`);
   });
 
   it("deb removes only the link it made", () => {
@@ -297,7 +295,7 @@ describe("packaged CLI", () => {
       /^deb:\n(?: .*\n|#.*\n)*? {2}afterRemove: build\/linux\/after-remove\.tpl$/m,
     );
     const afterRemove = read("build/linux/after-remove.tpl");
-    expect(afterRemove).toContain(`[ "\`readlink '/usr/bin/linsight'\`" = '${debTarget}' ]`);
-    expect(afterRemove).toContain("rm -f '/usr/bin/linsight'");
+    expect(afterRemove).toContain(`[ "\`readlink '/usr/bin/jiumate'\`" = '${debTarget}' ]`);
+    expect(afterRemove).toContain("rm -f '/usr/bin/jiumate'");
   });
 });

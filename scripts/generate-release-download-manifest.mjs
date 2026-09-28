@@ -7,30 +7,30 @@ const USAGE =
   "usage: generate-release-download-manifest.mjs <tag> <output-dir> <cli-artifacts-dir> <desktop-artifacts-dir> [extra-release-file...]";
 
 const CLI_BUNDLES = [
-  "linsight-linux-x64.tar.gz",
-  "linsight-linux-arm64.tar.gz",
-  "linsight-darwin-x64.tar.gz",
-  "linsight-darwin-arm64.tar.gz",
-  "linsight-universal.tar.gz",
-  "linsight-win32-x64.zip",
+  "jiumate-linux-x64.tar.gz",
+  "jiumate-linux-arm64.tar.gz",
+  "jiumate-darwin-x64.tar.gz",
+  "jiumate-darwin-arm64.tar.gz",
+  "jiumate-universal.tar.gz",
+  "jiumate-win32-x64.zip",
 ];
 
 const DESKTOP_INSTALLERS = [
-  "linsight-desktop-darwin-arm64.dmg",
-  "linsight-desktop-darwin-arm64.zip",
-  "linsight-desktop-darwin-x64.dmg",
-  "linsight-desktop-darwin-x64.zip",
-  "linsight-desktop-linux-x86_64.AppImage",
-  "linsight-desktop-linux-amd64.deb",
-  "linsight-desktop-win32-x64.exe",
+  "jiumate-desktop-darwin-arm64.dmg",
+  "jiumate-desktop-darwin-arm64.zip",
+  "jiumate-desktop-darwin-x64.dmg",
+  "jiumate-desktop-darwin-x64.zip",
+  "jiumate-desktop-linux-x86_64.AppImage",
+  "jiumate-desktop-linux-amd64.deb",
+  "jiumate-desktop-win32-x64.exe",
 ];
 
 const DESKTOP_UPDATE_METADATA = ["latest.yml", "latest-mac.yml", "latest-linux.yml"];
 
 const DESKTOP_UPDATE_BLOCKMAPS = [
-  "linsight-desktop-darwin-arm64.zip.blockmap",
-  "linsight-desktop-darwin-x64.zip.blockmap",
-  "linsight-desktop-win32-x64.exe.blockmap",
+  "jiumate-desktop-darwin-arm64.zip.blockmap",
+  "jiumate-desktop-darwin-x64.zip.blockmap",
+  "jiumate-desktop-win32-x64.exe.blockmap",
 ];
 
 const PROBES = [
@@ -85,7 +85,7 @@ function makeProbe(size) {
   let counter = 0;
   while (offset < size) {
     const chunk = createHash("sha256")
-      .update("linsight release probe v1\0")
+      .update("jiumate release probe v1\0")
       .update(String(size))
       .update("\0")
       .update(String(counter))
@@ -116,7 +116,7 @@ async function main() {
     writeFileSync(path.join(outputDir, probe.file), makeProbe(probe.size));
   }
 
-  const rows = [["linsight-release-download-manifest", "1", tag]];
+  const rows = [["jiumate-release-download-manifest", "1", tag]];
   for (const probe of PROBES) {
     const info = filePath(outputDir, probe.file);
     rows.push(["probe", probe.label, probe.file, String(info.size), await sha256File(info.path)]);

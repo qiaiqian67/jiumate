@@ -39,7 +39,7 @@ import {
   parseUserSteeringText,
   tracesDir,
   userText,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   ApproveFn,
   BackgroundCommandInfo,
@@ -55,7 +55,7 @@ import type {
   SubagentMessageOutcome,
   TextPayload,
   ThinkingLevelName,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   PendingFollowUpInfo,
   PendingSteeringInfo,

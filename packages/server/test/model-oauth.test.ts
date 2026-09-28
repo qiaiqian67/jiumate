@@ -13,11 +13,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  APP_URL,
-  presetModelEntries,
-  providerInfo,
-} from "@prismshadow/linsight-core/model-catalog";
+import { APP_URL, presetModelEntries, providerInfo } from "@prismshadow/jiumate-core/model-catalog";
 import type {
   ModelOAuthCodeResponse,
   ModelOAuthStartResponse,
@@ -94,9 +90,9 @@ describe("authorize URL", () => {
     expect(q.get("code_challenge")).toBe(challenge);
     expect(q.get("code_challenge_method")).toBe("S256");
     expect(q.get("app_url")).toBe(APP_URL);
-    expect(q.get("key_name")).toBe("Linsight");
+    expect(q.get("key_name")).toBe("JiuMate");
     // The two URL-valued parameters travel escaped, never raw.
-    expect(url).toContain("app_url=https%3A%2F%2Flinsight.ooo%2F");
+    expect(url).toContain("app_url=https%3A%2F%2Fjiumate.ooo%2F");
     expect(url).toContain("callback_url=http%3A%2F%2F127.0.0.1%3A8123%2F");
     expect(url).not.toContain("?flow=abc-_1&code_challenge");
   });
@@ -367,10 +363,10 @@ describe("callback origin", () => {
     expect(
       requestOrigin(
         "http://127.0.0.1:7364/api/x",
-        { proto: "https, http", host: "linsight.example, inner" },
+        { proto: "https, http", host: "jiumate.example, inner" },
         true,
       ),
-    ).toBe("https://linsight.example");
+    ).toBe("https://jiumate.example");
     // Trusted but absent: the request's own URL still answers.
     expect(requestOrigin("http://127.0.0.1:7364/api/x", {}, true)).toBe("http://127.0.0.1:7364");
   });
@@ -422,7 +418,7 @@ describe("model-oauth routes", () => {
     expect(q.get("callback_url")).toBe(
       `http://localhost${base()}/callback?flow=${encodeURIComponent(body.flowId)}`,
     );
-    expect(q.get("key_name")).toBe("Linsight");
+    expect(q.get("key_name")).toBe("JiuMate");
     expect(q.get("app_url")).toBe(APP_URL);
 
     expect((await member.post(`${base()}/start`, { provider: "tokendance" })).status).toBe(403);
@@ -592,7 +588,7 @@ describe("model-oauth routes", () => {
  * This is the desktop's whole story: the shell hands every non-app URL to
  * `shell.openExternal`, so the authorization page opens in the *system* browser, and the
  * system browser is redirected back to `http://localhost:<port>` holding no
- * `linsight_session` cookie for it. Behind the gate that was a bare 401 on every desktop
+ * `jiumate_session` cookie for it. Behind the gate that was a bare 401 on every desktop
  * authorization while the browser — whose popup is a tab of the session that opened it —
  * completed fine.
  *

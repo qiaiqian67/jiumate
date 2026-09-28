@@ -1,13 +1,13 @@
 /**
  * The whole CLI as a plain function: commander commands over
- * @prismshadow/linsight-core, returning an exit code.
+ * @prismshadow/jiumate-core, returning an exit code.
  *
- * Built twice: into this package's `linsight` binary (linsight.ts), and — as the CLI
- * artifact pushed to POST /api/hmr/upgrade — into the bundle `linsight-hmr` loads from
+ * Built twice: into this package's `jiumate` binary (jiumate.ts), and — as the CLI
+ * artifact pushed to POST /api/hmr/upgrade — into the bundle `jiumate-hmr` loads from
  * the HMR store instead (see scripts/deploy.mjs).
  */
 import { Command, CommanderError } from "commander";
-import { buildInfo } from "@prismshadow/linsight-core";
+import { buildInfo } from "@prismshadow/jiumate-core";
 import { registerAuthCommand } from "./commands/auth.js";
 import { registerConfigCommand } from "./commands/config.js";
 import { registerRunCommand } from "./commands/run.js";
@@ -34,9 +34,9 @@ export async function cli(argv: string[]): Promise<number> {
   const t = defaultMessages();
   const program = new Command();
   program
-    .name("linsight")
+    .name("jiumate")
     .description(t.cliDescription)
-    // The same string `linsight version` prints, so the flag and the subcommand can never
+    // The same string `jiumate version` prints, so the flag and the subcommand can never
     // disagree. Commander stores it eagerly, which costs a source build its two git calls on
     // every startup; a release build reads stamped constants and spawns nothing.
     .version(buildInfo().describe, "-v, --version", t.versionDesc)

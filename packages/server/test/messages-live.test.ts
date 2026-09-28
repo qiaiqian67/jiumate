@@ -16,8 +16,8 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@prismshadow/linsight-core";
-import type { ApproveFn, OmniMessage } from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
+import type { ApproveFn, OmniMessage } from "@prismshadow/jiumate-core";
 import type { MessagesResponse } from "../src/api/types.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";

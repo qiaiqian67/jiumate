@@ -12,21 +12,21 @@
  */
 
 /** Separates the identity line from the manifest text in the probe's output. */
-const SECTION = "---linsight---";
+const SECTION = "---jiumate---";
 
 /**
  * POSIX probe. `uname -s -m` names the machine; the manifest is read from the program
- * directory the installer writes (`~/.linsight`), and harness.json from the default data root
- * (core's resolveRoot: `~/.linsight/data`) — a remote's LINSIGHT_INSTALL_DIR or LINSIGHT_HOME
+ * directory the installer writes (`~/.jiumate`), and harness.json from the default data root
+ * (core's resolveRoot: `~/.jiumate/data`) — a remote's JIUMATE_INSTALL_DIR or JIUMATE_HOME
  * override is not visible over a non-interactive ssh, and the defaults are where an install
  * this page made would land.
  */
 export const POSIX_PROBE = [
   "uname -s -m",
   `echo ${SECTION}`,
-  'cat "$HOME/.linsight/lib/package.json" 2>/dev/null || true',
+  'cat "$HOME/.jiumate/lib/package.json" 2>/dev/null || true',
   `echo ${SECTION}`,
-  'cat "$HOME/.linsight/data/hmr/harness.json" 2>/dev/null || true',
+  'cat "$HOME/.jiumate/data/hmr/harness.json" 2>/dev/null || true',
 ].join("; ");
 
 /**
@@ -37,9 +37,9 @@ export const POSIX_PROBE = [
 export const WINDOWS_PROBE = [
   "echo %OS% %PROCESSOR_ARCHITECTURE%",
   `echo ${SECTION}`,
-  'type "%USERPROFILE%\\.linsight\\lib\\package.json" 2>nul',
+  'type "%USERPROFILE%\\.jiumate\\lib\\package.json" 2>nul',
   `echo ${SECTION}`,
-  'type "%USERPROFILE%\\.linsight\\data\\hmr\\harness.json" 2>nul',
+  'type "%USERPROFILE%\\.jiumate\\data\\hmr\\harness.json" 2>nul',
 ].join("&");
 
 /** Node's own names, matching what the release targets are spelled from. */
@@ -49,7 +49,7 @@ export type RemoteArch = "x64" | "arm64";
 export interface RemoteIdentity {
   platform: RemotePlatform;
   arch: RemoteArch;
-  /** Version of the Linsight installed there, or null when there is none. */
+  /** Version of the JiuMate installed there, or null when there is none. */
   installedVersion: string | null;
   /** Raw text of the remote data root's hmr/harness.json, or null when nothing was pushed. */
   harness: string | null;

@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { resolvePetSpriteSrc } from "./pet-service";
 import { getPetLookFrame } from "./pet-look";
 import { getPetSpriteStyle } from "./sprite";
-import type { PetPackage } from "@prismshadow/linsight-pets";
+import type { PetPackage } from "@prismshadow/jiumate-pets";
 
 export type PetMood = "rest" | "analyzing" | "waiting" | "working" | "hover" | "dragging";
 export type PetAction = "jumping" | "waving" | "failed" | null;
@@ -116,8 +116,8 @@ function PetSprite({
       data-pet-still={still ? "true" : undefined}
       className={
         still
-          ? "linsight-pet__sprite linsight-pet__sprite--static"
-          : `linsight-pet__sprite linsight-pet__sprite--${mood}`
+          ? "jiumate-pet__sprite jiumate-pet__sprite--static"
+          : `jiumate-pet__sprite jiumate-pet__sprite--${mood}`
       }
       style={{
         width: "100%",
@@ -135,17 +135,17 @@ function PandaSvg({ mood }: { mood: PetMood }) {
   const overlay = moodOverlay(mood);
   return (
     <svg
-      className="linsight-pet__panda"
+      className="jiumate-pet__panda"
       viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <ellipse cx={120} cy={120} rx={88} ry={64} className="linsight-pet__panda-body" />
-      <ellipse cx={200} cy={120} rx={40} ry={50} className="linsight-pet__panda-body" />
-      <ellipse cx={130} cy={120} rx={48} ry={56} fill="#fff" className="linsight-pet__panda-face" />
-      <circle cx={116} cy={114} r={6} className="linsight-pet__panda-eye" />
-      <circle cx={146} cy={114} r={6} className="linsight-pet__panda-eye" />
-      <ellipse cx={130} cy={136} rx={6} ry={3} className="linsight-pet__panda-nose" />
+      <ellipse cx={120} cy={120} rx={88} ry={64} className="jiumate-pet__panda-body" />
+      <ellipse cx={200} cy={120} rx={40} ry={50} className="jiumate-pet__panda-body" />
+      <ellipse cx={130} cy={120} rx={48} ry={56} fill="#fff" className="jiumate-pet__panda-face" />
+      <circle cx={116} cy={114} r={6} className="jiumate-pet__panda-eye" />
+      <circle cx={146} cy={114} r={6} className="jiumate-pet__panda-eye" />
+      <ellipse cx={130} cy={136} rx={6} ry={3} className="jiumate-pet__panda-nose" />
       {overlay}
     </svg>
   );
@@ -154,16 +154,16 @@ function PandaSvg({ mood }: { mood: PetMood }) {
 function moodOverlay(mood: PetMood) {
   if (mood === "analyzing") {
     return (
-      <g className="linsight-pet__overlay">
-        <circle cx={224} cy={70} r={4} className="linsight-pet__panda-eye" />
-        <circle cx={248} cy={50} r={6} className="linsight-pet__panda-eye" />
-        <circle cx={276} cy={28} r={8} className="linsight-pet__panda-eye" />
+      <g className="jiumate-pet__overlay">
+        <circle cx={224} cy={70} r={4} className="jiumate-pet__panda-eye" />
+        <circle cx={248} cy={50} r={6} className="jiumate-pet__panda-eye" />
+        <circle cx={276} cy={28} r={8} className="jiumate-pet__panda-eye" />
       </g>
     );
   }
   if (mood === "waiting") {
     return (
-      <g className="linsight-pet__overlay">
+      <g className="jiumate-pet__overlay">
         <circle cx={228} cy={50} r={5} fill="currentColor" />
         <circle cx={252} cy={50} r={5} fill="currentColor" />
         <circle cx={276} cy={50} r={5} fill="currentColor" />
@@ -172,20 +172,20 @@ function moodOverlay(mood: PetMood) {
   }
   if (mood === "working") {
     return (
-      <g className="linsight-pet__overlay">
+      <g className="jiumate-pet__overlay">
         <path
           d="M210 50 C204 60 204 72 210 76 C216 72 216 60 210 50 Z"
-          className="linsight-pet__sweat-drop"
+          className="jiumate-pet__sweat-drop"
         />
       </g>
     );
   }
   return (
-    <g className="linsight-pet__overlay">
-      <text x={215} y={75} className="linsight-pet__zzz">
+    <g className="jiumate-pet__overlay">
+      <text x={215} y={75} className="jiumate-pet__zzz">
         z
       </text>
-      <text x={245} y={45} className="linsight-pet__zzz">
+      <text x={245} y={45} className="jiumate-pet__zzz">
         z
       </text>
     </g>

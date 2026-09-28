@@ -24,14 +24,14 @@ let tmpRoot: string;
 let prevHome: string | undefined;
 
 beforeEach(async () => {
-  prevHome = process.env.LINSIGHT_HOME;
-  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-bench-"));
-  process.env.LINSIGHT_HOME = tmpRoot;
+  prevHome = process.env.JIUMATE_HOME;
+  tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-bench-"));
+  process.env.JIUMATE_HOME = tmpRoot;
 });
 
 afterEach(async () => {
-  if (prevHome === undefined) delete process.env.LINSIGHT_HOME;
-  else process.env.LINSIGHT_HOME = prevHome;
+  if (prevHome === undefined) delete process.env.JIUMATE_HOME;
+  else process.env.JIUMATE_HOME = prevHome;
   await fs.rm(tmpRoot, { recursive: true, force: true });
 });
 

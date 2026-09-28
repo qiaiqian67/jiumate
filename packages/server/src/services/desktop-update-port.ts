@@ -4,7 +4,7 @@
  * Under the desktop shell this server runs as an Electron utilityProcess, which injects
  * `process.parentPort` — an EventEmitter-ish port to the shell. The shell pushes its
  * updater snapshot through it, and the update routes forward the page's
- * check/download/install commands back. Under a plain `linsight server|web` run the port does not exist and this
+ * check/download/install commands back. Under a plain `jiumate server|web` run the port does not exist and this
  * module wires nothing; the update routes then answer 503 `shell_unreachable`.
  *
  * Wire shapes live in api/types.ts (DesktopUpdaterStatusMessage /

@@ -1,6 +1,6 @@
 /**
- * Three pillars, introduced by a radiating diagram: Linsight fans out into
- * Linsight Message / Linsight SDK / Linsight Skills, and each concept extends into one
+ * Three pillars, introduced by a radiating diagram: JiuMate fans out into
+ * JiuMate Message / JiuMate SDK / JiuMate Skills, and each concept extends into one
  * pillar card below. Arrow paths carry slow-moving dots (SMIL animateMotion); the
  * diagram is hidden on small screens where the three columns stack.
  */
@@ -90,7 +90,7 @@ function RadialDiagram() {
         className="fill-brand-50 stroke-brand-200 dark:fill-brand-950 dark:stroke-brand-800"
       />
       <image
-        href={`${import.meta.env.BASE_URL}linsight-logo.svg`}
+        href={`${import.meta.env.BASE_URL}jiumate-logo.svg`}
         x={288}
         y={22}
         width={22}

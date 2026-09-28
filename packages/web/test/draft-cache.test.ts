@@ -52,7 +52,7 @@ describe("parseDraft (field-by-field validation)", () => {
       modelRef: { provider: "anthropic", modelId: "claude-opus-4-8" },
       handoffAgentId: "agent_helper",
       switchModelRef: { provider: "openai", modelId: "gpt-5" },
-      skills: ["agent-initialization", "linsight-sdk"],
+      skills: ["agent-initialization", "jiumate-sdk"],
     });
     expect(parseDraft(raw)).toEqual({
       text: "Write me a script",
@@ -62,7 +62,7 @@ describe("parseDraft (field-by-field validation)", () => {
       modelRef: { provider: "anthropic", modelId: "claude-opus-4-8" },
       handoffAgentId: "agent_helper",
       switchModelRef: { provider: "openai", modelId: "gpt-5" },
-      skills: ["agent-initialization", "linsight-sdk"],
+      skills: ["agent-initialization", "jiumate-sdk"],
     });
   });
 
@@ -157,9 +157,9 @@ describe("load / save / clear (key isolation, errors silenced)", () => {
     });
     // Lock down the key format (e2e accesses it as a literal; ids are all
     // <prefix>-<hex> with no ".", so the key space never collides).
-    expect(draftKey("user-a1", "project-a")).toBe("linsight.chatDraft.user-a1.project-a");
+    expect(draftKey("user-a1", "project-a")).toBe("jiumate.chatDraft.user-a1.project-a");
     expect(sessionDraftKey("user-a1", "session-1")).toBe(
-      "linsight.chatDraft.session.user-a1.session-1",
+      "jiumate.chatDraft.session.user-a1.session-1",
     );
     expect(s.map.size).toBe(2);
   });

@@ -3,7 +3,7 @@
  * 新建工作区 button lets the user browse to a directory, and the picked path must show
  * up as a workspace group IMMEDIATELY — even with zero Sessions. There is no Workspace
  * entity on the server (groups are otherwise derived purely from Session paths), so the
- * picked paths persist frontend-side per Project (`linsight.…` key naming, injectable
+ * picked paths persist frontend-side per Project (`jiumate.…` key naming, injectable
  * storage — the model-group-expansion.ts convention) and merge into the grouping as
  * empty groups.
  *
@@ -35,7 +35,7 @@ export interface WorkspaceRegistryStorage {
 
 /** Storage key of one Project's manually-added Workspaces (sidebar key-naming convention). */
 export const workspaceRegistryKey = (projectId: string): string =>
-  `linsight.sidebarWorkspaces.${projectId}`;
+  `jiumate.sidebarWorkspaces.${projectId}`;
 
 /**
  * Canonical form of a picked path: trimmed, trailing separators dropped (the server

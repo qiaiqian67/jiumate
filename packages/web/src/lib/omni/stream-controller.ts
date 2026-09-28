@@ -29,8 +29,8 @@
  *   the buffer replays on top — so the in-progress message survives a refresh
  *   with its streamed prefix intact and keeps streaming.
  */
-import { isEventMessage, isPartialPayload } from "@prismshadow/linsight-core/omnimessage";
-import type { OmniMessage, ToolCallPayload } from "@prismshadow/linsight-core/omnimessage";
+import { isEventMessage, isPartialPayload } from "@prismshadow/jiumate-core/omnimessage";
+import type { OmniMessage, ToolCallPayload } from "@prismshadow/jiumate-core/omnimessage";
 import type {
   GoalServerEvent,
   MessagesLiveTail,
@@ -40,7 +40,7 @@ import type {
   PendingSteeringInfo,
   ServerEvent,
   SessionStatus,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import {
   approvalKey,
   buildDedupIndex,

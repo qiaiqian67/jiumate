@@ -6,7 +6,7 @@
  * nothing renders). The rule therefore lives here as a pure predicate that the menu
  * consumes — see test/account-menu.test.ts.
  */
-import type { MeResponse } from "@prismshadow/linsight-server/api";
+import type { MeResponse } from "@prismshadow/jiumate-server/api";
 
 /** The two fields of `GET /api/me` that describe who is asking, and from where. */
 export interface AccountMenuSession {
@@ -23,7 +23,7 @@ export interface AccountMenuSession {
  * in through the shell's one-shot token instead of a login form, and the seed password of
  * a desktop-created root is fully random and deliberately never printed, so its holder has
  * never seen one and has nothing to type. A root that later needs a usable password — to
- * be served by `linsight server` instead — is handled offline by `linsight server
+ * be served by `jiumate server` instead — is handled offline by `jiumate server
  * reset-admin-password` from the machine that owns it.
  *
  * BOTH halves are required, mirroring the server's own gate in `routes/me.ts`.
@@ -31,7 +31,7 @@ export interface AccountMenuSession {
  * same desktop-mode server over loopback: that session typed a real password and can still
  * change it (pinned by server/test/desktop.test.ts, "keeps requiring oldPassword for
  * password-established sessions in desktop mode"). `sessionVia` alone would strip it from a
- * stale desktop cookie replayed against a plain `linsight server` on the same shared data
+ * stale desktop cookie replayed against a plain `jiumate server` on the same shared data
  * root, where the server requires the old password like any other session.
  */
 export function offersChangePassword(session: AccountMenuSession): boolean {

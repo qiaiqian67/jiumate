@@ -9,30 +9,30 @@
  * the web UI could open DevTools, when the shell's own View menu already
  * does it.
  *
- * One window over the embedded server: fork linsight-server as a utilityProcess on the
- * shared data root (LINSIGHT_HOME or ~/.linsight/data), learn its port (last launch's when
+ * One window over the embedded server: fork jiumate-server as a utilityProcess on the
+ * shared data root (JIUMATE_HOME or ~/.jiumate/data), learn its port (last launch's when
  * still free, so origin-scoped localStorage preferences survive restarts), and load
  * `http://localhost:<port>/api/auth/claim?token=…` — the one-shot token lands
  * the window signed in as admin. The window is a plain browser environment (no preload,
  * no node integration); every capability flows through the server's HTTP API.
  *
- * Attach mode: when a live server (e.g. `linsight web`) already owns the data root, the
+ * Attach mode: when a live server (e.g. `jiumate web`) already owns the data root, the
  * window loads that instance instead — normal login page, deliberate degradation.
  *
  * Dev isolation: an unpackaged run takes a dev-suffixed identity (own userData, and with
- * it the single-instance lock and sticky port) and defaults to the ~/.linsight/dev-data
+ * it the single-instance lock and sticky port) and defaults to the ~/.jiumate/dev-data
  * root, so it runs beside an installed release build (see app-identity.ts).
  *
- * Smoke hook (LINSIGHT_DESKTOP_SMOKE=1): after the first load settles, print a
- * `DESKTOP-SMOKE-RESULT {json}` line (+ screenshot when LINSIGHT_DESKTOP_SMOKE_SHOT is
+ * Smoke hook (JIUMATE_DESKTOP_SMOKE=1): after the first load settles, print a
+ * `DESKTOP-SMOKE-RESULT {json}` line (+ screenshot when JIUMATE_DESKTOP_SMOKE_SHOT is
  * set) and quit through the regular quit path, exercising the graceful server stop.
  */
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { app, BrowserWindow, dialog, shell } from "electron";
-import { resolveRoot } from "@prismshadow/linsight-core";
-import { liveServerLock } from "@prismshadow/linsight-server/lock";
+import { resolveRoot } from "@prismshadow/jiumate-core";
+import { liveServerLock } from "@prismshadow/jiumate-server/lock";
 import { appIdentity, desktopDataRoot } from "./app-identity.js";
 import { webDistEntry, webDistFor } from "./web-dist.js";
 import { resolveTrayIcon, resolveWindowIcon } from "./app-icon.js";
@@ -77,7 +77,7 @@ let stopPromise: Promise<void> | null = null;
 let restartAttempts = 0;
 
 // app.name, not a literal: a dev run raises this box while the installed build may be
-// running beside it, and a dialog titled "Linsight" cannot be attributed to either.
+// running beside it, and a dialog titled "JiuMate" cannot be attributed to either.
 function fatal(context: string, err: unknown): void {
   const detail = err instanceof Error ? (err.stack ?? err.message) : String(err);
   dialog.showErrorBox(app.name, `${context}\n\n${detail}`);
@@ -225,7 +225,7 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
   if (webDist !== null && !fs.existsSync(webDistEntry(webDist))) {
     throw new Error(
       `The Web App is missing: ${webDistEntry(webDist)} does not exist. ` +
-        `This build was packed without the web assets, or LINSIGHT_WEB_DIST points elsewhere.`,
+        `This build was packed without the web assets, or JIUMATE_WEB_DIST points elsewhere.`,
     );
   }
   const started = await startEmbeddedServer({
@@ -290,10 +290,10 @@ async function handleServerExit(dataRoot: string, code: number): Promise<void> {
 }
 
 async function boot(): Promise<void> {
-  // Explicit LINSIGHT_HOME wins; otherwise a release build shares the CLI's data root and
+  // Explicit JIUMATE_HOME wins; otherwise a release build shares the CLI's data root and
   // a dev run takes the repo's dev root (the rule, and why, live in app-identity.ts).
   const dataRoot = desktopDataRoot({
-    envHome: process.env.LINSIGHT_HOME,
+    envHome: process.env.JIUMATE_HOME,
     isPackaged: app.isPackaged,
     homedir: os.homedir(),
     releaseRoot: resolveRoot,
@@ -370,7 +370,7 @@ if (!app.requestSingleInstanceLock()) {
     (async () => {
       // GUI launches on macOS/Linux miss the login shell's exports (model API keys for
       // core's env fallback, the PATH the agent shell needs). Import them fill-missing
-      // before anything reads process.env — boot() resolves LINSIGHT_HOME from it, and
+      // before anything reads process.env — boot() resolves JIUMATE_HOME from it, and
       // the forked server inherits it (#351).
       await applyLoginShellEnv({
         platform: process.platform,
@@ -385,10 +385,10 @@ if (!app.requestSingleInstanceLock()) {
       });
       initUpdater(() => win);
       await boot();
-      // Install or repair the bundled 'linsight' command. Runs every launch: that is what
+      // Install or repair the bundled 'jiumate' command. Runs every launch: that is what
       // carries it across an update and repairs a link a moved app left dangling. Skipped
       // in smoke mode — the macOS administrator prompt would hang the automated run.
-      if (process.env.LINSIGHT_DESKTOP_SMOKE !== "1") await ensureCliCommand();
+      if (process.env.JIUMATE_DESKTOP_SMOKE !== "1") await ensureCliCommand();
     })().catch((err) => fatal(`${app.name} failed to start.`, err)),
   );
 }
@@ -399,7 +399,7 @@ if (!app.requestSingleInstanceLock()) {
 const SMOKE_SETTLE_MS = 2500;
 
 function armSmokeProbe(target: BrowserWindow): void {
-  if (process.env.LINSIGHT_DESKTOP_SMOKE !== "1") return;
+  if (process.env.JIUMATE_DESKTOP_SMOKE !== "1") return;
   target.webContents.once("did-finish-load", () => {
     setTimeout(() => {
       void (async () => {
@@ -410,7 +410,7 @@ function armSmokeProbe(target: BrowserWindow): void {
             origin: appOrigin,
             embedded: server !== null,
           };
-          const shot = process.env.LINSIGHT_DESKTOP_SMOKE_SHOT;
+          const shot = process.env.JIUMATE_DESKTOP_SMOKE_SHOT;
           if (shot) {
             const image = await target.webContents.capturePage();
             const { writeFileSync } = await import("node:fs");

@@ -1,4 +1,4 @@
-import type { SessionInfo, SessionStatus } from "@prismshadow/linsight-server/api";
+import type { SessionInfo, SessionStatus } from "@prismshadow/jiumate-server/api";
 import { isSessionUnread } from "./session-seen";
 import type { SessionSeenState } from "./session-seen";
 

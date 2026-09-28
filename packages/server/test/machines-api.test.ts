@@ -70,7 +70,7 @@ function effects(over: Partial<MachinesEffects> = {}): Partial<MachinesEffects> 
     upgrade: async () => ({ kind: "upgraded", detail: "", persisted: true }),
     runOn: async () => ({
       code: 0,
-      stdout: "---linsight-auth-token---\nremote-token\n",
+      stdout: "---jiumate-auth-token---\nremote-token\n",
       stderr: "",
       timedOut: false,
     }),
@@ -1026,11 +1026,11 @@ describe("machines API", () => {
       connected.add("ssh:nas");
     };
     const listing = (stdout: string) => async (_t: unknown, command: string) =>
-      command.includes("---linsight-dirs---")
+      command.includes("---jiumate-dirs---")
         ? { code: 0, stdout, stderr: "", timedOut: false }
         : {
             code: 0,
-            stdout: "---linsight-auth-token---\nremote-token\n",
+            stdout: "---jiumate-auth-token---\nremote-token\n",
             stderr: "",
             timedOut: false,
           };
@@ -1040,7 +1040,7 @@ describe("machines API", () => {
       await boot({
         runOn: async (_t, command) => {
           asked.push(command);
-          return listing("/home/deploy/work\n---linsight-dirs---\nsrc\nnotes\n")(_t, command);
+          return listing("/home/deploy/work\n---jiumate-dirs---\nsrc\nnotes\n")(_t, command);
         },
       });
       connectedMachine();
@@ -1055,13 +1055,13 @@ describe("machines API", () => {
         ],
       });
       // The path went to the machine quoted, so a name with a space is one argument there.
-      expect(asked.find((c) => c.includes("---linsight-dirs---"))).toContain("'~/work'");
+      expect(asked.find((c) => c.includes("---jiumate-dirs---"))).toContain("'~/work'");
     });
 
     it("404s a directory the machine does not have", async () => {
       await boot({
         runOn: async (_t, command) =>
-          command.includes("---linsight-dirs---")
+          command.includes("---jiumate-dirs---")
             ? { code: 3, stdout: "", stderr: "", timedOut: false }
             : { code: 0, stdout: "", stderr: "", timedOut: false },
       });
@@ -1090,7 +1090,7 @@ describe("machines API", () => {
       await boot({
         runOn: async (target, command) => {
           asked.push(target.alias);
-          return listing("/home/deploy\n---linsight-dirs---\n")(target, command);
+          return listing("/home/deploy\n---jiumate-dirs---\n")(target, command);
         },
       });
       // Both aliases answered the same id; only build-box is connected.

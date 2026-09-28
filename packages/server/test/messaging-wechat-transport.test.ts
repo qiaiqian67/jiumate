@@ -115,7 +115,7 @@ describe("the WeChat request envelope", () => {
       // The probe is `getconfig`, which reads: polling would advance the cursor the poll
       // loop is about to read, and a probe that eats a message is not a probe.
       expect(JSON.parse(call.body)).toMatchObject({ ilink_user_id: USER });
-      expect(JSON.parse(call.body).base_info.bot_agent).toContain("Linsight");
+      expect(JSON.parse(call.body).base_info.bot_agent).toContain("JiuMate");
     });
   });
 

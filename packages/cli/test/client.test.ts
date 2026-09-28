@@ -1,5 +1,5 @@
 /**
- * Server-client plumbing: connection resolution order (--server > LINSIGHT_API_URL >
+ * Server-client plumbing: connection resolution order (--server > JIUMATE_API_URL >
  * live server.lock > auto-start), the remote-token gate, the SSE parser, and session
  * reference resolution (full id / unique fragment / ambiguity).
  */
@@ -25,11 +25,11 @@ import { FakeServer } from "./fake-server.js";
 const t = getMessages("en");
 
 const ENV_KEYS = [
-  "LINSIGHT_API_URL",
-  "LINSIGHT_API_TOKEN",
-  "LINSIGHT_HOME",
-  "LINSIGHT_PROJECT_ID",
-  "LINSIGHT_AGENT_ID",
+  "JIUMATE_API_URL",
+  "JIUMATE_API_TOKEN",
+  "JIUMATE_HOME",
+  "JIUMATE_PROJECT_ID",
+  "JIUMATE_AGENT_ID",
 ];
 const saved = new Map<string, string | undefined>();
 
@@ -47,25 +47,25 @@ afterEach(() => {
 });
 
 describe("connection resolution", () => {
-  it("--server wins over LINSIGHT_API_URL; trailing slashes are stripped", async () => {
-    process.env.LINSIGHT_API_URL = "http://127.0.0.1:7001";
+  it("--server wins over JIUMATE_API_URL; trailing slashes are stripped", async () => {
+    process.env.JIUMATE_API_URL = "http://127.0.0.1:7001";
     const conn = await resolveConnection({ server: "http://localhost:7002/" }, t);
     expect(conn.baseUrl).toBe("http://localhost:7002");
     expect(conn.loopback).toBe(true);
     expect(conn.autoStarted).toBe(false);
   });
 
-  it("LINSIGHT_API_URL is used when --server is absent", async () => {
-    process.env.LINSIGHT_API_URL = "http://127.0.0.1:7001";
+  it("JIUMATE_API_URL is used when --server is absent", async () => {
+    process.env.JIUMATE_API_URL = "http://127.0.0.1:7001";
     const conn = await resolveConnection({}, t);
     expect(conn.baseUrl).toBe("http://127.0.0.1:7001");
   });
 
-  it("a remote URL without LINSIGHT_API_TOKEN is refused with the token hint", async () => {
+  it("a remote URL without JIUMATE_API_TOKEN is refused with the token hint", async () => {
     await expect(resolveConnection({ server: "https://box.example.com" }, t)).rejects.toThrow(
-      /LINSIGHT_API_TOKEN/,
+      /JIUMATE_API_TOKEN/,
     );
-    process.env.LINSIGHT_API_TOKEN = "remote-token";
+    process.env.JIUMATE_API_TOKEN = "remote-token";
     const conn = await resolveConnection({ server: "https://box.example.com" }, t);
     expect(conn.baseUrl).toBe("https://box.example.com");
     expect(conn.loopback).toBe(false);
@@ -77,8 +77,8 @@ describe("connection resolution", () => {
   });
 
   it("a live server.lock on the data root resolves to http://localhost:<port>", async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-cli-lock-"));
-    process.env.LINSIGHT_HOME = root;
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-cli-lock-"));
+    process.env.JIUMATE_HOME = root;
     // Liveness needs a real pid AND an accepting port: use this process and a real listener.
     const listener = net.createServer();
     await new Promise<void>((resolve) => listener.listen(0, "127.0.0.1", resolve));
@@ -98,8 +98,8 @@ describe("connection resolution", () => {
   });
 
   it("no server + autoStart disabled -> the no-server error; a stale lock does not count", async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "linsight-cli-stale-"));
-    process.env.LINSIGHT_HOME = root;
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-cli-stale-"));
+    process.env.JIUMATE_HOME = root;
     // A lock whose port nothing accepts is stale and must be ignored.
     fs.writeFileSync(
       path.join(root, "server.lock"),
@@ -113,9 +113,9 @@ describe("connection resolution", () => {
   });
 
   it("autoStartEntry accepts plain-node entries only (a tsx .ts dev entry cannot re-run)", () => {
-    expect(autoStartEntry("/x/dist/linsight.js")).toBe(path.resolve("/x/dist/linsight.js"));
-    expect(autoStartEntry("/x/dist/linsight.mjs")).not.toBeNull();
-    expect(autoStartEntry("/x/src/linsight.ts")).toBeNull();
+    expect(autoStartEntry("/x/dist/jiumate.js")).toBe(path.resolve("/x/dist/jiumate.js"));
+    expect(autoStartEntry("/x/dist/jiumate.mjs")).not.toBeNull();
+    expect(autoStartEntry("/x/src/jiumate.ts")).toBeNull();
     expect(autoStartEntry(undefined)).toBeNull();
   });
 });
@@ -195,8 +195,8 @@ describe("option defaults", () => {
   it("project/agent ids: flag > env > built-in default", () => {
     expect(resolveProjectId(undefined)).toBe("default_project");
     expect(resolveAgentId(undefined)).toBe("default_agent");
-    process.env.LINSIGHT_PROJECT_ID = "env-project";
-    process.env.LINSIGHT_AGENT_ID = "env-agent";
+    process.env.JIUMATE_PROJECT_ID = "env-project";
+    process.env.JIUMATE_AGENT_ID = "env-agent";
     expect(resolveProjectId(undefined)).toBe("env-project");
     expect(resolveAgentId(undefined)).toBe("env-agent");
     expect(resolveProjectId("flag-project")).toBe("flag-project");

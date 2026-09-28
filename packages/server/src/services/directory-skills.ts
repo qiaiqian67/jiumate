@@ -22,8 +22,8 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
-import { parseSkillFrontmatter, PLUGIN_NAME_PATTERN } from "@prismshadow/linsight-core";
-import type { SkillMetadata } from "@prismshadow/linsight-core";
+import { parseSkillFrontmatter, PLUGIN_NAME_PATTERN } from "@prismshadow/jiumate-core";
+import type { SkillMetadata } from "@prismshadow/jiumate-core";
 import { HttpError } from "../http/errors.js";
 import {
   MAX_ARCHIVE_FILES,

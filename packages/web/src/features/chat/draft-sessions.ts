@@ -33,7 +33,7 @@ export interface DraftSessionEntry {
 
 /** Storage key for one user × Project's parked drafts (a JSON array of entries). */
 export const draftSessionsKey = (userId: string, projectId: string): string =>
-  `linsight.chatDrafts.${userId}.${projectId}`;
+  `jiumate.chatDrafts.${userId}.${projectId}`;
 
 /** Newest-first cap: localStorage is shared budget, and fifty abandoned drafts is already hoarding. */
 const MAX_DRAFTS = 50;
@@ -43,7 +43,7 @@ const MAX_DRAFTS = 50;
  * draft page flushes its debounce-pending text on this event, so the park never captures
  * a keystroke-stale cache and the page's unmount flush never resurrects parked text.
  */
-export const DRAFT_FLUSH_EVENT = "linsight:draft-flush";
+export const DRAFT_FLUSH_EVENT = "jiumate:draft-flush";
 
 function parseEntries(raw: string | null): DraftSessionEntry[] {
   if (!raw) return [];

@@ -6,7 +6,7 @@
     "start": "tsx self-evolve-recursive.ts"
   },
   "dependencies": {
-    "@prismshadow/linsight-core": "workspace:*"
+    "@prismshadow/jiumate-core": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.20.0"

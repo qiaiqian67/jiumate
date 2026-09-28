@@ -5,26 +5,26 @@
  *
  * Connection resolution order (first hit wins):
  *   1. `--server <url>` — an explicit target. A non-loopback URL requires
- *      LINSIGHT_API_TOKEN: the on-disk token file belongs to the LOCAL data root and must
+ *      JIUMATE_API_TOKEN: the on-disk token file belongs to the LOCAL data root and must
  *      never be sent to a remote host.
- *   2. `LINSIGHT_API_URL` — the same, from the environment. Server-driven sessions inject
- *      it (with LINSIGHT_API_TOKEN) into tool subprocesses, which is how an agent's own
- *      `linsight` calls find the server that runs them.
- *   3. A live `server.lock` at the data root (LINSIGHT_HOME or ~/.linsight/data): attach to
+ *   2. `JIUMATE_API_URL` — the same, from the environment. Server-driven sessions inject
+ *      it (with JIUMATE_API_TOKEN) into tool subprocesses, which is how an agent's own
+ *      `jiumate` calls find the server that runs them.
+ *   3. A live `server.lock` at the data root (JIUMATE_HOME or ~/.jiumate/data): attach to
  *      the running local server on `http://localhost:<port>`.
  *   4. Auto-start: spawn a detached `node <cli entry> server` with PORT=0, wait for its
  *      lock, attach. The loser of a two-CLI spawn race exits with code 3 ("already
  *      running"), which the lock poll absorbs — it finds the winner's lock either way.
  *
- * Token resolution: LINSIGHT_API_TOKEN, else `<root>/api-token` (written by the server
+ * Token resolution: JIUMATE_API_TOKEN, else `<root>/api-token` (written by the server
  * each boot). A 401 with a file-sourced token re-reads the file once and retries — the
  * server may have restarted (and rotated the token) since the first read.
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { resolveRoot } from "@prismshadow/linsight-core";
-import { liveServerLock } from "@prismshadow/linsight-server/lock";
+import { resolveRoot } from "@prismshadow/jiumate-core";
+import { liveServerLock } from "@prismshadow/jiumate-server/lock";
 import type { Messages } from "./i18n.js";
 
 /** Session-id shape (core's convention); a full id needs no directory search. */
@@ -156,11 +156,11 @@ export async function resolveConnection(
   t: Messages,
 ): Promise<Connection> {
   const root = resolveRoot();
-  const explicit = opts.server?.trim() || process.env.LINSIGHT_API_URL?.trim() || "";
+  const explicit = opts.server?.trim() || process.env.JIUMATE_API_URL?.trim() || "";
   if (explicit !== "") {
     const url = normalizeServerUrl(explicit, t);
     const loopback = isLoopbackUrl(url);
-    if (!loopback && !process.env.LINSIGHT_API_TOKEN?.trim()) {
+    if (!loopback && !process.env.JIUMATE_API_TOKEN?.trim()) {
       throw new Error(t.client.remoteNeedsToken(url.origin));
     }
     return { baseUrl: url.origin, root, autoStarted: false, loopback };
@@ -200,7 +200,7 @@ export class ServerClient {
     readonly conn: Connection,
     private readonly t: Messages,
   ) {
-    const envToken = process.env.LINSIGHT_API_TOKEN?.trim();
+    const envToken = process.env.JIUMATE_API_TOKEN?.trim();
     if (envToken) {
       this.token = envToken;
       this.tokenSource = "env";
@@ -365,7 +365,7 @@ export async function* parseSseBody(
 // Session references
 // ---------------------------------------------------------------------------
 
-/** The 8-hex tail of a session id — the short form `linsight ls` prints. */
+/** The 8-hex tail of a session id — the short form `jiumate ls` prints. */
 export function shortSessionId(sessionId: string): string {
   const m = /-([0-9a-f]{8})$/.exec(sessionId);
   return m === null ? sessionId : m[1]!;
@@ -413,12 +413,12 @@ export async function resolveSessionRef(
 // Shared option defaults
 // ---------------------------------------------------------------------------
 
-/** `--project-id` default chain: flag > LINSIGHT_PROJECT_ID > default_project. */
+/** `--project-id` default chain: flag > JIUMATE_PROJECT_ID > default_project. */
 export function resolveProjectId(flag: string | undefined): string {
-  return flag?.trim() || process.env.LINSIGHT_PROJECT_ID?.trim() || "default_project";
+  return flag?.trim() || process.env.JIUMATE_PROJECT_ID?.trim() || "default_project";
 }
 
-/** `--agent-id` default chain: flag > LINSIGHT_AGENT_ID > default_agent. */
+/** `--agent-id` default chain: flag > JIUMATE_AGENT_ID > default_agent. */
 export function resolveAgentId(flag: string | undefined): string {
-  return flag?.trim() || process.env.LINSIGHT_AGENT_ID?.trim() || "default_agent";
+  return flag?.trim() || process.env.JIUMATE_AGENT_ID?.trim() || "default_agent";
 }

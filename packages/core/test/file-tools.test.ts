@@ -58,7 +58,7 @@ async function run(tool: BuiltinTool, args: Record<string, unknown>, workspaceDi
 let tmp: string;
 
 beforeEach(async () => {
-  tmp = await mkdtemp(path.join(tmpdir(), "linsight-filetools-"));
+  tmp = await mkdtemp(path.join(tmpdir(), "jiumate-filetools-"));
 });
 
 afterEach(async () => {
@@ -76,7 +76,7 @@ describe("read_file", () => {
   });
 
   it("reads an absolute path outside the workspace", async () => {
-    const outside = await mkdtemp(path.join(tmpdir(), "linsight-filetools-out-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "jiumate-filetools-out-"));
     try {
       const abs = path.join(outside, "abs.txt");
       await writeFile(abs, "outside\n");

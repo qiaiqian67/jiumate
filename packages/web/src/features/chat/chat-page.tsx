@@ -28,7 +28,7 @@ import type {
   SessionStatus,
   SkillMetadataItem,
   TaskInputPart,
-} from "@prismshadow/linsight-server/api";
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";
@@ -103,7 +103,7 @@ import { buildPetTasks } from "../pet/pet-tasks";
 import { openSettings } from "../../lib/open-settings";
 import { handoffMessage, modelSwitchMessage } from "./agent-handoff";
 import { hasConfiguredKey, sameModelRef } from "../models/model-grouping";
-import { providerInfo } from "@prismshadow/linsight-core/model-catalog";
+import { providerInfo } from "@prismshadow/jiumate-core/model-catalog";
 import { WorkspaceBrowser } from "./workspace-browser";
 import { ChatMemoryView } from "./memory-view";
 import { useMemoryListing } from "./use-memory-listing";

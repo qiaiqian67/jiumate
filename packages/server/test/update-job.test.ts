@@ -25,7 +25,7 @@ describe("advanceUpdateProgress", () => {
   it("reads curl's progress bar once the download line has passed, keeping the freshest percentage", () => {
     const started = advanceUpdateProgress(
       INITIAL_PROGRESS,
-      "Downloading linsight-0.3.0-linux-x64.tar.gz from GitHub ...\n",
+      "Downloading jiumate-0.3.0-linux-x64.tar.gz from GitHub ...\n",
     );
     expect(started).toEqual({ phase: "downloading", percent: null });
     const chunk = "\r####                        12.3%\r########                    31.9%";
@@ -100,7 +100,7 @@ describe("UpdateJobService", () => {
     const job = new UpdateJobService(script.runner);
     expect(job.status()).toEqual({ state: "idle", targetVersion: null, output: "" });
 
-    const started = job.start("/opt/linsight/cli.js", "0.3.0");
+    const started = job.start("/opt/jiumate/cli.js", "0.3.0");
     expect(started).toMatchObject({
       state: "running",
       targetVersion: "0.3.0",
@@ -108,12 +108,12 @@ describe("UpdateJobService", () => {
       percent: null,
       output: "",
     });
-    expect(script.entries).toEqual(["/opt/linsight/cli.js"]);
+    expect(script.entries).toEqual(["/opt/jiumate/cli.js"]);
     // A second start joins the run rather than spawning another installer over the same dir.
-    expect(job.start("/opt/linsight/cli.js", "0.3.0")).toBe(job.status());
+    expect(job.start("/opt/jiumate/cli.js", "0.3.0")).toBe(job.status());
     expect(script.entries).toHaveLength(1);
 
-    script.emit("Downloading linsight.tar.gz from GitHub ...\n\r#### 40.0%");
+    script.emit("Downloading jiumate.tar.gz from GitHub ...\n\r#### 40.0%");
     expect(job.status()).toMatchObject({ phase: "downloading", percent: 40 });
     script.emit("\r######## 100.0%\nBundle checksum OK.\n");
     expect(job.status()).toMatchObject({ phase: "installing", percent: null });
@@ -130,7 +130,7 @@ describe("UpdateJobService", () => {
     const refused = scriptedRunner();
     const a = new UpdateJobService(refused.runner);
     a.start("/e", null);
-    refused.emit("This linsight runs from a source checkout, so there is nothing to download.");
+    refused.emit("This jiumate runs from a source checkout, so there is nothing to download.");
     await refused.finish({ exitCode: 0, timedOut: false });
     expect(a.status().result).toMatchObject({ status: "unsupported", needsRestart: false });
 

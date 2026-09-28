@@ -31,7 +31,7 @@ moved.
 - `ModelsPage` split into a thin page wrapper (which owns `useDocumentTitle` and the
   `h-full overflow-y-auto p-4 md:p-6` container) and `ModelsPane` (the library itself, with a
   class-free root). Neither piece of chrome belongs in a dialog pane: the title hook sets
-  `document.title` and never restores it, so an embedded copy would have left "模型库 · Linsight"
+  `document.title` and never restores it, so an embedded copy would have left "模型库 · JiuMate"
   in the tab after the dialog closed, and a second full-height scroll container inside the
   dialog's own would have nested two scrollbars with two sets of padding.
 - The pane's root stays an element rather than a fragment because the dialogs it opens
@@ -104,7 +104,7 @@ creating a session, not about this control.
   and the models page captions whichever entry carries `recommended`. Both still agree.
 - The web suite reads core through **pnpm's injected copy** in `node_modules/.pnpm`, not
   `packages/core`. A source edit is therefore invisible to it until core is built *through pnpm*
-  (`pnpm --filter @prismshadow/linsight-core build`, which is what `dev-prebuild.mjs` runs) —
+  (`pnpm --filter @prismshadow/jiumate-core build`, which is what `dev-prebuild.mjs` runs) —
   `npx tsup` writes `packages/core/dist` but does not trigger the sync hook, so the web tests go
   on asserting the previous order and pass. That false green is how the two order assertions in
   `model-grouping.test.ts` and `model-group-expansion.test.ts` were found.

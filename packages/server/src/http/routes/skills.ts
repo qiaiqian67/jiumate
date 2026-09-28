@@ -23,7 +23,7 @@ import {
   skillsDir,
   parseSkillFrontmatter,
   PLUGIN_NAME_PATTERN,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type { AgentSkillsResponse } from "../../api/types.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";

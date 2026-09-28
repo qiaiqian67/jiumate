@@ -31,7 +31,7 @@
  * list prunes dead shells' tabs on refresh.
  */
 
-const LAYOUT_KEY = "linsight.dock.layout";
+const LAYOUT_KEY = "jiumate.dock.layout";
 /** Scopes kept in storage; past that, the least recently touched conversations age out. */
 const MAX_SCOPES = 40;
 

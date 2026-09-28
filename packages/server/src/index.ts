@@ -2,10 +2,10 @@
  * Server process entry point: the whole startup lifecycle, as one ordered sequence.
  *
  * Importing this module STARTS the server — the CLI runs a server in its own process by
- * `await import("@prismshadow/linsight-server")` and nothing else, so main() is invoked at
+ * `await import("@prismshadow/jiumate-server")` and nothing else, so main() is invoked at
  * module scope rather than exported.
  *
- * main() comes first in the file and is the sequence itself: each step is one LinsightServer
+ * main() comes first in the file and is the sequence itself: each step is one JiuMateServer
  * method, named after what it does and appearing in the order main() calls it. The order
  * carries real constraints — the proxy dispatcher before any outbound request, the instance
  * lock before the database opens, extensions loaded before the platform boots against them,
@@ -19,7 +19,7 @@ import path from "node:path";
 import type { Server as HttpServer } from "node:http";
 import { config as loadDotenv } from "dotenv";
 import { serve } from "@hono/node-server";
-import { SERVER_RESTART_EXIT_CODE } from "@prismshadow/linsight-core";
+import { SERVER_RESTART_EXIT_CODE } from "@prismshadow/jiumate-core";
 import { bootAppDeps, createRuntimeApp, type AppDeps } from "./app.js";
 import { ADMIN_USER_ID } from "./auth/service.js";
 import { resolveServerConfig, type ServerConfig } from "./config.js";
@@ -35,11 +35,11 @@ import { shellPortOf, wireShellUpdatePort } from "./services/desktop-update-port
 /**
  * The startup lifecycle: one line per step, in the order they have to happen.
  *
- * This is the file's table of contents — each call below is a LinsightServer method, and
+ * This is the file's table of contents — each call below is a JiuMateServer method, and
  * reading them top to bottom is the whole of what starting a server does.
  */
 async function main(): Promise<void> {
-  const server = new LinsightServer();
+  const server = new JiuMateServer();
   server.loadEnv();
   server.installProxy();
   server.readConfig();
@@ -60,7 +60,7 @@ async function main(): Promise<void> {
  * the only caller and runs them in order, which is what lets the spine fields below be
  * read without a null check from the step after the one that assigns them.
  */
-class LinsightServer {
+class JiuMateServer {
   /** Set at seed when this server still has no admin password; printed once the port is known. */
   private pendingFirstLoginNotice = false;
 
@@ -111,7 +111,7 @@ class LinsightServer {
     const existing = await liveServerLock(this.config.root);
     if (existing === null) return;
     console.error(
-      `Another Linsight server is already running on this data root (pid ${existing.pid}).`,
+      `Another JiuMate server is already running on this data root (pid ${existing.pid}).`,
     );
     console.error(`Existing instance: http://localhost:${existing.port}/`);
     process.exit(EXIT_ALREADY_RUNNING);
@@ -185,7 +185,7 @@ class LinsightServer {
    *
    * Nothing is printed in desktop mode: the shell's own window signs in through its one-shot
    * token, so a link in a log would be a credential nobody needs. Nothing is printed either
-   * when the pinned LINSIGHT_SEED_ADMIN_PASSWORD is still the admin's actual password — the
+   * when the pinned JIUMATE_SEED_ADMIN_PASSWORD is still the admin's actual password — the
    * operator knows it. The pin alone is not enough: an offline reset-admin-password replaces
    * the password with an unknowable one while the pin stays configured, and the rescue flow
    * IS this link, so the gate verifies the pin against the hash rather than trusting it.
@@ -230,7 +230,7 @@ class LinsightServer {
 
     // Restart-to-update: POST /api/version/restart lands here once a self-update is
     // installed — the same graceful shutdown, exiting with the code the supervising
-    // `linsight server|web` respawns on, so the relaunch runs the new release. The
+    // `jiumate server|web` respawns on, so the relaunch runs the new release. The
     // lifecycle service only fires it when a supervisor is actually there.
     this.deps.lifecycle.onRestartRequest(
       () => void this.shutdown("restart", SERVER_RESTART_EXIT_CODE),
@@ -239,7 +239,7 @@ class LinsightServer {
     // Client-update relay: under the shell this process is an Electron utilityProcess and
     // carries process.parentPort; wire it to the desktop service so the update routes can
     // read the shell's updater snapshot and forward check/install. Absent port (a plain
-    // `linsight server|web` run, or tests) wires nothing.
+    // `jiumate server|web` run, or tests) wires nothing.
     if (this.deps.desktop !== null) {
       const shellPort = shellPortOf(process);
       if (shellPort !== null) wireShellUpdatePort(this.deps.desktop, shellPort);
@@ -273,17 +273,17 @@ class LinsightServer {
 
   /** Everything derived from the actual bound port, run once the listener is up. */
   private onListening(port: number): void {
-    console.log(`linsight-server started: http://${this.appHost()}:${port}`);
+    console.log(`jiumate-server started: http://${this.appHost()}:${port}`);
     console.log(`Data root: ${this.config.root}`);
     console.log(`SQLite: ${this.config.dbPath}`);
     // Named for the same reason the data root is: it is the one path the static tail
     // serves from when no pushed web version is restored, and the only trace of a wrong
-    // LINSIGHT_WEB_DIST or a missing build is otherwise a 404 on every page.
+    // JIUMATE_WEB_DIST or a missing build is otherwise a 404 on every page.
     console.log(`Web dist: ${this.config.webDist}`);
     if (!fs.existsSync(path.join(this.config.webDist, "index.html"))) {
       console.warn(
         `[server] Web dist has no index.html; the Web App answers 404 unless a pushed web ` +
-          `version is restored. Build packages/web or point LINSIGHT_WEB_DIST at a build.`,
+          `version is restored. Build packages/web or point JIUMATE_WEB_DIST at a build.`,
       );
     }
     if (this.config.desktopToken !== null) console.log("Desktop mode: enabled");
@@ -422,7 +422,7 @@ class LinsightServer {
 /** Exit code for "another server already owns this data root" (see lock.ts). */
 const EXIT_ALREADY_RUNNING = 3;
 
-/** Port announcement (LINSIGHT_PORT_FILE): tmp + rename, so a polling reader never sees a partial write. */
+/** Port announcement (JIUMATE_PORT_FILE): tmp + rename, so a polling reader never sees a partial write. */
 function writePortFile(file: string, port: number): void {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.${process.pid}.tmp`;
@@ -431,6 +431,6 @@ function writePortFile(file: string, port: number): void {
 }
 
 // Runs on import, which is what starting this server means. It is the last line of the
-// file because main() reaches LinsightServer, whose declaration has to have been evaluated
+// file because main() reaches JiuMateServer, whose declaration has to have been evaluated
 // by the time the call happens.
 await main();

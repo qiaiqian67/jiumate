@@ -6,7 +6,7 @@
  * and compare to both dictionaries.
  */
 import { describe, expect, it } from "vitest";
-import { defaultSystemConfig } from "@prismshadow/linsight-core";
+import { defaultSystemConfig } from "@prismshadow/jiumate-core";
 import { zh } from "../src/lib/strings";
 import { en } from "../src/lib/strings-en";
 

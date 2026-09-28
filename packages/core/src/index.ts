@@ -1,5 +1,5 @@
 /**
- * @prismshadow/linsight-core — public entry point for the Linsight core SDK.
+ * @prismshadow/jiumate-core — public entry point for the JiuMate core SDK.
  *
  * Exports the OmniMessage protocol, the three interface contracts (Human/LLM/Environment),
  * and the runtime entry points for Agent / Session / context_engine along with their
@@ -88,7 +88,7 @@ export const BUILD_DATE: string | null = null;
 export const BUILD_COMMIT: string | null = null;
 
 /**
- * Identity of the running build — the sole producer behind `linsight version [--json]` and
+ * Identity of the running build — the sole producer behind `jiumate version [--json]` and
  * GET /api/version. The three stamped constants above are the only inputs the release
  * workflow rewrites, so they are declared here and passed in rather than imported by
  * build-info.ts, which would make this barrel and that module a cycle.
@@ -96,5 +96,5 @@ export const BUILD_COMMIT: string | null = null;
 export function buildInfo(): BuildInfo {
   return resolveBuildInfo({ version: VERSION, buildDate: BUILD_DATE, commit: BUILD_COMMIT });
 }
-// Version-string helpers (shared by the CLI's `linsight update` and the server's update check).
+// Version-string helpers (shared by the CLI's `jiumate update` and the server's update check).
 export { compareVersions, normalizeVersion } from "./internal/version.js";

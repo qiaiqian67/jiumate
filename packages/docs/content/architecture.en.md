@@ -3,14 +3,14 @@ title: Architecture
 description: How the three-interface boundary, the context_engine and OmniMessage organize the SDK, CLI, Server and Web App into one system.
 ---
 
-Linsight is a pnpm monorepo whose center is the execution engine in `@prismshadow/linsight-core`; the CLI, the Server and the Web App are just different "Human implementations" of that same engine.
+JiuMate is a pnpm monorepo whose center is the execution engine in `@prismshadow/jiumate-core`; the CLI, the Server and the Web App are just different "Human implementations" of that same engine.
 
 ## Layers
 
 ```text
 ┌─────────────┐  ┌─────────────────────────────┐
 │   CLI       │  │  Web App (React SPA)        │
-│  (linsight)  │  │    ↑ OmniMessage over SSE   │
+│  (jiumate)  │  │    ↑ OmniMessage over SSE   │
 │             │  │  Server (Hono + SQLite)     │
 └──────┬──────┘  └──────────────┬──────────────┘
        │      session.run(...)  │        ← Human boundary
@@ -39,7 +39,7 @@ To place a design in a layer, ask where its **source of truth** lives. The four 
 | --- | --- | --- |
 | SDK (`core`) | Protocol and execution — everything that makes messages flow | persisted user state, multi-user, any rendering |
 | Server | The resident process and the multi-user runtime | engine logic (fully delegated to the SDK) |
-| File layer (`~/.linsight/data`) | Everything editable and everything recorded | any computation |
+| File layer (`~/.jiumate/data`) | Everything editable and everything recorded | any computation |
 | CLI / Web | Rendering and interaction | business state |
 
 Item by item (design → owner → carrying file or module):
@@ -117,7 +117,7 @@ Every message and event flows to two destinations at once: streamed live to the 
 
 ## The state layer
 
-Below the engine sits a purely file-based state layer rooted at `~/.linsight/data` (override with `LINSIGHT_HOME`), organized as `<project>/agents/<agent>/`:
+Below the engine sits a purely file-based state layer rooted at `~/.jiumate/data` (override with `JIUMATE_HOME`), organized as `<project>/agents/<agent>/`:
 
 - **Agent State** — the `agent_state/` directory: `system_config.yaml`, `AGENTS.md`, Skills, Vault. An Agent's entire behavior is editable files.
 - **Project config** — `.project_config.toml`: the model table and credentials; model identity is always the `(provider, model_id)` pair.

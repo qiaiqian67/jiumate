@@ -1,5 +1,5 @@
 /**
- * Signing in to a Linsight server from a terminal, and remembering it.
+ * Signing in to a JiuMate server from a terminal, and remembering it.
  *
  * Everything else this CLI does works on the data root directly — `config`, `run`, `chat` all
  * open files, never a socket. This is the one place that talks to a running server as a
@@ -18,7 +18,7 @@ import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
 import path from "node:path";
-import { writeSecretFile } from "@prismshadow/linsight-server/secret-file";
+import { writeSecretFile } from "@prismshadow/jiumate-server/secret-file";
 
 /** Where a login is remembered, beside the data root it belongs to. */
 export function sessionFile(root: string): string {

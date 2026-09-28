@@ -337,12 +337,12 @@ describePty("terminal API", () => {
       };
 
       await api.post(`/api/terminals/${terminal.id}/keys`, {
-        keys: "echo linsight-terminal-ok",
+        keys: "echo jiumate-terminal-ok",
         literal: true,
       });
       await api.post(`/api/terminals/${terminal.id}/keys`, { keys: "Enter" });
-      const lines = await waitForLine(read, /^linsight-terminal-ok$/);
-      expect(lines.some((line) => line === "linsight-terminal-ok")).toBe(true);
+      const lines = await waitForLine(read, /^jiumate-terminal-ok$/);
+      expect(lines.some((line) => line === "jiumate-terminal-ok")).toBe(true);
 
       const listed = await api.get("/api/terminals");
       expect(((await listed.json()) as { terminals: unknown[] }).terminals).toHaveLength(1);
@@ -430,7 +430,7 @@ describe.skipIf(process.platform === "win32")("spawn-helper repair", () => {
   // bit), and darwin's posix_spawnp then refuses it — the macOS "terminal opens blank"
   // bug.
   async function helperTree(relative: string[], mode: number): Promise<string> {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-pty-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-pty-"));
     const file = path.join(root, ...relative);
     await fs.mkdir(path.dirname(file), { recursive: true });
     await fs.writeFile(file, "#!/bin/sh\n", { mode });
@@ -453,7 +453,7 @@ describe.skipIf(process.platform === "win32")("spawn-helper repair", () => {
   });
 
   it("is a no-op when node-pty shipped no helper (every non-darwin install)", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-pty-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-pty-"));
 
     expect(repairSpawnHelpers(root, "x64")).toEqual([]);
   });

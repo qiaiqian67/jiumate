@@ -241,12 +241,12 @@ export function AppLayout() {
   };
   // Desktop sidebar collapse (persisted): collapsed state leaves a narrow rail to expand from.
   const [collapsed, setCollapsed] = useState(
-    () => localStorage.getItem("linsight.sidebarCollapsed") === "1",
+    () => localStorage.getItem("jiumate.sidebarCollapsed") === "1",
   );
   const toggleCollapsed = () =>
     setCollapsed((v) => {
       const next = !v;
-      localStorage.setItem("linsight.sidebarCollapsed", next ? "1" : "0");
+      localStorage.setItem("jiumate.sidebarCollapsed", next ? "1" : "0");
       return next;
     });
 

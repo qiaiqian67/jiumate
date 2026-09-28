@@ -28,8 +28,8 @@ import type { GroupMode } from "../components/ui/group-list";
 
 export type SessionSortMode = "recent" | "manual";
 
-/** The single global key (`linsight.…` naming, GROUP_MODE_KEY convention); holds "manual" / "recent". */
-export const SESSION_SORT_MODE_KEY = "linsight.sidebarSortMode";
+/** The single global key (`jiumate.…` naming, GROUP_MODE_KEY convention); holds "manual" / "recent". */
+export const SESSION_SORT_MODE_KEY = "jiumate.sidebarSortMode";
 
 /** Minimal storage interface (the subset of localStorage used here); tests inject an in-memory implementation. */
 export interface SessionOrderStorage {
@@ -64,13 +64,13 @@ export function storeSessionSortMode(mode: SessionSortMode, storage?: SessionOrd
 
 /**
  * Storage key of one Project's manual order (sidebar key-naming convention,
- * `linsight.pinnedSessions.<projectId>` &c.), scoped BY GROUPING MODE: the stored
+ * `jiumate.pinnedSessions.<projectId>` &c.), scoped BY GROUPING MODE: the stored
  * sequence is only ever read within a partition, and the modes cut the same Sessions
  * into different partitions — one shared array would let a drag in one mode scramble
  * another mode's order.
  */
 export const sessionOrderKey = (projectId: string, mode: GroupMode): string =>
-  `linsight.sessionOrder.${projectId}.${mode}`;
+  `jiumate.sessionOrder.${projectId}.${mode}`;
 
 /**
  * Reads a stored JSON string array, degrading to empty on anything unexpected: nothing

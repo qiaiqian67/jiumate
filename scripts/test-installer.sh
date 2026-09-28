@@ -18,7 +18,7 @@ fail_test() {
 }
 
 # The auto-mode rule lives in three implementations that cannot import from each other: the two
-# installers and the download page on linsight.ooo. Nothing but this check keeps their constants in
+# installers and the download page on jiumate.ooo. Nothing but this check keeps their constants in
 # step, so a threshold edited in one place fails here instead of shipping three different rules.
 check_shared_constant() {
   csc_label="$1"
@@ -39,23 +39,23 @@ check_shared_constant "the OSS switch ratio" "SPEED_PROBE_OSS_SWITCH_RATIO = 1.5
 
 # --- The launchers the release packages ship verbatim (scripts/launchers/). They are the only
 #     spelling of the payload layout, so moving where web/ or node/ sits fails here rather than
-#     shipping a package whose `linsight` cannot find its own web assets. ---
-LAUNCHER_SH="$ROOT_DIR/scripts/launchers/linsight"
-LAUNCHER_CMD="$ROOT_DIR/scripts/launchers/linsight.cmd"
-[ -x "$LAUNCHER_SH" ] || fail_test "scripts/launchers/linsight is missing or not executable"
-for marker in 'LINSIGHT_WEB_DIST:-$DIR/web' '$DIR/node/bin/node' '$DIR/lib/dist/linsight.js'; do
+#     shipping a package whose `jiumate` cannot find its own web assets. ---
+LAUNCHER_SH="$ROOT_DIR/scripts/launchers/jiumate"
+LAUNCHER_CMD="$ROOT_DIR/scripts/launchers/jiumate.cmd"
+[ -x "$LAUNCHER_SH" ] || fail_test "scripts/launchers/jiumate is missing or not executable"
+for marker in 'JIUMATE_WEB_DIST:-$DIR/web' '$DIR/node/bin/node' '$DIR/lib/dist/jiumate.js'; do
   grep -qF "$marker" "$LAUNCHER_SH" || fail_test "the POSIX launcher does not carry $marker"
 done
 sh -n "$LAUNCHER_SH" || fail_test "the POSIX launcher is not valid sh"
-for marker in '%DIR%\web' '%DIR%\node\node.exe' '%DIR%\lib\dist\linsight.js'; do
+for marker in '%DIR%\web' '%DIR%\node\node.exe' '%DIR%\lib\dist\jiumate.js'; do
   grep -qF "$marker" "$LAUNCHER_CMD" || fail_test "the Windows launcher does not carry $marker"
 done
 # .gitattributes keeps this one CRLF, the only form cmd.exe is fully reliable with.
 grep -q "$(printf '\r')" "$LAUNCHER_CMD" || fail_test "the Windows launcher is not CRLF"
-# No linsight.ps1: PowerShell would prefer it on PATH, and Restricted policy would then break
-# the plain `linsight` command.
-[ ! -e "$ROOT_DIR/scripts/launchers/linsight.ps1" ] \
-  || fail_test "a linsight.ps1 launcher must not be shipped"
+# No jiumate.ps1: PowerShell would prefer it on PATH, and Restricted policy would then break
+# the plain `jiumate` command.
+[ ! -e "$ROOT_DIR/scripts/launchers/jiumate.ps1" ] \
+  || fail_test "a jiumate.ps1 launcher must not be shipped"
 
 write_sha256() {
   file="$1"
@@ -68,28 +68,28 @@ make_posix_payload() {
   behavior="${3:-success}"
   payload="$WORK_DIR/payload-src"
   rm -rf "$payload"
-  mkdir -p "$payload/linsight/bin" "$payload/linsight/lib" "$payload/linsight/web"
+  mkdir -p "$payload/jiumate/bin" "$payload/jiumate/lib" "$payload/jiumate/web"
   if [ "$behavior" = "final-failure" ]; then
     {
       printf '%s\n' '#!/bin/sh'
       printf '%s\n' 'case "$0" in'
-      printf '%s\n' '  */.staging.*/bin/linsight) echo fixture-new; exit 0 ;;'
+      printf '%s\n' '  */.staging.*/bin/jiumate) echo fixture-new; exit 0 ;;'
       printf '%s\n' '  *) echo "fixture final-path failure" >&2; exit 42 ;;'
       printf '%s\n' 'esac'
-    } > "$payload/linsight/bin/linsight"
+    } > "$payload/jiumate/bin/jiumate"
   else
     {
       printf '%s\n' '#!/bin/sh'
       printf 'echo %s\n' "${4:-fixture-old}"
-    } > "$payload/linsight/bin/linsight"
+    } > "$payload/jiumate/bin/jiumate"
   fi
-  chmod +x "$payload/linsight/bin/linsight"
-  printf '%s\n' fixture > "$payload/linsight/lib/fixture.txt"
-  mkdir -p "$payload/linsight/lib/vendor"
-  printf '%s\n' vendored > "$payload/linsight/lib/vendor/data.txt"
-  printf '%s\n' fixture > "$payload/linsight/web/index.html"
-  printf '{"schemaVersion":1,"target":"%s"}\n' "$target" > "$payload/linsight/package-manifest.json"
-  tar -czf "$output" -C "$payload" linsight
+  chmod +x "$payload/jiumate/bin/jiumate"
+  printf '%s\n' fixture > "$payload/jiumate/lib/fixture.txt"
+  mkdir -p "$payload/jiumate/lib/vendor"
+  printf '%s\n' vendored > "$payload/jiumate/lib/vendor/data.txt"
+  printf '%s\n' fixture > "$payload/jiumate/web/index.html"
+  printf '{"schemaVersion":1,"target":"%s"}\n' "$target" > "$payload/jiumate/package-manifest.json"
+  tar -czf "$output" -C "$payload" jiumate
 }
 
 command -v sha256sum >/dev/null 2>&1 || fail_test "sha256sum is required"
@@ -103,17 +103,17 @@ case "$(uname -s):$(uname -m)" in
   Darwin:arm64) HOST_TARGET="darwin-arm64" ;;
   *) fail_test "unsupported fixture platform" ;;
 esac
-HOST_ASSET="linsight-$HOST_TARGET.tar.gz"
+HOST_ASSET="jiumate-$HOST_TARGET.tar.gz"
 
 # --- Build fixture payloads and package them exactly like the release workflow. ---
 for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 universal; do
   make_posix_payload "$target" "$PAYLOAD_DIR/$target.tar.gz"
 done
-windows_payload="$WORK_DIR/windows/linsight"
+windows_payload="$WORK_DIR/windows/jiumate"
 mkdir -p "$windows_payload/bin"
-printf '%s\r\n' '@echo off' 'echo fixture-old' > "$windows_payload/bin/linsight.cmd"
+printf '%s\r\n' '@echo off' 'echo fixture-old' > "$windows_payload/bin/jiumate.cmd"
 printf '%s\n' '{"schemaVersion":1,"target":"win32-x64"}' > "$windows_payload/package-manifest.json"
-(cd "$WORK_DIR/windows" && zip -qr "$PAYLOAD_DIR/win32-x64.zip" linsight)
+(cd "$WORK_DIR/windows" && zip -qr "$PAYLOAD_DIR/win32-x64.zip" jiumate)
 
 sh "$ROOT_DIR/scripts/package-release-bundles.sh" "$PAYLOAD_DIR" "$ARTIFACT_DIR"
 
@@ -150,9 +150,9 @@ STAMP_SHA=0123456789abcdef0123456789abcdef01234567
 
 STAMP_NEW_DIR="$WORK_DIR/stamp-new"
 make_stamp_case "$STAMP_NEW_DIR"
-printf '%s\n' 'EMBEDDED_RELEASE_VERSION="__LINSIGHT_RELEASE_VERSION__"' \
+printf '%s\n' 'EMBEDDED_RELEASE_VERSION="__JIUMATE_RELEASE_VERSION__"' \
   > "$STAMP_NEW_DIR/install.sh"
-printf '%s\n' '$EmbeddedReleaseVersion = "__LINSIGHT_RELEASE_VERSION__"' \
+printf '%s\n' '$EmbeddedReleaseVersion = "__JIUMATE_RELEASE_VERSION__"' \
   > "$STAMP_NEW_DIR/install.ps1"
 (cd "$STAMP_NEW_DIR" && TEST_RELEASE_TAG=v9.8.7 GITHUB_SHA="$STAMP_SHA" sh -e "$STAMP_SCRIPT")
 grep -Fq 'EMBEDDED_RELEASE_VERSION="v9.8.7"' "$STAMP_NEW_DIR/install.sh" \
@@ -171,9 +171,9 @@ grep -Fq "export const BUILD_COMMIT: string | null = \"$STAMP_SHA\";" \
 # Without GITHUB_SHA (a replay outside Actions) the commit stays null and the rest still stamps.
 STAMP_NOSHA_DIR="$WORK_DIR/stamp-no-sha"
 make_stamp_case "$STAMP_NOSHA_DIR"
-printf '%s\n' 'EMBEDDED_RELEASE_VERSION="__LINSIGHT_RELEASE_VERSION__"' \
+printf '%s\n' 'EMBEDDED_RELEASE_VERSION="__JIUMATE_RELEASE_VERSION__"' \
   > "$STAMP_NOSHA_DIR/install.sh"
-printf '%s\n' '$EmbeddedReleaseVersion = "__LINSIGHT_RELEASE_VERSION__"' \
+printf '%s\n' '$EmbeddedReleaseVersion = "__JIUMATE_RELEASE_VERSION__"' \
   > "$STAMP_NOSHA_DIR/install.ps1"
 (cd "$STAMP_NOSHA_DIR" && TEST_RELEASE_TAG=v9.8.7 GITHUB_SHA= sh -e "$STAMP_SCRIPT") \
   > "$WORK_DIR/stamp-no-sha.output"
@@ -188,9 +188,9 @@ grep -Fq 'export const VERSION = "9.8.7";' "$STAMP_NOSHA_DIR/packages/core/src/i
 # A tag predating the BUILD_COMMIT constant must still rebuild.
 STAMP_NOCONST_DIR="$WORK_DIR/stamp-no-commit-const"
 make_stamp_case "$STAMP_NOCONST_DIR" legacy
-printf '%s\n' 'EMBEDDED_RELEASE_VERSION="__LINSIGHT_RELEASE_VERSION__"' \
+printf '%s\n' 'EMBEDDED_RELEASE_VERSION="__JIUMATE_RELEASE_VERSION__"' \
   > "$STAMP_NOCONST_DIR/install.sh"
-printf '%s\n' '$EmbeddedReleaseVersion = "__LINSIGHT_RELEASE_VERSION__"' \
+printf '%s\n' '$EmbeddedReleaseVersion = "__JIUMATE_RELEASE_VERSION__"' \
   > "$STAMP_NOCONST_DIR/install.ps1"
 (cd "$STAMP_NOCONST_DIR" && TEST_RELEASE_TAG=v9.8.7 GITHUB_SHA="$STAMP_SHA" sh -e "$STAMP_SCRIPT") \
   > "$WORK_DIR/stamp-no-commit-const.output"
@@ -218,10 +218,10 @@ for inconsistent_side in posix powershell; do
   printf '%s\n' 'legacy POSIX installer' > "$STAMP_INCONSISTENT_DIR/install.sh"
   printf '%s\n' 'legacy PowerShell installer' > "$STAMP_INCONSISTENT_DIR/install.ps1"
   if [ "$inconsistent_side" = posix ]; then
-    printf '%s\n' 'EMBEDDED_RELEASE_VERSION="__LINSIGHT_RELEASE_VERSION__"' \
+    printf '%s\n' 'EMBEDDED_RELEASE_VERSION="__JIUMATE_RELEASE_VERSION__"' \
       > "$STAMP_INCONSISTENT_DIR/install.sh"
   else
-    printf '%s\n' '$EmbeddedReleaseVersion = "__LINSIGHT_RELEASE_VERSION__"' \
+    printf '%s\n' '$EmbeddedReleaseVersion = "__JIUMATE_RELEASE_VERSION__"' \
       > "$STAMP_INCONSISTENT_DIR/install.ps1"
   fi
   if (cd "$STAMP_INCONSISTENT_DIR" && TEST_RELEASE_TAG=v9.8.7 GITHUB_SHA="$STAMP_SHA" \
@@ -232,15 +232,15 @@ done
 
 # Model the release workflow's installer stamping without changing the source installer.
 STAMPED_INSTALLER="$WORK_DIR/install-v0.0.0-test.sh"
-grep -q 'EMBEDDED_RELEASE_VERSION="__LINSIGHT_RELEASE_VERSION__"' "$ROOT_DIR/install.sh" \
+grep -q 'EMBEDDED_RELEASE_VERSION="__JIUMATE_RELEASE_VERSION__"' "$ROOT_DIR/install.sh" \
   || fail_test "POSIX installer release-version token is missing"
-sed 's/__LINSIGHT_RELEASE_VERSION__/v0.0.0-test/' "$ROOT_DIR/install.sh" > "$STAMPED_INSTALLER"
+sed 's/__JIUMATE_RELEASE_VERSION__/v0.0.0-test/' "$ROOT_DIR/install.sh" > "$STAMPED_INSTALLER"
 chmod +x "$STAMPED_INSTALLER"
 
 # --- Canonical layout: flat bundles, exact member set, byte-identical installers, both
 #     checksum layers valid. ---
 for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 universal; do
-  bundle="$ARTIFACT_DIR/linsight-$target.tar.gz"
+  bundle="$ARTIFACT_DIR/jiumate-$target.tar.gz"
   [ -f "$bundle" ] || fail_test "missing $(basename "$bundle")"
   (cd "$ARTIFACT_DIR" && sha256sum -c "$(basename "$bundle").sha256" >/dev/null) \
     || fail_test "outer checksum failed for $(basename "$bundle")"
@@ -259,13 +259,13 @@ for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64 universal; do
     || fail_test "$(basename "$bundle") payload differs from its input"
 done
 
-windows_bundle="$ARTIFACT_DIR/linsight-win32-x64.zip"
-[ -f "$windows_bundle" ] || fail_test "missing linsight-win32-x64.zip"
-(cd "$ARTIFACT_DIR" && sha256sum -c linsight-win32-x64.zip.sha256 >/dev/null) \
-  || fail_test "outer checksum failed for linsight-win32-x64.zip"
+windows_bundle="$ARTIFACT_DIR/jiumate-win32-x64.zip"
+[ -f "$windows_bundle" ] || fail_test "missing jiumate-win32-x64.zip"
+(cd "$ARTIFACT_DIR" && sha256sum -c jiumate-win32-x64.zip.sha256 >/dev/null) \
+  || fail_test "outer checksum failed for jiumate-win32-x64.zip"
 members="$(unzip -Z1 "$windows_bundle" | LC_ALL=C sort)"
 expected="$(printf '%s\n' install.cmd install.ps1 payload.zip payload.zip.sha256 | LC_ALL=C sort)"
-[ "$members" = "$expected" ] || fail_test "linsight-win32-x64.zip has an unexpected layout"
+[ "$members" = "$expected" ] || fail_test "jiumate-win32-x64.zip has an unexpected layout"
 extracted="$WORK_DIR/layout-win32-x64"
 mkdir -p "$extracted"
 (cd "$extracted" && unzip -q "$windows_bundle")
@@ -291,10 +291,10 @@ OFFLINE_DIR="$WORK_DIR/offline"
 OFFLINE_INSTALL="$WORK_DIR/offline-install"
 mkdir -p "$OFFLINE_DIR"
 tar -xzf "$ARTIFACT_DIR/$HOST_ASSET" -C "$OFFLINE_DIR"
-HOME="$TEST_HOME" LINSIGHT_INSTALL_DIR="$OFFLINE_INSTALL" PATH="$STUB_BIN:$PATH" \
+HOME="$TEST_HOME" JIUMATE_INSTALL_DIR="$OFFLINE_INSTALL" PATH="$STUB_BIN:$PATH" \
   sh "$OFFLINE_DIR/install.sh" >/dev/null \
   || fail_test "offline install from the extracted bundle failed"
-[ "$("$OFFLINE_INSTALL/bin/linsight" --version)" = "fixture-old" ] \
+[ "$("$OFFLINE_INSTALL/bin/jiumate" --version)" = "fixture-old" ] \
   || fail_test "offline install did not produce a working command"
 
 # The stamped installer inside a released bundle must still prefer its sibling payload and
@@ -304,7 +304,7 @@ STAMPED_OFFLINE_INSTALL="$WORK_DIR/offline-stamped-install"
 mkdir -p "$STAMPED_OFFLINE_DIR"
 cp "$STAMPED_INSTALLER" "$STAMPED_OFFLINE_DIR/install.sh"
 cp "$OFFLINE_DIR/payload.tar.gz" "$OFFLINE_DIR/payload.tar.gz.sha256" "$STAMPED_OFFLINE_DIR/"
-HOME="$TEST_HOME" LINSIGHT_INSTALL_DIR="$STAMPED_OFFLINE_INSTALL" PATH="$STUB_BIN:$PATH" \
+HOME="$TEST_HOME" JIUMATE_INSTALL_DIR="$STAMPED_OFFLINE_INSTALL" PATH="$STUB_BIN:$PATH" \
   sh "$STAMPED_OFFLINE_DIR/install.sh" >/dev/null \
   || fail_test "stamped offline installer unexpectedly touched the network"
 
@@ -314,7 +314,7 @@ mkdir -p "$CORRUPT_DIR"
 tar -xzf "$ARTIFACT_DIR/$HOST_ASSET" -C "$CORRUPT_DIR"
 printf 'corruption' >> "$CORRUPT_DIR/payload.tar.gz"
 set +e
-HOME="$TEST_HOME" LINSIGHT_INSTALL_DIR="$WORK_DIR/offline-corrupt-install" PATH="$STUB_BIN:$PATH" \
+HOME="$TEST_HOME" JIUMATE_INSTALL_DIR="$WORK_DIR/offline-corrupt-install" PATH="$STUB_BIN:$PATH" \
   sh "$CORRUPT_DIR/install.sh" >/dev/null 2>&1
 status=$?
 set -e
@@ -322,15 +322,15 @@ set -e
 
 # --- Local archives: the canonical bundle and a bare payload both install; a failing upgrade
 #     rolls back to the previous installation. ---
-LOCAL_INSTALL="$TEST_HOME/.linsight"
-HOME="$TEST_HOME" LINSIGHT_INSTALL_DIR="$LOCAL_INSTALL" \
+LOCAL_INSTALL="$TEST_HOME/.jiumate"
+HOME="$TEST_HOME" JIUMATE_INSTALL_DIR="$LOCAL_INSTALL" \
   sh "$ROOT_DIR/install.sh" --archive "$ARTIFACT_DIR/$HOST_ASSET" >/dev/null \
   || fail_test "--archive with the canonical bundle failed"
 
 payload_archive="$WORK_DIR/payload.tar.gz"
 cp "$PAYLOAD_DIR/$HOST_TARGET.tar.gz" "$payload_archive"
 write_sha256 "$payload_archive"
-HOME="$TEST_HOME" LINSIGHT_INSTALL_DIR="$LOCAL_INSTALL" \
+HOME="$TEST_HOME" JIUMATE_INSTALL_DIR="$LOCAL_INSTALL" \
   sh "$ROOT_DIR/install.sh" --archive "$payload_archive" >/dev/null \
   || fail_test "--archive with a bare payload failed"
 
@@ -338,16 +338,16 @@ failure_archive="$WORK_DIR/final-failure.tar.gz"
 make_posix_payload "$HOST_TARGET" "$failure_archive" final-failure
 write_sha256 "$failure_archive"
 set +e
-HOME="$TEST_HOME" LINSIGHT_INSTALL_DIR="$LOCAL_INSTALL" \
+HOME="$TEST_HOME" JIUMATE_INSTALL_DIR="$LOCAL_INSTALL" \
   sh "$ROOT_DIR/install.sh" --archive "$failure_archive" >/dev/null 2>&1
 status=$?
 set -e
 [ "$status" -ne 0 ] || fail_test "failing POSIX upgrade unexpectedly succeeded"
-[ "$("$LOCAL_INSTALL/bin/linsight" --version)" = "fixture-old" ] \
+[ "$("$LOCAL_INSTALL/bin/jiumate" --version)" = "fixture-old" ] \
   || fail_test "previous POSIX installation was not restored"
 
 # --- Pinned-directory upgrade: emulate a filesystem that refuses to rename in-use directories
-#     (overlayfs reports EBUSY when `linsight update` replaces the very lib/ its own process runs
+#     (overlayfs reports EBUSY when `jiumate update` replaces the very lib/ its own process runs
 #     from). mv/rmdir stubs refuse directory renames that touch the installed lib, forcing
 #     relocate_dir through its per-entry and copy fallbacks and the husk-reuse path. ---
 PINNED_LIB="$LOCAL_INSTALL/lib"
@@ -379,11 +379,11 @@ chmod +x "$STUB_BIN/mv" "$STUB_BIN/rmdir"
 pinned_archive="$WORK_DIR/pinned-upgrade.tar.gz"
 make_posix_payload "$HOST_TARGET" "$pinned_archive" success fixture-upgraded
 write_sha256 "$pinned_archive"
-HOME="$TEST_HOME" LINSIGHT_INSTALL_DIR="$LOCAL_INSTALL" PATH="$STUB_BIN:$PATH" \
+HOME="$TEST_HOME" JIUMATE_INSTALL_DIR="$LOCAL_INSTALL" PATH="$STUB_BIN:$PATH" \
   sh "$ROOT_DIR/install.sh" --archive "$pinned_archive" >/dev/null \
   || fail_test "upgrade with a pinned lib directory failed"
 rm -f "$STUB_BIN/mv" "$STUB_BIN/rmdir"
-[ "$("$LOCAL_INSTALL/bin/linsight" --version)" = "fixture-upgraded" ] \
+[ "$("$LOCAL_INSTALL/bin/jiumate" --version)" = "fixture-upgraded" ] \
   || fail_test "pinned-lib upgrade did not install the new version"
 [ -f "$LOCAL_INSTALL/lib/vendor/data.txt" ] \
   || fail_test "pinned-lib upgrade lost the copied lib subdirectory"
@@ -432,8 +432,8 @@ done
 printf '%s\n' "$url" >> "$REQUEST_LOG"
 base="${url##*/}"
 case "$MODE:$url" in
-  primary-network:https://linsight-releases.oss-cn-beijing.aliyuncs.com/*) exit 7 ;;
-  forced-oss-payload:https://linsight-releases.oss-cn-beijing.aliyuncs.com/*/linsight-*) exit 7 ;;
+  primary-network:https://jiumate-releases.oss-cn-beijing.aliyuncs.com/*) exit 7 ;;
+  forced-oss-payload:https://jiumate-releases.oss-cn-beijing.aliyuncs.com/*/jiumate-*) exit 7 ;;
 esac
 case "$MODE:$base" in
   forwarder-auto-github:latest.json) exit 7 ;;
@@ -441,12 +441,12 @@ case "$MODE:$base" in
     printf '%s\n' '{"schemaVersion":1,"tag":"../invalid","releaseBaseUrl":"https://example.invalid"}' > "$output"
     ;;
   canonical:latest.json | outer-sha-mismatch:latest.json | inner-sha-mismatch:latest.json | forwarder-oss:latest.json | forced-oss-payload:latest.json)
-    printf '%s\n' '{"schemaVersion":1,"tag":"v0.0.0-test","releaseBaseUrl":"https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test"}' > "$output"
+    printf '%s\n' '{"schemaVersion":1,"tag":"v0.0.0-test","releaseBaseUrl":"https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test"}' > "$output"
     ;;
   speed-probe-missing-manifest:release-download-manifest.tsv) exit 22 ;;
   speed-probe-*:release-download-manifest.tsv)
     {
-      printf 'linsight-release-download-manifest\t1\tv0.0.0-test\n'
+      printf 'jiumate-release-download-manifest\t1\tv0.0.0-test\n'
       printf 'probe\tsmall\tprobe-64k.bin\t65536\t%s\n' "$PROBE64_HASH"
       printf 'probe\tlarge\tprobe-1m.bin\t1048576\t%s\n' "$PROBE1M_HASH"
       printf 'asset\t%s\t%s\t%s\n' "$HOST_ASSET" "$SPEED_PROBE_ASSET_SIZE" "$HOST_ASSET_HASH"
@@ -455,22 +455,22 @@ case "$MODE:$base" in
   speed-probe-*:probe-64k.bin) cp "$PROBE64" "$output" ;;
   speed-probe-*:probe-1m.bin) cp "$PROBE1M" "$output" ;;
   forwarder-oss:install.sh | forced-oss-payload:install.sh | forwarder-auto-github:install.sh | forwarder-invalid-metadata:install.sh | canonical:install.sh | speed-probe-*:install.sh) cp "$ROOT_DIR/install.sh" "$output" ;;
-  404:linsight-*) exit 22 ;;
-  network:linsight-*) exit 7 ;;
-  outer-sha-mismatch:linsight-*.sha256) printf '%064d  %s\n' 0 "${base%.sha256}" > "$output" ;;
-  outer-sha-mismatch:linsight-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
-  inner-sha-mismatch:linsight-*.sha256) cp "$BAD_BUNDLE.sha256" "$output" ;;
-  inner-sha-mismatch:linsight-*) cp "$BAD_BUNDLE" "$output" ;;
-  speed-probe-*:linsight-*.sha256) cp "$ARTIFACT_DIR/$base" "$output" ;;
-  speed-probe-*:linsight-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
-  primary-network:linsight-*.sha256) cp "$ARTIFACT_DIR/$base" "$output" ;;
-  primary-network:linsight-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
-  forced-oss-payload:linsight-*.sha256) cp "$ARTIFACT_DIR/$base" "$output" ;;
-  forced-oss-payload:linsight-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
-  legacy:linsight-*.sha256) cp "$LEGACY_ARCHIVE.sha256" "$output" ;;
-  legacy:linsight-*) cp "$LEGACY_ARCHIVE" "$output" ;;
-  canonical:linsight-*.sha256) cp "$ARTIFACT_DIR/$base" "$output" ;;
-  canonical:linsight-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  404:jiumate-*) exit 22 ;;
+  network:jiumate-*) exit 7 ;;
+  outer-sha-mismatch:jiumate-*.sha256) printf '%064d  %s\n' 0 "${base%.sha256}" > "$output" ;;
+  outer-sha-mismatch:jiumate-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  inner-sha-mismatch:jiumate-*.sha256) cp "$BAD_BUNDLE.sha256" "$output" ;;
+  inner-sha-mismatch:jiumate-*) cp "$BAD_BUNDLE" "$output" ;;
+  speed-probe-*:jiumate-*.sha256) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  speed-probe-*:jiumate-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  primary-network:jiumate-*.sha256) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  primary-network:jiumate-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  forced-oss-payload:jiumate-*.sha256) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  forced-oss-payload:jiumate-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  legacy:jiumate-*.sha256) cp "$LEGACY_ARCHIVE.sha256" "$output" ;;
+  legacy:jiumate-*) cp "$LEGACY_ARCHIVE" "$output" ;;
+  canonical:jiumate-*.sha256) cp "$ARTIFACT_DIR/$base" "$output" ;;
+  canonical:jiumate-*) cp "$ARTIFACT_DIR/$base" "$output" ;;
   *) echo "unexpected fixture request: $url" >&2; exit 2 ;;
 esac
 if [ -n "$writeout" ]; then
@@ -508,19 +508,19 @@ run_online_case() {
   : > "$CASE_LOG"
   set +e
   if [ "$speed_probe" = "__unset" ]; then
-    unset LINSIGHT_DOWNLOAD_SPEED_PROBE
+    unset JIUMATE_DOWNLOAD_SPEED_PROBE
     REQUEST_LOG="$CASE_LOG" MODE="$mode" PATH="$STUB_BIN:$PATH" \
-      HOME="$WORK_DIR/$name-home" LINSIGHT_INSTALL_DIR="$CASE_INSTALL" \
-      LINSIGHT_VERSION="$version" LINSIGHT_DOWNLOAD_BASE_URL="$download_base_url" \
-      LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL="$download_fallback_base_url" \
-      LINSIGHT_DOWNLOAD_SOURCE="$source_mode" \
+      HOME="$WORK_DIR/$name-home" JIUMATE_INSTALL_DIR="$CASE_INSTALL" \
+      JIUMATE_VERSION="$version" JIUMATE_DOWNLOAD_BASE_URL="$download_base_url" \
+      JIUMATE_DOWNLOAD_FALLBACK_BASE_URL="$download_fallback_base_url" \
+      JIUMATE_DOWNLOAD_SOURCE="$source_mode" \
       sh "$installer_path" >"$CASE_OUTPUT" 2>&1
   else
     REQUEST_LOG="$CASE_LOG" MODE="$mode" PATH="$STUB_BIN:$PATH" \
-      HOME="$WORK_DIR/$name-home" LINSIGHT_INSTALL_DIR="$CASE_INSTALL" \
-      LINSIGHT_VERSION="$version" LINSIGHT_DOWNLOAD_BASE_URL="$download_base_url" \
-      LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL="$download_fallback_base_url" \
-      LINSIGHT_DOWNLOAD_SOURCE="$source_mode" LINSIGHT_DOWNLOAD_SPEED_PROBE="$speed_probe" \
+      HOME="$WORK_DIR/$name-home" JIUMATE_INSTALL_DIR="$CASE_INSTALL" \
+      JIUMATE_VERSION="$version" JIUMATE_DOWNLOAD_BASE_URL="$download_base_url" \
+      JIUMATE_DOWNLOAD_FALLBACK_BASE_URL="$download_fallback_base_url" \
+      JIUMATE_DOWNLOAD_SOURCE="$source_mode" JIUMATE_DOWNLOAD_SPEED_PROBE="$speed_probe" \
       sh "$installer_path" >"$CASE_OUTPUT" 2>&1
   fi
   status=$?
@@ -535,7 +535,7 @@ run_online_case() {
 }
 
 run_online_case canonical canonical "" success 3
-[ "$("$WORK_DIR/canonical-install/bin/linsight" --version)" = "fixture-old" ] \
+[ "$("$WORK_DIR/canonical-install/bin/jiumate" --version)" = "fixture-old" ] \
   || fail_test "canonical online install did not produce a working command"
 grep -q "/latest.json\$" "$WORK_DIR/canonical.log" \
   || fail_test "unstamped installer did not resolve the OSS latest metadata"
@@ -544,14 +544,14 @@ grep -q "/releases/v0.0.0-test/$HOST_ASSET\$" "$WORK_DIR/canonical.log" \
 
 run_online_case stamped canonical "" success 2 "" "" "$STAMPED_INSTALLER"
 [ "$(sed -n '1p' "$WORK_DIR/stamped.log")" = \
-  "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
+  "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
   || fail_test "stamped installer did not select its own immutable OSS release"
 ! grep -q "/latest.json\$" "$WORK_DIR/stamped.log" \
   || fail_test "stamped installer unexpectedly resolved latest metadata"
 
 run_online_case stamped-fallback primary-network "" success 3 "" "" "$STAMPED_INSTALLER"
 [ "$(sed -n '1p' "$WORK_DIR/stamped-fallback.log")" = \
-  "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
+  "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
   || fail_test "stamped installer did not try its own OSS release first"
 grep -q "github.com/.*/releases/download/v0.0.0-test/$HOST_ASSET\$" "$WORK_DIR/stamped-fallback.log" \
   || fail_test "stamped installer did not fall back to the same GitHub version"
@@ -568,7 +568,7 @@ grep -q "github.com/.*/releases/download/v0.0.0-test/$HOST_ASSET\$" "$WORK_DIR/s
 run_online_case speed-probe-oss-clearly-faster speed-probe-oss-clearly-faster "" success 7 "" "" "$STAMPED_INSTALLER" auto 1
 grep -q "aliyuncs.com/.*/probe-1m.bin\$" "$WORK_DIR/speed-probe-oss-clearly-faster.log" \
   || fail_test "speed probe did not measure the OSS mirror once GitHub was below the minimum speed"
-grep -q "linsight-releases.oss-cn-beijing.aliyuncs.com/.*/$HOST_ASSET\$" "$WORK_DIR/speed-probe-oss-clearly-faster.log" \
+grep -q "jiumate-releases.oss-cn-beijing.aliyuncs.com/.*/$HOST_ASSET\$" "$WORK_DIR/speed-probe-oss-clearly-faster.log" \
   || fail_test "speed probe did not switch to OSS when it was clearly faster than a slow GitHub"
 
 run_online_case speed-probe-oss-not-worth-switching speed-probe-oss-not-worth-switching "" success 7 "" "" "$STAMPED_INSTALLER" auto 1
@@ -583,16 +583,16 @@ run_online_case stamped-github canonical "" success 2 "" "" "$STAMPED_INSTALLER"
 grep -q "github.com/.*/releases/download/v0.0.0-test/$HOST_ASSET\$" "$WORK_DIR/stamped-github.log" \
   || fail_test "stamped installer did not honor forced GitHub mode"
 run_online_case download-base-override canonical "" success 2 \
-  "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test" ""
+  "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test" ""
 grep -q "OSS mirror" "$WORK_DIR/download-base-override.output" \
   || fail_test "download base override did not identify the OSS mirror"
 ! grep -q "aliyuncs.com" "$WORK_DIR/download-base-override.output" \
   || fail_test "download base override exposed the OSS URL in normal output"
 run_online_case download-fallback primary-network "" success 3 \
-  "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test" \
-  "https://github.com/qiaiqian67/linsight/releases/download/v0.0.0-test"
+  "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test" \
+  "https://github.com/qiaiqian67/jiumate/releases/download/v0.0.0-test"
 [ "$(sed -n '1p' "$WORK_DIR/download-fallback.log")" = \
-  "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
+  "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
   || fail_test "download fallback did not try the primary source first"
 grep -q "github.com/.*/releases/download/v0.0.0-test/$HOST_ASSET\$" "$WORK_DIR/download-fallback.log" \
   || fail_test "download fallback did not use the same-version GitHub source"
@@ -612,7 +612,7 @@ run_online_case pinned-legacy legacy v0.1.4 success 2
 grep -q "/releases/v0.1.4/$HOST_ASSET\$" "$WORK_DIR/pinned-legacy.log" \
   || fail_test "pinned legacy did not prefer the pinned OSS asset"
 
-# --- Stable linsight.ooo forwarder: prefer a validated immutable OSS release, but fall back to
+# --- Stable jiumate.ooo forwarder: prefer a validated immutable OSS release, but fall back to
 #     GitHub when the metadata probe fails. The real installer uses a local fixture here so the
 #     test isolates bootstrap routing from bundle download behavior above. ---
 run_forwarder_case() {
@@ -634,19 +634,19 @@ run_forwarder_case() {
   fi
   set +e
   if [ "$speed_probe" = "__unset" ]; then
-    unset LINSIGHT_DOWNLOAD_SPEED_PROBE
+    unset JIUMATE_DOWNLOAD_SPEED_PROBE
     REQUEST_LOG="$CASE_LOG" MODE="$mode" PATH="$STUB_BIN:$PATH" \
-      HOME="$WORK_DIR/$name-home" LINSIGHT_INSTALL_DIR="$CASE_INSTALL" \
-      LINSIGHT_ARCHIVE="$archive" LINSIGHT_VERSION="$version" \
-      LINSIGHT_DOWNLOAD_SOURCE="$source" LINSIGHT_DOWNLOAD_BASE_URL="" \
-      LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL="" \
+      HOME="$WORK_DIR/$name-home" JIUMATE_INSTALL_DIR="$CASE_INSTALL" \
+      JIUMATE_ARCHIVE="$archive" JIUMATE_VERSION="$version" \
+      JIUMATE_DOWNLOAD_SOURCE="$source" JIUMATE_DOWNLOAD_BASE_URL="" \
+      JIUMATE_DOWNLOAD_FALLBACK_BASE_URL="" \
       sh "$ROOT_DIR/packages/landing/public/install.sh" >"$CASE_OUTPUT" 2>&1
   else
     REQUEST_LOG="$CASE_LOG" MODE="$mode" PATH="$STUB_BIN:$PATH" \
-      HOME="$WORK_DIR/$name-home" LINSIGHT_INSTALL_DIR="$CASE_INSTALL" \
-      LINSIGHT_ARCHIVE="$archive" LINSIGHT_VERSION="$version" \
-      LINSIGHT_DOWNLOAD_SOURCE="$source" LINSIGHT_DOWNLOAD_BASE_URL="" \
-      LINSIGHT_DOWNLOAD_FALLBACK_BASE_URL="" LINSIGHT_DOWNLOAD_SPEED_PROBE="$speed_probe" \
+      HOME="$WORK_DIR/$name-home" JIUMATE_INSTALL_DIR="$CASE_INSTALL" \
+      JIUMATE_ARCHIVE="$archive" JIUMATE_VERSION="$version" \
+      JIUMATE_DOWNLOAD_SOURCE="$source" JIUMATE_DOWNLOAD_BASE_URL="" \
+      JIUMATE_DOWNLOAD_FALLBACK_BASE_URL="" JIUMATE_DOWNLOAD_SPEED_PROBE="$speed_probe" \
       sh "$ROOT_DIR/packages/landing/public/install.sh" >"$CASE_OUTPUT" 2>&1
   fi
   status=$?
@@ -686,17 +686,17 @@ run_forwarder_case forwarder-forced-oss-no-fallback forced-oss-payload 2 oss v0.
 
 run_forwarder_case forwarder-pinned canonical 3 auto v0.0.0-test
 [ "$(sed -n '1p' "$WORK_DIR/forwarder-pinned.log")" = \
-  "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/install.sh" ] \
+  "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/install.sh" ] \
   || fail_test "pinned forwarder did not request the versioned installer"
 [ "$(sed -n '2p' "$WORK_DIR/forwarder-pinned.log")" = \
-  "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
+  "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/$HOST_ASSET" ] \
   || fail_test "pinned installer did not keep the selected release version"
 
 run_forwarder_case forwarder-speed-probe-handoff speed-probe-github-fast 7 auto v0.0.0-test success 1
 [ "$(sed -n '1p' "$WORK_DIR/forwarder-speed-probe-handoff.log")" = \
-  "https://linsight-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/install.sh" ] \
+  "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/install.sh" ] \
   || fail_test "speed probe handoff forwarder did not fetch the versioned OSS installer"
-! grep -q "linsight-releases.oss-cn-beijing.aliyuncs.com/.*/$HOST_ASSET\$" "$WORK_DIR/forwarder-speed-probe-handoff.log" \
+! grep -q "jiumate-releases.oss-cn-beijing.aliyuncs.com/.*/$HOST_ASSET\$" "$WORK_DIR/forwarder-speed-probe-handoff.log" \
   || fail_test "forwarder locked the payload source to OSS instead of letting the installer speed probe"
 grep -q "github.com/.*/releases/download/v0.0.0-test/$HOST_ASSET\$" "$WORK_DIR/forwarder-speed-probe-handoff.log" \
   || fail_test "forwarder locked the payload source instead of letting the installer speed probe"

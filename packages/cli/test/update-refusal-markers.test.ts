@@ -2,7 +2,7 @@
  * Drift guard for the server's self-update classifier.
  *
  * POST /api/version/update (packages/server/src/http/routes/version.ts) tells a refusal
- * ("unsupported") apart from a successful run by matching `linsight update` output against
+ * ("unsupported") apart from a successful run by matching `jiumate update` output against
  * REFUSAL_MARKERS — five English fragments duplicated from this package's i18n catalog.
  * The server cannot import the CLI (the dependency runs the other way), so the fragments
  * are hardcoded here too, on purpose: editing a refusal message without updating
@@ -29,9 +29,9 @@ const MARKERS: ReadonlyArray<{ marker: string; name: string; message: string }> 
     message: en.sourceCheckout(),
   },
   {
-    marker: "Cannot tell how this linsight was installed",
+    marker: "Cannot tell how this jiumate was installed",
     name: "unknownInstall",
-    message: en.unknownInstall("/opt/linsight/cli.js"),
+    message: en.unknownInstall("/opt/jiumate/cli.js"),
   },
   {
     marker: "could not be identified",
@@ -46,7 +46,7 @@ const MARKERS: ReadonlyArray<{ marker: string; name: string; message: string }> 
   {
     marker: "cannot run your package manager for you",
     name: "windowsGlobalInstall",
-    message: en.windowsGlobalInstall("npm install -g @prismshadow/linsight-cli@1.2.3"),
+    message: en.windowsGlobalInstall("npm install -g @prismshadow/jiumate-cli@1.2.3"),
   },
 ];
 

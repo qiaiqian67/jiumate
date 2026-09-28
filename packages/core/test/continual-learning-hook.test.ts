@@ -20,7 +20,7 @@ let agentState: string;
 let tracePath: string;
 
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "linsight-summary-plugin-"));
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-summary-plugin-"));
   agentState = path.join(root, "agents", "a1", "agent_state");
   tracePath = path.join(root, "agents", "a1", "traces", "2026-08-29", "s1_001.jsonl");
   await fs.mkdir(path.dirname(tracePath), { recursive: true });
@@ -29,10 +29,10 @@ beforeEach(async () => {
     path.join(agentState, "skills", "web-design", "SKILL.md"),
     "---\nname: web-design\n---\n",
   );
-  await fs.mkdir(path.join(agentState, "skills", "linsight-cli"), { recursive: true });
+  await fs.mkdir(path.join(agentState, "skills", "jiumate-cli"), { recursive: true });
   await fs.writeFile(
-    path.join(agentState, "skills", "linsight-cli", "SKILL.md"),
-    "---\nname: linsight-cli\n---\n",
+    path.join(agentState, "skills", "jiumate-cli", "SKILL.md"),
+    "---\nname: jiumate-cli\n---\n",
   );
 });
 
@@ -108,7 +108,7 @@ describe("continual-learning stop.mjs", () => {
     expect(res).toMatchObject({ output: { turns: 31 } });
     expect(res!.reason).toContain("31 turns");
     const prompt = res!.subagent!.prompt;
-    expect(prompt).toContain("Installed skills: linsight-cli, web-design");
+    expect(prompt).toContain("Installed skills: jiumate-cli, web-design");
     expect(prompt).toContain("Skills invoked in this task: web-design");
     expect(prompt).toContain("agent_state/skills");
     expect(prompt).toContain("[user] make it pretty");

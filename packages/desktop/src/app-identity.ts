@@ -38,30 +38,30 @@ export interface AppIdentity {
 /** The identity for this form: release, or dev-suffixed so both can run side by side. */
 export function appIdentity(isPackaged: boolean): AppIdentity {
   return isPackaged
-    ? { name: "Linsight", appUserModelId: "com.prismshadow.linsight" }
-    : { name: "Linsight-Dev", appUserModelId: "com.prismshadow.linsight.dev" };
+    ? { name: "JiuMate", appUserModelId: "com.prismshadow.jiumate" }
+    : { name: "JiuMate-Dev", appUserModelId: "com.prismshadow.jiumate.dev" };
 }
 
 /**
- * The dev default data root, `~/.linsight/dev-data` — the same convention as the repo's
+ * The dev default data root, `~/.jiumate/dev-data` — the same convention as the repo's
  * other dev entry points (CONTRIBUTING.md), kept apart from the release/CLI
- * `~/.linsight/data`. Without this split a dev shell launched bare (no LINSIGHT_HOME)
+ * `~/.jiumate/data`. Without this split a dev shell launched bare (no JIUMATE_HOME)
  * would find the release install's server.lock on the shared root and attach to the
  * running RELEASE instance — or, with the release idle, spawn its own server over the
  * release's data.
  */
 export function devDataRoot(homedir: string): string {
-  return path.join(homedir, ".linsight", "dev-data");
+  return path.join(homedir, ".jiumate", "dev-data");
 }
 
 /**
- * This form's data root, i.e. the precedence rule itself: an explicit `LINSIGHT_HOME`
+ * This form's data root, i.e. the precedence rule itself: an explicit `JIUMATE_HOME`
  * always wins; without one a release build shares the CLI's root by design, so a desktop
  * install and the CLI see the same Agents, Sessions and usage, while a dev run takes the
  * repo's dev root instead of attaching to — or writing into — the release install's data.
  *
  * `releaseRoot` stays a thunk (core's `resolveRoot`) so core remains the single
- * definition point of `~/.linsight/data`; it is only called when there is no explicit
+ * definition point of `~/.jiumate/data`; it is only called when there is no explicit
  * value, which is exactly the case where `resolveRoot()` yields that default. Pure, so
  * the rule is unit-tested — it cannot be, inline in main.ts, which imports Electron.
  */

@@ -16,12 +16,12 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import type {
   PartialTextPayload,
   PartialToolCallOutputPayload,
   PartialToolCallPayload,
-} from "@prismshadow/linsight-core";
+} from "@prismshadow/jiumate-core";
 import { LiveTailTracker } from "../src/runtime/live-tail.js";
 
 const SID = "s1";

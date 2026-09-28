@@ -5,7 +5,7 @@
  * Mirrors the MinGit step in .github/workflows/desktop-build.yml: a packaged build pulls
  * a fresh binary from the upstream release so the installer ships a known-good version;
  * a local `pnpm desktop` (dev mode) falls through to PATH (`resolvePandocPath` handles that).
- * CI calls this once per runner, then `pnpm --filter @prismshadow/linsight-desktop build`
+ * CI calls this once per runner, then `pnpm --filter @prismshadow/jiumate-desktop build`
  * (specifically build-assets.mjs) copies the staged binary into dist/bin/pandoc/<platform>/,
  * which is where pandoc-path.ts looks for it.
  *

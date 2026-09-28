@@ -28,7 +28,7 @@ import { BrowserWindow, app } from "electron";
 import type {
   DesktopExportRequest,
   DesktopExportResult,
-} from "@prismshadow/linsight-server/desktop-export";
+} from "@prismshadow/jiumate-server/desktop-export";
 
 /** The slice of Electron's ParentPort this relay uses. Mirrors server/desktop-export-port.ts. */
 export interface ShellPort {
@@ -95,7 +95,7 @@ export async function renderHtmlToPdf(html: string): Promise<Buffer> {
     } else {
       const tmpFile = path.join(
         os.tmpdir(),
-        `linsight-export-${process.pid}-${Date.now()}${strategy.ext}`,
+        `jiumate-export-${process.pid}-${Date.now()}${strategy.ext}`,
       );
       fs.writeFileSync(tmpFile, html, "utf8");
       try {
