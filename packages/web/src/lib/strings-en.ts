@@ -2360,21 +2360,8 @@ export const en: Strings = {
     editSave: "Save",
     /** Edit-mode discard action. */
     editCancel: "Cancel",
-    /** Save action on a .docx being edited through Markdown: save under a new name. */
+    /** Save action on a .docx being edited: save under a new name. */
     docxSaveAsNew: "Save as a new file",
-    /**
-     * Banner above the editor when a .docx is being edited.
-     *
-     * One line, because the editor sits in a side panel and every row it takes comes out of the
-     * document. The only thing that has to be said before a save is where the save goes; the rest —
-     * that the document opens and saves as itself, and that elements the engine cannot model are
-     * kept rather than dropped — is what "editing the document" already means, and it belongs in the
-     * title attribute where there is room for it.
-     */
-    docxEditBanner: "Save writes this file in place; Save as a new file keeps the original.",
-    /** The same, in full, for the `title` attribute — where there is room for it. */
-    docxEditBannerDetail:
-      "The document opens and saves as itself: fonts, styles, images, headers and footers all survive. The few complex elements this editor does not support (typeset equations, some shape effects) are kept in the file exactly as they were, but cannot be seen or changed here.",
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `Saved as ${name}`,
     /** Shown while the real .docx is being laid out as a page. */

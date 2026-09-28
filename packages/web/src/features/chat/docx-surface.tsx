@@ -26,7 +26,7 @@
  * Loaded through `React.lazy` at the call site. The engine is a layout and text-shaping pipeline,
  * not a form control, and a session that never opens a .docx should not pay for it.
  */
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
   DocxEditor,
   LocaleProvider,
@@ -60,10 +60,17 @@ export interface DocxSurfaceProps {
   mode: "view" | "edit";
   /**
    * The saved bytes, straight from the engine. Omitted in read-only mode, where there is nothing to
-   * save and no control to save with; the engine's own save action is left unwired so a keystroke
-   * cannot write to the workspace behind the panel's back.
+   * save and no control to save with.
    */
   onSave?: (bytes: ArrayBuffer) => void;
+  /**
+   * The save handle, handed over once on mount and `null` again on unmount.
+   *
+   * A callback rather than a ref, because this component is reached through `React.lazy` and a ref
+   * placed on a lazy component does not arrive: the panel's Save would find `null` and return
+   * without a word, which is exactly what it did. A prop travels through `lazy` like any other.
+   */
+  onHandle?: (handle: DocxSurfaceHandle | null) => void;
 }
 
 /**
@@ -78,10 +85,7 @@ function Toolbar({ onSave }: { onSave: () => void }) {
   return <DocxEditor.Toolbar t={t} onSave={onSave} />;
 }
 
-export default forwardRef<DocxSurfaceHandle, DocxSurfaceProps>(function DocxSurface(
-  { sessionId, path, mode, onSave },
-  ref,
-) {
+export default function DocxSurface({ sessionId, path, mode, onSave, onHandle }: DocxSurfaceProps) {
   const editorRef = useRef<DocxEditorRef | null>(null);
   const { locale } = useLocale();
   const { dark } = useTheme();
@@ -103,14 +107,16 @@ export default forwardRef<DocxSurfaceHandle, DocxSurfaceProps>(function DocxSurf
     if (bytes !== null && bytes !== undefined) onSave(bytes);
   }, [onSave]);
 
-  // Hands the panel the same bytes the engine's own control would have downloaded.
-  useImperativeHandle(
-    ref,
-    () => ({
+  // The panel's Save and Save-as live outside this component, so they call through here. Registered
+  // through a prop rather than a ref: see `onHandle`. Laid out rather than deferred, so the handle
+  // exists before the first paint — an effect would leave one frame where Save reads `null`.
+  useLayoutEffect(() => {
+    if (onHandle === undefined) return;
+    onHandle({
       save: async () => (await editorRef.current?.save()) ?? null,
-    }),
-    [],
-  );
+    });
+    return () => onHandle(null);
+  }, [onHandle]);
 
   // A font that could not be loaded is not fatal: the glyphs still paint in their true faces and
   // only the measured line breaks are approximate. Reported rather than shown — the packaged
@@ -155,4 +161,4 @@ export default forwardRef<DocxSurfaceHandle, DocxSurfaceProps>(function DocxSurf
       </LocaleProvider>
     </div>
   );
-});
+}

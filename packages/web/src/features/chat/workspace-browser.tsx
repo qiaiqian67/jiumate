@@ -405,13 +405,25 @@ export function WorkspaceBrowser({
    *  fires MarkdownEditor's onSave) both save the same bytes. */
   const [draftMd, setDraftMd] = useState("");
   /**
-   * The .docx editor's own handle.
+   * The .docx editor's save handle, filled in by the surface once it mounts.
    *
-   * The panel's Save and Save-as sit outside the editor, so they need the document from it rather
-   * than from a local draft: the document is parsed, edited and serialized inside the engine, and a
-   * copy of it in React state would be a second version that goes stale on every keystroke.
+   * A plain ref written through a callback prop rather than a `ref` on the component: the surface is
+   * behind `React.lazy`, and a ref placed on a lazy component never arrives. The panel's Save found
+   * `null` and returned in silence — clicking it did nothing at all.
    */
   const docxRef = useRef<DocxSurfaceHandle | null>(null);
+
+  /**
+   * A stable identity, because the surface registers its handle from an effect keyed on this prop.
+   *
+   * An inline arrow would change identity on every render, and the effect would then tear down and
+   * re-register on every render — its cleanup sets the handle to `null` first, and `useEffect` runs
+   * after paint, so a Save click landing in that window would read `null` and report "unavailable"
+   * about an editor that is right there on screen.
+   */
+  const setDocxHandle = useCallback((handle: DocxSurfaceHandle | null): void => {
+    docxRef.current = handle;
+  }, []);
   /** Save in flight (disables Save button, shows busy state in the editor). */
   const [savingMd, setSavingMd] = useState(false);
   /** Conflict modal: non-null when the server rejected save with 409 file_conflict. Carries the
@@ -790,11 +802,11 @@ export function WorkspaceBrowser({
    * action had two behaviours, and the shortcut was the one that destroyed the original.
    *
    * A .docx saves **in place**, which is what "save" means in a document editor; the copy is the
-   * separate action (`saveDocxCopy`). That is only safe because the loss is stated before the click
-   * rather than in a dialog after it — the editor carries a banner saying what the round trip keeps
-   * and what it drops. An earlier version asked in a modal, and the modal was the part that stopped
-   * responding: it opened from a value derived from the preview, and one absent field took the whole
-   * handler down with it.
+   * separate action (`saveDocxCopy`). That is safe to offer without a dialog because there is
+   * nothing to warn about: the engine stores the document it was given, so a save returns the file
+   * the user was looking at rather than a rebuild of it. An earlier version did ask in a modal, and
+   * the modal was the part that stopped responding — it opened from a value derived from the
+   * preview, and one absent field took the whole handler down with it.
    */
   const requestSave = useCallback((): void => {
     if (!preview || preview.kind !== "md") {
@@ -814,8 +826,18 @@ export function WorkspaceBrowser({
     // `output === sourcePath` is what makes `saveDocxBytes` send If-Match, so the write still
     // refuses to clobber a version the Agent changed underneath it.
     void (async () => {
-      const bytes = await docxRef.current?.save();
-      if (bytes === null || bytes === undefined) return;
+      const handle = docxRef.current;
+      if (handle === null) {
+        // No editor to read from. This is the state a Save click used to end in silently — the
+        // handle was never delivered, so the button looked broken rather than unavailable.
+        toastError(S.files.editSaveUnavailable);
+        return;
+      }
+      const bytes = await handle.save();
+      if (bytes === null) {
+        toastError(S.files.editSaveUnavailable);
+        return;
+      }
       await saveDocxBytes(bytes, { docxOutput: preview.path });
     })();
   }, [preview, draftMd, saveMdEdit, saveDocxBytes]);
@@ -833,8 +855,16 @@ export function WorkspaceBrowser({
     if (!preview || preview.kind !== "md" || !preview.docxSource) return;
     const stem = (preview.name ?? "").replace(/\.docx$/i, "");
     void (async () => {
-      const bytes = await docxRef.current?.save();
-      if (bytes === null || bytes === undefined) return;
+      const handle = docxRef.current;
+      if (handle === null) {
+        toastError(S.files.editSaveUnavailable);
+        return;
+      }
+      const bytes = await handle.save();
+      if (bytes === null) {
+        toastError(S.files.editSaveUnavailable);
+        return;
+      }
       await saveDocxBytes(bytes, {
         docxOutput: `${stem === "" ? "document" : stem}-edited.docx`,
       });
@@ -1131,7 +1161,17 @@ export function WorkspaceBrowser({
             width -> the image shrinks -> content fits -> scrollbar goes -> repeat, forever, as
             a visible shake. Reserving it always breaks the feedback path (and is inert where
             scrollbars are overlays). */}
-        <div className="min-h-0 flex-1 overflow-auto p-3 [scrollbar-gutter:stable]">
+        {/* One scrollbar for the panel, and the editor is the exception that owns it instead.
+            Everything else here is content of unknown height — a rendered page, a table, an image —
+            so this box scrolls. The .docx editor is not that: it is a fixed-height surface with a
+            viewport that scrolls its own pages, and nesting the two produced the worst of both. The
+            outer box sized itself to the document, the document grew the panel, and the scrollbar
+            ended up on the window while the inner viewport never scrolled at all. */}
+        <div
+          className={`flex min-h-0 flex-1 flex-col p-3 [scrollbar-gutter:stable] ${
+            editingDocx ? "overflow-hidden" : "overflow-auto"
+          }`}
+        >
           {preview.kind === "image" ? (
             // Keyed on the nonce like the isolated HTML iframe: the src alone is unchanged
             // when the same file is re-read, so only a remount re-requests the bytes the
@@ -1201,20 +1241,10 @@ export function WorkspaceBrowser({
             // mount and ignore later changes by design. No surrounding `h-full` wrapper: the
             // editors self-size, so a 1-line document isn't padded out to the panel's full height
             // and the outer panel doesn't grow a nested scrollbar (the bug behind #41.2).
+            // `gap-2` and a column, because the toolbar sits above an editor that needs a definite
+            // height: `min-h-0` on both is what lets the document scroll inside its own viewport
+            // instead of growing this column and handing the scrollbar to the panel around it.
             <div className="flex min-h-0 flex-1 flex-col gap-2">
-              {editingDocx && (
-                // The editor is a different surface from Word's, so what the user is owed before the
-                // first save is where that save goes. One line: this panel is a few hundred pixels
-                // tall and the editor's own chrome — title bar, menu, rulers, font notice — is
-                // deliberately not mounted for the same reason. The longer version, which is about
-                // what survives rather than about the button, rides along in the title attribute.
-                <p
-                  title={S.files.docxEditBannerDetail}
-                  className="shrink-0 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
-                >
-                  {S.files.docxEditBanner}
-                </p>
-              )}
               {editingDocx ? (
                 <Suspense
                   fallback={
@@ -1225,10 +1255,10 @@ export function WorkspaceBrowser({
                 >
                   <DocxSurface
                     key={`docx-edit-${preview.nonce}`}
-                    ref={docxRef}
                     sessionId={session.sessionId}
                     path={preview.path}
                     mode="edit"
+                    onHandle={setDocxHandle}
                     onSave={(bytes) => void saveDocxBytes(bytes, { docxOutput: preview.path })}
                   />
                 </Suspense>
