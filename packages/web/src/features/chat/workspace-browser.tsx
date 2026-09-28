@@ -669,10 +669,7 @@ export function WorkspaceBrowser({
    * answered the conflict modal.
    */
   const saveDocxBytes = useCallback(
-    async (
-      bytes: ArrayBuffer,
-      opts?: { force?: boolean; docxOutput?: string },
-    ): Promise<void> => {
+    async (bytes: ArrayBuffer, opts?: { force?: boolean; docxOutput?: string }): Promise<void> => {
       if (!preview || preview.kind !== "md" || !preview.docxSource) return;
       const { path: sourcePath, etag } = preview.docxSource;
       const output = opts?.force ? sourcePath : (opts?.docxOutput ?? sourcePath);
@@ -1206,11 +1203,15 @@ export function WorkspaceBrowser({
             // and the outer panel doesn't grow a nested scrollbar (the bug behind #41.2).
             <div className="flex min-h-0 flex-1 flex-col gap-2">
               {editingDocx && (
-                // The rich-text editor is a different surface from Word's, so what it still owes
-                // the user is the cost of the round trip: the styles survive because the save is
-                // built against this document, but the page layout does not. Saying so before the
-                // save is what makes an in-place Save safe to offer at all.
-                <p className="shrink-0 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                // The editor is a different surface from Word's, so what the user is owed before the
+                // first save is where that save goes. One line: this panel is a few hundred pixels
+                // tall and the editor's own chrome — title bar, menu, rulers, font notice — is
+                // deliberately not mounted for the same reason. The longer version, which is about
+                // what survives rather than about the button, rides along in the title attribute.
+                <p
+                  title={S.files.docxEditBannerDetail}
+                  className="shrink-0 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
+                >
                   {S.files.docxEditBanner}
                 </p>
               )}
@@ -1263,33 +1264,33 @@ export function WorkspaceBrowser({
                 />
               </Suspense>
             ) : (
-            (() => {
-              const body = editingMd ? draftMd : (preview.content ?? "");
-              return (
-                <>
-                  <div className="md-body text-base leading-relaxed text-gray-800 dark:text-gray-100">
-                    <RenderedMd
-                      body={body}
-                      fileNonce={preview.nonce}
-                      filePath={preview.path}
-                      sessionId={session.sessionId}
-                      highlight={body.length <= HIGHLIGHT_LIMIT}
-                      // previewPath is itself stable (useCallback with [session.sessionId] —
-                      // see previewPathRef comment); pass it directly so the memoized child
-                      // never sees a new onLinkClick identity on parent re-renders. An inline
-                      // `(t) => void previewPath(t)` would defeat this whole memoization: every
-                      // WorkspaceBrowser commit would flip the prop, the useMemo inside would
-                      // rebuild the components map, every fenced block would be a new component
-                      // type, and MermaidBlock would unmount/remount on each frame.
-                      onLinkClick={previewPath}
-                    />
-                  </div>
-                  {preview.truncated && (
-                    <p className="mt-1 text-xs text-gray-400">… {S.files.previewTruncated}</p>
-                  )}
-                </>
-              );
-            })()
+              (() => {
+                const body = editingMd ? draftMd : (preview.content ?? "");
+                return (
+                  <>
+                    <div className="md-body text-base leading-relaxed text-gray-800 dark:text-gray-100">
+                      <RenderedMd
+                        body={body}
+                        fileNonce={preview.nonce}
+                        filePath={preview.path}
+                        sessionId={session.sessionId}
+                        highlight={body.length <= HIGHLIGHT_LIMIT}
+                        // previewPath is itself stable (useCallback with [session.sessionId] —
+                        // see previewPathRef comment); pass it directly so the memoized child
+                        // never sees a new onLinkClick identity on parent re-renders. An inline
+                        // `(t) => void previewPath(t)` would defeat this whole memoization: every
+                        // WorkspaceBrowser commit would flip the prop, the useMemo inside would
+                        // rebuild the components map, every fenced block would be a new component
+                        // type, and MermaidBlock would unmount/remount on each frame.
+                        onLinkClick={previewPath}
+                      />
+                    </div>
+                    {preview.truncated && (
+                      <p className="mt-1 text-xs text-gray-400">… {S.files.previewTruncated}</p>
+                    )}
+                  </>
+                );
+              })()
             )
           ) : preview.kind === "document" && preview.document ? (
             <DocumentPreviewView

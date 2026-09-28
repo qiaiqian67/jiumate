@@ -2313,13 +2313,16 @@ export const zh = {
     /**
      * Banner above the editor when a .docx is being edited.
      *
-     * The editor is a rich-text surface rather than a Markdown one, so this no longer has to warn
-     * that the user is about to see source. What it still owes them is the cost of the round trip:
-     * saving rebuilds the document from its text and keeps the styles it already had, so the layout
-     * a Word user would recognise — page breaks, headers, footers, comments — is not preserved.
+     * One line, because the editor sits in a side panel and every row it takes comes out of the
+     * document. The only thing that has to be said before a save is where the save goes; the rest —
+     * that the document opens and saves as itself, and that elements the engine cannot model are
+     * kept rather than dropped — is what "editing the document" already means, and it belongs in the
+     * title attribute where there is room for it.
      */
-    docxEditBanner:
-      "正在编辑 Word 文档。保存会直接改这份 .docx；如需保留原件，用「另存为」写一份副本。文档按原样打开与保存——字体、样式、图片、页眉页脚都会保留。少数本编辑器未支持的复杂元素（如公式排版、部分图形效果）会原封不动保存在文件里，但此处看不到、也改不了。",
+    docxEditBanner: "保存会直接改这份文件；「另存为新文件」可保留原件。",
+    /** The same, in full, for the `title` attribute — where there is room for it. */
+    docxEditBannerDetail:
+      "文档按原样打开与保存：字体、样式、图片、页眉页脚都会保留。少数本编辑器未支持的复杂元素（如公式排版、部分图形效果）会原封不动保存在文件里，但此处看不到、也改不了。",
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `已另存为 ${name}`,
     /** Shown while the real .docx is being laid out as a page. */

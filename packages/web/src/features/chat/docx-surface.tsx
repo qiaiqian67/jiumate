@@ -11,16 +11,26 @@
  * `mode` is now the whole difference. `view` is a read-only rendering, `edit` is the same rendering
  * with editing enabled, and the engine keeps its place across the switch rather than remounting.
  *
+ * **Composed rather than packaged**, because the packaged frame is a title bar, a menu, rulers and
+ * a page-furniture row stacked above the document, and this surface lives in a side panel a few
+ * hundred pixels tall. Every one of those rows came out of the editor's height: the title bar repeats
+ * the file name the panel already shows, the menu's File rows duplicate the panel's own Save and
+ * Export, and the font and page-number readouts are diagnostics rather than writing surface. What
+ * stays is the toolbar — the one piece the panel cannot supply — and the viewport, which is the
+ * engine's sole scroll container.
+ *
  * The engine parses and serializes OOXML in the browser. Nothing about the document leaves the
  * machine: no upload, no conversion service, and no third party is asked for a font — the packaged
  * set is served from this bundle.
  *
- * Loaded through `React.lazy` at the call site. The engine is a layout and shaping pipeline, not a
- * form control, and a session that never opens a .docx should not pay for it.
+ * Loaded through `React.lazy` at the call site. The engine is a layout and text-shaping pipeline,
+ * not a form control, and a session that never opens a .docx should not pay for it.
  */
 import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
 import {
   DocxEditor,
+  LocaleProvider,
+  useChromeTranslate,
   useDocxSource,
   type DocxEditorRef,
 } from "@docx-editor.dev/react";
@@ -29,22 +39,8 @@ import zhCN from "@docx-editor.dev/i18n/zh-CN";
 import "@docx-editor.dev/core/styles/editor.css";
 import { workspaceFileUrl } from "../../api/endpoints";
 import { useLocale } from "../../state/locale";
+import { useTheme } from "../../state/theme";
 import { S } from "../../lib/strings";
-
-export interface DocxSurfaceProps {
-  sessionId: string;
-  /** Workspace-relative path of the .docx. */
-  path: string;
-  /** Read-only rendering or the same rendering with editing on. */
-  mode: "view" | "edit";
-  /**
-   * The saved bytes, straight from the engine. The parent decides where they go.
-   *
-   * Omitted in `view` mode, which has nothing to save — and omitting it is also what keeps the
-   * engine's own download away: the chrome's save control only appears when a host supplies one.
-   */
-  onSave?: (bytes: ArrayBuffer) => void;
-}
 
 export interface DocxSurfaceHandle {
   /**
@@ -56,12 +52,39 @@ export interface DocxSurfaceHandle {
   save(): Promise<ArrayBuffer | null>;
 }
 
+export interface DocxSurfaceProps {
+  sessionId: string;
+  /** Workspace-relative path of the .docx. */
+  path: string;
+  /** Read-only rendering or the same rendering with editing on. */
+  mode: "view" | "edit";
+  /**
+   * The saved bytes, straight from the engine. Omitted in read-only mode, where there is nothing to
+   * save and no control to save with; the engine's own save action is left unwired so a keystroke
+   * cannot write to the workspace behind the panel's back.
+   */
+  onSave?: (bytes: ArrayBuffer) => void;
+}
+
+/**
+ * The toolbar, and nothing else.
+ *
+ * It needs `t` rather than reading the catalog itself: a composed toolbar with no resolver renders
+ * raw translation keys, which the packaged editor avoids by wiring the two together for you. Reading
+ * the resolver here, inside the provider, is what puts the labels back.
+ */
+function Toolbar({ onSave }: { onSave: () => void }) {
+  const t = useChromeTranslate();
+  return <DocxEditor.Toolbar t={t} onSave={onSave} />;
+}
+
 export default forwardRef<DocxSurfaceHandle, DocxSurfaceProps>(function DocxSurface(
   { sessionId, path, mode, onSave },
   ref,
 ) {
   const editorRef = useRef<DocxEditorRef | null>(null);
   const { locale } = useLocale();
+  const { dark } = useTheme();
   // `lang` is a preference ("system" is a valid value) and `locale` is what it resolved to, so the
   // resolved tag is the one that can answer "is this a Chinese reader".
   const isChinese = locale.toLowerCase().startsWith("zh");
@@ -90,46 +113,46 @@ export default forwardRef<DocxSurfaceHandle, DocxSurfaceProps>(function DocxSurf
   );
 
   // A font that could not be loaded is not fatal: the glyphs still paint in their true faces and
-  // only the measured line breaks are approximate. It is reported rather than shown, so a
-  // substitute face does not put an error across a document the user can still read.
+  // only the measured line breaks are approximate. Reported rather than shown — the packaged
+  // editor's font notice is one of the rows this layout does without.
   const handleFontError = useCallback((fontError: { message?: string }) => {
     console.warn("[docx] font could not be loaded:", fontError.message ?? fontError);
   }, []);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    // The editor fills whichever element holds it, so that element needs a height — here the panel's
+    // remaining space. `min-h-0` is what lets a flex child shrink below its content, which is what
+    // keeps the document's own scrollbar inside the viewport instead of growing the panel and
+    // handing the whole page a scrollbar.
+    <div className="flex h-full min-h-0 flex-1 flex-col">
       {error !== null && (
-        <p className="mb-2 shrink-0 text-sm text-red-600 dark:text-red-400">
+        <p className="shrink-0 px-1 pb-1 text-sm text-red-600 dark:text-red-400">
           {S.files.docxPreviewFailed(error.message)}
         </p>
       )}
-      {/* The editor fills its parent and needs a non-zero height, which is what `flex-1` inside a
-          `min-h-0` column gives it once the error line is out of the way. */}
-      <div className="min-h-0 flex-1">
-        <DocxEditor
-          ref={editorRef}
+      <LocaleProvider i18n={isChinese ? zhCN : undefined}>
+        <DocxEditor.Root
           document={document}
           mode={mode}
-          // Read-only gets the document alone: the panel already owns its toolbar, and a second
-          // title bar beside the file's name is noise. Editing needs the formatting controls, so it
-          // keeps the chrome — but not the menu, whose File rows the app already answers.
-          chrome={mode === "edit"}
-          menu={false}
-          title={path.split("/").pop() ?? ""}
           // 'auto' fits the page to the container. This is the fix for the cropped page: the panel
           // is 320–720px and a Letter sheet is wider than all of it, so the engine scales the sheet
           // down instead of overflowing it.
           zoomMode="auto"
-          // The reader's language, and the region its dates come from. Falls back to English keys
-          // for anything the catalogue leaves out, so a partial translation is never a broken UI.
-          i18n={isChinese ? zhCN : undefined}
           locale={locale}
-          colorMode="system"
           fonts={fonts}
-          onSave={onSave === undefined ? undefined : () => void handleSave()}
           onFontError={handleFontError}
-        />
-      </div>
+        >
+          {/* Read-only gets no toolbar: there is nothing to format, and in a panel this short the
+              row is worth more as document. */}
+          {mode === "edit" && <Toolbar onSave={() => void handleSave()} />}
+          {/* `dark` is the chrome theme here. The packaged editor takes a `colorMode` prop, but a
+              composed `Root` has none — the class on the viewport is what carries it, and the
+              document canvas keeps the document's own colours either way. */}
+          <DocxEditor.Viewport className={`min-h-0 flex-1${dark ? " dark" : ""}`}>
+            <DocxEditor.Content />
+          </DocxEditor.Viewport>
+        </DocxEditor.Root>
+      </LocaleProvider>
     </div>
   );
 });

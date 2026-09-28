@@ -66,12 +66,7 @@ describe("files/document-docx route (the editor's bytes → the file)", () => {
   });
 
   /** A save, with the bytes in the body and the paths where they belong. */
-  const save = (opts: {
-    source: string;
-    target: string;
-    bytes?: Buffer;
-    ifMatch?: string;
-  }) =>
+  const save = (opts: { source: string; target: string; bytes?: Buffer; ifMatch?: string }) =>
     t.app.request(
       `/api/sessions/${sessionId}/files/document-docx?path=${encodeURIComponent(opts.source)}&target=${encodeURIComponent(opts.target)}`,
       {
