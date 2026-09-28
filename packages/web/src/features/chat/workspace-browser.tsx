@@ -634,12 +634,13 @@ export function WorkspaceBrowser({
   // strands the srcDoc fallback without content). Failure sets sourceError and touches
   // nothing else — a broken source fetch must not take down the rendered view.
   //
-  // A deck is the exception that cannot wait for a click: its rendered view IS the injected
-  // frame, so without its content there is nothing to inject into. The name is what makes that
-  // decidable here — the content is the thing being fetched.
+  // Decks are not fetched here. They go through the full-content effect below instead: this fetch
+  // caps at TEXT_PREVIEW_LIMIT and a deck is larger than the cap by construction, since the whole
+  // editor ships inside the file. Truncating one does not produce a smaller deck, it produces a
+  // broken one — the runtime script is cut mid-way and nothing renders.
   useEffect(() => {
     if (preview?.kind !== "html" || preview.content !== undefined) return;
-    if (richView !== "source" && previewIsolated && !/\.bento\.html?$/i.test(preview.name)) return;
+    if (richView !== "source" && previewIsolated) return;
     const target = preview.path;
     let cancelled = false;
     setSourceError(null);
@@ -668,6 +669,43 @@ export function WorkspaceBrowser({
       cancelled = true;
     };
   }, [preview, richView, previewIsolated, session.sessionId]);
+
+  /**
+   * The deck's own source, whole.
+   *
+   * Separate from `preview.content` because that one is capped at `TEXT_PREVIEW_LIMIT` and a deck
+   * is bigger than the cap by construction — the entire Bento editor ships inside the file. The
+   * deck's rendered view is a frame built from this text, so a truncated fetch does not show a
+   * smaller deck: it cuts the runtime script in half and renders nothing at all.
+   *
+   * Keyed on the path and nonce rather than on `preview`, whose identity changes whenever any
+   * other field lands — a re-fetch there would re-inject the frame and throw away the user's
+   * unsaved edits in it.
+   */
+  const [deckHtml, setDeckHtml] = useState<string | null>(null);
+  const deckPath = preview?.kind === "html" ? preview.path : null;
+  const deckNonce = preview?.kind === "html" ? preview.nonce : 0;
+  const isDeck = deckPath !== null && isBentoDeck(preview?.name ?? "", undefined);
+  useEffect(() => {
+    setDeckHtml(null);
+    if (!isDeck || deckPath === null) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(api.workspaceFileUrl(session.sessionId, deckPath), {
+          credentials: "same-origin",
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        const full = await res.text();
+        if (!cancelled) setDeckHtml(full);
+      } catch {
+        if (!cancelled) setSourceError(S.files.loadFailed);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isDeck, deckPath, deckNonce, session.sessionId]);
 
   // The same settled-turn signal re-reads whatever is open in the preview: watching a file
   // the Agent is editing is the reason this panel sits next to the conversation. Skipped on
@@ -751,7 +789,7 @@ export function WorkspaceBrowser({
    * the cut.
    */
   const saveBentoDoc = useCallback((): void => {
-    if (!preview || preview.kind !== "html" || !isBentoDeck(preview.name, preview.content)) return;
+    if (!preview || preview.kind !== "html" || !isDeck) return;
     const path = preview.path;
     const etag = preview.etag;
     setSavingBento(true);
@@ -1275,7 +1313,7 @@ export function WorkspaceBrowser({
           {/* A deck is edited in place inside the preview, and its own Save cannot reach out of the
               frame (see bento-bridge.ts), so the panel saves it. Only shown for a deck: for every
               other HTML file the rendered view is a view, and there is nothing to write back. */}
-          {isBentoDeck(preview.name, preview.content) && (
+          {isDeck && (
             <button
               type="button"
               onClick={saveBentoDoc}
@@ -1344,11 +1382,11 @@ export function WorkspaceBrowser({
               className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 dark:border-gray-800"
             />
           ) : preview.kind === "html" && richView === "rendered" ? (
-            isBentoDeck(preview.name, preview.content) ? (
-              preview.content === undefined ? (
-                // The deck's text is on its way (see the source effect). A deck cannot fall back to
-                // the isolated frame: that path loads the file itself, so there is nowhere to inject
-                // the bridge, and its Save would fail exactly as it did before.
+            isDeck ? (
+              deckHtml === null ? (
+                // The deck's text is on its way. It cannot fall back to the isolated frame: that
+                // path loads the file itself, so there is nowhere to inject the bridge, and its
+                // own Save would fail exactly as it did before.
                 <SkeletonList rows={6} />
               ) : (
                 // A Bento deck gets the frame the host can talk to, even when an isolated preview
@@ -1363,7 +1401,7 @@ export function WorkspaceBrowser({
                 <iframe
                   key={`bento-${preview.nonce}`}
                   ref={bentoFrameRef}
-                  srcDoc={withBentoBridge(preview.content ?? "", STORAGE_SHIM)}
+                  srcDoc={withBentoBridge(deckHtml, STORAGE_SHIM)}
                   title={preview.name}
                   sandbox="allow-scripts"
                   className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
