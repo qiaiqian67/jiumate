@@ -691,11 +691,12 @@ export function DraftView({
       <div className="flex-1" />
 
       <div className="mx-auto w-full max-w-3xl">
-        {/* Large brand logo + brand name + subtitle (e2e tests identify the draft page by this
-            heading). The asset is square-cropped and the graphic already has a bit of built-in
-            padding, so a small margin is enough to sit visually close to the title. */}
+        {/* Brand logo + brand name + subtitle (e2e tests identify the draft page by this
+            heading). The mark carries its own rounded corners inside the SVG and the artwork has
+            built-in padding, so no CSS radius is needed — a fixed `rounded-*` would be a larger
+            share of a small box than the artwork's own corner and would clip it. */}
         <div className="mb-10 text-center">
-          <JiuMateLogo className="mx-auto mb-1 h-36 w-36 rounded-3xl" />
+          <JiuMateLogo className="mx-auto mb-1 h-16 w-16" />
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
             {S.appName}
           </h1>
