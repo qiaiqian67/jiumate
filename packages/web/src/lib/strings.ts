@@ -2320,6 +2320,16 @@ export const zh = {
     docxSavedOver: "已覆盖原文件",
     /** Shown when Save is pressed but the preview it belongs to is gone — see `requestSave`. */
     editSaveUnavailable: "无法保存：预览状态已变化，请重新打开文件再试。",
+    /**
+     * The editor has been asked to serialize a document it does not have.
+     *
+     * Split from {@link editSaveUnavailable} because the two are different failures and the message
+     * is the only thing a user can report back. One means the panel and the preview disagree about
+     * what is open; the other means the engine has no document mounted. They shared a string once,
+     * and a save that failed because the editor had not attached reported itself as a changed
+     * preview — which sent the diagnosis in the wrong direction entirely.
+     */
+    editSaveNoDocument: "无法保存：编辑器尚未就绪，请稍后再试。",
     /** Shown when the save handler itself threw — otherwise the failure is invisible. */
     editSaveFailed: (message: string): string => `保存失败：${message}`,
     /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */

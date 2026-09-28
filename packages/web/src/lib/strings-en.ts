@@ -2372,6 +2372,16 @@ export const en: Strings = {
     docxSavedOver: "Overwrote the original",
     /** Shown when Save is pressed but the preview it belongs to is gone — see `requestSave`. */
     editSaveUnavailable: "Cannot save: the preview state has changed. Reopen the file and retry.",
+    /**
+     * The editor has been asked to serialize a document it does not have.
+     *
+     * Split from {@link editSaveUnavailable} because the two are different failures and the message
+     * is the only thing a user can report back. One means the panel and the preview disagree about
+     * what is open; the other means the engine has no document mounted. They shared a string once,
+     * and a save that failed because the editor had not attached reported itself as a changed
+     * preview — which sent the diagnosis in the wrong direction entirely.
+     */
+    editSaveNoDocument: "Cannot save: the editor is not ready yet. Try again in a moment.",
     /** Shown when the save handler itself threw — otherwise the failure is invisible. */
     editSaveFailed: (message: string): string => `Save failed: ${message}`,
     /** Banner shown when the file changed on disk since the user started editing — covers both server-side detection and the user's own reload. */

@@ -32,7 +32,7 @@ import {
   LocaleProvider,
   useChromeTranslate,
   useDocxSource,
-  type DocxEditorRef,
+  type Editor,
 } from "@docx-editor.dev/react";
 import { packagedFonts } from "@docx-editor.dev/fonts";
 import zhCN from "@docx-editor.dev/i18n/zh-CN";
@@ -86,7 +86,15 @@ function Toolbar({ onSave }: { onSave: () => void }) {
 }
 
 export default function DocxSurface({ sessionId, path, mode, onSave, onHandle }: DocxSurfaceProps) {
-  const editorRef = useRef<DocxEditorRef | null>(null);
+  /**
+   * The engine's facade, delivered by `onReady`.
+   *
+   * Not a `ref` on the root: a composed root hands the instance over through this callback (it "runs
+   * once per instance after `Content` attaches"), and a ref read but never attached stays `null`
+   * forever without any type error to say so — which is how Save came to report an editor that was
+   * plainly on screen as missing.
+   */
+  const editorRef = useRef<Editor | null>(null);
   const { locale } = useLocale();
   const { dark } = useTheme();
   // `lang` is a preference ("system" is a valid value) and `locale` is what it resolved to, so the
@@ -117,7 +125,6 @@ export default function DocxSurface({ sessionId, path, mode, onSave, onHandle }:
     });
     return () => onHandle(null);
   }, [onHandle]);
-
   // A font that could not be loaded is not fatal: the glyphs still paint in their true faces and
   // only the measured line breaks are approximate. Reported rather than shown — the packaged
   // editor's font notice is one of the rows this layout does without.
@@ -146,6 +153,9 @@ export default function DocxSurface({ sessionId, path, mode, onSave, onHandle }:
           zoomMode="auto"
           locale={locale}
           fonts={fonts}
+          onReady={(editor) => {
+            editorRef.current = editor;
+          }}
           onFontError={handleFontError}
         >
           {/* Read-only gets no toolbar: there is nothing to format, and in a panel this short the

@@ -828,14 +828,14 @@ export function WorkspaceBrowser({
     void (async () => {
       const handle = docxRef.current;
       if (handle === null) {
-        // No editor to read from. This is the state a Save click used to end in silently — the
-        // handle was never delivered, so the button looked broken rather than unavailable.
-        toastError(S.files.editSaveUnavailable);
+        // The editor has not registered its handle yet. A different failure from a preview
+        // mismatch, and it reports itself as itself so a screenshot says which one it was.
+        toastError(S.files.editSaveNoDocument);
         return;
       }
       const bytes = await handle.save();
       if (bytes === null) {
-        toastError(S.files.editSaveUnavailable);
+        toastError(S.files.editSaveNoDocument);
         return;
       }
       await saveDocxBytes(bytes, { docxOutput: preview.path });
@@ -857,12 +857,12 @@ export function WorkspaceBrowser({
     void (async () => {
       const handle = docxRef.current;
       if (handle === null) {
-        toastError(S.files.editSaveUnavailable);
+        toastError(S.files.editSaveNoDocument);
         return;
       }
       const bytes = await handle.save();
       if (bytes === null) {
-        toastError(S.files.editSaveUnavailable);
+        toastError(S.files.editSaveNoDocument);
         return;
       }
       await saveDocxBytes(bytes, {
