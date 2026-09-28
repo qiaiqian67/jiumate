@@ -2310,6 +2310,25 @@ export const zh = {
     editCancel: "取消",
     /** Save-as action on a .docx being edited: write a copy beside the original. */
     docxSaveAs: "另存为",
+    /**
+     * Bento deck save.
+     *
+     * A deck boots into its own editor inside the preview frame, and its own Save cannot work there:
+     * that control is wired to `showSaveFilePicker`, which the browser refuses from a cross-origin
+     * subframe. The panel saves instead, by asking the deck for its document and splicing it into
+     * the file. These strings are what the user sees when a step of that fails, so each names the
+     * step rather than saying "save failed".
+     */
+    bentoSaved: "已保存到工作区",
+    bentoNoFrame: "无法保存：演示文稿预览未就绪，请稍后再试。",
+    bentoNoAnswer: "无法保存：演示文稿没有响应。请刷新预览后重试。",
+    bentoNoDocument: "无法保存：演示文稿编辑器尚未就绪，请稍后再试。",
+    bentoCannotRead: "无法保存：读不到原文件，请重新打开文件再试。",
+    bentoNoBlock: "无法保存：这个文件里找不到 Bento 文档块（#bento-doc）。",
+    /** Save action for a Bento deck being edited in the preview. */
+    bentoSave: "保存",
+    /** Shown on that button while the document is being read out of the frame and written back. */
+    bentoSaving: "保存中…",
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `已另存为 ${name}`,
     /** Shown while the real .docx is being laid out as a page. */

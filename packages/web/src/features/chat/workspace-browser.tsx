@@ -44,6 +44,13 @@ import { CodeBlock } from "./code-block";
 import { MermaidBlock } from "./mermaid-block";
 import { languageForExtension } from "./code-languages";
 import { ExportMenu } from "./workspace-export";
+import {
+  bentoGetMessage,
+  isBentoDeck,
+  isBentoMessage,
+  spliceBentoDoc,
+  withBentoBridge,
+} from "./bento-bridge";
 import { MarkdownEditor } from "./markdown-editor";
 
 /**
@@ -414,6 +421,24 @@ export function WorkspaceBrowser({
   const docxRef = useRef<DocxSurfaceHandle | null>(null);
 
   /**
+   * The preview frame, when it is a deck whose document the host can reach.
+   *
+   * Set only for a Bento deck — the rest of the previews are frames we have no business scripting,
+   * and a ref that is only attached in that one case says so at a glance.
+   */
+  const bentoFrameRef = useRef<HTMLIFrameElement | null>(null);
+
+  /** The in-flight document request, if any. One at a time: Save is a button, not a stream. */
+  const bentoAskRef = useRef<{
+    rid: number;
+    settle: (value: { json: string } | { error: string }) => void;
+  } | null>(null);
+  const bentoRidRef = useRef(0);
+  const [savingBento, setSavingBento] = useState(false);
+  /** Set when the deck answered "no document", so the button can explain itself. */
+  const [bentoUnavailable, setBentoUnavailable] = useState(false);
+
+  /**
    * A stable identity, because the surface registers its handle from an effect keyed on this prop.
    *
    * An inline arrow would change identity on every render, and the effect would then tear down and
@@ -654,6 +679,102 @@ export function WorkspaceBrowser({
     const open = previewPathRef.current;
     if (open !== null) void previewPath(open, { refresh: true });
   }, [reloadSignal, previewPath]);
+
+  /**
+   * Asks the deck for its document.
+   *
+   * The frame is cross-origin, so there is no call to make — only a message to post and a reply to
+   * wait for. It resolves with the document JSON, or rejects with a reason worth showing: a deck
+   * that never booted, or one whose bridge is not there because the frame was not injected (an
+   * isolated preview, or a file that turned out not to be a deck).
+   */
+  const askBentoDoc = useCallback((timeoutMs = 8000): Promise<string> => {
+    const frame = bentoFrameRef.current;
+    if (frame?.contentWindow === null || frame?.contentWindow === undefined) {
+      return Promise.reject(new Error(S.files.bentoNoFrame));
+    }
+    const rid = ++bentoRidRef.current;
+    return new Promise<string>((resolve, reject) => {
+      const timer = window.setTimeout(() => {
+        bentoAskRef.current = null;
+        reject(new Error(S.files.bentoNoAnswer));
+      }, timeoutMs);
+      bentoAskRef.current = {
+        rid,
+        settle: (value) => {
+          window.clearTimeout(timer);
+          bentoAskRef.current = null;
+          if ("json" in value) resolve(value.json);
+          else reject(new Error(value.error));
+        },
+      };
+      frame.contentWindow?.postMessage(bentoGetMessage(rid), "*");
+    });
+  }, []);
+
+  // The replies. Bound once for the panel rather than per preview: `event.source` is what proves a
+  // message came from our frame, and a stray page cannot forge it.
+  useEffect(() => {
+    const onMessage = (event: MessageEvent): void => {
+      if (!isBentoMessage(event.data)) return;
+      if (event.source !== bentoFrameRef.current?.contentWindow) return;
+      if (event.data.type === "bento-ready") {
+        setBentoUnavailable(false);
+        return;
+      }
+      const ask = bentoAskRef.current;
+      if (ask === null || ask.rid !== event.data.rid) return;
+      ask.settle(
+        event.data.type === "bento-doc"
+          ? { json: event.data.json }
+          : { error: S.files.bentoNoDocument },
+      );
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
+  /**
+   * Saves an edited deck back to the file it came from.
+   *
+   * Three steps, and the middle one is why this is not a one-liner: read the document out of the
+   * frame, splice it into the file's `#bento-doc` block, write the file. The runtime is left exactly
+   * as it was — a deck's HTML is mostly its own editor, and regenerating it would replace the one
+   * the file shipped with.
+   *
+   * The file is re-read from the server rather than taken from `preview.content`, which may have
+   * been truncated for display: splicing into a truncated file would silently drop everything past
+   * the cut.
+   */
+  const saveBentoDoc = useCallback((): void => {
+    if (!preview || preview.kind !== "html" || !isBentoDeck(preview.content)) return;
+    const path = preview.path;
+    const etag = preview.etag;
+    setSavingBento(true);
+    void (async () => {
+      try {
+        const json = await askBentoDoc();
+        const response = await fetch(api.workspaceFileUrl(session.sessionId, path), {
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error(S.files.bentoCannotRead);
+        const spliced = spliceBentoDoc(await response.text(), json);
+        if (spliced === null) throw new Error(S.files.bentoNoBlock);
+        const dataBase64 = btoa(unescape(encodeURIComponent(spliced)));
+        const newEtag = await api.uploadWorkspaceFile(session.sessionId, path, dataBase64, etag);
+        if (newEtag !== null) {
+          setPreview((p) => (p && p.path === path ? { ...p, etag: newEtag } : p));
+        }
+        toastSuccess(S.files.bentoSaved);
+        void previewPath(path, { refresh: true });
+      } catch (err) {
+        setBentoUnavailable(err instanceof Error && err.message === S.files.bentoNoDocument);
+        toastError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setSavingBento(false);
+      }
+    })();
+  }, [preview, session.sessionId, askBentoDoc, previewPath]);
 
   /**
    * Save the current .md edit. Outcomes:
@@ -1147,6 +1268,20 @@ export function WorkspaceBrowser({
               )}
             </a>
           )}
+          {/* A deck is edited in place inside the preview, and its own Save cannot reach out of the
+              frame (see bento-bridge.ts), so the panel saves it. Only shown for a deck: for every
+              other HTML file the rendered view is a view, and there is nothing to write back. */}
+          {isBentoDeck(preview.content) && (
+            <button
+              type="button"
+              onClick={saveBentoDoc}
+              disabled={savingBento || bentoUnavailable}
+              title={bentoUnavailable ? S.files.bentoNoDocument : undefined}
+              className="inline-flex shrink-0 items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors duration-150 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              {savingBento ? S.files.bentoSaving : S.files.bentoSave}
+            </button>
+          )}
           {/* Multi-format export menu (MD / HTML / PDF / DOCX / EPUB / RTF / TXT). PDF and
               Pandoc-backed items gate themselves on capabilities; MD and HTML always run.
 
@@ -1205,7 +1340,25 @@ export function WorkspaceBrowser({
               className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 dark:border-gray-800"
             />
           ) : preview.kind === "html" && richView === "rendered" ? (
-            previewIsolated ? (
+            isBentoDeck(preview.content) ? (
+              // A Bento deck gets the frame the host can talk to, even when an isolated preview
+              // origin is available. The bridge has to be injected, and injection is only possible
+              // in the `srcDoc` path — there is nothing to attach it to when the frame loads the
+              // file itself. Nothing is lost by it: a deck is self-contained by design, so it has
+              // no relative subresources for the real base URL to resolve.
+              //
+              // `allow-scripts` without `allow-same-origin`, as in the fallback below: the deck
+              // needs to run, and this is the one frame whose document we reach into — which is a
+              // reason to keep it on an opaque origin rather than a reason to relax it.
+              <iframe
+                key={`bento-${preview.nonce}`}
+                ref={bentoFrameRef}
+                srcDoc={withBentoBridge(preview.content ?? "", STORAGE_SHIM)}
+                title={preview.name}
+                sandbox="allow-scripts"
+                className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
+              />
+            ) : previewIsolated ? (
               // Same URL and serving path as "open in new tab": the app-origin redirect mints
               // a token and 302s to the separate preview origin, where the document has a real
               // base URL — relative subresources (<img src="foo.png">, app.js, style.css)

@@ -2362,6 +2362,25 @@ export const en: Strings = {
     editCancel: "Cancel",
     /** Save-as action on a .docx being edited: write a copy beside the original. */
     docxSaveAs: "Save as",
+    /**
+     * Bento deck save.
+     *
+     * A deck boots into its own editor inside the preview frame, and its own Save cannot work there:
+     * that control is wired to `showSaveFilePicker`, which the browser refuses from a cross-origin
+     * subframe. The panel saves instead, by asking the deck for its document and splicing it into
+     * the file. These strings are what the user sees when a step of that fails, so each names the
+     * step rather than saying "save failed".
+     */
+    bentoSaved: "Saved to the workspace",
+    bentoNoFrame: "Cannot save: the deck preview is not ready yet. Try again in a moment.",
+    bentoNoAnswer: "Cannot save: the deck did not respond. Refresh the preview and retry.",
+    bentoNoDocument: "Cannot save: the deck editor is not ready yet. Try again in a moment.",
+    bentoCannotRead: "Cannot save: the file could not be read. Reopen it and retry.",
+    bentoNoBlock: "Cannot save: this file has no Bento document block (#bento-doc).",
+    /** Save action for a Bento deck being edited in the preview. */
+    bentoSave: "Save",
+    /** Shown on that button while the document is being read out of the frame and written back. */
+    bentoSaving: "Saving…",
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `Saved as ${name}`,
     /** Shown while the real .docx is being laid out as a page. */
