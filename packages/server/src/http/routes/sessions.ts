@@ -24,7 +24,6 @@ import {
 import {
   applyCellEdits,
   buildDocumentPreview,
-  docxToMarkdown,
   documentFormatOf,
   type CellEdit,
 } from "@prismshadow/linsight-core/documents";
@@ -1540,40 +1539,12 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
   });
 
   /**
-   * GET /api/sessions/:sessionId/files/document-markdown — a .docx as Markdown, for editing.
+   * PUT /api/sessions/:sessionId/files/document-docx — store an edited document.
    *
-   * Fetched when the user asks to edit rather than shipped with every preview: the preview is HTML
-   * and a reader who only looks at a document should not download a second copy of its text in
-   * another format. What comes back is the body without the extractor's framing, which is the only
-   * form safe to feed back through the writer — see `docxToMarkdown`.
-   */
-  app.get("/:sessionId/files/document-markdown", async (c) => {
-    const row = resolveSession(c);
-    const rel = c.req.query("path") ?? "";
-    if (documentFormatOf(rel) !== "docx") {
-      throw new HttpError(415, "not_editable_document", "Only a .docx can be edited as Markdown.");
-    }
-    const { data } = await deps.workspaceFiles.read(row.workspace, rel);
-    try {
-      return c.json({ markdown: await docxToMarkdown(data) });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      throw new HttpError(422, "document_read_failed", message);
-    }
-  });
-
-  /**
-   * PUT /api/sessions/:sessionId/files/document-docx — turn edited HTML into a .docx.
-   *
-   * The write half of editing a Word document. The client sends the HTML the rich-text editor has
-   * been holding, not a document: the browser never held a .docx it could faithfully re-serialize.
-   * Pandoc does the conversion — **the same converter the export route uses**, which is what makes
-   * the file you get from Save and the file you get from Export the same document. They were not
-   * before: save went through a hand-written OOXML writer, export went through Pandoc, and the
-   * preview went through a third renderer, so three pipelines disagreed about the same text.
-   *
-   * `targetPath` is required rather than inferred, because the choice between "new file" and
-   * "replace the original" is the user's and should not be guessed.
+   * The write half of editing a Word document. The body is a complete .docx, serialized by the
+   * editor from the OOXML it parsed — the route's whole job is to put it where it belongs. Nothing
+   * is converted, which is why the file that lands is the document that was open: the version this
+   * replaced sent HTML for Pandoc to rebuild, and the rebuild was never the same document.
    *
    * An existing target without an If-Match is refused rather than overwritten: "save as a new file"
    * that silently clobbers another document is the failure this check exists to prevent. `*` is the

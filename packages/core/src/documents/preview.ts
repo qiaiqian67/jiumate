@@ -24,7 +24,7 @@
  * drops a chart is a preview that lies — but they are advisory here, because the original file is
  * one click away and the user can see for themselves.
  */
-import { docxToHtml, docxToMarkdown } from "./docx.js";
+import { docxToHtml } from "./docx.js";
 import { extractOdf } from "./odf.js";
 import { pptxSlides, type PptxSlide } from "./slides.js";
 import { xlsxSheets, type SheetGrid } from "./spreadsheet.js";
@@ -34,14 +34,6 @@ export type DocumentPreview =
   | {
       kind: "html";
       html: string;
-      /**
-       * The editing basis: the document as Markdown, with no extractor framing around it.
-       *
-       * Carried alongside the HTML rather than fetched separately because the pane needs both and
-       * they come from one parse. It is what the editor is handed and what the writer is fed back,
-       * so the round trip stays inside the body — see `docxToMarkdown`.
-       */
-      markdown: string;
       warnings: string[];
     }
   | { kind: "grid"; sheets: SheetGrid[]; warnings: string[] }
@@ -55,8 +47,12 @@ export async function buildDocumentPreview(
 ): Promise<DocumentPreview> {
   switch (format) {
     case "docx": {
+      // HTML only. The payload used to carry the document as Markdown as well, because that was what
+      // the editor was handed and what the writer was fed back. The editor now reads the file itself
+      // — same bytes, same parse, in the browser — so the Markdown was a conversion nobody consumed,
+      // paid for on every preview of every Word document.
       const { html, warnings } = await docxToHtml(data);
-      return { kind: "html", html, markdown: await docxToMarkdown(data), warnings };
+      return { kind: "html", html, warnings };
     }
     case "xlsx": {
       const sheets = await xlsxSheets(data);
