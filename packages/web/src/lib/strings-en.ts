@@ -2360,8 +2360,8 @@ export const en: Strings = {
     editSave: "Save",
     /** Edit-mode discard action. */
     editCancel: "Cancel",
-    /** Save action on a .docx being edited: save under a new name. */
-    docxSaveAsNew: "Save as a new file",
+    /** Save-as action on a .docx being edited: write a copy beside the original. */
+    docxSaveAs: "Save as",
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `Saved as ${name}`,
     /** Shown while the real .docx is being laid out as a page. */

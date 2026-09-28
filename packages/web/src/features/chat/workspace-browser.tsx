@@ -1027,38 +1027,48 @@ export function WorkspaceBrowser({
           {preview.kind === "md" ? (
             <>
               <div className="flex shrink-0 rounded-md bg-gray-100 p-0.5 dark:bg-gray-800">
-                {(
-                  [
-                    ["rendered", S.files.htmlRendered],
-                    ["source", S.files.htmlSource],
-                    ["edit", S.files.edit],
-                  ] as const
-                ).map(([key, label]) => {
-                  const active =
-                    key === "edit" ? editingMd && richView === "edit" : richView === key;
-                  const onClick = () => {
-                    if (key === "edit") {
-                      if (!editingMd) enterMdEdit();
-                      setRichView("edit");
-                    } else {
-                      setRichView(key);
-                    }
-                  };
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={onClick}
-                      className={`rounded px-2 py-0.5 text-xs transition-colors duration-150 ${
-                        active
-                          ? "bg-white font-medium text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100"
-                          : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+                {
+                  // A .docx has no "source" to show. Its `content` is the extractor's HTML rather
+                  // than the file's own text — the format is a zip of XML, and no view of this
+                  // panel would be the document's source. The Markdown path keeps it, because
+                  // there the source IS the file.
+                  (preview.docxSource !== undefined
+                    ? ([
+                        ["rendered", S.files.htmlRendered],
+                        ["edit", S.files.edit],
+                      ] as const)
+                    : ([
+                        ["rendered", S.files.htmlRendered],
+                        ["source", S.files.htmlSource],
+                        ["edit", S.files.edit],
+                      ] as const)
+                  ).map(([key, label]) => {
+                    const active =
+                      key === "edit" ? editingMd && richView === "edit" : richView === key;
+                    const onClick = () => {
+                      if (key === "edit") {
+                        if (!editingMd) enterMdEdit();
+                        setRichView("edit");
+                      } else {
+                        setRichView(key);
+                      }
+                    };
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={onClick}
+                        className={`rounded px-2 py-0.5 text-xs transition-colors duration-150 ${
+                          active
+                            ? "bg-white font-medium text-gray-900 shadow-sm dark:bg-gray-600 dark:text-gray-100"
+                            : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })
+                }
               </div>
               {editingMd && (
                 <div className="flex shrink-0 items-center gap-1">
@@ -1080,7 +1090,7 @@ export function WorkspaceBrowser({
                       disabled={savingMd}
                       className="inline-flex shrink-0 items-center rounded-md border border-transparent bg-transparent px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                     >
-                      {S.files.docxSaveAsNew}
+                      {S.files.docxSaveAs}
                     </button>
                   )}
                   <button
@@ -1138,15 +1148,20 @@ export function WorkspaceBrowser({
             </a>
           )}
           {/* Multi-format export menu (MD / HTML / PDF / DOCX / EPUB / RTF / TXT). PDF and
-              Pandoc-backed items gate themselves on capabilities; MD and HTML always run. */}
-          {(preview.kind === "md" || preview.kind === "html") && (
-            <ExportMenu
-              sessionId={session.sessionId}
-              filePath={preview.path}
-              fileName={preview.name}
-              markdown={preview.content ?? ""}
-            />
-          )}
+              Pandoc-backed items gate themselves on capabilities; MD and HTML always run.
+
+              Not offered for a .docx: the file IS the Word document, so "export to Word" would
+              re-render something the panel is already showing as itself. The editor's Save is the
+              way out of a .docx. */}
+          {(preview.kind === "md" || preview.kind === "html") &&
+            preview.docxSource === undefined && (
+              <ExportMenu
+                sessionId={session.sessionId}
+                filePath={preview.path}
+                fileName={preview.name}
+                markdown={preview.content ?? ""}
+              />
+            )}
           <a
             href={api.workspaceFileUrl(session.sessionId, preview.path, true)}
             download={preview.name}

@@ -2308,8 +2308,8 @@ export const zh = {
     editSave: "保存",
     /** Edit-mode discard action. */
     editCancel: "取消",
-    /** Save action on a .docx being edited: save under a new name. */
-    docxSaveAsNew: "另存为新文件",
+    /** Save-as action on a .docx being edited: write a copy beside the original. */
+    docxSaveAs: "另存为",
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `已另存为 ${name}`,
     /** Shown while the real .docx is being laid out as a page. */

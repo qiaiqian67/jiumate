@@ -36,19 +36,24 @@ describe("ExportMenu integration in workspace-browser", () => {
     const src = await loadSource();
     // The predicate must mention both kinds explicitly — a future kind added (e.g. "epub"
     // previews) requires a conscious decision to expose the menu for it. Order between
-    // `html` and `md` is not load-bearing; allow either. The actual JSX span looks like
-    // `{(preview.kind === "md" || preview.kind === "html") && (<ExportMenu …)}`, so the
-    // closing `)` of the OR group sits between the kinds and `&&`.
+    // `html` and `md` is not load-bearing; allow either.
     const gateMatch =
-      /preview\.kind === "(?:md|html)"\s*\|\|\s*preview\.kind === "(?:md|html)"\)\s*&&\s*\(/.exec(
-        src,
-      );
+      /preview\.kind === "(?:md|html)"\s*\|\|\s*preview\.kind === "(?:md|html)"\)\s*&&/.exec(src);
     expect(gateMatch, "expected the export-menu predicate to cover md and html").not.toBeNull();
     // The gate may not be one of these accidental category errors (text/image/pdf combined
     // with html) immediately followed by `<ExportMenu`:
     expect(src).not.toMatch(/preview\.kind === "text"[^\n]*\n[^\n]*<ExportMenu/);
     expect(src).not.toMatch(/preview\.kind === "image"[^\n]*\n[^\n]*<ExportMenu/);
     expect(src).not.toMatch(/preview\.kind === "pdf"[^\n]*\n[^\n]*<ExportMenu/);
+  });
+
+  it("withholds the menu from a .docx, which is already the Word document", async () => {
+    const src = await loadSource();
+    // A .docx being edited is presented as an `md` preview, so the kind gate alone would offer it
+    // "Export to Word (.docx)" — re-rendering the file the panel is already showing as itself. The
+    // exception is the second half of the predicate and has to stay visible: dropping it silently
+    // gives every Word document a menu that includes exporting it to its own format.
+    expect(src).toMatch(/preview\.docxSource === undefined\s*&&/);
   });
 
   it("binds every prop the ExportMenu expects", async () => {
