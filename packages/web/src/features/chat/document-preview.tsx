@@ -22,10 +22,10 @@ import type { DocumentPreview, SheetGrid } from "@prismshadow/linsight-core/docu
 import { S } from "../../lib/strings";
 
 /**
- * The real-.docx renderer, on demand. `docx-preview` is a few hundred kilobytes and the HTML
- * fallback below covers every case that cannot use it, so it is not worth paying for at startup.
+ * The real-.docx surface, on demand. The engine is a layout and shaping pipeline rather than a form
+ * control, and the HTML fallback below covers every case that cannot use it.
  */
-const DocxRenderer = lazy(() => import("./docx-renderer"));
+const DocxSurface = lazy(() => import("./docx-surface"));
 
 /**
  * Base typography for converted document HTML.
@@ -408,9 +408,9 @@ export function DocumentPreviewView({
 }) {
   if (payload.kind === "markdown") return null;
   // The `html` payload is the .docx case (ODF extracts to Markdown, see the file header), so a
-  // .docx with both a session and a path is shown as itself. Anything else keeps the extractor's
-  // rendering, which is a worse preview of a Word document but the only one available without the
-  // bytes.
+  // .docx with both a session and a path is shown as itself — the same surface the editor uses, in
+  // its read-only mode. Anything else keeps the extractor's rendering, which is a worse preview of a
+  // Word document but the only one available without the bytes.
   const showRealDocx =
     payload.kind === "html" &&
     sessionId !== undefined &&
@@ -425,7 +425,7 @@ export function DocumentPreviewView({
             <p className="text-sm text-gray-500 dark:text-gray-400">{S.files.docxPreviewLoading}</p>
           }
         >
-          <DocxRenderer sessionId={sessionId} path={path} />
+          <DocxSurface sessionId={sessionId} path={path} mode="view" />
         </Suspense>
       ) : payload.kind === "html" ? (
         <HtmlDocumentView html={payload.html} />

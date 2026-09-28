@@ -1,11 +1,13 @@
 /**
  * files/document-docx route tests — the write half of editing a Word document.
  *
- * The PandocService is injected through `BuildDepsOverrides`, so nothing here spawns a process. What
- * these pin is that the route sends **HTML** to Pandoc and writes what comes back, because that is
- * the property the whole design rests on: save and export run the same converter, so the file you
- * get from Save is the file you get from Export. They used to run different converters — save went
- * through a hand-written OOXML writer — and the two disagreed about the same text.
+ * These pin the property the whole design rests on: **the bytes arriving in the body are the
+ * document**, and the route stores them. It used to receive HTML and hand it to Pandoc, which
+ * rebuilt a .docx from it against the source as a style reference. That preserved the styles and
+ * nothing else — every part Pandoc has no model for was reconstructed, and every save was a fresh
+ * chance for the result to differ from the file the user had open. The editor now parses and
+ * serializes OOXML in the browser, so the most important assertion here is the negative one: saving
+ * must not convert, and must not reach for Pandoc at all.
  */
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -16,42 +18,24 @@ import type { ProjectCreateResponse, SessionCreateResponse } from "../src/api/ty
 import { PandocService } from "../src/services/pandoc-service.js";
 import type { PandocRunner } from "../src/services/pandoc-service.js";
 
-describe("files/document-docx route (edited HTML → .docx)", () => {
+/** Stands in for a serialized document. Anything comparing bytes compares against this. */
+const SAVED = Buffer.from("PK\u0003\u0004-SERIALIZED-DOCX-BYTES");
+
+describe("files/document-docx route (the editor's bytes → the file)", () => {
   let t: Awaited<ReturnType<typeof createTestApp>>;
   let owner: ReturnType<typeof apiClient>;
   let sessionId: string;
   let workspace: string;
   let ownerCookie: string;
-  let pandocCalls: {
-    path: string;
-    args: string[];
-    stdin: Buffer;
-    timeoutMs: number;
-    /** The reference document, read while the call is in flight (the service deletes it after). */
-    reference?: Buffer;
-  }[];
-  /** What `pandoc --version` reports; the reference flag depends on it. */
-  let pandocVersion: string;
+  let pandocCalls: { args: string[]; stdin: Buffer }[];
 
   beforeEach(async () => {
     pandocCalls = [];
-    pandocVersion = "pandoc 3.1.11\nCompiled with pandoc-types...";
-    const pandocRunner: PandocRunner = async (pandocPath, args, stdin, timeoutMs) => {
-      if (args[0] === "--version") {
-        pandocCalls.push({ path: pandocPath, args, stdin, timeoutMs });
-        return { exitCode: 0, timedOut: false, stdout: Buffer.from(pandocVersion), stderr: "" };
-      }
-      // The reference is a file in the call's private temp directory, which the service removes on
-      // the way out — so it has to be read here, while Pandoc would have it open.
-      const refIndex = args.findIndex((a) => a === "--reference-doc" || a === "--reference-docx");
-      const reference =
-        refIndex >= 0 && args[refIndex + 1] !== undefined
-          ? await fs.readFile(args[refIndex + 1]!)
-          : undefined;
-      pandocCalls.push({ path: pandocPath, args, stdin, timeoutMs, reference });
+    const pandocRunner: PandocRunner = async (_pandocPath, args, stdin) => {
+      pandocCalls.push({ args, stdin });
       const outIndex = args.indexOf("-o");
       if (outIndex >= 0 && args[outIndex + 1]) {
-        await fs.writeFile(args[outIndex + 1]!, Buffer.from("GENERATED-DOCX"));
+        await fs.writeFile(args[outIndex + 1]!, Buffer.from("CONVERTED"));
       }
       return { exitCode: 0, timedOut: false, stdout: Buffer.from(""), stderr: "" };
     };
@@ -81,88 +65,73 @@ describe("files/document-docx route (edited HTML → .docx)", () => {
     await t.cleanup();
   });
 
-  it("sends the editor's HTML to Pandoc and writes what it produces", async () => {
-    const res = await owner.put(`/api/sessions/${sessionId}/files/document-docx?path=report.docx`, {
-      html: "<h1>Edited</h1><p>body</p>",
-      targetPath: "copy.docx",
-    });
+  /** A save, with the bytes in the body and the paths where they belong. */
+  const save = (opts: {
+    source: string;
+    target: string;
+    bytes?: Buffer;
+    ifMatch?: string;
+  }) =>
+    t.app.request(
+      `/api/sessions/${sessionId}/files/document-docx?path=${encodeURIComponent(opts.source)}&target=${encodeURIComponent(opts.target)}`,
+      {
+        method: "PUT",
+        headers: {
+          cookie: ownerCookie,
+          // The write guard admits a fixed list of content types and the .docx media type is not on
+          // it — the client sends the generic binary one, so the tests do too.
+          "content-type": "application/octet-stream",
+          ...(opts.ifMatch === undefined ? {} : { "if-match": opts.ifMatch }),
+        },
+        body: opts.bytes ?? SAVED,
+      },
+    );
+
+  it("stores the document's bytes unchanged, without converting them", async () => {
+    const res = await save({ source: "report.docx", target: "copy.docx" });
     expect(res.status).toBe(204);
-    // One call is `--version` (the reference flag depends on it); the other is the conversion.
-    const conversions = pandocCalls.filter((c) => c.args[0] !== "--version");
-    expect(conversions).toHaveLength(1);
-    const call = conversions[0]!;
-    expect(call.args.slice(0, 4)).toEqual(["-f", "html", "-t", "docx"]);
-    expect(call.stdin.toString("utf8")).toBe("<h1>Edited</h1><p>body</p>");
-    expect(await fs.readFile(path.join(workspace, "copy.docx"), "utf8")).toBe("GENERATED-DOCX");
+    expect(await fs.readFile(path.join(workspace, "copy.docx"))).toEqual(SAVED);
+    // The regression this exists for: a save must not reach for Pandoc. It did, and the document
+    // that came back was one Pandoc had rebuilt rather than the one the user edited.
+    expect(pandocCalls).toHaveLength(0);
   });
 
-  it("hands Pandoc the document being edited as its style reference", async () => {
-    const source = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x99, 0x88]);
-    await fs.writeFile(path.join(workspace, "report.docx"), source);
-
-    const res = await owner.put(`/api/sessions/${sessionId}/files/document-docx?path=report.docx`, {
-      html: "<h1>Edited</h1>",
-      targetPath: "copy.docx",
-    });
+  it("leaves the source alone when saving to a new name", async () => {
+    const before = await fs.readFile(path.join(workspace, "report.docx"));
+    const res = await save({ source: "report.docx", target: "copy.docx" });
     expect(res.status).toBe(204);
-
-    // Pandoc takes each paragraph's formatting from named styles, and the styles come from the
-    // reference file — so this is what keeps the user's fonts, colours and table borders across a
-    // save. Without it every save replaced the document's design with Pandoc's default, which is
-    // why the preview and the export looked like two different documents.
-    const call = pandocCalls.filter((c) => c.args[0] !== "--version")[0]!;
-    expect(call.reference?.equals(source)).toBe(true);
-    expect(call.args).toContain("--reference-doc");
+    expect(await fs.readFile(path.join(workspace, "report.docx"))).toEqual(before);
   });
 
-  it("names the reference flag the way the installed Pandoc spells it", async () => {
-    // Pandoc 1.x called it `--reference-docx`; 2.0 renamed it and dropped the old spelling. The
-    // choice is made from the version rather than by trying one and retrying, so a save runs the
-    // converter once.
-    pandocVersion = "pandoc 1.19.2.1\nCompiled with...";
-    const res = await owner.put(`/api/sessions/${sessionId}/files/document-docx?path=report.docx`, {
-      html: "<h1>Edited</h1>",
-      targetPath: "copy.docx",
-    });
-    expect(res.status).toBe(204);
-    const call = pandocCalls.filter((c) => c.args[0] !== "--version")[0]!;
-    expect(call.args).toContain("--reference-docx");
-    expect(call.args).not.toContain("--reference-doc");
-  });
-
-  it("saves without a reference when the source is not a .docx", async () => {
-    // The text is what the user typed; losing the styling is the fallback this route had before
-    // references existed, and it is better than refusing the save.
-    await fs.writeFile(path.join(workspace, "notes.md"), "# source\n");
-    const res = await owner.put(`/api/sessions/${sessionId}/files/document-docx?path=notes.md`, {
-      html: "<h1>Edited</h1>",
-      targetPath: "copy.docx",
-    });
-    expect(res.status).toBe(204);
-    const call = pandocCalls.filter((c) => c.args[0] !== "--version")[0]!;
-    expect(call.args).not.toContain("--reference-doc");
-    expect(call.args).not.toContain("--reference-docx");
-  });
-
-  it("requires html, not markdown", async () => {
-    const res = await owner.put(`/api/sessions/${sessionId}/files/document-docx?path=report.docx`, {
-      markdown: "# nope",
-      targetPath: "copy.docx",
-    });
+  it("refuses an empty body", async () => {
+    const res = await save({ source: "report.docx", target: "copy.docx", bytes: Buffer.alloc(0) });
     expect(res.status).toBe(400);
     expect(pandocCalls).toHaveLength(0);
   });
 
+  it("requires a target", async () => {
+    const res = await t.app.request(
+      `/api/sessions/${sessionId}/files/document-docx?path=report.docx`,
+      {
+        method: "PUT",
+        headers: { cookie: ownerCookie, "content-type": "application/octet-stream" },
+        body: SAVED,
+      },
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("refuses a target that is not a .docx", async () => {
+    const res = await save({ source: "report.docx", target: "copy.md" });
+    expect(res.status).toBe(400);
+  });
+
   it("refuses an existing target with no If-Match", async () => {
     await fs.writeFile(path.join(workspace, "other.docx"), Buffer.from([0x50, 0x4b, 0x03, 0x04]));
-    const res = await owner.put(`/api/sessions/${sessionId}/files/document-docx?path=report.docx`, {
-      html: "<p>x</p>",
-      targetPath: "other.docx",
-    });
+    const res = await save({ source: "report.docx", target: "other.docx" });
     expect(res.status).toBe(409);
     const body = (await res.json()) as { error: { code: string } };
     expect(body.error.code).toBe("file_exists");
-    expect(pandocCalls).toHaveLength(0);
   });
 
   it("overwrites the original in place when the ETag matches, and refuses without one", async () => {
@@ -171,21 +140,21 @@ describe("files/document-docx route (edited HTML → .docx)", () => {
     const etag = got.headers.get("etag");
     expect(etag).toBeTruthy();
 
-    const saveInPlace = (ifMatch?: string) =>
-      t.app.request(`/api/sessions/${sessionId}/files/document-docx?path=report.docx`, {
-        method: "PUT",
-        headers: {
-          cookie: ownerCookie,
-          "content-type": "application/json",
-          ...(ifMatch === undefined ? {} : { "if-match": ifMatch }),
-        },
-        body: JSON.stringify({ html: "<p>saved in place</p>", targetPath: "report.docx" }),
-      });
-
     // The source exists, so an unversioned write is refused rather than clobbering it.
-    expect((await saveInPlace()).status).toBe(409);
+    expect((await save({ source: "report.docx", target: "report.docx" })).status).toBe(409);
 
-    expect((await saveInPlace(etag!)).status).toBe(204);
-    expect(await fs.readFile(path.join(workspace, "report.docx"), "utf8")).toBe("GENERATED-DOCX");
+    expect(
+      (await save({ source: "report.docx", target: "report.docx", ifMatch: etag! })).status,
+    ).toBe(204);
+    expect(await fs.readFile(path.join(workspace, "report.docx"))).toEqual(SAVED);
+  });
+
+  it("treats If-Match: * as the overwrite the conflict dialog promised", async () => {
+    // The wildcard is what the user answering "overwrite anyway" sends. Re-sending the stale ETag
+    // instead is what made the dialog reopen forever.
+    expect(
+      (await save({ source: "report.docx", target: "report.docx", ifMatch: "*" })).status,
+    ).toBe(204);
+    expect(await fs.readFile(path.join(workspace, "report.docx"))).toEqual(SAVED);
   });
 });

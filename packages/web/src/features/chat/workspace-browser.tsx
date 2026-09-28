@@ -47,14 +47,15 @@ import { ExportMenu } from "./workspace-export";
 import { MarkdownEditor } from "./markdown-editor";
 
 /**
- * The .docx editor, loaded on demand.
+ * The .docx surface, loaded on demand.
  *
- * TipTap brings ProseMirror and a set of extensions, several hundred kilobytes between them, and
- * only a session that opens a Word document and asks to edit it ever needs any of it. `lazy` keeps
- * them out of the bundle every other view pays for, the same reason CodeMirror is loaded inside
+ * It is a layout and text-shaping engine, not a form control — a whole paginated editor and its
+ * font pipeline — and only a session that opens a Word document needs any of it. `lazy` keeps it out
+ * of the bundle every other view pays for, the same reason CodeMirror is loaded inside
  * MarkdownEditor rather than beside it.
  */
-const DocxEditor = lazy(() => import("./docx-editor"));
+const DocxSurface = lazy(() => import("./docx-surface"));
+import type { DocxSurfaceHandle } from "./docx-surface";
 import { DocumentPreviewView } from "./document-preview";
 import type { CellEditDraft } from "./document-preview";
 import type { DocumentPreview } from "@prismshadow/linsight-core/documents";
@@ -404,14 +405,13 @@ export function WorkspaceBrowser({
    *  fires MarkdownEditor's onSave) both save the same bytes. */
   const [draftMd, setDraftMd] = useState("");
   /**
-   * The .docx editor's content, as HTML.
+   * The .docx editor's own handle.
    *
-   * A Word document is edited as formatted text rather than as Markdown, so its draft is HTML and
-   * it lives apart from `draftMd` — one field holding two formats would be a field whose meaning
-   * depends on which file is open, which is how the Markdown version of this went wrong. Only one
-   * of the two is ever non-empty: entering edit mode sets the one the open file calls for.
+   * The panel's Save and Save-as sit outside the editor, so they need the document from it rather
+   * than from a local draft: the document is parsed, edited and serialized inside the engine, and a
+   * copy of it in React state would be a second version that goes stale on every keystroke.
    */
-  const [draftDocxHtml, setDraftDocxHtml] = useState("");
+  const docxRef = useRef<DocxSurfaceHandle | null>(null);
   /** Save in flight (disables Save button, shows busy state in the editor). */
   const [savingMd, setSavingMd] = useState(false);
   /** Conflict modal: non-null when the server rejected save with 409 file_conflict. Carries the
@@ -657,48 +657,62 @@ export function WorkspaceBrowser({
    *
    * `force` skips the If-Match header, used after the user explicitly chose overwrite.
    */
-  const saveMdEdit = useCallback(
-    async (content: string, opts?: { force?: boolean; docxOutput?: string }): Promise<void> => {
-      if (!preview || preview.kind !== "md") return;
-      // A .docx is saved through a different route, and `content` means something different for it:
-      // the rich-text editor hands back HTML, Pandoc reads that and rebuilds the document. `docxOutput`
-      // names where it goes, and `force` means the user confirmed an overwrite in the conflict modal.
-      if (preview.docxSource) {
-        const { path: sourcePath, etag } = preview.docxSource;
-        const output = opts?.force ? sourcePath : (opts?.docxOutput ?? sourcePath);
-        setSavingMd(true);
-        try {
-          await api.writeDocumentDocx(
-            session.sessionId,
-            sourcePath,
-            content,
-            output,
-            // `force` is the user answering the conflict dialog, so it means overwrite regardless of
-            // what is on disk — the If-Match wildcard. Re-sending the stale ETag is what made
-            // "overwrite" impossible: the server refused it for the same reason it refused the first
-            // attempt, and the dialog reopened forever.
-            opts?.force ? "*" : output === sourcePath && etag !== undefined ? etag : undefined,
-          );
-          setEditingMd(false);
-          setDraftMd("");
-          setDraftDocxHtml("");
-          toastSuccess(
-            output === sourcePath
-              ? S.files.docxSavedOver
-              : S.files.docxSavedAs(output.split("/").pop() ?? output),
-          );
-          void previewPath(output, { refresh: true });
-        } catch (err) {
-          if (err instanceof ApiError && err.status === 409 && output === sourcePath) {
-            setMdConflict({ path: sourcePath });
-          } else {
-            toastError(apiErrorText(err));
-          }
-        } finally {
-          setSavingMd(false);
+  /**
+   * Writes an edited .docx back through the workspace.
+   *
+   * The bytes come from the editor's own serializer — a complete OOXML package — so this function's
+   * whole job is to decide where they go and to refuse to clobber something the user did not mean to
+   * overwrite. It is deliberately not part of `saveMdEdit`: that one takes text, this one takes a
+   * document, and the two only looked alike because a save used to be a conversion.
+   *
+   * `docxOutput` names the target when it is not the source (Save as), and `force` means the user
+   * answered the conflict modal.
+   */
+  const saveDocxBytes = useCallback(
+    async (
+      bytes: ArrayBuffer,
+      opts?: { force?: boolean; docxOutput?: string },
+    ): Promise<void> => {
+      if (!preview || preview.kind !== "md" || !preview.docxSource) return;
+      const { path: sourcePath, etag } = preview.docxSource;
+      const output = opts?.force ? sourcePath : (opts?.docxOutput ?? sourcePath);
+      setSavingMd(true);
+      try {
+        await api.writeDocumentDocx(
+          session.sessionId,
+          sourcePath,
+          bytes,
+          output,
+          // `force` is the user answering the conflict dialog, so it means overwrite regardless of
+          // what is on disk — the If-Match wildcard. Re-sending the stale ETag is what made
+          // "overwrite" impossible: the server refused it for the same reason it refused the first
+          // attempt, and the dialog reopened forever.
+          opts?.force ? "*" : output === sourcePath && etag !== undefined ? etag : undefined,
+        );
+        setEditingMd(false);
+        setDraftMd("");
+        toastSuccess(
+          output === sourcePath
+            ? S.files.docxSavedOver
+            : S.files.docxSavedAs(output.split("/").pop() ?? output),
+        );
+        void previewPath(output, { refresh: true });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 409 && output === sourcePath) {
+          setMdConflict({ path: sourcePath });
+        } else {
+          toastError(apiErrorText(err));
         }
-        return;
+      } finally {
+        setSavingMd(false);
       }
+    },
+    [preview, session.sessionId, previewPath],
+  );
+
+  const saveMdEdit = useCallback(
+    async (content: string, opts?: { force?: boolean }): Promise<void> => {
+      if (!preview || preview.kind !== "md") return;
       setSavingMd(true);
       try {
         const dataBase64 = btoa(unescape(encodeURIComponent(content)));
@@ -739,22 +753,21 @@ export function WorkspaceBrowser({
    *  source of truth for the rendered view, and a stray edit would re-mount MarkdownEditor
    *  on a stale value. */
   /**
-   * Enter edit mode on a .docx, with the document shown as formatted text.
+   * Enter edit mode on a .docx.
    *
-   * The preview already carries the editing basis — the document as HTML — so this needs no
-   * request: it re-presents the same file as an `md` preview holding that HTML, which is what makes
-   * the existing edit flow apply unchanged. `docxSource` is the one difference, and it is what
-   * routes the save (and what supplies the style reference the save is built against).
+   * No content is carried across, which is the point: the editor reads the file itself, from the
+   * same URL the preview just rendered, so the document the user edits is the document they were
+   * looking at. All this does is re-present the same file as an editable one and remember where the
+   * save should go — `docxSource` is that memory, and it is what routes the write and what the
+   * response's ETag is checked against.
    *
-   * It used to hand over the document's Markdown and mount the Markdown editor, so a user who
-   * opened a Word document was shown its source. The HTML is the same content rendered as the
-   * document reads.
+   * The state is called `md` because a .docx edit reuses the Markdown preview's shape; the editor
+   * mounted for it is not the Markdown one.
    */
   const enterDocxEdit = useCallback((): void => {
     if (!preview || preview.kind !== "document") return;
     const payload = preview.document;
     if (payload?.kind !== "html") return;
-    setDraftDocxHtml(payload.html);
     setEditingMd(true);
     setRichView("edit");
     setPreview((current) =>
@@ -799,10 +812,16 @@ export function WorkspaceBrowser({
       return;
     }
     // Save writes the document in place — the .docx the user opened, which is what "save" means
-    // in a document editor. `output === sourcePath` is what makes `saveMdEdit` send If-Match, so
-    // the write still refuses to clobber a version the Agent changed underneath it.
-    void saveMdEdit(draftDocxHtml, { docxOutput: preview.path });
-  }, [preview, draftMd, draftDocxHtml, saveMdEdit]);
+    // in a document editor. The bytes come from the editor rather than from React state: the
+    // engine owns the parse and the serializer, and a second copy here would be a second version.
+    // `output === sourcePath` is what makes `saveDocxBytes` send If-Match, so the write still
+    // refuses to clobber a version the Agent changed underneath it.
+    void (async () => {
+      const bytes = await docxRef.current?.save();
+      if (bytes === null || bytes === undefined) return;
+      await saveDocxBytes(bytes, { docxOutput: preview.path });
+    })();
+  }, [preview, draftMd, saveMdEdit, saveDocxBytes]);
 
   /**
    * Save as: write a copy beside the original and leave that one alone.
@@ -816,10 +835,14 @@ export function WorkspaceBrowser({
   const saveDocxCopy = useCallback((): void => {
     if (!preview || preview.kind !== "md" || !preview.docxSource) return;
     const stem = (preview.name ?? "").replace(/\.docx$/i, "");
-    void saveMdEdit(draftDocxHtml, {
-      docxOutput: `${stem === "" ? "document" : stem}-edited.docx`,
-    });
-  }, [preview, draftDocxHtml, saveMdEdit]);
+    void (async () => {
+      const bytes = await docxRef.current?.save();
+      if (bytes === null || bytes === undefined) return;
+      await saveDocxBytes(bytes, {
+        docxOutput: `${stem === "" ? "document" : stem}-edited.docx`,
+      });
+    })();
+  }, [preview, saveDocxBytes]);
 
   /**
    * The Save button's handler.
@@ -841,7 +864,6 @@ export function WorkspaceBrowser({
   const cancelMdEdit = useCallback((): void => {
     setEditingMd(false);
     setDraftMd("");
-    setDraftDocxHtml("");
   }, []);
 
   /** Enter edit mode: prime the draft with the current rendered content and mount the
@@ -1196,17 +1218,17 @@ export function WorkspaceBrowser({
                 <Suspense
                   fallback={
                     <p className="px-1 py-2 text-sm text-gray-500 dark:text-gray-400">
-                      {S.files.docxToolbar.loading}
+                      {S.files.docxPreviewLoading}
                     </p>
                   }
                 >
-                  <DocxEditor
+                  <DocxSurface
                     key={`docx-edit-${preview.nonce}`}
-                    value={draftDocxHtml}
-                    onChange={setDraftDocxHtml}
-                    onSave={(html) => void saveMdEdit(html, { docxOutput: preview.path })}
-                    onCancel={cancelMdEdit}
-                    saving={savingMd}
+                    ref={docxRef}
+                    sessionId={session.sessionId}
+                    path={preview.path}
+                    mode="edit"
+                    onSave={(bytes) => void saveDocxBytes(bytes, { docxOutput: preview.path })}
                   />
                 </Suspense>
               ) : (
@@ -1221,15 +1243,28 @@ export function WorkspaceBrowser({
               )}
             </div>
           ) : preview.kind === "md" && richView === "rendered" ? (
-            // Markdown rendered view: prefer the in-flight draft over the on-disk content
-            // so toggling to "rendered" while editing shows the user's latest keystrokes.
-            // Falling back to preview.content covers the non-editing path.
+            // Rendered view. A .docx has no Markdown to render, so it shows the same surface the
+            // edit view uses, in read-only mode: one rendering, toggled rather than swapped. The
+            // Markdown path below keeps preferring the in-flight draft over the on-disk content, so
+            // toggling to "rendered" while editing shows the user's latest keystrokes.
+            editingDocx ? (
+              <Suspense
+                fallback={
+                  <p className="px-1 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    {S.files.docxPreviewLoading}
+                  </p>
+                }
+              >
+                <DocxSurface
+                  key={`docx-view-${preview.nonce}`}
+                  sessionId={session.sessionId}
+                  path={preview.path}
+                  mode="view"
+                />
+              </Suspense>
+            ) : (
             (() => {
-              const body = editingDocx
-                ? draftDocxHtml
-                : editingMd
-                  ? draftMd
-                  : (preview.content ?? "");
+              const body = editingMd ? draftMd : (preview.content ?? "");
               return (
                 <>
                   <div className="md-body text-base leading-relaxed text-gray-800 dark:text-gray-100">
@@ -1255,6 +1290,7 @@ export function WorkspaceBrowser({
                 </>
               );
             })()
+            )
           ) : preview.kind === "document" && preview.document ? (
             <DocumentPreviewView
               payload={preview.document}
@@ -1287,11 +1323,10 @@ export function WorkspaceBrowser({
               // and lands in the background; the user toggling to source right now should not
               // see yesterday's bytes).
               (() => {
-                const sourceBody = editingDocx
-                  ? draftDocxHtml
-                  : editingMd
-                    ? draftMd
-                    : preview.content;
+                // A .docx has no "source view": it is a binary package, and the preview's content is
+                // the extractor's HTML rather than the file's text. The toggle is hidden for it
+                // (`editingDocx`), so this only has to be a defined value, not a useful one.
+                const sourceBody = editingMd ? draftMd : preview.content;
                 return (
                   <>
                     <CodeBlock
@@ -1516,12 +1551,21 @@ export function WorkspaceBrowser({
           if (path) void previewPath(path, { refresh: true });
         }}
         onSecondary={() => {
-          // Overwrite: re-send the same draft without If-Match. Force flag bypasses the
-          // server's conflict check — once it's done the local ETag is no longer current
-          // anyway, so a future If-Match would fail; that's why we drop the modal here.
-          const draft = editingDocx ? draftDocxHtml : draftMd;
+          // Overwrite: re-send the same document without If-Match. The force flag bypasses the
+          // server's conflict check — once it's done the local ETag is no longer current anyway,
+          // so a future If-Match would fail; that's why we drop the modal here.
           setMdConflict(null);
-          void saveMdEdit(draft, { force: true });
+          if (editingDocx) {
+            // The bytes are taken again rather than cached: the editor is still mounted behind the
+            // modal, and what the user is overwriting with is what is in the editor now.
+            void (async () => {
+              const bytes = await docxRef.current?.save();
+              if (bytes === null || bytes === undefined) return;
+              await saveDocxBytes(bytes, { force: true });
+            })();
+            return;
+          }
+          void saveMdEdit(draftMd, { force: true });
         }}
       >
         <p className="text-sm text-gray-600 dark:text-gray-300">{S.files.editConflictBanner}</p>

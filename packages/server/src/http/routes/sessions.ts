@@ -1582,21 +1582,21 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
   app.put("/:sessionId/files/document-docx", async (c) => {
     const row = resolveSession(c);
     const rel = c.req.query("path") ?? "";
-    const body = await readJson(c);
-
-    const html = body.html;
-    if (typeof html !== "string") {
-      throw badRequest("html must be a string.");
+    // The body IS the document. A .docx is a zip, so it can neither be a JSON string field nor be
+    // read as text; the paths travel in the query because the body is already spoken for.
+    const bytes = Buffer.from(await c.req.arrayBuffer());
+    if (bytes.byteLength === 0) {
+      throw badRequest("The request body must be a .docx.");
     }
-    if (Buffer.byteLength(html, "utf8") > EXPORT_MAX_HTML_BYTES) {
+    if (bytes.byteLength > MAX_UPLOAD_BYTES) {
       throw new HttpError(413, "document_too_large", "The edited document is too large to save.");
     }
-    const targetPath = body.targetPath;
-    if (typeof targetPath !== "string" || targetPath.length === 0) {
-      throw badRequest("targetPath is required: saving as a new file or over the original.");
+    const targetPath = c.req.query("target") ?? "";
+    if (targetPath.length === 0) {
+      throw badRequest("target is required: saving as a new file or over the original.");
     }
     if (documentFormatOf(targetPath) !== "docx") {
-      throw badRequest("targetPath must name a .docx file.");
+      throw badRequest("target must name a .docx file.");
     }
 
     const ifMatch = c.req.header("if-match");
@@ -1615,31 +1615,15 @@ export function sessionsRoutes(deps: AppDeps): Hono<AppEnv> {
     // the editor read it, and a stale save would discard that work without a word.
     if (targetPath === rel) await assertUnchanged(row.workspace, rel, ifMatch);
 
-    // The document being edited is also the document the output should look like.
+    // The document the editor serialized, written through unchanged.
     //
-    // Pandoc's writer takes each paragraph's formatting from named styles — `Heading1`,
-    // `FirstParagraph`, `Compact` — and those styles come from the reference file. Handing it the
-    // source is what keeps the user's fonts, colours and table borders across a save. Without a
-    // reference every save quietly replaced the document's design with Pandoc's default, which is
-    // how the preview and the export came to look like two different documents.
-    //
-    // A source that cannot be read is not a reason to refuse the save: the text is what the user
-    // typed, and losing the styling is the fallback this route had until now. So the read is
-    // best-effort and a non-.docx source simply has no reference to offer.
-    let referenceDocx: Buffer | undefined;
-    if (documentFormatOf(rel) === "docx") {
-      try {
-        referenceDocx = Buffer.from((await deps.workspaceFiles.read(row.workspace, rel)).data);
-      } catch {
-        referenceDocx = undefined;
-      }
-    }
-
-    // The converter's own HttpErrors (503 with no Pandoc, 504 on timeout, 500 with Pandoc's stderr)
-    // travel as they are — they say more than a generic "write failed" would.
-    const generated = await deps.pandoc.exportHtmlTo(html, "docx", { referenceDocx });
-
-    await deps.workspaceFiles.write(row.workspace, targetPath, Buffer.from(generated));
+    // This route used to receive the document as HTML and hand it to Pandoc, which rebuilt a .docx
+    // from it against the source as a style reference. That kept the styles but not the document:
+    // anything Pandoc has no model for — headers, page furniture, the parts it does not parse — was
+    // reconstructed from scratch, and every save was a new opportunity for the result to differ from
+    // what the user had open. The editor now parses and serializes OOXML itself, so the bytes
+    // arriving here are the document, and the work left is to store them.
+    await deps.workspaceFiles.write(row.workspace, targetPath, bytes);
     return noContentWithEtag(row.workspace, targetPath);
   });
 

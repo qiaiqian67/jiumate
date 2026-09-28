@@ -1019,32 +1019,40 @@ export const documentPreview = (
 /**
  * Writes an edited document back as a .docx.
  *
- * `html` is what the rich-text editor produced, not Markdown: the editor shows the document as
- * formatted text, so that is what it can faithfully hand back. Pandoc reads it and rebuilds the
- * .docx, and the source document travels as its style reference so the result keeps the fonts,
- * colours and table borders it had.
+ * `bytes` is the document the editor serialized — a complete OOXML package, not a rendering of one.
+ * The engine builds it in the browser, so nothing is reconstructed on the way in and nothing the user
+ * did not touch is rewritten: the styles, headers, images and any markup the engine does not model
+ * travel through untouched. An earlier version sent HTML for Pandoc to rebuild the document from,
+ * which is how a save came back looking like a different document.
  *
- * `targetPath` is required and not inferred: the choice between a new file and replacing the
- * original belongs to the user. The round trip keeps the text and its structure and the styles, but
- * not the page layout — headers, footers, comments and page breaks go — so the UI states that before
- * the click and offers a copy as the action that cannot destroy anything.
+ * `targetPath` is required and not inferred: the choice between a new file and replacing the original
+ * belongs to the user.
  *
  * `ifMatch` is sent when overwriting. The server refuses an existing target that has no If-Match,
  * so a "save as a new file" can never silently clobber another document. Pass `"*"` to overwrite
  * regardless — the If-Match wildcard, sent when the user has answered the conflict dialog.
+ *
+ * The bytes go in the body and the paths in the query, rather than both in a JSON envelope: the body
+ * is the document, and base64-ing a document to fit it in JSON would inflate every save by a third.
+ *
+ * The content type is the generic binary one rather than the .docx media type, because the write
+ * guard admits a fixed list and the .docx type is not on it. Widening a guard to name one file
+ * format is the wrong trade; the guard's job is to refuse the types an HTML form can send, and this
+ * is not one of them.
  */
 export const writeDocumentDocx = (
   sessionId: string,
   sourcePath: string,
-  html: string,
+  bytes: ArrayBuffer,
   targetPath: string,
   ifMatch?: string,
 ): Promise<void> =>
   apiFetch<void>(
-    `/api/sessions/${sessionId}/files/document-docx?path=${encodeURIComponent(sourcePath)}`,
+    `/api/sessions/${sessionId}/files/document-docx?path=${encodeURIComponent(sourcePath)}&target=${encodeURIComponent(targetPath)}`,
     {
       method: "PUT",
-      body: JSON.stringify({ html, targetPath }),
+      rawBody: new Blob([bytes], { type: "application/octet-stream" }),
+      contentType: "application/octet-stream",
       ...(ifMatch === undefined ? {} : { headers: { "if-match": ifMatch } }),
     },
   );

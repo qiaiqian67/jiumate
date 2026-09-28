@@ -2371,26 +2371,7 @@ export const en: Strings = {
      * a Word user would recognise — page breaks, headers, footers, comments — is not preserved.
      */
     docxEditBanner:
-      'Editing a Word document. Save writes this .docx in place; use Save as a new file to keep the original. Text, heading levels, lists, tables, emphasis and links survive, and the document keeps its own fonts, colours and table styling. Headers, footers, comments and page breaks do not, and images become the words "[image omitted]".',
-    /** Rich-text toolbar labels. Short because the bar sits beside the file name. */
-    docxToolbar: {
-      bold: "Bold",
-      italic: "Italic",
-      underline: "Underline",
-      strike: "Strikethrough",
-      heading1: "Heading 1",
-      heading2: "Heading 2",
-      heading3: "Heading 3",
-      paragraph: "Body text",
-      bulletList: "Bulleted list",
-      orderedList: "Numbered list",
-      insertTable: "Insert table",
-      insertLink: "Insert link",
-      addRow: "Insert row below",
-      addColumn: "Insert column right",
-      deleteTable: "Delete table",
-      loading: "Preparing the editor…",
-    },
+      'Editing a Word document. Save writes this .docx in place; use Save as a new file to keep the original. The document opens and saves as itself — fonts, styles, images, headers and footers all survive. The few complex elements this editor does not support (typeset equations, some shape effects) are kept in the file exactly as they were, but cannot be seen or changed here.',
     /** Toast after a .docx is written to a new path. */
     docxSavedAs: (name: string): string => `Saved as ${name}`,
     /** Shown while the real .docx is being laid out as a page. */

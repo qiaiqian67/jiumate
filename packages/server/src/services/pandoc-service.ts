@@ -15,7 +15,7 @@
  * the timeout itself never holds the process open.
  */
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { HttpError } from "../http/errors.js";
@@ -110,9 +110,6 @@ export class PandocService {
     },
   ) {}
 
-  /** Memoized answer to `referenceDocFlag`, which costs a `pandoc --version` spawn to compute. */
-  private referenceFlag: string | undefined;
-
   /** True iff a binary path was resolved at startup. Mirrored on the client as a capabilities flag. */
   get available(): boolean {
     return this.opts.pandocPath !== null;
@@ -142,24 +139,13 @@ export class PandocService {
    * was forgotten once: `--output -` was there from the start and the injected test runner returned
    * canned bytes, so no test ever asked real Pandoc to do it.
    *
-   * `referenceDocx` is the document the output should look like. Pandoc's writer takes every
-   * paragraph's formatting from named styles (`Heading1`, `FirstParagraph`, ...), and those styles
-   * come from the reference file — so passing the document being edited is what keeps its fonts,
-   * colours and table borders across a save. Without it every save quietly replaced the document's
-   * design with Pandoc's default, which is how the preview and the export came to look like two
-   * different documents. Only docx output has a reference.
-   *
    * Errors:
    * - 503 when no Pandoc is configured.
    * - 400 for a format outside `SUPPORTED_FORMATS`.
    * - 504 on timeout, 500 on a spawn failure or a non-zero exit (stderr is truncated — a Pandoc
    *   parse error quotes the document, and this is a service, not a place to keep user text).
    */
-  async exportHtmlTo(
-    html: string,
-    format: PandocFormat,
-    opts?: { referenceDocx?: Buffer },
-  ): Promise<Buffer> {
+  async exportHtmlTo(html: string, format: PandocFormat): Promise<Buffer> {
     if (!this.opts.pandocPath) {
       throw new HttpError(503, PANDOC_UNAVAILABLE, "Pandoc is not installed on this server.");
     }
@@ -169,17 +155,10 @@ export class PandocService {
     const timeoutMs = this.opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
     // A private directory per call, so two concurrent exports cannot collide on a file name and
-    // the output never appears anywhere a workspace could serve it from. It is also where the
-    // reference document goes, which is why it is per-call: two saves of two documents must not
-    // share a reference.
+    // the output never appears anywhere a workspace could serve it from.
     const dir = await mkdtemp(path.join(tmpdir(), "linsight-pandoc-"));
     const outPath = path.join(dir, `export.${format}`);
     const args = ["-f", "html", "-t", format, "-o", outPath];
-    if (format === "docx" && opts?.referenceDocx) {
-      const referencePath = path.join(dir, "reference.docx");
-      await writeFile(referencePath, opts.referenceDocx);
-      args.push(await this.referenceDocFlag(), referencePath);
-    }
     try {
       const r = await this.runOnce(
         this.opts.pandocPath,
@@ -201,27 +180,6 @@ export class PandocService {
     } finally {
       await rm(dir, { recursive: true, force: true }).catch(() => undefined);
     }
-  }
-
-  /**
-   * Which flag names the reference document, for the Pandoc in front of us.
-   *
-   * Pandoc 1.x called it `--reference-docx`; 2.0 renamed it to `--reference-doc` and dropped the old
-   * spelling. Both are "the .docx whose styles the output inherits", so the choice is made from the
-   * version rather than by trying one and retrying — a retry would run Pandoc twice on every save,
-   * and the first attempt's failure would have to be told apart from a real one.
-   *
-   * Cached on the instance: `version()` spawns a process, and the answer cannot change under a
-   * running server. An unparseable version falls to the legacy flag, because the only binaries that
-   * fail to report a version are the old ones this exists for.
-   */
-  private async referenceDocFlag(): Promise<string> {
-    if (this.referenceFlag !== undefined) return this.referenceFlag;
-    const version = await this.version();
-    const major = /(\d+)\./.exec(version ?? "")?.[1];
-    this.referenceFlag =
-      major !== undefined && Number(major) >= 2 ? "--reference-doc" : "--reference-docx";
-    return this.referenceFlag;
   }
 
   private async runOnce(path: string, args: string[], stdin: Buffer, timeoutMs: number) {
