@@ -5,6 +5,7 @@ import {
   isBentoDeck,
   isBentoMessage,
   spliceBentoDoc,
+  stripBentoCollab,
   withBentoBridge,
 } from "../src/features/chat/bento-bridge";
 
@@ -87,7 +88,7 @@ describe("spliceBentoDoc", () => {
 
 describe("withBentoBridge", () => {
   it("injects the shim and the bridge after <head>, shim first", () => {
-    const out = withBentoBridge(DECK, "<script>SHIM</script>");
+    const out = withBentoBridge(DECK, "<script>SHIM</script>", "deck.bento.html");
     const shimAt = out.indexOf("SHIM");
     const bridgeAt = out.indexOf(BENTO_BRIDGE_SCRIPT);
     expect(shimAt).toBeGreaterThan(-1);
@@ -98,9 +99,67 @@ describe("withBentoBridge", () => {
     expect(out.indexOf("<title>Deck</title>")).toBeGreaterThan(shimAt);
   });
 
+  it("declares the deck's title before the bridge, so the bridge can read it", () => {
+    const out = withBentoBridge(DECK, "S", "Kimi K3.bento.html");
+    const titleAt = out.indexOf("__linsightDeckTitle");
+    expect(titleAt).toBeGreaterThan(-1);
+    expect(titleAt).toBeLessThan(out.indexOf(BENTO_BRIDGE_SCRIPT));
+    expect(out).toContain("Kimi K3.bento.html");
+  });
+
+  it("escapes `<` in the title, so a name cannot end the script early", () => {
+    const out = withBentoBridge(DECK, "S", "</script><script>bad()</script>");
+    expect(out).not.toContain("</script><script>bad()");
+    expect(out).toContain("\\u003c");
+  });
+
   it("falls back to <html> and then to the very start", () => {
-    expect(withBentoBridge("<html><body>x</body></html>", "S")).toContain("S");
-    expect(withBentoBridge("<body>x</body>", "S").startsWith("S")).toBe(true);
+    expect(withBentoBridge("<html><body>x</body></html>", "S", "t")).toContain("S");
+    expect(withBentoBridge("<body>x</body>", "S", "t").startsWith("S")).toBe(true);
+  });
+});
+
+describe("stripBentoCollab", () => {
+  const withCreds = JSON.stringify({
+    format: "bento/slides",
+    docId: "c5f6ed8c-849f-470f-b58a-c2cd7cbaaec5",
+    collab: {
+      room: "wss://sync.bento.page/d/room",
+      key: "CczeeRqiBprVtv2EUBiPJ1Cg2CbzdUJcR3pVkC7p6JQ",
+      on: true,
+      role: "writer",
+      ownerPriv: "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg",
+    },
+    slides: [{ id: "s1" }],
+  });
+
+  it("removes the credential block and reports that it did", () => {
+    const { json, stripped } = stripBentoCollab(withCreds);
+    expect(stripped).toBe(true);
+    const parsed = JSON.parse(json) as Record<string, unknown>;
+    expect(parsed.collab).toBeUndefined();
+    expect(json).not.toContain("ownerPriv");
+    expect(json).not.toContain("MIGHAgEA");
+  });
+
+  it("keeps docId, which is identity rather than a credential", () => {
+    const { json } = stripBentoCollab(withCreds);
+    expect(JSON.parse(json).docId).toBe("c5f6ed8c-849f-470f-b58a-c2cd7cbaaec5");
+    expect(json).toContain('"slides"');
+  });
+
+  it("leaves a deck with no collab block untouched, and says so", () => {
+    const plain = JSON.stringify({ format: "bento/slides", slides: [] });
+    const { json, stripped } = stripBentoCollab(plain);
+    expect(stripped).toBe(false);
+    expect(json).toBe(plain);
+  });
+
+  it("passes unparseable JSON through rather than refusing the save", () => {
+    // Not our business to fix a document the engine produced.
+    const { json, stripped } = stripBentoCollab("not json");
+    expect(stripped).toBe(false);
+    expect(json).toBe("not json");
   });
 });
 

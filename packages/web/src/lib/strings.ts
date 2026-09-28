@@ -2320,6 +2320,16 @@ export const zh = {
      * step rather than saying "save failed".
      */
     bentoSaved: "已保存到工作区",
+    /**
+     * Shown instead of {@link bentoSaved} when the save also removed collaboration credentials.
+     *
+     * Said out loud rather than done quietly: the block being removed is what makes the deck join a
+     * shared room, so a user who shared it deliberately is owed the reason it stopped, and the
+     * remedy — rotating the keys, which is what actually revokes the old room — is in Bento's own
+     * Share menu.
+     */
+    bentoCollabStripped:
+      "已保存到工作区（已移除共享凭证；如需作废旧密钥请在 Bento 的 Share 里 Rotate keys）",
     bentoNoFrame: "无法保存：演示文稿预览未就绪，请稍后再试。",
     bentoNoAnswer: "无法保存：演示文稿没有响应。请刷新预览后重试。",
     bentoNoDocument: "无法保存：演示文稿编辑器尚未就绪，请稍后再试。",

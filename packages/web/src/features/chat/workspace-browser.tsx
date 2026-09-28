@@ -49,6 +49,7 @@ import {
   isBentoDeck,
   isBentoMessage,
   spliceBentoDoc,
+  stripBentoCollab,
   withBentoBridge,
 } from "./bento-bridge";
 import { MarkdownEditor } from "./markdown-editor";
@@ -795,7 +796,11 @@ export function WorkspaceBrowser({
     setSavingBento(true);
     void (async () => {
       try {
-        const json = await askBentoDoc();
+        const raw = await askBentoDoc();
+        // Credentials never travel into the workspace. The runtime mints dormant ones the moment a
+        // deck is opened, and a plaintext private key in a file the Agent reads is a leak with a
+        // provider's log at the far end of it. See `stripBentoCollab`.
+        const { json, stripped } = stripBentoCollab(raw);
         const response = await fetch(api.workspaceFileUrl(session.sessionId, path), {
           credentials: "include",
         });
@@ -807,7 +812,7 @@ export function WorkspaceBrowser({
         if (newEtag !== null) {
           setPreview((p) => (p && p.path === path ? { ...p, etag: newEtag } : p));
         }
-        toastSuccess(S.files.bentoSaved);
+        toastSuccess(stripped ? S.files.bentoCollabStripped : S.files.bentoSaved);
         void previewPath(path, { refresh: true });
       } catch (err) {
         setBentoUnavailable(err instanceof Error && err.message === S.files.bentoNoDocument);
@@ -1401,7 +1406,7 @@ export function WorkspaceBrowser({
                 <iframe
                   key={`bento-${preview.nonce}`}
                   ref={bentoFrameRef}
-                  srcDoc={withBentoBridge(deckHtml, STORAGE_SHIM)}
+                  srcDoc={withBentoBridge(deckHtml, STORAGE_SHIM, preview.name)}
                   title={preview.name}
                   sandbox="allow-scripts"
                   className="h-full min-h-[60vh] w-full rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"

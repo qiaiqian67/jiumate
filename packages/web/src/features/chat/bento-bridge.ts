@@ -85,7 +85,11 @@ export function bentoGetMessage(rid: number): { app: string; type: string; rid: 
 export const BENTO_BRIDGE_SCRIPT =
   "<script>(function(){function post(m){try{parent.postMessage(m,'*')}catch(e){}}" +
   "function doc(){try{return window.bento&&window.bento.doc?window.bento.doc:null}catch(e){return null}}" +
-  "var n=0,t=setInterval(function(){if(doc()){clearInterval(t);post({app:'" +
+  // The file's own `<title>` is `bento/slides` — the shell's name, not the deck's. The host passes
+  // the file name in and it is re-applied every time the runtime reports itself, because the
+  // runtime sets its own title on boot and a single write here would be overwritten.
+  "function title(){try{if(window.__linsightDeckTitle)document.title=window.__linsightDeckTitle}catch(e){}}" +
+  "var n=0,t=setInterval(function(){if(doc()){clearInterval(t);title();post({app:'" +
   APP +
   "',type:'" +
   TYPE_READY +
@@ -94,7 +98,7 @@ export const BENTO_BRIDGE_SCRIPT =
   APP +
   "'||d.type!=='" +
   TYPE_GET +
-  "')return;" +
+  "')return;title();" +
   "var j=doc();if(!j){post({app:'" +
   APP +
   "',type:'" +
@@ -105,6 +109,17 @@ export const BENTO_BRIDGE_SCRIPT =
   "',type:'" +
   TYPE_DOC +
   "',rid:d.rid,json:JSON.stringify(j)})})})();</script>";
+
+/**
+ * The file name to show as the deck's title, encoded for a `<script>` body.
+ *
+ * `<` becomes `\u003c` for the same reason the document JSON needs it: the value lands inside a
+ * script element, and a name containing `</script>` would otherwise end it early.
+ */
+function titleScript(title: string): string {
+  const encoded = JSON.stringify(title ?? "").replace(/</g, "\\u003c");
+  return `<script>window.__linsightDeckTitle=${encoded};</script>`;
+}
 
 /**
  * Injects a script at the earliest script position in the HTML: right after `<head>`, else right
@@ -124,10 +139,11 @@ function injectAtStart(html: string, script: string): string {
  * that cannot be read rather than a deck that cannot boot. The shim has to be in place first, so it
  * is injected first.
  */
-export function withBentoBridge(html: string, storageShim: string): string {
+export function withBentoBridge(html: string, storageShim: string, title: string): string {
   // Injected in one pass, in this order: each `injectAtStart` lands immediately after `<head>`, so
-  // two separate calls would put the later one FIRST and run the bridge before the shim.
-  return injectAtStart(html, storageShim + BENTO_BRIDGE_SCRIPT);
+  // two separate calls would put the later one FIRST and run the bridge before the shim. The title
+  // goes before the bridge so the bridge can read it.
+  return injectAtStart(html, storageShim + titleScript(title) + BENTO_BRIDGE_SCRIPT);
 }
 
 /**
@@ -163,4 +179,38 @@ export function spliceBentoDoc(html: string, json: string): string | null {
   return html.replace(BENTO_BLOCK, (_match, open: string, _body: string, close: string) => {
     return `${open}\n${safe}\n${close}`;
   });
+}
+
+/**
+ * Removes the `collab` block from a document, reporting whether there was one to remove.
+ *
+ * A deck with collaboration switched on carries the credentials to that room in its own document —
+ * the room address, a symmetric key, and on an owner copy an EC private key, all in plaintext.
+ * Bento's own guide is explicit that this is what makes sharing work ("the file is the invitation")
+ * and equally explicit that anything receiving the file receives the room: a chat, a ticket, a
+ * harness, or a model provider's logs. A workspace file is read by the Agent, so it is the first of
+ * those.
+ *
+ * The runtime mints dormant credentials on first open, which means a deck that was merely *opened*
+ * here picks them up — and then the next save would write them into the file. Stripping on the way
+ * out is what keeps a workspace copy from accumulating them.
+ *
+ * Removing them does not revoke anything: whoever has the old file still has the old room. Rotation
+ * is the only retraction, and it happens in the deck's own Share menu.
+ *
+ * `docId` is deliberately left alone — it is the document's identity, not a credential.
+ */
+export function stripBentoCollab(json: string): { json: string; stripped: boolean } {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    // Not our business to fix a document the engine produced; saving it as-is beats refusing.
+    return { json, stripped: false };
+  }
+  if (typeof parsed !== "object" || parsed === null || !("collab" in parsed)) {
+    return { json, stripped: false };
+  }
+  delete (parsed as Record<string, unknown>).collab;
+  return { json: JSON.stringify(parsed), stripped: true };
 }

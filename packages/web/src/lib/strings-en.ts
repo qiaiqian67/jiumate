@@ -2372,6 +2372,16 @@ export const en: Strings = {
      * step rather than saying "save failed".
      */
     bentoSaved: "Saved to the workspace",
+    /**
+     * Shown instead of {@link bentoSaved} when the save also removed collaboration credentials.
+     *
+     * Said out loud rather than done quietly: the block being removed is what makes the deck join a
+     * shared room, so a user who shared it deliberately is owed the reason it stopped, and the
+     * remedy — rotating the keys, which is what actually revokes the old room — is in Bento's own
+     * Share menu.
+     */
+    bentoCollabStripped:
+      "Saved to the workspace (sharing credentials removed; rotate the keys in Bento's Share menu to revoke the old ones)",
     bentoNoFrame: "Cannot save: the deck preview is not ready yet. Try again in a moment.",
     bentoNoAnswer: "Cannot save: the deck did not respond. Refresh the preview and retry.",
     bentoNoDocument: "Cannot save: the deck editor is not ready yet. Try again in a moment.",

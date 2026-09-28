@@ -61,10 +61,11 @@ When done, offer to open it (`open` / `xdg-open` / `start`): the file boots stra
    - [ ] a drill-down that would work better as a **state slide**?
    - [ ] one accent colour, at most two typefaces, 96px margins?
    - [ ] speaker notes on every slide?
-6. **Write back** the edited `#bento-doc` block (escaping `<` as `\u003c`), or return the replacement JSON. Never regenerate the whole HTML file.
+6. **Write back** the edited `#bento-doc` block (escaping `<` as `\u003c`), or return the replacement JSON. Never regenerate the whole HTML file. Strip any `collab` block on the way out — see the first gotcha.
 
 ## Critical gotchas
 
+- **Never leave a `collab` block in a deck you write.** A deck with collaboration switched on carries the credentials to that room in its own document — the room address, a symmetric key, and on an owner copy an EC **private key**, all in plaintext. Opening a deck mints dormant ones, so a file can pick them up just by being opened in the editor. Anything that receives the file receives the room: a chat, a ticket, a harness, **a model provider's logs** — and a deck in a workspace is read by the agent. Before you write a deck back, delete `collab` (and do not add one). Removing it does **not** revoke anything; whoever holds the old file still holds the old room, and only the deck's own *Share → Rotate keys* retracts it. Say so if you find one, rather than deleting it quietly.
 - **Charts:** bar and line series `data` must be **plain numbers** — `{value,…}` item objects coerce to 0, and only pie takes `{name,value}`. Colour by series, not per bar. `option` is pure JSON: template formatters only (`{b}` / `{c}` / `{d}`), never functions.
 - **Morph needs deterministic, stable ids** shared across the slides that should animate together. Different ids mean no morph — the elements just cut.
 - **Images and fonts must be embedded** as data URIs in `doc.assets` and referenced by `"asset:<key>"`, so the file stays self-contained.
