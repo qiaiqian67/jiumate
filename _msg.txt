@@ -1,0 +1,15 @@
+﻿feat(web): an Agent's skills can come from the Project's library
+
+The Skills tab could only take a skill by source (a URL, a repo, an upload) or from another
+Agent. The library the Project already has was not a source at all, so picking a skill off
+the library page and getting it onto an Agent meant a detour through the cards.
+
+It is now a source, listed per SKILL rather than per plugin, because a skill is what the
+reader came for. Each row names the plugin it ships in, since that is the real consequence
+of choosing it: installation is per plugin, so picking one skill installs that plugin whole
+and the skill becomes available by being on disk. There is no backend path that copies a
+single skill out of a plugin, and the copy says so rather than implying otherwise. A skill
+this Agent already has stays visible but inert, so the list does not change shape as things
+get added.
+
+No backend change: this is the same installAgentPlugins call the library page's cards make.

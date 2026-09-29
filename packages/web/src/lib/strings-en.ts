@@ -428,6 +428,7 @@ export const en: Strings = {
     save: "Save",
     cancel: "Cancel",
     close: "Close",
+    back: "Back",
     create: "Create",
     delete: "Delete",
     edit: "Edit",
@@ -1528,6 +1529,16 @@ export const en: Strings = {
     agentTabEmpty: "No skills installed yet",
     exportSkill: "Export",
     importSkill: "Import skill",
+    /** Library picker on the Agent's Skills tab: install one of the Project's library skills. */
+    pickFromLibrary: "Pick from library",
+    pickFromLibraryDesc:
+      "Skills install with their plugin: picking one installs its plugin on this Agent and makes that skill the default.",
+    pickFromLibraryTitle: "Pick a skill from the library",
+    pickFromLibraryEmpty: "The library has no installable skill yet",
+    pickComesWithPlugin: (plugin: string): string => `from plugin ${plugin}`,
+    pickAdd: "Add",
+    pickAlready: "Added",
+    alreadyInstalled: "Installed",
     importChatTitle: "Recommended: install by chatting with the agent",
     importChatWhy:
       "The agent can read, review and adapt the skill content in full — more reliable than a raw upload.",

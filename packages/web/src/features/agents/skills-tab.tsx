@@ -20,7 +20,11 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router";
-import type { SkillMetadataItem } from "@prismshadow/jiumate-server/api";
+import type {
+  PluginGroupItem,
+  PluginItem,
+  SkillMetadataItem,
+} from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";
@@ -29,6 +33,7 @@ import { useAuth } from "../../state/auth";
 import { useLocale } from "../../state/locale";
 import { agentDisplayName, useProject } from "../../state/project";
 import { Button } from "../../components/ui/button";
+import { Chevron } from "../../components/ui/chevron";
 import { CopiedStatus, CopyCheckGlyph, useCopied } from "../../components/ui/copy-button";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { Input, Textarea } from "../../components/ui/input";
@@ -41,7 +46,7 @@ import { SkeletonList } from "../../components/ui/skeleton";
 import { toastError, toastSuccess } from "../../components/ui/toast";
 import { SkillTile } from "../skills/skill-icon-view";
 import { SkillImportDialog } from "../skills/skill-import-dialog";
-import { localizedShortText } from "../chat/skill-use";
+import { localizedShortText, localizedText } from "../chat/skill-use";
 import { DRAFT_SESSION_ID } from "../chat/chat-page";
 import { draftKey, loadDraft, saveDraft } from "../chat/draft-cache";
 import { parkActiveDraft } from "../chat/draft-sessions";
@@ -102,6 +107,12 @@ export function SkillsTab({
   const [uploadError, setUploadError] = useState<string | null>(null);
   // Non-null shows the overwrite confirm (the archive POST answered 409 skill_exists).
   const [overwriting, setOverwriting] = useState<PendingOverwrite | null>(null);
+  /** Library picker: open flag, the fetched library (null while loading), and a fetch error. */
+  const [pickOpen, setPickOpen] = useState(false);
+  const [library, setLibrary] = useState<PluginGroupItem[] | null>(null);
+  const [pickError, setPickError] = useState<string | null>(null);
+  /** The plugin whose skills are being listed, and the one chosen inside it. */
+  const [pickPlugin, setPickPlugin] = useState<PluginItem | null>(null);
 
   const load = useCallback(async () => {
     if (!projectId || !agentId) return;
@@ -193,6 +204,52 @@ export function SkillsTab({
     setUploadError(null);
     setOverwriting(null);
     setImportOpen(true);
+  };
+
+  /**
+   * Open the library picker. The list is fetched on entry rather than kept warm: it is read
+   * once per pick, the fetch is a single GET, and a cached copy would go stale the moment
+   * someone installs the plugin on the library page.
+   */
+  const openPicker = async () => {
+    setPickOpen(true);
+    setLibrary(null);
+    setPickError(null);
+    setPickPlugin(null);
+    try {
+      setLibrary((await api.getPluginLibrary()).groups);
+    } catch (e) {
+      setPickError(apiErrorText(e));
+    }
+  };
+
+  /**
+   * Install the chosen skill's plugin onto this Agent. A library skill ships inside a plugin
+   * (PluginItem.skills), and installation is per plugin — `installAgentPlugins` writes every
+   * skill and hook the plugin carries. So picking one skill installs its plugin whole; there is
+   * no backend path that copies a single skill out of a plugin, and pretending otherwise would
+   * install nothing. Nothing is written to the Agent config: `config.skills` is the prompt
+   * injection feature switch (see prompt-injection-controls.tsx), not a selection list, so
+   * there is nothing to "pre-select" — the installed skill becomes available to the model by
+   * virtue of being on disk.
+   */
+  const installFromLibrary = async (plugin: PluginItem, skillName: string) => {
+    if (!projectId || !agentId) return;
+    setBusy(true);
+    try {
+      await api.installAgentPlugins(projectId, agentId, [plugin.name]);
+      toastSuccess(
+        `${S.plugins.installedToast(plugin.name, agentName)}${S.agent.takesEffectSuffix}`,
+      );
+      setPickOpen(false);
+      await load();
+      void reloadAgents();
+    } catch (e) {
+      toastError(apiErrorText(e));
+    } finally {
+      setBusy(false);
+    }
+    void skillName;
   };
 
   // The prompt tailors its lead sentence to the source kind (URL / repo / path / command /
@@ -297,11 +354,84 @@ export function SkillsTab({
           page puts its create action in the same slot above its table. It renders in every list
           state (loading, empty, populated) so the action never shifts and the dashed empty block
           keeps a header instead of standing alone; the modal carries both install paths. */}
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button size="sm" disabled={skills === null} onClick={() => void openPicker()}>
+          {S.skills.pickFromLibrary}
+        </Button>
         <Button size="sm" variant="primary" disabled={skills === null} onClick={openImport}>
           {S.skills.importSkill}
         </Button>
       </div>
+
+      {/* Library picker: a list, not a form — it copies in a skill the Project's library already
+          defines. One row per SKILL (not per plugin), because a skill is what the reader came
+          for; a skill this Agent already has stays visible but inert, so the list does not
+          silently change shape as things get added. */}
+      <Modal
+        open={pickOpen}
+        title={S.skills.pickFromLibraryTitle}
+        onClose={() => setPickOpen(false)}
+        footer={<Button onClick={() => setPickOpen(false)}>{S.common.close}</Button>}
+      >
+        <p className="text-xs text-gray-500 dark:text-gray-400">{S.skills.pickFromLibraryDesc}</p>
+        {pickError !== null ? (
+          <SettingsEmpty>{pickError}</SettingsEmpty>
+        ) : library === null ? (
+          <SkeletonList rows={4} />
+        ) : library.every((group) => group.plugins.length === 0) ? (
+          <SettingsEmpty>{S.skills.pickFromLibraryEmpty}</SettingsEmpty>
+        ) : (
+          <div className="mt-2 space-y-3">
+            {library.map((group) => {
+              const rows = group.plugins.flatMap((plugin) =>
+                plugin.skills.map((skill) => ({ plugin, skill })),
+              );
+              if (rows.length === 0) return null;
+              return (
+                <div key={group.id}>
+                  <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {localizedText(locale, group.title, group.titleZh)}
+                  </p>
+                  <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-800">
+                    {rows.map(({ plugin, skill }) => {
+                      const owned = skills !== null && skills.some((s) => s.name === skill.name);
+                      return (
+                        <div
+                          key={skill.name}
+                          className="flex items-center gap-3 border-b border-gray-100 px-3 py-2 last:border-b-0 dark:border-gray-800/60"
+                        >
+                          <SkillTile
+                            icon={skill.icon ?? plugin.icon}
+                            name={skill.name}
+                            size={28}
+                            glyph={16}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <span className="block truncate font-mono text-xs font-semibold">
+                              {skill.name}
+                            </span>
+                            <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                              {S.skills.pickComesWithPlugin(plugin.name)}
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={owned ? "ghost" : "primary"}
+                            disabled={owned || busy}
+                            onClick={() => void installFromLibrary(plugin, skill.name)}
+                          >
+                            {owned ? S.skills.pickAlready : S.skills.pickAdd}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Modal>
 
       {skills === null ? (
         <SkeletonList rows={4} />
@@ -394,6 +524,110 @@ export function SkillsTab({
           </section>
         }
       />
+
+      {/* Library picker: two levels, because installation is per plugin while the ask is per
+          skill. The plugin list is the honest unit (installing installs the whole thing), and
+          picking a plugin reveals what it would bring — so the effect of a click is never a
+          surprise. Skills this Agent already has show as installed rather than disappearing, so
+          the list keeps its shape. */}
+      <Modal
+        open={pickOpen}
+        title={S.skills.pickFromLibrary}
+        onClose={() => setPickOpen(false)}
+        footer={
+          <>
+            {pickPlugin !== null && (
+              <Button onClick={() => setPickPlugin(null)} disabled={busy}>
+                {S.common.back}
+              </Button>
+            )}
+            <Button onClick={() => setPickOpen(false)}>{S.common.close}</Button>
+          </>
+        }
+      >
+        <p className="text-xs text-gray-500 dark:text-gray-400">{S.skills.pickFromLibraryDesc}</p>
+        {pickError !== null ? (
+          <SettingsEmpty>{pickError}</SettingsEmpty>
+        ) : library === null ? (
+          <SkeletonList rows={3} />
+        ) : pickPlugin === null ? (
+          (() => {
+            const withSkills = (library ?? []).filter((g) =>
+              g.plugins.some((p) => p.skills.length > 0),
+            );
+            if (withSkills.length === 0) {
+              return <SettingsEmpty>{S.skills.pickFromLibraryEmpty}</SettingsEmpty>;
+            }
+            return (
+              <div className="space-y-3">
+                {withSkills.map((group) => (
+                  <div key={group.id}>
+                    <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
+                      {localizedText(locale, group.title, group.titleZh)}
+                    </p>
+                    <div className="divide-y divide-gray-100 overflow-hidden rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+                      {group.plugins
+                        .filter((p) => p.skills.length > 0)
+                        .map((p) => (
+                          <button
+                            key={p.name}
+                            type="button"
+                            disabled={busy}
+                            className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors duration-150 hover:bg-gray-50 disabled:opacity-60 dark:hover:bg-gray-800/40"
+                            onClick={() => setPickPlugin(p)}
+                          >
+                            <SkillTile icon={p.icon} name={p.name} size={28} glyph={16} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-mono text-xs font-semibold">
+                                {p.name}
+                              </span>
+                              <span className="block truncate text-[11px] text-gray-500 dark:text-gray-400">
+                                {localizedShortText(locale, p)}
+                              </span>
+                            </span>
+                            <span className="shrink-0 font-mono text-[11px] text-gray-400">
+                              {p.skills.length}
+                            </span>
+                            <Chevron open={false} className="text-gray-400" />
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()
+        ) : (
+          <div className="divide-y divide-gray-100 overflow-hidden rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+            {pickPlugin.skills.map((skill) => {
+              const has = (skills ?? []).some((s) => s.name === skill.name);
+              return (
+                <button
+                  key={skill.name}
+                  type="button"
+                  disabled={busy}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors duration-150 hover:bg-gray-50 disabled:opacity-60 dark:hover:bg-gray-800/40"
+                  onClick={() => void installFromLibrary(pickPlugin, skill.name)}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-mono text-xs font-semibold">
+                      {skill.name}
+                    </span>
+                    <span className="block truncate text-[11px] text-gray-500 dark:text-gray-400">
+                      {localizedShortText(locale, skill)}
+                    </span>
+                  </span>
+                  {has && (
+                    <span className="shrink-0 text-[11px] text-gray-400">
+                      {S.skills.alreadyInstalled}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </Modal>
 
       {/* Overwrite confirmation: the import modal stays underneath, so cancel returns to it; confirm resends the same zip with overwrite: true. */}
       <ConfirmModal
