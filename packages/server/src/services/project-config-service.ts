@@ -33,6 +33,7 @@ import {
   DEFAULT_COMMAND_POLICY_RULES,
   effectiveCommandPolicyRules,
   parseCommandPolicy,
+  parseMcpServers,
   GenerativeModel,
   canonicalClientType,
   listEndpointModels as coreListEndpointModels,
@@ -49,6 +50,7 @@ import { providerInfo } from "@prismshadow/jiumate-core/model-catalog";
 import type {
   CommandPolicyRule,
   LLMOutcome,
+  MCPServerConfig,
   ModelRef,
   OmniMessage,
   ProjectConfig,
@@ -529,6 +531,30 @@ export class ProjectConfigService {
     }));
     await this.writeRaw(projectId, { ...raw, command_policy: block });
     return this.getCommandPolicy(projectId);
+  }
+
+  /**
+   * The Project's MCP registry (`[[mcp_servers]]`) — the centrally managed list an Agent's
+   * `tools.mcpServers` selects from. Read through core's tolerant parser so this GET can
+   * never disagree with what an Agent would actually connect with: an entry the Environment
+   * would reject is already gone by the time it reaches the response.
+   */
+  async getMcpServers(projectId: string): Promise<MCPServerConfig[]> {
+    const raw = await this.readRaw(projectId);
+    return parseMcpServers(raw.mcp_servers) ?? [];
+  }
+
+  /**
+   * Replaces the whole registry (declarative PUT, validated at the route). Read-modify-write
+   * like setCommandPolicy, preserving every other key. An empty list is written as an
+   * explicit empty array rather than by removing the key, so "nothing registered" is a
+   * state the file records instead of an ambiguity.
+   */
+  async setMcpServers(projectId: string, servers: MCPServerConfig[]): Promise<MCPServerConfig[]> {
+    const raw = await this.readRaw(projectId);
+    const block = servers.map((s) => ({ name: s.name, config: s.config }));
+    await this.writeRaw(projectId, { ...raw, mcp_servers: block });
+    return this.getMcpServers(projectId);
   }
 
   /** Pricing lookup for usage-recorder: the current pricing for this paired reference (undefined if none -> cost is NULL). */

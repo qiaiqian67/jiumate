@@ -30,9 +30,11 @@ import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import type {
   CommandPolicyConfig,
   CommandPolicyRule,
+  MCPServerConfig,
   ThinkingLevelName,
 } from "../interfaces/index.js";
 import { atomicWriteFile } from "../internal/atomic-write.js";
+import { resolveMCPServers } from "../environment/mcp/config.js";
 import { DEFAULT_COMMAND_POLICY_RULES } from "./command-policy-defaults.js";
 import { canonicalClientType, presetModelEntries } from "./model-catalog.js";
 import { projectConfigPath } from "./paths.js";
@@ -194,6 +196,19 @@ export interface ProjectConfig {
    * key, and dropping `enabled` falls back to on.
    */
   command_policy?: CommandPolicyConfig;
+  /**
+   * The Project's MCP server registry (`[[mcp_servers]]`): the centrally managed list that
+   * an Agent's `tools.mcpServers` selects from, edited in one place instead of once per
+   * Agent. Entries carry the same `{ name, config }` shape the Agent side uses, so a
+   * selection is a copy of the entry — an Agent is still self-contained in its own file,
+   * and nothing it does can leave another Agent pointing at a server it never chose.
+   *
+   * Absent by default. Loaded tolerantly: an entry is kept only if the **shared transport
+   * resolver** accepts it (the same one the Environment connects with), so a malformed or
+   * duplicate entry drops instead of failing the load — a broken registry must never make
+   * an Agent unable to start. A dropped entry is reported by whoever writes the file.
+   */
+  mcp_servers?: MCPServerConfig[];
   models: ModelEntry[];
 }
 
@@ -336,6 +351,40 @@ export function parseCommandPolicy(value: unknown): CommandPolicyConfig | undefi
 }
 
 /**
+ * Leniently parses the `[[mcp_servers]]` registry. An entry is kept only when the shared
+ * transport resolver accepts it and its name is the first of its kind — the same rules the
+ * Environment applies when it connects — so a malformed or duplicate entry drops rather
+ * than blocking the load. The **original** entry is preserved (not the resolver's flattened
+ * form) so keys this version does not understand survive a read→write round trip.
+ *
+ * Returns `undefined` when the key is absent or not a list, so a read→write round trip
+ * leaves a file that never had a registry alone (the `default_chat` / `command_policy`
+ * convention); an explicit empty list is a deliberate "nothing registered" and stays.
+ */
+export function parseMcpServers(value: unknown): MCPServerConfig[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const entries = value.filter(
+    (e): e is MCPServerConfig =>
+      e !== null &&
+      typeof e === "object" &&
+      !Array.isArray(e) &&
+      typeof (e as MCPServerConfig).name === "string" &&
+      (e as MCPServerConfig).config !== null &&
+      typeof (e as MCPServerConfig).config === "object",
+  );
+  const { servers } = resolveMCPServers(entries);
+  const accepted = new Set(servers.map((s) => s.name));
+  const seen = new Set<string>();
+  const out: MCPServerConfig[] = [];
+  for (const entry of entries) {
+    if (!accepted.has(entry.name) || seen.has(entry.name)) continue;
+    seen.add(entry.name);
+    out.push(entry);
+  }
+  return out;
+}
+
+/**
  * Narrows an already-parsed `.project_config.toml` table into a typed `ProjectConfig`
  * (`file` is used in error messages only). Shared by `loadProjectConfig` and callers that
  * hold a cached parse of the same file (the server's ProjectConfigService), so the two
@@ -353,12 +402,14 @@ export function projectConfigFromTable(
   const visionModel = parseRefField(file, "vision_model", parsed.vision_model);
   const defaultChat = parseDefaultChat(parsed.default_chat);
   const commandPolicy = parseCommandPolicy(parsed.command_policy);
+  const mcpServers = parseMcpServers(parsed.mcp_servers);
   return {
     ...(parsed.name !== undefined ? { name: parsed.name as string } : {}),
     ...(defaultModel !== undefined ? { default_model: defaultModel } : {}),
     ...(visionModel !== undefined ? { vision_model: visionModel } : {}),
     ...(defaultChat !== undefined ? { default_chat: defaultChat } : {}),
     ...(commandPolicy !== undefined ? { command_policy: commandPolicy } : {}),
+    ...(mcpServers !== undefined ? { mcp_servers: mcpServers } : {}),
     models: ((parsed.models as unknown[] | undefined) ?? []).map((m) => assertModelEntry(file, m)),
   };
 }

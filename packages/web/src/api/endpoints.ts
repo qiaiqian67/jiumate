@@ -241,6 +241,20 @@ export const putChatDefaults = (projectId: string, body: ChatDefaultsDto) =>
 export const getCommandPolicy = (projectId: string) =>
   apiFetch<CommandPolicyDto>(`/api/projects/${encodeURIComponent(projectId)}/command-policy`);
 
+/**
+ * Project MCP registry (`[[mcp_servers]]`): the centrally managed server list that each
+ * Agent's `tools.mcpServers` selects from. Member-readable — an Agent's picker shows it too.
+ */
+export const getMcpServers = (projectId: string) =>
+  apiFetch<MCPServerConfig[]>(`/api/projects/${encodeURIComponent(projectId)}/mcp-servers`);
+
+/** Whole-registry replace (owner): the full list is required and gets materialized into the config. */
+export const putMcpServers = (projectId: string, servers: MCPServerConfig[]) =>
+  apiFetch<MCPServerConfig[]>(`/api/projects/${encodeURIComponent(projectId)}/mcp-servers`, {
+    method: "PUT",
+    body: { mcp_servers: servers },
+  });
+
 /** Whole-block replace (owner): the full rule list is required and gets materialized into the config. */
 export const putCommandPolicy = (
   projectId: string,
