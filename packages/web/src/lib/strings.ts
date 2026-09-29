@@ -1583,7 +1583,7 @@ export const zh = {
       `确定移除「${name}」？仅从侧边栏移除该工作区分组，不影响磁盘目录与已有会话，可随时重新添加。`,
     tempWorkspaces: "临时工作区",
     newSessionInWorkspace: "在此工作区新建对话",
-    draftSubtitle: "最擅长 AI 开发任务的自进化 Agent",
+    draftSubtitle: "最懂你节奏，默契共事的智能伙伴。",
     /** The draft screen's picker's last tab: prompts the user saved themselves (see user-shortcuts.ts). */
     shortcuts: {
       folder: "我的快捷指令",

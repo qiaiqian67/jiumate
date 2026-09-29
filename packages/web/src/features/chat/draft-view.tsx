@@ -49,10 +49,8 @@ import type {
 } from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
-import { formatMonthDay } from "../../lib/format";
 import { apiErrorText } from "../../lib/api-error";
 import { useAuth } from "../../state/auth";
-import { useLocale } from "../../state/locale";
 import { agentDisplayName, useProject } from "../../state/project";
 import { useSessions } from "../../state/sessions";
 import { AgentAvatar } from "../../components/ui/agent-avatar";
@@ -60,9 +58,6 @@ import { Chevron } from "../../components/ui/chevron";
 import { Dropdown } from "../../components/ui/dropdown";
 import { JiuMateLogo } from "../../components/ui/jiumate-logo";
 import { toastError } from "../../components/ui/toast";
-import { useVersionInfo } from "../../lib/use-version-info";
-import { versionBadgeFor } from "../../lib/update-flow";
-import { openUpdateModal, useUpdateFlow } from "../../lib/use-update-flow";
 import { ChatInput } from "./chat-input";
 import type { ComposerControl } from "./chat-input";
 import { adoptDockScope } from "../dock/dock-state";
@@ -697,11 +692,10 @@ export function DraftView({
             share of a small box than the artwork's own corner and would clip it. */}
         <div className="mb-10 text-center">
           <JiuMateLogo className="mx-auto mb-1 h-16 w-16" />
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-            {S.appName}
+          <h1 className="text-[15px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+            经邦·九川
           </h1>
           <p className="mt-2 text-base text-gray-400 dark:text-gray-500">{S.chat.draftSubtitle}</p>
-          <VersionLine />
         </div>
 
         <ChatInput
@@ -759,82 +753,6 @@ export function DraftView({
       {/* Lower symmetric space — empty, so it matches the upper one exactly */}
       <div className="flex-1" />
     </div>
-  );
-}
-
-/**
- * Superscript "new version" hint on the version line: plain small text raised via
- * align-super, in the version line's own muted color and weight. Deliberately not a pill —
- * user feedback was that the earlier accent-colored pill read as a button; the link case
- * only adds a hover underline. The only remaining copy: the sidebar's version row dropped
- * its badge when the three update rows collapsed into one whose label already names the
- * new version.
- */
-const versionBadgeClass =
-  "ml-1.5 inline-block align-super text-[10px] leading-4 text-gray-400 dark:text-gray-500";
-
-/**
- * Quiet version line under the brand subtitle: `vX.Y.Z · Last updated Jul 26`
- * (localized per dictionary). The product name is not repeated here — the brand wordmark
- * sits directly above, and the sidebar's version footer is bare `vX.Y.Z` too. The date is
- * the running version's release
- * date, stamped into core's BUILD_DATE at build time — displayed as-is, no network;
- * dev builds and releases that predate the stamping (v0.1.2 and earlier) carry null
- * and show the version alone. When the update flow has something waiting — a release
- * offered, a download in the background, a restart pending — a small superscript badge
- * follows, a button into the update modal (the same modal the sidebar's update row opens).
- * Fetching starts on mount — useVersionInfo caches at module level, so after the first
- * resolution anywhere in the app this renders instantly and never refetches. Nothing
- * renders until the version resolves (no placeholder flicker under the brand).
- */
-function VersionLine() {
-  const { locale } = useLocale();
-  const { version } = useVersionInfo(true);
-  if (version === null) return null;
-  const date = version.buildDate;
-  return (
-    <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
-      {`v${version.version}${
-        date !== null ? ` · ${S.update.lastUpdated(formatMonthDay(date, locale))}` : ""
-      }`}
-      <VersionBadge />
-    </p>
-  );
-}
-
-/**
- * The superscript on the version line: a button into the update modal, worded by where the
- * flow stands. Its title and accessible name carry the update row's own sentence, so the
- * two surfaces say the same thing about the same release.
- */
-function VersionBadge() {
-  const { mode, flow } = useUpdateFlow();
-  const badge = versionBadgeFor(flow);
-  if (mode === "none" || badge === null) return null;
-  const text =
-    badge === "available"
-      ? S.update.newVersionBadge
-      : badge === "downloading"
-        ? S.update.badgeDownloading
-        : S.update.badgeReady;
-  const note =
-    flow.kind === "available"
-      ? S.update.newVersion(flow.version)
-      : flow.kind === "downloading"
-        ? S.update.rowDownloading(flow.version, flow.percent)
-        : flow.kind === "ready"
-          ? S.update.restartToUpdate(flow.version)
-          : text;
-  return (
-    <button
-      type="button"
-      onClick={openUpdateModal}
-      title={note}
-      aria-label={note}
-      className={`${versionBadgeClass} hover:underline`}
-    >
-      {text}
-    </button>
   );
 }
 

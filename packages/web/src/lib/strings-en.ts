@@ -1617,7 +1617,7 @@ export const en: Strings = {
       `Remove "${name}"? This only removes the workspace group from the sidebar — the directory on disk and existing chats are untouched, and it can be re-added anytime.`,
     tempWorkspaces: "Temporary workspaces",
     newSessionInWorkspace: "New chat in this workspace",
-    draftSubtitle: "The self-evolving agent that excels at AI development tasks",
+    draftSubtitle: "The teammate who knows your rhythm and works in step with you.",
     /** The draft screen's picker's last tab: prompts the user saved themselves (see user-shortcuts.ts). */
     shortcuts: {
       folder: "My shortcuts",
