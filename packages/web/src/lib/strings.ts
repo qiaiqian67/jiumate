@@ -1415,6 +1415,11 @@ export const zh = {
     installedForAgent: (n: number): string => `当前 Agent 已装 ${n} 个`,
     /** The leading category chip: no filter. */
     allCategories: "全部",
+    /** Add-a-skill button in the header: opens the same source dialog the Agent's Skills tab uses. */
+    addSkill: "添加技能",
+    addSkillHint: "按来源添加技能：安装由当前选中的 Agent 在聊天里执行",
+    /** Why the button is disabled: the install prompt has to land on some Agent. */
+    addSkillNeedsAgent: "先在顶部选择一个 Agent，安装提示词需要一个执行者",
     /** Shown in place of the groups when a search matches nothing. */
     noMatch: (query: string): string => `没有匹配「${query}」的插件`,
     /** Usage count in the card metadata (shows "unused" instead of a bare 0). */

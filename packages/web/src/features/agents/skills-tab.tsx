@@ -40,6 +40,7 @@ import { SettingsEmpty } from "../../components/ui/empty-state";
 import { SkeletonList } from "../../components/ui/skeleton";
 import { toastError, toastSuccess } from "../../components/ui/toast";
 import { SkillTile } from "../skills/skill-icon-view";
+import { SkillImportDialog } from "../skills/skill-import-dialog";
 import { localizedShortText } from "../chat/skill-use";
 import { DRAFT_SESSION_ID } from "../chat/chat-page";
 import { draftKey, loadDraft, saveDraft } from "../chat/draft-cache";
@@ -366,54 +367,16 @@ export function SkillsTab({
 
       {promptSection}
 
-      {/* Import modal: recommended chat install on top, zip upload below. */}
-      <Modal
+      {/* Import dialog: the shared source half, plus this surface's own archive upload.
+          The upload stays here (and only here) because it writes to THIS Agent's directory;
+          the source half is shared with the library page, where no Agent is in scope. */}
+      <SkillImportDialog
         open={importOpen}
-        title={S.skills.importSkill}
         onClose={() => setImportOpen(false)}
-        widthClass="sm:max-w-lg"
-      >
-        <div className="space-y-4">
-          <section>
-            <p className="text-sm font-medium">{S.skills.importChatTitle}</p>
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              {S.skills.importChatWhy}
-            </p>
-            <div className="mt-2.5 space-y-2.5">
-              <Input
-                size="sm"
-                label={S.skills.importSourceLabel}
-                hint={S.skills.importSourceHint}
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                placeholder={S.skills.importSourcePlaceholder}
-                autoComplete="off"
-              />
-              <Textarea
-                label={S.skills.importPromptLabel}
-                size="sm"
-                rows={5}
-                readOnly
-                value={chatPrompt}
-                className="text-gray-600 dark:text-gray-300"
-              />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  disabled={trimmedSource === ""}
-                  onClick={() => promptCopy.flash(buildImportPrompt(trimmedSource))}
-                >
-                  <CopyCheckGlyph copied={promptCopy.copied} size={12} />
-                  {S.skills.importCopyPrompt}
-                </Button>
-                <CopiedStatus copied={promptCopy.copied} />
-                <Button size="sm" variant="primary" onClick={openChat}>
-                  {S.skills.importOpenChat}
-                </Button>
-              </div>
-            </div>
-          </section>
-
+        source={source}
+        onSourceChange={setSource}
+        onOpenChat={openChat}
+        extra={
           <section className="border-t border-gray-200 pt-4 dark:border-gray-800">
             <p className="text-sm font-medium">{S.skills.importUploadTitle}</p>
             <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
@@ -429,8 +392,8 @@ export function SkillsTab({
               <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{uploadError}</p>
             )}
           </section>
-        </div>
-      </Modal>
+        }
+      />
 
       {/* Overwrite confirmation: the import modal stays underneath, so cancel returns to it; confirm resends the same zip with overwrite: true. */}
       <ConfirmModal

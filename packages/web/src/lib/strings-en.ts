@@ -1445,6 +1445,11 @@ export const en: Strings = {
     installedForAgent: (n: number): string => `${n} on this Agent`,
     /** The leading category chip: no filter. */
     allCategories: "All",
+    /** Add-a-skill button in the header: opens the same source dialog the Agent's Skills tab uses. */
+    addSkill: "Add skill",
+    addSkillHint: "Add a skill by source: the Agent selected up top runs the install in chat",
+    /** Why the button is disabled: the install prompt has to land on some Agent. */
+    addSkillNeedsAgent: "Select an Agent above first — the install prompt needs someone to run it",
     /** Shown in place of the groups when a search matches nothing. */
     noMatch: (query: string): string => `No plugin matches “${query}”`,
     /** Section labels of the plugin detail Modal. */

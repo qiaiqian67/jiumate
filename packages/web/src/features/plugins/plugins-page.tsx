@@ -80,6 +80,8 @@ import { ConnectorsTab } from "./connectors-tab";
 import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
 import { SkillTile } from "../skills/skill-icon-view";
+import { SkillImportDialog } from "../skills/skill-import-dialog";
+import { buildImportPrompt } from "../agents/skill-import-source";
 import { InfoPopover } from "../../components/ui/info-popover";
 import { HelpFold } from "../../components/ui/help-fold";
 import { ICON_SIZE } from "../../lib/icon-scale";
@@ -216,6 +218,9 @@ export function PluginsPage() {
   const [query, setQuery] = useState("");
   /** Active category chip (null = all): narrows the sections to one, like the reference chips. */
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
+  /** Add-a-skill dialog (open flag + the source text the caller owns). */
+  const [importOpen, setImportOpen] = useState(false);
+  const [importSource, setImportSource] = useState("");
   const navigate = useNavigate();
   const { locale } = useLocale();
   const userId = useAuth().user?.userId ?? null;
@@ -466,6 +471,35 @@ export function PluginsPage() {
   };
 
   /**
+   * "Add skill": opens a chat on the Agent selected up top to run the install prompt for
+   * whatever source was typed. Mirrors quickInvoke — the draft cache is the same mechanism —
+   * with two differences that matter: the text is the generated install prompt rather than a
+   * canned invocation body, and `skills` is cleared because installing a skill is not invoking
+   * one (a leftover pre-selection would ride along). `handoffAgentId` is cleared for the same
+   * reason quickInvoke clears it: a stale handoff target would forward the install prompt to a
+   * different Agent than the one selected here.
+   */
+  const openSkillImportChat = () => {
+    const agentId = currentAgent?.agentId;
+    const trimmed = importSource.trim();
+    if (!agentId || trimmed === "") return;
+    if (userId && projectId) {
+      parkActiveDraft(userId, projectId);
+      const key = draftKey(userId, projectId);
+      saveDraft(key, {
+        ...loadDraft(key),
+        agentId,
+        text: buildImportPrompt(trimmed),
+        skills: [],
+        handoffAgentId: undefined,
+      });
+    }
+    setCurrentAgentId(agentId);
+    setImportOpen(false);
+    navigate(`/chat/${DRAFT_SESSION_ID}`, { state: { agentId } });
+  };
+
+  /**
    * The library narrowed by the search box: a plugin matches on its name and on whichever
    * description applies to the active language, and a category left with no match drops out
    * entirely — an empty group header is noise, and browsing by category is still the point
@@ -545,6 +579,24 @@ export function PluginsPage() {
               <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
                 {S.plugins.installedForAgent(installedPluginsForCurrentAgent)}
               </span>
+            )}
+            {tab === "skills" && (
+              <Button
+                size="sm"
+                variant="primary"
+                className="shrink-0 whitespace-nowrap"
+                disabled={currentAgent === null}
+                title={
+                  currentAgent === null ? S.plugins.addSkillNeedsAgent : S.plugins.addSkillHint
+                }
+                onClick={() => {
+                  setImportSource("");
+                  setImportOpen(true);
+                }}
+              >
+                <PlusIcon size={13} strokeWidth={1.7} />
+                {S.plugins.addSkill}
+              </Button>
             )}
           </div>
         </div>
@@ -695,6 +747,17 @@ export function PluginsPage() {
           overwriting reinstall — and the same primary (overwrite) tone, with the list naming
           every plugin the batch would rewrite. Confirm-first is the point of the button: it
           overwrites many installs in one press, and a single one already asks. */}
+      {/* Add-a-skill: the same source dialog the Agent's Skills tab opens, minus its archive
+          upload — that one writes to an Agent's own directory, which this page has no way to
+          name. The chat it opens lands on the Agent selected up top. */}
+      <SkillImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        source={importSource}
+        onSourceChange={setImportSource}
+        onOpenChat={openSkillImportChat}
+      />
+
       {pendingBulk !== null && (
         <ConfirmModal
           open
