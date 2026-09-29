@@ -52,7 +52,7 @@ export function LibraryCard({
   return (
     // h-full + the meta line's mt-auto keep the bottoms of a row aligned when one card's
     // description runs to two lines and its neighbour's takes one.
-    <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-4 transition-shadow duration-150 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+    <div className="group flex h-full flex-col rounded-xl border border-gray-200 bg-white p-4 transition-shadow duration-150 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
       <div className="flex items-start gap-2">
         {onOpen ? (
           <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 text-left">
@@ -61,7 +61,10 @@ export function LibraryCard({
         ) : (
           header
         )}
-        {action !== undefined && <div className="flex shrink-0 items-center">{action}</div>}
+        {action !== undefined && (
+          // Reserve the row's height so revealing the actions on hover cannot reflow the name.
+          <div className="flex min-h-8 shrink-0 items-center">{action}</div>
+        )}
       </div>
       <p
         className="mt-3 line-clamp-2 text-[13px] leading-5 text-gray-500 dark:text-gray-400"

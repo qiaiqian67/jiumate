@@ -1458,6 +1458,8 @@ export const en: Strings = {
     uninstalledToast: (plugin: string, agent: string): string =>
       `Uninstalled ${plugin} from ${agent}`,
     updateOutdated: (n: number): string => `Update available: update ${n} agent install(s)`,
+    /** Tooltip of the upgrade button when nothing is waiting (the button stays visible but disabled). */
+    upToDate: "Already up to date",
     updateConfirmTitle: (name: string): string => `Update ${name}`,
     updateConfirmWarning: (name: string): string =>
       `Updating ${name} reinstalls the library copy over each agent's installed skill and hook files — any local edits are lost. Export a backup first if you need them.`,

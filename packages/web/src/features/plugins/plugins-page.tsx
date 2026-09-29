@@ -63,6 +63,7 @@ import { Chevron } from "../../components/ui/chevron";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { Input } from "../../components/ui/input";
 import { CheckIcon, PLUGIN_ICON, PlusIcon, SEND_ICON } from "../../components/ui/icons";
+import { TRASH_ICON } from "../../components/ui/session-row-menu";
 import { LibraryCard } from "./library-card";
 import { Modal } from "../../components/ui/modal";
 import { TodoNotice } from "../../components/ui/todo-notice";
@@ -547,9 +548,6 @@ export function PluginsPage() {
             )}
           </div>
         </div>
-        <HelpFold className="mt-2.5" label={S.plugins.pageTitle}>
-          {S.plugins.pageDesc}
-        </HelpFold>
         {tab === "connectors" ? (
           <div className="mt-6">
             <ConnectorsTab />
@@ -809,27 +807,33 @@ function PluginCard({
         meta={meta}
         onOpen={() => setDetailOpen(true)}
         action={
-          <div className="flex shrink-0 items-center gap-1.5">
-            {/* Light (secondary): an update nudge, not the card's primary action. The last stop on
-              the plugins trail, so it carries the dot itself — straddling the top-right
-              corner of the button's border, the anchoring rule update-dot.tsx states for a
-              button. */}
-            {outdated.length > 0 && (
-              <Button
-                size="sm"
-                variant="secondary"
-                className="relative h-8 w-8 shrink-0 justify-center p-0"
-                aria-label={`${S.plugins.updateOutdated(outdated.length)} ${plugin.name}`}
-                title={S.plugins.updateOutdated(outdated.length)}
-                onClick={() => setPendingUpdate(outdated)}
-              >
-                <GlyphIcon d={UPDATE_ICON} size={ICON_SIZE.iconButton} />
+          // Shown on hover (or focus, so the keyboard reaches them): four buttons on a card
+          // this wide would otherwise sit on top of the name, which is the one thing the card
+          // has to say.
+          <div className="flex shrink-0 items-center gap-1.5 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100">
+            {/* Upgrade: always present so the affordance is findable, disabled with the reason in
+                its tooltip once the library and every installed copy agree. Carries the update
+                dot itself when something IS waiting — straddling the top-right corner of the
+                button's border, the anchoring rule update-dot.tsx states for a button. */}
+            <Button
+              size="sm"
+              variant="secondary"
+              className="relative h-8 w-8 shrink-0 justify-center p-0"
+              aria-label={`${S.skills.updateAction} ${plugin.name}`}
+              title={
+                outdated.length > 0 ? S.plugins.updateOutdated(outdated.length) : S.plugins.upToDate
+              }
+              disabled={outdated.length === 0}
+              onClick={() => setPendingUpdate(outdated)}
+            >
+              <GlyphIcon d={UPDATE_ICON} size={ICON_SIZE.iconButton} />
+              {outdated.length > 0 && (
                 <UpdateDot
                   size="inline"
                   position="right-0.5 top-0.5 -translate-y-1/2 translate-x-1/2"
                 />
-              </Button>
-            )}
+              )}
+            </Button>
             {plugin.skills.length > 0 && (
               <Button
                 size="sm"
@@ -856,12 +860,14 @@ function PluginCard({
             >
               <GlyphIcon d={INSTALL_ICON} size={ICON_SIZE.iconButton} />
             </Button>
-            {/* The corner action the reference layout leads with: install on the Agent selected
-              right now, without opening the per-Agent list. Installing this Agent's own copy
-              is the same operation the list performs, so it goes through the same handler;
-              `installing` only stops a double click landing two installs. */}
+            {/* Install / uninstall on the Agent selected right now, without opening the
+              per-Agent list. Uninstalling deletes that Agent's files, so it wears the danger
+              variant and the trash glyph the Agent's own skill rows use — the same act, marked
+              the same way — and it confirms before it runs. `installing` only stops a double
+              click landing two installs. */}
             <Button
               size="sm"
+              variant={isInstalledOnCurrentAgent ? "danger" : "primary"}
               className="h-8 w-8 shrink-0 justify-center p-0"
               aria-label={
                 isInstalledOnCurrentAgent
@@ -872,16 +878,18 @@ function PluginCard({
               disabled={currentAgent === null || installing}
               onClick={() => {
                 if (!currentAgent) return;
+                if (isInstalledOnCurrentAgent) {
+                  setPendingUninstall(currentAgent.agentId);
+                  return;
+                }
                 setInstalling(true);
-                void onToggleInstall(
-                  currentAgent.agentId,
-                  plugin,
-                  !isInstalledOnCurrentAgent,
-                ).finally(() => setInstalling(false));
+                void onToggleInstall(currentAgent.agentId, plugin, true).finally(() =>
+                  setInstalling(false),
+                );
               }}
             >
               {isInstalledOnCurrentAgent ? (
-                <CheckIcon size={ICON_SIZE.iconButton} />
+                <GlyphIcon d={TRASH_ICON} size={ICON_SIZE.iconButton} />
               ) : (
                 <PlusIcon size={ICON_SIZE.iconButton} strokeWidth={1.7} />
               )}

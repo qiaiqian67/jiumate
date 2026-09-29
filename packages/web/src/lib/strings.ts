@@ -1428,6 +1428,8 @@ export const zh = {
     installedToast: (plugin: string, agent: string): string => `已将 ${plugin} 安装到 ${agent}`,
     uninstalledToast: (plugin: string, agent: string): string => `已从 ${agent} 卸载 ${plugin}`,
     updateOutdated: (n: number): string => `有新版本：更新 ${n} 个 Agent 的安装`,
+    /** Tooltip of the upgrade button when nothing is waiting (the button stays visible but disabled). */
+    upToDate: "已是最新版本",
     updateConfirmTitle: (name: string): string => `更新 ${name}`,
     updateConfirmWarning: (name: string): string =>
       `更新 ${name} 会把库内当前副本重装到各 Agent，覆盖其已安装的技能与钩子文件——本地改动会丢失，如有需要请先导出备份。`,

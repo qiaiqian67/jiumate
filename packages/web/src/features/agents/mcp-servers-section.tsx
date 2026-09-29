@@ -177,6 +177,8 @@ export function McpServersSection({
   const [testAllOpen, setTestAllOpen] = useState(false);
   const [testAllRunning, setTestAllRunning] = useState(false);
   const [rowResults, setRowResults] = useState<Map<string, RowTestResult>>(new Map());
+  /** Open detail modal (index into `servers`, null = closed): the browsing layout's card click. */
+  const [detailIndex, setDetailIndex] = useState<number | null>(null);
   // Registry picker: open flag, the fetched list (null while loading), and a fetch error.
   const [pickOpen, setPickOpen] = useState(false);
   const [registry, setRegistry] = useState<MCPServerConfig[] | null>(null);
@@ -275,6 +277,27 @@ export function McpServersSection({
     setEditIndex(index);
     setFieldErrors({});
     setModalError(null);
+  };
+
+  /**
+   * Probes one stored entry ("连接" on the detail modal): the same route the form's own test
+   * uses, on the saved config rather than unsaved form state. The verdict lands in
+   * `rowResults`, so the card and the table row show it the same way.
+   */
+  const testOne = async (entry: MCPServerConfig) => {
+    setRowResults((prev) => new Map(prev).set(entry.name, "pending"));
+    const started = Date.now();
+    try {
+      const res = await target.test(entry);
+      setRowResults((prev) =>
+        new Map(prev).set(entry.name, {
+          ...res,
+          latencyMs: res.latencyMs ?? Date.now() - started,
+        }),
+      );
+    } catch (e) {
+      setRowResults((prev) => new Map(prev).set(entry.name, { ok: false, error: apiErrorText(e) }));
+    }
   };
 
   const closeModal = () => {
