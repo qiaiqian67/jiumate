@@ -1435,9 +1435,16 @@ export const en: Strings = {
     pluginCount: (n: number): string => (n === 1 ? "1 plugin" : `${n} plugins`),
     /** Content badge for each hook point a plugin's hook package answers at (e.g. "stop hook"); also the chips on the settings Hooks tab. */
     hookBadge: (event: string): string => `${event} hook`,
-    searchPlaceholder: "Search plugins",
+    searchPlaceholder: "Search skills",
     /** Search box on the library page itself (accessible name). */
     searchLabel: "Search skills",
+    /** The connectors tab's search box (the registry is a list of its own). */
+    searchConnectorsPlaceholder: "Search connectors",
+    searchConnectorsLabel: "Search connectors",
+    /** Count beside the search box: library plugins installed on the Agent selected right now. */
+    installedForAgent: (n: number): string => `${n} on this Agent`,
+    /** The leading category chip: no filter. */
+    allCategories: "All",
     /** Shown in place of the groups when a search matches nothing. */
     noMatch: (query: string): string => `No plugin matches “${query}”`,
     /** Section labels of the plugin detail Modal. */

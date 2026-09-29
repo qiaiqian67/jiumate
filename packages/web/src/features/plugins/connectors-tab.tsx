@@ -56,6 +56,7 @@ export function ConnectorsTab() {
     test: (entry) => api.testMcpRegistryServer(projectId, entry),
     savedMessage: S.plugins.connectorsSavedToast,
     readOnly: !isOwner,
+    layout: "cards",
   };
 
   return (

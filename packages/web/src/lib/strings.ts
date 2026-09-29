@@ -1405,9 +1405,16 @@ export const zh = {
     /** Content badge for each hook point a plugin's hook package answers at (e.g. "stop 钩子"); also the chips on the settings Hooks tab. */
     hookBadge: (event: string): string => `${event} 钩子`,
     /** Search box of the create dialog's plugin picker. */
-    searchPlaceholder: "搜索插件",
+    searchPlaceholder: "搜索技能",
     /** Search box on the library page itself (accessible name). */
     searchLabel: "搜索技能",
+    /** The connectors tab's search box (the registry is a list of its own). */
+    searchConnectorsPlaceholder: "搜索连接器",
+    searchConnectorsLabel: "搜索连接器",
+    /** Count beside the search box: library plugins installed on the Agent selected right now. */
+    installedForAgent: (n: number): string => `当前 Agent 已装 ${n} 个`,
+    /** The leading category chip: no filter. */
+    allCategories: "全部",
     /** Shown in place of the groups when a search matches nothing. */
     noMatch: (query: string): string => `没有匹配「${query}」的插件`,
     /** Usage count in the card metadata (shows "unused" instead of a bare 0). */

@@ -62,7 +62,8 @@ import { Button } from "../../components/ui/button";
 import { Chevron } from "../../components/ui/chevron";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { Input } from "../../components/ui/input";
-import { PLUGIN_ICON, SEND_ICON } from "../../components/ui/icons";
+import { CheckIcon, PLUGIN_ICON, PlusIcon, SEND_ICON } from "../../components/ui/icons";
+import { LibraryCard } from "./library-card";
 import { Modal } from "../../components/ui/modal";
 import { TodoNotice } from "../../components/ui/todo-notice";
 import { UpdateDot } from "../../components/ui/update-dot";
@@ -79,7 +80,17 @@ import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
 import { SkillTile } from "../skills/skill-icon-view";
 import { InfoPopover } from "../../components/ui/info-popover";
+import { HelpFold } from "../../components/ui/help-fold";
 import { ICON_SIZE } from "../../lib/icon-scale";
+
+/** Category chip on the library page: filled when it is the active filter, outlined otherwise. */
+function chipClass(active: boolean): string {
+  return `shrink-0 rounded-full px-3 py-1 text-xs transition-colors duration-150 ${
+    active
+      ? "bg-gray-900 font-medium text-white dark:bg-gray-100 dark:text-gray-900"
+      : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+  }`;
+}
 
 /**
  * What one Agent has installed, by name → the installed copy's version (`YYYY-MM-DD.N`, or ""
@@ -202,6 +213,8 @@ export function PluginsPage() {
   const [tab, setTab] = useState<"skills" | "connectors">("skills");
   /** Library search: filters the cards inside their categories (see the title row). */
   const [query, setQuery] = useState("");
+  /** Active category chip (null = all): narrows the sections to one, like the reference chips. */
+  const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const navigate = useNavigate();
   const { locale } = useLocale();
   const userId = useAuth().user?.userId ?? null;
@@ -459,9 +472,10 @@ export function PluginsPage() {
    */
   const visibleGroups = useMemo(() => {
     if (groups === null) return null;
+    const byCategory = groupFilter === null ? groups : groups.filter((g) => g.id === groupFilter);
     const q = query.trim().toLowerCase();
-    if (q === "") return groups;
-    return groups
+    if (q === "") return byCategory;
+    return byCategory
       .map((group) => ({
         ...group,
         plugins: group.plugins.filter((plugin) =>
@@ -472,37 +486,32 @@ export function PluginsPage() {
         ),
       }))
       .filter((group) => group.plugins.length > 0);
-  }, [groups, query, locale]);
+  }, [groups, query, locale, groupFilter]);
+
+  /**
+   * How many library plugins the currently selected Agent has. Per Agent rather than per
+   * user — installation is an Agent's own state, so a count that ignored which Agent is
+   * selected would be a number about nothing.
+   */
+  const installedPluginsForCurrentAgent = useMemo(() => {
+    if (groups === null || currentAgent === null) return 0;
+    const mine = installed.get(currentAgent.agentId);
+    if (mine === undefined) return 0;
+    return groups.reduce(
+      (n, group) => n + group.plugins.filter((plugin) => pluginInstalled(plugin, mine)).length,
+      0,
+    );
+  }, [groups, installed, currentAgent]);
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mx-auto max-w-6xl">
+        {/* One bar, as the reference layout has it: the switcher on the left, the active tab's
+            search and its own count on the right. No page heading above them — the nav entry
+            already says where you are, and the tabs say what is behind it. The description
+            moves into the help fold below, because a circled "?" is an anchored mark and there
+            is no title left for it to anchor to (see disclosure-anchor.test.ts). */}
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-          <h1 className="flex min-w-0 items-center gap-1.5 text-xl font-semibold">
-            {S.plugins.pageTitle}
-            <InfoPopover label={S.plugins.pageTitle}>{S.plugins.pageDesc}</InfoPopover>
-          </h1>
-          <span className="min-w-0 flex-1" />
-          {/* Search sits on the title row and filters within the categories rather than
-              flattening them — browsing by category is the point of the page, and a query
-              is a way to find one card in it, not a second way to list them all. Only the
-              skills tab has a list to filter; connectors is a table with its own controls. */}
-          {tab === "skills" && (
-            <div className="w-full sm:w-56">
-              <Input
-                size="sm"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={S.plugins.searchPlaceholder}
-                aria-label={S.plugins.searchLabel}
-              />
-            </div>
-          )}
-        </div>
-        {/* Two surfaces behind one nav entry: the skill library (what actually gets installed
-            on an agent) and the project's MCP registry (connectors, picked from an agent's
-            tools settings). They share nothing but the entry point, so they are tabs. */}
-        <div className="mt-4">
           <Tabs
             items={[
               { key: "skills", label: S.plugins.tabSkills },
@@ -510,8 +519,37 @@ export function PluginsPage() {
             ]}
             active={tab}
             onChange={setTab}
+            variant="pill"
           />
+          <span className="min-w-0 flex-1" />
+          <div className="flex min-w-0 items-center gap-2">
+            {/* Search filters within the categories rather than flattening them: browsing by
+                category is what the page is for, and a query is how you find one card in it. */}
+            <div className="w-40 sm:w-56">
+              <Input
+                size="sm"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={
+                  tab === "skills"
+                    ? S.plugins.searchPlaceholder
+                    : S.plugins.searchConnectorsPlaceholder
+                }
+                aria-label={
+                  tab === "skills" ? S.plugins.searchLabel : S.plugins.searchConnectorsLabel
+                }
+              />
+            </div>
+            {tab === "skills" && (
+              <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+                {S.plugins.installedForAgent(installedPluginsForCurrentAgent)}
+              </span>
+            )}
+          </div>
         </div>
+        <HelpFold className="mt-2.5" label={S.plugins.pageTitle}>
+          {S.plugins.pageDesc}
+        </HelpFold>
         {tab === "connectors" ? (
           <div className="mt-6">
             <ConnectorsTab />
@@ -557,76 +595,98 @@ export function PluginsPage() {
                 {S.plugins.noMatch(query.trim())}
               </p>
             ) : (
-              <div className="mt-6 space-y-3">
-                {(visibleGroups ?? []).map((group) => {
-                  const open = !collapsed.has(group.id);
-                  return (
-                    <section
+              <div className="mt-5">
+                {/* Category chips, as the reference layout has them: one row of categories, the
+                    active one filled. Selecting a chip narrows to that category — the same
+                    relationship the search box has to the cards, one level up. */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setGroupFilter(null)}
+                    className={chipClass(groupFilter === null)}
+                  >
+                    {S.plugins.allCategories}
+                  </button>
+                  {(groups ?? []).map((group) => (
+                    <button
                       key={group.id}
-                      className="overflow-hidden rounded-md bg-white dark:bg-gray-900"
+                      type="button"
+                      onClick={() => setGroupFilter(groupFilter === group.id ? null : group.id)}
+                      className={chipClass(groupFilter === group.id)}
                     >
-                      {/* Group header (styled like the model page's provider groups): category name +
-                      plugin count (no icon, no description); the whole row toggles
-                      collapse on click and highlights on hover. */}
-                      <button
-                        type="button"
-                        aria-expanded={open}
-                        onClick={() =>
-                          setCollapsed((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(group.id)) next.delete(group.id);
-                            else next.add(group.id);
-                            return next;
-                          })
-                        }
-                        className="flex w-full items-center gap-2.5 bg-gray-50 px-3 py-2.5 text-left transition-colors duration-150 hover:bg-gray-100 dark:bg-gray-900/60 dark:hover:bg-gray-800/60"
-                      >
-                        {/* Group name can truncate (min-w-0): the count and collapse arrow must not shrink. */}
-                        <span className="min-w-0 truncate text-sm font-semibold">
-                          {localizedText(locale, group.title, group.titleZh)}
-                        </span>
-                        <span className="shrink-0 whitespace-nowrap font-mono text-xs text-gray-400">
-                          {S.plugins.pluginCount(group.plugins.length)}
-                        </span>
-                        <span className="min-w-0 flex-1" />
-                        <Chevron open={open} className="text-gray-400" />
-                      </button>
+                      {localizedText(locale, group.title, group.titleZh)}
+                    </button>
+                  ))}
+                </div>
 
-                      {/* Expand/collapse height transition: grid-template-rows tweens between
-                      0fr and 1fr, with the inner overflow-hidden clipping the content
-                      (same convention as the model page). */}
-                      <div
-                        className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
-                      >
-                        {/* inert while collapsed: cards at zero height shouldn't still be Tab-focusable or clickable. */}
-                        <div className="overflow-hidden" inert={!open}>
-                          {/* Generously sized cards: 2 columns ≥sm, 1 column on narrow screens.
-                          `grid-cols-1` is load-bearing, not redundant: with no declared track the
-                          single implicit column is `auto`-sized, and an auto track never goes below
+                <div className="mt-6 space-y-7">
+                  {(visibleGroups ?? []).map((group) => {
+                    const open = !collapsed.has(group.id);
+                    return (
+                      <section key={group.id}>
+                        {/* Section heading: a plain bold title with the count beside it, the way the
+                        reference lays its sections out — no tinted bar and no box around the cards,
+                        so the grid itself is the grouping. The whole row still toggles collapse. */}
+                        <button
+                          type="button"
+                          aria-expanded={open}
+                          onClick={() =>
+                            setCollapsed((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(group.id)) next.delete(group.id);
+                              else next.add(group.id);
+                              return next;
+                            })
+                          }
+                          className="flex w-full items-center gap-2.5 py-1 text-left"
+                        >
+                          {/* Group name can truncate (min-w-0): the count and collapse arrow must not shrink. */}
+                          <span className="min-w-0 truncate text-base font-semibold">
+                            {localizedText(locale, group.title, group.titleZh)}
+                          </span>
+                          <span className="shrink-0 whitespace-nowrap font-mono text-xs text-gray-400">
+                            {S.plugins.pluginCount(group.plugins.length)}
+                          </span>
+                          <span className="min-w-0 flex-1" />
+                          <Chevron open={open} className="text-gray-400" />
+                        </button>
+
+                        {/* Expand/collapse height transition: grid-template-rows tweens between
+                        0fr and 1fr, with the inner overflow-hidden clipping the content
+                        (same convention as the model page). */}
+                        <div
+                          className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+                        >
+                          {/* inert while collapsed: cards at zero height shouldn't still be Tab-focusable or clickable. */}
+                          <div className="overflow-hidden" inert={!open}>
+                            {/* Cards: 3 columns ≥lg, 2 ≥sm, 1 on narrow screens. `grid-cols-1` is
+                            load-bearing, not redundant: with no declared track the single implicit
+                            column is `auto`-sized, and an auto track never goes below
                           the widest card's min-content width — which `truncate` does not lower,
                           since `nowrap` leaves no wrap opportunity and `overflow: hidden` only
                           clips at paint time. A card then overflows the section's `overflow-hidden`
                           and its action buttons land off-viewport, unreachable. Tailwind's
                           `grid-cols-*` is `minmax(0, 1fr)`, which clamps that floor to 0. */}
-                          <div
-                            className={`grid grid-cols-1 gap-2.5 p-2.5 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-3 ${open ? "opacity-100" : "opacity-0"}`}
-                          >
-                            {group.plugins.map((plugin) => (
-                              <PluginCard
-                                key={plugin.name}
-                                plugin={plugin}
-                                installed={installed}
-                                onQuickInvoke={quickInvoke}
-                                onToggleInstall={toggleInstall}
-                                onUpdateOutdated={updateOutdated}
-                              />
-                            ))}
+                            <div
+                              className={`grid grid-cols-1 gap-2.5 p-2.5 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-3 ${open ? "opacity-100" : "opacity-0"}`}
+                            >
+                              {group.plugins.map((plugin) => (
+                                <PluginCard
+                                  key={plugin.name}
+                                  plugin={plugin}
+                                  installed={installed}
+                                  onQuickInvoke={quickInvoke}
+                                  onToggleInstall={toggleInstall}
+                                  onUpdateOutdated={updateOutdated}
+                                />
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </section>
-                  );
-                })}
+                      </section>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </>
@@ -686,6 +746,8 @@ function PluginCard({
   const [updating, setUpdating] = useState(false);
   // Agent pending an uninstall confirmation (null = none): uninstalling deletes the installed files, local edits included.
   const [pendingUninstall, setPendingUninstall] = useState<string | null>(null);
+  /** The corner install button's own in-flight flag, so a double click cannot land two installs. */
+  const [installing, setInstalling] = useState(false);
 
   const confirmUpdate = async () => {
     if (!pendingUpdate) return;
@@ -702,6 +764,9 @@ function PluginCard({
 
   let installedCount = 0;
   for (const m of installed.values()) if (pluginInstalled(plugin, m)) installedCount += 1;
+  /** Whether the Agent selected right now has this plugin — what the corner button toggles. */
+  const isInstalledOnCurrentAgent =
+    currentAgent !== null && pluginInstalled(plugin, installed.get(currentAgent.agentId));
   // The server's list of Agents behind on this plugin, minus any this page has since uninstalled
   // it from (the list is re-read after every install action, but the snapshot moves first).
   const outdated = outdatedAgentIds(agents, plugin.name).filter((agentId) =>
@@ -734,96 +799,96 @@ function PluginCard({
     .filter((v): v is string => v !== null)
     .join(" · ");
   return (
-    <div className="flex h-full items-center gap-3 rounded-md p-4 transition-colors hover:bg-gray-100/70 dark:hover:bg-gray-800/60">
-      <button
-        type="button"
-        onClick={() => setDetailOpen(true)}
-        className="min-w-0 flex-1 text-left"
-      >
-        {/* Header: the plugin icon centered across the two text rows (rounded tile in the plugin's
-            own palette color — see SkillTile; deliberately a bit smaller than the two rows),
-            with the name and short description on one line each to the right. */}
-        <div className="flex items-center gap-3">
-          <SkillTile
-            icon={plugin.icon}
-            name={plugin.name}
-            fallback={PLUGIN_ICON}
-            size={36}
-            glyph={20}
-          />
-          <div className="min-w-0 flex-1">
-            <span
-              className="block truncate font-mono text-[13px] font-semibold"
-              title={plugin.name}
+    <>
+      <LibraryCard
+        icon={plugin.icon}
+        name={plugin.name}
+        fallbackIcon={PLUGIN_ICON}
+        description={description}
+        descriptionTitle={fullDescription}
+        meta={meta}
+        onOpen={() => setDetailOpen(true)}
+        action={
+          <div className="flex shrink-0 items-center gap-1.5">
+            {/* Light (secondary): an update nudge, not the card's primary action. The last stop on
+              the plugins trail, so it carries the dot itself — straddling the top-right
+              corner of the button's border, the anchoring rule update-dot.tsx states for a
+              button. */}
+            {outdated.length > 0 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="relative h-8 w-8 shrink-0 justify-center p-0"
+                aria-label={`${S.plugins.updateOutdated(outdated.length)} ${plugin.name}`}
+                title={S.plugins.updateOutdated(outdated.length)}
+                onClick={() => setPendingUpdate(outdated)}
+              >
+                <GlyphIcon d={UPDATE_ICON} size={ICON_SIZE.iconButton} />
+                <UpdateDot
+                  size="inline"
+                  position="right-0.5 top-0.5 -translate-y-1/2 translate-x-1/2"
+                />
+              </Button>
+            )}
+            {plugin.skills.length > 0 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 w-8 shrink-0 justify-center p-0"
+                aria-label={`${S.skills.quickInvoke} ${plugin.name}`}
+                title={quickStartSkill ? S.skills.quickInvoke : S.plugins.quickInvokeNeedsInstall}
+                disabled={quickStartSkill === undefined}
+                onClick={() => {
+                  if (quickStartSkill) onQuickInvoke(quickStartSkill.name);
+                }}
+              >
+                <GlyphIcon d={SEND_ICON} size={ICON_SIZE.iconButton} />
+              </Button>
+            )}
+            {/* Managing the other Agents: the per-Agent list, unchanged. */}
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 w-8 shrink-0 justify-center p-0"
+              aria-label={`${S.skills.manageInstall} ${plugin.name}`}
+              title={S.skills.manageInstall}
+              onClick={() => setInstallOpen(true)}
             >
-              {plugin.name}
-            </span>
-            {/* Short description truncates to one line (full description goes into title for hover reading). */}
-            <p
-              className="mt-0.5 truncate text-xs leading-5 text-gray-500 dark:text-gray-400"
-              title={fullDescription}
+              <GlyphIcon d={INSTALL_ICON} size={ICON_SIZE.iconButton} />
+            </Button>
+            {/* The corner action the reference layout leads with: install on the Agent selected
+              right now, without opening the per-Agent list. Installing this Agent's own copy
+              is the same operation the list performs, so it goes through the same handler;
+              `installing` only stops a double click landing two installs. */}
+            <Button
+              size="sm"
+              className="h-8 w-8 shrink-0 justify-center p-0"
+              aria-label={
+                isInstalledOnCurrentAgent
+                  ? `${S.skills.uninstall} ${plugin.name}`
+                  : `${S.skills.install} ${plugin.name}`
+              }
+              title={isInstalledOnCurrentAgent ? S.skills.uninstall : S.skills.install}
+              disabled={currentAgent === null || installing}
+              onClick={() => {
+                if (!currentAgent) return;
+                setInstalling(true);
+                void onToggleInstall(
+                  currentAgent.agentId,
+                  plugin,
+                  !isInstalledOnCurrentAgent,
+                ).finally(() => setInstalling(false));
+              }}
             >
-              {description}
-            </p>
+              {isInstalledOnCurrentAgent ? (
+                <CheckIcon size={ICON_SIZE.iconButton} />
+              ) : (
+                <PlusIcon size={ICON_SIZE.iconButton} strokeWidth={1.7} />
+              )}
+            </Button>
           </div>
-        </div>
-        {/* Metadata line under the header (e.g. `v2026-08-29.1 · updated 3 days ago · used by
-            2 agents`); what the plugin contains lives in the detail Modal this card opens. */}
-        <p className="mt-2.5 truncate text-[11px] text-gray-400 dark:text-gray-500" title={meta}>
-          {meta}
-        </p>
-      </button>
-      {detailOpen && (
-        <PluginDetailModal plugin={plugin} meta={meta} onClose={() => setDetailOpen(false)} />
-      )}
-      {/* Actions: equal-square light icon buttons in a single row, vertically centered at the
-          card's right edge (copy goes into aria-label and title). */}
-      <div className="flex shrink-0 items-center justify-center gap-1.5">
-        {/* Light (secondary): an update nudge, not the card's primary action. The last stop on
-            the plugins trail, so it carries the dot itself — straddling the top-right corner of
-            the button's border, the anchoring rule update-dot.tsx states for a button. The mark
-            is decorative; what is waiting is already in this button's own title and accessible
-            name, which is why no sr-only sentence is added beside it. */}
-        {outdated.length > 0 && (
-          <Button
-            size="sm"
-            variant="secondary"
-            className="relative h-8 w-8 shrink-0 justify-center p-0"
-            aria-label={`${S.plugins.updateOutdated(outdated.length)} ${plugin.name}`}
-            title={S.plugins.updateOutdated(outdated.length)}
-            onClick={() => setPendingUpdate(outdated)}
-          >
-            <GlyphIcon d={UPDATE_ICON} size={ICON_SIZE.iconButton} />
-            <UpdateDot
-              size="inline"
-              position="right-0.5 top-0.5 -translate-y-1/2 translate-x-1/2"
-            />
-          </Button>
-        )}
-        {plugin.skills.length > 0 && (
-          <Button
-            size="sm"
-            className="h-8 w-8 shrink-0 justify-center p-0"
-            aria-label={`${S.skills.quickInvoke} ${plugin.name}`}
-            title={quickStartSkill ? S.skills.quickInvoke : S.plugins.quickInvokeNeedsInstall}
-            disabled={quickStartSkill === undefined}
-            onClick={() => {
-              if (quickStartSkill) onQuickInvoke(quickStartSkill.name);
-            }}
-          >
-            <GlyphIcon d={SEND_ICON} size={ICON_SIZE.iconButton} />
-          </Button>
-        )}
-        <Button
-          size="sm"
-          className="h-8 w-8 shrink-0 justify-center p-0"
-          aria-label={`${S.skills.manageInstall} ${plugin.name}`}
-          title={S.skills.manageInstall}
-          onClick={() => setInstallOpen(true)}
-        >
-          <GlyphIcon d={INSTALL_ICON} size={ICON_SIZE.iconButton} />
-        </Button>
-      </div>
+        }
+      />
       {installOpen && (
         <Modal
           open
@@ -906,7 +971,7 @@ function PluginCard({
           </p>
         </ConfirmModal>
       )}
-    </div>
+    </>
   );
 }
 

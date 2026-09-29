@@ -28,6 +28,8 @@ import { Input, Textarea } from "../../components/ui/input";
 import { Modal } from "../../components/ui/modal";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { SettingsEmpty } from "../../components/ui/empty-state";
+import { CONNECTOR_ICON } from "../../components/ui/icons";
+import { LibraryCard } from "../plugins/library-card";
 import { Skeleton } from "../../components/ui/skeleton";
 import { OptionMenu, type OptionMenuChoice } from "../../components/ui/option-menu";
 import { Segmented } from "../../components/ui/segmented";
@@ -125,6 +127,12 @@ export interface McpSectionTarget {
    * pick from — adding there means writing a new definition, not choosing an existing one.
    */
   registry?: () => Promise<MCPServerConfig[]>;
+  /**
+   * How the list is laid out. `table` is the Agent's Tools tab, where the servers sit among
+   * other tabled settings; `cards` is the connectors tab, which is a browsing surface and
+   * follows the library's card grid. Same state, same handlers, same modals either way.
+   */
+  layout?: "table" | "cards";
 }
 
 /**
@@ -372,6 +380,47 @@ export function McpServersSection({
 
       {servers.length === 0 ? (
         <SettingsEmpty>{S.agent.mcpEmpty}</SettingsEmpty>
+      ) : target.layout === "cards" ? (
+        /* The browsing layout: one card per server, following the library's grid. The
+           description is the entry's real connection target — an MCP server has no blurb to
+           show, and the target is the thing that tells two servers apart. */
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {servers.map((entry, index) => (
+            <LibraryCard
+              key={entry.name}
+              name={entry.name}
+              fallbackIcon={CONNECTOR_ICON}
+              description={targetOf(entry)}
+              meta={`${transportOf(entry)} · ${permissionOf(entry)}`}
+              action={
+                <div className="flex shrink-0 items-center">
+                  {!readOnly && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        aria-label={`${S.common.edit} ${entry.name}`}
+                        onClick={() => openEdit(index)}
+                      >
+                        {S.common.edit}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        aria-label={`${S.agent.mcpRemove} ${entry.name}`}
+                        onClick={() => setDeleting(index)}
+                      >
+                        {S.agent.mcpRemove}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              }
+            />
+          ))}
+        </div>
       ) : (
         <div className="overflow-x-auto overflow-y-clip rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
           <table className="w-full min-w-[520px] text-left text-sm">

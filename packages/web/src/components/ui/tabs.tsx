@@ -19,11 +19,51 @@ export function Tabs<K extends string>({
   items,
   active,
   onChange,
+  variant = "underline",
 }: {
   items: ReadonlyArray<TabItem<K>>;
   active: K;
   onChange: (key: K) => void;
+  /**
+   * `underline` is the in-page tab strip. `pill` is the standalone switcher a library page
+   * leads with: a tinted track whose active item is a raised white pill. A variant rather
+   * than a second component so the badge handling above stays in one place.
+   */
+  variant?: "underline" | "pill";
 }) {
+  if (variant === "pill") {
+    return (
+      <div
+        role="tablist"
+        className="inline-flex max-w-full items-center gap-0.5 rounded-full bg-gray-100 p-0.5 dark:bg-gray-800"
+      >
+        {items.map((item) => {
+          const badge = item.badge ?? null;
+          const on = item.key === active;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              {...(badge !== null
+                ? { title: badge, "aria-label": `${item.label} · ${badge}` }
+                : {})}
+              onClick={() => onChange(item.key)}
+              className={`relative whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm transition-colors duration-150 ${
+                on
+                  ? "bg-white font-semibold text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+                  : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+              }`}
+            >
+              {item.label}
+              {badge !== null && <UpdateDot size="inline" position="right-1 top-1" />}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
   return (
     <div
       role="tablist"
