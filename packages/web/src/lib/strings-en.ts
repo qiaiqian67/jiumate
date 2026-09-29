@@ -1436,6 +1436,10 @@ export const en: Strings = {
     /** Content badge for each hook point a plugin's hook package answers at (e.g. "stop hook"); also the chips on the settings Hooks tab. */
     hookBadge: (event: string): string => `${event} hook`,
     searchPlaceholder: "Search plugins",
+    /** Search box on the library page itself (accessible name). */
+    searchLabel: "Search skills",
+    /** Shown in place of the groups when a search matches nothing. */
+    noMatch: (query: string): string => `No plugin matches “${query}”`,
     /** Section labels of the plugin detail Modal. */
     detailSkills: "Skills",
     detailHooks: "Hooks",

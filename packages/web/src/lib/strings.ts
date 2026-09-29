@@ -1406,6 +1406,10 @@ export const zh = {
     hookBadge: (event: string): string => `${event} 钩子`,
     /** Search box of the create dialog's plugin picker. */
     searchPlaceholder: "搜索插件",
+    /** Search box on the library page itself (accessible name). */
+    searchLabel: "搜索技能",
+    /** Shown in place of the groups when a search matches nothing. */
+    noMatch: (query: string): string => `没有匹配「${query}」的插件`,
     /** Usage count in the card metadata (shows "unused" instead of a bare 0). */
     /** Section labels of the plugin detail Modal. */
     detailSkills: "技能",

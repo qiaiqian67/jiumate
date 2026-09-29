@@ -37,7 +37,7 @@
  *   which is why the page fetches both lists per Agent. Uninstall takes the plugin apart the
  *   same way: one DELETE per skill and one for the hook package.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import type {
   AgentSummary,
@@ -61,6 +61,7 @@ import { AgentAvatar } from "../../components/ui/agent-avatar";
 import { Button } from "../../components/ui/button";
 import { Chevron } from "../../components/ui/chevron";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
+import { Input } from "../../components/ui/input";
 import { PLUGIN_ICON, SEND_ICON } from "../../components/ui/icons";
 import { Modal } from "../../components/ui/modal";
 import { TodoNotice } from "../../components/ui/todo-notice";
@@ -199,6 +200,8 @@ export function pluginUpdatePlan(
 export function PluginsPage() {
   useDocumentTitle(S.nav.plugins);
   const [tab, setTab] = useState<"skills" | "connectors">("skills");
+  /** Library search: filters the cards inside their categories (see the title row). */
+  const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const { locale } = useLocale();
   const userId = useAuth().user?.userId ?? null;
@@ -206,8 +209,9 @@ export function PluginsPage() {
   const projectId = currentProject?.projectId ?? null;
 
   /** The plugins trail's raised badge, or undefined — the notice under the title acts on it or clears it. */
-  const todo = useUpdateBadges().todos.plugins;
-  /** The bulk update's confirmation is open (null = closed); it holds the plan it will run. */
+  const todo =
+    useUpdateBadges().todos
+      .plugins; /** The bulk update's confirmation is open (null = closed); it holds the plan it will run. */
   const [pendingBulk, setPendingBulk] = useState<PluginUpdatePlan | null>(null);
   const [bulkRunning, setBulkRunning] = useState(false);
 
@@ -447,13 +451,54 @@ export function PluginsPage() {
     navigate(`/chat/${DRAFT_SESSION_ID}`, { state: { agentId } });
   };
 
+  /**
+   * The library narrowed by the search box: a plugin matches on its name and on whichever
+   * description applies to the active language, and a category left with no match drops out
+   * entirely — an empty group header is noise, and browsing by category is still the point
+   * of the page, so the query narrows what is there instead of replacing it with a flat list.
+   */
+  const visibleGroups = useMemo(() => {
+    if (groups === null) return null;
+    const q = query.trim().toLowerCase();
+    if (q === "") return groups;
+    return groups
+      .map((group) => ({
+        ...group,
+        plugins: group.plugins.filter((plugin) =>
+          [plugin.name, localizedText(locale, plugin.description, plugin.descriptionZh)]
+            .join(" ")
+            .toLowerCase()
+            .includes(q),
+        ),
+      }))
+      .filter((group) => group.plugins.length > 0);
+  }, [groups, query, locale]);
+
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
-      <div className="mx-auto max-w-5xl">
-        <h1 className="flex items-center gap-1.5 text-xl font-semibold">
-          {S.plugins.pageTitle}
-          <InfoPopover label={S.plugins.pageTitle}>{S.plugins.pageDesc}</InfoPopover>
-        </h1>
+      <div className="mx-auto max-w-6xl">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+          <h1 className="flex min-w-0 items-center gap-1.5 text-xl font-semibold">
+            {S.plugins.pageTitle}
+            <InfoPopover label={S.plugins.pageTitle}>{S.plugins.pageDesc}</InfoPopover>
+          </h1>
+          <span className="min-w-0 flex-1" />
+          {/* Search sits on the title row and filters within the categories rather than
+              flattening them — browsing by category is the point of the page, and a query
+              is a way to find one card in it, not a second way to list them all. Only the
+              skills tab has a list to filter; connectors is a table with its own controls. */}
+          {tab === "skills" && (
+            <div className="w-full sm:w-56">
+              <Input
+                size="sm"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={S.plugins.searchPlaceholder}
+                aria-label={S.plugins.searchLabel}
+              />
+            </div>
+          )}
+        </div>
         {/* Two surfaces behind one nav entry: the skill library (what actually gets installed
             on an agent) and the project's MCP registry (connectors, picked from an agent's
             tools settings). They share nothing but the entry point, so they are tabs. */}
@@ -498,8 +543,8 @@ export function PluginsPage() {
                 </Button>
               </div>
             ) : groups === null ? (
-              <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                {Array.from({ length: 4 }, (_, i) => (
+              <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }, (_, i) => (
                   <SkeletonCard key={i} className="p-4">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="mt-2 h-4 w-3/4" />
@@ -507,9 +552,13 @@ export function PluginsPage() {
                   </SkeletonCard>
                 ))}
               </div>
+            ) : visibleGroups !== null && visibleGroups.length === 0 ? (
+              <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+                {S.plugins.noMatch(query.trim())}
+              </p>
             ) : (
               <div className="mt-6 space-y-3">
-                {groups.map((group) => {
+                {(visibleGroups ?? []).map((group) => {
                   const open = !collapsed.has(group.id);
                   return (
                     <section
@@ -560,7 +609,7 @@ export function PluginsPage() {
                           and its action buttons land off-viewport, unreachable. Tailwind's
                           `grid-cols-*` is `minmax(0, 1fr)`, which clamps that floor to 0. */}
                           <div
-                            className={`grid grid-cols-1 gap-2.5 p-2.5 transition-opacity duration-200 sm:grid-cols-2 ${open ? "opacity-100" : "opacity-0"}`}
+                            className={`grid grid-cols-1 gap-2.5 p-2.5 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-3 ${open ? "opacity-100" : "opacity-0"}`}
                           >
                             {group.plugins.map((plugin) => (
                               <PluginCard
