@@ -16,9 +16,11 @@
 import { Hono } from "hono";
 import { resolveMCPServer } from "@prismshadow/jiumate-core";
 import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
+import type { McpServerTestResponse } from "../../api/types.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import { HttpError } from "../errors.js";
 import { readJson, requireValidId } from "../validate.js";
+import { McpProbeInvalidEntryError, probeMcpServer } from "../../services/mcp-probe.js";
 import type { AppDeps } from "../../app.js";
 
 /** A registry is edited by hand and copied into Agent configs, so it stays small and bounded. */
@@ -95,6 +97,29 @@ export function mcpServersRoutes(deps: AppDeps): Hono<AppEnv> {
     const body = await readJson(c);
     const servers = validateServers(body.mcp_servers);
     return c.json(await deps.projectConfigService.setMcpServers(projectId, servers));
+  });
+
+  /**
+   * Probe one registry entry before it is saved (the connectors tab's "test" button), the
+   * same reachability question the Agent-side editor asks. Readable by any member: it only
+   * talks to a server, and someone who can see the registry can already read the entry.
+   */
+  app.post("/test", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    const body = await readJson(c);
+    if (body.config === null || typeof body.config !== "object" || Array.isArray(body.config)) {
+      throw new HttpError(400, "invalid_mcp_server", "config must be an object.");
+    }
+    const entry = validateServers([{ name: body.name, config: body.config }])[0]!;
+    try {
+      return c.json((await probeMcpServer(entry)) satisfies McpServerTestResponse);
+    } catch (err) {
+      if (err instanceof McpProbeInvalidEntryError) {
+        throw new HttpError(400, "invalid_mcp_server", err.message);
+      }
+      throw err;
+    }
   });
 
   return app;

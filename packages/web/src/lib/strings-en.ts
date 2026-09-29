@@ -744,6 +744,15 @@ export const en: Strings = {
       "Connect external MCP Servers: their tools join this agent's toolset as mcp__<name>__<tool>. Changes in this block save immediately.",
     mcpEmpty: "No MCP Servers configured yet",
     mcpAdd: "Add MCP Server",
+    mcpPick: "Add from registry",
+    mcpPickTitle: "Add from the Project registry",
+    mcpPickDesc:
+      "Pick from the MCP servers registered under Plugins · Skills → Connectors. What gets added is a copy: editing it here later changes neither the registry nor any other Agent.",
+    mcpPickEmpty:
+      "The registry has no MCP servers yet — add one under Plugins · Skills → Connectors first.",
+    mcpPickAllAdded: "Every MCP server in the registry is already added.",
+    mcpPickAdd: "Add",
+    mcpPickAdded: "Added",
     mcpEditTitle: "Edit MCP Server",
     mcpRemove: "Remove",
     mcpName: "name",
@@ -1447,6 +1456,17 @@ export const en: Strings = {
     uninstallConfirmTitle: (name: string): string => `Uninstall ${name}`,
     uninstallConfirmBody: (plugin: string, agent: string): string =>
       `Uninstall ${plugin} from ${agent}? Its installed skill and hook files (local edits included) will be deleted.`,
+    /** The page's two tabs. "Skills" is the plugin library flattened to what actually lands on an agent. */
+    tabSkills: "Skills",
+    tabConnectors: "Connectors",
+    /** Connectors tab (features/plugins/connectors-tab.tsx): the project's MCP server registry. */
+    connectorsDesc:
+      "MCP servers: one list shared by the whole project. Add a server here once, then tick it in an agent's tools settings. An agent stores its own copy of what it picked, so editing a server here does not change agents that already picked it.",
+    connectorsEmpty:
+      "No MCP servers yet. Add one and it becomes selectable in agent tool settings.",
+    connectorsReadOnly:
+      "Only a project owner can change MCP servers; you are a member, so this list is read-only.",
+    connectorsSavedToast: "Saved — agents can now pick it in their tools settings",
   },
 
   /** Agent settings "Hooks" tab (features/agents/hooks-tab.tsx): the hook packages installed on one agent. */

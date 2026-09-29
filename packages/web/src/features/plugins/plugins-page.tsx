@@ -73,6 +73,8 @@ import { draftKey, loadDraft, saveDraft } from "../chat/draft-cache";
 import { parkActiveDraft } from "../chat/draft-sessions";
 import { localizedShortText, localizedText } from "../chat/skill-use";
 import { PluginDetailModal } from "./plugin-detail";
+import { ConnectorsTab } from "./connectors-tab";
+import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
 import { SkillTile } from "../skills/skill-icon-view";
 import { InfoPopover } from "../../components/ui/info-popover";
@@ -196,6 +198,7 @@ export function pluginUpdatePlan(
 
 export function PluginsPage() {
   useDocumentTitle(S.nav.plugins);
+  const [tab, setTab] = useState<"skills" | "connectors">("skills");
   const navigate = useNavigate();
   const { locale } = useLocale();
   const userId = useAuth().user?.userId ?? null;
@@ -451,85 +454,104 @@ export function PluginsPage() {
           {S.plugins.pageTitle}
           <InfoPopover label={S.plugins.pageTitle}>{S.plugins.pageDesc}</InfoPopover>
         </h1>
-        {/* Last stop on the plugins trail: what the sidebar's dot was pointing at, the control
+        {/* Two surfaces behind one nav entry: the skill library (what actually gets installed
+            on an agent) and the project's MCP registry (connectors, picked from an agent's
+            tools settings). They share nothing but the entry point, so they are tabs. */}
+        <div className="mt-4">
+          <Tabs
+            items={[
+              { key: "skills", label: S.plugins.tabSkills },
+              { key: "connectors", label: S.plugins.tabConnectors },
+            ]}
+            active={tab}
+            onChange={setTab}
+          />
+        </div>
+        {tab === "connectors" ? (
+          <div className="mt-6">
+            <ConnectorsTab />
+          </div>
+        ) : (
+          <>
+            {/* Last stop on the plugins trail: what the sidebar's dot was pointing at, the control
             that takes all of it in one press, and the way to clear it for someone who has looked
             and decided to stay on the installed copies. A plugin is never NEW here — one nobody
             has installed is not waiting for anyone — so the line states the upgradable count
             alone rather than padding it with a zero. The per-card update buttons below remain
             the way to take just one. */}
-        {todo && (
-          <TodoNotice
-            text={S.todo.changesUpgradable(noticeCounts(todo).updated)}
-            actionLabel={S.todo.updateNow}
-            busy={bulkRunning}
-            onAction={() => setPendingBulk(pluginUpdatePlan(agents))}
-            dismissLabel={S.todo.dismiss}
-            onDismiss={() => dismissTodo(projectId, "plugins", todo.signature)}
-          />
-        )}
+            {todo && (
+              <TodoNotice
+                text={S.todo.changesUpgradable(noticeCounts(todo).updated)}
+                actionLabel={S.todo.updateNow}
+                busy={bulkRunning}
+                onAction={() => setPendingBulk(pluginUpdatePlan(agents))}
+                dismissLabel={S.todo.dismiss}
+                onDismiss={() => dismissTodo(projectId, "plugins", todo.signature)}
+              />
+            )}
 
-        {error ? (
-          <div className="mt-6 flex items-center gap-3">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            <Button size="sm" onClick={() => window.location.reload()}>
-              {S.common.retry}
-            </Button>
-          </div>
-        ) : groups === null ? (
-          <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {Array.from({ length: 4 }, (_, i) => (
-              <SkeletonCard key={i} className="p-4">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="mt-2 h-4 w-3/4" />
-                <Skeleton className="mt-3 h-6 w-36" />
-              </SkeletonCard>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-6 space-y-3">
-            {groups.map((group) => {
-              const open = !collapsed.has(group.id);
-              return (
-                <section
-                  key={group.id}
-                  className="overflow-hidden rounded-md bg-white dark:bg-gray-900"
-                >
-                  {/* Group header (styled like the model page's provider groups): category name +
+            {error ? (
+              <div className="mt-6 flex items-center gap-3">
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <Button size="sm" onClick={() => window.location.reload()}>
+                  {S.common.retry}
+                </Button>
+              </div>
+            ) : groups === null ? (
+              <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <SkeletonCard key={i} className="p-4">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="mt-2 h-4 w-3/4" />
+                    <Skeleton className="mt-3 h-6 w-36" />
+                  </SkeletonCard>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 space-y-3">
+                {groups.map((group) => {
+                  const open = !collapsed.has(group.id);
+                  return (
+                    <section
+                      key={group.id}
+                      className="overflow-hidden rounded-md bg-white dark:bg-gray-900"
+                    >
+                      {/* Group header (styled like the model page's provider groups): category name +
                       plugin count (no icon, no description); the whole row toggles
                       collapse on click and highlights on hover. */}
-                  <button
-                    type="button"
-                    aria-expanded={open}
-                    onClick={() =>
-                      setCollapsed((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(group.id)) next.delete(group.id);
-                        else next.add(group.id);
-                        return next;
-                      })
-                    }
-                    className="flex w-full items-center gap-2.5 bg-gray-50 px-3 py-2.5 text-left transition-colors duration-150 hover:bg-gray-100 dark:bg-gray-900/60 dark:hover:bg-gray-800/60"
-                  >
-                    {/* Group name can truncate (min-w-0): the count and collapse arrow must not shrink. */}
-                    <span className="min-w-0 truncate text-sm font-semibold">
-                      {localizedText(locale, group.title, group.titleZh)}
-                    </span>
-                    <span className="shrink-0 whitespace-nowrap font-mono text-xs text-gray-400">
-                      {S.plugins.pluginCount(group.plugins.length)}
-                    </span>
-                    <span className="min-w-0 flex-1" />
-                    <Chevron open={open} className="text-gray-400" />
-                  </button>
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        onClick={() =>
+                          setCollapsed((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(group.id)) next.delete(group.id);
+                            else next.add(group.id);
+                            return next;
+                          })
+                        }
+                        className="flex w-full items-center gap-2.5 bg-gray-50 px-3 py-2.5 text-left transition-colors duration-150 hover:bg-gray-100 dark:bg-gray-900/60 dark:hover:bg-gray-800/60"
+                      >
+                        {/* Group name can truncate (min-w-0): the count and collapse arrow must not shrink. */}
+                        <span className="min-w-0 truncate text-sm font-semibold">
+                          {localizedText(locale, group.title, group.titleZh)}
+                        </span>
+                        <span className="shrink-0 whitespace-nowrap font-mono text-xs text-gray-400">
+                          {S.plugins.pluginCount(group.plugins.length)}
+                        </span>
+                        <span className="min-w-0 flex-1" />
+                        <Chevron open={open} className="text-gray-400" />
+                      </button>
 
-                  {/* Expand/collapse height transition: grid-template-rows tweens between
+                      {/* Expand/collapse height transition: grid-template-rows tweens between
                       0fr and 1fr, with the inner overflow-hidden clipping the content
                       (same convention as the model page). */}
-                  <div
-                    className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
-                  >
-                    {/* inert while collapsed: cards at zero height shouldn't still be Tab-focusable or clickable. */}
-                    <div className="overflow-hidden" inert={!open}>
-                      {/* Generously sized cards: 2 columns ≥sm, 1 column on narrow screens.
+                      <div
+                        className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+                      >
+                        {/* inert while collapsed: cards at zero height shouldn't still be Tab-focusable or clickable. */}
+                        <div className="overflow-hidden" inert={!open}>
+                          {/* Generously sized cards: 2 columns ≥sm, 1 column on narrow screens.
                           `grid-cols-1` is load-bearing, not redundant: with no declared track the
                           single implicit column is `auto`-sized, and an auto track never goes below
                           the widest card's min-content width — which `truncate` does not lower,
@@ -537,26 +559,28 @@ export function PluginsPage() {
                           clips at paint time. A card then overflows the section's `overflow-hidden`
                           and its action buttons land off-viewport, unreachable. Tailwind's
                           `grid-cols-*` is `minmax(0, 1fr)`, which clamps that floor to 0. */}
-                      <div
-                        className={`grid grid-cols-1 gap-2.5 p-2.5 transition-opacity duration-200 sm:grid-cols-2 ${open ? "opacity-100" : "opacity-0"}`}
-                      >
-                        {group.plugins.map((plugin) => (
-                          <PluginCard
-                            key={plugin.name}
-                            plugin={plugin}
-                            installed={installed}
-                            onQuickInvoke={quickInvoke}
-                            onToggleInstall={toggleInstall}
-                            onUpdateOutdated={updateOutdated}
-                          />
-                        ))}
+                          <div
+                            className={`grid grid-cols-1 gap-2.5 p-2.5 transition-opacity duration-200 sm:grid-cols-2 ${open ? "opacity-100" : "opacity-0"}`}
+                          >
+                            {group.plugins.map((plugin) => (
+                              <PluginCard
+                                key={plugin.name}
+                                plugin={plugin}
+                                installed={installed}
+                                onQuickInvoke={quickInvoke}
+                                onToggleInstall={toggleInstall}
+                                onUpdateOutdated={updateOutdated}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </section>
-              );
-            })}
-          </div>
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
 

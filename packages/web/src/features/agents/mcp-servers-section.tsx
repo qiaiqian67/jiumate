@@ -28,6 +28,7 @@ import { Input, Textarea } from "../../components/ui/input";
 import { Modal } from "../../components/ui/modal";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { SettingsEmpty } from "../../components/ui/empty-state";
+import { Skeleton } from "../../components/ui/skeleton";
 import { OptionMenu, type OptionMenuChoice } from "../../components/ui/option-menu";
 import { Segmented } from "../../components/ui/segmented";
 import { toastError, toastSuccess } from "../../components/ui/toast";
@@ -102,18 +103,58 @@ function TestBadge({ result }: { result: RowTestResult | undefined }) {
   );
 }
 
-export function McpServersSection({
-  agentId,
-  initial,
-}: {
-  agentId: string;
-  initial: MCPServerConfig[];
-}) {
-  const { currentProject } = useProject();
-  const projectId = currentProject?.projectId ?? null;
+/**
+ * Where a list of MCP servers is stored and how one is probed. The section renders and
+ * edits the same table either way; only these things differ, which is what lets the
+ * Agent's Tools tab and the Project's connectors tab share one implementation instead of
+ * growing two that drift.
+ */
+export interface McpSectionTarget {
+  /** Persist the full list; resolves with the stored list (server-side normalize/validate). */
+  save(servers: MCPServerConfig[]): Promise<MCPServerConfig[]>;
+  /** Probe one entry's reachability (nothing persisted). */
+  test(entry: MCPServerConfig): Promise<McpServerTestResponse>;
+  /** Toast shown after a successful save — the two surfaces say different things about when it applies. */
+  savedMessage: string;
+  /** Renders the table without any way to change it (a member who cannot write the registry). */
+  readOnly?: boolean;
+  /**
+   * The Project's MCP registry, present only on an Agent's Tools tab. Setting it adds a
+   * "add from registry" affordance that copies a registered entry in. It is deliberately
+   * absent on the connectors tab: that surface *is* the registry, so there is nothing to
+   * pick from — adding there means writing a new definition, not choosing an existing one.
+   */
+  registry?: () => Promise<MCPServerConfig[]>;
+}
 
+/**
+ * The Agent-scoped target: reads and writes the Agent's own `tools.mcpServers` copy, and
+ * probes through the Agent config route (which needs the Agent only for authorization).
+ * It also carries the Project registry, so an Agent can pick a server instead of retyping
+ * one — the pick is copied in, which is what keeps an Agent self-contained.
+ */
+export function agentMcpTarget(projectId: string, agentId: string): McpSectionTarget {
+  return {
+    save: async (servers) => {
+      const res = await api.putAgentConfig(projectId, agentId, { config: { mcpServers: servers } });
+      return res.config.mcpServers;
+    },
+    test: (entry) => api.testAgentMcpServer(projectId, agentId, entry),
+    savedMessage: S.agent.savedTakesEffect,
+    registry: () => api.getMcpServers(projectId),
+  };
+}
+
+export function McpServersSection({
+  initial,
+  target,
+}: {
+  initial: MCPServerConfig[];
+  target: McpSectionTarget;
+}) {
   const [servers, setServers] = useState<MCPServerConfig[]>(initial);
   const [busy, setBusy] = useState(false);
+  const readOnly = target.readOnly ?? false;
   // Modal state: editIndex null = adding, a number = editing that row; closed when form is null.
   const [form, setForm] = useState<McpServerFormState | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -128,6 +169,10 @@ export function McpServersSection({
   const [testAllOpen, setTestAllOpen] = useState(false);
   const [testAllRunning, setTestAllRunning] = useState(false);
   const [rowResults, setRowResults] = useState<Map<string, RowTestResult>>(new Map());
+  // Registry picker: open flag, the fetched list (null while loading), and a fetch error.
+  const [pickOpen, setPickOpen] = useState(false);
+  const [registry, setRegistry] = useState<MCPServerConfig[] | null>(null);
+  const [pickError, setPickError] = useState<string | null>(null);
 
   // http leads (the Add modal's default), stdio second, legacy sse last.
   const transportOptions: ReadonlyArray<{ value: McpTransportKind; label: string }> = [
@@ -164,14 +209,10 @@ export function McpServersSection({
 
   /** Persist the full list (immediate, vault-style); returns null on success or an error message. */
   const persist = async (next: MCPServerConfig[]): Promise<string | null> => {
-    if (!projectId || !agentId) return S.common.unknownError;
     setBusy(true);
     try {
-      const res = await api.putAgentConfig(projectId, agentId, {
-        config: { mcpServers: next },
-      });
-      setServers(res.config.mcpServers);
-      toastSuccess(S.agent.savedTakesEffect);
+      setServers(await target.save(next));
+      toastSuccess(target.savedMessage);
       return null;
     } catch (e) {
       return apiErrorText(e);
@@ -185,6 +226,38 @@ export function McpServersSection({
     setEditIndex(null);
     setFieldErrors({});
     setModalError(null);
+  };
+
+  /**
+   * Opens the registry picker, loading the registry fresh on every open — the list is
+   * edited on another page (Plugins · Skills → Connectors), so a cached copy would go
+   * stale the moment the user switches tabs.
+   */
+  const openPicker = async () => {
+    const fetchRegistry = target.registry;
+    if (!fetchRegistry) return;
+    setPickOpen(true);
+    setRegistry(null);
+    setPickError(null);
+    try {
+      setRegistry(await fetchRegistry());
+    } catch (e) {
+      setPickError(apiErrorText(e));
+    }
+  };
+
+  /**
+   * Copies a registered entry into this Agent's own list. Deep-copied on purpose: the Agent
+   * stores its own copy (see McpSectionTarget.registry), and the picker's list is still on
+   * screen for a second pick — sharing one `config` object between the two lists would let
+   * an edit to one show up in the other before either is saved.
+   */
+  const pickFromRegistry = async (entry: MCPServerConfig) => {
+    if (servers.some((s) => s.name === entry.name)) return;
+    const next = [...servers, { name: entry.name, config: structuredClone(entry.config) }];
+    const err = await persist(next);
+    if (err !== null) toastError(err);
+    else setPickOpen(false);
   };
 
   const openEdit = (index: number) => {
@@ -209,7 +282,7 @@ export function McpServersSection({
 
   /** Probes the current form state (unsaved values on purpose: verify before persisting). */
   const testConnection = async () => {
-    if (!form || !projectId) return;
+    if (!form) return;
     const built = formToServer(form);
     if (!built.ok) {
       setFieldErrors(built.errors);
@@ -217,7 +290,7 @@ export function McpServersSection({
     }
     setTesting(true);
     try {
-      const res = await api.testAgentMcpServer(projectId, agentId, built.server);
+      const res = await target.test(built.server);
       if (res.ok) toastSuccess(S.agent.mcpTestOk(res.tools?.length ?? 0, res.latencyMs));
       else toastError(S.agent.mcpTestFail(res.error ?? S.common.unknownError));
     } catch (e) {
@@ -233,14 +306,13 @@ export function McpServersSection({
    * badge updating as its result lands.
    */
   const runTestAll = async () => {
-    if (!projectId) return;
     setTestAllRunning(true);
     try {
       for (const entry of servers) {
         setRowResults((prev) => new Map(prev).set(entry.name, "pending"));
         let result: McpServerTestResponse;
         try {
-          result = await api.testAgentMcpServer(projectId, agentId, entry);
+          result = await target.test(entry);
         } catch (e) {
           result = { ok: false, error: apiErrorText(e) };
         }
@@ -284,8 +356,6 @@ export function McpServersSection({
     setDeleting(null);
   };
 
-  if (!projectId) return null;
-
   // The form's target field (command / url) — the same gate the models dialog uses for its
   // test button (disabled until the identity is filled in).
   const targetFilled =
@@ -315,14 +385,16 @@ export function McpServersSection({
                 {showBadges && <th className="px-3 py-2.5" />}
                 {/* Bulk test lives in the table's own header bar, over the actions column. */}
                 <th className="px-3 py-1 text-right font-normal whitespace-nowrap">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={busy || testAllRunning}
-                    onClick={() => setTestAllOpen(true)}
-                  >
-                    {testAllRunning ? S.agent.mcpTestPending : S.agent.mcpTest}
-                  </Button>
+                  {!readOnly && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={busy || testAllRunning}
+                      onClick={() => setTestAllOpen(true)}
+                    >
+                      {testAllRunning ? S.agent.mcpTestPending : S.agent.mcpTest}
+                    </Button>
+                  )}
                 </th>
               </tr>
             </thead>
@@ -348,22 +420,26 @@ export function McpServersSection({
                     </td>
                   )}
                   <td className="px-3 py-2 text-right whitespace-nowrap">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={busy}
-                      onClick={() => openEdit(index)}
-                    >
-                      {S.common.edit}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={busy}
-                      onClick={() => setDeleting(index)}
-                    >
-                      {S.agent.mcpRemove}
-                    </Button>
+                    {!readOnly && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={busy}
+                          onClick={() => openEdit(index)}
+                        >
+                          {S.common.edit}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={busy}
+                          onClick={() => setDeleting(index)}
+                        >
+                          {S.agent.mcpRemove}
+                        </Button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -372,9 +448,69 @@ export function McpServersSection({
         </div>
       )}
 
-      <Button size="sm" variant="primary" disabled={busy} onClick={openAdd}>
-        {S.agent.mcpAdd}
-      </Button>
+      {!readOnly && (
+        <div className="flex items-center gap-2">
+          {target.registry !== undefined && (
+            <Button size="sm" disabled={busy} onClick={() => void openPicker()}>
+              {S.agent.mcpPick}
+            </Button>
+          )}
+          <Button size="sm" variant="primary" disabled={busy} onClick={openAdd}>
+            {S.agent.mcpAdd}
+          </Button>
+        </div>
+      )}
+
+      {/* Registry picker: a list, not a form — it copies an entry the Project already
+          defines. Entries already on this Agent stay visible but inert, so the list does
+          not silently change shape as things get added. */}
+      <Modal
+        open={pickOpen}
+        title={S.agent.mcpPickTitle}
+        onClose={() => setPickOpen(false)}
+        footer={<Button onClick={() => setPickOpen(false)}>{S.common.close}</Button>}
+      >
+        <p className="text-xs text-gray-500 dark:text-gray-400">{S.agent.mcpPickDesc}</p>
+        {pickError !== null ? (
+          <SettingsEmpty>{pickError}</SettingsEmpty>
+        ) : registry === null ? (
+          <Skeleton className="h-24 w-full" />
+        ) : registry.length === 0 ? (
+          <SettingsEmpty>{S.agent.mcpPickEmpty}</SettingsEmpty>
+        ) : (
+          <div className="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+            {registry.map((entry) => {
+              const added = servers.some((s) => s.name === entry.name);
+              return (
+                <div key={entry.name} className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-sm text-gray-900 dark:text-gray-100">
+                      {entry.name}
+                    </p>
+                    <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                      {targetOf(entry)}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={added ? "ghost" : "primary"}
+                    disabled={busy || added}
+                    onClick={() => void pickFromRegistry(entry)}
+                  >
+                    {added ? S.agent.mcpPickAdded : S.agent.mcpPickAdd}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {registry !== null &&
+          registry.length > 0 &&
+          servers.length > 0 &&
+          registry.every((entry) => servers.some((s) => s.name === entry.name)) && (
+            <p className="text-xs text-gray-400 dark:text-gray-500">{S.agent.mcpPickAllAdded}</p>
+          )}
+      </Modal>
 
       <Modal
         open={form !== null}

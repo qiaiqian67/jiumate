@@ -47,7 +47,8 @@ import { MemoryTab } from "./memory-tab";
 import { kernelTabLabel } from "./kernel-labels";
 import { VaultTab } from "./vault-tab";
 import { SchedulesTab } from "./schedules-tab";
-import { McpServersSection } from "./mcp-servers-section";
+import { McpServersSection, agentMcpTarget } from "./mcp-servers-section";
+import type { McpSectionTarget } from "./mcp-servers-section";
 import { SNAPSHOT_ACCEPT, SNAPSHOT_BUTTON_CLASS, fileToBase64 } from "./snapshot-file";
 import { thinkingLevelOptionsFor } from "../chat/thinking-level";
 import { InfoPopover } from "../../components/ui/info-popover";
@@ -299,8 +300,13 @@ export function AgentSettingsPage() {
             <div className="space-y-8">
               <ToolsTab data={data} onSave={save} />
               {/* MCP Servers persist vault-style (immediately, own modals) — separate from the
-                  builtin table's Save button, so it lives beside ToolsTab, not inside it. */}
-              <McpServersSection agentId={agentId} initial={data.config.mcpServers} />
+                  builtin table's Save button, so it lives beside ToolsTab, not inside it. The
+                  entries come from the Project registry, but an Agent stores its own copies:
+                  picking is a copy, so nothing another Agent does can change this one. */}
+              <McpServersSection
+                initial={data.config.mcpServers}
+                target={agentMcpTarget(projectId, agentId)}
+              />
             </div>
           )}
           {tab === "skills" && <SkillsTab agentId={agentId} onConfigChanged={refreshConfig} />}

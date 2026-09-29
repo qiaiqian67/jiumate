@@ -4,6 +4,7 @@
  * tsconfig paths to the server contract file types.ts; must not be a value import — server
  * code must not enter the browser bundle).
  */
+import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
 import type {
   AdminPasswordResetRequest,
   AdminUserCreateRequest,
@@ -145,7 +146,6 @@ import type {
   VersionResponse,
   WorkspaceFilesResponse,
 } from "@prismshadow/jiumate-server/api";
-import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
 import type { DocumentPreview } from "@prismshadow/jiumate-core/documents";
 import { apiFetch, apiFetchWithMeta, postBinary } from "./client";
 // Auth & user -----------------------------------------------------------------
@@ -254,6 +254,13 @@ export const putMcpServers = (projectId: string, servers: MCPServerConfig[]) =>
     method: "PUT",
     body: { mcp_servers: servers },
   });
+
+/** Probe one registry entry's reachability before saving it (nothing is persisted). */
+export const testMcpRegistryServer = (projectId: string, server: MCPServerConfig) =>
+  apiFetch<McpServerTestResponse>(
+    `/api/projects/${encodeURIComponent(projectId)}/mcp-servers/test`,
+    { method: "POST", body: { name: server.name, config: server.config } },
+  );
 
 /** Whole-block replace (owner): the full rule list is required and gets materialized into the config. */
 export const putCommandPolicy = (

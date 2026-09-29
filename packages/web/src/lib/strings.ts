@@ -716,6 +716,14 @@ export const zh = {
       "连接外部 MCP Server：其工具以 mcp__<name>__<tool> 并入本 Agent 的工具列表。此区块的改动即时保存。",
     mcpEmpty: "尚未配置 MCP Server",
     mcpAdd: "添加 MCP Server",
+    mcpPick: "从注册表添加",
+    mcpPickTitle: "从项目注册表添加",
+    mcpPickDesc:
+      "从「插件·技能 → 连接器」里已注册的 MCP 服务中勾选。添加的是该条目的副本，之后在这里改动不会影响注册表，也不会影响其他 Agent。",
+    mcpPickEmpty: "注册表里还没有 MCP 服务，先去「插件·技能 → 连接器」添加。",
+    mcpPickAllAdded: "注册表里的 MCP 服务都已添加。",
+    mcpPickAdd: "添加",
+    mcpPickAdded: "已添加",
     mcpEditTitle: "编辑 MCP Server",
     mcpRemove: "删除",
     mcpName: "name",
@@ -1418,6 +1426,15 @@ export const zh = {
     uninstallConfirmTitle: (name: string): string => `卸载 ${name}`,
     uninstallConfirmBody: (plugin: string, agent: string): string =>
       `确定从 ${agent} 卸载 ${plugin} 吗？其已安装的技能与钩子文件（含本地改动）将被删除。`,
+    /** The page's two tabs. "技能" is the plugin library flattened to what actually lands on an Agent. */
+    tabSkills: "技能",
+    tabConnectors: "连接器",
+    /** Connectors tab (features/plugins/connectors-tab.tsx): the Project's MCP server registry. */
+    connectorsDesc:
+      "MCP 服务：整个项目共用一份，在这里添加一次，再到各 Agent 的工具设置里勾选。Agent 保存的是选中条目的副本，因此改动这里不会自动影响已有 Agent。",
+    connectorsEmpty: "还没有添加 MCP 服务。添加后即可在智能体的工具设置中勾选。",
+    connectorsReadOnly: "只有项目管理员可以增删改 MCP 服务，你当前是成员，因此这里是只读的。",
+    connectorsSavedToast: "已保存，智能体可在工具设置中勾选",
   },
 
   /** Agent settings "Hooks" tab (features/agents/hooks-tab.tsx): the hook packages installed on one Agent. */
