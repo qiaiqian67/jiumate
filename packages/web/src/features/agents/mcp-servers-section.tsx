@@ -29,6 +29,7 @@ import { Modal } from "../../components/ui/modal";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { SettingsEmpty } from "../../components/ui/empty-state";
 import { CONNECTOR_ICON } from "../../components/ui/icons";
+import { SkillTile } from "../skills/skill-icon-view";
 import { LibraryCard } from "../plugins/library-card";
 import { Skeleton } from "../../components/ui/skeleton";
 import { OptionMenu, type OptionMenuChoice } from "../../components/ui/option-menu";
@@ -415,6 +416,7 @@ export function McpServersSection({
               fallbackIcon={CONNECTOR_ICON}
               description={targetOf(entry)}
               meta={`${transportOf(entry)} · ${permissionOf(entry)}`}
+              onOpen={() => setDetailIndex(index)}
               action={
                 <div className="flex shrink-0 items-center">
                   {!readOnly && (
@@ -582,6 +584,77 @@ export function McpServersSection({
           registry.every((entry) => servers.some((s) => s.name === entry.name)) && (
             <p className="text-xs text-gray-400 dark:text-gray-500">{S.agent.mcpPickAllAdded}</p>
           )}
+      </Modal>
+
+      <Modal
+        open={detailIndex !== null && servers[detailIndex] !== undefined}
+        title={
+          detailIndex !== null && servers[detailIndex] !== undefined
+            ? servers[detailIndex].name
+            : ""
+        }
+        onClose={() => setDetailIndex(null)}
+        footer={
+          <>
+            <Button onClick={() => setDetailIndex(null)}>{S.common.close}</Button>
+            {!readOnly && servers[detailIndex ?? 0] !== undefined && (
+              <Button
+                variant="primary"
+                disabled={busy || rowResults.get(servers[detailIndex!]!.name) === "pending"}
+                onClick={() => {
+                  const entry = servers[detailIndex!];
+                  if (entry) void testOne(entry);
+                }}
+              >
+                {servers[detailIndex ?? 0] !== undefined &&
+                rowResults.get(servers[detailIndex!]!.name) === "pending"
+                  ? S.agent.mcpTestPending
+                  : S.agent.mcpTest}
+              </Button>
+            )}
+          </>
+        }
+      >
+        {/* The detail view shows the stored entry, not the form's draft: the form is a separate
+            modal with its own unsaved state, and a reader who opened this to see what a server
+            IS should not be shown edits nobody has saved. */}
+        {detailIndex !== null && servers[detailIndex] !== undefined && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <SkillTile
+                name={servers[detailIndex].name}
+                fallback={CONNECTOR_ICON}
+                size={48}
+                glyph={26}
+              />
+              <div className="min-w-0 flex-1">
+                <span className="block truncate font-mono text-sm font-semibold">
+                  {servers[detailIndex].name}
+                </span>
+                <span className="block text-xs text-gray-400 dark:text-gray-500">
+                  {transportOf(servers[detailIndex])} · {permissionOf(servers[detailIndex])}
+                </span>
+              </div>
+            </div>
+            {/* The connection target, verbatim and unwrapped: this is the one field a reader
+                needs whole — a truncated command is not something you can copy or debug. */}
+            {targetOf(servers[detailIndex]) !== "" && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {S.agent.mcpTarget}
+                </p>
+                <p className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-xs break-all text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+                  {targetOf(servers[detailIndex])}
+                </p>
+              </div>
+            )}
+            {rowResults.get(servers[detailIndex].name) !== undefined && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                <TestBadge result={rowResults.get(servers[detailIndex].name)} />
+              </p>
+            )}
+          </div>
+        )}
       </Modal>
 
       <Modal
