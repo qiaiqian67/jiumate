@@ -175,14 +175,17 @@ function ApprovalModeSelect({
       menuClass="w-max"
       portal={{ direction, align: "left" }}
       button={
-        // Button styling matches the model selector (h-8 / rounded-md / solid hover background).
+        // Pill styling, the reference layout's row: a soft filled capsule rather than a
+        // bordered square, so several of them sit in one line without the row reading as a
+        // toolbar of separate widgets. h-8 is kept from the model selector so every control
+        // in the row shares one height.
         <button
           type="button"
           aria-label={S.chat.approvalMode}
           title={`${S.chat.approvalMode}：${S.chat.approvalModeNames[value] ?? value}`}
           disabled={disabled}
           onClick={() => setOpen((v) => !v)}
-          className="flex h-8 max-w-44 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          className="flex h-8 max-w-44 shrink-0 items-center gap-1.5 rounded-full bg-gray-100/70 px-2.5 text-xs text-gray-600 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800/60 dark:text-gray-300 dark:hover:bg-gray-700/60 dark:hover:text-gray-100"
         >
           {/* Icon changes with the current mode (allow-all = warning triangle, grayscale, no color-coding) */}
           <GlyphIcon d={APPROVAL_MODE_ICONS[value]} />
@@ -518,7 +521,7 @@ function SkillSelect({
           disabled={disabled}
           // The panel is unmounted while closed, so its search box starts empty on every open.
           onClick={() => setOpen(!open)}
-          className="flex h-8 max-w-44 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          className="flex h-8 max-w-44 shrink-0 items-center gap-1.5 rounded-full bg-gray-100/70 px-2.5 text-xs text-gray-600 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800/60 dark:text-gray-300 dark:hover:bg-gray-700/60 dark:hover:text-gray-100"
         >
           <GlyphIcon d={BOOK_ICON} className="shrink-0" />
           {/* When the card is narrower than @md, only the icon + badge remain (title shows the full name). */}
@@ -587,7 +590,7 @@ function PlusMenu({
       setOpen={setOpen}
       // Placement is portal-driven like the rest of the toolbar (its scroll container would
       // clip an absolutely-positioned panel); only size classes belong here.
-      menuClass="w-72"
+      menuClass="w-64 rounded-xl border border-gray-200/80 bg-white/95 p-1.5 shadow-lg backdrop-blur dark:border-gray-800 dark:bg-gray-900/95"
       portal={{ direction, align: "left" }}
       button={
         <button
@@ -595,34 +598,54 @@ function PlusMenu({
           aria-label={S.chat.plusMenu}
           title={S.chat.plusMenu}
           onClick={() => setOpen(!open)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
         >
-          <GlyphIcon d="M12 5v14M5 12h14" size={15} className="shrink-0" />
+          <GlyphIcon d="M12 5v14M5 12h14" size={16} className="shrink-0" />
         </button>
       }
     >
+      {/* One row per entry, the way the reference layout stacks them: icon, label, and a
+          right-hand marker. The description moves into the row's title (hover) rather than
+          sitting in a third column — at this width a description column squeezes the labels
+          into truncating, and what it said is a hint, not the name of the thing. The check
+          only appears on the row it belongs to, so a menu at rest has a clean right edge. */}
       {items.map((item) => (
         <button
           key={item.key}
           type="button"
           aria-pressed={item.active}
           disabled={item.disabled}
+          title={item.desc}
           onClick={() => {
             setOpen(false);
             item.onSelect();
           }}
-          className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs transition-colors duration-150 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:hover:bg-gray-800 dark:disabled:hover:bg-transparent ${
+          className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:hover:bg-gray-800 dark:disabled:hover:bg-transparent ${
             item.active
               ? "font-medium text-gray-900 dark:text-gray-100"
-              : "text-gray-600 dark:text-gray-400"
+              : "text-gray-700 dark:text-gray-300"
           }`}
         >
-          <GlyphIcon d={item.icon} className="shrink-0 text-gray-400 dark:text-gray-500" />
-          <span className="shrink-0">{item.label}</span>
-          <span className="min-w-0 flex-1 truncate text-gray-400 dark:text-gray-500">
-            {item.desc}
+          <GlyphIcon
+            d={item.icon}
+            size={16}
+            className="shrink-0 text-gray-500 dark:text-gray-400"
+          />
+          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          <span className="w-4 shrink-0 text-center">
+            {item.active ? (
+              <GlyphIcon
+                d="M20 6 9 17l-5-5"
+                size={13}
+                className="text-gray-500 dark:text-gray-400"
+              />
+            ) : (
+              // The reference layout's right-hand marker: what the row opens, not a
+              // decorative chevron — the entries that open a submenu are the ones that
+              // would get one, and the ones that act immediately do not.
+              <GlyphIcon d="m9 6 6 6-6 6" size={13} className="text-gray-300 dark:text-gray-600" />
+            )}
           </span>
-          <span className="w-3 shrink-0 text-center">{item.active ? "✓" : ""}</span>
         </button>
       ))}
       {footer && (
