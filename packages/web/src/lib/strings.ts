@@ -1639,6 +1639,10 @@ export const zh = {
     /** The draft screen's picker's last tab: prompts the user saved themselves (see user-shortcuts.ts). */
     shortcuts: {
       folder: "我的快捷指令",
+      /** 药丸行上的短标签，比 folder 短：那一行窄，「我的」两个字省下来给药丸。 */
+      pills: "快捷指令",
+      /** 行尾齿轮的提示：进入管理态，每个药丸上出现编辑/删除。 */
+      manage: "管理快捷指令",
       /** 收起药丸行 / 展开药丸行的箭头上的提示文字。 */
       collapse: "收起快捷指令",
       expand: "展开快捷指令",

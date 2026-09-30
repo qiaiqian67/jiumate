@@ -26,8 +26,18 @@ import type { DraftShortcut } from "@prismshadow/jiumate-server/api";
 /** A saved shortcut, as stored and as rendered. Re-exported from the API type so the two cannot drift. */
 export type UserShortcut = DraftShortcut;
 
-/** Most shortcuts one user may keep. Past this a click-to-pick list is a search problem. */
-export const SHORTCUT_MAX_COUNT = 3;
+/**
+ * Most shortcuts one user may keep.
+ *
+ * 5, not more: the pill row above the composer is a single line, and this is how many fit
+ * beside the label, the collapse caret and the gear before the row has to scroll on a
+ * laptop-width window. Past that the row is still usable, but the shortcuts have stopped being
+ * glanceable and become a list again — which is what the folder in the picker is for.
+ *
+ * The server carries the same number (`draft-shortcuts.ts`) and enforces it on the write path;
+ * `test/user-shortcuts.test.ts` fails if the two copies drift.
+ */
+export const SHORTCUT_MAX_COUNT = 5;
 /** Longest title, in characters: what one folder row shows without truncating. */
 export const SHORTCUT_TITLE_MAX = 40;
 /** Longest prompt body, in characters: about three times the longest built-in example. */

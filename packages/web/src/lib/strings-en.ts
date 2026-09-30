@@ -1676,6 +1676,10 @@ export const en: Strings = {
     /** The draft screen's picker's last tab: prompts the user saved themselves (see user-shortcuts.ts). */
     shortcuts: {
       folder: "My shortcuts",
+      /** 药丸行上的短标签，比 folder 短：那一行窄，「我的」两个字省下来给药丸。 */
+      pills: "Shortcuts",
+      /** 行尾齿轮的提示：进入管理态，每个药丸上出现编辑/删除。 */
+      manage: "Manage shortcuts",
       /** 收起药丸行 / 展开药丸行的箭头上的提示文字。 */
       collapse: "Collapse shortcuts",
       expand: "Expand shortcuts",

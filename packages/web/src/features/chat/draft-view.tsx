@@ -62,7 +62,6 @@ import { ChatInput } from "./chat-input";
 import type { ComposerControl } from "./chat-input";
 import { adoptDockScope } from "../dock/dock-state";
 import { setDockCwd } from "../dock/dock-terminal";
-import { InspirationPicker } from "../inspiration/inspiration-picker";
 import { InspirationStrip } from "../inspiration/inspiration-strip";
 import { ShortcutPills } from "./shortcut-pills";
 import { clearDraft, draftKey, loadDraft, saveDraft } from "./draft-cache";
@@ -702,7 +701,7 @@ export function DraftView({
 
         {/* 快捷指令药丸行：输入框正上方，一排药丸，点一下填入不发送。收起后只留一个标题
             按钮——没有快捷指令时整行不渲染（见 shortcut-pills.tsx），不占输入框上方的位置。 */}
-        <ShortcutPills onFill={fillShortcut} />
+        <ShortcutPills onFill={fillShortcut} readComposerText={() => textRef.current} />
 
         <ChatInput
           status="idle"

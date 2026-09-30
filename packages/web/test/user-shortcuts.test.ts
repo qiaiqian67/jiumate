@@ -209,16 +209,20 @@ describe("the draft picker keeps its height", () => {
     expect(source).toContain("activeCases.slice(0, PICKER_ROWS)");
   });
 
-  it("keeps the user folder within one row of a category tab", () => {
-    // Its tallest state is either the cap with no add row, or one below the cap plus the add
-    // row — both SHORTCUT_MAX_COUNT rows. The cap is what holds this, not a pinned height with
-    // a scrollbar inside it.
-    const tallestUser = Math.max(SHORTCUT_MAX_COUNT, SHORTCUT_MAX_COUNT - 1 + 1);
-    expect(tallestUser - PICKER_ROWS).toBeLessThanOrEqual(1);
+  it("bounds the shortcuts to what the pill row shows without scrolling", () => {
+    // The shortcuts' surface on the draft screen is the pill row (shortcut-pills.tsx), one line
+    // beside its label, collapse caret and gear. The count cap is what keeps that line glanceable
+    // — a taller cap and the row starts scrolling, at which point the folder in the picker is
+    // the better surface anyway. This used to assert parity with the picker category tabs, which
+    // was a real invariant while the picker was on this page; it is not rendered here any more.
+    const SHORTCUTS_PER_PILL_ROW = 5;
+    expect(SHORTCUT_MAX_COUNT).toBe(SHORTCUTS_PER_PILL_ROW);
+    // The picker's own cap is now unrelated to the folder's, so only its own bound is asserted.
+    expect(PICKER_ROWS).toBeGreaterThan(0);
   });
 
   it("drops the add row at the cap instead of disabling it", () => {
-    // The header already reads 3/3; a disabled row explaining the same thing is the second
+    // The header already reads 5/5; a disabled row explaining the same thing is the second
     // telling, and it is the row that would otherwise make the folder one taller than its cap.
     const source = read("../src/features/chat/shortcuts-folder.tsx");
     expect(source).toContain("canAddShortcut(shortcuts) && (");
