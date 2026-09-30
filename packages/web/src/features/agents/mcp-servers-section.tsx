@@ -69,6 +69,81 @@ function errorText(err: McpFormError | undefined): string | undefined {
   }
 }
 
+/**
+ * 连接器详情弹窗。
+ *
+ * 刻意做成一个独立组件，而不是在列表组件里内联一段 JSX：弹窗的 footer 是 JSX 节点，
+ * 在传给 Modal 之前就会被求值，不管弹窗开没开。之前把 `servers[detailIndex!]` 写在
+ * footer 的属性里，detailIndex 为 null 时直接抛错，第一次渲染就整页白屏——连接器页
+ * 每次打开都会崩。现在条目只解析一次，闭包里也只读这个稳定的入参。
+ *
+ * 展示的是已存条目，不是编辑表单的草稿：表单是另一个带未保存状态的弹窗，打开详情是
+ * 想看这个连接器「是什么」，不该看到没人保存过的改动。
+ */
+function DetailModal({
+  entry,
+  result,
+  busy,
+  editable,
+  onClose,
+  onTest,
+}: {
+  entry: MCPServerConfig;
+  result: RowTestResult | undefined;
+  busy: boolean;
+  /** 只读成员可以看详情，但没有「测试连接」这个会发请求的动作。 */
+  editable: boolean;
+  onClose: () => void;
+  onTest: () => void;
+}) {
+  return (
+    <Modal
+      open
+      title={entry.name}
+      onClose={onClose}
+      footer={
+        <>
+          <Button onClick={onClose}>{S.common.close}</Button>
+          {editable && (
+            <Button variant="primary" disabled={busy || result === "pending"} onClick={onTest}>
+              {result === "pending" ? S.agent.mcpTestPending : S.agent.mcpTest}
+            </Button>
+          )}
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <SkillTile name={entry.name} fallback={CONNECTOR_ICON} size={48} glyph={26} />
+          <div className="min-w-0 flex-1">
+            <span className="block truncate font-mono text-sm font-semibold">{entry.name}</span>
+            <span className="block text-xs text-gray-400 dark:text-gray-500">
+              {transportOf(entry)} · {permissionOf(entry)}
+            </span>
+          </div>
+        </div>
+        {/* 连接地址完整展示、不截断：这是读者唯一需要看全的字段——被截断的命令没法复制、
+            也没法排查。 */}
+        {targetOf(entry) !== "" && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {S.agent.mcpTarget}
+            </p>
+            <p className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-xs break-all text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+              {targetOf(entry)}
+            </p>
+          </div>
+        )}
+        {result !== undefined && (
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            <TestBadge result={result} />
+          </p>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 /** Table cell summary: the spawn line for stdio, the URL for http/sse. */
 function targetOf(entry: MCPServerConfig): string {
   const c = entry.config;
@@ -586,76 +661,24 @@ export function McpServersSection({
           )}
       </Modal>
 
-      <Modal
-        open={detailIndex !== null && servers[detailIndex] !== undefined}
-        title={
-          detailIndex !== null && servers[detailIndex] !== undefined
-            ? servers[detailIndex].name
-            : ""
-        }
-        onClose={() => setDetailIndex(null)}
-        footer={
-          <>
-            <Button onClick={() => setDetailIndex(null)}>{S.common.close}</Button>
-            {!readOnly && servers[detailIndex ?? 0] !== undefined && (
-              <Button
-                variant="primary"
-                disabled={busy || rowResults.get(servers[detailIndex!]!.name) === "pending"}
-                onClick={() => {
-                  const entry = servers[detailIndex!];
-                  if (entry) void testOne(entry);
-                }}
-              >
-                {servers[detailIndex ?? 0] !== undefined &&
-                rowResults.get(servers[detailIndex!]!.name) === "pending"
-                  ? S.agent.mcpTestPending
-                  : S.agent.mcpTest}
-              </Button>
-            )}
-          </>
-        }
-      >
-        {/* The detail view shows the stored entry, not the form's draft: the form is a separate
-            modal with its own unsaved state, and a reader who opened this to see what a server
-            IS should not be shown edits nobody has saved. */}
-        {detailIndex !== null && servers[detailIndex] !== undefined && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <SkillTile
-                name={servers[detailIndex].name}
-                fallback={CONNECTOR_ICON}
-                size={48}
-                glyph={26}
-              />
-              <div className="min-w-0 flex-1">
-                <span className="block truncate font-mono text-sm font-semibold">
-                  {servers[detailIndex].name}
-                </span>
-                <span className="block text-xs text-gray-400 dark:text-gray-500">
-                  {transportOf(servers[detailIndex])} · {permissionOf(servers[detailIndex])}
-                </span>
-              </div>
-            </div>
-            {/* The connection target, verbatim and unwrapped: this is the one field a reader
-                needs whole — a truncated command is not something you can copy or debug. */}
-            {targetOf(servers[detailIndex]) !== "" && (
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {S.agent.mcpTarget}
-                </p>
-                <p className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-xs break-all text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-                  {targetOf(servers[detailIndex])}
-                </p>
-              </div>
-            )}
-            {rowResults.get(servers[detailIndex].name) !== undefined && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                <TestBadge result={rowResults.get(servers[detailIndex].name)} />
-              </p>
-            )}
-          </div>
-        )}
-      </Modal>
+      {/* The entry the dialog is about, resolved ONCE. The footer below is a JSX node, so it
+          is evaluated on every render whether or not the dialog is open — indexing `servers`
+          with a nullable index there threw on the very first render and took the whole tab
+          with it. One local binding, read by everything including the callbacks, since a
+          narrowing on a prop of the JSX does not survive into a closure. */}
+      {detailIndex !== null && servers[detailIndex] !== undefined && (
+        <DetailModal
+          entry={servers[detailIndex]}
+          result={rowResults.get(servers[detailIndex].name)}
+          busy={busy}
+          editable={!readOnly}
+          onClose={() => setDetailIndex(null)}
+          onTest={() => {
+            const entry = detailIndex === null ? undefined : servers[detailIndex];
+            if (entry !== undefined) void testOne(entry);
+          }}
+        />
+      )}
 
       <Modal
         open={form !== null}
