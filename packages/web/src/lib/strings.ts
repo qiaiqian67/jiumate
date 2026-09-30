@@ -1633,6 +1633,9 @@ export const zh = {
     /** The draft screen's picker's last tab: prompts the user saved themselves (see user-shortcuts.ts). */
     shortcuts: {
       folder: "我的快捷指令",
+      /** 收起药丸行 / 展开药丸行的箭头上的提示文字。 */
+      collapse: "收起快捷指令",
+      expand: "展开快捷指令",
       new: "新建快捷指令",
       /**
        * Tooltip on the new-shortcut row. Unconditional, and worded to hold either way: the

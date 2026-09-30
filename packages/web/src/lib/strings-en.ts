@@ -1670,6 +1670,9 @@ export const en: Strings = {
     /** The draft screen's picker's last tab: prompts the user saved themselves (see user-shortcuts.ts). */
     shortcuts: {
       folder: "My shortcuts",
+      /** 收起药丸行 / 展开药丸行的箭头上的提示文字。 */
+      collapse: "Collapse shortcuts",
+      expand: "Expand shortcuts",
       new: "New shortcut",
       newFromComposer: "Starts from whatever is in the composer",
       createTitle: "New shortcut",
