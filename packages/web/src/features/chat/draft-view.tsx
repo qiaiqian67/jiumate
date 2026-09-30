@@ -63,6 +63,7 @@ import type { ComposerControl } from "./chat-input";
 import { adoptDockScope } from "../dock/dock-state";
 import { setDockCwd } from "../dock/dock-terminal";
 import { InspirationPicker } from "../inspiration/inspiration-picker";
+import { InspirationStrip } from "../inspiration/inspiration-strip";
 import { ShortcutPills } from "./shortcut-pills";
 import { clearDraft, draftKey, loadDraft, saveDraft } from "./draft-cache";
 import type { DraftCache } from "./draft-cache";
@@ -744,15 +745,7 @@ export function DraftView({
             scrolling. Rows stay enabled once the Agent's installed skills are known: without them
             the preselect would silently drop the case's skills (a saved shortcut pins none, so it
             never waits). */}
-        <div className="mt-6">
-          <InspirationPicker
-            skillsReady={skillsLoaded}
-            installedSkills={agentSkills.map((skill) => skill.name)}
-            onFill={fillCase}
-            readComposerText={() => textRef.current}
-            onFillShortcut={fillShortcut}
-          />
-        </div>
+        <InspirationStrip onFill={fillCase} />
       </div>
 
       {/* Lower symmetric space — empty, so it matches the upper one exactly */}

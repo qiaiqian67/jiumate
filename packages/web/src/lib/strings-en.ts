@@ -1289,6 +1289,12 @@ export const en: Strings = {
    */
   inspiration: {
     pageTitle: "Inspiration",
+    /** 新会话页输入框下方那条封面卡片条的标题。 */
+    stripTitle: "From inspiration",
+    /** 卡片条右上角的按钮：换下一组卡片。 */
+    shuffle: "Shuffle",
+    /** 卡片条上分类选项卡的第一个：显示所有分类的案例。 */
+    allCategories: "All",
     pageDesc:
       "Built-in prompts, agents, skills and tools — one click fills the composer and you are started.",
     /** The card's and the detail modal's star. */
