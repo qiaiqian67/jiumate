@@ -22,6 +22,7 @@ import type {
   PluginFilesResponse,
   PluginLibraryResponse,
   ProjectCreateResponse,
+  SkillCatalogResponse,
 } from "../src/api/types.js";
 import { apiClient, createTestApp, provisionUser } from "./helpers.js";
 import type { TestApp } from "./helpers.js";
@@ -65,7 +66,9 @@ describe("skills api", () => {
   /** Creates a plain Agent with no Skills preinstalled. */
   async function createPlainAgent(agentId: string): Promise<void> {
     const res = await owner.post(`/api/projects/${projectId}/agents`, { agentId });
-    expect(res.status).toBe(201);
+    if (res.status !== 201) {
+      throw new Error(`create ${agentId} -> ${res.status}: ${await res.text()}`);
+    }
   }
 
   it("GET /api/plugins: categories with plugin metadata, skills and hook points, without sending bodies", async () => {
@@ -232,6 +235,82 @@ describe("skills api", () => {
     for (const body of [{}, { names: [] }, { names: ["data-analysis", 1] }, { names: [""] }]) {
       expect((await owner.post(toPlugins(url), body)).status, JSON.stringify(body)).toBe(400);
     }
+  });
+
+  it("the project catalog unions every Agent's skills, and says which Agents hold each one", async () => {
+    // This is the question the per-Agent list cannot answer: a skill added to one Agent used to
+    // be visible only there, so "the list" and "the Agent's list" disagreed on both membership and
+    // count. The catalog is scanned across Agents and merged by skill name.
+    await createPlainAgent("cat_a");
+    await createPlainAgent("cat_b");
+    // Plugins, not skills: the plugin route installs a plugin, which brings its own skills along.
+    // `software-development` is what ships the web-design skill (see the install test above).
+    expect((await owner.post(toPlugins(base("cat_a")), { names: ["data-analysis"] })).status).toBe(
+      201,
+    );
+    const bInstall = await owner.post(toPlugins(base("cat_b")), {
+      names: ["data-analysis", "software-development"],
+    });
+    if (bInstall.status !== 201) {
+      throw new Error(`install on cat_b -> ${bInstall.status}: ${await bInstall.text()}`);
+    }
+
+    const res = await member.get(`/api/projects/${projectId}/skills/catalog`);
+    if (res.status !== 200) {
+      throw new Error(`catalog ${res.status}: ${JSON.stringify(await res.json())}`);
+    }
+    const body = (await res.json()) as SkillCatalogResponse;
+    // The expected union is derived from the three per-Agent lists rather than written out: the
+    // preinstalled set is whatever the manifests say, and hardcoding it here would make this
+    // test fail for an unrelated change to a plugin's `preinstall` flag.
+    const expected = new Map<string, Set<string>>();
+    for (const agentId of ["cat_a", "cat_b", "default_agent"]) {
+      const one = (await (await member.get(base(agentId))).json()) as AgentSkillsResponse;
+      for (const skill of one.skills) {
+        const holders = expected.get(skill.name) ?? new Set<string>();
+        holders.add(agentId);
+        expected.set(skill.name, holders);
+      }
+    }
+    expect(body.agentCount).toBe(3);
+    expect(body.skills.map((s) => s.name)).toEqual([...expected.keys()].sort());
+    for (const skill of body.skills) {
+      const want = [...expected.get(skill.name)!].sort();
+      expect(skill.agents, skill.name).toEqual(want);
+      // The two derived flags have to agree with the list they summarize, on every entry — that
+      // is the whole contract, so it is checked for all of them rather than for one sample.
+      expect(skill.onAllAgents, skill.name).toBe(want.length === body.agentCount);
+      expect(skill.uninstalled, skill.name).toBe(want.length === 0);
+      expect(skill.description, skill.name).toBeTruthy();
+    }
+
+    // A skill on both plain Agents reads as one card, not two — the merge is by skill name. Which
+    // Agents that is depends on what preinstalls, so it is read off the derived map above rather
+    // than asserted as a literal.
+    const shared = body.skills.find((s) => s.name === "data-analysis")!;
+    expect(shared.agents).toEqual([...expected.get("data-analysis")!].sort());
+    // A skill on only one plain Agent keeps that split: which Agents exactly depends on what
+    // preinstalls, but the point is that cat_b's copy is named rather than summarized away.
+    const onlyB = body.skills.find((s) => s.name === "web-design")!;
+    expect(onlyB.agents).toEqual([...expected.get("web-design")!].sort());
+    expect(onlyB.agents).toContain("cat_b");
+
+    // Uninstalling from one Agent moves the skill rather than removing it from the catalog.
+    expect((await member.delete(`${base("cat_b")}/web-design`)).status).toBe(204);
+    const after = (await (
+      await member.get(`/api/projects/${projectId}/skills/catalog`)
+    ).json()) as SkillCatalogResponse;
+    const moved = after.skills.find((s) => s.name === "web-design");
+    // Still listed — default_agent ships it preinstalled — and no longer counted on cat_b.
+    expect(moved).toBeDefined();
+    expect(moved!.agents).not.toContain("cat_b");
+  });
+
+  it("the catalog is member-readable and outsider-hidden, like every other Project read", async () => {
+    expect((await member.get(`/api/projects/${projectId}/skills/catalog`)).status).toBe(200);
+    expect((await owner.get(`/api/projects/${projectId}/skills/catalog`)).status).toBe(200);
+    expect((await outsider.get(`/api/projects/${projectId}/skills/catalog`)).status).toBe(404);
+    expect((await owner.get("/api/projects/no_such_project/skills/catalog")).status).toBe(404);
   });
 
   it("outsiders always get 404 (read, install, uninstall); a missing Agent is 404", async () => {

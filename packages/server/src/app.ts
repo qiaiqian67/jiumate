@@ -159,7 +159,7 @@ import { vaultRoutes } from "./http/routes/vault.js";
 import { memoryRoutes } from "./http/routes/memory.js";
 import { scheduleRoutes } from "./http/routes/schedules.js";
 import { benchmarksRoutes } from "./http/routes/benchmarks.js";
-import { agentSkillsRoutes } from "./http/routes/skills.js";
+import { agentSkillsRoutes, projectSkillsRoutes } from "./http/routes/skills.js";
 import {
   agentHooksRoutes,
   agentPluginsRoutes,
@@ -1327,6 +1327,8 @@ export function createApp(
   app.route("/api/projects/:projectId/agents/:agentId/schedules", scheduleRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId/benchmarks", benchmarksRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId/skills", agentSkillsRoutes(deps));
+  // Project-level skill catalog: what skills exist across every Agent (see projectSkillsRoutes).
+  app.route("/api/projects/:projectId/skills", projectSkillsRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId/plugins", agentPluginsRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId/hooks", agentHooksRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId", agentTransferRoutes(deps));

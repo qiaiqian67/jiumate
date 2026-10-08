@@ -1472,6 +1472,15 @@ export const en: Strings = {
     statUsedBy: "Usage",
     /** 钥匙图标的说明：列出这个插件的技能各自还差哪些环境变量。 */
     needsEnv: (names: string[]): string => `Needs: ${names.join(", ")}`,
+    /** 已装在几个 Agent 上（总数在第二位，便于对照）。 */
+    onAgents: (n: number, total: number): string =>
+      total <= 1 ? "installed" : `${n} / ${total} agents`,
+    /** 目录选项卡。 */
+    tabCatalog: "Installed skills",
+    catalogCount: (skills: number, agents: number): string => `${skills} skills · ${agents} agents`,
+    catalogEmpty: "No skills installed yet",
+    catalogEmptyHint:
+      "Install one from the Skill library, or add your own. Everything an Agent can use shows up here.",
     detailHooks: "Hooks",
     usedByAgents: (n: number): string =>
       n === 0 ? "not used yet" : n === 1 ? "used by 1 agent" : `used by ${n} agents`,

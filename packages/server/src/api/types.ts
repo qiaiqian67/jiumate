@@ -1338,6 +1338,48 @@ export interface DirectorySkillsResponse {
   skills: DirectorySkillItem[];
 }
 
+/**
+ * One skill as the catalog sees it, unioned across every Agent in the Project.
+ *
+ * The catalog is the union because a skill is installed **per Agent**, so "which skills exist"
+ * has no single answer — the same skill can be on three Agents and missing from a fourth. This
+ * type says where a skill is *available* rather than pretending one of those is the truth, and
+ * `agents` is what the card's install state is drawn from.
+ */
+export interface SkillCatalogItem extends SkillMetadataItem {
+  /** The Agents in this Project that have it installed, sorted; every Agent in the catalog. */
+  agents: string[];
+  /**
+   * True when no Agent in the Project has it.
+   *
+   * A separate flag rather than `agents.length === 0` at the call site, because the two are not
+   * the same question: an empty list also describes a skill that was installed and then
+   * uninstalled everywhere, and the catalog lists that one differently from one that was never
+   * available.
+   */
+  uninstalled: boolean;
+  /**
+   * Whether every Agent has it — the state worth surfacing on a card, since "on all of them" is
+   * what an install-to-everyone action is for.
+   */
+  onAllAgents: boolean;
+  /** The number of Agents in the Project, so a card can say "2 / 3" without a second request. */
+  agentCount: number;
+  /**
+   * Which library plugin ships this skill, when one does. Absent for a skill installed on its
+   * own (a zip import, a hand-authored one) — that is the distinction the catalog needs to tell
+   * "came from the library" from "the user made this".
+   */
+  pluginName?: string;
+}
+
+export interface SkillCatalogResponse {
+  /** Every skill installed on at least one Agent in the Project, sorted by name. */
+  skills: SkillCatalogItem[];
+  /** How many Agents were scanned. */
+  agentCount: number;
+}
+
 export interface SessionCreateRequest {
   /** Upstream id of the session's model; always sent together with provider. Omit both for the Project's default Model. */
   modelId?: string;

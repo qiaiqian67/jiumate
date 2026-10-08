@@ -99,6 +99,7 @@ import type {
   SessionsResponse,
   SessionTracesResponse,
   SkillArchiveInstallRequest,
+  SkillCatalogResponse,
   PluginFilesResponse,
   PluginInstallRequest,
   PluginLibraryResponse,
@@ -1183,6 +1184,16 @@ export const getAgentSkills = (projectId: string, agentId: string) =>
   apiFetch<AgentSkillsResponse>(
     `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}/skills`,
   );
+
+/**
+ * Every skill in the Project, unioned over its Agents.
+ *
+ * Not the same answer as `getAgentSkills`: a skill lives in one Agent's directory, so that one
+ * reports only what one Agent has, and a skill installed on two Agents is listed twice across the
+ * per-Agent calls. This is what a page showing "all skills" must read.
+ */
+export const getSkillCatalog = (projectId: string) =>
+  apiFetch<SkillCatalogResponse>(`/api/projects/${encodeURIComponent(projectId)}/skills/catalog`);
 
 export const getAgentHooks = (projectId: string, agentId: string) =>
   apiFetch<AgentHooksResponse>(

@@ -1443,6 +1443,16 @@ export const zh = {
     statUsedBy: "使用情况",
     /** 钥匙图标的说明：列出这个插件的技能各自还差哪些环境变量。 */
     needsEnv: (names: string[]): string => `需要配置：${names.join("、")}`,
+    /** 已装在几个 Agent 上（总数在第二位，便于对照）。 */
+    onAgents: (n: number, total: number): string =>
+      total <= 1 ? "已安装" : `${n} / ${total} 个 Agent`,
+    /** 目录选项卡。 */
+    tabCatalog: "已装技能",
+    catalogCount: (skills: number, agents: number): string =>
+      `${skills} 个技能 · ${agents} 个 Agent`,
+    catalogEmpty: "还没有装任何技能",
+    catalogEmptyHint:
+      "从「技能库」安装，或用「添加技能」导入自己的。装好后每个 Agent 用到它都会出现在这里。",
     detailHooks: "钩子",
     usedByAgents: (n: number): string => (n === 0 ? "未被使用" : `${n} 个 Agent 在用`),
     /**

@@ -37,13 +37,15 @@
  *   which is why the page fetches both lists per Agent. Uninstall takes the plugin apart the
  *   same way: one DELETE per skill and one for the hook package.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import type {
   AgentSummary,
   HookItem,
   PluginGroupItem,
   PluginItem,
+  SkillCatalogItem,
+  SkillCatalogResponse,
   SkillMetadataItem,
 } from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
@@ -74,7 +76,7 @@ import { toastError, toastSuccess } from "../../components/ui/toast";
 import { DRAFT_SESSION_ID } from "../chat/chat-page";
 import { draftKey, loadDraft, saveDraft } from "../chat/draft-cache";
 import { parkActiveDraft } from "../chat/draft-sessions";
-import { localizedShortText, localizedText } from "../chat/skill-use";
+import { BOOK_ICON, localizedShortText, localizedText } from "../chat/skill-use";
 import { PluginDetailModal } from "./plugin-detail";
 import { ConnectorsTab } from "./connectors-tab";
 import { Tabs } from "../../components/ui/tabs";
@@ -213,7 +215,7 @@ export function pluginUpdatePlan(
 
 export function PluginsPage() {
   useDocumentTitle(S.nav.plugins);
-  const [tab, setTab] = useState<"skills" | "connectors">("skills");
+  const [tab, setTab] = useState<"catalog" | "skills" | "connectors">("catalog");
   /** Library search: filters the cards inside their categories (see the title row). */
   const [query, setQuery] = useState("");
   /** Active category chip (null = all): narrows the sections to one, like the reference chips. */
@@ -237,6 +239,16 @@ export function PluginsPage() {
   const [groups, setGroups] = useState<PluginGroupItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [installed, setInstalled] = useState<InstalledMap>(new Map());
+  /**
+   * Every skill in the Project, unioned over its Agents (null until loaded).
+   *
+   * This is what the catalog tab lists. The plugin library below it answers a different question
+   * — what *can* be installed — and it cannot answer "what is installed": a skill added straight
+   * to one Agent belongs to no plugin, so it appeared in that Agent's tab and nowhere on this
+   * page. Keeping both, under separate tabs, is what makes the difference legible instead of
+   * merging "available" and "installed" into one list that is wrong about both.
+   */
+  const [catalog, setCatalog] = useState<SkillCatalogResponse | null>(null);
   /** Collapsed groups (all expanded by default; same convention as the model page's provider groups). */
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -305,6 +317,34 @@ export function PluginsPage() {
     setInstalled((prev) => new Map(prev).set(agentId, installs));
 
   /**
+   * Re-read the catalog. Called after any install or uninstall, since both change which Agents
+   * hold a skill — the per-plugin `installed` map updates optimistically, but the catalog's
+   * union has to be rebuilt from the server to stay truthful about the other Agents.
+   */
+  const reloadCatalog = useCallback(() => {
+    if (!projectId) {
+      setCatalog(null);
+      return;
+    }
+    let cancelled = false;
+    void api
+      .getSkillCatalog(projectId)
+      .then((res) => {
+        if (!cancelled) setCatalog(res);
+      })
+      .catch((e: unknown) => {
+        // The catalog tab degrades to empty rather than taking the page down: the plugin library
+        // below it is a separate request and stays usable.
+        if (!cancelled) setError(apiErrorText(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  useEffect(() => reloadCatalog(), [reloadCatalog]);
+
+  /**
    * One Agent's snapshot entry with a plugin marked present (at the library's version) or
    * absent — its skills and, when it ships one, its hook package, all at once.
    */
@@ -369,6 +409,7 @@ export function PluginsPage() {
       return;
     }
     void reloadAgents();
+    reloadCatalog();
   };
 
   /**
@@ -392,6 +433,7 @@ export function PluginsPage() {
     // would survive the very update it led the user to. Runs after a partial failure too —
     // some Agent moved.
     void reloadAgents();
+    reloadCatalog();
   };
 
   /**
@@ -438,6 +480,7 @@ export function PluginsPage() {
       setBulkRunning(false);
       setPendingBulk(null);
     }
+    reloadCatalog();
   };
 
   /**
@@ -524,6 +567,23 @@ export function PluginsPage() {
   }, [groups, query, locale, groupFilter]);
 
   /**
+   * The catalog narrowed by the same search box, on the same terms as the library above it: name
+   * and the description that applies to the active language. Memoized for the same reason — the
+   * filter runs on every render of a tab that re-renders whenever an install changes `installed`.
+   */
+  const visibleCatalog = useMemo(() => {
+    if (catalog === null) return [];
+    const q = query.trim().toLowerCase();
+    if (q === "") return catalog.skills;
+    return catalog.skills.filter((one) =>
+      [one.name, localizedText(locale, one.description, one.shortDescriptionZh)]
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [catalog, query, locale]);
+
+  /**
    * How many library plugins the currently selected Agent has. Per Agent rather than per
    * user — installation is an Agent's own state, so a count that ignored which Agent is
    * selected would be a number about nothing.
@@ -549,6 +609,7 @@ export function PluginsPage() {
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <Tabs
             items={[
+              { key: "catalog", label: S.plugins.tabCatalog },
               { key: "skills", label: S.plugins.tabSkills },
               { key: "connectors", label: S.plugins.tabConnectors },
             ]}
@@ -566,15 +627,20 @@ export function PluginsPage() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={
-                  tab === "skills"
-                    ? S.plugins.searchPlaceholder
-                    : S.plugins.searchConnectorsPlaceholder
+                  tab === "connectors"
+                    ? S.plugins.searchConnectorsPlaceholder
+                    : S.plugins.searchPlaceholder
                 }
                 aria-label={
-                  tab === "skills" ? S.plugins.searchLabel : S.plugins.searchConnectorsLabel
+                  tab === "connectors" ? S.plugins.searchConnectorsLabel : S.plugins.searchLabel
                 }
               />
             </div>
+            {tab === "catalog" && catalog !== null && (
+              <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+                {S.plugins.catalogCount(catalog.skills.length, catalog.agentCount)}
+              </span>
+            )}
             {tab === "skills" && (
               <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
                 {S.plugins.installedForAgent(installedPluginsForCurrentAgent)}
@@ -600,7 +666,40 @@ export function PluginsPage() {
             )}
           </div>
         </div>
-        {tab === "connectors" ? (
+        {tab === "catalog" ? (
+          <div className="mt-6">
+            {catalog === null ? (
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <SkeletonCard key={i} className="p-4">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="mt-2 h-4 w-3/4" />
+                    <Skeleton className="mt-3 h-6 w-36" />
+                  </SkeletonCard>
+                ))}
+              </div>
+            ) : visibleCatalog.length === 0 ? (
+              // One empty state for both "nothing installed" and "nothing matched": telling them
+              // apart needs a sentence about installing skills, which would be wrong advice for
+              // someone who has skills and mistyped a filter.
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {catalog.skills.length === 0
+                  ? `${S.plugins.catalogEmpty}。${S.plugins.catalogEmptyHint}`
+                  : S.plugins.noMatch(query.trim())}
+              </p>
+            ) : (
+              <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleCatalog.map((one) => (
+                  <li key={one.name} className="flex">
+                    <div className="flex w-full">
+                      <SkillCatalogCard skill={one} agentNames={agentNamesOf(one.agents, agents)} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : tab === "connectors" ? (
           <div className="mt-6">
             <ConnectorsTab />
           </div>
@@ -782,6 +881,76 @@ export function PluginsPage() {
         </ConfirmModal>
       )}
     </div>
+  );
+}
+
+/**
+ * Display names for the Agents a skill is installed on, in the order the catalog returned them.
+ *
+ * Uses the app's own `agentDisplayName`, which falls back to the raw id — so an Agent deleted
+ * since the catalog was fetched still reads as its id rather than as a blank.
+ */
+function agentNamesOf(agentIds: readonly string[], agents: readonly AgentSummary[]): string[] {
+  return agentIds.map((id) => {
+    const found = agents.find((a) => a.agentId === id);
+    return found === undefined ? id : agentDisplayName(found);
+  });
+}
+
+/**
+ * One skill in the catalog: what it is, where it is installed, and whether it is ready to run.
+ *
+ * The Agents it is on are the card's real state, not a decoration — the same skill can be on two
+ * Agents and absent from a third, and that is the fact a user needs when deciding what to add
+ * where. It is shown as a count plus a tooltip of names rather than as names on the card: three
+ * names would not fit beside a version and would be unreadable at nine.
+ *
+ * Built on `LibraryCard` rather than a new article so the catalog and the library below it share
+ * one card — same tile, same truncation, same hover behaviour — and the two tabs cannot drift.
+ */
+function SkillCatalogCard({
+  skill,
+  agentNames,
+}: {
+  skill: SkillCatalogItem;
+  /** Already-resolved display names, in catalog order. */
+  agentNames: string[];
+}) {
+  const { locale } = useLocale();
+  const description = skill.shortDescription ?? skill.description;
+  const versionDate = skill.version ? skill.version.split(".")[0]! : null;
+  const versionRevision = skill.version ? skill.version.split(".")[1] : null;
+  const where = S.plugins.onAgents(skill.agents.length, skill.agentCount);
+  const meta = [
+    versionDate
+      ? S.plugins.versionLabel(
+          versionDate,
+          versionRevision === undefined ? null : Number(versionRevision),
+          formatRelativeDate(versionDate, locale),
+        )
+      : null,
+    // The count on the card, the names in the tooltip: which Agents have it is the fact a user
+    // acts on, but three names do not fit beside a version and nine would be unreadable, so the
+    // full list rides on hover rather than being dropped.
+    agentNames.length > 0 ? `${where}：${agentNames.join("、")}` : where,
+  ]
+    .filter((v): v is string => v !== null)
+    .join(" · ");
+  const needsKey = (skill.requiredEnv?.length ?? 0) > 0;
+  return (
+    <LibraryCard
+      icon={skill.icon}
+      name={skill.name}
+      // The book, the app's uniform mark for a skill — the same fallback the Agent's skill rows
+      // use, so a skill without its own icon looks identical wherever it appears.
+      fallbackIcon={BOOK_ICON}
+      description={description}
+      meta={meta}
+      // Only a skill that has a key to be missing gets a marker; one that declares none would
+      // otherwise sit there permanently "unset" for a reason it does not have.
+      keyState={needsKey ? (skill.requiredEnvReady ? "ready" : "unset") : undefined}
+      keyLabel={needsKey ? S.plugins.needsEnv(skill.requiredEnv!) : undefined}
+    />
   );
 }
 

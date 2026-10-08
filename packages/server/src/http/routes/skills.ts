@@ -24,7 +24,11 @@ import {
   parseSkillFrontmatter,
   PLUGIN_NAME_PATTERN,
 } from "@prismshadow/jiumate-core";
-import type { AgentSkillsResponse } from "../../api/types.js";
+import type {
+  AgentSkillsResponse,
+  SkillCatalogItem,
+  SkillCatalogResponse,
+} from "../../api/types.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";
 import { HttpError } from "../errors.js";
@@ -165,6 +169,79 @@ function explicitSkillVersion(skillMd: string): string | null {
   return parseSkillFrontmatter(skillMd)?.version || null;
 }
 
+/**
+ * Every skill in the Project, unioned over its Agents.
+ *
+ * This exists because the per-Agent list cannot answer "what skills are there". A skill lives in
+ * one Agent's directory, so a skill added to one Agent was invisible to any page reading another
+ * Agent's list, and a skill installed on two Agents showed up twice — the same complaint from two
+ * directions. The catalog scans every Agent once and merges by skill name, and each entry carries
+ * the Agents it is on so a card can draw real install state rather than a guess.
+ *
+ * Merge rule: the first Agent that has a skill wins its metadata. Two copies of one skill name are
+ * the same skill by definition (the directory name is its identity), and the copies can differ only
+ * by a local edit to one Agent's — taking the first keeps the response deterministic instead of
+ * dependent on scan order.
+ */
+async function projectSkillCatalog(
+  deps: AppDeps,
+  projectId: string,
+): Promise<SkillCatalogResponse> {
+  const agents = await deps.agentService.listAgents(projectId);
+  const agentIds = agents.map((one) => one.agentId).sort();
+  // Read in parallel: the scan is I/O-bound and the Agents are independent, and an unreadable
+  // skills directory yields [] in core rather than throwing, so one Agent cannot fail the catalog.
+  const perAgent = await Promise.all(
+    agentIds.map((agentId) => listInstalledSkills(deps.config.root, projectId, agentId)),
+  );
+  const merged = new Map<string, SkillCatalogItem>();
+  perAgent.forEach((skills, index) => {
+    const agentId = agentIds[index]!;
+    for (const skill of skills) {
+      const existing = merged.get(skill.name);
+      if (existing === undefined) {
+        merged.set(skill.name, {
+          ...toSkillItem(skill),
+          agents: [agentId],
+          // Both flags are fixed below, once the union is complete: at this point the skill is
+          // known to be on at least one Agent, but not yet on all of them.
+          uninstalled: false,
+          onAllAgents: false,
+          agentCount: agentIds.length,
+        });
+      } else {
+        existing.agents.push(agentId);
+      }
+    }
+  });
+  return {
+    skills: [...merged.values()]
+      .map((one) => ({
+        ...one,
+        agents: one.agents.sort(),
+        onAllAgents: agentIds.length > 0 && one.agents.length === agentIds.length,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    agentCount: agentIds.length,
+  };
+}
+
+/**
+ * /api/projects/:p/skills — the Project-level skill catalog.
+ *
+ * Mounted beside the per-Agent router rather than inside it: this answer has no Agent in it, and
+ * a path that names an Agent it does not use would be worse than a second mount point.
+ */
+export function projectSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
+  const app = new Hono<AppEnv>();
+  app.get("/catalog", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    return c.json(await projectSkillCatalog(deps, projectId));
+  });
+  return app;
+}
+
 /** /api/projects/:p/agents/:a/skills: read, import/export and uninstall are all Project-member operations. */
 export function agentSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
@@ -183,6 +260,20 @@ export function agentSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
     deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
     await deps.agentConfigService.requireExists(projectId, agentId);
     return c.json(await listResponse(projectId, agentId));
+  });
+
+  /**
+   * GET /api/projects/:p/agents/:a/skills/catalog — see {@link projectSkillsRoutes}. Kept here as
+   * a sibling rather than only on the project-level router so the two answers cannot drift: both
+   * call `projectSkillCatalog`, and this one is scoped to the Agent in the path as a convenience
+   * for callers that are already on that Agent's page.
+   */
+  app.get("/catalog", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    const agentId = requireValidId(c, "agentId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    await deps.agentConfigService.requireExists(projectId, agentId);
+    return c.json(await projectSkillCatalog(deps, projectId));
   });
 
   // Insert (or migrate a legacy hardcoded # Skills section to) the {{SKILLS}} placeholder —
