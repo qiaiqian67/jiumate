@@ -51,16 +51,17 @@ export function LibraryCard({
   onOpen?: () => void;
 }) {
   const header = (
-    <span className="flex min-w-0 flex-1 items-start gap-2.5">
+    // `items-center`, not `items-start`: the tile is 40px and the name one line of 20px, and
+    // top-aligning them leaves the name sitting high against a much taller icon — which reads
+    // as the two not belonging to the same card.
+    <span className="flex min-w-0 flex-1 items-center gap-2.5">
       <SkillTile icon={icon} name={name} fallback={fallbackIcon} size={40} glyph={22} />
-      {/* Two lines with an ellipsis, not `truncate`. Truncation is a function of the container's
-          width, so a longer name silently shows fewer characters on a card nobody resized — which
-          reads as the card being at fault. Two lines of a fixed 15px face carry roughly twice the
-          text in the same box, and the full name stays on `title` and in the accessible name. */}
-      <span
-        className="line-clamp-2 min-w-0 flex-1 text-[15px] font-semibold leading-5"
-        title={name}
-      >
+      {/* One line, ellipsized. `truncate` rather than `line-clamp-2`: the card's width is fixed by
+          the grid, so a second line buys nothing but makes short names ragged and pushes the
+          description down on the cards that happen to have long names. What shows is a function
+          of the card width, which is the honest trade for a fixed grid — the full name stays on
+          `title` and in the accessible name, and the detail modal shows it in full. */}
+      <span className="min-w-0 flex-1 truncate text-[15px] font-semibold" title={name}>
         {name}
       </span>
     </span>
@@ -69,9 +70,13 @@ export function LibraryCard({
     // h-full + the meta line's mt-auto keep the bottoms of a row aligned when one card's
     // description runs to two lines and its neighbour's takes one.
     <div className="group flex h-full flex-col rounded-xl border border-gray-200 bg-white p-4 transition-shadow duration-150 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
-      <div className="flex items-start gap-2">
+      <div className="flex items-center gap-2">
         {onOpen ? (
-          <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 text-left">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="flex min-w-0 flex-1 items-center text-left"
+          >
             {header}
           </button>
         ) : (
