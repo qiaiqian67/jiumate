@@ -1,6 +1,7 @@
 ---
 name: jiumate-orchestration
 description: Drive JiuMate itself from a shell — list and create agents and sessions, send and steer messages mid-flight, and query costs and scheduled tasks via the jiumate CLI over the local server.
+required_env: JIUMATE_API_TOKEN
 ---
 
 # JiuMate Orchestration

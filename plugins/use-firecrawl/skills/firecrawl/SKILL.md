@@ -1,6 +1,7 @@
 ---
 name: firecrawl
 description: Search the web and scrape pages into clean markdown with the Firecrawl API — query-based discovery, single-URL extraction including public PDFs, driven by curl with a vault-stored API key.
+required_env: FIRECRAWL_API_KEY
 ---
 
 # Firecrawl

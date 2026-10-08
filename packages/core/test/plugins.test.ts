@@ -66,6 +66,10 @@ describe("loadLibraryPlugins", () => {
         const dir = path.join(pluginsRoot, plugin.name, "skills", skill.name);
         const file = await fs.readFile(path.join(dir, "SKILL.md"), "utf8");
         // The library file carries only name + description; plugin.json is the metadata holder.
+        // `required_env` is the exception: it has no home in plugin.json (a plugin's skills may
+        // each need different credentials), so it is the one declaration a skill's own file has
+        // to carry — and it has to survive the stamp, or an installed copy would arrive with no
+        // record of what it needs.
         const fileFront = /^---\n([\s\S]*?)\n---/.exec(file)![1]!;
         expect(fileFront, `${plugin.name}/${skill.name} file frontmatter`).not.toMatch(
           /^(version|short_description|short_description_zh):/m,
@@ -76,6 +80,12 @@ describe("loadLibraryPlugins", () => {
         expect(meta.version, `${plugin.name}/${skill.name} version`).toBe(plugin.version);
         expect(skill.version).toBe(plugin.version);
         expect(meta.shortDescriptionZh).toBe(plugin.shortDescriptionZh);
+        // The credential declaration has to reach the installed copy. It is the only field a
+        // skill's own frontmatter holds that the stamp has to carry over, so a skill needing a
+        // key would otherwise install with nothing to tell the UI it is not ready to run.
+        expect(meta.requiredEnv, `${plugin.name}/${skill.name} requiredEnv`).toEqual(
+          parseSkillFrontmatter(file)?.requiredEnv,
+        );
         expect(skill.content.endsWith(file.replace(/^---\n[\s\S]*?\n---/, ""))).toBe(true);
         // A skill's icon is its plugin's, stamped by the loader — no skill directory ships
         // an icon.svg of its own.
