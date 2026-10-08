@@ -223,6 +223,14 @@ export const PLUGIN_ICON =
  */
 export const CONNECTOR_ICON = "M9.5 14.5 14.5 9.5M8 17a5 5 0 0 1 0-7l2-2M16 7a5 5 0 0 1 0 7l-2 2";
 
+/**
+ * Key: a credential. What a model row shows when its API key is unset, and what a library card
+ * shows for a subject that declares `required_env` — so the same mark means "needs a secret,
+ * and here is whether it has one" wherever that comes up.
+ */
+export const KEY_ICON =
+  "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4";
+
 export const NAV_ICONS = {
   /** App Center (a grid of four rounded squares — a catalog of starter apps, the eye's quick
      shorthand for a menu of things to launch). */

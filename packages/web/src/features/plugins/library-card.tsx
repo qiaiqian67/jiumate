@@ -13,7 +13,9 @@
  * action.
  */
 import type { ReactNode } from "react";
+import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { SkillTile } from "../skills/skill-icon-view";
+import { KEY_ICON } from "../../components/ui/icons";
 
 export function LibraryCard({
   icon,
@@ -23,6 +25,8 @@ export function LibraryCard({
   descriptionTitle,
   action,
   meta,
+  keyState,
+  keyLabel,
   onOpen,
 }: {
   /** Sanitized inline svg of the subject, when it has one. */
@@ -38,13 +42,25 @@ export function LibraryCard({
   action?: ReactNode;
   /** Optional bottom line of real data (version, usage, connection target). */
   meta?: string;
+  /** Key state for a subject that needs credentials: yellow unset, green ready, undefined when
+   *  it needs none. Rendered at the bottom-right of the meta row. */
+  keyState?: "unset" | "ready";
+  /** Tooltip naming the variables a keyState subject waits on. */
+  keyLabel?: string;
   /** When set, the name area becomes a button that opens the subject. */
   onOpen?: () => void;
 }) {
   const header = (
-    <span className="flex min-w-0 flex-1 items-center gap-2.5">
+    <span className="flex min-w-0 flex-1 items-start gap-2.5">
       <SkillTile icon={icon} name={name} fallback={fallbackIcon} size={40} glyph={22} />
-      <span className="min-w-0 flex-1 truncate text-[15px] font-semibold" title={name}>
+      {/* Two lines with an ellipsis, not `truncate`. Truncation is a function of the container's
+          width, so a longer name silently shows fewer characters on a card nobody resized — which
+          reads as the card being at fault. Two lines of a fixed 15px face carry roughly twice the
+          text in the same box, and the full name stays on `title` and in the accessible name. */}
+      <span
+        className="line-clamp-2 min-w-0 flex-1 text-[15px] font-semibold leading-5"
+        title={name}
+      >
         {name}
       </span>
     </span>
@@ -72,8 +88,25 @@ export function LibraryCard({
       >
         {description}
       </p>
-      {meta !== undefined && (
-        <p className="mt-auto pt-3 text-[11px] text-gray-400 dark:text-gray-500">{meta}</p>
+      {(meta !== undefined || keyState !== undefined) && (
+        // The meta line and the key mark share one row so the key sits at the card's
+        // bottom-right rather than adding a row of its own — a subject needing credentials is a
+        // fact about it, not a second line of copy.
+        <div className="mt-auto flex items-end gap-2 pt-3">
+          {meta !== undefined && (
+            <p className="min-w-0 flex-1 text-[11px] text-gray-400 dark:text-gray-500">{meta}</p>
+          )}
+          {keyState !== undefined && (
+            <span
+              className={`shrink-0 ${keyState === "ready" ? "text-emerald-500 dark:text-emerald-400" : "text-amber-500 dark:text-amber-400"}`}
+              title={keyLabel}
+              aria-label={keyLabel}
+              role="img"
+            >
+              <GlyphIcon d={KEY_ICON} size={14} />
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

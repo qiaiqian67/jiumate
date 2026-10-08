@@ -843,18 +843,42 @@ function PluginCard({
       : plugin.skills.find((skill) => currentInstalls.skills.has(skill.name));
 
   // The card's detail Modal (the model library's card pattern): what the plugin ships,
-  // with a per-skill SKILL.md reader.
+  // with a per-skill SKILL.md reader. Rendered below the card rather than by the page, since
+  // one card's detail has to know that card's own `installedCount`.
   const [detailOpen, setDetailOpen] = useState(false);
   // Short description takes priority, falling back to the full description
   // when missing (per UI language); title carries the full description for hover reading.
   const description = localizedShortText(locale, plugin);
   const fullDescription = localizedText(locale, plugin.description, plugin.descriptionZh);
-  // Metadata line: version (`YYYY-MM-DD.N`, omitted when the manifest carries none) · how
-  // long ago that version's date is · usage count — plain readable phrases, no badges.
+  // Metadata line: version · how long ago that version's date is · usage count — plain
+  // readable phrases, no badges.
+  //
+  // The version is split rather than printed whole because `2026-08-04.1` is not a version
+  // number — it is a date and a revision welded together, and printing it as `v2026-08-04.1`
+  // left people asking which of the two they were looking at. The date part is what they were
+  // reading anyway (the relative phrase beside it already came from it), so it gets its own
+  // label and the `.N` stays as the revision.
   const versionDate = plugin.version ? plugin.version.split(".")[0]! : null;
+  const versionRevision = plugin.version ? plugin.version.split(".")[1] : null;
+  // Key state for the whole card: a plugin is only as ready as the least-ready skill it ships,
+  // so any skill waiting on a credential tints the card. The names go in the tooltip so the
+  // mark says *what* to set, not merely that something is unset.
+  const envSkills = plugin.skills.filter((skill) => (skill.requiredEnv?.length ?? 0) > 0);
+  const envNames = [...new Set(envSkills.flatMap((skill) => skill.requiredEnv ?? []))];
+  const keyState =
+    envNames.length === 0
+      ? undefined
+      : envSkills.every((skill) => skill.requiredEnvReady)
+        ? "ready"
+        : "unset";
   const meta = [
-    plugin.version ? `v${plugin.version}` : null,
-    versionDate ? formatRelativeDate(versionDate, locale) : null,
+    versionDate
+      ? S.plugins.versionLabel(
+          versionDate,
+          versionRevision === undefined ? null : Number(versionRevision),
+          formatRelativeDate(versionDate, locale),
+        )
+      : null,
     S.plugins.usedByAgents(installedCount),
   ]
     .filter((v): v is string => v !== null)
@@ -868,6 +892,8 @@ function PluginCard({
         description={description}
         descriptionTitle={fullDescription}
         meta={meta}
+        keyState={keyState}
+        keyLabel={envNames.length === 0 ? undefined : S.plugins.needsEnv(envNames)}
         onOpen={() => setDetailOpen(true)}
         action={
           // Shown on hover (or focus, so the keyboard reaches them): four buttons on a card
@@ -960,6 +986,14 @@ function PluginCard({
           </div>
         }
       />
+      {detailOpen && (
+        <PluginDetailModal
+          plugin={plugin}
+          meta={meta}
+          installedCount={installedCount}
+          onClose={() => setDetailOpen(false)}
+        />
+      )}
       {installOpen && (
         <Modal
           open

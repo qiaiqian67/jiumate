@@ -1467,9 +1467,23 @@ export const en: Strings = {
     noMatch: (query: string): string => `No plugin matches “${query}”`,
     /** Section labels of the plugin detail Modal. */
     detailSkills: "Skills",
+    /** 详情弹窗那两栏数据的标题。 */
+    statVersion: "Version",
+    statUsedBy: "Usage",
+    /** 钥匙图标的说明：列出这个插件的技能各自还差哪些环境变量。 */
+    needsEnv: (names: string[]): string => `Needs: ${names.join(", ")}`,
     detailHooks: "Hooks",
     usedByAgents: (n: number): string =>
       n === 0 ? "not used yet" : n === 1 ? "used by 1 agent" : `used by ${n} agents`,
+    /**
+     * 卡片底部那行的版本：`2026-08-04` 是日期，`.1` 是修订号，括号里是相对时间。
+     * 三者放一起是因为分开成两行会让卡片底部高出同行卡片；`v2026-08-04.1` 那种写法看不出
+     * 哪段是日期，正是要解决的问题。
+     */
+    versionLabel: (date: string, revision: number | null, relative: string): string =>
+      revision === null || Number.isNaN(revision)
+        ? `${date} (${relative})`
+        : `${date}.${revision} (${relative})`,
     /** Title on a disabled quick-start button: it pre-selects one of the plugin's skills on the currently selected agent, so the plugin has to be installed there first. */
     quickInvokeNeedsInstall: "Install this plugin on the current agent first to quick-start",
     installedToast: (plugin: string, agent: string): string => `Installed ${plugin} to ${agent}`,

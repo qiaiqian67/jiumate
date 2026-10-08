@@ -38,6 +38,17 @@ export function toSkillItem(skill: SkillMetadata & { icon?: string }): SkillMeta
       ? { shortDescriptionZh: skill.shortDescriptionZh }
       : {}),
     ...(skill.icon !== undefined ? { icon: skill.icon } : {}),
+    ...(skill.requiredEnv !== undefined && skill.requiredEnv.length > 0
+      ? {
+          requiredEnv: skill.requiredEnv,
+          // Presence only, and a variable set to an empty string counts as unset — a declared
+          // key that is blank is exactly the half-configured state this marker exists to show.
+          requiredEnvReady: skill.requiredEnv.every((one) => {
+            const value = process.env[one];
+            return value !== undefined && value.trim() !== "";
+          }),
+        }
+      : {}),
     version: skill.version,
   };
 }

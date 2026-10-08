@@ -41,6 +41,17 @@ export interface SkillMetadata {
   shortDescriptionZh?: string;
   /** Version, `YYYY-MM-DD.N`; an absent or malformed frontmatter version reads as "" (older than any real version). */
   version: string;
+  /**
+   * Environment variables the skill cannot run without (frontmatter `required_env`), as declared
+   * names. Absent when the skill declares none.
+   *
+   * The skill author knows which credentials their calls need and the server can see which
+   * variables are set; neither of them can tell the other on its own. This is the declaration
+   * that lets the UI answer "is this skill ready to use?" truthfully instead of the user finding
+   * out from a failed call — and the values themselves never leave the server, only whether each
+   * one is present.
+   */
+  requiredEnv?: string[];
 }
 
 /** A skill in the library: metadata + full SKILL.md content (including frontmatter, written as-is on install). */
@@ -169,12 +180,21 @@ export function parseSkillFrontmatter(content: string): SkillMetadata | null {
   const version = fields["version"] ?? "";
   const shortDescription = fields["short_description"];
   const shortDescriptionZh = fields["short_description_zh"];
+  // `required_env` is a comma-separated list on one line, matching every other frontmatter value
+  // here (they are all scalars — this parser reads no YAML). Empty entries are dropped, and an
+  // empty result is treated as "declares nothing" rather than as an empty list, so the field
+  // stays absent and the UI shows no key marker at all rather than a permanently-unset one.
+  const requiredEnv = (fields["required_env"] ?? "")
+    .split(",")
+    .map((one) => one.trim())
+    .filter((one) => one !== "");
   return {
     name,
     description: fields["description"] ?? "",
     // short_description(_zh) is optional: omitted when absent (undefined keys aren't set).
     ...(shortDescription !== undefined ? { shortDescription } : {}),
     ...(shortDescriptionZh !== undefined ? { shortDescriptionZh } : {}),
+    ...(requiredEnv.length > 0 ? { requiredEnv } : {}),
     version: PLUGIN_VERSION_PATTERN.test(version) ? version : "",
   };
 }
@@ -285,12 +305,19 @@ function stampSkill(
   },
 ): LibrarySkill {
   const { shortDescription, shortDescriptionZh } = plugin;
+  // `required_env` is written out as well as carried: the installed SKILL.md has to stay
+  // self-describing, or a skill that needs a credential would arrive at an Agent with the
+  // declaration stripped and nothing left to tell the UI it is not ready to run.
+  const requiredEnv = skill.requiredEnv;
   const front = [
     "---",
     `name: ${skill.name}`,
     `description: ${skill.description}`,
     ...(shortDescription !== undefined ? [`short_description: ${shortDescription}`] : []),
     ...(shortDescriptionZh !== undefined ? [`short_description_zh: ${shortDescriptionZh}`] : []),
+    ...(requiredEnv !== undefined && requiredEnv.length > 0
+      ? [`required_env: ${requiredEnv.join(", ")}`]
+      : []),
     `version: ${plugin.version}`,
     "---",
   ].join("\n");

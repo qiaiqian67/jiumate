@@ -100,11 +100,16 @@ export function groupPluginFiles(
 export function PluginDetailModal({
   plugin,
   meta,
+  installedCount,
   onClose,
 }: {
   plugin: PluginItem;
   /** The card's metadata line (version · updated · used by N agents), repeated under the title. */
   meta: string;
+  /** How many Agents in this Project have it installed — the one usage number this build can
+   *  state truthfully. Passed in rather than fetched: the card already counted it to draw `meta`,
+   *  and a second request would only be able to disagree with it. */
+  installedCount: number;
   onClose: () => void;
 }) {
   const { locale } = useLocale();
@@ -175,6 +180,24 @@ export function PluginDetailModal({
           )}
         </div>
       </div>
+
+      {/* Stat row. Two columns, not the three the reference shows: download counts belong to a
+          marketplace, and this build installs from the filesystem, so there is no download to
+          count — a fabricated number is worse than an absent one. What is real is here. */}
+      <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-gray-100 py-3 dark:border-gray-800">
+        <div className="min-w-0 text-center">
+          <dt className="text-[11px] text-gray-400 dark:text-gray-500">{S.plugins.statVersion}</dt>
+          <dd className="mt-0.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {plugin.version === "" ? S.common.none : plugin.version}
+          </dd>
+        </div>
+        <div className="min-w-0 border-l border-gray-100 text-center dark:border-gray-800">
+          <dt className="text-[11px] text-gray-400 dark:text-gray-500">{S.plugins.statUsedBy}</dt>
+          <dd className="mt-0.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {S.plugins.usedByAgents(installedCount)}
+          </dd>
+        </div>
+      </dl>
 
       {/* The browser: tree left, preview right (stacked on narrow screens). Both panes scroll on
           their own inside fixed heights, so the header above stays put. */}

@@ -3105,6 +3105,18 @@ export interface SkillMetadataItem {
   icon?: string;
   /** Version (`YYYY-MM-DD.N`, frontmatter version); an empty string when the frontmatter carries none or a malformed one. */
   version: string;
+  /**
+   * Environment variables this skill needs (frontmatter `required_env`, comma-separated); absent
+   * when it declares none.
+   *
+   * The API reports which of them are **set**, never their values: the browser cannot ask the
+   * server's environment, so this is the only way it can tell a ready skill from one that will
+   * fail on first use, and the answer is a boolean per name precisely because the secrets stay
+   * here.
+   */
+  requiredEnv?: string[];
+  /** `requiredEnv` resolved against the server's environment: true when every one is present. Absent with `requiredEnv` itself. */
+  requiredEnvReady?: boolean;
 }
 
 /** One installed hook package (`agent_state/hooks/<name>/`): its manifest, without the scripts. */

@@ -221,6 +221,28 @@ describe("parseSkillFrontmatter", () => {
     expect(parseSkillFrontmatter("no frontmatter")).toBeNull();
     expect(parseSkillFrontmatter("---\ndescription: d\n---\n")).toBeNull();
   });
+
+  it("reads required_env as a comma-separated list, and omits it when empty", () => {
+    // The field is what lets the UI say "this skill needs a credential you have not set"
+    // instead of leaving the user to find out from a failed call, so both halves matter: a
+    // declared list, and no field at all when the skill declares nothing (an empty list would
+    // render a permanently-unset key mark on skills that need no key).
+    expect(
+      parseSkillFrontmatter("---\nname: x\nrequired_env: EXA_API_KEY, FOO_TOKEN\n---\nbody")
+        ?.requiredEnv,
+    ).toEqual(["EXA_API_KEY", "FOO_TOKEN"]);
+    expect(
+      parseSkillFrontmatter("---\nname: x\nrequired_env:  A , , B  \n---\nbody")?.requiredEnv,
+    ).toEqual(["A", "B"]);
+    // Absent, blank, or only separators: the key is omitted rather than set to [].
+    expect(parseSkillFrontmatter("---\nname: x\n---\nbody")).not.toHaveProperty("requiredEnv");
+    expect(parseSkillFrontmatter("---\nname: x\nrequired_env:   \n---\nbody")).not.toHaveProperty(
+      "requiredEnv",
+    );
+    expect(parseSkillFrontmatter("---\nname: x\nrequired_env: , ,\n---\nbody")).not.toHaveProperty(
+      "requiredEnv",
+    );
+  });
 });
 
 /**
