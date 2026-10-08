@@ -24,6 +24,42 @@ export function ChevronDown({ size = 12, className = "" }: { size?: number; clas
   );
 }
 
+/**
+ * Back arrow for a page reached from another one.
+ *
+ * A chevron on its own would read as a disclosure ("more under this") rather than as leaving the
+ * page, which is the wrong affordance on the one control that leaves: the whole point is that the
+ * user can see they are somewhere else and get back in one press.
+ */
+export function ArrowLeftIcon({
+  size = 18,
+  strokeWidth = 1.8,
+  className = "",
+}: {
+  size?: number;
+  strokeWidth?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden
+      className={`shrink-0 ${className}`}
+    >
+      <path
+        d="M19 12H5m0 0 6-6m-6 6 6 6"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** Selected-row checkmark in the Select / OptionMenu menus. */
 export function CheckIcon({ size = 13, className = "" }: { size?: number; className?: string }) {
   return (

@@ -1483,8 +1483,14 @@ export const en: Strings = {
      * skill are different things, and folding both into one number is what made "19 skills against
      * 11 plugins — where did the other 8 go?" unanswerable.
      */
-    installedTitle: (skills: number, plugins: number, agents: number): string =>
-      `Installed skills (${skills})`,
+    installedTitle: (skills: number): string => `Installed skills (${skills})`,
+    /** The full-screen page's search box. */
+    searchInstalledPlaceholder: "Search installed skills",
+    searchInstalledLabel: "Search installed skills",
+    /** The full-screen page's batch-manage entry. */
+    batchManage: "Batch manage",
+    /** The full-screen page's back arrow. */
+    back: "Back",
     /** The three group headings: which one a skill falls in is decided by how it was installed. */
     groupFromPlugins: "From plugins",
     groupStandalone: "Installed individually",

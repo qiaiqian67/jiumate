@@ -67,7 +67,13 @@ import { Button } from "../../components/ui/button";
 import { Chevron } from "../../components/ui/chevron";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { Input } from "../../components/ui/input";
-import { CheckIcon, PLUGIN_ICON, PlusIcon, SEND_ICON } from "../../components/ui/icons";
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  PLUGIN_ICON,
+  PlusIcon,
+  SEND_ICON,
+} from "../../components/ui/icons";
 import { TRASH_ICON } from "../../components/ui/session-row-menu";
 import { LibraryCard } from "./library-card";
 import { Modal } from "../../components/ui/modal";
@@ -218,7 +224,18 @@ export function pluginUpdatePlan(
 
 export function PluginsPage() {
   useDocumentTitle(S.nav.plugins);
-  const [tab, setTab] = useState<"catalog" | "skills" | "connectors">("catalog");
+  const [tab, setTab] = useState<"skills" | "connectors">("skills");
+  /**
+   * Whether the installed-skills full-screen page is open.
+   *
+   * Its own view rather than a fourth tab: the marketplace and the installed list are two
+   * different questions, and a tab makes them look like two views of one question. The reference
+   * layout makes the count a button that opens a page with a back arrow, which says "this is
+   * somewhere else" in the affordance itself.
+   */
+  const [showInstalled, setShowInstalled] = useState(false);
+  /** The full-screen page's own search, independent of the library's. */
+  const [installedQuery, setInstalledQuery] = useState("");
   /** Library search: filters the cards inside their categories (see the title row). */
   const [query, setQuery] = useState("");
   /** Active category chip (null = all): narrows the sections to one, like the reference chips. */
@@ -574,30 +591,18 @@ export function PluginsPage() {
    * and the description that applies to the active language. Memoized for the same reason — the
    * filter runs on every render of a tab that re-renders whenever an install changes `installed`.
    */
-  const visibleCatalog = useMemo(() => {
-    if (catalog === null)
-      return { plugins: [] as InstalledPluginItem[], skills: [] as InstalledSkillItem[] };
-    const q = query.trim().toLowerCase();
-    const matches = (name: string, description: string) =>
-      [name, description].join(" ").toLowerCase().includes(q);
-    // A query narrows within the structure rather than flattening it: the install unit is what
-    // the page is for, so a match on one of a plugin's Skills keeps the plugin card (and its
-    // other members) rather than dropping the user into a flat list of names.
-    const plugins = catalog.plugins.filter(
-      (plugin) =>
-        q === "" ||
-        matches(plugin.name, localizedText(locale, plugin.description, undefined)) ||
-        plugin.skills.some((skill) =>
-          matches(skill.name, localizedText(locale, skill.description, skill.shortDescriptionZh)),
-        ),
-    );
-    const skills = catalog.skills.filter(
-      (skill) =>
-        q === "" ||
-        matches(skill.name, localizedText(locale, skill.description, skill.shortDescriptionZh)),
-    );
-    return { plugins, skills };
-  }, [catalog, query, locale]);
+  /**
+   * How many skills are installed in total, across the plugins and the standalone ones.
+   *
+   * Counts **skills**, not install units: a plugin carrying four skills is four skills, and this
+   * number is what the marketplace pill and the installed page title both claim. Counting cards
+   * instead would be the same confusion the grouping exists to remove — 19 skills shown as 11
+   * would put the original question straight back.
+   */
+  const installedCount = useMemo(() => {
+    if (catalog === null) return null;
+    return catalog.plugins.reduce((n, p) => n + p.skills.length, 0) + catalog.skills.length;
+  }, [catalog]);
 
   /**
    * How many library plugins the currently selected Agent has. Per Agent rather than per
@@ -614,6 +619,24 @@ export function PluginsPage() {
     );
   }, [groups, installed, currentAgent]);
 
+  // The installed-skills page replaces the marketplace wholesale rather than sitting beside it:
+  // a back arrow and its own title bar say "you went somewhere", and two lists of skills on one
+  // scroll is how the marketplace and the inventory get read as one.
+  if (showInstalled) {
+    return (
+      <InstalledSkillsPage
+        catalog={catalog}
+        query={installedQuery}
+        onQueryChange={setInstalledQuery}
+        onBack={() => {
+          setInstalledQuery("");
+          setShowInstalled(false);
+        }}
+        agentNamesOf={(ids) => agentNamesOf(ids, agents)}
+      />
+    );
+  }
+
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mx-auto max-w-6xl">
@@ -625,7 +648,6 @@ export function PluginsPage() {
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <Tabs
             items={[
-              { key: "catalog", label: S.plugins.tabCatalog },
               { key: "skills", label: S.plugins.tabSkills },
               { key: "connectors", label: S.plugins.tabConnectors },
             ]}
@@ -652,14 +674,19 @@ export function PluginsPage() {
                 }
               />
             </div>
-            {tab === "catalog" && catalog !== null && (
-              <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-                {S.plugins.installedTitle(
-                  catalog.plugins.reduce((n, p) => n + p.skills.length, 0) + catalog.skills.length,
-                  catalog.plugins.length,
-                  catalog.agentCount,
-                )}
-              </span>
+            {/* The installed-skills count is a **button**, not a badge: the reference layout has it
+                open a full-screen page of what is installed. A count you cannot click cannot be
+                the door to that page, and leaving it inert is why "installed 19" sat on the
+                catalog tab while nothing on screen showed what those 19 were. */}
+            {installedCount !== null && (
+              <button
+                type="button"
+                onClick={() => setShowInstalled(true)}
+                title={S.plugins.installedTitle(installedCount)}
+                className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-bg)] dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-700 dark:hover:bg-gray-800"
+              >
+                {S.plugins.installedTitle(installedCount)}
+              </button>
             )}
             {tab === "skills" && (
               <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
@@ -686,36 +713,7 @@ export function PluginsPage() {
             )}
           </div>
         </div>
-        {tab === "catalog" ? (
-          <div className="mt-6">
-            {catalog === null ? (
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }, (_, i) => (
-                  <SkeletonCard key={i} className="p-4">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="mt-2 h-4 w-3/4" />
-                    <Skeleton className="mt-3 h-6 w-36" />
-                  </SkeletonCard>
-                ))}
-              </div>
-            ) : visibleCatalog.plugins.length === 0 && visibleCatalog.skills.length === 0 ? (
-              // One empty state for both "nothing installed" and "nothing matched": telling them
-              // apart needs a sentence about installing skills, which would be wrong advice for
-              // someone who has skills and mistyped a filter.
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {catalog.plugins.length === 0 && catalog.skills.length === 0
-                  ? `${S.plugins.catalogEmpty}。${S.plugins.catalogEmptyHint}`
-                  : S.plugins.noMatch(query.trim())}
-              </p>
-            ) : (
-              <InstalledSkillsView
-                plugins={visibleCatalog.plugins}
-                skills={visibleCatalog.skills}
-                agentNamesOf={(ids) => agentNamesOf(ids, agents)}
-              />
-            )}
-          </div>
-        ) : tab === "connectors" ? (
+        {tab === "connectors" ? (
           <div className="mt-6">
             <ConnectorsTab />
           </div>
@@ -911,6 +909,119 @@ function agentNamesOf(agentIds: readonly string[], agents: readonly AgentSummary
     const found = agents.find((a) => a.agentId === id);
     return found === undefined ? id : agentDisplayName(found);
   });
+}
+
+/**
+ * The installed-skills page: everything this Project has, grouped by install unit.
+ *
+ * Laid out as the reference page is — back arrow, the count in the title, its own search on the
+ * right, then one section per kind of install. The count is a heading rather than a pill because on
+ * this page it *is* the subject; the marketplace keeps the pill as the way in.
+ *
+ * The grouping is the content, not decoration. A plugin carrying four skills is one install, and
+ * showing it as one card is what makes "19 skills" and "11 plugins" reconcile instead of looking
+ * like eight missing.
+ */
+function InstalledSkillsPage({
+  catalog,
+  query,
+  onQueryChange,
+  onBack,
+  agentNamesOf,
+}: {
+  catalog: InstalledSkillsResponse | null;
+  query: string;
+  onQueryChange: (next: string) => void;
+  onBack: () => void;
+  agentNamesOf: (ids: readonly string[]) => string[];
+}) {
+  const { locale } = useLocale();
+  const total =
+    catalog === null
+      ? 0
+      : catalog.plugins.reduce((n, p) => n + p.skills.length, 0) + catalog.skills.length;
+
+  // Filtering happens before grouping, and a match inside a plugin keeps the plugin card: the
+  // install unit is the thing being described, so a hit on one of its skills should not scatter
+  // the card's other members across the page.
+  const { plugins, skills } = useMemo(() => {
+    if (catalog === null) return { plugins: [], skills: [] };
+    const q = query.trim().toLowerCase();
+    const hit = (name: string, text: string) => `${name} ${text}`.toLowerCase().includes(q);
+    return {
+      plugins: catalog.plugins.filter(
+        (p) =>
+          q === "" ||
+          hit(p.name, localizedText(locale, p.description, p.descriptionZh)) ||
+          p.skills.some((s) =>
+            hit(s.name, localizedText(locale, s.description, s.shortDescriptionZh)),
+          ),
+      ),
+      skills: catalog.skills.filter(
+        (s) => q === "" || hit(s.name, localizedText(locale, s.description, s.shortDescriptionZh)),
+      ),
+    };
+  }, [catalog, query, locale]);
+
+  return (
+    <div className="h-full overflow-y-auto p-4 md:p-6">
+      <div className="mx-auto max-w-6xl">
+        {/* The reference page's top row: back, title-with-count, then the search. The title is the
+            count, so it is a heading rather than a pill — nothing else here competes to be the
+            subject. */}
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label={S.plugins.back}
+            title={S.plugins.back}
+            className="shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-bg)] dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+          >
+            <ArrowLeftIcon size={18} strokeWidth={1.8} />
+          </button>
+          <h2 className="min-w-0 truncate text-base font-semibold text-gray-900 dark:text-gray-100">
+            {S.plugins.installedTitle(total)}
+          </h2>
+          <span className="min-w-0 flex-1" />
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="w-40 sm:w-56">
+              <Input
+                size="sm"
+                value={query}
+                onChange={(event) => onQueryChange(event.target.value)}
+                placeholder={S.plugins.searchInstalledPlaceholder}
+                aria-label={S.plugins.searchInstalledLabel}
+              />
+            </div>
+          </div>
+        </div>
+        {catalog === null ? (
+          <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }, (_, i) => (
+              <SkeletonCard key={i} className="p-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="mt-2 h-4 w-3/4" />
+                <Skeleton className="mt-3 h-6 w-36" />
+              </SkeletonCard>
+            ))}
+          </div>
+        ) : plugins.length === 0 && skills.length === 0 ? (
+          // One empty state for both "nothing installed" and "nothing matched": telling them apart
+          // needs a sentence about installing skills, which would be wrong advice for someone who
+          // has skills and mistyped a filter.
+          <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+            {catalog.plugins.length === 0 && catalog.skills.length === 0
+              ? `${S.plugins.catalogEmpty}。${S.plugins.catalogEmptyHint}`
+              : S.plugins.noMatch(query.trim())}
+          </p>
+        ) : (
+          <div className="mt-6">
+            <InstalledSkillsView plugins={plugins} skills={skills} agentNamesOf={agentNamesOf} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /** A single plugin card: metadata display (contents badges + a semantic metadata line) + update reminder + quick start + "manage installs" Modal. */

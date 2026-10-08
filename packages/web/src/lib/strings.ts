@@ -1454,8 +1454,14 @@ export const zh = {
      * 「已装技能」页的总标题。它数的是**技能**，不是安装单位——插件和技能是两种东西，
      * 混进一个数字就会重演「19 个技能对 11 个插件，差的 8 个去哪了」。
      */
-    installedTitle: (skills: number, plugins: number, agents: number): string =>
-      `已安装技能 (${skills})`,
+    installedTitle: (skills: number): string => `已安装技能 (${skills})`,
+    /** 全屏页的搜索框。 */
+    searchInstalledPlaceholder: "搜索已安装的技能",
+    searchInstalledLabel: "搜索已安装的技能",
+    /** 全屏页右上角的批量管理入口。 */
+    batchManage: "批量管理",
+    /** 全屏页返回箭头的名称。 */
+    back: "返回",
     /** 三组分区的标题：一个技能属于哪一组，由它「怎么装进来的」决定。 */
     groupFromPlugins: "来自插件",
     groupStandalone: "单独安装",
