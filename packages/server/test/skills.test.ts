@@ -237,6 +237,159 @@ describe("skills api", () => {
     }
   });
 
+  describe("install provenance", () => {
+    const installed = () => member.get(`/api/projects/${projectId}/skills/installed`);
+    const json = async () =>
+      (await (await installed()).json()) as {
+        plugins: {
+          name: string;
+          skills: { name: string; inferred: boolean; origin: string; pluginName: string | null }[];
+          missingSkills: string[];
+          hooks: string[];
+          inferred: boolean;
+          agents: string[];
+        }[];
+        skills: { name: string; pluginName: string | null; origin: string }[];
+        agentCount: number;
+      };
+
+    it("records the plugin install and groups its skills under it", async () => {
+      await createPlainAgent("prov_a");
+      const res = await owner.post(toPlugins(base("prov_a")), { names: ["agent-tuning"] });
+      expect(res.status).toBe(201);
+
+      const body = await json();
+      const plugin = body.plugins.find((p) => p.name === "agent-tuning")!;
+      // Recorded, not inferred: this install happened after .installs.json shipped.
+      expect(plugin.inferred).toBe(false);
+      expect(plugin.skills.map((s) => s.name).sort()).toEqual(
+        loadPreinstalledPlugins()
+          .find((p) => p.name === "agent-tuning")!
+          .skills.map((s) => s.name)
+          .sort(),
+      );
+      expect(plugin.skills.every((s) => s.inferred)).toBe(false);
+      // The plugin is also preinstalled on default_agent, so the view is project-wide and both Agents
+      // legitimately hold it — that is the point of the grouping.
+      expect(plugin.agents).toEqual(["default_agent", "prov_a"]);
+      expect(plugin.hooks).toEqual([]);
+      // Every member is attributed to the plugin, so none of them also shows as standalone.
+      expect(body.skills.map((s) => s.name)).not.toContain("agent-evaluation");
+      const onDisk = body.plugins
+        .flatMap((p) => p.skills)
+        .find((s) => s.name === "agent-evaluation")!;
+      expect(onDisk.pluginName).toBe("agent-tuning");
+    });
+
+    it("records a zip import as the user's own, and it is not attributed to any plugin", async () => {
+      await createPlainAgent("prov_b");
+      const res = await member.post(`${base("prov_b")}/archive`, {
+        dataBase64: Buffer.from(
+          zipSync({
+            "my-own-skill/SKILL.md": strToU8(
+              "---\nname: my-own-skill\ndescription: mine\nversion: 1\n---\n\nbody\n",
+            ),
+          }),
+        ).toString("base64"),
+      });
+      expect(res.status).toBe(201);
+
+      const body = await json();
+      const own = body.skills.find((s) => s.name === "my-own-skill")!;
+      expect(own).toBeDefined();
+      expect(own.origin).toBe("import");
+      expect(own.pluginName).toBeNull();
+    });
+
+    it("a plugin uninstall removes every member's directory and the record entry", async () => {
+      await createPlainAgent("prov_c");
+      await owner.post(toPlugins(base("prov_c")), { names: ["agent-tuning"] });
+      const before = await json();
+      const members = before.plugins
+        .find((p) => p.name === "agent-tuning")!
+        .skills.map((s) => s.name);
+
+      const res = await member.post(`${base("prov_c")}/plugins/uninstall`, {
+        name: "agent-tuning",
+      });
+      expect(res.status).toBe(200);
+      const payload = (await res.json()) as { removedSkills: string[]; removedHooks: string[] };
+      // default_agent also holds the plugin, so the member count here is this Agent's own four.
+      expect(payload.removedSkills.sort()).toEqual(members.sort());
+      // Gone from disk, not just from the view. Asserted on this Agent's own list because the
+      // view is project-wide and default_agent also holds the plugin — uninstalling from one
+      // Agent must not touch the other.
+      const after = (await (await member.get(base("prov_c"))).json()) as AgentSkillsResponse;
+      expect(after.skills.map((s) => s.name)).toEqual([]);
+      for (const name of members) {
+        await expect(
+          fs.access(path.join(skillsDir(t.root, projectId, "prov_c"), name, "SKILL.md")),
+        ).rejects.toThrow();
+      }
+      // The record entry is gone, so the plugin is no longer attributed here — it now reads as
+      // inferred from default_agent's copy, which is the honest reading of a partial install.
+      const view = await json();
+      const plugin = view.plugins.find((p) => p.name === "agent-tuning")!;
+      expect(plugin.agents).toEqual(["default_agent"]);
+      expect(plugin.inferred).toBe(true);
+    });
+
+    it("uninstalling a plugin the Agent does not have is a no-op, not an error", async () => {
+      await createPlainAgent("prov_d");
+      // prov_d's own copy, which the library fallback has to clear: without a record for the
+      // plugin, "uninstall" would otherwise report success and leave the Skills in place, which
+      // is the state where the word plainly is not true.
+      await owner.post(toPlugins(base("prov_d")), { names: ["agent-tuning"] });
+      const had = ((await (await member.get(base("prov_d"))).json()) as AgentSkillsResponse).skills;
+      expect(had.length).toBeGreaterThan(0);
+
+      const res = await member.post(`${base("prov_d")}/plugins/uninstall`, {
+        name: "agent-tuning",
+      });
+      expect(res.status).toBe(200);
+      const after = (await (await member.get(base("prov_d"))).json()) as AgentSkillsResponse;
+      expect(after.skills).toEqual([]);
+    });
+
+    it("uninstalling a plugin the Agent never had is a no-op, not an error", async () => {
+      await createPlainAgent("prov_fresh");
+      const res = await member.post(`${base("prov_fresh")}/plugins/uninstall`, {
+        name: "agent-tuning",
+      });
+      expect(res.status).toBe(200);
+      const after = (await (await member.get(base("prov_fresh"))).json()) as AgentSkillsResponse;
+      expect(after.skills).toEqual([]);
+    });
+
+    it("a deleted member leaves the plugin visibly incomplete rather than silently whole", async () => {
+      await createPlainAgent("prov_e");
+      await owner.post(toPlugins(base("prov_e")), { names: ["agent-tuning"] });
+      const all = (await json()).plugins
+        .find((p) => p.name === "agent-tuning")!
+        .skills.map((s) => s.name);
+      // default_agent also holds this plugin, so the member has to go everywhere for the view to
+      // show it missing at all — which is itself the point: a member deleted from one Agent is
+      // still installed on another, so the project view is not the place to judge completeness.
+      const victim = all[0]!;
+      for (const agent of ["prov_e", "default_agent"]) {
+        expect((await member.delete(`${base(agent)}/${victim}`)).status).toBe(204);
+      }
+
+      const after = await json();
+      const plugin = after.plugins.find((p) => p.name === "agent-tuning")!;
+      // Reported as incomplete rather than silently whole.
+      expect(plugin.missingSkills).toEqual([victim]);
+      expect(plugin.skills.map((s) => s.name)).not.toContain(victim);
+      expect(plugin.skills.length).toBe(all.length - 1);
+    });
+
+    it("the route is member-readable and outsider-hidden", async () => {
+      expect((await installed()).status).toBe(200);
+      expect((await owner.get(`/api/projects/${projectId}/skills/installed`)).status).toBe(200);
+      expect((await outsider.get(`/api/projects/${projectId}/skills/installed`)).status).toBe(404);
+    });
+  });
+
   it("the project catalog unions every Agent's skills, and says which Agents hold each one", async () => {
     // This is the question the per-Agent list cannot answer: a skill added to one Agent used to
     // be visible only there, so "the list" and "the Agent's list" disagreed on both membership and

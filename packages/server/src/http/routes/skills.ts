@@ -18,7 +18,13 @@ import { unzipSync, strFromU8, zipSync } from "fflate";
 import { Hono } from "hono";
 import {
   listInstalledSkills,
+  libraryPlugin,
+  hooksDir,
   loadLibraryPlugins,
+  readInstalls,
+  updateInstalls,
+  recordSkillInstall,
+  removePluginInstall,
   removeSkill,
   renameSkill,
   backupSkillDirectory,
@@ -28,6 +34,7 @@ import {
   LEGACY_SKILL_NAMES,
   PLUGIN_NAME_PATTERN,
 } from "@prismshadow/jiumate-core";
+import { buildInstalledSkillsView } from "../../services/installed-skills-view.js";
 import type {
   AgentSkillsResponse,
   SkillCatalogItem,
@@ -245,6 +252,38 @@ export function projectSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
   });
 
   /**
+   * GET /api/projects/:p/skills/installed — what this Project has installed, grouped by install
+   * unit.
+   *
+   * The grouping is computed here and returned as structure rather than left to the browser on
+   * purpose: "which plugin is this Skill part of" is a question with one right answer, and the
+   * failure mode of a client that works it out is a plausible-looking wrong layout rather than an
+   * error.
+   *
+   * `inferred: true` on an item means its install unit was deduced from which Skills are present
+   * rather than read from `agent_state/.installs.json` — true for anything installed before that
+   * file existed, and true permanently if a write failed. The UI shows it rather than presenting
+   * a deduction as a record.
+   */
+  app.get("/installed", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    const agents = await deps.agentService.listAgents(projectId);
+    const agentIds = agents.map((a) => a.agentId).sort();
+    const skillsByAgent = new Map(
+      await Promise.all(
+        agentIds.map(async (agentId) => {
+          const skills = await listInstalledSkills(deps.config.root, projectId, agentId);
+          return [agentId, skills] as const;
+        }),
+      ),
+    );
+    return c.json(
+      await buildInstalledSkillsView(deps.config.root, projectId, agentIds, skillsByAgent),
+    );
+  });
+
+  /**
    * The installed skills this build can rename, discovered rather than declared: an old-name copy
    * is one whose library counterpart exists under a new name and the old one is absent from the
    * library. That is the whole definition of "pre-rebrand", and deriving it means a future rename
@@ -318,6 +357,9 @@ export function projectSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
       }
       await backupSkillDirectory(deps.config.root, projectId, agent.agentId, from);
       await renameSkill(deps.config.root, projectId, agent.agentId, from, to);
+      // The name moved, so the record has to move with it: a rename that left the old entry
+      // would make the skill read as "unknown origin" the moment it was successfully renamed.
+      await recordRenamedSkill(deps.config.root, projectId, agent.agentId, from, to);
       moved.push(agent.agentId);
     }
     return c.json({ from, to, moved, skipped });
@@ -325,9 +367,95 @@ export function projectSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
   return app;
 }
 
+/**
+ * Moves a Skill's install record from one name to another after a rename.
+ *
+ * Without this the renamed Skill would read as "unknown origin" immediately after a rename that
+ * had succeeded — the record would still name the directory that no longer exists. A member of a
+ * plugin install moves the plugin's list rather than becoming standalone.
+ */
+async function recordRenamedSkill(
+  root: string,
+  projectId: string,
+  agentId: string,
+  from: string,
+  to: string,
+): Promise<void> {
+  const file = await readInstalls(root, projectId, agentId);
+  const standalone = file.skills[from];
+  const owningPlugin = Object.entries(file.plugins).find(([, record]) =>
+    record.skills.includes(from),
+  )?.[0];
+  if (standalone === undefined && owningPlugin === undefined) return;
+  await updateInstalls(root, projectId, agentId, file, (next) => {
+    if (standalone !== undefined) {
+      delete next.skills[from];
+      next.skills[to] = standalone;
+    }
+    if (owningPlugin !== undefined) {
+      next.plugins[owningPlugin] = {
+        ...next.plugins[owningPlugin]!,
+        skills: next.plugins[owningPlugin]!.skills.map((n) => (n === from ? to : n)).sort(),
+      };
+    }
+  });
+}
+
 /** /api/projects/:p/agents/:a/skills: read, import/export and uninstall are all Project-member operations. */
 export function agentSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
+
+  /**
+   * POST /plugins/uninstall — remove one plugin install from this Agent.
+   *
+   * The per-Skill delete could express "remove three of a plugin's four Skills" but never "remove
+   * the plugin", which left a record claiming a plugin that held nothing. Going through this
+   * instead drops the record entry too.
+   *
+   * Registered before `/:name` so the literal segment wins over the Skill-delete wildcard — a
+   * Skill can never be named "plugins", but relying on that would be a route that silently
+   * changes meaning if the name rule ever loosens.
+   */
+  app.post("/plugins/uninstall", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    const agentId = requireValidId(c, "agentId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    await deps.agentConfigService.requireExists(projectId, agentId);
+    const pluginName = requireString(await readJson(c), "name");
+    if (!/^[A-Za-z0-9_-]+$/.test(pluginName)) {
+      throw badRequest(`Invalid plugin name: ${pluginName}`);
+    }
+    const before = (await readInstalls(deps.config.root, projectId, agentId)).plugins[pluginName];
+    // With no record — an install from before it shipped — fall back to the library's own list,
+    // otherwise uninstalling a legacy plugin would silently do nothing and look like a bug.
+    const library = libraryPlugin(pluginName);
+    const skillNames = before?.skills ?? library?.skills.map((s) => s.name) ?? [];
+    const hookNames = before?.hooks ?? (library?.hooks !== undefined ? [pluginName] : []);
+    const removed = await removePluginInstall(deps.config.root, projectId, agentId, pluginName);
+    // Members the library names but the record did not (a legacy install whose record was lost)
+    // still have to go, or "uninstall" would leave the plugin's Skills behind.
+    for (const name of skillNames) {
+      if (removed.removedSkills.includes(name)) continue;
+      await removeSkill(deps.config.root, projectId, agentId, name);
+    }
+    for (const name of hookNames) {
+      if (removed.removedHooks.includes(name)) continue;
+      await fs.rm(path.join(hooksDir(deps.config.root, projectId, agentId), name), {
+        recursive: true,
+        force: true,
+      });
+    }
+    // Hook packages are bound when a core Session is built, so a runtime cached for this Agent
+    // would keep running the removed hook until it was evicted.
+    if (removed.removedHooks.length > 0 || hookNames.length > 0) {
+      deps.manager.invalidateAgentRuntimes(projectId, agentId);
+    }
+    return c.json({
+      plugin: pluginName,
+      removedSkills: [...new Set([...removed.removedSkills, ...skillNames])].sort(),
+      removedHooks: [...new Set([...removed.removedHooks, ...hookNames])].sort(),
+    });
+  });
 
   const listResponse = async (
     projectId: string,
@@ -411,6 +539,10 @@ export function agentSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
     // staged and swapped in, so no stale file survives and an interrupted import leaves no
     // half-written Skill behind (subdirectories kept).
     await replaceSkillDirectory(dir, skill.files);
+    // Recorded as an import, and as a version-less entry: an uploaded archive carries its own
+    // frontmatter version but no library version to compare against, so there is nothing here for
+    // an upgrade to act on — which is exactly what separates it from a library skill.
+    await recordSkillInstall(deps.config.root, projectId, agentId, skill.name, null, "import");
     return c.json(await listResponse(projectId, agentId), 201);
   });
 

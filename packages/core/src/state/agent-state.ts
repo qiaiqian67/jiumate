@@ -64,6 +64,7 @@ import {
   type SystemConfig,
 } from "./default-config.js";
 import { builtinProjectAgentPresets, type AgentPreset } from "./builtin-agents.js";
+import { updateInstalls, readInstalls, type InstallSource } from "./installs.js";
 import { ensureUserMemoryDir, type SessionMemory } from "./memory.js";
 import { provisionExampleBenchmark } from "./example-benchmark.js";
 import {
@@ -556,6 +557,96 @@ export async function removeSkill(
     recursive: true,
     force: true,
   });
+  await forgetSkill(root, projectId, agentId, name);
+}
+
+/**
+ * Records a Skill installed on its own, or forgets one that has just been removed.
+ *
+ * The two share one body because they are the same edit from the record's point of view — a name
+ * either is or is not a standalone entry — and keeping them together is what stops the removal
+ * path from having to remember to clean up.
+ *
+ * `forgetSkill` is deliberately *not* the same as removing the name from a plugin's `skills` list:
+ * a member deleted on purpose stays listed there, so the plugin is visibly incomplete rather than
+ * quietly whole. Only a plugin-level uninstall (see `removePluginInstall`) drops members wholesale.
+ *
+ * Like the plugin record, failures are swallowed: the directory is already gone either way, and a
+ * stale provenance entry costs a wrong grouping, not a lost skill.
+ */
+export async function recordSkillInstall(
+  root: string,
+  projectId: string,
+  agentId: string,
+  name: string,
+  version: string | null,
+  source: InstallSource,
+): Promise<void> {
+  try {
+    await updateInstalls(root, projectId, agentId, undefined, (file) => {
+      file.skills[name] = { version, source };
+    });
+  } catch {
+    // Provenance is a cache; see recordPluginInstall.
+  }
+}
+
+async function forgetSkill(
+  root: string,
+  projectId: string,
+  agentId: string,
+  name: string,
+): Promise<void> {
+  try {
+    await updateInstalls(root, projectId, agentId, undefined, (file) => {
+      delete file.skills[name];
+    });
+  } catch {
+    // See recordSkillInstall.
+  }
+}
+
+/**
+ * Removes a whole plugin install: every Skill directory it brought, its hook package if it had
+ * one, and its record entry.
+ *
+ * This is the operation the per-skill delete could not express. Removing members one at a time was
+ * possible but left the record claiming a plugin that no longer held anything, which is how a
+ * "4 skills" card ends up listing three with no explanation.
+ */
+export async function removePluginInstall(
+  root: string,
+  projectId: string,
+  agentId: string,
+  pluginName: string,
+): Promise<{ removedSkills: string[]; removedHooks: string[] }> {
+  assertValidId("project_id", projectId);
+  assertValidId("agent_id", agentId);
+  const file = await readInstalls(root, projectId, agentId);
+  const record = file.plugins[pluginName];
+  const removedSkills: string[] = [];
+  for (const name of record?.skills ?? []) {
+    assertValidId("skill_name", name);
+    await fs.rm(path.join(skillsDir(root, projectId, agentId), name), {
+      recursive: true,
+      force: true,
+    });
+    removedSkills.push(name);
+  }
+  const removedHooks: string[] = [];
+  for (const name of record?.hooks ?? []) {
+    assertValidId("skill_name", name);
+    await fs.rm(path.join(hooksDir(root, projectId, agentId), name), {
+      recursive: true,
+      force: true,
+    });
+    removedHooks.push(name);
+  }
+  await updateInstalls(root, projectId, agentId, file, (next) => {
+    delete next.plugins[pluginName];
+    for (const name of removedSkills) delete next.skills[name];
+  });
+  return { removedSkills, removedHooks };
 }
 
 /**
@@ -708,6 +799,39 @@ export async function installPlugin(
       plugin.hooks.files,
       plugin.icon,
     );
+  }
+  await recordPluginInstall(root, projectId, agentId, plugin);
+}
+
+/**
+ * Notes a plugin install in `agent_state/.installs.json`: the version, and every directory it
+ * brought — the skills named here stay named even if the user deletes one later, because that is
+ * what makes an upgrade distinguish "mine to overwrite" from "not mine", and what lets an
+ * incomplete plugin be shown as incomplete instead of silently whole.
+ *
+ * A member is dropped from `skills` in the same write: installing the plugin is the later claim on
+ * that directory, so from here the plugin owns it and an upgrade may overwrite it.
+ *
+ * Recorded after the files land, and a failure here does not fail the install — the Skills are on
+ * disk and usable either way, and a missing record costs provenance, not content.
+ */
+async function recordPluginInstall(
+  root: string,
+  projectId: string,
+  agentId: string,
+  plugin: LibraryPlugin,
+): Promise<void> {
+  try {
+    await updateInstalls(root, projectId, agentId, undefined, (file) => {
+      file.plugins[plugin.name] = {
+        version: plugin.version,
+        skills: [...plugin.skills.map((s) => s.name)].sort(),
+        hooks: plugin.hooks === undefined ? [] : [plugin.name],
+      };
+      for (const skill of plugin.skills) delete file.skills[skill.name];
+    });
+  } catch {
+    // Provenance is a cache; the install it describes has already succeeded on disk.
   }
 }
 

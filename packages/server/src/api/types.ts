@@ -1369,6 +1369,10 @@ export interface SkillCatalogItem extends SkillMetadataItem {
    * Which library plugin ships this skill, when one does. Absent for a skill installed on its
    * own (a zip import, a hand-authored one) — that is the distinction the catalog needs to tell
    * "came from the library" from "the user made this".
+   *
+   * Always absent on the catalog route: which plugin a skill belongs to is an *install* fact, and
+   * that route reads only the filesystem. Populated on the installed-skills route, which also
+   * reads `agent_state/.installs.json`.
    */
   pluginName?: string;
 }
@@ -1376,6 +1380,73 @@ export interface SkillCatalogItem extends SkillMetadataItem {
 export interface SkillCatalogResponse {
   /** Every skill installed on at least one Agent in the Project, sorted by name. */
   skills: SkillCatalogItem[];
+  /** How many Agents were scanned. */
+  agentCount: number;
+}
+
+/**
+ * One installed Skill as the installed-skills page shows it.
+ *
+ * `pluginName` and `inferred` travel together on purpose. A Skill's *install unit* — part of a
+ * plugin, or on its own — is not visible on disk at all: `installPlugin` writes each member
+ * through the same call a standalone install uses, so a plugin-installed skill and a
+ * standalone one are byte-identical. `agent_state/.installs.json` settles it for anything
+ * installed after it shipped; for anything older the answer is deduced from which Skills are
+ * present, and `inferred` is what tells the UI to say so rather than present a deduction as a
+ * record.
+ */
+export interface InstalledSkillItem {
+  name: string;
+  description: string;
+  shortDescription?: string;
+  icon?: string;
+  /** The record's version, else the skill's own; null when neither carries one. */
+  version: string | null;
+  /** "library" when the library ships it, "import" when it is the user's own file. */
+  origin: "library" | "import";
+  /** The plugin it was installed through, or null when standalone. */
+  pluginName: string | null;
+  /** True when `pluginName` was deduced rather than recorded. */
+  inferred: boolean;
+  /** Every Agent in the Project holding it, sorted. */
+  agents: string[];
+  /** Variable names this skill needs; absent when it declares none. */
+  requiredEnv?: string[];
+  /** Whether those variables are set. Absent along with `requiredEnv`. */
+  requiredEnvReady?: boolean;
+}
+
+/**
+ * One plugin as installed: the Skills it brought, any that are missing, and its hook packages.
+ *
+ * Hook packages live here rather than in their own view because a plugin may carry both — a
+ * separate tab would count a mixed plugin twice, and the thing being described is one install of
+ * one plugin either way.
+ */
+export interface InstalledPluginItem {
+  name: string;
+  description: string;
+  icon?: string;
+  version: string | null;
+  /** How many Skills the library says this plugin ships, whether present or not. */
+  skillCount: number;
+  /** Members present, sorted. */
+  skills: InstalledSkillItem[];
+  /** Members the library ships that are not present — what makes a plugin visibly incomplete. */
+  missingSkills: string[];
+  /** Installed hook package names; empty for a plugin with no hooks. */
+  hooks: string[];
+  /** Every Agent holding at least one member, sorted. */
+  agents: string[];
+  /** True when membership was deduced rather than recorded. */
+  inferred: boolean;
+}
+
+export interface InstalledSkillsResponse {
+  /** Plugins installed in this Project, including hook-only ones. */
+  plugins: InstalledPluginItem[];
+  /** Skills installed on their own, not through any plugin. */
+  skills: InstalledSkillItem[];
   /** How many Agents were scanned. */
   agentCount: number;
 }
