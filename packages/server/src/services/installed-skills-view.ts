@@ -17,11 +17,13 @@
  *     because a Skill the library does not ship cannot have come from the library.
  */
 import {
+  hooksDir,
   loadLibraryPlugins,
   readInstalls,
   type InstallsFile,
   type LibraryPlugin,
 } from "@prismshadow/jiumate-core";
+import fs from "node:fs/promises";
 import { toSkillItem } from "./plugin-library.js";
 
 /**
@@ -80,7 +82,7 @@ export interface InstalledPluginView {
   skills: InstalledSkillView[];
   /** Members the library ships that are not present — what makes a plugin visibly incomplete. */
   missingSkills: string[];
-  /** Installed hook package names. */
+  /** Installed hook packages: the Agents holding one, sorted; empty when the plugin has no hooks. */
   hooks: string[];
   agents: string[];
   /** True when this plugin's membership was inferred rather than recorded. */
@@ -120,6 +122,37 @@ function inferPluginMembership(installed: ReadonlySet<string>): {
     for (const skill of plugin.skills) pluginOf.set(skill.name, plugin.name);
   }
   return { pluginOf, plugins };
+}
+
+/**
+ * Which hook packages are on disk, per Agent.
+ *
+ * Needed because a hook-only plugin has no Skill directory to infer from: `goal` and
+ * `continual-learning` ship no Skills at all, so with only a Skills scan they are invisible even
+ * when `hooks/<name>/` is right there proving they were installed. Their directory name is the
+ * plugin name (`installHook` writes `hooks/<plugin>/`), so presence is as good as a record.
+ */
+async function readInstalledHooks(
+  root: string,
+  projectId: string,
+  agentIds: readonly string[],
+): Promise<Map<string, Set<string>>> {
+  const byAgent = new Map<string, Set<string>>();
+  await Promise.all(
+    agentIds.map(async (agentId) => {
+      const dir = hooksDir(root, projectId, agentId);
+      let entries: string[];
+      try {
+        entries = (await fs.readdir(dir, { withFileTypes: true }))
+          .filter((e) => e.isDirectory() && !e.name.startsWith("."))
+          .map((e) => e.name);
+      } catch {
+        entries = [];
+      }
+      byAgent.set(agentId, new Set(entries));
+    }),
+  );
+  return byAgent;
 }
 
 /** The recorded plugin version for a plugin, or null when no Agent recorded one. */
@@ -169,6 +202,7 @@ export async function buildInstalledSkillsView(
   const inferred = inferPluginMembership(installed);
 
   // The record is authoritative where it exists; inference only fills the gaps.
+  const hooksByAgent = await readInstalledHooks(root, projectId, agentIdList);
   const records: InstallsFile[] = await Promise.all(
     agentIdList.map((agentId) => readInstalls(root, projectId, agentId)),
   );
@@ -205,7 +239,15 @@ export async function buildInstalledSkillsView(
 
   const plugins: InstalledPluginView[] = [];
   const consumed = new Set<string>();
-  for (const pluginName of [...new Set([...recordedPlugins, ...inferred.plugins])].sort()) {
+  // Every hook-only plugin in the library joins the candidates: there is no Skill to infer one
+  // from, so without this a hook plugin that predates provenance could only be admitted by its
+  // record, and would be reported as not installed while `hooks/<name>/` is on disk.
+  const hookOnlyCandidates = [...libraryPlugins.values()]
+    .filter((p) => p.skills.length === 0 && p.hooks !== undefined)
+    .map((p) => p.name);
+  for (const pluginName of [
+    ...new Set([...recordedPlugins, ...inferred.plugins, ...hookOnlyCandidates]),
+  ].sort()) {
     const plugin = libraryPlugins.get(pluginName);
     // A record naming a plugin this build no longer ships is dropped rather than shown as a
     // nameless card: its Skills still appear below as standalone, which is the honest reading.
@@ -213,24 +255,36 @@ export async function buildInstalledSkillsView(
     const wanted = plugin.skills.map((s) => s.name).sort();
     const present = wanted.filter((n) => installed.has(n));
     // Two ways a plugin is admitted, and the reason matters below:
-    //   - its record names it → it is installed, even with no member left on disk;
-    //   - a member is on disk with no record → inference put it here.
-    // A hook-only plugin ships no Skills, so for one "nothing present" is the normal state rather
-    // than evidence of absence — and it can only ever be admitted by its record, because there is
-    // no directory to infer from.
+    //   - its record names it → installed, even with no member left on disk;
+    //   - a member (or its hook package) is on disk with no record → inference put it here.
+    // The hook check is what keeps a hook-only plugin visible for an install that predates
+    // provenance: it ships no Skills, so `present` is legitimately empty and a Skills-only test
+    // would report it as not installed while `hooks/goal/` sits right there.
     const recorded = recordedPlugins.has(pluginName);
-    if (present.length === 0 && !recorded) continue;
+    const hasHook = agentIdList.some((a) => hooksByAgent.get(a)?.has(pluginName));
+    if (present.length === 0 && !recorded && !hasHook) continue;
     for (const name of present) consumed.add(name);
     plugins.push({
       name: pluginName,
       description: plugin.description,
+      ...(plugin.descriptionZh !== undefined ? { descriptionZh: plugin.descriptionZh } : {}),
       ...(plugin.icon !== undefined ? { icon: plugin.icon } : {}),
       version: recordedPluginVersion(records, pluginName) ?? plugin.version,
       skillCount: wanted.length,
       skills: present.map(toView),
       missingSkills: wanted.filter((n) => !installed.has(n)),
-      hooks: plugin.hooks === undefined ? [] : [pluginName],
-      agents: agentIdList.filter((a) => present.some((n) => byName.get(n)!.agents.includes(a))),
+      hooks:
+        plugin.hooks === undefined
+          ? []
+          : agentIdList.filter((a) => hooksByAgent.get(a)?.has(pluginName)),
+      // Per Agent, not project-wide: a hook held by one Agent is not held by the rest, and
+      // listing all Agents for a plugin only one of them has would be the same class of lie the
+      // page exists to stop. A hook-only plugin therefore resolves entirely from this.
+      agents: agentIdList.filter(
+        (a) =>
+          hooksByAgent.get(a)?.has(pluginName) === true ||
+          present.some((n) => byName.get(n)!.agents.includes(a)),
+      ),
       inferred: !recorded,
     });
   }

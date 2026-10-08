@@ -1399,6 +1399,7 @@ export interface InstalledSkillItem {
   name: string;
   description: string;
   shortDescription?: string;
+  shortDescriptionZh?: string;
   icon?: string;
   /** The record's version, else the skill's own; null when neither carries one. */
   version: string | null;
@@ -1426,6 +1427,7 @@ export interface InstalledSkillItem {
 export interface InstalledPluginItem {
   name: string;
   description: string;
+  descriptionZh?: string;
   icon?: string;
   version: string | null;
   /** How many Skills the library says this plugin ships, whether present or not. */
@@ -1434,7 +1436,7 @@ export interface InstalledPluginItem {
   skills: InstalledSkillItem[];
   /** Members the library ships that are not present — what makes a plugin visibly incomplete. */
   missingSkills: string[];
-  /** Installed hook package names; empty for a plugin with no hooks. */
+  /** Installed hook packages for this plugin: the Agents holding it, sorted (empty when none). */
   hooks: string[];
   /** Every Agent holding at least one member, sorted. */
   agents: string[];

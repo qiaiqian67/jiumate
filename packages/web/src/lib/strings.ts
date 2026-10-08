@@ -1450,6 +1450,33 @@ export const zh = {
     tabCatalog: "已装技能",
     catalogCount: (skills: number, agents: number): string =>
       `${skills} 个技能 · ${agents} 个 Agent`,
+    /**
+     * 「已装技能」页的总标题。它数的是**技能**，不是安装单位——插件和技能是两种东西，
+     * 混进一个数字就会重演「19 个技能对 11 个插件，差的 8 个去哪了」。
+     */
+    installedTitle: (skills: number, plugins: number, agents: number): string =>
+      `已安装技能 (${skills})`,
+    /** 三组分区的标题：一个技能属于哪一组，由它「怎么装进来的」决定。 */
+    groupFromPlugins: "来自插件",
+    groupStandalone: "单独安装",
+    groupImported: "用户自定义",
+    groupPluginsCount: (n: number): string => `来自插件 (${n})`,
+    groupStandaloneCount: (n: number): string => `单独安装 (${n})`,
+    groupImportedCount: (n: number): string => `用户自定义 (${n})`,
+    /** 插件卡上「N 个技能」；N 为 0 时说的是钩子。 */
+    pluginSkills: (n: number): string => `${n} 个技能`,
+    pluginHooks: (n: number): string => `${n} 个钩子`,
+    /** 插件只装了其中一部分时的提示，数字是「已装 / 共计」。 */
+    pluginPartial: (present: number, total: number): string => `${present} / ${total} 个技能`,
+    /**
+     * 「推断」标记。装在凭据文件出现之前的技能，无法从磁盘上区分「随插件装的」和「单独装的」，
+     * 所以这里如实说是推断出来的，而不是把它讲成一条记录。
+     */
+    inferredBadge: "推断",
+    inferredHint: "该来源是推断的，不是记录：本机安装早于来源记录功能。",
+    pluginUninstall: "卸载这个插件",
+    pluginUninstallConfirm: (name: string, n: number): string =>
+      `从这些 Agent 卸载 ${name}？将同时删除它带来的 ${n} 个技能。`,
     catalogEmpty: "还没有装任何技能",
     catalogEmptyHint:
       "从「技能库」安装，或用「添加技能」导入自己的。装好后每个 Agent 用到它都会出现在这里。",

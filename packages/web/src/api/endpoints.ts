@@ -100,6 +100,7 @@ import type {
   SessionTracesResponse,
   SkillArchiveInstallRequest,
   SkillCatalogResponse,
+  InstalledSkillsResponse,
   PluginFilesResponse,
   PluginInstallRequest,
   PluginLibraryResponse,
@@ -1194,6 +1195,32 @@ export const getAgentSkills = (projectId: string, agentId: string) =>
  */
 export const getSkillCatalog = (projectId: string) =>
   apiFetch<SkillCatalogResponse>(`/api/projects/${encodeURIComponent(projectId)}/skills/catalog`);
+
+/**
+ * What this Project has installed, grouped by **install unit** — the Plugins that brought Skills,
+ * and the Skills installed on their own.
+ *
+ * Read this rather than `getSkillCatalog` when the page has to say where a Skill came from: the
+ * catalog scans the filesystem and cannot know it, because a Plugin's member and a standalone Skill
+ * are byte-identical on disk. Items whose unit was deduced rather than recorded carry
+ * `inferred: true`.
+ */
+export const getInstalledSkills = (projectId: string) =>
+  apiFetch<InstalledSkillsResponse>(
+    `/api/projects/${encodeURIComponent(projectId)}/skills/installed`,
+  );
+
+/**
+ * Removes one plugin install from one Agent: its Skills, its hook package if any, and its record
+ * entry.
+ *
+ * Per-Agent because a plugin is installed per Agent — the same scope `installPlugin` has.
+ */
+export const uninstallPlugin = (projectId: string, agentId: string, name: string) =>
+  apiFetch<{ plugin: string; removedSkills: string[]; removedHooks: string[] }>(
+    `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}/skills/plugins/uninstall`,
+    { method: "POST", body: JSON.stringify({ name }) },
+  );
 
 export const getAgentHooks = (projectId: string, agentId: string) =>
   apiFetch<AgentHooksResponse>(

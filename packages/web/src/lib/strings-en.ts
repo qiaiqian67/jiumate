@@ -1478,6 +1478,36 @@ export const en: Strings = {
     /** 目录选项卡。 */
     tabCatalog: "Installed skills",
     catalogCount: (skills: number, agents: number): string => `${skills} skills · ${agents} agents`,
+    /**
+     * The installed-skills page title. It counts **skills**, not install units: a plugin and a
+     * skill are different things, and folding both into one number is what made "19 skills against
+     * 11 plugins — where did the other 8 go?" unanswerable.
+     */
+    installedTitle: (skills: number, plugins: number, agents: number): string =>
+      `Installed skills (${skills})`,
+    /** The three group headings: which one a skill falls in is decided by how it was installed. */
+    groupFromPlugins: "From plugins",
+    groupStandalone: "Installed individually",
+    groupImported: "Your own",
+    groupPluginsCount: (n: number): string => `From plugins (${n})`,
+    groupStandaloneCount: (n: number): string => `Installed individually (${n})`,
+    groupImportedCount: (n: number): string => `Your own (${n})`,
+    /** On a plugin card: how many Skills it brought. */
+    pluginSkills: (n: number): string => `${n} ${n === 1 ? "skill" : "skills"}`,
+    pluginHooks: (n: number): string => `${n} ${n === 1 ? "hook" : "hooks"}`,
+    /** Shown when a plugin is only partly installed: present / total. */
+    pluginPartial: (present: number, total: number): string => `${present} / ${total} skills`,
+    /**
+     * The "inferred" mark. A Skill installed before the provenance record existed cannot be told
+     * apart on disk from one installed on its own, so the source is said to be deduced rather
+     * than presented as a record.
+     */
+    inferredBadge: "inferred",
+    inferredHint:
+      "This origin was deduced, not recorded: it was installed before provenance tracking.",
+    pluginUninstall: "Uninstall this plugin",
+    pluginUninstallConfirm: (name: string, n: number): string =>
+      `Uninstall ${name} from these Agents? Its ${n} skills are removed with it.`,
     catalogEmpty: "No skills installed yet",
     catalogEmptyHint:
       "Install one from the Skill library, or add your own. Everything an Agent can use shows up here.",

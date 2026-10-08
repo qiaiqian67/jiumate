@@ -44,11 +44,14 @@ import type {
   HookItem,
   PluginGroupItem,
   PluginItem,
+  InstalledPluginItem,
+  InstalledSkillItem,
+  InstalledSkillsResponse,
   SkillCatalogItem,
-  SkillCatalogResponse,
   SkillMetadataItem,
 } from "@prismshadow/jiumate-server/api";
 import * as api from "../../api/endpoints";
+import { InstalledSkillsView } from "./installed-skills-view";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
@@ -248,7 +251,7 @@ export function PluginsPage() {
    * page. Keeping both, under separate tabs, is what makes the difference legible instead of
    * merging "available" and "installed" into one list that is wrong about both.
    */
-  const [catalog, setCatalog] = useState<SkillCatalogResponse | null>(null);
+  const [catalog, setCatalog] = useState<InstalledSkillsResponse | null>(null);
   /** Collapsed groups (all expanded by default; same convention as the model page's provider groups). */
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -328,7 +331,7 @@ export function PluginsPage() {
     }
     let cancelled = false;
     void api
-      .getSkillCatalog(projectId)
+      .getInstalledSkills(projectId)
       .then((res) => {
         if (!cancelled) setCatalog(res);
       })
@@ -572,15 +575,28 @@ export function PluginsPage() {
    * filter runs on every render of a tab that re-renders whenever an install changes `installed`.
    */
   const visibleCatalog = useMemo(() => {
-    if (catalog === null) return [];
+    if (catalog === null)
+      return { plugins: [] as InstalledPluginItem[], skills: [] as InstalledSkillItem[] };
     const q = query.trim().toLowerCase();
-    if (q === "") return catalog.skills;
-    return catalog.skills.filter((one) =>
-      [one.name, localizedText(locale, one.description, one.shortDescriptionZh)]
-        .join(" ")
-        .toLowerCase()
-        .includes(q),
+    const matches = (name: string, description: string) =>
+      [name, description].join(" ").toLowerCase().includes(q);
+    // A query narrows within the structure rather than flattening it: the install unit is what
+    // the page is for, so a match on one of a plugin's Skills keeps the plugin card (and its
+    // other members) rather than dropping the user into a flat list of names.
+    const plugins = catalog.plugins.filter(
+      (plugin) =>
+        q === "" ||
+        matches(plugin.name, localizedText(locale, plugin.description, undefined)) ||
+        plugin.skills.some((skill) =>
+          matches(skill.name, localizedText(locale, skill.description, skill.shortDescriptionZh)),
+        ),
     );
+    const skills = catalog.skills.filter(
+      (skill) =>
+        q === "" ||
+        matches(skill.name, localizedText(locale, skill.description, skill.shortDescriptionZh)),
+    );
+    return { plugins, skills };
   }, [catalog, query, locale]);
 
   /**
@@ -638,7 +654,11 @@ export function PluginsPage() {
             </div>
             {tab === "catalog" && catalog !== null && (
               <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-                {S.plugins.catalogCount(catalog.skills.length, catalog.agentCount)}
+                {S.plugins.installedTitle(
+                  catalog.plugins.reduce((n, p) => n + p.skills.length, 0) + catalog.skills.length,
+                  catalog.plugins.length,
+                  catalog.agentCount,
+                )}
               </span>
             )}
             {tab === "skills" && (
@@ -678,25 +698,21 @@ export function PluginsPage() {
                   </SkeletonCard>
                 ))}
               </div>
-            ) : visibleCatalog.length === 0 ? (
+            ) : visibleCatalog.plugins.length === 0 && visibleCatalog.skills.length === 0 ? (
               // One empty state for both "nothing installed" and "nothing matched": telling them
               // apart needs a sentence about installing skills, which would be wrong advice for
               // someone who has skills and mistyped a filter.
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {catalog.skills.length === 0
+                {catalog.plugins.length === 0 && catalog.skills.length === 0
                   ? `${S.plugins.catalogEmpty}。${S.plugins.catalogEmptyHint}`
                   : S.plugins.noMatch(query.trim())}
               </p>
             ) : (
-              <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleCatalog.map((one) => (
-                  <li key={one.name} className="flex">
-                    <div className="flex w-full">
-                      <SkillCatalogCard skill={one} agentNames={agentNamesOf(one.agents, agents)} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <InstalledSkillsView
+                plugins={visibleCatalog.plugins}
+                skills={visibleCatalog.skills}
+                agentNamesOf={(ids) => agentNamesOf(ids, agents)}
+              />
             )}
           </div>
         ) : tab === "connectors" ? (
@@ -895,63 +911,6 @@ function agentNamesOf(agentIds: readonly string[], agents: readonly AgentSummary
     const found = agents.find((a) => a.agentId === id);
     return found === undefined ? id : agentDisplayName(found);
   });
-}
-
-/**
- * One skill in the catalog: what it is, where it is installed, and whether it is ready to run.
- *
- * The Agents it is on are the card's real state, not a decoration — the same skill can be on two
- * Agents and absent from a third, and that is the fact a user needs when deciding what to add
- * where. It is shown as a count plus a tooltip of names rather than as names on the card: three
- * names would not fit beside a version and would be unreadable at nine.
- *
- * Built on `LibraryCard` rather than a new article so the catalog and the library below it share
- * one card — same tile, same truncation, same hover behaviour — and the two tabs cannot drift.
- */
-function SkillCatalogCard({
-  skill,
-  agentNames,
-}: {
-  skill: SkillCatalogItem;
-  /** Already-resolved display names, in catalog order. */
-  agentNames: string[];
-}) {
-  const { locale } = useLocale();
-  const description = skill.shortDescription ?? skill.description;
-  const versionDate = skill.version ? skill.version.split(".")[0]! : null;
-  const versionRevision = skill.version ? skill.version.split(".")[1] : null;
-  const where = S.plugins.onAgents(skill.agents.length, skill.agentCount);
-  const meta = [
-    versionDate
-      ? S.plugins.versionLabel(
-          versionDate,
-          versionRevision === undefined ? null : Number(versionRevision),
-          formatRelativeDate(versionDate, locale),
-        )
-      : null,
-    // The count on the card, the names in the tooltip: which Agents have it is the fact a user
-    // acts on, but three names do not fit beside a version and nine would be unreadable, so the
-    // full list rides on hover rather than being dropped.
-    agentNames.length > 0 ? `${where}：${agentNames.join("、")}` : where,
-  ]
-    .filter((v): v is string => v !== null)
-    .join(" · ");
-  const needsKey = (skill.requiredEnv?.length ?? 0) > 0;
-  return (
-    <LibraryCard
-      icon={skill.icon}
-      name={skill.name}
-      // The book, the app's uniform mark for a skill — the same fallback the Agent's skill rows
-      // use, so a skill without its own icon looks identical wherever it appears.
-      fallbackIcon={BOOK_ICON}
-      description={description}
-      meta={meta}
-      // Only a skill that has a key to be missing gets a marker; one that declares none would
-      // otherwise sit there permanently "unset" for a reason it does not have.
-      keyState={needsKey ? (skill.requiredEnvReady ? "ready" : "unset") : undefined}
-      keyLabel={needsKey ? S.plugins.needsEnv(skill.requiredEnv!) : undefined}
-    />
-  );
 }
 
 /** A single plugin card: metadata display (contents badges + a semantic metadata line) + update reminder + quick start + "manage installs" Modal. */

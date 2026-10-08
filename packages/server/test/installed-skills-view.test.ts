@@ -16,7 +16,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { skillsDir, writeInstalls } from "@prismshadow/jiumate-core";
+import { hooksDir, skillsDir, writeInstalls } from "@prismshadow/jiumate-core";
 import { buildInstalledSkillsView } from "../src/services/installed-skills-view.js";
 
 describe("buildInstalledSkillsView", () => {
@@ -51,6 +51,13 @@ describe("buildInstalledSkillsView", () => {
     return entries
       .sort()
       .map((name) => ({ name, description: `${name} description`, version: "" }));
+  }
+
+  /** Writes a hook package, the way `installHook` does: `hooks/<plugin name>/hooks.json`. */
+  async function writeHook(agent: string, plugin: string): Promise<void> {
+    const dir = path.join(hooksDir(root, projectId, agent), plugin);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, "hooks.json"), "{}", "utf8");
   }
 
   /** Builds the view from the current on-disk skills, as the route does. */
@@ -172,19 +179,39 @@ describe("buildInstalledSkillsView", () => {
     expect(result.agentCount).toBe(2);
   });
 
-  it("shows a hook-only plugin rather than dropping it", async () => {
-    // `goal` ships no Skills, only a hook package — there is no directory to scan, so an
-    // install-unaware view would simply omit it and the user could not tell it was installed.
-    await writeInstalls(root, projectId, agentId, {
-      version: 1,
-      plugins: { goal: { version: "2026-09-01.1", skills: [], hooks: ["goal"] } },
-      skills: {},
-    });
+  it("shows a hook-only plugin whose only trace on disk is its hook package", async () => {
+    // `goal` and `continual-learning` ship no Skills, so there is no skill directory to scan and
+    // no record (installed before provenance existed). Before this was read from disk, they were
+    // reported as not installed while hooks/goal/ was right there — an installed plugin made
+    // invisible, with nothing on the page to hint it was missing.
+    await writeHook(agentId, "goal");
     const result = await view();
     const goal = result.plugins.find((p) => p.name === "goal")!;
     expect(goal).toBeDefined();
-    expect(goal.hooks).toEqual(["goal"]);
+    expect(goal.hooks).toEqual([agentId]);
     expect(goal.skills).toEqual([]);
-    expect(goal.inferred).toBe(false);
+    expect(goal.agents).toEqual([agentId]);
+    // Inferred like every other unrecorded install: the hook directory is a real trace, but it is
+    // a deduction from the filesystem rather than a record of the install.
+    expect(goal.inferred).toBe(true);
+  });
+
+  it("does not show a hook-only plugin that is not installed", async () => {
+    // The counterpart to the case above: reading hooks/ must not make every hook plugin appear.
+    const result = await view();
+    expect(result.plugins.map((p) => p.name)).not.toContain("goal");
+    expect(result.plugins.map((p) => p.name)).not.toContain("continual-learning");
+  });
+
+  it("reports which Agent holds a hook, rather than implying all of them do", async () => {
+    const other = "a_hook_other";
+    for (const agent of [agentId, other]) {
+      await writeHook(agent, "goal");
+    }
+    // default_agent is not in the fixture set, so `agentId` and `other` are the only two here;
+    // the point is that the list is per Agent, not "everyone".
+    const result = await view([agentId, other].sort());
+    const goal = result.plugins.find((p) => p.name === "goal")!;
+    expect(goal.agents).toEqual([agentId, other].sort());
   });
 });
