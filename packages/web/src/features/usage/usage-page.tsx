@@ -234,7 +234,8 @@ export function UsagePage() {
   }));
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
-      <div className="mx-auto max-w-5xl space-y-4">
+      {/* `max-w-6xl`, the width the plugin and skill pages use: one app, one content width. */}
+      <div className="mx-auto max-w-6xl space-y-4">
         {/* Top filters: controls have no external title (the explanation is written into the "all …" option), so they're baseline-centered with the page title */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-semibold">{S.usage.title}</h1>

@@ -211,18 +211,41 @@ try {
       refreshViteCache();
       exitCode = 0;
     } else {
-      console.log("[dev-prebuild] building core...");
-      const res = spawnSync(
-        "pnpm",
-        ["--filter", "@prismshadow/jiumate-core", "build"],
-        // shell on Windows: pnpm is a .cmd shim there (see ensureInstalled).
-        { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" },
-      );
-      if (res.status === 0) {
+      console.log("[dev-prebuild] building workspace packages...");
+      // Every workspace package the server or web imports **through its `exports` map** has to be
+      // built here, not just core. They resolve to `dist/`, not `src/`, so a change in one of
+      // their sources is invisible to a running dev server until the build runs — and nothing
+      // else will run it. That is not a subtle failure: the edit looks right, the type check and
+      // the unit tests (which import `src/`) pass, and the server keeps serving the previous
+      // build's behaviour. `inspirations` was the one that bit, over a one-line schema fix.
+      //
+      // So the list is explicit rather than "everything": a full workspace build is slow, and
+      // the packages that resolve to source (core's internals, the web app's own files) do not
+      // belong in it. Anything added here must be a package whose `exports` point at `dist/`.
+      const BUILT_PACKAGES = [
+        "@prismshadow/jiumate-core",
+        "@prismshadow/jiumate-inspirations",
+        "@prismshadow/jiumate-skins",
+        "@prismshadow/jiumate-pets",
+      ];
+      let failed = null;
+      for (const name of BUILT_PACKAGES) {
+        const res = spawnSync(
+          "pnpm",
+          ["--filter", name, "build"],
+          // shell on Windows: pnpm is a .cmd shim there (see ensureInstalled).
+          { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" },
+        );
+        if ((res.status ?? 1) !== 0) {
+          failed = name;
+          break;
+        }
+      }
+      if (failed === null) {
         writeFileSync(BUILD_STAMP, String(Date.now()));
         refreshViteCache();
       }
-      exitCode = res.status ?? 1;
+      exitCode = failed === null ? 0 : 1;
     }
   }
 } finally {

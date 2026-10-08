@@ -175,9 +175,14 @@ export function InspirationCard({
           {!one.enabled && <Badge tone="amber">{S.inspiration.hiddenBadge}</Badge>}
           <span className="flex-1" />
           {editable && (
-            // Visible on hover/focus and dimmed at rest rather than hidden: an admin scanning the
-            // grid should be able to see which cards are theirs without hovering each one.
-            <span className="flex items-center opacity-60 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+            // Hover or focus only, as on the plugin and skill cards: four controls along the
+            // bottom of a card this narrow sit on top of the title, which is the one thing the
+            // card has to say. `group-focus-within` is what keeps them reachable by keyboard —
+            // without it the buttons exist but a keyboard user cannot bring them in.
+            //
+            // A space is reserved whether or not they are shown (`flex` on the wrapper), so the
+            // badge row does not shuffle sideways as the pointer travels across the grid.
+            <span className="flex items-center gap-1 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100">
               <CardAction label={S.common.edit} glyph={PENCIL_ICON} onClick={onEdit} />
               <CardAction label={S.common.delete} glyph={TRASH_ICON} danger onClick={onDelete} />
             </span>

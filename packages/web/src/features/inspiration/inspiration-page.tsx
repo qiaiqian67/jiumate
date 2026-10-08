@@ -121,7 +121,9 @@ export function InspirationPage() {
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
-      <div className="mx-auto max-w-5xl">
+      {/* `max-w-6xl`, the width the plugin and skill pages use. Three galleries in one app that
+          each stop at a different width read as three unrelated pages rather than one section. */}
+      <div className="mx-auto max-w-6xl">
         {/* The page header follows the models page exactly: title with the description behind an
             info trigger beside it, then one wrapping row holding the search box and the admin's
             actions. The search box is the only flexible child and the buttons are `shrink-0`, so a

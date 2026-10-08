@@ -402,7 +402,8 @@ export function AgentsPage() {
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
-      <div className="mx-auto max-w-5xl">
+      {/* `max-w-6xl`, the width the plugin and skill pages use: one app, one content width. */}
+      <div className="mx-auto max-w-6xl">
         {/* The title row and the notice under it share one block, so the gap below the block
             (to the list) is the same whether or not the notice is showing — the models page's
             header has the same shape. */}
