@@ -109,17 +109,31 @@ export class InspirationCatalogService {
   async list(opts: { includeDisabled: boolean }): Promise<InspirationCatalog> {
     const admin = await this.readAdmin();
     const categories = sortCategories(admin.categories);
-    const cases = [...builtinInspirationCatalog().cases, ...admin.cases].filter(
-      (one) => one.enabled || opts.includeDisabled,
-    );
+    // The admin copy **replaces** the built-in of the same id, and this is where that happens on
+    // the server. Without it an edited built-in would be listed twice — the bundled original and
+    // the shadowing copy — and every surface that trusted the catalog would show the case the
+    // admin had just replaced. (The web bundle merges its own copy of the built-ins and dedupes
+    // there too; this is the same rule applied where the catalog is assembled.)
+    const shadowed = new Set(admin.cases.map((one) => one.id));
+    const cases = [
+      ...builtinInspirationCatalog().cases.filter((one) => !shadowed.has(one.id)),
+      ...admin.cases,
+    ].filter((one) => one.enabled || opts.includeDisabled);
     return { categories, cases: sortCases(cases, categories), diagnostics: admin.diagnostics };
   }
 
-  /** Resolve one case by id, built-in or admin, disabled included. */
+  /**
+   * Resolve one case by id, built-in or admin, disabled included.
+   *
+   * The admin copy wins, for the same reason it does in {@link list}: an edited built-in is a
+   * built-in id held by the server, and resolving it to the bundled original would serve the very
+   * text the admin replaced — including to the preview document and cover asset routes, which
+   * resolve through here.
+   */
   async get(id: string): Promise<InspirationCase | null> {
-    const builtin = builtinInspirationCatalog().cases.find((one) => one.id === id);
-    if (builtin !== undefined) return builtin;
-    return readInspirationCase(this.root, id);
+    const existing = await readInspirationCase(this.root, id);
+    if (existing !== null) return existing;
+    return builtinInspirationCatalog().cases.find((one) => one.id === id) ?? null;
   }
 
   /**
@@ -127,9 +141,14 @@ export class InspirationCatalogService {
    *
    * `id` is taken from the URL on an update and from the body on a create, and the two must agree
    * — otherwise an editor that renamed a case would silently write a second one beside the first.
-   * An id that names a built-in is refused: the built-in half is not the admin's to overwrite, and
-   * a shadowing admin case would make the same id mean two different things depending on which
-   * surface merged them.
+   *
+   * A built-in's id is writable, and this is the whole of how "edit a built-in" works: the write
+   * lands as an **admin case under the same id**, and {@link list} already drops a built-in whose
+   * id the server holds, so the admin's copy is what everyone sees. The bundled original is not
+   * touched — it is a constant in the package, not a file — so deleting the admin copy brings the
+   * built-in straight back, and no upgrade carries the change away. The alternative, refusing the
+   * id, left the first thing an admin wants of an example (their own prompt in place of the
+   * sample one) impossible.
    */
   async save(
     input: InspirationSaveInput,
@@ -146,13 +165,6 @@ export class InspirationCatalogService {
     if (opts.id !== undefined && parsed.id !== opts.id) {
       throw new InspirationCatalogError(
         `the body's id "${parsed.id}" does not match the path's "${opts.id}"`,
-      );
-    }
-    const builtinIds = new Set(builtinInspirationCatalog().cases.map((one) => one.id));
-    if (builtinIds.has(parsed.id)) {
-      throw new InspirationCatalogError(
-        `"${parsed.id}" is a built-in case and cannot be replaced`,
-        409,
       );
     }
     const existing = await readInspirationCase(this.root, parsed.id);
@@ -193,12 +205,16 @@ export class InspirationCatalogService {
     }
   }
 
-  /** Delete an admin case. A built-in is not the admin's to delete. */
+  /**
+   * Delete a case.
+   *
+   * A built-in's id is accepted here, and for the same reason it is accepted in {@link save}: what
+   * gets deleted is the admin copy shadowing it, and the bundled original becomes visible again.
+   * Refusing the id outright made an edited built-in **undeletable** — the write path let it be
+   * shadowed and the delete path then refused the same id, so an admin could put a case they did
+   * not want into their library with no way to take it out again.
+   */
   async remove(id: string): Promise<void> {
-    const builtin = builtinInspirationCatalog().cases.find((one) => one.id === id);
-    if (builtin !== undefined) {
-      throw new InspirationCatalogError(`"${id}" is a built-in case and cannot be deleted`, 409);
-    }
     const existing = await readInspirationCase(this.root, id);
     if (existing === null) {
       throw new InspirationCatalogError(`no case with id "${id}"`, 404);

@@ -1358,6 +1358,12 @@ export const en: Strings = {
     newCase: "New case",
     createTitle: "New case",
     editTitle: "Edit case",
+    /**
+     * 编辑内置案例时表单顶部的一句话。保存会写一份同 id 的管理员案例把内置那份遮住，
+     * 内置本身不动——删掉这份就会回到内置，所以这不是一句可有可无的说明。
+     */
+    shadowBuiltinHint:
+      "This is a built-in. Saving writes your own copy under its id and puts that in its place; the built-in itself is untouched, and deleting your copy brings it back.",
     manageCategories: "Categories",
     created: "Case created",
     saved: "Case saved",

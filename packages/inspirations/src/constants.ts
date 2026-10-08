@@ -16,6 +16,26 @@
 /** The `schema` discriminator every case manifest carries. */
 export const INSPIRATION_SCHEMA = "jiumate.inspiration";
 
+/**
+ * The `schema` value written before the rebrand, still accepted on read.
+ *
+ * The product was renamed, and a `case.json` an admin authored under the old name keeps saying
+ * so. Rejecting that would leave the case invisible: a read is otherwise deliberately tolerant so
+ * one bad manifest cannot take the gallery down, but a name we used to write ourselves is not a
+ * bad manifest — it is our own older file. So it is read as what it is, and the next write
+ * stamps the current name.
+ *
+ * Nothing else about the two differs — the schema version did not move across the rename — so the
+ * accepted set is a name set, not a branch per name.
+ */
+export const INSPIRATION_SCHEMA_LEGACY = "linsight.inspiration";
+
+/** Every `schema` value a case manifest may carry and still be read. */
+export const INSPIRATION_SCHEMA_ACCEPTED: ReadonlySet<string> = new Set([
+  INSPIRATION_SCHEMA,
+  INSPIRATION_SCHEMA_LEGACY,
+]);
+
 /** Schema version written into `case.json`. Bump when the on-disk shape changes incompatibly. */
 export const INSPIRATION_SCHEMA_VERSION = 1;
 

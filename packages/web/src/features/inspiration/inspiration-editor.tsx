@@ -63,6 +63,7 @@ import {
   defaultCaseId,
   fileToBase64,
   isCoverFilename,
+  isShadowing,
   kindLabel,
 } from "./inspiration-service";
 import type { InspirationCatalogView } from "./inspiration-service";
@@ -440,6 +441,11 @@ export function CaseEditorDialog({
       }
     >
       <div className="space-y-3">
+        {one !== null && isShadowing(one) && (
+          <p className="mb-3 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-gray-800/60 dark:text-gray-400">
+            {S.inspiration.shadowBuiltinHint}
+          </p>
+        )}
         <Input
           label={S.inspiration.fieldTitleZh}
           required={draft.title.trim() === ""}

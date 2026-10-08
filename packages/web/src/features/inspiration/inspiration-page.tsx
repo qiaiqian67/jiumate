@@ -20,8 +20,8 @@
  *
  * `canManage` comes from the server, not from the user record the page holds: the write routes
  * re-check it, and a page that inferred it would show controls that fail. When it is true the page
- * gains "new case", "manage categories", and a per-card edit/delete — on admin cases only, since a
- * built-in is not the admin's to change.
+ * gains "new case", "manage categories", and a per-card edit/delete — on built-ins too, which
+ * works by shadowing rather than by rewriting (see `isEditable`).
  *
  * ## Filling from here
  *

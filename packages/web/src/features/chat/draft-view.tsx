@@ -703,46 +703,58 @@ export function DraftView({
             按钮——没有快捷指令时整行不渲染（见 shortcut-pills.tsx），不占输入框上方的位置。 */}
         <ShortcutPills onFill={fillShortcut} readComposerText={() => textRef.current} />
 
-        <ChatInput
-          status="idle"
-          controlRef={composerRef}
-          onSend={onSend}
-          onStop={async () => undefined}
-          onCompact={async () => undefined}
-          modelRef={modelRef}
-          models={models?.models ?? []}
-          onChangeModel={setModelRef}
-          thinkingLevel={thinkingLevel}
-          onChangeThinkingLevel={onChangeThinkingLevel}
-          {...(models?.defaultModel !== undefined ? { defaultModel: models.defaultModel } : {})}
-          {...(contextWindow !== undefined ? { contextWindow } : {})}
-          contextNow={0}
-          vision={vision}
-          approvalMode={approvalMode}
-          onChangeApprovalMode={changeApprovalMode}
-          modeSaving={false}
-          autoFocus
-          agents={agents}
-          {...(agentId ? { currentAgentId: agentId } : {})}
-          skills={agentSkills}
-          {...(cached.skills && cached.skills.length > 0 ? { initialSkills: cached.skills } : {})}
-          onSkillsChange={onSkillsChange}
-          initialText={cached.text ?? ""}
-          onTextChange={onTextChange}
-        />
+        {/* Composer + ownership bar as ONE outlined surface.
 
-        {/* Ownership bar: the reference layout hangs these two selects off the bottom of the
-            composer card as their own soft strip, which is what makes them read as part of the
-            card rather than as another row of page furniture. Only the framing is new — the
-            selects and what they do are untouched. */}
-        <div className="rounded-b-2xl bg-gray-200 px-3 py-2 dark:bg-gray-700/80">
-          <div className="flex flex-wrap items-center gap-2">
-            <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />
-            <WorkspaceSelect
-              projectId={projectId}
-              workspace={workspace}
-              onChange={changeWorkspace}
-            />
+            The reference frame is a single rounded box whose bottom strip is a different shade, so
+            the outline and the focus ring have to go around both. Drawn per-piece instead, three
+            seams show: the card's 8px corner meeting the strip's, the card's bottom border crossing
+            the strip's top edge, and a focus ring that stops at the card's edge while the strip
+            carries on below — which reads as a line that does not line up.
+
+            So the border and the ring live here, on the wrapper, and neither piece paints its own:
+            the card is `border-0` with its own ring off, the strip has no border. One outline, one
+            radius, one focus state — and the shade change is the only thing telling the halves
+            apart, which is the point of the frame. */}
+        <div className="rounded-lg border border-gray-300 transition-[border-color,box-shadow] duration-200 has-[:focus-within]:border-gray-500 has-[:focus-within]:ring-2 has-[:focus-within]:ring-gray-400/30 dark:border-gray-700 dark:has-[:focus-within]:border-gray-400">
+          <ChatInput
+            status="idle"
+            cardClassName="rounded-b-none border-0 focus-within:ring-0"
+            controlRef={composerRef}
+            onSend={onSend}
+            onStop={async () => undefined}
+            onCompact={async () => undefined}
+            modelRef={modelRef}
+            models={models?.models ?? []}
+            onChangeModel={setModelRef}
+            thinkingLevel={thinkingLevel}
+            onChangeThinkingLevel={onChangeThinkingLevel}
+            {...(models?.defaultModel !== undefined ? { defaultModel: models.defaultModel } : {})}
+            {...(contextWindow !== undefined ? { contextWindow } : {})}
+            contextNow={0}
+            vision={vision}
+            approvalMode={approvalMode}
+            onChangeApprovalMode={changeApprovalMode}
+            modeSaving={false}
+            autoFocus
+            agents={agents}
+            {...(agentId ? { currentAgentId: agentId } : {})}
+            skills={agentSkills}
+            {...(cached.skills && cached.skills.length > 0 ? { initialSkills: cached.skills } : {})}
+            onSkillsChange={onSkillsChange}
+            initialText={cached.text ?? ""}
+            onTextChange={onTextChange}
+          />
+
+          {/* Only the shade differs here — no border, no ring, no corner of its own. */}
+          <div className="rounded-b-lg bg-gray-200 px-3 py-2 dark:bg-gray-700/80">
+            <div className="flex flex-wrap items-center gap-2">
+              <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />
+              <WorkspaceSelect
+                projectId={projectId}
+                workspace={workspace}
+                onChange={changeWorkspace}
+              />
+            </div>
           </div>
         </div>
 

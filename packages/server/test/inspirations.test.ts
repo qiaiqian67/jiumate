@@ -11,7 +11,8 @@
  *
  * The manifest/coercion rules themselves live in `@prismshadow/jiumate-inspirations` and are
  * covered by its own unit suite; these tests pin the HTTP contract and the merge on top — in
- * particular that the built-in half cannot be written to, and that a non-admin cannot write at all.
+ * particular that an admin may shadow a built-in by writing its id, that the shadow replaces it in
+ * the listing rather than appearing beside it, and that a non-admin cannot write at all.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { apiClient, createTestApp, loginAdmin, provisionUser } from "./helpers.js";
@@ -134,16 +135,49 @@ describe("case writes", () => {
     expect(stored?.createdAt).not.toBeNull();
   });
 
-  it("refuses a create whose id is already taken, and one that shadows a built-in", async () => {
+  it("refuses a create whose id is already taken", async () => {
+    // Still a conflict: a create that lands on an existing admin case would silently overwrite it,
+    // and the editor that made the mistake would report success for a case it did not write.
     const client = apiClient(app.app, admin.cookie);
     await client.post("/api/inspirations/cases", caseBody());
-    const duplicate = await client.post("/api/inspirations/cases", caseBody());
-    expect(duplicate.status).toBe(409);
-    const shadow = await client.post(
-      "/api/inspirations/cases",
-      caseBody({ id: "game", title: "Not the built-in" }),
+    expect((await client.post("/api/inspirations/cases", caseBody())).status).toBe(409);
+  });
+
+  it("lets an admin shadow a built-in, and shows only the shadow", async () => {
+    // "Edit a built-in" is a copy under the same id: the bundled case is a constant, not a file,
+    // so the write lands as an admin case and the merge drops the built-in that id names. The
+    // bundled original is still in the package, which is what makes this reversible.
+    const client = apiClient(app.app, admin.cookie);
+    const before = await catalog(admin.cookie);
+    expect(before.cases.find((one) => one.id === "game")?.source).toBe("builtin");
+
+    const shadowed = await client.put(
+      "/api/inspirations/cases/game",
+      caseBody({ id: "game", title: "Our own game brief", categoryId: "webapps" }),
     );
-    expect(shadow.status).toBe(409);
+    expect(shadowed.status).toBe(200);
+
+    const body = await catalog(member.cookie);
+    // One case under that id, not two — a duplicate would show the admin both the text they
+    // replaced and the replacement.
+    expect(body.cases.filter((one) => one.id === "game")).toHaveLength(1);
+    expect(body.cases.find((one) => one.id === "game")).toMatchObject({
+      title: "Our own game brief",
+      source: "admin",
+    });
+
+    // Deleting the shadow brings the built-in back rather than removing anything from the bundle.
+    expect((await client.delete("/api/inspirations/cases/game")).status).toBe(204);
+    const restored = await catalog(member.cookie);
+    expect(restored.cases.find((one) => one.id === "game")?.source).toBe("builtin");
+  });
+
+  it("404s a delete for an id nothing holds, built-in included", async () => {
+    // Once the built-in guard is gone from delete, "nothing to delete" is the only honest answer —
+    // and it must not be a success, or a client would believe a row is gone that never existed.
+    const client = apiClient(app.app, admin.cookie);
+    expect((await client.delete("/api/inspirations/cases/game")).status).toBe(404);
+    expect((await client.delete("/api/inspirations/cases/never-existed")).status).toBe(404);
   });
 
   it("refuses a body whose id disagrees with the path", async () => {
@@ -262,7 +296,7 @@ describe("case writes", () => {
     ).toBe(404);
   });
 
-  it("deletes a case and its assets, and refuses to delete a built-in", async () => {
+  it("deletes a case and its assets", async () => {
     const client = apiClient(app.app, admin.cookie);
     await client.post(
       "/api/inspirations/cases",
@@ -277,9 +311,6 @@ describe("case writes", () => {
       (await apiClient(app.app, member.cookie).get("/api/inspirations/my-case/asset/shot.png"))
         .status,
     ).toBe(404);
-
-    expect((await client.delete("/api/inspirations/cases/game")).status).toBe(409);
-    expect((await client.delete("/api/inspirations/cases/nope")).status).toBe(404);
   });
 });
 

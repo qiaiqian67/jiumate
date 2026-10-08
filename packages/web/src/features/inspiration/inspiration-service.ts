@@ -360,7 +360,33 @@ export function kindOf(one: InspirationCase): InspirationKind {
   return one.kind;
 }
 
-/** True when the viewer may edit or delete this case: an admin, and not a built-in. */
+/**
+ * True when the viewer may act on this case: an admin, whatever the case's source.
+ *
+ * Built-ins used to be excluded here, on the grounds that a case compiled into the bundle is not
+ * the admin's to change. That is half true and it blocks the obvious thing: the first thing an
+ * admin wants of a built-in example is to change its prompt, because their users do not want the
+ * example, they want their prompt. So a built-in is editable too — by **shadowing**, not by
+ * rewriting: the editor writes an admin case under the same id, and the catalog merge already
+ * drops a built-in whose id the server has. The original stays in the bundle, so removing the
+ * shadow brings it back, and no upgrade can carry the change away.
+ *
+ * Deleting a built-in is the same operation for the same reason: it writes nothing, it deletes an
+ * id the server does not hold, and the built-in it was shadowing is simply visible again. Neither
+ * action touches `presets.ts`.
+ */
 export function isEditable(one: InspirationCase, canManage: boolean): boolean {
-  return canManage && one.source === "admin";
+  return canManage;
+}
+
+/**
+ * True when acting on this case writes a *new* file rather than editing one.
+ *
+ * The editor needs it to say what the save will do: overwriting an admin case is a plain edit,
+ * while saving a built-in is a copy, and "Save" on a form whose result is a new file should not
+ * be a surprise. The copy is also what carries the built-in's cover, since the bundle's image
+ * bytes are not on the server to be re-uploaded.
+ */
+export function isShadowing(one: InspirationCase): boolean {
+  return one.source === "builtin";
 }

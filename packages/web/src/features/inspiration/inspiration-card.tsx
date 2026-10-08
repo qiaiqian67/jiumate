@@ -93,7 +93,10 @@ export function InspirationCard({
   one: InspirationCase;
   locale: Locale;
   favorite: boolean;
-  /** Whether this viewer may edit or delete *this* case — false for every built-in, for everyone. */
+  /**
+   * Whether this viewer may edit or delete *this* case. True for an admin whatever the source:
+   * a built-in is shadowed by an admin copy of the same id, never rewritten in place.
+   */
   canManage: boolean;
   /** True until the selected Agent's installed skills are known: a fill before that drops pins. */
   disabled: boolean;

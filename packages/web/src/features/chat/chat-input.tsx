@@ -813,6 +813,7 @@ export function ChatInput({
   contextStale = false,
   sessionId,
   vision,
+  cardClassName,
   approvalMode,
   onChangeApprovalMode,
   modeSaving,
@@ -1021,6 +1022,13 @@ export function ChatInput({
    * model or agent, so there is no locked-model hint to click for.
    */
   variant?: "session" | "subagent";
+  /**
+   * Extra classes for the composer's own card, for the one caller that hangs a strip off its
+   * bottom edge (the draft page's ownership bar). Passing `rounded-b-none` there hands that edge
+   * to the strip, which rounds it once — rounding both leaves two different radii meeting at the
+   * seam, which is exactly what the strip is not supposed to look like.
+   */
+  cardClassName?: string;
   /**
    * Handle for the one thing a parent reaches in and does: the draft screen's example cards
    * fill this composer (see ComposerControl). A ref rather than a `fill` prop because it is a
@@ -2249,7 +2257,9 @@ export function ChatInput({
           (help text/button text visibility uses @md/@lg container breakpoints) — because the
           card's width changes with the viewport and the Files panel squeezing it, viewport
           breakpoints wouldn't judge it accurately. */}
-      <div className="@container rounded-lg border border-gray-300 bg-white px-2.5 pb-2 pt-2 transition-[border-color,box-shadow] duration-200 focus-within:border-gray-500 focus-within:ring-2 focus-within:ring-gray-400/30 dark:border-gray-700 dark:bg-gray-900 dark:focus-within:border-gray-400">
+      <div
+        className={`@container rounded-lg border border-gray-300 bg-white px-2.5 pb-2 pt-2 transition-[border-color,box-shadow] duration-200 focus-within:border-gray-500 focus-within:ring-2 focus-within:ring-gray-400/30 dark:border-gray-700 dark:bg-gray-900 dark:focus-within:border-gray-400 ${cardClassName ?? ""}`}
+      >
         {/* Chip row above the text body: the staged switch target (an /agent handoff or a
             /model fork — never both) followed by the selected skills, all sharing the same
             chip look. Remove buttons recolor the x on hover (no background wash). */}

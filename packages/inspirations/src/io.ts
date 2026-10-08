@@ -35,6 +35,7 @@ import {
   GLYPH_LIMIT,
   IMAGE_EXTENSIONS,
   INSPIRATION_SCHEMA,
+  INSPIRATION_SCHEMA_ACCEPTED,
   INSPIRATION_SCHEMA_VERSION,
   MANIFEST_LIMIT,
   MAX_CASES,
@@ -363,8 +364,13 @@ export async function readInspirationCase(
     throw new InspirationPackageError(`case.json is not valid JSON: ${(err as Error).message}`);
   }
   const raw = asRecord(parsed, "case");
-  if (raw["schema"] !== undefined && raw["schema"] !== INSPIRATION_SCHEMA) {
-    throw new InspirationPackageError(`case.json declares an unknown schema`);
+  // A schema we have written ourselves — the current one, or the pre-rebrand one — is read, not
+  // refused. Everything else is a file from somewhere else and stays a diagnostic, so one foreign
+  // manifest cannot take the gallery down (see the tolerance note at the top of this module).
+  if (raw["schema"] !== undefined && !INSPIRATION_SCHEMA_ACCEPTED.has(String(raw["schema"]))) {
+    throw new InspirationPackageError(
+      `case.json declares an unknown schema "${String(raw["schema"])}"`,
+    );
   }
   if (raw["schemaVersion"] !== undefined && raw["schemaVersion"] !== INSPIRATION_SCHEMA_VERSION) {
     throw new InspirationPackageError(

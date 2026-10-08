@@ -33,6 +33,7 @@ import {
   writeInspirationCover,
   writeInspirationPreview,
 } from "../src/io.js";
+import { INSPIRATION_SCHEMA_LEGACY } from "../src/constants.js";
 import type { InspirationCaseInput } from "../src/schema.js";
 
 let root: string;
@@ -247,6 +248,41 @@ describe("case IO", () => {
     await deleteInspirationCase(root, "sample");
     expect(await readInspirationCase(root, "sample")).toBeNull();
     expect(await readFile(join(caseDir(root, "sample"), "cover.png")).catch(() => null)).toBeNull();
+  });
+
+  it("reads a manifest still carrying the pre-rebrand schema name", async () => {
+    // An admin authored this before the rename, and the file still says so. Refusing it would
+    // leave the case invisible — and it is our own older file, not a bad one. A read is otherwise
+    // deliberately tolerant so one broken manifest cannot take the gallery down, and this is the
+    // case that tolerance is for.
+    await writeInspirationCase(root, input(), {
+      createdBy: "admin",
+      updatedAt: "2026-09-21T00:00:00Z",
+    });
+    const manifest = caseManifestPath(root, "sample");
+    const body = JSON.parse(await readFile(manifest, "utf8")) as Record<string, unknown>;
+    body["schema"] = INSPIRATION_SCHEMA_LEGACY;
+    await writeFile(manifest, JSON.stringify(body, null, 2), "utf8");
+
+    const stored = await readInspirationCase(root, "sample");
+    expect(stored?.title).toBe("Sample case");
+    // The catalog read is what the gallery sees: no diagnostic, the case is listed.
+    expect(await readAdminCases(root)).toMatchObject({ diagnostics: [] });
+  });
+
+  it("still refuses a schema from somewhere else", async () => {
+    // The legacy name is one specific value, not a wildcard: a manifest from another tool is
+    // still reported rather than half-read.
+    await writeInspirationCase(root, input(), { createdBy: null, updatedAt: null });
+    const manifest = caseManifestPath(root, "sample");
+    const body = JSON.parse(await readFile(manifest, "utf8")) as Record<string, unknown>;
+    body["schema"] = "someone-elses.inspiration";
+    await writeFile(manifest, JSON.stringify(body, null, 2), "utf8");
+
+    await expect(readInspirationCase(root, "sample")).rejects.toThrow(/unknown schema/);
+    const read = await readAdminCases(root);
+    expect(read.cases).toHaveLength(0);
+    expect(read.diagnostics[0]).toContain("someone-elses.inspiration");
   });
 
   it("reads a missing catalog as empty rather than as an error", async () => {
