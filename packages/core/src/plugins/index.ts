@@ -139,6 +139,29 @@ export interface ResolvedPluginGroup extends PluginCategory {
 /** Character rule for plugin, skill and hook names (directory names): prevents path traversal (exported for the server's archive-install validation). */
 export const PLUGIN_NAME_PATTERN = /^[A-Za-z0-9_-]+$/;
 
+/**
+ * Skills the pre-rebrand project shipped under an older name → their current names.
+ *
+ * A Skill's identity is its directory name, so renaming one in the library cannot reach the
+ * copies already installed: `skills/linsight-sdk/` stayed `linsight-sdk` while the library moved
+ * to `jiumate-sdk`. The result was one skill appearing twice in a catalog — once per name — with
+ * the counts disagreeing, which is the symptom this table exists to resolve.
+ *
+ * Written as old → new rather than inferred from a string replacement on purpose. A rename is a
+ * fact about a particular release, not a pattern: `linsight-` happened to prefix these three, but
+ * "strip the old brand prefix" would also rewrite a user-authored skill that merely mentions it,
+ * and would keep matching skill names nobody renamed. The server treats a pair in this table as
+ * the only renames it will perform.
+ *
+ * All three ship in the `agent-development` plugin. Retirement: drop an entry once no install in
+ * the wild can still carry it.
+ */
+export const LEGACY_SKILL_NAMES: ReadonlyMap<string, string> = new Map([
+  ["linsight-config", "jiumate-config"],
+  ["linsight-orchestration", "jiumate-orchestration"],
+  ["linsight-sdk", "jiumate-sdk"],
+]);
+
 /** Version format: an ISO date and a sequence number, e.g. `2026-08-29.1`. */
 export const PLUGIN_VERSION_PATTERN = /^\d{4}-\d{2}-\d{2}\.\d+$/;
 

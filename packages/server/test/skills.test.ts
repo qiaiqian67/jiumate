@@ -313,6 +313,114 @@ describe("skills api", () => {
     expect((await owner.get("/api/projects/no_such_project/skills/catalog")).status).toBe(404);
   });
 
+  describe("pre-rebrand skill renames", () => {
+    /** Writes a skill directory by hand, under a name the library no longer ships. */
+    async function writeSkill(agentId: string, name: string, body = "legacy body"): Promise<void> {
+      const dir = path.join(skillsDir(t.root, projectId, agentId), name);
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(
+        path.join(dir, "SKILL.md"),
+        `---\nname: ${name}\ndescription: installed before the rebrand\nversion: 2026-08-01.1\n---\n\n${body}\n`,
+        "utf8",
+      );
+    }
+    const readBody = (agentId: string, name: string) =>
+      fs.readFile(path.join(skillsDir(t.root, projectId, agentId), name, "SKILL.md"), "utf8");
+
+    it("lists only old-name skills whose new name is in the library, then renames them with a backup", async () => {
+      await createPlainAgent("re_agent");
+      await writeSkill("re_agent", "linsight-sdk", "user text that must survive");
+      // Old name, but the library has no such new name → not offered.
+      await writeSkill("re_agent", "linsight-not-real");
+
+      const listed = (await (
+        await member.get(`/api/projects/${projectId}/skills/renamable`)
+      ).json()) as { items: { from: string; to: string; agents: string[] }[] };
+      expect(listed.items).toEqual([
+        { from: "linsight-sdk", to: "jiumate-sdk", agents: ["re_agent"] },
+      ]);
+
+      const res = await member.post(`/api/projects/${projectId}/skills/rename`, {
+        from: "linsight-sdk",
+        to: "jiumate-sdk",
+      });
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { moved: string[]; skipped: unknown[] };
+      expect(body.moved).toEqual(["re_agent"]);
+      expect(body.skipped).toEqual([]);
+
+      // Renamed, with the user's text intact — the rename is a move, not a reinstall.
+      expect(await readBody("re_agent", "jiumate-sdk")).toContain("user text that must survive");
+      await expect(
+        fs.access(path.join(skillsDir(t.root, projectId, "re_agent"), "linsight-sdk")),
+      ).rejects.toThrow();
+
+      // The backup exists and holds the original: an installed copy may have been hand-edited,
+      // and this is what makes the rename recoverable.
+      const entries = (await fs.readdir(skillsDir(t.root, projectId, "re_agent"))).filter((n) =>
+        n.includes("backup"),
+      );
+      expect(entries).toHaveLength(1);
+      expect(await readBody("re_agent", entries[0]!)).toContain("user text that must survive");
+
+      // And the skill now reads under its new name in the catalog, and is no longer renamable.
+      const catalog = (await (
+        await member.get(`/api/projects/${projectId}/skills/catalog`)
+      ).json()) as SkillCatalogResponse;
+      expect(catalog.skills.map((s) => s.name)).toContain("jiumate-sdk");
+      const again = (await (
+        await member.get(`/api/projects/${projectId}/skills/renamable`)
+      ).json()) as { items: { from: string }[] };
+      expect(again.items.map((i) => i.from)).not.toContain("linsight-sdk");
+    });
+
+    it("skips an Agent whose target name is taken rather than merging the two", async () => {
+      await createPlainAgent("re_busy");
+      await writeSkill("re_busy", "linsight-sdk", "old copy");
+      // The new name already present: renaming onto it would merge two skills' files.
+      await writeSkill("re_busy", "jiumate-sdk", "already here");
+
+      const res = await member.post(`/api/projects/${projectId}/skills/rename`, {
+        from: "linsight-sdk",
+        to: "jiumate-sdk",
+      });
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        moved: string[];
+        skipped: { agentId: string; reason: string }[];
+      };
+      expect(body.moved).toEqual([]);
+      expect(body.skipped).toEqual([{ agentId: "re_busy", reason: "target_exists" }]);
+      // Both copies untouched.
+      expect(await readBody("re_busy", "jiumate-sdk")).toContain("already here");
+      expect(await readBody("re_busy", "linsight-sdk")).toContain("old copy");
+    });
+
+    it("rejects a rename this build does not know about", async () => {
+      // The endpoint moves known pre-rebrand pairs only; a free "move any skill" would let a
+      // caller shadow a library skill with an unrelated directory.
+      for (const body of [
+        { from: "data-analysis", to: "anything" },
+        { from: "linsight-sdk", to: "somewhere-else" },
+        { from: "linsight-sdk" },
+        {},
+      ]) {
+        expect(
+          (await member.post(`/api/projects/${projectId}/skills/rename`, body)).status,
+          JSON.stringify(body),
+        ).toBe(400);
+      }
+      expect(
+        (
+          await outsider.post(`/api/projects/${projectId}/skills/rename`, {
+            from: "linsight-sdk",
+            to: "jiumate-sdk",
+          })
+        ).status,
+      ).toBe(404);
+    });
+  });
+
   it("outsiders always get 404 (read, install, uninstall); a missing Agent is 404", async () => {
     const url = base("default_agent");
     expect((await outsider.get(url)).status).toBe(404);

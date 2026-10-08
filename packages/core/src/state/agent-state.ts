@@ -558,6 +558,70 @@ export async function removeSkill(
   });
 }
 
+/**
+ * Renames an installed Skill directory, keeping its contents.
+ *
+ * Written for the rebrand case rather than as a general facility: a Skill installed before the
+ * project was renamed still sits under its old directory name, and a Skill's identity **is** its
+ * directory name (install, uninstall and Prompt addressing all use it), so the library's rename
+ * never reached the installed copies. Reading them as aliases would have left the catalog listing
+ * one skill twice — under both names — which is worse than the original discrepancy.
+ *
+ * `rename(2)` is atomic within a filesystem and needs the target to be free, so the caller has to
+ * establish that: renaming onto an existing directory would merge or fail unpredictably. Both
+ * names are validated as ids first, so neither can escape `skills/`.
+ */
+export async function renameSkill(
+  root: string,
+  projectId: string,
+  agentId: string,
+  fromName: string,
+  toName: string,
+): Promise<void> {
+  assertValidId("project_id", projectId);
+  assertValidId("agent_id", agentId);
+  assertValidId("skill_name", fromName);
+  assertValidId("skill_name", toName);
+  const dir = skillsDir(root, projectId, agentId);
+  await fs.rename(path.join(dir, fromName), path.join(dir, toName));
+}
+
+/**
+ * Copies an installed Skill directory to `<name>.backup-<timestamp>` and returns the new name,
+ * or null when the source is not there.
+ *
+ * Exists because the rename above cannot itself be the safe part: an installed copy may have been
+ * hand-edited, and neither the rename nor a later reinstall can tell an edit from an old version
+ * of the library's own text. Copying first means the outcome is recoverable whatever it turns out
+ * to be — the backup is a normal skill-shaped directory the user can diff and delete themselves,
+ * rather than a promise.
+ *
+ * The suffix is dot-prefixed like the staging directories, so a backup left behind is skipped by
+ * `listInstalledSkills` and never shows up as a skill.
+ */
+export async function backupSkillDirectory(
+  root: string,
+  projectId: string,
+  agentId: string,
+  name: string,
+  stamp = String(Date.now()),
+): Promise<string | null> {
+  assertValidId("project_id", projectId);
+  assertValidId("agent_id", agentId);
+  assertValidId("skill_name", name);
+  const source = path.join(skillsDir(root, projectId, agentId), name);
+  // `access` on the directory rather than a read: the caller wants to know whether there is
+  // anything to copy, and a Skill directory without SKILL.md is not one.
+  try {
+    await fs.access(path.join(source, "SKILL.md"));
+  } catch {
+    return null;
+  }
+  const target = path.join(skillsDir(root, projectId, agentId), `.${name}.backup-${stamp}`);
+  await fs.cp(source, target, { recursive: true });
+  return path.basename(target);
+}
+
 /** An installed Skill entry: frontmatter metadata (including an optional short description) + the optional icon.svg content in the directory. */
 export interface InstalledSkill extends SkillMetadata {
   /** The raw content of `skills/<name>/icon.svg` — the plugin's icon for a library install, a custom one for a user-authored skill — copied alongside SKILL.md at install time; the field is omitted when missing (the frontend then draws the book glyph). */

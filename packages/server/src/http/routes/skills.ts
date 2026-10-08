@@ -18,10 +18,14 @@ import { unzipSync, strFromU8, zipSync } from "fflate";
 import { Hono } from "hono";
 import {
   listInstalledSkills,
+  loadLibraryPlugins,
   removeSkill,
+  renameSkill,
+  backupSkillDirectory,
   replaceSkillDirectory,
   skillsDir,
   parseSkillFrontmatter,
+  LEGACY_SKILL_NAMES,
   PLUGIN_NAME_PATTERN,
 } from "@prismshadow/jiumate-core";
 import type {
@@ -238,6 +242,85 @@ export function projectSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
     const projectId = requireValidId(c, "projectId");
     deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
     return c.json(await projectSkillCatalog(deps, projectId));
+  });
+
+  /**
+   * The installed skills this build can rename, discovered rather than declared: an old-name copy
+   * is one whose library counterpart exists under a new name and the old one is absent from the
+   * library. That is the whole definition of "pre-rebrand", and deriving it means a future rename
+   * is covered by shipping the new library rather than by editing a list that has to be remembered.
+   *
+   * `agentNames` is empty for a skill that has been renamed everywhere already, which is what
+   * makes this idempotent: asking twice answers the second time with nothing to do rather than
+   * failing.
+   */
+  app.get("/renamable", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    const catalog = await projectSkillCatalog(deps, projectId);
+    const libraryNames = new Set(loadLibraryPlugins().flatMap((p) => p.skills.map((s) => s.name)));
+    const items = catalog.skills
+      .filter((one) => !libraryNames.has(one.name) && LEGACY_SKILL_NAMES.has(one.name))
+      .map((one) => ({
+        from: one.name,
+        to: LEGACY_SKILL_NAMES.get(one.name)!,
+        agents: one.agents,
+      }));
+    return c.json({ items });
+  });
+
+  /**
+   * POST /api/projects/:p/skills/rename — move one skill to its current library name, on every
+   * Agent that has it, backing the old directory up first.
+   *
+   * The copy before the rename is the point: an installed copy may have been hand-edited, and
+   * neither this nor a later reinstall can tell an edit from an old version of the library's own
+   * text. Backing up means the outcome is recoverable either way.
+   *
+   * The body content is left alone. Upgrading the text is the library's job (reinstall), and
+   * mixing it in here would overwrite whatever the backup exists to preserve — the rename's
+   * purpose is the name, and the two changes should be separable.
+   */
+  app.post("/rename", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    const body = await readJson(c);
+    const from = requireString(body, "from");
+    const to = requireString(body, "to");
+    // The rename has to be one this build knows about, rather than any pair of ids: it is what
+    // stops a caller turning this into a free "move any skill anywhere" operation.
+    if (LEGACY_SKILL_NAMES.get(from) !== to) {
+      throw badRequest(`Not a known pre-rebrand rename: ${from} -> ${to}`);
+    }
+    const libraryNames = new Set(loadLibraryPlugins().flatMap((p) => p.skills.map((s) => s.name)));
+    if (!libraryNames.has(to)) throw badRequest(`The library has no skill named ${to}`);
+    const agents = await deps.agentService.listAgents(projectId);
+    const moved: string[] = [];
+    const skipped: { agentId: string; reason: string }[] = [];
+    for (const agent of agents) {
+      const dir = skillsDir(deps.config.root, projectId, agent.agentId);
+      const fromDir = path.join(dir, from);
+      const toDir = path.join(dir, to);
+      const hasFrom = await fs.access(path.join(fromDir, "SKILL.md")).then(
+        () => true,
+        () => false,
+      );
+      if (!hasFrom) continue;
+      const hasTo = await fs.access(path.join(toDir, "SKILL.md")).then(
+        () => true,
+        () => false,
+      );
+      if (hasTo) {
+        // Renaming onto an existing directory would merge two skills' files or fail; report it
+        // per Agent instead of picking one and losing the other.
+        skipped.push({ agentId: agent.agentId, reason: "target_exists" });
+        continue;
+      }
+      await backupSkillDirectory(deps.config.root, projectId, agent.agentId, from);
+      await renameSkill(deps.config.root, projectId, agent.agentId, from, to);
+      moved.push(agent.agentId);
+    }
+    return c.json({ from, to, moved, skipped });
   });
   return app;
 }
