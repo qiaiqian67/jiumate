@@ -895,11 +895,12 @@ function PluginCard({
         keyState={keyState}
         keyLabel={envNames.length === 0 ? undefined : S.plugins.needsEnv(envNames)}
         onOpen={() => setDetailOpen(true)}
+        actionOverlay
         action={
           // Shown on hover (or focus, so the keyboard reaches them): four buttons on a card
-          // this wide would otherwise sit on top of the name, which is the one thing the card
-          // has to say.
-          <div className="flex shrink-0 items-center gap-1.5 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100">
+          // this narrow would otherwise cost the name a third of its width, so they lay over
+          // its tail instead — see `actionOverlay`.
+          <div className="flex shrink-0 items-center gap-1.5">
             {/* Upgrade: always present so the affordance is findable, disabled with the reason in
                 its tooltip once the library and every installed copy agree. Carries the update
                 dot itself when something IS waiting — straddling the top-right corner of the

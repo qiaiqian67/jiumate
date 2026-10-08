@@ -24,6 +24,7 @@ export function LibraryCard({
   description,
   descriptionTitle,
   action,
+  actionOverlay,
   meta,
   keyState,
   keyLabel,
@@ -40,6 +41,16 @@ export function LibraryCard({
   descriptionTitle?: string;
   /** The corner control (install, edit, …). */
   action?: ReactNode;
+  /**
+   * Lay `action` over the card's top-right rather than beside the name.
+   *
+   * For a hover-revealed group that outnumbers the width a name can spare: in the row the
+   * buttons are invisible at rest but still occupy it, so the name truncates at a fraction of
+   * the card. Overlaying hands the whole row to the name and spends the hover itself instead.
+   * A single always-visible control (one install button) stays in flow — there is nothing to
+   * reveal and no reason to cover anything.
+   */
+  actionOverlay?: boolean;
   /** Optional bottom line of real data (version, usage, connection target). */
   meta?: string;
   /** Key state for a subject that needs credentials: yellow unset, green ready, undefined when
@@ -69,7 +80,7 @@ export function LibraryCard({
   return (
     // h-full + the meta line's mt-auto keep the bottoms of a row aligned when one card's
     // description runs to two lines and its neighbour's takes one.
-    <div className="group flex h-full flex-col rounded-xl border border-gray-200 bg-white p-4 transition-shadow duration-150 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+    <div className="group relative flex h-full flex-col rounded-xl border border-gray-200 bg-white p-4 transition-shadow duration-150 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
       <div className="flex items-center gap-2">
         {onOpen ? (
           <button
@@ -82,10 +93,21 @@ export function LibraryCard({
         ) : (
           header
         )}
-        {action !== undefined && (
-          // Reserve the row's height so revealing the actions on hover cannot reflow the name.
-          <div className="flex min-h-8 shrink-0 items-center">{action}</div>
-        )}
+        {action !== undefined &&
+          (actionOverlay ? (
+            // Laid over the name's tail instead of beside it. In the row these four buttons are
+            // ~146px — invisible at rest but still occupying that space, which left every name
+            // about a third shorter and truncating near fifteen characters. The overlay's own
+            // inset matches the card's padding so it lines up with the icon, and the `p-4`
+            // padding on the card is what keeps the revealed buttons clear of the rounded
+            // corner.
+            <div className="pointer-events-none absolute right-4 top-4 flex items-center opacity-0 transition-opacity duration-150 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100">
+              <div className="pointer-events-auto">{action}</div>
+            </div>
+          ) : (
+            // In-flow: reserve the row's height so revealing the actions cannot reflow the name.
+            <div className="flex min-h-8 shrink-0 items-center">{action}</div>
+          ))}
       </div>
       <p
         className="mt-3 line-clamp-2 text-[13px] leading-5 text-gray-500 dark:text-gray-400"
