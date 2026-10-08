@@ -731,10 +731,19 @@ export function DraftView({
           onTextChange={onTextChange}
         />
 
-        {/* Ownership selection right below the card (small pill dropdowns, styled after ChatGPT's project picker button) */}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />
-          <WorkspaceSelect projectId={projectId} workspace={workspace} onChange={changeWorkspace} />
+        {/* Ownership bar: the reference layout hangs these two selects off the bottom of the
+            composer card as their own soft strip, which is what makes them read as part of the
+            card rather than as another row of page furniture. Only the framing is new — the
+            selects and what they do are untouched. */}
+        <div className="rounded-b-2xl bg-gray-200 px-3 py-2 dark:bg-gray-700/80">
+          <div className="flex flex-wrap items-center gap-2">
+            <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />
+            <WorkspaceSelect
+              projectId={projectId}
+              workspace={workspace}
+              onChange={changeWorkspace}
+            />
+          </div>
         </div>
 
         {/* Inspiration: canned builds showing off the one-sentence → app flow; a click fills the

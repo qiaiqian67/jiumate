@@ -1783,6 +1783,8 @@ export const en: Strings = {
     recallQueuedTitle: "Recall to the input box to edit and resend",
     send: "Send",
     stop: "Stop",
+    /** 麦克风按钮的提示：图标按参考图加了，但还没有语音识别后端。 */
+    voiceNotAvailable: "Voice input is not available yet",
     compact: "Compact context",
     approve: "Allow",
     deny: "Deny",

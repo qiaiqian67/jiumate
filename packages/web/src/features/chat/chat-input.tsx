@@ -2655,6 +2655,32 @@ export function ChatInput({
                 <span className="hidden min-w-0 truncate @md:block">{lockedModelLabel}</span>
               </button>
             )}
+            {/* Voice input: the reference layout's icon, sitting left of Send. There is no
+                speech backend behind it, so it says so rather than looking wired and doing
+                nothing when pressed. */}
+            <button
+              type="button"
+              title={S.chat.voiceNotAvailable}
+              aria-label={S.chat.voiceNotAvailable}
+              onClick={() => toastInfo(S.chat.voiceNotAvailable)}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+                className="block"
+              >
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
+              </svg>
+            </button>
             {/* One action button, never two: while running an empty composer means "Stop"
               (abort), and typing turns the very same button into "Send" — which, mid-run,
               steers or queues per the remembered send mode (the "+" menu's settings row).
@@ -2670,8 +2696,8 @@ export function ChatInput({
               onClick={() => (stopAction ? void onStop() : void send())}
               className={
                 stopAction
-                  ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-red-50 text-red-600 transition-colors duration-150 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-950"
-                  : "flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gray-900 text-white transition-colors duration-150 hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300 dark:disabled:bg-gray-800 dark:disabled:text-gray-600"
+                  ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 transition-colors duration-150 hover:bg-red-100 dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-950"
+                  : "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-white transition-colors duration-150 hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300 dark:disabled:bg-gray-800 dark:disabled:text-gray-600"
               }
             >
               {stopAction ? (

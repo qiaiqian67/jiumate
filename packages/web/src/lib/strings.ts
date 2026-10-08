@@ -1744,6 +1744,8 @@ export const zh = {
     recallQueuedTitle: "撤回到输入框，编辑后重新发送",
     send: "发送",
     stop: "停止",
+    /** 麦克风按钮的提示：图标按参考图加了，但还没有语音识别后端。 */
+    voiceNotAvailable: "语音输入尚未开放",
     compact: "压缩上下文",
     approve: "允许",
     deny: "拒绝",
