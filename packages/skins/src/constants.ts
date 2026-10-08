@@ -38,8 +38,23 @@ export const SKIN_NAME_LIMIT = 128;
 export const SKIN_AUTHOR_LIMIT = 128;
 export const SKIN_DESCRIPTION_LIMIT = 4096;
 
-/** The `schema` discriminator every native manifest carries. */
+/** The `schema` discriminator every skin manifest carries. */
 export const SKIN_SCHEMA = "jiumate.skin";
+
+/**
+ * The `schema` value written before the rebrand, still accepted on read.
+ *
+ * The same reasoning as `INSPIRATION_SCHEMA_LEGACY` in `@prismshadow/jiumate-inspirations`, and
+ * for the same reason: a theme installed under the old name keeps declaring it, and refusing that
+ * makes the theme silently vanish from the picker with one line in the log as the only trace. A
+ * name this build used to write is an older file of ours, not an invalid one — and unlike a
+ * built-in skin, an installed theme is a user's own file, so there is nothing to protect by
+ * rejecting it.
+ */
+export const SKIN_SCHEMA_LEGACY = "linsight.skin";
+
+/** Every `schema` value a skin manifest may carry and still be read. */
+export const SKIN_SCHEMA_ACCEPTED: ReadonlySet<string> = new Set([SKIN_SCHEMA, SKIN_SCHEMA_LEGACY]);
 
 /** Schema version written into `skin.json`. */
 export const SKIN_SCHEMA_VERSION = 1;

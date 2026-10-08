@@ -38,6 +38,7 @@ import {
   SKIN_ID_LIMIT,
   SKIN_NAME_LIMIT,
   SKIN_SCHEMA,
+  SKIN_SCHEMA_ACCEPTED,
   SKIN_SCHEMA_VERSION,
   TOKEN_VALUE_LIMIT,
   TYPOGRAPHY_TOKENS,
@@ -123,8 +124,13 @@ export async function readSkinPackage(root: string, slug: string): Promise<SkinP
 export function coerceSkinPackage(value: unknown, ctx: { packagePath: string }): SkinPackage {
   const raw = asObject(value, "Theme manifest must be a JSON object");
 
-  if (raw["schema"] !== SKIN_SCHEMA) {
-    throw new SkinPackageError(`Theme manifest must declare schema "${SKIN_SCHEMA}"`);
+  // Both the current name and the pre-rebrand one are read; anything else is a file from somewhere
+  // else. An installed theme is the user's own file, so accepting a name this build used to write
+  // costs nothing and refusing it only loses them a theme they installed.
+  if (raw["schema"] === undefined || !SKIN_SCHEMA_ACCEPTED.has(String(raw["schema"]))) {
+    throw new SkinPackageError(
+      `Theme manifest must declare schema "${SKIN_SCHEMA}" (got ${JSON.stringify(raw["schema"] ?? null)})`,
+    );
   }
   if (raw["schemaVersion"] !== SKIN_SCHEMA_VERSION) {
     throw new SkinPackageError(`Theme manifest must use schemaVersion ${SKIN_SCHEMA_VERSION}`);

@@ -7,6 +7,7 @@ import {
   MANIFEST_LIMIT,
   MAX_SKINS,
   MAX_TOKENS,
+  SKIN_SCHEMA_LEGACY,
   SkinPackageError,
   coerceSkinPackage,
   deleteSkinPackage,
@@ -360,6 +361,22 @@ describe("catalog IO", () => {
     await writeFile(join(root, "skins", "stray.txt"), "not a directory", "utf8");
     const skins = await readSkinCatalog(root);
     expect(skins.map((s) => s.id)).toEqual(["sakura"]);
+  });
+
+  it("lists a theme still declaring the pre-rebrand schema", async () => {
+    // Installed under the old brand, so its manifest still says so. Refusing it made the theme
+    // disappear from the picker with one line in the log as the only trace — a silent loss of
+    // something the user installed themselves, over a name this build used to write.
+    await stage("legacy", manifest({ id: "legacy", schema: SKIN_SCHEMA_LEGACY }));
+    const skins = await readSkinCatalog(root);
+    expect(skins.map((s) => s.id)).toEqual(["legacy"]);
+  });
+
+  it("still skips a theme declaring a schema from somewhere else", async () => {
+    // The legacy name is one specific value, not a wildcard.
+    await stage("foreign", manifest({ id: "foreign", schema: "someone-elses.skin" }));
+    await stage("sakura", manifest());
+    expect((await readSkinCatalog(root)).map((s) => s.id)).toEqual(["sakura"]);
   });
 
   it("returns an empty catalog when the directory does not exist", async () => {
