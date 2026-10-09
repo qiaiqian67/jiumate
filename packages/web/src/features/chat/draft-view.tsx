@@ -703,33 +703,36 @@ export function DraftView({
             按钮——没有快捷指令时整行不渲染（见 shortcut-pills.tsx），不占输入框上方的位置。 */}
         <ShortcutPills onFill={fillShortcut} readComposerText={() => textRef.current} />
 
-        {/* Composer + ownership bar as one flat surface.
+        {/* Composer + ownership bar as ONE gray slab with the input floating on it.
 
-            The reference frame has no outline and no focus state at all: a white card on a gray
-            strip, both the same radius, and nothing changes when the composer takes focus. An
-            earlier pass wrapped the two in a bordered box that also ringed and darkened its border
-            on focus, which put a second, larger rounded rectangle outside the card — you could see
-            the frame's corners *around* the card's corners, and the card lit up on every click.
+            Read the reference: the gray is the **background**, not a strip. It is wider than the
+            white card, it shows above and to both sides of it, and the card sits *on* it with a
+            small even margin — then a much larger gray run below holds 选择工作空间 / 默认权限.
+            Two earlier passes got this wrong in opposite directions — one glued them into a single
+            outlined box with a band along the bottom edge, the other stacked two same-width boxes
+            with a gap — and neither matched, because in both the gray is a sibling strip rather
+            than the thing the card rests on.
 
-            So this wrapper now carries the radius and nothing else: no border, no shadow, no
-            focus-within rules. The card's own ring is switched off at the source (`focusRing`),
-            not overridden here — a `ring-0` class loses the cascade in Tailwind v4, which is why
-            that is a prop. Both pieces keep `rounded-lg`, so the gray and the white share one
-            corner size instead of two radii meeting on a single panel. */}
-        <div className="rounded-lg">
+            So the two pieces are siblings here too, but the relationship is inverted: the card is
+            **inset** inside the slab rather than sitting above a strip of equal width. The slab's
+            own padding is what produces the gray on every side, and `pb-6` — much larger than the
+            `p-3` around — is the reference's clearest cue about where the extra gray belongs.
+
+            `overflow-hidden` so the card's corners are clipped by the slab's: it is a card lying
+            on a surface, not a card floating above one, and the reference shows no shadow of it
+            escaping the gray. */}
+        <div className="overflow-hidden rounded-2xl bg-gray-100 p-3 pb-6 dark:bg-gray-800/60">
           <ChatInput
             status="idle"
-            // rounded-lg, matching the gray strip below: one panel, one corner size. The card's
-            // own base radius is rounded-lg too, so passing the same value keeps the two from
-            // drifting apart the next time either default changes.
-            // No ring and no border-colour change on focus: this frame is flat by design, and the
-            // reference shows the composer at rest whether it holds focus or not. Must be the
-            // prop rather than a class — a ring-0 handed in through cardClassName sorts before
-            // ring-2 in the built sheet and silently loses the cascade (see focusRing above).
-            cardClassName="rounded-lg"
-            // prop, not a class: a ring-0 handed in through cardClassName sorts before
-            // ring-2 in the built sheet and silently loses the cascade
-            // (see focusRing in chat-input.tsx).
+            // No radius of its own: the slab clips it (overflow-hidden), so the card's corners are
+            // the slab's — which is what "lying on" reads as. A radius here would draw a
+            // second set of corners inside the gray, which is the mismatch that prompted the
+            // last round of changes.
+            // No ring and no focus-state change: the reference shows the composer looking the
+            // same whether or not it holds focus. `focusRing`, not a class — a ring-0 through
+            // cardClassName sorts before ring-2 in the built sheet and silently loses the
+            // cascade (see focusRing in chat-input.tsx).
+            cardClassName=""
             focusRing={false}
             controlRef={composerRef}
             onSend={onSend}
@@ -757,13 +760,11 @@ export function DraftView({
             onTextChange={onTextChange}
           />
 
-          {/* Only the shade differs here — no border, no ring. `rounded-lg` is the same value the card
-            and the wrapper use, which is the fix for the mismatch: two different corner sizes
-            meeting on one panel is exactly what made the gray read as a separate object behind
-            the input. `mt-2.5` leaves the strip clear of the card's own edge instead of letting
-            the two shapes touch, and `pt-3`/`pb-3` give the gray more height below the controls
-            than above, as the reference shows. */}
-          <div className="mt-2.5 rounded-lg bg-gray-200 px-3 pb-3 pt-3 dark:bg-gray-700/80">
+          {/* The ownership controls sit on the gray, below the card's edge, with no strip of their
+            own: `px-1` lines their left edge up with the card's content, and the slab's `pb-6`
+            below is the reference's "most gray at the bottom". They are not given a radius —
+            they have no surface, only the slab they rest on. */}
+          <div className="px-1 pb-1 pt-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />
               <WorkspaceSelect

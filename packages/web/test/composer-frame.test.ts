@@ -1,23 +1,17 @@
 /**
  * The homepage composer frame (`src/features/chat/draft-view.tsx` + `chat-input.tsx`).
  *
- * The reference shows a white card on a gray strip with **no outline and no focus state**: same
- * corner size on both, and nothing changes when the composer takes focus. An earlier pass wrapped
- * them in a bordered box that also ringed and darkened its border on focus, so you saw a second
- * rounded rectangle *around* the card and the card lit up on every click. Two reports came back
- * about exactly those two things, which is why they are checked rather than described.
+ * The reference: a white card **lying on** a gray slab. The gray is the background, not a strip —
+ * it is wider than the card, shows above and to both sides of it, and carries a much larger run
+ * below the card holding 选择工作空间 / 默认权限. The card is inset in it, with a small even
+ * margin on the top and sides.
  *
- * Both parts of that are silent failures, which is why they are worth a test:
- *
- * 1. **The focus ring cannot be turned off with a class.** The card sets `focus-within:ring-2` in
- *    its own base classes, and Tailwind v4 settles conflicting utilities by where they land in the
- *    generated stylesheet — in this build `.focus-within\:ring-2` comes *after*
- *    `.focus-within\:ring-0`. So a `ring-0` passed in via `cardClassName` loses the cascade and
- *    does nothing at all, with no error anywhere. It has to be a prop (`focusRing`) set where the
- *    ring is set, and this test fails if the class-string version creeps back.
- *
- * 2. **The radius is two class strings that must agree.** `rounded-lg` appears on the wrapper, the
- *    card override and the strip. Nothing computes that for you, and a mismatch is a screenshot.
+ * This file exists because two earlier passes got that relationship wrong in opposite directions —
+ * one glued card and strip into a single outlined box, the other stacked two same-width boxes with
+ * a gap — and in both the gray was a *sibling strip* rather than the surface the card rests on.
+ * Neither matched the reference and neither could be caught by the rest of the suite: nothing reads
+ * these class strings, and the dev server serves a stale transform, so a pass whose edits are not
+ * on disk still reports green. The assertions read the real source.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -29,51 +23,59 @@ const draftView = readFileSync(`${SRC}/features/chat/draft-view.tsx`, "utf8");
 const chatInput = readFileSync(`${SRC}/features/chat/chat-input.tsx`, "utf8");
 
 describe("homepage composer frame", () => {
-  it("draws no border, shadow or ring on the wrapper itself", () => {
-    // The wrapper exists only to carry the radius now. Anything focus- or border-related here is
-    // the outer rectangle that made the card look boxed-in.
-    const wrapper = draftView.match(/<div className="([^"]*)">\s*\n\s*<ChatInput/);
-    expect(wrapper).not.toBeNull();
-    expect(wrapper?.[1]).toBe("rounded-lg");
+  it("makes the gray a slab that surrounds the card, not a strip below it", () => {
+    // The single wrapper owns the gray and the padding. `p-3` gives the small even margin the
+    // reference shows on top and both sides; `pb-6` — far larger — is the gray run at the bottom.
+    expect(draftView).toMatch(/overflow-hidden rounded-2xl bg-gray-100 p-3 pb-6/);
   });
 
-  it("keeps the card and the strip on one corner size", () => {
-    // All three pieces must be the same radius. A half-rounded card (`rounded-t-*`) is the old
-    // strip-attached shape; a different size on the strip is the mismatch reported back.
-    expect(draftView).toMatch(/cardClassName="rounded-lg"/);
-    expect(draftView).toMatch(/rounded-lg bg-gray-200/);
-    expect(draftView).not.toMatch(/cardClassName="[^"]*rounded-t-/);
+  it("has no second gray strip inside the slab", () => {
+    // The failure this replaces: a `bg-gray-200` band as a sibling of the card, which reads as a
+    // strip under the input rather than as the surface it rests on.
+    expect(draftView).not.toMatch(/bg-gray-200/);
   });
 
-  it("leaves the strip its own rounded corners rather than inheriting the wrapper's", () => {
-    // The wrapper spans both pieces, so if the strip had no radius of its own the gray would show
-    // the wrapper's corners only at its own bottom edge — four corners from two different boxes.
-    expect(draftView).toMatch(/mt-2\.5 rounded-lg bg-gray-200/);
+  it("clips the card to the slab's corners rather than giving it its own", () => {
+    // `overflow-hidden` on the slab is what squares off the card against the gray. A radius passed
+    // through cardClassName would draw a second set of corners inside the gray.
+    expect(draftView).toMatch(/cardClassName=""/);
+    expect(draftView).not.toMatch(/cardClassName="[^"]*rounded/);
+  });
+
+  it("keeps the ownership controls on the slab, below the card and without a surface", () => {
+    // No radius on the controls: they have no background of their own, only the gray under them.
+    const row = draftView.match(/<div className="(px-1 pb-1 pt-2\.5)">/);
+    expect(row).not.toBeNull();
+    const cardAt = draftView.indexOf("<ChatInput");
+    expect(draftView.indexOf("<AgentSelect")).toBeGreaterThan(cardAt);
   });
 
   it("switches the focus ring off through the prop, never a class-string override", () => {
+    // Tailwind v4 settles conflicting utilities by their position in the stylesheet: in this build
+    // `.focus-within\:ring-2` sorts after `.focus-within\:ring-0`, so a ring-0 handed in through
+    // cardClassName loses the cascade and does nothing, silently.
     expect(draftView).toMatch(/focusRing=\{false\}/);
-    // The override that looks right and does nothing: sorts before ring-2 in the built sheet.
     expect(draftView).not.toMatch(/cardClassName="[^"]*ring-0/);
   });
 
   it("keeps the ring for the callers that do not opt out", () => {
-    // The session and subagent composers rely on the default, so dropping the ring globally to
-    // fix the draft page would quietly change two other screens.
+    // The session and subagent composers rely on the default; removing it globally to fix the
+    // draft page would quietly change two other screens.
     expect(chatInput).toMatch(/focusRing = true/);
     expect(chatInput).toMatch(/focusRing \? "focus-within:ring-2 focus-within:ring-gray-400\/30"/);
   });
 
-  it("does not transition box-shadow on the card, since it no longer has one", () => {
-    // `transition-[border-color]` only. Leaving `box-shadow` in the list would animate a shadow
-    // that is never painted, which is harmless but reads as the frame still expecting one.
-    expect(chatInput).toMatch(/transition-\[border-color\]/);
+  it("draws no focus ring anywhere on the draft wrapper", () => {
+    // An outer ring or a focus-darkened border is the second, larger rectangle around the card
+    // that made every click light the composer up.
+    expect(draftView).not.toMatch(/has-\[:focus-within\]/);
+    expect(draftView).not.toMatch(/focus-within:ring/);
   });
 
-  it("keeps the ownership controls below the card", () => {
-    const cardAt = draftView.indexOf("<ChatInput");
-    const rowAt = draftView.indexOf("<AgentSelect");
-    expect(cardAt).toBeGreaterThan(-1);
-    expect(rowAt).toBeGreaterThan(cardAt);
+  it("leaves the card's resting border alone", () => {
+    // Base classes stay rounded-lg / border-gray-300 for the session and subagent composers. The
+    // draft page must not achieve its look by editing those: it clips the card to the slab's radius
+    // instead, so the shared card is untouched by a change meant for one screen.
+    expect(chatInput).toMatch(/@container rounded-lg border border-gray-300 bg-white/);
   });
 });
