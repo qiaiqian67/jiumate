@@ -692,16 +692,6 @@ export function PluginsPage() {
    * user — installation is an Agent's own state, so a count that ignored which Agent is
    * selected would be a number about nothing.
    */
-  const installedPluginsForCurrentAgent = useMemo(() => {
-    if (groups === null || currentAgent === null) return 0;
-    const mine = installed.get(currentAgent.agentId);
-    if (mine === undefined) return 0;
-    return groups.reduce(
-      (n, group) => n + group.plugins.filter((plugin) => pluginInstalled(plugin, mine)).length,
-      0,
-    );
-  }, [groups, installed, currentAgent]);
-
   // The installed-skills page replaces the marketplace wholesale rather than sitting beside it:
   // a back arrow and its own title bar say "you went somewhere", and two lists of skills on one
   // scroll is how the marketplace and the inventory get read as one.
@@ -731,6 +721,12 @@ export function PluginsPage() {
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <Tabs
             items={[
+              // Three top-level kinds, matching the reference: a plugin is the packaging unit
+              // (skills, hooks, or both — installable on its own), a skill is a standalone
+              // instruction, and a connector is an external MCP service. The reference's second
+              // row of tabs (插件 / 技能 / 钩子) is a *filter within the plugin list*, not a peer
+              // of these three, so it is not repeated here — a skill bundled inside a plugin is
+              // reachable through the plugin's detail view, never as its own top-level card.
               { key: "skills", label: S.plugins.tabSkills },
               { key: "installed", label: S.plugins.tabInstalled },
               { key: "connectors", label: S.plugins.tabConnectors },
@@ -771,11 +767,6 @@ export function PluginsPage() {
               >
                 {S.plugins.installedTitle(installedCount)}
               </button>
-            )}
-            {tab === "skills" && (
-              <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-                {S.plugins.installedForAgent(installedPluginsForCurrentAgent)}
-              </span>
             )}
             {tab === "skills" && (
               <Button
