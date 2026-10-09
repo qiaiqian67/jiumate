@@ -703,32 +703,34 @@ export function DraftView({
             按钮——没有快捷指令时整行不渲染（见 shortcut-pills.tsx），不占输入框上方的位置。 */}
         <ShortcutPills onFill={fillShortcut} readComposerText={() => textRef.current} />
 
-        {/* Composer + ownership bar as ONE outlined surface.
+        {/* Composer + ownership bar as one flat surface.
 
-            The reference frame is a single rounded box whose bottom strip is a different shade, so
-            the outline and the focus ring have to go around both. Drawn per-piece instead, three
-            seams show: the card's 8px corner meeting the strip's, the card's bottom border crossing
-            the strip's top edge, and a focus ring that stops at the card's edge while the strip
-            carries on below — which reads as a line that does not line up.
+            The reference frame has no outline and no focus state at all: a white card on a gray
+            strip, both the same radius, and nothing changes when the composer takes focus. An
+            earlier pass wrapped the two in a bordered box that also ringed and darkened its border
+            on focus, which put a second, larger rounded rectangle outside the card — you could see
+            the frame's corners *around* the card's corners, and the card lit up on every click.
 
-            So the border and the ring live here, on the wrapper, and neither piece paints its own:
-            the card is `border-0` with its own ring off, the strip has no border. One outline, one
-            radius, one focus state — and the shade change is the only thing telling the halves
-            apart, which is the point of the frame.
-
-            The radius follows the reference frame rather than the old all-round box: **top** two
-            corners rounded, the seam with the gray strip square. The two halves are one continuous
-            panel, so rounding the input's bottom edge would put a step in that seam and make the
-            strip read as a separate piece attached underneath instead of the same surface in a
-            second shade. The focus ring takes the strip's own gray, so focusing does not flash a
-            colour the panel does not otherwise contain. */}
-        <div className="rounded-t-lg border border-gray-300 transition-[border-color,box-shadow] duration-200 has-[:focus-within]:border-gray-500 has-[:focus-within]:ring-2 has-[:focus-within]:ring-gray-300/40 dark:border-gray-700 dark:has-[:focus-within]:ring-gray-500/40">
+            So this wrapper now carries the radius and nothing else: no border, no shadow, no
+            focus-within rules. The card's own ring is switched off at the source (`focusRing`),
+            not overridden here — a `ring-0` class loses the cascade in Tailwind v4, which is why
+            that is a prop. Both pieces keep `rounded-lg`, so the gray and the white share one
+            corner size instead of two radii meeting on a single panel. */}
+        <div className="rounded-lg">
           <ChatInput
             status="idle"
-            // `pb-0` so the white input meets the gray strip flush. The card's own `pb-2` would otherwise
-            // leave a white gap between the two halves, and a gap is a seam: it reads as two
-            // stacked boxes instead of one panel whose colour changes halfway down.
-            cardClassName="rounded-t-lg rounded-b-none border-0 focus-within:ring-0 pb-0"
+            // rounded-lg, matching the gray strip below: one panel, one corner size. The card's
+            // own base radius is rounded-lg too, so passing the same value keeps the two from
+            // drifting apart the next time either default changes.
+            // No ring and no border-colour change on focus: this frame is flat by design, and the
+            // reference shows the composer at rest whether it holds focus or not. Must be the
+            // prop rather than a class — a ring-0 handed in through cardClassName sorts before
+            // ring-2 in the built sheet and silently loses the cascade (see focusRing above).
+            cardClassName="rounded-lg"
+            // prop, not a class: a ring-0 handed in through cardClassName sorts before
+            // ring-2 in the built sheet and silently loses the cascade
+            // (see focusRing in chat-input.tsx).
+            focusRing={false}
             controlRef={composerRef}
             onSend={onSend}
             onStop={async () => undefined}
@@ -755,11 +757,13 @@ export function DraftView({
             onTextChange={onTextChange}
           />
 
-          {/* Only the shade differs here — no border, no ring, no corner of its own beyond the frame's
-            bottom two. `pt-3` above the controls is the reference's "the gray block shows less on
-            top than at the bottom": the strip is a visible shelf under the input, not a hairline,
-            so its own top padding is what gives it that height. */}
-          <div className="rounded-b-lg bg-gray-200 px-3 pb-3 pt-3 dark:bg-gray-700/80">
+          {/* Only the shade differs here — no border, no ring. `rounded-lg` is the same value the card
+            and the wrapper use, which is the fix for the mismatch: two different corner sizes
+            meeting on one panel is exactly what made the gray read as a separate object behind
+            the input. `mt-2.5` leaves the strip clear of the card's own edge instead of letting
+            the two shapes touch, and `pt-3`/`pb-3` give the gray more height below the controls
+            than above, as the reference shows. */}
+          <div className="mt-2.5 rounded-lg bg-gray-200 px-3 pb-3 pt-3 dark:bg-gray-700/80">
             <div className="flex flex-wrap items-center gap-2">
               <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />
               <WorkspaceSelect

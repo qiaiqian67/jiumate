@@ -814,6 +814,7 @@ export function ChatInput({
   sessionId,
   vision,
   cardClassName,
+  focusRing = true,
   approvalMode,
   onChangeApprovalMode,
   modeSaving,
@@ -1029,6 +1030,19 @@ export function ChatInput({
    * seam, which is exactly what the strip is not supposed to look like.
    */
   cardClassName?: string;
+  /**
+   * Whether the card paints a ring when the composer holds focus. Default on.
+   *
+   * A prop rather than something `cardClassName` could say: Tailwind v4 settles two
+   * conflicting utilities by where they land in the generated stylesheet, not by the order
+   * they appear in a class string — in this build `.focus-within\\:ring-2` sorts *after*
+   * `.focus-within\\:ring-0`, so a `ring-0` handed in here loses the cascade and does nothing at
+   * all, silently. The reference frame on the draft page wants no ring at all, and the only
+   * place it can be switched off is where it is set.
+   *
+   * Off for the draft page, off nowhere else: the session and subagent composers keep their ring.
+   */
+  focusRing?: boolean;
   /**
    * Handle for the one thing a parent reaches in and does: the draft screen's example cards
    * fill this composer (see ComposerControl). A ref rather than a `fill` prop because it is a
@@ -2258,7 +2272,7 @@ export function ChatInput({
           card's width changes with the viewport and the Files panel squeezing it, viewport
           breakpoints wouldn't judge it accurately. */}
       <div
-        className={`@container rounded-lg border border-gray-300 bg-white px-2.5 pb-2 pt-2 transition-[border-color,box-shadow] duration-200 focus-within:border-gray-500 focus-within:ring-2 focus-within:ring-gray-400/30 dark:border-gray-700 dark:bg-gray-900 dark:focus-within:border-gray-400 ${cardClassName ?? ""}`}
+        className={`@container rounded-lg border border-gray-300 bg-white px-2.5 pb-2 pt-2 transition-[border-color] duration-200 focus-within:border-gray-500 dark:border-gray-700 dark:bg-gray-900 ${focusRing ? "focus-within:ring-2 focus-within:ring-gray-400/30" : ""} dark:focus-within:border-gray-400 ${cardClassName ?? ""}`}
       >
         {/* Chip row above the text body: the staged switch target (an /agent handoff or a
             /model fork — never both) followed by the selected skills, all sharing the same
