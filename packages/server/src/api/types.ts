@@ -672,6 +672,38 @@ export interface ModelProtocolDetectResponse {
 }
 
 /**
+ * Prompt enhancement (POST /api/projects/:p/prompt/enhance, any member): rewrites the user's
+ * draft message into a clearer instruction for the model. The composer sends what the user
+ * typed and receives `prompt` back into the same text box — **nothing is sent to the model on
+ * the user's behalf**, so the user always reads, edits and sends the result themselves.
+ */
+export interface PromptEnhanceRequest {
+  /** The draft to rewrite, as typed. Bounded by the route; trimmed server-side. */
+  text: string;
+}
+
+/** Why an enhancement produced no prompt. Only `no_model` is user-actionable. */
+export type PromptEnhanceCode =
+  /** The Project has no usable default model — the user must pick one first. */
+  | "no_model"
+  /** The model answered, but with nothing usable after the rewrite's framing was stripped. */
+  | "no_result"
+  /** The request itself failed (credential, provider error, timeout, network). */
+  | "request_failed";
+
+/**
+ * Enhancement result. A discriminated union on `ok` rather than an optional `prompt`, so a
+ * caller cannot read the prompt off a failure — where `code` says what to tell the user, and
+ * `no_model` is the one case that means "go configure a model" rather than "try again".
+ */
+export type PromptEnhanceResponse =
+  | {
+      ok: true;
+      /** The rewritten instruction, already stripped of the model's framing. */ prompt: string;
+    }
+  | { ok: false; code: PromptEnhanceCode };
+
+/**
  * Endpoint model listing (POST /api/projects/:p/models/list, owner): given a base URL and
  * the protocol `/detect` reported, returns every model id the endpoint serves (AgentHub's
  * `listModels()` on the routed client). Used by the add-group dialog to import a provider's

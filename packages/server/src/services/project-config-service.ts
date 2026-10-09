@@ -36,6 +36,7 @@ import {
   parseMcpServers,
   GenerativeModel,
   canonicalClientType,
+  enhancePromptWithLLM,
   listEndpointModels as coreListEndpointModels,
   catalogEntryFor,
   defaultProjectConfig,
@@ -49,6 +50,7 @@ import {
 import { providerInfo } from "@prismshadow/jiumate-core/model-catalog";
 import type {
   CommandPolicyRule,
+  LLMInterface,
   LLMOutcome,
   MCPServerConfig,
   ModelRef,
@@ -72,6 +74,8 @@ import type {
   ModelTestResponse,
   ModelVisionDetectRequest,
   ModelVisionDetectResponse,
+  PromptEnhanceRequest,
+  PromptEnhanceResponse,
 } from "../api/types.js";
 import { badRequest } from "../http/validate.js";
 import { cacheable } from "../internal/mtime-gate.js";
@@ -145,6 +149,46 @@ function asArray(v: unknown): RawTable[] {
 
 function optNum(v: unknown): number | undefined {
   return typeof v === "number" && Number.isFinite(v) ? v : undefined;
+}
+
+/**
+ * Output-token budget for the prompt-enhancement request: `ENHANCE_BUDGET_TOKENS`, lowered to
+ * a positive per-model pin when that pin is smaller. Mirrors core's `metaMaxTokens`, which is
+ * not exported — see the call site.
+ */
+const ENHANCE_BUDGET_TOKENS = 2048;
+function enhanceMaxTokens(modelCap: number | undefined): number {
+  return modelCap !== undefined && modelCap > 0 && modelCap < ENHANCE_BUDGET_TOKENS
+    ? modelCap
+    : ENHANCE_BUDGET_TOKENS;
+}
+
+/**
+ * The real LLM for the enhancement request: the Project's default model, no tools, no thinking,
+ * a bounded budget and a bounded time. `entry` is the stored model entry, read here for the
+ * optional per-model pins so one call site does not have to restate them.
+ */
+function defaultEnhanceLLM(modelId: string, entry: RawTable): LLMInterface {
+  const contextWindow = optNum(entry.context_window);
+  return new GenerativeModel({
+    modelId,
+    ...(optStr(entry.api_key) ? { apiKey: optStr(entry.api_key)! } : {}),
+    ...(optStr(entry.base_url) ? { baseUrl: optStr(entry.base_url)! } : {}),
+    ...(canonicalClientType(optStr(entry.client_type))
+      ? { clientType: canonicalClientType(optStr(entry.client_type))! }
+      : {}),
+    tools: [],
+    // "none" over "low": the request carries an empty think block and demands an immediate
+    // answer, so there is nothing for a reasoning phase to contribute, and the rewrite is
+    // short enough that thinking would cost more than it returns.
+    thinkingLevel: "none",
+    // A rewritten instruction is a few hundred tokens; the entry's own pin wins when smaller.
+    maxTokens: enhanceMaxTokens(optNum(entry.max_tokens)),
+    ...(contextWindow !== undefined ? { contextWindow } : {}),
+    // Bounded so a hanging endpoint cannot leave the button spinning indefinitely; the client
+    // aborts on it, which the driver reports as a non-completed outcome.
+    requestTimeoutMs: 30_000,
+  });
 }
 
 /**
@@ -410,6 +454,50 @@ export class ProjectConfigService {
   async getDefaultModelRef(projectId: string): Promise<ModelRef | undefined> {
     const raw = await this.readRaw(projectId);
     return optRef(raw.default_model);
+  }
+
+  /**
+   * Rewrites a draft message into a clearer instruction (the composer's 优化提示词 side
+   * channel). One off-the-calls request against the Project's **default** model, with no
+   * tools — the rewrite must not be able to act — and no thinking, so the whole call is spent
+   * on the rewrite. Nothing is written: no history, no Trace, no config.
+   *
+   * The default model rather than the draft's session model, because this runs before any
+   * Session exists (it is a draft box) and because rewriting is cheap and shape-preserving,
+   * not the user's actual work — so it does not have to be the expensive model.
+   *
+   * Never throws: the caller is a button, and every failure (no model configured, missing
+   * credential, provider 4xx, timeout, empty output) collapses into `{ ok:false }`. Distinct
+   * codes only where the UI can say something actionable — `no_model` tells the user to pick
+   * a default model, which no other failure means.
+   *
+   * `createLLM` is a parameter so a test never constructs a provider client: the injection
+   * point is the **factory**, not the driver, because the driver is handed the constructed
+   * model and would otherwise still require one — which is how the first version of this test
+   * ended up making real client constructions (and reporting them as `request_failed`).
+   */
+  async enhancePrompt(
+    projectId: string,
+    req: PromptEnhanceRequest,
+    createLLM: (modelId: string, entry: RawTable) => LLMInterface = defaultEnhanceLLM,
+    drive: typeof enhancePromptWithLLM = enhancePromptWithLLM,
+  ): Promise<PromptEnhanceResponse> {
+    const raw = await this.readRaw(projectId);
+    const ref = optRef(raw.default_model);
+    if (!ref) return { ok: false, code: "no_model" };
+    const entry = asArray(raw.models).find((m) => entryMatches(m, ref.provider, ref.model_id));
+    if (!entry) return { ok: false, code: "no_model" };
+    try {
+      // Construction inside the try for the reason testModel gives: a provider SDK can throw
+      // while being constructed (a missing credential on the OpenAI protocol), and that must
+      // surface as `{ ok:false }` rather than a 500.
+      const llm = createLLM(ref.model_id, entry);
+      const res = await drive(llm, { draft: req.text });
+      if (!res.prompt) return { ok: false, code: "no_result" };
+      return { ok: true, prompt: res.prompt };
+    } catch {
+      return { ok: false, code: "request_failed" };
+    }
   }
 
   /**

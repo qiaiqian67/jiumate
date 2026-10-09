@@ -2149,6 +2149,19 @@ export const en: Strings = {
     goalRemove: "Exit goal mode",
     /** Label of the collapsed card a harness-injected user message renders as (a stop hook's continue, a goal round's protocol, a user_prompt hook's expansion). */
     harnessInjected: "Injected by the harness",
+    /**
+     * The rewrite button. Mirrors the zh block key for key: the labels promise exactly what it
+     * does — rewrite, never send — and the hint says the result can still be edited before it
+     * goes. `enhanceBusy` replaces the label of the same button in flight, so the toolbar does
+     * not reflow when it starts working.
+     */
+    enhancePrompt: "Improve prompt",
+    enhancePromptDesc: "Rewrite as a clearer instruction — edit before sending",
+    enhancePromptBusy: "Improving…",
+    enhancePromptEmpty: "Type something first",
+    enhancePromptNoModel: "Pick a default model in model settings first",
+    enhancePromptNoResult: "Couldn't improve it: the model returned nothing usable",
+    enhancePromptFailed: "Couldn't improve it — try again",
     goalProgress: (rounds: number, tokens: string): string => `round ${rounds} · tokens ${tokens}`,
     goalStatus: {
       active: "running",

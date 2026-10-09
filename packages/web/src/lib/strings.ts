@@ -2107,6 +2107,20 @@ export const zh = {
     goalRemove: "退出目标模式",
     /** Label of the collapsed card a harness-injected user message renders as (a stop hook's continue, a goal round's protocol, a user_prompt hook's expansion). */
     harnessInjected: "由 harness 注入",
+    /**
+     * 优化提示词 (the composer's rewrite button). The CJK rules block is intentional: the
+     * rewrite is read as the user's own words in their own box, so the labels promise exactly
+     * what it does — rewrite, never send — and the hint says the user can still edit before
+     * sending. `enhanceBusy` is the in-flight state of the same button rather than a separate
+     * control, so it replaces the label in place and the toolbar does not reflow.
+     */
+    enhancePrompt: "优化提示词",
+    enhancePromptDesc: "按 AI 易懂的指令格式重写，可再修改后发送",
+    enhancePromptBusy: "优化中…",
+    enhancePromptEmpty: "请先输入内容再优化",
+    enhancePromptNoModel: "请先在模型设置中指定默认模型",
+    enhancePromptNoResult: "优化失败：模型没有返回可用内容",
+    enhancePromptFailed: "优化失败，请稍后重试",
     goalProgress: (rounds: number, tokens: string): string => `第 ${rounds} 轮 · tokens ${tokens}`,
     goalStatus: {
       active: "进行中",

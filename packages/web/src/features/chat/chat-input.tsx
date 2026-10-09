@@ -784,6 +784,16 @@ export interface ComposerControl {
    * has not installed are dropped here, where the installed list already lives.
    */
   fillExample: (prompt: string, exampleSkills: readonly string[]) => void;
+  /**
+   * Replace the text body with `prompt`, changing nothing else — the 优化提示词 button's
+   * landing spot, and the write half of that button's contract.
+   *
+   * Separate from `fillExample` on purpose: that one *merges* skills, which is right for an
+   * example card that pins its own and wrong for a rewrite of text the user is already
+   * editing — the skills they had selected are part of what they are about to send, and
+   * silently re-selecting some would change the request underneath them.
+   */
+  setPrompt: (prompt: string) => void;
 }
 
 export function ChatInput({
@@ -1415,7 +1425,32 @@ export function ChatInput({
     },
     [skills, selectedSkills, onTextChange, onSkillsChange],
   );
-  useImperativeHandle(controlRef, () => ({ fillExample }), [fillExample]);
+
+  /**
+   * Replace the body text and leave everything else alone. The caret goes to the **end**,
+   * unlike fillExample's "to the start, scrolled to the top": that one lands a prompt whose
+   * first line is the point (an example card the user is about to read from the top), whereas
+   * a rewrite replaces text the user has been writing in, and they are picking up where they
+   * left off — usually to fix the end of it.
+   */
+  const setPrompt = useCallback(
+    (prompt: string) => {
+      setText(prompt);
+      onTextChange?.(prompt);
+      setCaret(prompt.length);
+      // The textarea is controlled, so the value and its new height exist only once React has
+      // rendered them (same rAF convention as fillExample / applyRecalled / applyHistory).
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.focus();
+        el.setSelectionRange(prompt.length, prompt.length);
+        el.scrollTop = el.scrollHeight;
+      });
+    },
+    [onTextChange],
+  );
+  useImperativeHandle(controlRef, () => ({ fillExample, setPrompt }), [fillExample, setPrompt]);
 
   /** The slash token currently under the caret (kept in a ref so command run() closures always remove the live token). */
   const slashMatchRef = useRef<ReturnType<typeof matchSlash>>(null);

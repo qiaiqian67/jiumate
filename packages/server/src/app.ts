@@ -153,6 +153,7 @@ import { membersRoutes } from "./http/routes/members.js";
 import { modelsRoutes } from "./http/routes/models.js";
 import { modelOAuthCallbackRoutes, modelOAuthRoutes } from "./http/routes/model-oauth.js";
 import { chatDefaultsRoutes } from "./http/routes/chat-defaults.js";
+import { promptEnhanceRoutes } from "./http/routes/prompt-enhance.js";
 import { commandPolicyRoutes } from "./http/routes/command-policy.js";
 import { mcpServersRoutes } from "./http/routes/mcp-servers.js";
 import { vaultRoutes } from "./http/routes/vault.js";
@@ -1316,6 +1317,7 @@ export function createApp(
   app.route("/api/projects/:projectId/models", modelsRoutes(deps));
   app.route("/api/projects/:projectId/model-oauth", modelOAuthRoutes(deps));
   app.route("/api/projects/:projectId/chat-defaults", chatDefaultsRoutes(deps));
+  app.route("/api/projects/:projectId/prompt", promptEnhanceRoutes(deps));
   app.route("/api/projects/:projectId/command-policy", commandPolicyRoutes(deps));
   app.route("/api/projects/:projectId/mcp-servers", mcpServersRoutes(deps));
   app.route("/api/projects/:projectId/agents", agentsRoutes(deps));

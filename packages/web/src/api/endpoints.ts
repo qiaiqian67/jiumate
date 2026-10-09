@@ -82,6 +82,7 @@ import type {
   ProjectUpdateRequest,
   ProjectUpdateResponse,
   ProjectsResponse,
+  PromptEnhanceResponse,
   ScheduleItem,
   SchedulesResponse,
   ScheduleUpsertRequest,
@@ -237,6 +238,19 @@ export const putChatDefaults = (projectId: string, body: ChatDefaultsDto) =>
   apiFetch<ChatDefaultsDto>(`/api/projects/${encodeURIComponent(projectId)}/chat-defaults`, {
     method: "PUT",
     body,
+  });
+
+/**
+ * Rewrites the draft into a clearer instruction (the composer's 优化提示词 button).
+ *
+ * A failure comes back as `{ ok: false, code }` inside a 200 rather than as a thrown HTTP
+ * error — "couldn't rewrite this" is an outcome the composer renders as a message, and a
+ * rejected promise would have no message to show. Callers read `ok` first.
+ */
+export const enhancePrompt = (projectId: string, text: string) =>
+  apiFetch<PromptEnhanceResponse>(`/api/projects/${encodeURIComponent(projectId)}/prompt/enhance`, {
+    method: "POST",
+    body: { text },
   });
 
 /** Sandbox command policy ([command_policy]): member-readable; carries the factory set for "restore defaults". */

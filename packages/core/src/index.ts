@@ -60,6 +60,15 @@ export type { SessionConfig } from "./session.js";
 // via the omnimessage barrel.
 export { sanitizeTitle, truncateTitle } from "./internal/session-title.js";
 export type { SessionTitleResult } from "./internal/session-title.js";
+// Prompt enhancement (the composer's "优化提示词" side channel) is internal for the same reason
+// title generation is: a one-off request is an assembly detail, and the Prompt stays private so
+// its phrasing can change without being anyone's contract. What the barrel re-exports is the
+// driver, the result type and `sanitizeEnhancedPrompt` — the server needs the driver to issue the
+// request (injected as a parameter so the route can be tested without a network), and the
+// cleaner is public because its framing-stripping rules are about what a chat model does to a
+// rewrite, which a host must be able to defend against independently of the request.
+export { enhancePromptWithLLM, sanitizeEnhancedPrompt } from "./internal/prompt-enhance.js";
+export type { EnhancePromptResult } from "./internal/prompt-enhance.js";
 // Session assembly likewise stays internal; only the attachment-line placement rule is
 // re-exported, because the server appends `[attached file: …]` lines for the composer's
 // uploads and both producers must place them identically (see the markers module).

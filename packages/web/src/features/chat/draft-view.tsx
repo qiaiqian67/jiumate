@@ -78,6 +78,7 @@ import {
   type ChatDefaultsChangedDetail,
 } from "./chat-defaults-event";
 import { effectiveThinkingLevel } from "./thinking-level";
+import { EnhancePromptButton } from "./enhance-prompt-button";
 import { WorkspaceSelect, pillClass } from "./workspace-select";
 import { sameModelRef } from "../models/model-grouping";
 import { ICON_GAP } from "../../lib/icon-scale";
@@ -766,6 +767,11 @@ export function DraftView({
             they have no surface, only the slab they rest on. */}
           <div className="px-1 pb-1 pt-2.5">
             <div className="flex flex-wrap items-center gap-2">
+              <EnhancePromptButton
+                projectId={projectId}
+                text={textRef.current}
+                onEnhanced={(prompt) => composerRef.current?.setPrompt(prompt)}
+              />
               <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />
               <WorkspaceSelect
                 projectId={projectId}
