@@ -1442,6 +1442,11 @@ export const zh = {
     agentReasonSelected: "已选用",
     /** Shown when nothing depends on the item — the change is safe and the dialog says so. */
     noAffectedAgents: "没有智能体正在使用，可以安全操作。",
+    /** Empty state for a search that matched nothing. Distinct from "nothing installed". */
+    noSearchResult: "没有匹配的结果",
+    noSearchResultDesc: "换个关键词，或切换上方的分类标签。",
+    /** Empty state for the origin filter the user selected. */
+    noItemsInFilter: "此分类下暂无项目",
 
     // —— 分类管理 ——
     /** Tab label for the uncategorised bucket. */
@@ -1602,6 +1607,8 @@ export const zh = {
       `确定从 ${agent} 卸载 ${plugin} 吗？其已安装的技能与钩子文件（含本地改动）将被删除。`,
     /** The page's two tabs. "技能" is the plugin library flattened to what actually lands on an Agent. */
     tabSkills: "技能",
+    /** The inventory tab: what is installed, with origin and on/off. Distinct from the library. */
+    tabInstalled: "已安装",
     tabConnectors: "连接器",
     /** Connectors tab (features/plugins/connectors-tab.tsx): the Project's MCP server registry. */
     connectorsDesc:

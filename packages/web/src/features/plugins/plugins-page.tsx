@@ -89,6 +89,7 @@ import { parkActiveDraft } from "../chat/draft-sessions";
 import { BOOK_ICON, localizedShortText, localizedText } from "../chat/skill-use";
 import { PluginDetailModal } from "./plugin-detail";
 import { ConnectorsTab } from "./connectors-tab";
+import { SkillsTab } from "./skills-tab";
 import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
 import { SkillTile } from "../skills/skill-icon-view";
@@ -225,7 +226,7 @@ export function pluginUpdatePlan(
 
 export function PluginsPage() {
   useDocumentTitle(S.nav.plugins);
-  const [tab, setTab] = useState<"skills" | "connectors">("skills");
+  const [tab, setTab] = useState<"skills" | "installed" | "connectors">("skills");
   /**
    * Whether the installed-skills full-screen page is open.
    *
@@ -261,6 +262,17 @@ export function PluginsPage() {
   const { locale } = useLocale();
   const userId = useAuth().user?.userId ?? null;
   const { currentProject, agents, currentAgent, setCurrentAgentId, reloadAgents } = useProject();
+  /**
+   * Agent id -> display name, for the impact dialog. Built once per agents change rather than
+   * inside the tab so a dialog that lists twenty Agents does not rebuild the lookup per row.
+   * An Agent missing from the list is left out and `affectedAgents` falls back to the raw id —
+   * the alternative is showing a blank row for a deleted Agent.
+   */
+  const agentNameMap = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const a of agents) out[a.agentId] = agentDisplayName(a);
+    return out;
+  }, [agents]);
   const projectId = currentProject?.projectId ?? null;
 
   /** The plugins trail's raised badge, or undefined — the notice under the title acts on it or clears it. */
@@ -720,6 +732,7 @@ export function PluginsPage() {
           <Tabs
             items={[
               { key: "skills", label: S.plugins.tabSkills },
+              { key: "installed", label: S.plugins.tabInstalled },
               { key: "connectors", label: S.plugins.tabConnectors },
             ]}
             active={tab}
@@ -787,6 +800,37 @@ export function PluginsPage() {
         {tab === "connectors" ? (
           <div className="mt-6">
             <ConnectorsTab />
+          </div>
+        ) : tab === "installed" ? (
+          <div className="mt-6">
+            {catalog === null ? (
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <SkeletonCard key={i} className="p-4">
+                    <Skeleton className="h-4 w-32" />
+                  </SkeletonCard>
+                ))}
+              </div>
+            ) : (
+              /* Flattened: `catalog.skills` carries only the standalone ones, and a bundled skill
+                 lives under its plugin's `skills`. The tab distinguishes the two by origin, so it
+                 has to see both — reading only `catalog.skills` would make 「插件捆绑」永远为空. */
+              <SkillsTab
+                skills={[
+                  ...catalog.skills,
+                  ...catalog.plugins.flatMap((p) =>
+                    p.skills.map((s) => ({
+                      ...s,
+                      origin: "library" as const,
+                      pluginName: p.name,
+                      inferred: false,
+                      agents: p.agents,
+                    })),
+                  ),
+                ]}
+                agentNames={agentNameMap}
+              />
+            )}
           </div>
         ) : (
           <>

@@ -1472,6 +1472,11 @@ export const en: Strings = {
     agentReasonSelected: "Selected",
     /** Shown when nothing depends on the item — the change is safe and the dialog says so. */
     noAffectedAgents: "No agent is using this — safe to proceed.",
+    /** Empty state for a search that matched nothing. Distinct from "nothing installed". */
+    noSearchResult: "No matches",
+    noSearchResultDesc: "Try a different term, or switch the filter tab above.",
+    /** Empty state for the origin filter the user selected. */
+    noItemsInFilter: "Nothing in this category",
 
     // —— Category management ——
     categoryUncategorized: "Uncategorized",
@@ -1631,6 +1636,8 @@ export const en: Strings = {
       `Uninstall ${plugin} from ${agent}? Its installed skill and hook files (local edits included) will be deleted.`,
     /** The page's two tabs. "Skills" is the plugin library flattened to what actually lands on an agent. */
     tabSkills: "Skills",
+    /** The inventory tab: what is installed, with origin and on/off. Distinct from the library. */
+    tabInstalled: "Installed",
     tabConnectors: "Connectors",
     /** Connectors tab (features/plugins/connectors-tab.tsx): the project's MCP server registry. */
     connectorsDesc:
