@@ -86,12 +86,7 @@ export interface InstalledPluginManifest {
 const manifestFile = "manifest.json";
 
 /** `<agentState>/plugins/<id>`. */
-export function pluginDir(
-  root: string,
-  projectId: string,
-  agentId: string,
-  id: string,
-): string {
+export function pluginDir(root: string, projectId: string, agentId: string, id: string): string {
   return path.join(pluginsDir(root, projectId, agentId), id);
 }
 
@@ -190,7 +185,7 @@ async function skillDirNames(dir: string): Promise<string[]> {
   }
 }
 
-/** One Skill directory written from `relative path → content`, replacing anything already there. */async function writeSkillDir(
+/** One Skill directory written from `relative path → content`, replacing anything already there. */ async function writeSkillDir(
   target: string,
   files: Array<[string, string]>,
 ): Promise<void> {
@@ -275,9 +270,7 @@ export async function listInstalledPlugins(
     const dir = path.join(base, entry.name);
     let manifest: Partial<InstalledPluginManifest> = {};
     try {
-      const parsed: unknown = JSON.parse(
-        await fs.readFile(path.join(dir, manifestFile), "utf8"),
-      );
+      const parsed: unknown = JSON.parse(await fs.readFile(path.join(dir, manifestFile), "utf8"));
       if (parsed && typeof parsed === "object") {
         manifest = parsed as Partial<InstalledPluginManifest>;
       }
@@ -326,20 +319,33 @@ export interface MigrationReport {
 /**
  * Moves pre-migration Skills into the plugins tree, where they belong.
  *
- * Only a Skill that is a **member of an installed plugin** and that already has a plugin directory
- * is moved. A Skill no plugin claims is left in `skills/`, because the flat tree is exactly where a
- * standalone Skill belongs and moving it anywhere else would invent an owner.
+ * A flat Skill is moved only when **exactly one** library plugin ships a Skill of that name. That is
+ * the whole rule, and it is deliberately strict in both directions:
  *
- * Idempotent by construction: a Skill already inside a plugin is not in `skills/` to be moved, and a
- * plugin with no directory is skipped until its install writes one. So re-running after a partial
- * run, or after the user installs something new, converges rather than duplicating.
+ *   - shipped by exactly one plugin → that plugin owns it. Nothing else could have installed a Skill
+ *     of that name from the library, so attributing it is a proof, not a guess.
+ *   - shipped by none → the user's own (imported, or hand-written). Left alone: the flat tree is
+ *     exactly where a standalone Skill belongs, and inventing an owner would be a lie.
+ *   - shipped by several → ambiguous, because the user may well have installed that one Skill on its
+ *     own rather than with a plugin. Left alone and reported.
+ *
+ * The uniqueness requirement is what makes this safe to run against real data. An earlier design
+ * consulted `.installs.json`, which sounds authoritative but is absent for **every** install made
+ * before that file shipped — so on exactly the machines that need migrating, it named nothing and
+ * the migration silently did nothing. The library says what a Skill is; the record only says who
+ * brought it, and that is the half that is missing.
+ *
+ * Idempotent by construction: a moved Skill is no longer in `skills/`, and re-running finds nothing
+ * left to move. Safe to run on every read.
+ *
+ * `libraryMembers` maps plugin name → its Skill names, so this function needs no knowledge of the
+ * library itself.
  */
 export async function migrateFlatBundledSkills(
   root: string,
   projectId: string,
   agentId: string,
-  installedPluginNames: readonly string[],
-  versionOf: (name: string) => string = () => "",
+  libraryMembers: ReadonlyMap<string, readonly string[]>,
 ): Promise<MigrationReport> {
   const report: MigrationReport = { migrated: [], movedSkills: [], leftAlone: [] };
   const flat = skillsDir(root, projectId, agentId);
@@ -352,23 +358,25 @@ export async function migrateFlatBundledSkills(
   const flatNames = entries
     .filter((e) => e.isDirectory() && !e.name.startsWith("."))
     .map((e) => e.name);
+  if (flatNames.length === 0) return report;
 
-  // Which plugin claims which flat Skill. Built from the caller's installed-plugin list so this
-  // function needs no knowledge of the library — it moves directories, it does not decide meaning.
-  const claimedBy = new Map<string, string>();
-  for (const pluginName of installedPluginNames) {
-    for (const member of await pluginMemberNames(root, projectId, agentId, pluginName)) {
-      if (!claimedBy.has(member)) claimedBy.set(member, pluginName);
+  // Skill name → the plugins that ship it. Only names claimed by exactly one plugin are movable;
+  // the reverse index is built once rather than per Skill.
+  const claimants = new Map<string, string[]>();
+  for (const [pluginName, members] of libraryMembers) {
+    for (const member of members) {
+      claimants.set(member, [...(claimants.get(member) ?? []), pluginName]);
     }
   }
 
   for (const name of flatNames) {
-    const owner = claimedBy.get(name);
-    if (owner === undefined) {
+    const owners = claimants.get(name) ?? [];
+    // Zero or many owners: not a bundled Skill we can prove. Reported, never moved.
+    if (owners.length !== 1) {
       report.leftAlone.push(name);
       continue;
     }
-    const id = builtinPluginId(owner);
+    const id = builtinPluginId(owners[0]!);
     const target = path.join(pluginDir(root, projectId, agentId, id), "skills", name);
     // Already inside the plugin (a previous run): nothing to move, and re-reporting it would make
     // the caller think it had just been handled again.
@@ -387,27 +395,63 @@ export async function migrateFlatBundledSkills(
       report.leftAlone.push(name);
     }
   }
+
+  // A manifest for every plugin directory this run created or added to.
+  //
+  // Without it a migrated plugin has Skills but no `enabled` flag, and `setPluginEnabled` has
+  // nothing to rewrite — so the switch would work on a freshly installed plugin and silently do
+  // nothing on an upgraded one. The version is left unknown (`""`) rather than guessed from the
+  // library: what is on disk is the installed copy, and claiming it is a specific version would be
+  // a claim this function has not checked.
+  for (const id of report.migrated) {
+    const pluginName = pluginNameOf(id);
+    const members = libraryMembers.get(pluginName) ?? [];
+    // Record only what actually moved, so the record matches the tree rather than the library:
+    // a Skill still sitting in `skills/` was not migrated and must not be listed as the plugin's.
+    const present = members.filter((m) => report.movedSkills.includes(m));
+    if (present.length === 0) continue;
+    const file = path.join(pluginDir(root, projectId, agentId, id), manifestFile);
+    if (!(await fileExists(file))) {
+      const manifest: InstalledPluginManifest = {
+        id,
+        version: "",
+        enabled: true,
+        installedAt: Date.now(),
+      };
+      try {
+        await atomicWriteFile(file, `${JSON.stringify(manifest, null, 2)}\n`);
+      } catch {
+        // The Skills are already moved and readable; only the switch is unavailable, and an absent
+        // manifest already reads as enabled.
+      }
+    }
+    // The provenance record, so plugin-level uninstall and the update badge know this Agent has the
+    // plugin. Best-effort: the path already says who owns the Skills, so a failure here costs the
+    // update check, not the layout.
+    try {
+      const { updateInstalls } = await import("./installs.js");
+      await updateInstalls(root, projectId, agentId, undefined, (f) => {
+        const existing = f.plugins[pluginName];
+        f.plugins[pluginName] = {
+          version: existing?.version ?? null,
+          // Union, so a Skill already recorded from an earlier partial run is not dropped.
+          skills: [...new Set([...(existing?.skills ?? []), ...present])].sort(),
+          hooks: existing?.hooks ?? [],
+        };
+        for (const m of present) delete f.skills[m];
+      });
+    } catch {
+      // As above: provenance is a cache, not the thing that makes a Skill bundled.
+    }
+  }
   return report;
 }
 
-/**
- * The Skill names an installed plugin brought, from `.installs.json`.
- *
- * Read from the provenance record rather than from the library: this runs during migration, and a
- * plugin the current build no longer ships still has members on disk that must be moved to the
- * right place.
- */
-async function pluginMemberNames(
-  root: string,
-  projectId: string,
-  agentId: string,
-  pluginName: string,
-): Promise<string[]> {
+async function fileExists(file: string): Promise<boolean> {
   try {
-    const { readInstalls } = await import("./installs.js");
-    const file = await readInstalls(root, projectId, agentId);
-    return file.plugins[pluginName]?.skills ?? [];
+    await fs.access(file);
+    return true;
   } catch {
-    return [];
+    return false;
   }
 }

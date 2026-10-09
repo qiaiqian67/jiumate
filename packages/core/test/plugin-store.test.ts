@@ -82,15 +82,20 @@ describe("plugin id", () => {
 
 describe("installPlugin writes into the plugins tree", () => {
   it("puts each Skill under the plugin's own directory, not in skills/", async () => {
-    await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("tuning", ["a", "b"]));
+    await installPlugin(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      makePlugin("tuning", ["a", "b"]),
+    );
 
     const base = pluginDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin");
     expect(await exists(path.join(base, "skills", "a", "SKILL.md"))).toBe(true);
     expect(await exists(path.join(base, "skills", "b", "SKILL.md"))).toBe(true);
     // The flat tree was never written: ownership is the path, not a note beside it.
-    expect(await exists(path.join(skillsDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID), "a"))).toBe(
-      false,
-    );
+    expect(
+      await exists(path.join(skillsDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID), "a")),
+    ).toBe(false);
 
     // And the reader still finds them, now attributed structurally.
     const found = await list();
@@ -117,9 +122,9 @@ describe("installPlugin writes into the plugins tree", () => {
     await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("tuning", []));
     const base = pluginDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin");
     expect(await exists(path.join(base, "skills", "a"))).toBe(false);
-    expect((await listInstalledPlugins(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID))[0]!.skills).toEqual(
-      [],
-    );
+    expect(
+      (await listInstalledPlugins(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID))[0]!.skills,
+    ).toEqual([]);
   });
 });
 
@@ -138,13 +143,25 @@ describe("a bundled Skill cannot be removed on its own", () => {
   });
 
   it("removing the plugin takes its Skills with it", async () => {
-    await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("tuning", ["a", "b"]));
-    await removePluginInstall(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin");
+    await installPlugin(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      makePlugin("tuning", ["a", "b"]),
+    );
+    await removePluginInstall(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      "tuning@jiumate-builtin",
+    );
 
     expect(await list()).toEqual([]);
-    expect(await exists(pluginDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin"))).toBe(
-      false,
-    );
+    expect(
+      await exists(
+        pluginDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin"),
+      ),
+    ).toBe(false);
   });
 
   it("does not delete a same-named standalone Skill when its plugin is uninstalled", async () => {
@@ -158,7 +175,12 @@ describe("a bundled Skill cannot be removed on its own", () => {
     );
     await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("tuning", ["a"]));
 
-    await removePluginInstall(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin");
+    await removePluginInstall(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      "tuning@jiumate-builtin",
+    );
 
     // The user's copy survives: it was never the plugin's to delete.
     expect(await exists(solo)).toBe(true);
@@ -173,21 +195,39 @@ describe("enabled / disabled", () => {
     await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("tuning", ["a"]));
     expect((await list()).map((s) => s.name)).toEqual(["a"]);
 
-    expect(await setPluginEnabled(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin", false)).toBe(
-      false,
-    );
+    expect(
+      await setPluginEnabled(
+        tmpRoot,
+        DEFAULT_PROJECT_ID,
+        DEFAULT_AGENT_ID,
+        "tuning@jiumate-builtin",
+        false,
+      ),
+    ).toBe(false);
     expect(await list()).toEqual([]);
 
     // The files were never touched, so switching back on needs no reinstall.
-    expect(await setPluginEnabled(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin", true)).toBe(
-      true,
-    );
+    expect(
+      await setPluginEnabled(
+        tmpRoot,
+        DEFAULT_PROJECT_ID,
+        DEFAULT_AGENT_ID,
+        "tuning@jiumate-builtin",
+        true,
+      ),
+    ).toBe(true);
     expect((await list()).map((s) => s.name)).toEqual(["a"]);
   });
 
   it("reports the state through the plugin listing", async () => {
     await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("tuning", ["a"]));
-    await setPluginEnabled(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin", false);
+    await setPluginEnabled(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      "tuning@jiumate-builtin",
+      false,
+    );
     const [entry] = await listInstalledPlugins(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID);
     expect(entry!.enabled).toBe(false);
     expect(entry!.id).toBe("tuning@jiumate-builtin");
@@ -203,7 +243,13 @@ describe("enabled / disabled", () => {
       "utf8",
     );
     await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("tuning", ["a"]));
-    await setPluginEnabled(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin", false);
+    await setPluginEnabled(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      "tuning@jiumate-builtin",
+      false,
+    );
     expect((await list()).map((s) => s.name)).toEqual(["mine"]);
   });
 
@@ -217,7 +263,12 @@ describe("enabled / disabled", () => {
 describe("listInstalledPlugins", () => {
   it("lists by id, sorted, with members", async () => {
     await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("zeta", ["z"]));
-    await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("alpha", ["a1", "a2"]));
+    await installPlugin(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      makePlugin("alpha", ["a1", "a2"]),
+    );
     const entries = await listInstalledPlugins(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID);
     expect(entries.map((e) => e.id)).toEqual(["alpha@jiumate-builtin", "zeta@jiumate-builtin"]);
     expect(entries[0]!.skills).toEqual(["a1", "a2"]);
@@ -258,41 +309,57 @@ describe("migrateFlatBundledSkills", () => {
     );
   };
 
-  /** Records a plugin as having brought `names`, the way installPlugin's provenance entry does. */
-  const recordMembers = async (plugin: string, names: string[]): Promise<void> => {
-    const { updateInstalls } = await import("../src/state/installs.js");
-    await updateInstalls(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, undefined, (file) => {
-      file.plugins[plugin] = { version: "2026-10-01.1", skills: names, hooks: [] };
-    });
-  };
+  /** The library, as migration sees it: plugin name → the Skill names it ships. */
+  const libraryOf = (...plugins: Array<[string, string[]]>) => new Map(plugins);
 
-  it("moves a Skill an installed plugin claims, and reports what moved", async () => {
+  it("moves a flat Skill the library ships from exactly one plugin", async () => {
     await writeFlat("a");
-    await recordMembers("tuning", ["a"]);
 
-    const report = await migrateFlatBundledSkills(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, [
-      "tuning",
-    ]);
+    const report = await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(["tuning", ["a"]]),
+    );
 
     expect(report.movedSkills).toEqual(["a"]);
     expect(report.migrated).toEqual(["tuning@jiumate-builtin"]);
     // Gone from the flat tree, present in the plugin's, and attributed structurally.
-    expect(await exists(path.join(skillsDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID), "a"))).toBe(
-      false,
-    );
+    expect(
+      await exists(path.join(skillsDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID), "a")),
+    ).toBe(false);
     const found = await list();
     expect(found[0]!.plugin).toBe("tuning@jiumate-builtin");
   });
 
-  it("leaves a Skill no installed plugin claims exactly where it is", async () => {
-    // The user's own Skill, and a plugin that never shipped it.
+  it("migrates without a provenance record — the real-world case", async () => {
+    // `.installs.json` is absent for every install made before it shipped, which is exactly the
+    // population that needs migrating. The library says what a Skill *is*; the record only says who
+    // brought it, and that is the half that is missing.
+    await writeFlat("a");
+    const { readInstalls } = await import("../src/state/installs.js");
+    expect((await readInstalls(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID)).plugins).toEqual({});
+
+    const report = await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(["tuning", ["a"]]),
+    );
+    expect(report.movedSkills).toEqual(["a"]);
+  });
+
+  it("leaves a Skill the library does not ship exactly where it is", async () => {
+    // The user's own import. Nothing claims it, so nothing moves it.
     await writeFlat("mine");
     await writeFlat("theirs");
-    await recordMembers("tuning", ["theirs"]);
 
-    const report = await migrateFlatBundledSkills(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, [
-      "tuning",
-    ]);
+    const report = await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(["tuning", ["theirs"]]),
+    );
 
     expect(report.movedSkills).toEqual(["theirs"]);
     // Explicitly reported rather than silently skipped — this is the answer to "why is this still
@@ -304,25 +371,156 @@ describe("migrateFlatBundledSkills", () => {
     expect(found.find((s) => s.name === "theirs")!.plugin).toBe("tuning@jiumate-builtin");
   });
 
+  it("leaves a Skill two plugins both ship, because it may have been installed alone", async () => {
+    // The one case uniqueness rules out: the user may have installed this Skill on its own rather
+    // than with either plugin, and moving it would take away the ability to remove just it.
+    await writeFlat("shared");
+
+    const report = await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(
+        ["alpha", ["shared"]],
+        ["beta", ["shared"]],
+      ),
+    );
+
+    expect(report.movedSkills).toEqual([]);
+    expect(report.leftAlone).toEqual(["shared"]);
+    expect((await list()).map((s) => s.name)).toEqual(["shared"]);
+  });
+
+  it("moves a partial plugin's members one at a time, each to the plugin that owns it", async () => {
+    // Membership of the whole set is *not* required. A Skill shipped by exactly one plugin is
+    // provably that plugin's, whether or not its siblings happen to be installed too.
+    await writeFlat("a");
+    await writeFlat("b");
+    await writeFlat("c");
+
+    const report = await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(["tuning", ["a", "b"]], ["other", ["c"]]),
+    );
+
+    expect(report.movedSkills.sort()).toEqual(["a", "b", "c"]);
+    expect(report.migrated.sort()).toEqual([
+      "other@jiumate-builtin",
+      "tuning@jiumate-builtin",
+    ]);
+  });
+
+  it("writes a manifest for each migrated plugin, so the switch has something to rewrite", async () => {
+    await writeFlat("a");
+
+    await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(["tuning", ["a"]]),
+    );
+
+    // Without this the plugin has Skills but no `enabled` flag, and the switch would work on a
+    // freshly installed plugin while silently doing nothing on an upgraded one.
+    const file = path.join(
+      pluginDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin"),
+      "manifest.json",
+    );
+    const manifest = JSON.parse(await fs.readFile(file, "utf8"));
+    expect(manifest.id).toBe("tuning@jiumate-builtin");
+    expect(manifest.enabled).toBe(true);
+    // Unknown rather than guessed: the on-disk copy's version is not something this checked.
+    expect(manifest.version).toBe("");
+
+    // And the switch therefore actually works on a migrated plugin.
+    expect(
+      await setPluginEnabled(
+        tmpRoot,
+        DEFAULT_PROJECT_ID,
+        DEFAULT_AGENT_ID,
+        "tuning@jiumate-builtin",
+        false,
+      ),
+    ).toBe(false);
+    expect(await list()).toEqual([]);
+  });
+
+  it("records provenance for a migrated plugin, so plugin-level uninstall knows it", async () => {
+    await writeFlat("a");
+    await writeFlat("b");
+
+    await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(["tuning", ["a", "b"]]),
+    );
+
+    const { readInstalls } = await import("../src/state/installs.js");
+    const file = await readInstalls(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID);
+    expect(file.plugins["tuning"]?.skills).toEqual(["a", "b"]);
+  });
+
+  it("does not overwrite an existing plugin's manifest or version", async () => {
+    // A plugin that was installed properly first, then a stray flat copy of one of its members
+    // appears. The manifest is the real one and must survive the migration untouched.
+    await installPlugin(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, makePlugin("tuning", ["a"]));
+    await writeFlat("b");
+
+    await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(["tuning", ["a", "b"]]),
+    );
+
+    const file = path.join(
+      pluginDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, "tuning@jiumate-builtin"),
+      "manifest.json",
+    );
+    expect(JSON.parse(await fs.readFile(file, "utf8")).version).toBe("2026-10-01.1");
+  });
+
   it("is idempotent: a second run moves nothing and reports nothing as moved", async () => {
     await writeFlat("a");
-    await recordMembers("tuning", ["a"]);
 
-    await migrateFlatBundledSkills(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, ["tuning"]);
-    const second = await migrateFlatBundledSkills(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, [
-      "tuning",
-    ]);
+    const members = libraryOf(["tuning", ["a"]]);
+    await migrateFlatBundledSkills(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, members);
+    const second = await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      members,
+    );
 
     expect(second.movedSkills).toEqual([]);
-    // Converges rather than duplicating, so it is safe to re-run after a partial failure.
+    // Converges rather than duplicating, so it is safe to re-run on every read.
     expect((await list()).map((s) => s.name)).toEqual(["a"]);
   });
 
-  it("does nothing at all when no plugins are installed", async () => {
+  it("does nothing at all when the library is empty", async () => {
     await writeFlat("a");
-    const report = await migrateFlatBundledSkills(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, []);
+    const report = await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      new Map(),
+    );
     expect(report.migrated).toEqual([]);
     expect(report.leftAlone).toEqual(["a"]);
     expect((await list()).map((s) => s.name)).toEqual(["a"]);
+  });
+
+  it("does nothing when there are no flat skills, without creating the plugins tree", async () => {
+    const report = await migrateFlatBundledSkills(
+      tmpRoot,
+      DEFAULT_PROJECT_ID,
+      DEFAULT_AGENT_ID,
+      libraryOf(["tuning", ["a"]]),
+    );
+    expect(report.migrated).toEqual([]);
+    expect(await exists(pluginsDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID))).toBe(false);
   });
 });

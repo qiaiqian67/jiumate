@@ -1245,10 +1245,18 @@ export const uninstallPlugin = (projectId: string, agentId: string, name: string
  * This is a real switch, not a stored preference: a disabled plugin's Skills are absent from the
  * next Session's system prompt, and the response reports the state actually written.
  */
-export const setPluginEnabled = (projectId: string, agentId: string, id: string, enabled: boolean) =>
+export const setPluginEnabled = (
+  projectId: string,
+  agentId: string,
+  id: string,
+  enabled: boolean,
+) =>
   apiFetch<{ id: string; enabled: boolean }>(
     `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}/skills/plugins/enabled`,
-    { method: "POST", body: JSON.stringify({ id, enabled }) },
+    // The object, not a pre-stringified string: `apiFetch` encodes the body itself, so passing a
+    // string would double-encode it and the server would read a JSON string where it expects
+    // fields — a 400 that looks like a validation failure rather than a client bug.
+    { method: "POST", body: { id, enabled } },
   );
 
 /** Every plugin installed on one Agent, with its members and the state of its switch. */

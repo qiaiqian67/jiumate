@@ -14,7 +14,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { skillsDir, pluginsDir, librarySkill, loadPreinstalledPlugins } from "@prismshadow/jiumate-core";
+import {
+  skillsDir,
+  pluginsDir,
+  librarySkill,
+  loadPreinstalledPlugins,
+} from "@prismshadow/jiumate-core";
 import type {
   AgentCreateResponse,
   AgentsResponse,
@@ -177,7 +182,10 @@ describe("skills api", () => {
     const skillDir = (pluginId: string, name: string) =>
       path.join(pluginsDir(t.root, projectId, "bare_agent"), pluginId, "skills", name);
     expect(
-      await fs.readFile(path.join(skillDir("software-development@jiumate-builtin", "web-design"), "SKILL.md"), "utf8"),
+      await fs.readFile(
+        path.join(skillDir("software-development@jiumate-builtin", "web-design"), "SKILL.md"),
+        "utf8",
+      ),
     ).toBe(librarySkill("web-design")!.skill.content);
     expect(
       await fs.readFile(
@@ -415,15 +423,17 @@ describe("skills api", () => {
 
       // Uninstalling the plugin does take it, and a reinstall brings the whole set back.
       expect(
-        (await member.post(`${base("prov_e")}/plugins/uninstall`, { name: "agent-tuning" }))
-          .status,
+        (await member.post(`${base("prov_e")}/plugins/uninstall`, { name: "agent-tuning" })).status,
       ).toBe(200);
       expect(
         (await owner.post(toPlugins(base("prov_e")), { names: ["agent-tuning"] })).status,
       ).toBe(201);
       const back = await json();
       expect(
-        back.plugins.find((p) => p.name === "agent-tuning")!.skills.map((s) => s.name).sort(),
+        back.plugins
+          .find((p) => p.name === "agent-tuning")!
+          .skills.map((s) => s.name)
+          .sort(),
       ).toEqual(all.slice().sort());
     });
 

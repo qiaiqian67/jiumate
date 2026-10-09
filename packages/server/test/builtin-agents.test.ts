@@ -54,7 +54,9 @@ describe("built-in Agent provisioning", () => {
     // assert the layout we just replaced.
     const skillsOf = async (agentId: string) => {
       const res = await owner.get(`/api/projects/${projectId}/agents/${agentId}/skills`);
-      return (((await res.json()) as { skills: { name: string }[] }).skills.map((s) => s.name)).sort();
+      return ((await res.json()) as { skills: { name: string }[] }).skills
+        .map((s) => s.name)
+        .sort();
     };
     expect(await skillsOf("default_agent")).toEqual(
       loadPreinstalledPlugins()

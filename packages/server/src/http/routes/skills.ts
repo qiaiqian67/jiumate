@@ -278,22 +278,24 @@ export function projectSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
     // Migrate before reading, so the first request after the upgrade already sees the new layout.
     // Best-effort per Agent and never fatal: a Skill that cannot be moved stays readable from the
     // flat tree (both are read), so the worst case is that nothing moved — not that the page fails.
+    //
+    // Membership comes from the **library**, not `.installs.json`: the record is absent on every
+    // install made before it shipped, which is exactly the population that needs migrating.
+    const library = loadLibraryPlugins();
+    const libraryMembers = new Map(
+      library.map((p) => [p.name, p.skills.map((s) => s.name)] as const),
+    );
     await Promise.all(
       agentIds.map(async (agentId) => {
         try {
-          // The provenance record names the plugins this Agent has installed; the library is not
-          // consulted, because a plugin the current build no longer ships still has members on
-          // disk that belong in the right place.
-          const record = await readInstalls(deps.config.root, projectId, agentId);
           await migrateFlatBundledSkills(
             deps.config.root,
             projectId,
             agentId,
-            Object.keys(record.plugins),
+            libraryMembers,
           );
         } catch {
-          // Best-effort: a Skill that cannot be moved stays readable from the flat tree (both
-          // trees are read), so the worst case is that nothing moved — not that the page fails.
+          // Best-effort: the worst case is that nothing moved, never that a Skill is lost.
         }
       }),
     );
@@ -533,7 +535,6 @@ export function agentSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
     const plugins = await listInstalledPlugins(deps.config.root, projectId, agentId);
     return c.json({ plugins });
   });
-
 
   const listResponse = async (
     projectId: string,
