@@ -101,6 +101,7 @@ import { noAutofill } from "../../components/ui/input";
 import { toastError, toastInfo } from "../../components/ui/toast";
 import { SkillIcon } from "../skills/skill-icon-view";
 import { SkillPickList } from "../skills/skill-pick-list";
+import { EnhancePromptControl } from "./enhance-prompt-button";
 import { toggleSkillName } from "../skills/skill-selection";
 import { ZoomableImage } from "../../components/ui/image-zoom";
 import { ProviderLogo } from "../../components/ui/provider-logo";
@@ -2667,6 +2668,19 @@ export function ChatInput({
                 direction={models && onChangeModel ? "down" : "up"}
               />
             )}
+            {/* 优化提示词 — rewriting a draft is a property of a composer, not of a page, so it
+                lives here and both the new-chat box and a live conversation's Claude Opus 5.5get it
+                without either host doing anything. It reads and writes the text through the handle
+                below rather than props (the earlier prop-from-ref version optimized a stale
+                draft), and resolves the Project itself, so no caller threads an id down for it.
+                After the "+" menu because that one is documented as leading the row, and it is
+                the least-used of the two, so the far-left slot keeps its established occupant. */}
+            <EnhancePromptControl
+              readText={getText}
+              subscribeText={subscribeText}
+              onReplace={setPrompt}
+              disabled={running || compacting || busy}
+            />
             <ApprovalModeSelect
               value={approvalMode}
               onChange={onChangeApprovalMode}

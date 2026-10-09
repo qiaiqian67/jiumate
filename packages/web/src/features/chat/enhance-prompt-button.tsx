@@ -1,12 +1,18 @@
 /**
- * 优化提示词 — the composer's rewrite button, plus the 还原 that undoes it.
+ * 优化提示词 — the composer's rewrite control, and the 撤回 that undoes it.
  *
  * One click sends the current draft to the server, which has a model restate it as a clearer
  * instruction, and puts the result **back into the same text box**. It is deliberately not a
  * send: the whole point is that the user reads what the rewrite says, fixes what it got wrong,
  * and presses Send themselves. A rewrite nobody checks would quietly change what they asked,
- * and a badly-comprehended request is the exact failure this button exists to prevent — so
- * replacing their text without asking would reproduce it one step later.
+ * and a badly-comprehended request is the exact failure this control exists to prevent.
+ *
+ * Lives **inside ChatInput**, not in the draft page. It is a property of a composer, not of a
+ * route: a user hits the same incomprehensible-prompt wall on the fifth turn of a conversation as
+ * on the empty box, and the fix is most valuable exactly there — mid-conversation, where the
+ * model has already been given half an answer built on their sloppy wording. Hosting it in
+ * draft-view gave the draft page a control the session composer did not have, which is the wrong
+ * way round.
  *
  * Behaviours worth naming, all of them from that contract:
  *
@@ -17,22 +23,26 @@
  *   where the old text ended (or at 0) puts their cursor in the wrong place for that.
  * - **The draft is read at click time, from the composer.** An earlier version took the draft
  *   as a prop fed from a ref the parent updates without re-rendering, so the click handler
- *   closed over a snapshot: after the user cleared the box and typed something else, the
- *   button rewrote the *previous* prompt. The subscription below is what makes the label and
- *   the in-flight guard see the live text without re-rendering the page per keystroke.
- * - **A slow result is dropped, and now the guard actually fires.** The old check compared a
+ *   closed over a snapshot: after the user cleared the box and typed something else, the button
+ *   rewrote the *previous* prompt.
+ * - **A slow result is dropped, and the guard actually fires.** The old check compared a
  *   captured prop against a copy of that same prop, so it was always equal and never dropped
  *   anything. Both sides come from the live draft now.
- * - **还原 appears only while it is safe**, i.e. while the text still *is* the rewrite. Once
- *   the user edits it, restoring would throw away their words to bring back a version they
- *   have already moved past — a wrong trade, and one that cannot be undone. A keystroke hides
- *   it; that is the whole invalidation rule.
+ * - **撤回 appears only while it is safe**, i.e. while the text still *is* the rewrite. Once
+ *   the user edits it, restoring would throw away their words to bring back a version they have
+ *   already moved past — a wrong trade, and one that cannot be undone. A keystroke hides it;
+ *   that is the whole invalidation rule.
+ * - **One control, two states.** It becomes the undo button in place rather than growing a
+ *   sibling, because the two are mutually exclusive by construction — there is nothing to undo
+ *   until there has been a rewrite, and nothing to rewrite once there is an undo — and a second
+ *   button would spend toolbar width on a control that is disabled most of the time.
  */
 import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { toastError, toastInfo } from "../../components/ui/toast";
 import { S } from "../../lib/strings";
 import { enhancePrompt } from "../../api/endpoints";
+import { useProject } from "../../state/project";
 
 /**
  * Wand/sparkle glyph, the convention other "do something to my text" affordances use. Drawn
@@ -45,30 +55,31 @@ const ENHANCE_ICON =
 /** Undo arrow, matching the app's icon weight. */
 const RESTORE_ICON = "M9 14L4 9l5-5M4 9h9a7 7 0 0 1 0 14h-3";
 
-/** One line, one action. */
-interface EnhancePromptButtonProps {
-  /** Project whose default model does the rewriting. */
-  projectId: string;
+interface EnhancePromptControlProps {
   /** Live accessors into the composer's text body (ComposerControl). */
   readText: () => string;
   subscribeText: (listener: (text: string) => void) => () => void;
-  /**
-   * Receives the rewritten instruction — and, with it, the text to restore on 还原. The
-   * caller owns the text body, so it applies both through the same path a keystroke would
-   * (state + the draft cache callback), keeping the auto-save consistent.
-   */
-  onEnhanced: (prompt: string) => void;
+  /** Applies a replacement to the text body — the rewrite, and the undo of it. */
+  onReplace: (prompt: string) => void;
   /** Whether the composer is mid-run: rewriting is pointless then, since the box is inert. */
   disabled?: boolean;
 }
 
-export function EnhancePromptButton({
-  projectId,
+export function EnhancePromptControl({
   readText,
   subscribeText,
-  onEnhanced,
+  onReplace,
   disabled = false,
-}: EnhancePromptButtonProps) {
+}: EnhancePromptControlProps) {
+  /**
+   * The Project whose default model does the rewriting. Read here rather than passed in: the
+   * control is part of the composer, so requiring every composer host (draft page, session page)
+   * to thread a project id down for it would be a prop that exists only to serve this button.
+   * Absent (no project loaded, or rendering outside one) the control simply does not render.
+   */
+  const { currentProject } = useProject();
+  const projectId = currentProject?.projectId;
+
   /**
    * The live draft, via a subscription rather than a prop. `useSyncExternalStore` is what
    * makes the read side consistent with React: it re-reads on every render, so a value read
@@ -77,7 +88,7 @@ export function EnhancePromptButton({
   const text = useSyncExternalStore(subscribeText, readText, readText);
   const [busy, setBusy] = useState(false);
   /**
-   * The rewrite and the draft it replaced, kept as a pair so 还原 can put the original back.
+   * The rewrite and the draft it replaced, kept as a pair so 撤回 can put the original back.
    * `null` = nothing to undo.
    *
    * A **pair, not just the original**, because the undo is only offered while the text still
@@ -98,7 +109,7 @@ export function EnhancePromptButton({
   /**
    * Undo is offered only while the box still holds the rewrite untouched. The moment the user
    * edits it, restoring would throw away their words to bring back a version they have already
-   * moved past — a trade that cannot be undone, so the button simply goes away.
+   * moved past — a trade that cannot be undone, so the control simply withdraws.
    */
   const canRestore = restorePoint !== null && text === restorePoint.rewritten && !busy && !disabled;
 
@@ -108,13 +119,13 @@ export function EnhancePromptButton({
     draftAtRequest.current = draft;
     setBusy(true);
     try {
-      const res = await enhancePrompt(projectId, draft);
+      const res = await enhancePrompt(projectId!, draft);
       // Dropped if the draft changed while the request was in flight.
       if (readText().trim() !== draftAtRequest.current) return;
       if (res.ok) {
-        onEnhanced(res.prompt);
+        onReplace(res.prompt);
         // Only an actual change is undoable: if the model echoed the draft back, the two are
-        // equal and a 还原 button that "restores" the identical text would be a dead control.
+        // equal and an undo that "restores" identical text would be a dead control.
         if (res.prompt !== draft) setRestore({ original: draft, rewritten: res.prompt });
         toastInfo(S.chat.enhancePromptDone);
         return;
@@ -134,51 +145,48 @@ export function EnhancePromptButton({
     } finally {
       setBusy(false);
     }
-  }, [busy, projectId, readText, onEnhanced]);
+  }, [busy, projectId, readText, onReplace]);
 
   const restoreOriginal = useCallback(() => {
     if (restorePoint === null) return;
-    onEnhanced(restorePoint.original);
+    onReplace(restorePoint.original);
     // Clearing on use keeps the stored draft from lingering behind a later rewrite, and the
-    // button hides itself anyway: the text is no longer the rewrite.
+    // control returns to its rewrite state anyway.
     setRestore(null);
-  }, [restorePoint, onEnhanced]);
+  }, [restorePoint, onReplace]);
+
+  if (!projectId) return null;
+
+  const isUndo = canRestore;
+  const label = busy
+    ? S.chat.enhancePromptBusy
+    : isUndo
+      ? S.chat.enhancePromptRestore
+      : S.chat.enhancePrompt;
+  const hint = busy
+    ? S.chat.enhancePromptBusy
+    : isUndo
+      ? S.chat.enhancePromptRestoreDesc
+      : S.chat.enhancePromptDesc;
 
   return (
-    <div className="flex shrink-0 items-center gap-1.5">
-      <button
-        type="button"
-        title={S.chat.enhancePromptDesc}
-        aria-label={S.chat.enhancePrompt}
-        aria-busy={busy}
-        // Disabled on an empty draft so no pointless call is made; `text` is the live value
-        // here (see useSyncExternalStore), so this is the current emptiness, not a snapshot.
-        disabled={disabled || busy || !hasDraft}
-        onClick={() => void run()}
-        className="flex h-8 items-center gap-1.5 rounded-full bg-gray-100/70 px-2.5 text-xs text-gray-600 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800/60 dark:text-gray-300 dark:hover:bg-gray-700/60 dark:hover:text-gray-100"
-      >
-        <GlyphIcon d={ENHANCE_ICON} size={16} className={busy ? "animate-pulse" : ""} />
-        <span className="whitespace-nowrap">
-          {busy ? S.chat.enhancePromptBusy : S.chat.enhancePrompt}
-        </span>
-      </button>
-
-      {/* 还原 — only while the text still is the rewrite, so it can never destroy a later
-          edit. Placed beside the button that made the change rather than in a toast: a toast
-          is gone before a second look, and this is a decision the user often makes *after*
-          reading the result. */}
-      {canRestore && (
-        <button
-          type="button"
-          title={S.chat.enhancePromptRestoreDesc}
-          aria-label={S.chat.enhancePromptRestore}
-          onClick={restoreOriginal}
-          className="flex h-8 items-center gap-1 rounded-full px-2 text-xs text-gray-500 transition-colors duration-150 hover:bg-gray-200/60 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200"
-        >
-          <GlyphIcon d={RESTORE_ICON} size={14} />
-          <span className="whitespace-nowrap">{S.chat.enhancePromptRestore}</span>
-        </button>
-      )}
-    </div>
+    <button
+      type="button"
+      // No visible text: this is an icon control in a toolbar that already has labelled pills,
+      // and a permanent label would spend width on a button whose meaning is carried by its
+      // glyph. The native tooltip appears on hover, and aria-label keeps it announced.
+      title={hint}
+      aria-label={label}
+      aria-busy={busy}
+      disabled={disabled || busy || (!isUndo && !hasDraft)}
+      onClick={() => (isUndo ? restoreOriginal() : void run())}
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-gray-700/60 dark:hover:text-gray-100"
+    >
+      <GlyphIcon
+        d={isUndo ? RESTORE_ICON : ENHANCE_ICON}
+        size={16}
+        className={busy ? "animate-pulse" : ""}
+      />
+    </button>
   );
 }
