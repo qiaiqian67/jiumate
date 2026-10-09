@@ -665,6 +665,27 @@ export function DraftView({
     composerRef.current?.fillExample(prompt, []);
   }, []);
 
+  /**
+   * The composer's live text, reached through the handle rather than through `textRef`.
+   *
+   * `textRef` is a mirror the parent keeps in sync on every keystroke **without** re-rendering,
+   * so reading it during render yields the draft as of the last render — which is how
+   * 优化提示词 came to rewrite a prompt the user had already deleted. `useSyncExternalStore`
+   * inside the button re-reads on each of its own renders, and React re-renders it whenever the
+   * subscription below fires, so what it reads is current without the page re-rendering per
+   * keystroke.
+   *
+   * The fallback matters: the button renders on first paint, before ChatInput has mounted, so
+   * the handle is briefly null and `textRef.current` — not an empty string — is the honest
+   * answer then (the draft cache is what the composer's `initialText` came from).
+   */
+  const readComposerText = useCallback(() => composerRef.current?.getText() ?? textRef.current, []);
+  const subscribeComposerText = useCallback(
+    (listener: (text: string) => void) =>
+      composerRef.current?.subscribeText(listener) ?? (() => {}),
+    [],
+  );
+
   const selectedAgent = agents.find((a) => a.agentId === agentId) ?? null;
 
   // Capability info for the currently selected model (vision/context window) switches instantly with the selection (matched by paired reference).
@@ -769,7 +790,8 @@ export function DraftView({
             <div className="flex flex-wrap items-center gap-2">
               <EnhancePromptButton
                 projectId={projectId}
-                text={textRef.current}
+                readText={readComposerText}
+                subscribeText={subscribeComposerText}
                 onEnhanced={(prompt) => composerRef.current?.setPrompt(prompt)}
               />
               <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />

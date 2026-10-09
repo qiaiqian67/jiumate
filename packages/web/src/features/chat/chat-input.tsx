@@ -794,6 +794,24 @@ export interface ComposerControl {
    * silently re-selecting some would change the request underneath them.
    */
   setPrompt: (prompt: string) => void;
+  /**
+   * Live accessors for the text body, with a subscription for reactivity.
+   *
+   * These exist because the Claude Opus 5.5cannot pass the draft down as a prop: it owns the
+   * text in local state, and the parent keeps a mirror in a ref that it updates without
+   * re-rendering (see draft-view). A child handed `textRef.current` therefore reads whatever
+   * the draft was at the last render of the parent — which for a ref-updated draft is a
+   * snapshot, not the live value. 优化提示词 did exactly that and optimized the *previous*
+   * prompt after the user cleared the box and typed another: the button's click handler closed
+   * over a stale `text`, and the in-flight guard compared that same stale value against itself
+   * and was therefore always equal, so it never fired.
+   *
+   * `subscribe` is what makes the button re-render on its own when the draft changes, rather
+   * than requiring the whole page to re-render on every keystroke just to keep one pill's label
+   * correct. The snapshot it provides is fresh for the lifetime of one render.
+   */
+  getText: () => string;
+  subscribeText: (listener: (text: string) => void) => () => void;
 }
 
 export function ChatInput({
@@ -1078,6 +1096,19 @@ export function ChatInput({
   /** Live text mirror for slash-command run() closures (the commands memo deliberately doesn't depend on text). */
   const textRef = useRef(text);
   textRef.current = text;
+  /**
+   * Live readers of the text body (see ComposerControl.subscribeText). Held in a ref because
+   * the notify effect must not re-subscribe every keystroke: a new listener identity each
+   * render would tear down and re-add all subscribers on every character.
+   */
+  const textSubscribers = useRef(new Set<(text: string) => void>());
+  // Fires on the first pass too, which is harmless and keeps this simple: a subscriber that
+  // mounts mid-life gets the current value (React bails out when it already holds that state),
+  // and one that mounts before any typing gets `initialText` — the value it can already read.
+  useEffect(() => {
+    const listeners = textSubscribers.current;
+    for (const listener of listeners) listener(text);
+  }, [text]);
   const [images, setImages] = useState<string[]>([]);
   // File attachments picked from the "+" menu (any type): held as base64 data URLs, exactly
   // like images — a draft has no Session yet, so there is nothing to upload them to ahead of
@@ -1450,7 +1481,24 @@ export function ChatInput({
     },
     [onTextChange],
   );
-  useImperativeHandle(controlRef, () => ({ fillExample, setPrompt }), [fillExample, setPrompt]);
+  /** Live read + subscribe for the body text (see ComposerControl). */
+  const getText = useCallback(() => textRef.current, []);
+  const subscribeText = useCallback((listener: (next: string) => void) => {
+    const listeners = textSubscribers.current;
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+  // One handle, not one per method: `useImperativeHandle` replaces the ref's value wholesale,
+  // so a second call would drop `fillExample`/`setPrompt` and leave the inspiration cards with
+  // nothing to call.
+  useImperativeHandle(controlRef, () => ({ fillExample, setPrompt, getText, subscribeText }), [
+    fillExample,
+    setPrompt,
+    getText,
+    subscribeText,
+  ]);
 
   /** The slash token currently under the caret (kept in a ref so command run() closures always remove the live token). */
   const slashMatchRef = useRef<ReturnType<typeof matchSlash>>(null);

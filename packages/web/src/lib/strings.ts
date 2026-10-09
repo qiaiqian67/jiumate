@@ -2117,10 +2117,16 @@ export const zh = {
     enhancePrompt: "优化提示词",
     enhancePromptDesc: "按 AI 易懂的指令格式重写，可再修改后发送",
     enhancePromptBusy: "优化中…",
+    /** Shown once a rewrite lands; the point is that nothing was sent yet. */
+    enhancePromptDone: "已优化，可修改后发送或还原",
     enhancePromptEmpty: "请先输入内容再优化",
     enhancePromptNoModel: "请先在模型设置中指定默认模型",
     enhancePromptNoResult: "优化失败：模型没有返回可用内容",
     enhancePromptFailed: "优化失败，请稍后重试",
+    /** 还原 — puts back the draft the rewrite replaced. */
+    enhancePromptRestore: "还原",
+    /** Its tooltip says why it disappears on the first keystroke, which otherwise looks arbitrary. */
+    enhancePromptRestoreDesc: "还原优化前的提示词（修改内容后此按钮消失）",
     goalProgress: (rounds: number, tokens: string): string => `第 ${rounds} 轮 · tokens ${tokens}`,
     goalStatus: {
       active: "进行中",

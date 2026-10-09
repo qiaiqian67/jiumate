@@ -2158,10 +2158,16 @@ export const en: Strings = {
     enhancePrompt: "Improve prompt",
     enhancePromptDesc: "Rewrite as a clearer instruction — edit before sending",
     enhancePromptBusy: "Improving…",
+    /** Shown once a rewrite lands; the point is that nothing was sent yet. */
+    enhancePromptDone: "Improved — edit before sending, or undo",
     enhancePromptEmpty: "Type something first",
     enhancePromptNoModel: "Pick a default model in model settings first",
     enhancePromptNoResult: "Couldn't improve it: the model returned nothing usable",
     enhancePromptFailed: "Couldn't improve it — try again",
+    /** 还原 — puts back the draft the rewrite replaced. */
+    enhancePromptRestore: "Undo",
+    /** Its tooltip says why it disappears on the first keystroke, which otherwise looks arbitrary. */
+    enhancePromptRestoreDesc: "Restore the prompt from before the rewrite (gone once you edit)",
     goalProgress: (rounds: number, tokens: string): string => `round ${rounds} · tokens ${tokens}`,
     goalStatus: {
       active: "running",
