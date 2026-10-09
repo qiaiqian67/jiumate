@@ -14,7 +14,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { skillsDir, librarySkill, loadPreinstalledPlugins } from "@prismshadow/jiumate-core";
+import { skillsDir, pluginsDir, librarySkill, loadPreinstalledPlugins } from "@prismshadow/jiumate-core";
 import type {
   AgentCreateResponse,
   AgentsResponse,
@@ -143,7 +143,7 @@ describe("skills api", () => {
     expect((await member.get("/api/plugins/no-such-plugin/files")).status).toBe(404);
   });
 
-  it("members can install and uninstall; installs land verbatim on disk, the directory disappears after uninstall", async () => {
+  it("members can install and uninstall; installs land verbatim inside the plugin, and uninstalling the plugin removes them", async () => {
     await createPlainAgent("bare_agent");
     const url = base("bare_agent");
 
@@ -167,28 +167,51 @@ describe("skills api", () => {
     expect(pluginIcon).toBeDefined();
     expect(installed.icon).toBe(pluginIcon);
 
-    // The on-disk content matches the library's SKILL.md verbatim (including frontmatter),
-    // and the icon beside it is the plugin's.
-    const skillFile = (name: string) =>
-      path.join(skillsDir(t.root, projectId, "bare_agent"), name, "SKILL.md");
-    expect(await fs.readFile(skillFile("web-design"), "utf8")).toBe(
-      librarySkill("web-design")!.skill.content,
-    );
+    // A plugin's Skill reports its owning plugin, read off the directory it was installed into. The
+    // bare library name, which is the key the plugin cards are indexed by.
+    expect(installed.plugin).toBe("software-development");
+
+    // The on-disk content matches the library's SKILL.md verbatim (including frontmatter), and
+    // the icon beside it is the plugin's. The file lives **inside the plugin's own directory**,
+    // which is what makes it un-removable on its own.
+    const skillDir = (pluginId: string, name: string) =>
+      path.join(pluginsDir(t.root, projectId, "bare_agent"), pluginId, "skills", name);
+    expect(
+      await fs.readFile(path.join(skillDir("software-development@jiumate-builtin", "web-design"), "SKILL.md"), "utf8"),
+    ).toBe(librarySkill("web-design")!.skill.content);
     expect(
       await fs.readFile(
-        path.join(skillsDir(t.root, projectId, "bare_agent"), "web-design", "icon.svg"),
+        path.join(skillDir("software-development@jiumate-builtin", "web-design"), "icon.svg"),
         "utf8",
       ),
     ).toBe(pluginIcon);
 
-    // Member uninstalls one skill: 204, the whole skills/<name>/ directory disappears, and the list is updated.
-    expect((await member.delete(`${url}/web-design`)).status).toBe(204);
-    await expect(fs.access(path.dirname(skillFile("web-design")))).rejects.toThrow();
-    const after = (await (await member.get(url)).json()) as AgentSkillsResponse;
-    expect(after.skills.map((s) => s.name)).toEqual(["data-analysis", "software-engineering"]);
-
-    // Deleting a Skill that isn't installed (or was already uninstalled) → 404.
+    // Deleting one member on its own is **not** how a bundled Skill is removed: it has no
+    // standalone path out of the plugin directory. The per-Skill endpoint only ever addressed
+    // `skills/<name>/`, so a bundled name is simply not there — 404, and the Skill is untouched.
+    // This is the structural guarantee, exercised through the public API.
     expect((await member.delete(`${url}/web-design`)).status).toBe(404);
+    const stillThere = (await (await member.get(url)).json()) as AgentSkillsResponse;
+    expect(stillThere.skills.map((s) => s.name)).toEqual([
+      "data-analysis",
+      "software-engineering",
+      "web-design",
+    ]);
+
+    // Uninstalling the plugin removes its whole directory, members included.
+    expect(
+      (await member.post(`${url}/plugins/uninstall`, { name: "software-development" })).status,
+    ).toBe(200);
+    await expect(
+      fs.access(skillDir("software-development@jiumate-builtin", "web-design")),
+    ).rejects.toThrow();
+    const after = (await (await member.get(url)).json()) as AgentSkillsResponse;
+    expect(after.skills.map((s) => s.name)).toEqual(["data-analysis"]);
+
+    // Uninstalling it again is a no-op, not an error.
+    expect(
+      (await member.post(`${url}/plugins/uninstall`, { name: "software-development" })).status,
+    ).toBe(200);
   });
 
   it("reinstall is an idempotent update: hand-edited on-disk content is restored to the library content", async () => {
@@ -196,9 +219,11 @@ describe("skills api", () => {
     const url = base("update_agent");
     expect((await owner.post(toPlugins(url), { names: ["agent-development"] })).status).toBe(201);
 
-    // Simulate stale/tampered on-disk content.
+    // Simulate stale/tampered on-disk content, in the plugin's own directory where it now lives.
     const file = path.join(
-      skillsDir(t.root, projectId, "update_agent"),
+      pluginsDir(t.root, projectId, "update_agent"),
+      "agent-development@jiumate-builtin",
+      "skills",
       "jiumate-config",
       "SKILL.md",
     );
@@ -321,17 +346,22 @@ describe("skills api", () => {
       // Agent must not touch the other.
       const after = (await (await member.get(base("prov_c"))).json()) as AgentSkillsResponse;
       expect(after.skills.map((s) => s.name)).toEqual([]);
-      for (const name of members) {
-        await expect(
-          fs.access(path.join(skillsDir(t.root, projectId, "prov_c"), name, "SKILL.md")),
-        ).rejects.toThrow();
-      }
-      // The record entry is gone, so the plugin is no longer attributed here — it now reads as
-      // inferred from default_agent's copy, which is the honest reading of a partial install.
+      // Gone from disk inside the plugin's own directory, not just from the view. Asserted on this
+      // Agent's own tree because the view is project-wide and default_agent also holds the plugin
+      // — uninstalling from one Agent must not touch the other.
+      const pluginRoot = path.join(
+        pluginsDir(t.root, projectId, "prov_c"),
+        "agent-tuning@jiumate-builtin",
+      );
+      await expect(fs.access(pluginRoot)).rejects.toThrow();
+      // The record entry is gone, so this Agent no longer claims the plugin. It is still listed,
+      // because default_agent holds it — and that copy is **structural**, so the claim is not a
+      // deduction any more either: `inferred` is false for the same reason it is false for a
+      // freshly installed plugin.
       const view = await json();
       const plugin = view.plugins.find((p) => p.name === "agent-tuning")!;
       expect(plugin.agents).toEqual(["default_agent"]);
-      expect(plugin.inferred).toBe(true);
+      expect(plugin.inferred).toBe(false);
     });
 
     it("uninstalling a plugin the Agent does not have is a no-op, not an error", async () => {
@@ -361,26 +391,40 @@ describe("skills api", () => {
       expect(after.skills).toEqual([]);
     });
 
-    it("a deleted member leaves the plugin visibly incomplete rather than silently whole", async () => {
+    it("a bundled Skill cannot be deleted on its own, which is what keeps the plugin whole", async () => {
       await createPlainAgent("prov_e");
       await owner.post(toPlugins(base("prov_e")), { names: ["agent-tuning"] });
       const all = (await json()).plugins
         .find((p) => p.name === "agent-tuning")!
         .skills.map((s) => s.name);
-      // default_agent also holds this plugin, so the member has to go everywhere for the view to
-      // show it missing at all — which is itself the point: a member deleted from one Agent is
-      // still installed on another, so the project view is not the place to judge completeness.
-      const victim = all[0]!;
-      for (const agent of ["prov_e", "default_agent"]) {
-        expect((await member.delete(`${base(agent)}/${victim}`)).status).toBe(204);
-      }
 
+      // Deleting one member on its own is **not** how a bundled Skill is removed: the per-Skill
+      // endpoint only ever addressed `skills/<name>/`, so a bundled name is not there and the
+      // request reports 404 without touching the plugin's copy.
+      //
+      // This is the guarantee that replaced the old "delete a member and the card shows it
+      // incomplete" behaviour. A bundled Skill cannot reach the half-installed state at all — it
+      // leaves with its plugin or not at all. The `missingSkills` branch stays reachable for a
+      // library that ships a member this install never received.
+      const victim = all[0]!;
+      expect((await member.delete(`${base("prov_e")}/${victim}`)).status).toBe(404);
       const after = await json();
       const plugin = after.plugins.find((p) => p.name === "agent-tuning")!;
-      // Reported as incomplete rather than silently whole.
-      expect(plugin.missingSkills).toEqual([victim]);
-      expect(plugin.skills.map((s) => s.name)).not.toContain(victim);
-      expect(plugin.skills.length).toBe(all.length - 1);
+      expect(plugin.skills.map((s) => s.name).sort()).toEqual(all.slice().sort());
+      expect(plugin.missingSkills).toEqual([]);
+
+      // Uninstalling the plugin does take it, and a reinstall brings the whole set back.
+      expect(
+        (await member.post(`${base("prov_e")}/plugins/uninstall`, { name: "agent-tuning" }))
+          .status,
+      ).toBe(200);
+      expect(
+        (await owner.post(toPlugins(base("prov_e")), { names: ["agent-tuning"] })).status,
+      ).toBe(201);
+      const back = await json();
+      expect(
+        back.plugins.find((p) => p.name === "agent-tuning")!.skills.map((s) => s.name).sort(),
+      ).toEqual(all.slice().sort());
     });
 
     it("the route is member-readable and outsider-hidden", async () => {
@@ -448,8 +492,12 @@ describe("skills api", () => {
     expect(onlyB.agents).toEqual([...expected.get("web-design")!].sort());
     expect(onlyB.agents).toContain("cat_b");
 
-    // Uninstalling from one Agent moves the skill rather than removing it from the catalog.
-    expect((await member.delete(`${base("cat_b")}/web-design`)).status).toBe(204);
+    // Uninstalling the plugin from one Agent moves its Skills off that Agent's catalog entry,
+    // rather than removing the card: default_agent ships them preinstalled.
+    expect(
+      (await member.post(`${base("cat_b")}/plugins/uninstall`, { name: "software-development" }))
+        .status,
+    ).toBe(200);
     const after = (await (
       await member.get(`/api/projects/${projectId}/skills/catalog`)
     ).json()) as SkillCatalogResponse;
@@ -616,7 +664,9 @@ describe("skills api", () => {
     // byte-identical to the library source (subdirectory preserved).
     const aux = "reference/persistent-session.md";
     const refPath = path.join(
-      skillsDir(t.root, projectId, "default_agent"),
+      pluginsDir(t.root, projectId, "default_agent"),
+      "use-claude-code@jiumate-builtin",
+      "skills",
       "remote-claude-code",
       "reference",
       "persistent-session.md",
@@ -651,9 +701,17 @@ describe("skills api", () => {
       "unified-llm-api",
       "web-design",
     ]);
-    // Installed through the same writer as the Skills tab: SKILL.md is the library file verbatim.
+    // Seeded as whole plugins, so each Skill lives inside its plugin's directory — the same layout a
+    // library install produces, which is the point: picking plugins at creation and installing
+    // them later must not be two different things.
     const onDisk = await fs.readFile(
-      path.join(skillsDir(t.root, projectId, "seeded_agent"), "jiumate-sdk", "SKILL.md"),
+      path.join(
+        pluginsDir(t.root, projectId, "seeded_agent"),
+        "agent-development@jiumate-builtin",
+        "skills",
+        "jiumate-sdk",
+        "SKILL.md",
+      ),
       "utf8",
     );
     expect(onDisk).toBe(librarySkill("jiumate-sdk")!.skill.content);
@@ -913,9 +971,28 @@ describe("skills api", () => {
     const listAgents = async (): Promise<AgentsResponse["agents"]> =>
       ((await (await owner.get(`/api/projects/${projectId}/agents`)).json()) as AgentsResponse)
         .agents;
-    /** Rewrites an installed SKILL.md's frontmatter version, which is what "behind" means. */
+    /**
+     * Rewrites an installed SKILL.md's frontmatter version, which is what "behind" means.
+     *
+     * Resolves the file through the installed listing rather than assuming `skills/<name>/`: a
+     * library plugin's Skill lives inside its own directory, and a hardcoded flat path would fail
+     * to open rather than rewrite the version it meant to. `plugin` is the **bare** library name,
+     * so the marketplace suffix is added here.
+     */
     const setInstalledVersion = async (agentId: string, name: string, version: string) => {
-      const file = path.join(skillsDir(t.root, projectId, agentId), name, "SKILL.md");
+      const url = base(agentId);
+      const skills = ((await (await owner.get(url)).json()) as AgentSkillsResponse).skills;
+      const owning = skills.find((s) => s.name === name)?.plugin;
+      const file =
+        owning === undefined
+          ? path.join(skillsDir(t.root, projectId, agentId), name, "SKILL.md")
+          : path.join(
+              pluginsDir(t.root, projectId, agentId),
+              `${owning}@jiumate-builtin`,
+              "skills",
+              name,
+              "SKILL.md",
+            );
       const raw = await fs.readFile(file, "utf8");
       await fs.writeFile(file, raw.replace(/^version:.*$/m, `version: ${version}`), "utf8");
     };

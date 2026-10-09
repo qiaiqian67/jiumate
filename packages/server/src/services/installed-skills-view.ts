@@ -17,8 +17,10 @@
  *     because a Skill the library does not ship cannot have come from the library.
  */
 import {
+  builtinPluginId,
   hooksDir,
   loadLibraryPlugins,
+  pluginNameOf,
   readInstalls,
   type InstallsFile,
   type LibraryPlugin,
@@ -82,6 +84,15 @@ export interface InstalledSkillView {
 /** One plugin as installed: its Skill members, any missing ones, and its hook packages. */
 export interface InstalledPluginView {
   name: string;
+  /**
+   * The install id, `<name>@<marketplace>` — the directory the plugin's Skills live in.
+   *
+   * **Separate from `name`, not a replacement for it.** `name` is the library key every existing
+   * caller joins on (`p.name === "agent-tuning"`, grouping, updates, per-agent rollups), and
+   * changing its shape would silently break all of them. `id` is what addresses the install, so
+   * both are reported and neither is derived by the client.
+   */
+  id: string;
   description: string;
   icon?: string;
   version: string | null;
@@ -104,19 +115,6 @@ export interface InstalledSkillsView {
   /** Skills installed on their own, not through any plugin. */
   skills: InstalledSkillView[];
   agentCount: number;
-}
-
-/**
- * The plugin's **name** part of a plugin id.
- *
- * An id is `<name>@<marketplace>` — the on-disk directory name, which is also the convention the
- * wider ecosystem uses so the origin is readable without a side table. The library is keyed by
- * bare name (`agent-tuning`), so everything that looks a plugin up strips the suffix first, and
- * everything that *reports* one keeps the id. An id with no `@` is already a bare name.
- */
-function pluginNameOf(id: string): string {
-  const at = id.indexOf("@");
-  return at <= 0 ? id : id.slice(0, at);
 }
 
 /**
@@ -252,12 +250,23 @@ export async function buildInstalledSkillsView(
     // when it disagrees with the other two, the other two are the stale ones — and that is worth
     // knowing during the migration window rather than silently preferring a guess.
     const structural = entry.skill.plugin;
-    const claimed = structural ?? recordedPluginOf.get(name) ?? inferred.pluginOf.get(name) ?? null;
+    // The structural source arrives as an id and is reduced to the bare name, because
+    // `pluginName` is joined against library plugin names everywhere downstream and a skill whose
+    // owner read `agent-tuning@jiumate-builtin` where its siblings said `agent-tuning` would not
+    // match the card it is supposed to appear under.
+    const claimed =
+      (structural === undefined ? undefined : pluginNameOf(structural)) ??
+      recordedPluginOf.get(name) ??
+      inferred.pluginOf.get(name) ??
+      null;
     // `toSkillItem` owns the credential rule (a blank variable counts as unset), so it is
     // reused rather than restated here — a second copy of that rule is how the two drift.
     const common = toSkillItem(entry.skill);
     return {
       ...common,
+      // Reported as the bare library name, the same value `pluginName` carries and the same key the
+      // plugin cards are indexed by. The full id is available on the plugin's own `id`.
+      ...(claimed !== null ? { plugin: claimed } : {}),
       version: recordedSkill.get(name)?.version ?? entry.skill.version,
       origin: librarySkillNames.has(name) ? "library" : "import",
       pluginName: claimed,
@@ -317,9 +326,11 @@ export async function buildInstalledSkillsView(
     if (present.length === 0 && !recorded && !structural && !hasHook) continue;
     for (const name of present) consumed.add(name);
     plugins.push({
-      // The full id when the plugin was installed under one, so the card names the directory the
-      // skills actually live in; the bare library name otherwise.
-      name: structuralOf.get(pluginName) ?? pluginName,
+      // `name` stays the library key — every caller joins on it — and `id` carries the directory
+      // the install actually lives under, so the two conventions do not have to be reconciled by
+      // whoever is reading this.
+      name: pluginName,
+      id: structuralOf.get(pluginName) ?? builtinPluginId(pluginName),
       description: plugin.description,
       ...(plugin.descriptionZh !== undefined ? { descriptionZh: plugin.descriptionZh } : {}),
       ...(plugin.icon !== undefined ? { icon: plugin.icon } : {}),

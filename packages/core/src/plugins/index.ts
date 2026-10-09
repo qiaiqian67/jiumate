@@ -275,6 +275,42 @@ function pluginRoots(): Map<string, string> {
 }
 
 /**
+ * The category manifest, read from `marketplace.json` where one exists.
+ *
+ * The file is what lets a plugin directory from elsewhere state what category it belongs to without
+ * a release: `{"categories": [{"id": "...", "title": "...", "titleZh": "..."}]}`. It is read from
+ * each plugin root and merged in root order, so a locally added plugin can add its own group.
+ *
+ * Falls back to {@link PLUGIN_CATEGORIES} when no root carries the file — a checkout without one
+ * groups exactly as it did before this existed, rather than showing every plugin under "Other".
+ *
+ * An unreadable or malformed file falls back too, and loudly: a broken marketplace file is a broken
+ * install, and saying so beats silently regrouping a library the user did not change.
+ */
+export function loadPluginCategories(): PluginCategory[] {
+  const fromFiles: PluginCategory[] = [];
+  const seen = new Set<string>();
+  for (const dir of pluginRoots().values()) {
+    const file = path.join(dir, "marketplace.json");
+    if (!fs.existsSync(file)) continue;
+    const parsed = JSON.parse(fs.readFileSync(file, "utf8")) as {
+      categories?: PluginCategory[];
+    };
+    for (const category of parsed.categories ?? []) {
+      if (typeof category?.id !== "string" || typeof category?.title !== "string") {
+        throw new Error(`${file}: each category needs a string "id" and "title".`);
+      }
+      // First root to declare an id wins, so a plugin's own root is not overridden by another.
+      if (seen.has(category.id)) continue;
+      seen.add(category.id);
+      fromFiles.push(category);
+    }
+  }
+  if (fromFiles.length > 0) return fromFiles;
+  return PLUGIN_CATEGORIES;
+}
+
+/**
  * Recursively collects a directory's files as text keyed by POSIX-relative path, skipping the
  * names in `except` at the top level. Symlinks and other non-regular entries are skipped.
  * Returns undefined when the directory has no such files.
@@ -374,9 +410,37 @@ interface PluginManifestFile {
   };
 }
 
+/**
+ * The manifest file inside a plugin directory, read from whichever location holds it.
+ *
+ * `.claude-plugin/plugin.json` is the layout the wider ecosystem uses, and it is checked **first**:
+ * a plugin directory that carries both is an upstream plugin carrying our legacy file alongside,
+ * and the upstream one is the authoritative statement of what it is. `plugin.json` at the root stays
+ * supported so every plugin already in this repository keeps loading.
+ *
+ * Two locations rather than a copy: writing both would let them drift, and a plugin would then be
+ * able to disagree with itself about its own version.
+ */
+const PLUGIN_MANIFEST_PATHS = [path.join(".claude-plugin", "plugin.json"), "plugin.json"] as const;
+
+/** The plugin's manifest path, preferring the conventional `.claude-plugin/` location. */
+export function pluginManifestPath(dir: string): string | null {
+  for (const rel of PLUGIN_MANIFEST_PATHS) {
+    const candidate = path.join(dir, rel);
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
 /** Reads one plugin directory. */
 function readPluginDir(name: string, dir: string): LibraryPlugin {
-  const manifestFile = path.join(dir, "plugin.json");
+  const found = pluginManifestPath(dir);
+  if (found === null) {
+    throw new Error(
+      `${dir}: no plugin manifest — expected .claude-plugin/plugin.json or plugin.json`,
+    );
+  }
+  const manifestFile = found;
   const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8")) as PluginManifestFile;
   if (!PLUGIN_VERSION_PATTERN.test(manifest.version)) {
     throw new Error(`${manifestFile}: version must be YYYY-MM-DD.N, got ${manifest.version}`);
@@ -472,9 +536,20 @@ export function librarySkill(
 }
 
 /**
- * Category manifest, in display order. Categories group by audience, not by technology: a
- * hook-only plugin sits with the skills it serves the same audience as (goal mode and
- * continual learning are office productivity), and agent tuning is AI app development.
+ * Category manifest, in display order, as shipped with the product.
+ *
+ * **This is the fallback, not the source of truth.** `marketplace.json` beside the library root is
+ * read first and overrides it (see {@link loadPluginCategories}); this list keeps a checkout with no
+ * marketplace file working, and keeps a plugin whose category the file omits from landing in a
+ * group nobody expected.
+ *
+ * Categories group by audience, not by technology: a hook-only plugin sits with the skills it
+ * serves the same audience as (goal mode and continual learning are office productivity), and
+ * agent tuning is AI app development.
+ *
+ * The reason the file wins: a plugin directory from elsewhere arrives with **its own** idea of what
+ * it is, and hardcoding that here means shipping a release before an unfamiliar plugin can be
+ * filed correctly. Data first, fallback second.
  * Docs: /docs/skills § "Built-in library".
  */
 export const PLUGIN_CATEGORIES: PluginCategory[] = [
@@ -490,8 +565,9 @@ export const PLUGIN_CATEGORIES: PluginCategory[] = [
  */
 export function groupPlugins(all: LibraryPlugin[]): ResolvedPluginGroup[] {
   const groups: ResolvedPluginGroup[] = [];
-  const known = new Set(PLUGIN_CATEGORIES.map((c) => c.id));
-  for (const category of PLUGIN_CATEGORIES) {
+  const categories = loadPluginCategories();
+  const known = new Set(categories.map((c) => c.id));
+  for (const category of categories) {
     const members = all
       .filter((p) => p.category === category.id)
       .sort((a, b) => a.name.localeCompare(b.name));

@@ -8,7 +8,7 @@
  * library types is withheld from the API until someone adds it here on purpose; skill bodies
  * and hook scripts never travel in a listing.
  */
-import { libraryPlugin } from "@prismshadow/jiumate-core";
+import { builtinPluginId, libraryPlugin, pluginNameOf } from "@prismshadow/jiumate-core";
 import type { HookManifest, LibraryPlugin, SkillMetadata } from "@prismshadow/jiumate-core";
 import type { HookItem, PluginItem, SkillMetadataItem } from "../api/types.js";
 import { HttpError } from "../http/errors.js";
@@ -40,10 +40,13 @@ export function toSkillItem(
       ? { shortDescriptionZh: skill.shortDescriptionZh }
       : {}),
     ...(skill.icon !== undefined ? { icon: skill.icon } : {}),
-    // Travels straight from where the file sits. A library listing's skills have no plugin of
-    // their own here (they belong to the plugin item that carries them), so this stays absent
-    // there and only appears on the installed side.
-    ...(skill.plugin !== undefined ? { plugin: skill.plugin } : {}),
+    // Normalised to the bare library name **here** rather than in each caller: the wire field is
+    // documented as the library key, and three call sites had already disagreed about whether they
+    // should strip the `@marketplace` suffix themselves. One place decides it.
+    //
+    // Travels straight from where the file sits, so unlike the older recorded attribution it
+    // cannot be wrong.
+    ...(skill.plugin !== undefined ? { plugin: pluginNameOf(skill.plugin) } : {}),
     ...(skill.requiredEnv !== undefined && skill.requiredEnv.length > 0
       ? {
           requiredEnv: skill.requiredEnv,
@@ -103,6 +106,10 @@ export function pluginFiles(plugin: LibraryPlugin): Record<string, string> {
 /** A library plugin as the listing describes it. Its skills go without their icon: it is the plugin's, sent once on the plugin itself. */
 export function toPluginItem(plugin: LibraryPlugin): PluginItem {
   return {
+    // Stamped with the marketplace it ships in, so the install id is one value the frontend passes
+    // through rather than something it reconstructs — an id assembled from parts can disagree with
+    // the directory the plugin is actually installed under.
+    id: builtinPluginId(plugin.name),
     name: plugin.name,
     description: plugin.description,
     ...(plugin.descriptionZh !== undefined ? { descriptionZh: plugin.descriptionZh } : {}),

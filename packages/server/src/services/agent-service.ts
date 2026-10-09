@@ -22,6 +22,7 @@ import {
   installPlugin,
   installSkill,
   listInstalledHooks,
+  listInstalledSkills,
   isValidId,
   loadAgentVault,
   memoryDir,
@@ -209,32 +210,15 @@ export class AgentService {
     agentId: string,
     library: readonly LibraryPlugin[],
   ): Promise<{ skillCount: number; hookCount: number; updates: PluginUpdateRef[] }> {
-    const base = skillsDir(this.root, projectId, agentId);
-    let dirents: Dirent[] = [];
-    try {
-      dirents = await fs.readdir(base, { withFileTypes: true });
-    } catch {
-      // No skills/ directory: nothing installed.
-    }
-    const skills = await Promise.all(
-      dirents
-        // Dot-prefixed directories are install staging, never a Skill (a Skill name has no dot).
-        .filter((d) => d.isDirectory() && !d.name.startsWith("."))
-        .map(async (d) => {
-          try {
-            const head = await readHead(path.join(base, d.name, "SKILL.md"), SKILL_HEAD_BYTES);
-            return { name: d.name, version: parseSkillFrontmatter(head)?.version ?? "" };
-          } catch {
-            return null;
-          }
-        }),
-    );
+    // `listInstalledSkills` reads both trees, so a bundled Skill counts here without this method
+    // knowing about the layout — the previous version scanned `skills/` itself and reported every
+    // plugin's Skills as missing the moment they moved into `plugins/`.
+    const installed = await listInstalledSkills(this.root, projectId, agentId);
     const hooks = await listInstalledHooks(this.root, projectId, agentId);
     const byPlugin = new Map(library.map((p) => [p.name, p] as const));
     const bySkill = new Map(library.flatMap((p) => p.skills.map((s) => [s.name, p] as const)));
     const updates = new Map<string, string>();
-    for (const skill of skills) {
-      if (skill === null) continue;
+    for (const skill of installed) {
       const plugin = bySkill.get(skill.name);
       if (plugin && comparePluginVersions(plugin.version, skill.version) > 0) {
         updates.set(plugin.name, plugin.version);
@@ -247,7 +231,7 @@ export class AgentService {
       }
     }
     return {
-      skillCount: skills.filter((s) => s !== null).length,
+      skillCount: installed.length,
       hookCount: hooks.length,
       updates: [...updates].map(([name, version]) => ({ name, version })),
     };

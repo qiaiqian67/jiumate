@@ -1599,6 +1599,9 @@ export const zh = {
     /** Top toast shown on successful install / uninstall. */
     installedToast: (plugin: string, agent: string): string => `已将 ${plugin} 安装到 ${agent}`,
     uninstalledToast: (plugin: string, agent: string): string => `已从 ${agent} 卸载 ${plugin}`,
+    /** Top toast after the plugin's on/off switch; the switch keeps the files either way. */
+    enabledToast: (plugin: string): string => `已启用 ${plugin}`,
+    disabledToast: (plugin: string): string => `已停用 ${plugin}`,
     updateOutdated: (n: number): string => `有新版本：更新 ${n} 个 Agent 的安装`,
     /** Tooltip of the upgrade button when nothing is waiting (the button stays visible but disabled). */
     upToDate: "已是最新版本",

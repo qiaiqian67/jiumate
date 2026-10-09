@@ -3265,12 +3265,15 @@ export interface SkillMetadataItem {
   /** `requiredEnv` resolved against the server's environment: true when every one is present. Absent with `requiredEnv` itself. */
   requiredEnvReady?: boolean;
   /**
-   * The plugin this skill was bundled with, as `<name>@<marketplace>` — the id of the directory
-   * it lives in (`plugins/<id>/skills/<name>/`). Absent for a standalone skill.
+   * The plugin this skill was bundled with, as the library's bare plugin name (`agent-tuning`).
+   * Absent for a standalone skill.
    *
    * Read off the path rather than deduced, so it cannot be wrong and cannot be lost by a code path
    * that forgot to record it. Its presence is what makes 「bundled, not uninstallable on its own」
    * true: a skill inside a plugin directory has no standalone removal that reaches it.
+   *
+   * The bare name, not the install id `<name>@<marketplace>` — this is the key the plugin cards are
+   * indexed by. `InstalledPluginView.id` carries the id itself.
    */
   plugin?: string;
 }
@@ -3289,8 +3292,15 @@ export interface HookItem {
   icon?: string;
 }
 
-/** One library plugin as the listing describes it: the manifest fields plus what it ships (skill bodies and scripts are never sent). */
+/** A plugin as the API describes it — the library side, the installed side and the directory side all carry these fields. `icon` travels when the caller passes one: installed lists do, the library listing does not (see toPluginItem). */
 export interface PluginItem {
+  /**
+   * The plugin's install id, `<name>@<marketplace>`.
+   *
+   * Carried so the frontend never composes one out of parts: the id is what the plugins tree is
+   * keyed by, and an install addressed by bare name would have to guess which marketplace to mean.
+   */
+  id: string;
   name: string;
   description: string;
   descriptionZh?: string;

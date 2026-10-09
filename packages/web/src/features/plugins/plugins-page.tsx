@@ -132,6 +132,14 @@ export type PluginParts = Pick<PluginItem, "name" | "skills" | "hooks">;
 const INSTALL_ICON = "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3";
 /** "Update installs" button icon (rotate-cw, 24×24 line path). */
 const UPDATE_ICON = "M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10";
+/**
+ * "Plugin switched on / off" button icon (the standard power glyph, 24×24 line path).
+ *
+ * One glyph rather than an on/off pair: the state is carried by `aria-pressed` and the muted
+ * variant, because a second icon shape would be a *different* symbol for "off" — and "power" is
+ * already the universally understood switch mark.
+ */
+const POWER_ICON = "M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10";
 
 const NO_INSTALLS: AgentInstalls = { skills: new Map(), hooks: new Map() };
 
@@ -428,10 +436,12 @@ export function PluginsPage() {
   /**
    * Install / uninstall on one Agent (any member can do this): optimistic update, a
    * confirmation toast on success, rollback plus a toast on failure. Install is one request for
-   * the whole plugin; uninstall takes it apart — one DELETE per skill and one for the hook
-   * package — since the server offers no plugin-level delete, and a plugin's parts are what an
-   * Agent actually holds. The Agent list is re-read afterwards either way: the card's counts
-   * and its `pluginUpdates` moved, and both are read off that list.
+   * the whole plugin; uninstall is **one plugin-level request**, not a DELETE per skill — a bundled
+   * Skill lives inside its plugin's directory, so the per-skill endpoint has no path that reaches
+   * it and a skill-by-skill uninstall would report success while removing nothing.
+   *
+   * The Agent list is re-read afterwards either way: the card's counts and its `pluginUpdates`
+   * moved, and both are read off that list.
    */
   const toggleInstall = async (agentId: string, plugin: PluginItem, on: boolean) => {
     if (!projectId) return;
@@ -447,21 +457,19 @@ export function PluginsPage() {
           `${S.plugins.installedToast(plugin.name, agentName)}${S.agent.takesEffectSuffix}`,
         );
       } else {
-        // A 404 on a part means "was already not installed": the target state is already
-        // reached for that part, so it does not fail the uninstall (otherwise the row would be
-        // stuck at "Installed" whenever this page's snapshot is stale).
+        // The hook package is not part of the plugin directory, so it is removed by its own
+        // endpoint alongside the plugin — the plugin request clears the Skills, this clears the
+        // hooks the plugin installed. A 404 means "already not installed", i.e. the state we were
+        // heading for, so it must not fail the uninstall (otherwise the row would sit at
+        // "Installed" whenever this page's snapshot is stale).
         const gone = (e: unknown) => {
           if (e instanceof ApiError && e.status === 404) return;
           throw e;
         };
-        await Promise.all([
-          ...plugin.skills.map((skill) =>
-            api.removeAgentSkill(projectId, agentId, skill.name).catch(gone),
-          ),
-          ...(plugin.hooks.length > 0
-            ? [api.uninstallAgentHook(projectId, agentId, plugin.name).catch(gone)]
-            : []),
-        ]);
+        await api.uninstallPlugin(projectId, agentId, plugin.name);
+        if (plugin.hooks.length > 0) {
+          await api.uninstallAgentHook(projectId, agentId, plugin.name).catch(gone);
+        }
         toastSuccess(
           `${S.plugins.uninstalledToast(plugin.name, agentName)}${S.agent.takesEffectSuffix}`,
         );
@@ -1300,7 +1308,8 @@ function PluginCard({
   onUpdateOutdated: (name: string, agentIds: string[]) => Promise<void>;
 }) {
   const { locale } = useLocale();
-  const { agents, currentAgent } = useProject();
+  const { agents, currentAgent, currentProject } = useProject();
+  const projectId = currentProject?.projectId;
   const [installOpen, setInstallOpen] = useState(false);
   // Agents pending an update confirmation (null = none): an update is an overwriting reinstall, so it needs a confirm + a per-agent version list before it runs.
   const [pendingUpdate, setPendingUpdate] = useState<string[] | null>(null);
@@ -1309,6 +1318,58 @@ function PluginCard({
   const [pendingUninstall, setPendingUninstall] = useState<string | null>(null);
   /** The corner install button's own in-flight flag, so a double click cannot land two installs. */
   const [installing, setInstalling] = useState(false);
+  /** Whether the current Agent has this plugin switched on; null while unknown. */
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [togglingEnabled, setTogglingEnabled] = useState(false);
+
+  // The switch's own state, read whenever the current Agent or the plugin changes. Kept separate
+  // from the install snapshot because "installed" and "switched on" are different questions, and
+  // answering the second from the first would make a disabled plugin look uninstalled.
+  useEffect(() => {
+    const agentId = currentAgent?.agentId;
+    if (!projectId || agentId === undefined) {
+      setEnabled(null);
+      return;
+    }
+    let cancelled = false;
+    void api
+      .getInstalledPlugins(projectId, agentId)
+      .then((res) => {
+        if (cancelled) return;
+        const entry = res.plugins.find((p) => p.name === plugin.name);
+        setEnabled(entry?.enabled ?? null);
+      })
+      .catch(() => {
+        // Unreadable is "unknown", not "off": showing the switch as on when it is off would be a
+        // claim we cannot support, and hiding it would strand the user with no way back.
+        if (!cancelled) setEnabled(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, currentAgent?.agentId, plugin.name]);
+
+  const toggleEnabled = async () => {
+    const agentId = currentAgent?.agentId;
+    if (!projectId || agentId === undefined || enabled === null || togglingEnabled) return;
+    const next = !enabled;
+    setEnabled(next);
+    setTogglingEnabled(true);
+    try {
+      // Optimistic, like the install toggle; rolled back below on failure.
+      const res = await api.setPluginEnabled(projectId, agentId, plugin.id, next);
+      setEnabled(res.enabled);
+    } catch (e) {
+      setEnabled(enabled);
+      toastError(apiErrorText(e));
+      return;
+    } finally {
+      setTogglingEnabled(false);
+    }
+    toastSuccess(
+      `${next ? S.plugins.enabledToast(plugin.name) : S.plugins.disabledToast(plugin.name)}${S.agent.takesEffectSuffix}`,
+    );
+  };
 
   const confirmUpdate = async () => {
     if (!pendingUpdate) return;
@@ -1450,6 +1511,24 @@ function PluginCard({
             >
               <GlyphIcon d={INSTALL_ICON} size={ICON_SIZE.iconButton} />
             </Button>
+            {/* Switch the plugin on or off for the Agent selected right now, shown only once it is
+              installed there — a switch for something that is not installed has nothing to act on.
+              Switching off keeps the files, so it is reversible without a reinstall, and it wears
+              the secondary variant: it changes what the Agent does, it does not delete anything. */}
+            {isInstalledOnCurrentAgent && enabled !== null && (
+              <Button
+                size="sm"
+                variant={enabled ? "secondary" : "ghost"}
+                className="h-8 w-8 shrink-0 justify-center p-0"
+                aria-label={`${enabled ? S.plugins.disable : S.plugins.enable} ${plugin.name}`}
+                title={enabled ? S.plugins.disable : S.plugins.enable}
+                aria-pressed={enabled}
+                disabled={togglingEnabled}
+                onClick={() => void toggleEnabled()}
+              >
+                <GlyphIcon d={POWER_ICON} size={ICON_SIZE.iconButton} />
+              </Button>
+            )}
             {/* Install / uninstall on the Agent selected right now, without opening the
               per-Agent list. Uninstalling deletes that Agent's files, so it wears the danger
               variant and the trash glyph the Agent's own skill rows use — the same act, marked

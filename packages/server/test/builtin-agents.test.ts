@@ -48,10 +48,14 @@ describe("built-in Agent provisioning", () => {
 
     // Install policy: default_agent is pre-installed with the library's preinstalled set
     // (plugins marked `preinstall: false`, e.g. use-claude-code, stay manual-install only).
-    const skillsOf = async (agentId: string) =>
-      (
-        await fs.readdir(path.join(t.root, projectId, "agents", agentId, "agent_state", "skills"))
-      ).sort();
+    //
+    // Read through the API rather than off `skills/`: a plugin's Skills live inside its own
+    // directory, so the flat tree is empty for a freshly-provisioned Agent and scanning it would
+    // assert the layout we just replaced.
+    const skillsOf = async (agentId: string) => {
+      const res = await owner.get(`/api/projects/${projectId}/agents/${agentId}/skills`);
+      return (((await res.json()) as { skills: { name: string }[] }).skills.map((s) => s.name)).sort();
+    };
     expect(await skillsOf("default_agent")).toEqual(
       loadPreinstalledPlugins()
         .flatMap((plugin) => plugin.skills.map((skill) => skill.name))

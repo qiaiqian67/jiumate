@@ -1629,6 +1629,9 @@ export const en: Strings = {
     installedToast: (plugin: string, agent: string): string => `Installed ${plugin} to ${agent}`,
     uninstalledToast: (plugin: string, agent: string): string =>
       `Uninstalled ${plugin} from ${agent}`,
+    /** Top toast after the plugin's on/off switch; the switch keeps the files either way. */
+    enabledToast: (plugin: string): string => `Enabled ${plugin}`,
+    disabledToast: (plugin: string): string => `Disabled ${plugin}`,
     updateOutdated: (n: number): string => `Update available: update ${n} agent install(s)`,
     /** Tooltip of the upgrade button when nothing is waiting (the button stays visible but disabled). */
     upToDate: "Already up to date",

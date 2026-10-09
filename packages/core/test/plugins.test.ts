@@ -5,6 +5,7 @@
  * shipped skill follows, and the README tables that repeat the library for human readers.
  */
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -15,9 +16,11 @@ import {
   libraryPlugin,
   librarySkill,
   loadLibraryPlugins,
+  loadPluginCategories,
   loadPluginGroups,
   loadPreinstalledPlugins,
   parseSkillFrontmatter,
+  pluginManifestPath,
   type LibraryPlugin,
   type PluginCategory,
 } from "../src/plugins/index.js";
@@ -32,6 +35,35 @@ const fakePlugin = (name: string, category?: string): LibraryPlugin => ({
   preinstall: true,
   skills: [],
   ...(category !== undefined ? { category } : {}),
+});
+
+describe("pluginManifestPath", () => {
+  it("prefers .claude-plugin/plugin.json and falls back to a root plugin.json", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jiumate-manifest-"));
+    try {
+      // Neither: nothing to read.
+      expect(pluginManifestPath(dir)).toBeNull();
+
+      // The legacy location keeps working.
+      await fs.writeFile(path.join(dir, "plugin.json"), "{}", "utf8");
+      expect(pluginManifestPath(dir)).toBe(path.join(dir, "plugin.json"));
+
+      // The conventional location wins when both are present: it is the upstream statement of what
+      // the plugin is, and writing both copies would let them drift.
+      await fs.mkdir(path.join(dir, ".claude-plugin"), { recursive: true });
+      await fs.writeFile(path.join(dir, ".claude-plugin", "plugin.json"), "{}", "utf8");
+      expect(pluginManifestPath(dir)).toBe(path.join(dir, ".claude-plugin", "plugin.json"));
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("loadPluginCategories", () => {
+  it("falls back to the shipped list when no plugin root carries marketplace.json", () => {
+    // The repo's plugins/ carry no marketplace file, so this is the fallback being exercised.
+    expect(loadPluginCategories()).toEqual(PLUGIN_CATEGORIES);
+  });
 });
 
 describe("loadLibraryPlugins", () => {
