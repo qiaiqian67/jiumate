@@ -29,7 +29,9 @@ export function resolveLibraryPlugins(names: readonly string[]): LibraryPlugin[]
 }
 
 /** A skill as the API describes it — the library side, the installed side and the directory side all carry these fields. `icon` travels when the caller passes one: installed lists do, the library listing does not (see toPluginItem). */
-export function toSkillItem(skill: SkillMetadata & { icon?: string }): SkillMetadataItem {
+export function toSkillItem(
+  skill: SkillMetadata & { icon?: string; plugin?: string },
+): SkillMetadataItem {
   return {
     name: skill.name,
     description: skill.description,
@@ -38,6 +40,10 @@ export function toSkillItem(skill: SkillMetadata & { icon?: string }): SkillMeta
       ? { shortDescriptionZh: skill.shortDescriptionZh }
       : {}),
     ...(skill.icon !== undefined ? { icon: skill.icon } : {}),
+    // Travels straight from where the file sits. A library listing's skills have no plugin of
+    // their own here (they belong to the plugin item that carries them), so this stays absent
+    // there and only appears on the installed side.
+    ...(skill.plugin !== undefined ? { plugin: skill.plugin } : {}),
     ...(skill.requiredEnv !== undefined && skill.requiredEnv.length > 0
       ? {
           requiredEnv: skill.requiredEnv,

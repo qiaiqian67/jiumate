@@ -3264,6 +3264,15 @@ export interface SkillMetadataItem {
   requiredEnv?: string[];
   /** `requiredEnv` resolved against the server's environment: true when every one is present. Absent with `requiredEnv` itself. */
   requiredEnvReady?: boolean;
+  /**
+   * The plugin this skill was bundled with, as `<name>@<marketplace>` — the id of the directory
+   * it lives in (`plugins/<id>/skills/<name>/`). Absent for a standalone skill.
+   *
+   * Read off the path rather than deduced, so it cannot be wrong and cannot be lost by a code path
+   * that forgot to record it. Its presence is what makes 「bundled, not uninstallable on its own」
+   * true: a skill inside a plugin directory has no standalone removal that reaches it.
+   */
+  plugin?: string;
 }
 
 /** One installed hook package (`agent_state/hooks/<name>/`): its manifest, without the scripts. */

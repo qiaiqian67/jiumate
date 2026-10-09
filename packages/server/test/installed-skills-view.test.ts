@@ -60,6 +60,14 @@ describe("buildInstalledSkillsView", () => {
     await fs.writeFile(path.join(dir, "hooks.json"), "{}", "utf8");
   }
 
+  /** The listing shape `buildInstalledSkillsView` takes, widened with core's new `plugin` field. */
+  type ListedSkillish = {
+    name: string;
+    description: string;
+    version: string;
+    plugin?: string;
+  };
+
   /** Builds the view from the current on-disk skills, as the route does. */
   async function view(agents: string[] = [agentId]) {
     const skillsByAgent = new Map<
@@ -201,6 +209,44 @@ describe("buildInstalledSkillsView", () => {
     const result = await view();
     expect(result.plugins.map((p) => p.name)).not.toContain("goal");
     expect(result.plugins.map((p) => p.name)).not.toContain("continual-learning");
+  });
+
+  it("prefers a structural plugin id over the inferred attribution, and is not marked inferred", async () => {
+    // A skill read from `plugins/<id>/skills/` arrives with `plugin` set by core. This is the
+    // step-1 payoff: the plugin id comes from where the file is, so it is not a deduction and must
+    // not be labelled one. The fixture below is the same on-disk shape the previous test builds,
+    // but handed to the view the way core's loader now hands it over.
+    for (const name of ["agent-evaluation", "agent-initialization"]) {
+      await writeSkill(agentId, name);
+    }
+    const skillsByAgent = new Map<string, ListedSkillish[]>([
+      [
+        agentId,
+        ["agent-evaluation", "agent-initialization"].map((name) => ({
+          name,
+          description: `${name} description`,
+          version: "",
+          plugin: "agent-tuning@jiumate-builtin",
+        })),
+      ],
+    ]);
+    const result = await buildInstalledSkillsView(root, projectId, [agentId], skillsByAgent);
+
+    // Attributed to the plugin the path said, not to one the skill set implied. The card carries
+    // the full id, because that is the directory the skills live in.
+    const plugin = result.plugins.find((p) => p.name === "agent-tuning@jiumate-builtin")!;
+    expect(plugin).toBeDefined();
+    expect(plugin.skills.map((s) => s.name).sort()).toEqual([
+      "agent-evaluation",
+      "agent-initialization",
+    ]);
+    // The whole point: not inferred, because nothing was deduced.
+    expect(plugin.inferred).toBe(false);
+    expect(plugin.skills.every((s) => s.inferred)).toBe(false);
+    // The id, not the bare library name, is what a skill reports as its owner.
+    expect(plugin.skills.every((s) => s.pluginName === "agent-tuning@jiumate-builtin")).toBe(true);
+    // And still not double-listed as standalone.
+    expect(result.skills.map((s) => s.name)).toEqual([]);
   });
 
   it("reports which Agent holds a hook, rather than implying all of them do", async () => {

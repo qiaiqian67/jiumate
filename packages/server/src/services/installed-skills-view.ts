@@ -41,6 +41,15 @@ interface ListedSkill {
   icon?: string;
   /** Variable names the skill needs, when it declares them. */
   requiredEnv?: string[];
+  /**
+   * The owning plugin id, when the skill was read from `plugins/<id>/skills/` — carried through
+   * from core's `InstalledSkill.plugin`. Absent for a standalone skill.
+   *
+   * This is the structural attribution: it comes from the directory the file was found in, so it
+   * is not a deduction. Adding it to this subset is what lets the view prefer it over the inferred
+   * answer, which is otherwise the only source of `pluginName` until the install path moves.
+   */
+  plugin?: string;
 }
 
 /** One installed Skill, as the installed-skills page needs it. */
@@ -95,6 +104,19 @@ export interface InstalledSkillsView {
   /** Skills installed on their own, not through any plugin. */
   skills: InstalledSkillView[];
   agentCount: number;
+}
+
+/**
+ * The plugin's **name** part of a plugin id.
+ *
+ * An id is `<name>@<marketplace>` — the on-disk directory name, which is also the convention the
+ * wider ecosystem uses so the origin is readable without a side table. The library is keyed by
+ * bare name (`agent-tuning`), so everything that looks a plugin up strips the suffix first, and
+ * everything that *reports* one keeps the id. An id with no `@` is already a bare name.
+ */
+function pluginNameOf(id: string): string {
+  const at = id.indexOf("@");
+  return at <= 0 ? id : id.slice(0, at);
 }
 
 /**
@@ -221,8 +243,16 @@ export async function buildInstalledSkillsView(
 
   const toView = (name: string): InstalledSkillView => {
     const entry = byName.get(name)!;
-    // Recorded wins; otherwise the inferred attribution, if any. Null means standalone.
-    const claimed = recordedPluginOf.get(name) ?? inferred.pluginOf.get(name) ?? null;
+    // Three sources, strongest first:
+    //   1. structural — the skill sits in `plugins/<id>/skills/`, so the path answers it
+    //   2. recorded   — installs.json names the owning plugin
+    //   3. inferred   — deduced from which skills happen to be present
+    //
+    // The structural one is new and wins outright. It is the only one that cannot be wrong, so
+    // when it disagrees with the other two, the other two are the stale ones — and that is worth
+    // knowing during the migration window rather than silently preferring a guess.
+    const structural = entry.skill.plugin;
+    const claimed = structural ?? recordedPluginOf.get(name) ?? inferred.pluginOf.get(name) ?? null;
     // `toSkillItem` owns the credential rule (a blank variable counts as unset), so it is
     // reused rather than restated here — a second copy of that rule is how the two drift.
     const common = toSkillItem(entry.skill);
@@ -231,8 +261,9 @@ export async function buildInstalledSkillsView(
       version: recordedSkill.get(name)?.version ?? entry.skill.version,
       origin: librarySkillNames.has(name) ? "library" : "import",
       pluginName: claimed,
-      // Only an inferred attribution needs saying; a recorded one is simply true.
-      inferred: claimed !== null && !recordedPluginOf.has(name),
+      // True only when the claim is a deduction. A structural or recorded attribution is simply
+      // true, and labelling it as inferred would make the UI hedge about something it knows.
+      inferred: claimed !== null && structural === undefined && !recordedPluginOf.has(name),
       agents: entry.agents.sort(),
     };
   };
@@ -245,8 +276,26 @@ export async function buildInstalledSkillsView(
   const hookOnlyCandidates = [...libraryPlugins.values()]
     .filter((p) => p.skills.length === 0 && p.hooks !== undefined)
     .map((p) => p.name);
+  // Structurally-attributed plugins join too. Before this, a plugin could only enter the list via
+  // its record or by inference from its member set, so a skill sitting in `plugins/<id>/skills/`
+  // would be attributed to a plugin that then never appeared — the card would be invisible while
+  // claiming its skills.
+  //
+  // Ids may carry an `@<marketplace>` suffix (the on-disk directory name), so the **name part**
+  // is what the library is keyed by; the full id is what gets reported, since that is where the
+  // skill actually lives.
+  const structuralOf = new Map<string, string>();
+  for (const entry of byName.values()) {
+    const id = entry.skill.plugin;
+    if (id !== undefined) structuralOf.set(pluginNameOf(id), id);
+  }
   for (const pluginName of [
-    ...new Set([...recordedPlugins, ...inferred.plugins, ...hookOnlyCandidates]),
+    ...new Set([
+      ...recordedPlugins,
+      ...inferred.plugins,
+      ...hookOnlyCandidates,
+      ...structuralOf.keys(),
+    ]),
   ].sort()) {
     const plugin = libraryPlugins.get(pluginName);
     // A record naming a plugin this build no longer ships is dropped rather than shown as a
@@ -262,10 +311,15 @@ export async function buildInstalledSkillsView(
     // would report it as not installed while `hooks/goal/` sits right there.
     const recorded = recordedPlugins.has(pluginName);
     const hasHook = agentIdList.some((a) => hooksByAgent.get(a)?.has(pluginName));
-    if (present.length === 0 && !recorded && !hasHook) continue;
+    // A structural attribution is as good as a record for admitting the plugin: the skill was
+    // found inside this plugin's directory, so there is nothing left to prove.
+    const structural = structuralOf.has(pluginName);
+    if (present.length === 0 && !recorded && !structural && !hasHook) continue;
     for (const name of present) consumed.add(name);
     plugins.push({
-      name: pluginName,
+      // The full id when the plugin was installed under one, so the card names the directory the
+      // skills actually live in; the bare library name otherwise.
+      name: structuralOf.get(pluginName) ?? pluginName,
       description: plugin.description,
       ...(plugin.descriptionZh !== undefined ? { descriptionZh: plugin.descriptionZh } : {}),
       ...(plugin.icon !== undefined ? { icon: plugin.icon } : {}),
@@ -285,7 +339,7 @@ export async function buildInstalledSkillsView(
           hooksByAgent.get(a)?.has(pluginName) === true ||
           present.some((n) => byName.get(n)!.agents.includes(a)),
       ),
-      inferred: !recorded,
+      inferred: !recorded && !structural,
     });
   }
 
