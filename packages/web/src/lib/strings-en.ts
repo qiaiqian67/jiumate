@@ -1443,6 +1443,79 @@ export const en: Strings = {
   /** Plugin library page (features/plugins/plugins-page.tsx): one card per library plugin, installed on agents as a whole. */
   plugins: {
     pageTitle: "Plugins & Skills",
+
+    // —— Origin and state (shared by plugins / skills / connectors) ——
+    /** The three origin tabs plus All. Skills add a fourth; see filtersFor. */
+    filterAll: "All",
+    filterBuiltin: "Built-in",
+    filterUser: "Installed by you",
+    /** Skills only: shipped inside a plugin — removable only with the plugin, switchable alone. */
+    filterBundled: "Bundled",
+    originBuiltin: "Built-in",
+    originUser: "Installed by you",
+    originBundled: "Bundled",
+    enable: "Enable",
+    disable: "Disable",
+    enabled: "Enabled",
+    disabled: "Disabled",
+    enableHint: "Agents can use it once enabled",
+    disableHint: "Agents will not be able to use it",
+
+    // —— Affected-Agent confirmation ——
+    /** Heading above the Agent list in the impact dialog. */
+    affectedAgentsCount: (n: number): string => `${n === 1 ? "1 agent is" : `${n} agents are`} using it:`,
+    /** Overflow line — never left implicit, so a truncated list is never read as the whole one. */
+    affectedAgentsMore: (n: number): string => `${n} more not listed.`,
+    /** Why an Agent is affected: installed, versus actively selected (the urgent one). */
+    agentReasonInstalled: "Installed",
+    agentReasonSelected: "Selected",
+    /** Shown when nothing depends on the item — the change is safe and the dialog says so. */
+    noAffectedAgents: "No agent is using this — safe to proceed.",
+
+    // —— Category management ——
+    categoryUncategorized: "Uncategorized",
+    manageCategories: "Manage categories",
+    addCategory: "New category",
+    categoryNamePlaceholder: "Category name",
+    categoryRename: "Rename",
+    categoryDelete: "Delete",
+    /** Confirm text for deleting a category; {n} = how many items will fall back to Uncategorized. */
+    categoryDeleteConfirm: (n: number): string =>
+      n === 0
+        ? "Delete this category? This cannot be undone."
+        : `Delete this category? Its ${n} item(s) will move to “Uncategorized”; the items themselves are not deleted.`,
+    /** Built-in categories cannot be deleted; this explains why on the disabled button. */
+    categoryBuiltinLocked: "Built-in categories can't be deleted",
+    categoryRenamed: "Category renamed",
+    categoryAdded: "Category created",
+    categoryDeleted: "Category deleted",
+
+    // —— Marketplace sources ——
+    sourcesTitle: "Sources",
+    sourcesDesc: "Where plugins and skills come from — the official marketplace, third-party repos, or a local path.",
+    addSource: "Add source",
+    sourceTypeMarket: "Marketplace",
+    sourceTypeLocal: "Local path",
+    sourceUrlLabel: "Repository URL",
+    sourcePathLabel: "Local path",
+    sourceNameLabel: "Name",
+    sourceNamePlaceholder: "Display name",
+    sourceUrlPlaceholder: "https://example.com/repo",
+    sourcePathPlaceholder: "D:\\skills or ~/skills",
+    sourceKindPlugin: "Plugins",
+    sourceKindSkill: "Skills",
+    sourceEnabled: "Enabled",
+    sourceDisabled: "Added",
+    sourceRemove: "Remove source",
+    sourceRemoveConfirm: (name: string): string =>
+      `Remove “${name}”? Installed items are not deleted, but they will no longer be updated from this source.`,
+    sourceAdded: "Source added",
+    sourceRemoved: "Source removed",
+    /** Neither a URL nor a path — the field is required either way. */
+    sourceInvalid: "Enter a valid URL or path",
+    /** A local path that does not resolve to a directory. */
+    sourcePathMissing: "That path doesn't exist or can't be read",
+
     pageDesc:
       "Built-in plugin library: each plugin ships skills and/or a hook package — browse, quick-start a chat, or install to agents.",
     pluginCount: (n: number): string => (n === 1 ? "1 plugin" : `${n} plugins`),

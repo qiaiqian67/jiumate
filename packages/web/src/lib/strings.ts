@@ -1412,6 +1412,84 @@ export const zh = {
   /** Plugin library page (features/plugins/plugins-page.tsx): one card per library plugin, installed on Agents as a whole. */
   plugins: {
     pageTitle: "插件·技能",
+
+    // —— 来源与状态（插件／技能／连接器共用）——
+    /** The three origin tabs plus 全部. Skills add a fourth; see filtersFor. */
+    filterAll: "全部",
+    filterBuiltin: "系统内置",
+    filterUser: "用户安装",
+    /** Skills only: shipped inside a plugin — removable only with the plugin, switchable alone. */
+    filterBundled: "插件捆绑",
+    originBuiltin: "系统内置",
+    originUser: "用户安装",
+    originBundled: "插件捆绑",
+    /** Switch labels, shared by every surface's toggle. */
+    enable: "启用",
+    disable: "禁用",
+    enabled: "已启用",
+    disabled: "已禁用",
+    /** Tooltip for the toggle, so the state is never conveyed by glyph alone. */
+    enableHint: "启用后可被 Agent 使用",
+    disableHint: "禁用后 Agent 将无法使用",
+
+    // —— 受影响智能体确认 ——
+    /** Heading above the Agent list in the impact dialog. */
+    affectedAgentsCount: (n: number): string => `以下 ${n} 个智能体正在使用：`,
+    /** Overflow line — never left implicit, so a truncated list is never read as the whole one. */
+    affectedAgentsMore: (n: number): string => `还有 ${n} 个未列出。`,
+    /** Why an Agent is affected: installed, versus actively selected (the urgent one). */
+    agentReasonInstalled: "已安装",
+    agentReasonSelected: "已选用",
+    /** Shown when nothing depends on the item — the change is safe and the dialog says so. */
+    noAffectedAgents: "没有智能体正在使用，可以安全操作。",
+
+    // —— 分类管理 ——
+    /** Tab label for the uncategorised bucket. */
+    categoryUncategorized: "未分类",
+    /** Manage-categories button. */
+    manageCategories: "管理分类",
+    addCategory: "新建分类",
+    categoryNamePlaceholder: "分类名称",
+    categoryRename: "重命名",
+    categoryDelete: "删除",
+    /** Confirm text for deleting a category; {n} = how many items will fall back to 未分类. */
+    categoryDeleteConfirm: (n: number): string =>
+      n === 0
+        ? "删除该分类？此操作不可撤销。"
+        : `删除该分类？该分类下的 ${n} 项将移到「未分类」，项目本身不会被删除。`,
+    /** Built-in categories cannot be deleted; this explains why on the disabled button. */
+    categoryBuiltinLocked: "系统内置分类不可删除",
+    /** Toast after a rename. */
+    categoryRenamed: "分类已重命名",
+    categoryAdded: "分类已创建",
+    categoryDeleted: "分类已删除",
+
+    // —— 市场源管理 ——
+    sourcesTitle: "市场源",
+    sourcesDesc: "管理插件与技能的获取来源，支持官方市场、第三方仓库和本地路径。",
+    addSource: "添加来源",
+    sourceTypeMarket: "市场源",
+    sourceTypeLocal: "本地路径",
+    sourceUrlLabel: "仓库地址",
+    sourcePathLabel: "本地路径",
+    sourceNameLabel: "名称",
+    sourceNamePlaceholder: "显示名称",
+    sourceUrlPlaceholder: "https://example.com/repo",
+    sourcePathPlaceholder: "D:\\skills 或 ~/skills",
+    sourceKindPlugin: "插件",
+    sourceKindSkill: "技能",
+    sourceEnabled: "已启用",
+    sourceDisabled: "已添加",
+    sourceRemove: "移除来源",
+    sourceRemoveConfirm: (name: string): string =>
+      `移除来源「${name}」？已安装的项目不会被删除，但将不再从此来源更新。`,
+    sourceAdded: "来源已添加",
+    sourceRemoved: "来源已移除",
+    /** Neither a URL nor a path — the field is required either way. */
+    sourceInvalid: "请填写有效的地址或路径",
+    /** A local path that does not resolve to a directory. */
+    sourcePathMissing: "路径不存在或无法访问",
+
     pageDesc: "内置插件库：每个插件带有技能和／或钩子包，可浏览、快捷调用，或安装到 Agent。",
     /** Plugin count in the group header (small text to the right of the category name). */
     pluginCount: (n: number): string => `${n} 个插件`,
