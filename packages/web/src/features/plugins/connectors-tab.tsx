@@ -26,17 +26,37 @@ import { McpServersSection, mcpSearchText } from "../agents/mcp-servers-section"
 import type { McpSectionTarget } from "../agents/mcp-servers-section";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
-import { Input } from "../../components/ui/input";
+import { OriginFilterTabs } from "./extension-ui";
+import { filtersFor, type ExtensionFilter } from "./extension-model";
 
-export function ConnectorsTab() {
+export function ConnectorsTab({
+  query,
+  originFilter,
+  setOriginFilter,
+  addNonce = 0,
+}: {
+  /**
+   * The page's search text, passed in rather than held here. The one search box lives in the top
+   * toolbar; owning a second copy meant typing in one silently did nothing to the list the other
+   * one controlled.
+   */
+  query: string;
+  originFilter: ExtensionFilter;
+  setOriginFilter: (next: ExtensionFilter) => void;
+  /**
+   * Incremented by the page's add button to ask this tab's own add dialog to open. The dialog is
+   * owned by `McpServersSection`, which is also what renders the cards — putting the button in the
+   * page toolbar keeps it in the same slot as every other tab's add button without duplicating the
+   * dialog or reaching across into the section.
+   */
+  addNonce?: number;
+}) {
   const { currentProject } = useProject();
   const projectId = currentProject?.projectId ?? null;
   const isOwner = currentProject?.role === "owner";
 
   const [servers, setServers] = useState<MCPServerConfig[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  /** Narrows the cards by name and connection target — the registry is a flat list, so this is the only narrowing there is. */
-  const [query, setQuery] = useState("");
 
   useEffect(() => {
     if (!projectId) return;
@@ -68,6 +88,17 @@ export function ConnectorsTab() {
     return query.trim() === "" ? servers.length : servers.filter(matches).length;
   }, [servers, query, matches]);
 
+  /**
+   * Origin counts. Every registry entry is **user-added**: the registry is a Project config file,
+   * not product content, so there is no built-in connector to count. The built-in tab is still
+   * rendered, at zero — a tab that is hidden reads as "not applicable", whereas a tab showing 0
+   * states the fact ("there are none") and is the honest answer to "how do I tell them apart?".
+   */
+  const originCounts = useMemo(() => {
+    const n = visibleCount ?? 0;
+    return { all: n, builtin: 0, user: n, bundled: 0 };
+  }, [visibleCount]);
+
   if (!projectId) return null;
   if (error !== null) return <EmptyState title={error} />;
 
@@ -81,26 +112,26 @@ export function ConnectorsTab() {
 
   return (
     <div>
-      {/* The skills page's toolbar: search on the left of the pair, the count beside it, and the
-          add button last — the same order and the same components, so switching tabs does not
-          move anything. */}
+      {/* The page's top bar already carries the one search box (it is bound to the same `query`),
+          so this row holds only what is specific to this tab: the count and the origin filter. A
+          second search box here was rendering a third identical 「搜索技能」 field on the same
+          screen — one control, one job, one place. */}
       <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-        <div className="w-40 sm:w-56">
-          <Input
-            size="sm"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={S.plugins.searchConnectorsPlaceholder}
-            aria-label={S.plugins.searchConnectorsLabel}
-          />
-        </div>
         {visibleCount !== null && (
           <span className="shrink-0 whitespace-nowrap rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
             {S.plugins.connectorsCount(visibleCount)}
           </span>
         )}
-        {/* Add lives in the section below, which owns the modal; a duplicate here would open the
-            same dialog twice with no way to tell which button did it. */}
+        {/* Origin tabs, same control as the other two tabs. A connector in the registry is
+            user-added by definition — it is a Project config file, not product content — so the
+            「系统内置」 tab is shown with its count rather than hidden, which is what makes the
+            absence meaningful instead of merely unlisted. */}
+        <OriginFilterTabs
+          value={originFilter}
+          onChange={setOriginFilter}
+          filters={filtersFor(false)}
+          counts={originCounts}
+        />
       </div>
       <div className="mt-4">
         {servers === null ? (

@@ -59,7 +59,7 @@ import {
 } from "./extension-ui";
 import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/empty-state";
-import { GlyphIcon } from "../../components/ui/glyph-icon";
+import { LibraryCard } from "./library-card";
 
 const BOOK_ICON = "M4 5a2 2 0 0 1 2-2h11v18H6a2 2 0 0 1-2-2V5zM7 3v14";
 
@@ -72,17 +72,28 @@ interface PendingToggle {
 export function SkillsTab({
   skills,
   agentNames,
+  query,
+  originFilter,
+  setOriginFilter,
 }: {
   skills: readonly InstalledSkillItem[];
   /** Display names keyed by agent id, for the impact list. */
   agentNames: Readonly<Record<string, string>>;
+  /**
+   * The search box and origin tabs are owned by the **page**, not here, so plugins and skills are
+   * filtered by the same controls in the same place — they file into the same categories, and two
+   * independent filter rows for one shared taxonomy is how the two come to disagree. The counts
+   * are still local, since only this tab knows its own inventory.
+   */
+  query: string;
+  originFilter: ExtensionFilter;
+  /** Shared with the plugin tab: one filter, one taxonomy, both tabs write the same value. */
+  setOriginFilter: (next: ExtensionFilter) => void;
 }) {
   const { user } = useAuth();
   const { locale } = useLocale();
   const userId = user?.userId ?? null;
 
-  const [filter, setFilter] = useState<ExtensionFilter>("all");
-  const [query, setQuery] = useState("");
   const [switches, setSwitches] = useState<SwitchMap>(() => loadSwitches(userId));
   const [categories, setCategories] = useState(() => loadCategories(userId));
   const [managing, setManaging] = useState(false);
@@ -119,8 +130,8 @@ export function SkillsTab({
     () =>
       withOrigin
         .filter(({ skill }) => matchesQuery(skill, query))
-        .filter(({ origin }) => filterMatches(origin, filter)),
-    [withOrigin, query, filter],
+        .filter(({ origin }) => filterMatches(origin, originFilter)),
+    [withOrigin, query, originFilter],
   );
 
   const counts = useMemo(() => {
@@ -189,15 +200,16 @@ export function SkillsTab({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <OriginFilterTabs value={filter} onChange={setFilter} filters={filters} counts={counts} />
+        {/* Origin tabs, then the one category manager — the same controls, in the same order, as
+            the plugin tab above it. Skills and plugins file into the same taxonomy, so they get
+            the same row; only the inventory behind it differs. */}
+        <OriginFilterTabs
+          value={originFilter}
+          onChange={setOriginFilter}
+          filters={filters}
+          counts={counts}
+        />
         <span className="flex-1" />
-        <div className="w-40 sm:w-56">
-          <ExtensionSearch
-            value={query}
-            onChange={setQuery}
-            placeholder={S.plugins.searchPlaceholder}
-          />
-        </div>
         <Button size="sm" variant="ghost" onClick={() => setManaging(true)}>
           {S.plugins.manageCategories}
         </Button>
@@ -212,59 +224,61 @@ export function SkillsTab({
           description={query.trim() !== "" ? S.plugins.noSearchResultDesc : undefined}
         />
       ) : (
-        <ul className="grid gap-2 sm:grid-cols-2">
+        /* The same `LibraryCard` the plugin tab renders, so the two tabs are visually one page —
+           a hand-rolled card here would differ in padding, tile size and meta placement, and the
+           eye reads that as two different systems rather than two views of one. The origin badge
+           rides in the corner slot, next to the switch, which is where a per-item control belongs;
+           the owning plugin goes on the meta line so the relationship is stated without adding a
+           row of its own. */
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map(({ skill, origin, id }) => {
             const on = isOn(switches, id);
             const toggleable = canToggleIndependently(origin);
             const removable = canUninstall(origin);
+            const meta = [
+              skill.version === null ? undefined : skill.version,
+              origin === "bundled" && skill.pluginName ? skill.pluginName : undefined,
+            ]
+              .filter((p): p is string => p !== undefined)
+              .join(" · ");
             return (
-              <li
+              <LibraryCard
                 key={id}
-                className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900"
-              >
-                <GlyphIcon d={BOOK_ICON} size={18} className="mt-0.5 shrink-0 text-gray-400" />
-                <div className="min-w-0 flex-1">
+                {...(skill.icon !== undefined ? { icon: skill.icon } : {})}
+                name={skill.name}
+                fallbackIcon={BOOK_ICON}
+                description={localizedText(locale, skill.description, skill.shortDescriptionZh)}
+                {...(meta === "" ? {} : { meta })}
+                actionOverlay
+                action={
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate font-mono text-sm text-gray-900 dark:text-gray-100">
-                      {skill.name}
-                    </span>
                     <OriginBadge origin={origin} />
+                    <ExtensionSwitch
+                      on={on}
+                      label={skill.name}
+                      disabled={!toggleable}
+                      onToggle={() => requestToggle(skill, !on)}
+                    />
                   </div>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
-                    {localizedText(locale, skill.description, skill.shortDescriptionZh)}
-                  </p>
-                  {skill.pluginName && (
-                    <p className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">
-                      {skill.pluginName}
-                    </p>
-                  )}
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
-                  <ExtensionSwitch
-                    on={on}
-                    label={skill.name}
-                    disabled={!toggleable}
-                    onToggle={() => requestToggle(skill, !on)}
-                  />
-                  {!removable && (
-                    /* Not a dead control: the reason is on it, since "why can't I remove this"
-                       is the question a bundled skill provokes. */
-                    <span
-                      className="text-[11px] text-gray-400 dark:text-gray-500"
-                      title={
+                }
+                /* A bundled skill cannot be uninstalled on its own — the plugin takes it — and a
+                   built-in cannot be uninstalled at all. Rather than show a control that would do
+                   nothing, the reason rides on the card: "why can't I remove this" is the question
+                   a bundled skill provokes, and it deserves an answer rather than a dead button. */
+                {...(!removable
+                  ? {
+                      keyState: undefined,
+                      descriptionTitle: `${localizedText(locale, skill.description, skill.shortDescriptionZh)}\n\n${
                         origin === "bundled"
-                          ? (skill.pluginName ?? undefined)
-                          : S.plugins.originBuiltin
-                      }
-                    >
-                      {origin === "bundled" ? S.plugins.originBundled : S.plugins.originBuiltin}
-                    </span>
-                  )}
-                </div>
-              </li>
+                          ? S.plugins.bundledSkillNote
+                          : S.plugins.builtinSkillNote
+                      }`,
+                    }
+                  : {})}
+              />
             );
           })}
-        </ul>
+        </div>
       )}
 
       <CategoryManagerDialog

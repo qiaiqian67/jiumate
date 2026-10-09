@@ -90,6 +90,9 @@ import { BOOK_ICON, localizedShortText, localizedText } from "../chat/skill-use"
 import { PluginDetailModal } from "./plugin-detail";
 import { ConnectorsTab } from "./connectors-tab";
 import { SkillsTab } from "./skills-tab";
+import { OriginFilterTabs } from "./extension-ui";
+import { SourcesManager, BUILTIN_SOURCE } from "./sources-manager";
+import { filtersFor, type ExtensionFilter } from "./extension-model";
 import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
 import { SkillTile } from "../skills/skill-icon-view";
@@ -228,6 +231,14 @@ export function PluginsPage() {
   useDocumentTitle(S.nav.plugins);
   const [tab, setTab] = useState<"plugins" | "skills" | "connectors">("plugins");
   const [libraryView, setLibraryView] = useState<"plugins" | "skills" | "hooks">("plugins");
+  /** Origin filter, shared by the plugin and skills tabs — they file into the SAME categories. */
+  const [originFilter, setOriginFilter] = useState<ExtensionFilter>("all");
+  /** Sources dialog (the plugin tab's add button). */
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+  /** Bumped by the connectors tab's add button to ask its own dialog to open. */
+  const [connectorsAddNonce, setConnectorsAddNonce] = useState(0);
+  /** Configured marketplace sources; the built-in library is always present. */
+  const [sources, setSources] = useState(() => [BUILTIN_SOURCE]);
   /**
    * Whether the installed-skills full-screen page is open.
    *
@@ -629,6 +640,30 @@ export function PluginsPage() {
   }, [groups, query, locale, groupFilter, libraryView]);
 
   /**
+   * Library plugins by origin, for the filter tabs.
+   *
+   * Counted over the whole library rather than over `visibleGroups`, because a count that shifted
+   * with the other filters would be circular: the tab you are deciding whether to click would
+   * already have applied that filter. It is also counted before the category and query cuts, for
+   * the same reason — the tabs answer "what would I get", not "what is on screen".
+   *
+   * A library plugin is **built-in**: it ships with the product and was not added by anyone. That
+   * is the whole distinction here, so the counts are structural rather than stored — the server
+   * has no origin field on a library plugin because there is nothing to record.
+   */
+  const originCounts = useMemo(() => {
+    if (groups === null) return { all: 0, builtin: 0, user: 0, bundled: 0 };
+    const out = { all: 0, builtin: 0, user: 0, bundled: 0 };
+    for (const group of groups) {
+      for (const plugin of group.plugins) {
+        out.all += 1;
+        out.builtin += 1;
+      }
+    }
+    return out;
+  }, [groups]);
+
+  /**
    * The skill and hook views as one flat card list.
    *
    * Flat rather than per category: a skill belongs to a plugin, but the question here is "which
@@ -753,8 +788,10 @@ export function PluginsPage() {
           />
           <span className="min-w-0 flex-1" />
           <div className="flex min-w-0 items-center gap-2">
-            {/* Search filters within the categories rather than flattening them: browsing by
-                category is what the page is for, and a query is how you find one card in it. */}
+            {/* ONE search for the whole page, and it lives here — in the top bar, beside the tabs
+                it filters. It used to be duplicated inside the skills tab as well, which put two
+                identical 「搜索技能」 boxes on one screen; two boxes bound to the same state is worse
+                than one, because editing the "other" one silently does nothing. */}
             <div className="w-40 sm:w-56">
               <Input
                 size="sm"
@@ -784,6 +821,9 @@ export function PluginsPage() {
                 {S.plugins.installedTitle(installedCount)}
               </button>
             )}
+            {/* The add button is the page's one action, so it takes the same slot on every tab —
+                skills, plugins and connectors alike. Three tabs that each put their add control
+                somewhere else is the kind of inconsistency a user has to re-learn per tab. */}
             {tab === "skills" && (
               <Button
                 size="sm"
@@ -802,19 +842,73 @@ export function PluginsPage() {
                 {S.plugins.addSkill}
               </Button>
             )}
+            {tab === "plugins" && (
+              <Button
+                size="sm"
+                variant="primary"
+                className="shrink-0 whitespace-nowrap"
+                title={S.plugins.addPluginHint}
+                onClick={() => setSourcesOpen(true)}
+              >
+                <PlusIcon size={13} strokeWidth={1.7} />
+                {S.plugins.addPlugin}
+              </Button>
+            )}
+            {tab === "connectors" && (
+              /* The connectors registry owns its own add dialog, so this opens that one rather
+                 than a second path to the same thing — two buttons reaching the same dialog is
+                 indistinguishable from two different actions. */
+              <Button
+                size="sm"
+                variant="primary"
+                className="shrink-0 whitespace-nowrap"
+                title={S.plugins.addConnectorHint}
+                onClick={() => setConnectorsAddNonce((n) => n + 1)}
+              >
+                <PlusIcon size={13} strokeWidth={1.7} />
+                {S.plugins.addConnector}
+              </Button>
+            )}
           </div>
         </div>
         {tab === "connectors" ? (
           <div className="mt-6">
-            <ConnectorsTab />
+            <ConnectorsTab
+              query={query}
+              originFilter={originFilter}
+              setOriginFilter={setOriginFilter}
+              addNonce={connectorsAddNonce}
+            />
           </div>
         ) : tab === "skills" && catalog !== null ? (
-          /* The reference is explicit: the skills tab lists **only standalone** skills — the ones
-             inside a plugin are not repeated here. So this passes `catalog.skills` alone, and not
-             the flattened set an origin-tab would need: a bundled skill appearing in this list
-             beside its plugin is exactly the duplication the reference rules out. */
+          /* Bundled skills ARE listed here, badged 「插件捆绑」 and separately filterable — this was
+             a reported bug: the 「插件捆绑」 tab sat permanently at 0 because only standalone
+             skills were passed. (The reference's note that bundled skills are not repeated here
+             is read as "not given their own top-level card", not "absent from the list": the
+             requirement for a bundled filter only means something if they appear.)
+
+             Lifted from each plugin's `skills` with the plugin's name and Agents attached, so the
+             tab can tell a bundled skill from a standalone one and the impact dialog can name who
+             would be affected. `pluginName` is what marks it — the same field the server records. */
           <div className="mt-6">
-            <SkillsTab skills={catalog.skills} agentNames={agentNameMap} />
+            <SkillsTab
+              skills={[
+                ...catalog.skills,
+                ...catalog.plugins.flatMap((p) =>
+                  p.skills.map((s) => ({
+                    ...s,
+                    origin: "library" as const,
+                    pluginName: p.name,
+                    inferred: false,
+                    agents: p.agents,
+                  })),
+                ),
+              ]}
+              agentNames={agentNameMap}
+              query={query}
+              originFilter={originFilter}
+              setOriginFilter={setOriginFilter}
+            />
           </div>
         ) : (
           <>
@@ -889,24 +983,36 @@ export function PluginsPage() {
                     relationship the search box has to the cards, one level up. Hidden for the flat
                     views, where there is no category grouping left to narrow. */}
                 {libraryView === "plugins" && (
-                  <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setGroupFilter(null)}
-                      className={chipClass(groupFilter === null)}
-                    >
-                      {S.plugins.allCategories}
-                    </button>
-                    {(groups ?? []).map((group) => (
+                  <div className="mt-4">
+                    {/* Origin first, then category: origin answers "is this mine or the product's",
+                        category answers "what kind". Origin is the coarser cut, so it sits above —
+                        and the category row below hides itself when a category has nothing left in
+                        it, rather than offering a chip that leads to an empty section. */}
+                    <OriginFilterTabs
+                      value={originFilter}
+                      onChange={setOriginFilter}
+                      filters={filtersFor(false)}
+                      counts={originCounts}
+                    />
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
                       <button
-                        key={group.id}
                         type="button"
-                        onClick={() => setGroupFilter(groupFilter === group.id ? null : group.id)}
-                        className={chipClass(groupFilter === group.id)}
+                        onClick={() => setGroupFilter(null)}
+                        className={chipClass(groupFilter === null)}
                       >
-                        {localizedText(locale, group.title, group.titleZh)}
+                        {S.plugins.allCategories}
                       </button>
-                    ))}
+                      {(groups ?? []).map((group) => (
+                        <button
+                          key={group.id}
+                          type="button"
+                          onClick={() => setGroupFilter(groupFilter === group.id ? null : group.id)}
+                          className={chipClass(groupFilter === group.id)}
+                        >
+                          {localizedText(locale, group.title, group.titleZh)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -999,6 +1105,18 @@ export function PluginsPage() {
         onOpenChat={openSkillImportChat}
       />
 
+      {/* The plugin tab's add button opens the sources manager — adding a plugin means adding a
+          place to get one from, so the dialog is about sources rather than a single file. */}
+      <SourcesManager
+        open={sourcesOpen}
+        onClose={() => setSourcesOpen(false)}
+        sources={sources}
+        onAdd={(src) => setSources((prev) => [...prev, src])}
+        onRemove={(id) => setSources((prev) => prev.filter((s) => s.id !== id))}
+        onToggle={(id, on) =>
+          setSources((prev) => prev.map((s) => (s.id === id ? { ...s, enabled: on } : s)))
+        }
+      />
       {pendingBulk !== null && (
         <ConfirmModal
           open

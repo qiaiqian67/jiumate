@@ -1454,6 +1454,11 @@ export const en: Strings = {
     originBuiltin: "Built-in",
     originUser: "Installed by you",
     originBundled: "Bundled",
+    /** Why a bundled skill cannot be uninstalled on its own. */
+    bundledSkillNote:
+      "Bundled skill: can't be uninstalled on its own — it goes with its plugin, but can be switched on or off alone.",
+    /** Why a built-in cannot be uninstalled. */
+    builtinSkillNote: "Built-in skill: can't be uninstalled.",
     enable: "Enable",
     disable: "Disable",
     enabled: "Enabled",
@@ -1538,6 +1543,12 @@ export const en: Strings = {
     allCategories: "All",
     /** Add-a-skill button in the header: opens the same source dialog the Agent's Skills tab uses. */
     addSkill: "Add skill",
+    /** Plugin tab: opens the sources manager (adding a plugin means adding somewhere to get one). */
+    addPlugin: "Add plugin",
+    addPluginHint: "Add a plugin from a marketplace or local path",
+    /** Connectors tab: opens the registry's own add dialog. */
+    addConnector: "Add connector",
+    addConnectorHint: "Add an MCP service",
     addSkillHint: "Add a skill by source: the Agent selected up top runs the install in chat",
     /** Why the button is disabled: the install prompt has to land on some Agent. */
     addSkillNeedsAgent: "Select an Agent above first — the install prompt needs someone to run it",

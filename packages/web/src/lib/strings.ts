@@ -1423,6 +1423,10 @@ export const zh = {
     originBuiltin: "系统内置",
     originUser: "用户安装",
     originBundled: "插件捆绑",
+    /** Why a bundled skill cannot be uninstalled on its own. */
+    bundledSkillNote: "捆绑技能：不能单独卸载，随所属插件一并移除；可单独启用或禁用。",
+    /** Why a built-in cannot be uninstalled. */
+    builtinSkillNote: "系统内置技能：不可卸载。",
     /** Switch labels, shared by every surface's toggle. */
     enable: "启用",
     disable: "禁用",
@@ -1511,6 +1515,12 @@ export const zh = {
     allCategories: "全部",
     /** Add-a-skill button in the header: opens the same source dialog the Agent's Skills tab uses. */
     addSkill: "添加技能",
+    /** Plugin tab: opens the sources manager (adding a plugin means adding somewhere to get one). */
+    addPlugin: "添加插件",
+    addPluginHint: "从市场源或本地路径添加插件",
+    /** Connectors tab: opens the registry's own add dialog. */
+    addConnector: "添加连接器",
+    addConnectorHint: "添加一个 MCP 服务",
     addSkillHint: "按来源添加技能：安装由当前选中的 Agent 在聊天里执行",
     /** Why the button is disabled: the install prompt has to land on some Agent. */
     addSkillNeedsAgent: "先在顶部选择一个 Agent，安装提示词需要一个执行者",
