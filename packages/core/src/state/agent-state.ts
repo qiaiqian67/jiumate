@@ -12,6 +12,7 @@
  * come from `system_config.yaml`.
  */
 import fs from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import path from "node:path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import {
@@ -74,6 +75,7 @@ import {
   DEFAULT_PROJECT_ID,
   hooksDir,
   memoryDir,
+  pluginsDir,
   resolveRoot,
   scheduleDir,
   scratchpadDir,
@@ -717,6 +719,17 @@ export async function backupSkillDirectory(
 export interface InstalledSkill extends SkillMetadata {
   /** The raw content of `skills/<name>/icon.svg` — the plugin's icon for a library install, a custom one for a user-authored skill — copied alongside SKILL.md at install time; the field is omitted when missing (the frontend then draws the book glyph). */
   icon?: string;
+  /**
+   * The plugin this skill was bundled with — read off **where the file is**
+   * (`plugins/<id>/skills/<name>/`), never deduced from which skills happen to be installed.
+   * Absent for a standalone skill.
+   *
+   * This is the field that makes "bundled" structural rather than a recorded note. A skill that
+   * lives inside a plugin directory cannot be uninstalled on its own, because the only removal
+   * that reaches it takes the whole plugin with it; the UI's 「不可单独卸载」 is a consequence of
+   * the path, and holds for any code that reads this tree, not just the UI.
+   */
+  plugin?: string;
 }
 
 /**
@@ -736,28 +749,23 @@ export async function listInstalledSkills(
 ): Promise<InstalledSkill[]> {
   assertValidId("project_id", projectId);
   assertValidId("agent_id", agentId);
-  const dir = skillsDir(root, projectId, agentId);
-  let entries;
-  try {
-    entries = await fs.readdir(dir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
   const skills: InstalledSkill[] = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
+  // Read one `<parent>/<name>/SKILL.md` directory. Extracted because both trees are walked the
+  // same way and the two must not drift: a rule that changed in one and not the other would make
+  // a bundled skill behave differently from a standalone one of the same shape.
+  const readOne = async (parent: string, dirName: string): Promise<InstalledSkill | null> => {
     // A Skill name never starts with a dot (assertValidId), so a dot-prefixed directory is
     // this Agent's staging directory, mid-install or left behind by an interrupted one.
-    if (entry.name.startsWith(".")) continue;
+    if (dirName.startsWith(".")) return null;
     let raw: string;
     try {
-      raw = await fs.readFile(path.join(dir, entry.name, "SKILL.md"), "utf8");
+      raw = await fs.readFile(path.join(parent, dirName, "SKILL.md"), "utf8");
     } catch {
-      continue;
+      return null;
     }
     let icon: string | undefined;
     try {
-      icon = await fs.readFile(path.join(dir, entry.name, "icon.svg"), "utf8");
+      icon = await fs.readFile(path.join(parent, dirName, "icon.svg"), "utf8");
     } catch {
       // icon.svg is optional: missing means no custom icon.
     }
@@ -767,13 +775,88 @@ export async function listInstalledSkills(
     // directory name always wins — otherwise the model would read a nonexistent path using the
     // injected name, and the API couldn't uninstall it either.
     const parsed = parseSkillFrontmatter(raw);
-    skills.push({
+    return {
       ...(parsed ?? { description: "", version: "" }),
-      name: entry.name,
+      name: dirName,
       ...(icon !== undefined ? { icon } : {}),
-    });
+    };
+  };
+
+  // Standalone skills — the user's own and imported ones. Unchanged layout.
+  const standalone = skillsDir(root, projectId, agentId);
+  let entries: Dirent[];
+  try {
+    entries = await fs.readdir(standalone, { withFileTypes: true });
+  } catch {
+    entries = [];
   }
-  return skills.sort((a, b) => a.name.localeCompare(b.name));
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const one = await readOne(standalone, entry.name);
+    if (one !== null) skills.push(one);
+  }
+
+  // Bundled skills — `<plugins>/<name>@<marketplace>/skills/<name>/`. A skill's plugin is read
+  // off the path rather than deduced from which skills happen to be present, so the answer cannot
+  // be wrong: it is where the file is.
+  //
+  // Only a plugin that declares `enabled` as false is skipped. Absent means enabled, so a plugin
+  // installed before this flag existed keeps working rather than silently disappearing from every
+  // Agent that has it.
+  const pluginsRoot = pluginsDir(root, projectId, agentId);
+  let pluginEntries: Dirent[];
+  try {
+    pluginEntries = await fs.readdir(pluginsRoot, { withFileTypes: true });
+  } catch {
+    pluginEntries = [];
+  }
+  for (const pluginEntry of pluginEntries) {
+    if (!pluginEntry.isDirectory() || pluginEntry.name.startsWith(".")) continue;
+    const pluginRoot = path.join(pluginsRoot, pluginEntry.name);
+    if (await isPluginDisabled(pluginRoot)) continue;
+    const bundled = path.join(pluginRoot, "skills");
+    let bundledEntries: Dirent[];
+    try {
+      bundledEntries = await fs.readdir(bundled, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const bundledEntry of bundledEntries) {
+      if (!bundledEntry.isDirectory()) continue;
+      const one = await readOne(bundled, bundledEntry.name);
+      if (one !== null) skills.push({ ...one, plugin: pluginEntry.name });
+    }
+  }
+
+  // A bundled skill wins over a standalone one of the same name: it is the one whose owning
+  // plugin will remove it, so letting a stale flat copy shadow it would report a skill the user
+  // cannot actually uninstall through its plugin. Sorting by name keeps the order stable for both
+  // Prompt injection and API responses.
+  const byName = new Map<string, InstalledSkill>();
+  for (const skill of skills) {
+    const existing = byName.get(skill.name);
+    if (existing === undefined || skill.plugin !== undefined) byName.set(skill.name, skill);
+  }
+  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Whether a plugin directory is switched off.
+ *
+ * Reads `<pluginRoot>/manifest.json`'s `enabled` flag. A missing, unparseable, or flagless
+ * manifest reads as enabled — the conservative direction, because the alternative is a plugin
+ * vanishing from every Agent on the strength of a file that may simply not have been written yet.
+ */
+async function isPluginDisabled(pluginRoot: string): Promise<boolean> {
+  try {
+    const raw = await fs.readFile(path.join(pluginRoot, "manifest.json"), "utf8");
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return false;
+    const enabled = (parsed as { enabled?: unknown }).enabled;
+    return enabled === false;
+  } catch {
+    return false;
+  }
 }
 
 /**

@@ -134,6 +134,21 @@ export function skillsDir(root: string, projectId: string, agentId: string): str
   return path.join(agentStateDir(root, projectId, agentId), "skills");
 }
 
+/**
+ * `<agentStateDir>/plugins`: the installed plugins, one directory per plugin id.
+ *
+ * Step 3 of the storage change: a bundled skill belongs to a plugin by **location**, so
+ * "which plugin is this skill from" stops being a recorded note that new code could forget to
+ * write and becomes the path itself. A plugin id is `<name>@<marketplace>`, matching the
+ * convention the ecosystem uses, so the origin is readable off the directory name.
+ *
+ * Reads both this tree and {@link skillsDir} today (see listInstalledSkills); the install path
+ * switches over in the same step that starts writing here, so no state can end up in neither.
+ */
+export function pluginsDir(root: string, projectId: string, agentId: string): string {
+  return path.join(agentStateDir(root, projectId, agentId), "plugins");
+}
+
 /** `<agentStateDir>/hooks`: the installed hook packages, one directory per plugin (see agent-state.ts installHook). */
 export function hooksDir(root: string, projectId: string, agentId: string): string {
   return path.join(agentStateDir(root, projectId, agentId), "hooks");

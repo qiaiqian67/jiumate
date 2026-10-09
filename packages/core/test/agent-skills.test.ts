@@ -17,6 +17,7 @@ import {
   assembleSystemPrompt,
   installSkill,
   listInstalledSkills,
+  pluginsDir,
   removeSkill,
   skillMetadataSection,
   skillsDir,
@@ -249,5 +250,105 @@ describe("skillMetadataSection / assembleSystemPrompt injection", () => {
     const empty = assembleSystemPrompt(state);
     expect(empty).toBe(["before", "# Agent Rules", "", "after"].join("\n"));
     expect(empty).not.toContain(SKILL_METADATA_PLACEHOLDER);
+  });
+});
+
+/**
+ * Step 1 of the storage change: the collection layer reads `skills/` **and**
+ * `plugins/<id>/skills/`, and a skill's owning plugin comes off its path rather than being
+ * inferred from which skills happen to be present.
+ */
+describe("listInstalledSkills across both trees", () => {
+  /** Lays down a plugin directory in the shape the installer will write. */
+  const writePlugin = async (
+    pluginId: string,
+    bundled: Record<string, string>,
+    manifest?: Record<string, unknown>,
+  ): Promise<void> => {
+    const root = path.join(pluginsDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID), pluginId);
+    await fs.mkdir(root, { recursive: true });
+    if (manifest !== undefined) {
+      await fs.writeFile(path.join(root, "manifest.json"), JSON.stringify(manifest));
+    }
+    for (const [name, body] of Object.entries(bundled)) {
+      const dir = path.join(root, "skills", name);
+      await fs.mkdir(dir, { recursive: true });
+      // `description` lives in the frontmatter, not the body — parseSkillFrontmatter only reads
+      // the frontmatter, so a body-only description reads back as "".
+      await fs.writeFile(
+        path.join(dir, "SKILL.md"),
+        `---\nname: ${name}\ndescription: ${body}\n---\n\n${body}\n`,
+      );
+    }
+  };
+
+  it("lists bundled and standalone skills together, with the plugin read off the path", async () => {
+    await install("my-own", "mine");
+    await writePlugin("agent-tuning@jiumate-builtin", { "agent-evaluation": "from the plugin" });
+
+    const found = await list();
+    expect(found.map((s) => s.name)).toEqual(["agent-evaluation", "my-own"]);
+
+    const bundled = found.find((s) => s.name === "agent-evaluation")!;
+    // Structural, not inferred: the value came from the directory the file sits in.
+    expect(bundled.plugin).toBe("agent-tuning@jiumate-builtin");
+    expect(bundled.description).toBe("from the plugin");
+
+    // A standalone skill has no plugin — absent, not an empty string.
+    expect(found.find((s) => s.name === "my-own")!.plugin).toBeUndefined();
+  });
+
+  it("skips a plugin whose manifest says enabled: false", async () => {
+    await writePlugin(
+      "off@jiumate-builtin",
+      { "hidden-skill": "should not appear" },
+      { enabled: false },
+    );
+    expect((await list()).map((s) => s.name)).toEqual([]);
+  });
+
+  it("lists a plugin whose manifest is absent or flagless", async () => {
+    // Absent and flagless both mean enabled: the conservative direction, so a plugin installed
+    // before the flag existed keeps working instead of vanishing from every Agent.
+    await writePlugin("no-manifest@m", { a: "x" });
+    await writePlugin("flagless@m", { b: "y" }, { version: "1" });
+    expect((await list()).map((s) => s.name).sort()).toEqual(["a", "b"]);
+  });
+
+  it("survives an unparseable manifest rather than dropping the plugin", async () => {
+    const root = path.join(pluginsDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID), "bad@m");
+    await fs.mkdir(path.join(root, "skills", "s"), { recursive: true });
+    await fs.writeFile(
+      path.join(root, "skills", "s", "SKILL.md"),
+      "---\nname: s\ndescription: body\n---\n\nbody\n",
+    );
+    await fs.writeFile(path.join(root, "manifest.json"), "{ not json");
+    expect((await list()).map((s) => s.name)).toEqual(["s"]);
+  });
+
+  it("ignores staging directories and plugins without skills", async () => {
+    await writePlugin("empty@m", {});
+    // Dot-prefixed: mid-install staging, never a real plugin (same rule as skills/).
+    await writePlugin(".staging@m", { "half-written": "x" });
+    await install("real", "y");
+    expect((await list()).map((s) => s.name)).toEqual(["real"]);
+  });
+
+  it("lets a bundled skill win over a stale flat copy of the same name", async () => {
+    // The bundled one is the copy whose plugin will actually remove it, so shadowing it with the
+    // stale flat directory would advertise a skill the user cannot uninstall through its plugin.
+    await install("dup", "flat copy");
+    await writePlugin("p@m", { dup: "bundled copy" });
+    const found = await list();
+    expect(found).toHaveLength(1);
+    expect(found[0].description).toBe("bundled copy");
+    expect(found[0].plugin).toBe("p@m");
+  });
+
+  it("still returns only standalone skills when no plugins directory exists", async () => {
+    await install("solo", "just me");
+    const found = await list();
+    expect(found.map((s) => s.name)).toEqual(["solo"]);
+    expect(found[0].plugin).toBeUndefined();
   });
 });
