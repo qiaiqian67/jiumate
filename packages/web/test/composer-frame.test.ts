@@ -34,7 +34,15 @@ describe("homepage composer frame", () => {
   it("makes the gray a slab that surrounds the card, not a strip below it", () => {
     // The single wrapper owns the gray and the padding. `p-3` gives the small even margin the
     // reference shows on top and both sides; `pb-6` — far larger — is the gray run at the bottom.
-    expect(draftView).toMatch(/overflow-hidden rounded-2xl bg-gray-100 p-3 pb-6/);
+    //
+    // `overflow-hidden` used to lead this string. It was there to clip the card to the slab's
+    // radius, but overflow clips *every* descendant that leaves the box, and the composer opens
+    // four popovers upward (goal budget, `/` menu, skills, "+") — all sliced off at the card's
+    // edge, which is the reported bug. The radius needs no clipping: the card brings its own
+    // `rounded-lg` and nothing inside it that matters reaches a corner. `relative` replaces the
+    // overflow's other job, anchoring those `bottom-full` layers. See
+    // composer-popover-clipping.test.ts, which guards the popover half.
+    expect(draftView).toMatch(/relative rounded-2xl bg-gray-100 p-3 pb-6/);
   });
 
   it("has no second gray strip inside the slab", () => {
@@ -44,8 +52,9 @@ describe("homepage composer frame", () => {
   });
 
   it("clips the card to the slab's corners rather than giving it its own", () => {
-    // `overflow-hidden` on the slab is what squares off the card against the gray. A radius passed
-    // through cardClassName would draw a second set of corners inside the gray.
+    // The card carries no radius of its own through cardClassName — a radius there would draw a
+    // second set of corners inside the gray. Its `rounded-lg` is ChatInput's own default (see
+    // composer-popover-clipping.test.ts for why the slab no longer clips it).
     expect(draftView).toMatch(/cardClassName=""/);
     expect(draftView).not.toMatch(/cardClassName="[^"]*rounded/);
   });

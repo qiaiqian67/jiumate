@@ -718,21 +718,28 @@ export function DraftView({
             own padding is what produces the gray on every side, and `pb-6` — much larger than the
             `p-3` around — is the reference's clearest cue about where the extra gray belongs.
 
-            `overflow-hidden` so the card's corners are clipped by the slab's: it is a card lying
-            on a surface, not a card floating above one, and the reference shows no shadow of it
-            escaping the gray. */}
-        <div className="overflow-hidden rounded-2xl bg-gray-100 p-3 pb-6 dark:bg-gray-800/60">
+            No `overflow-hidden` here — that is the fix for the composer's popovers being cut off. The
+            wrapper's only job was clipping the card's corners to the slab's radius, but
+            `overflow-hidden` clips **every** descendant that leaves the box, and this composer
+            opens four of them upward (goal-budget editor, `/` command menu, skills picker, the
+            "+" menu) — all `absolute bottom-full`, all sliced off at the card's top edge, which
+            is what the reference screenshot shows.
+
+            The radius is preserved without any clipping: the card keeps its own `rounded-lg`,
+            and nothing inside it that matters reaches a corner — the only children are the chip
+            row, the textarea and the toolbar, all inset by the card's own `px-2.5`/`pt-2`. A
+            popover escaping upward is not a corner case to clip, it is the whole point of it
+            opening. `relative` is what lets those `bottom-full` layers anchor to the card. */}
+        <div className="relative rounded-2xl bg-gray-100 p-3 pb-6 dark:bg-gray-800/60">
           <ChatInput
             status="idle"
-            // No radius of its own: the slab clips it (overflow-hidden), so the card's corners are
-            // the slab's — which is what "lying on" reads as. A radius here would draw a
-            // second set of corners inside the gray, which is the mismatch that prompted the
-            // last round of changes.
-            // No ring and no focus-state change: the reference shows the composer looking the
-            // same whether or not it holds focus. `focusRing`, not a class — a ring-0 through
-            // cardClassName sorts before ring-2 in the built sheet and silently loses the
-            // cascade (see focusRing in chat-input.tsx).
+            // No clipping here either — see above. The card's own `rounded-lg` carries the shape
+            // and nothing inside it overflows except the popovers, which must be free to leave.
+            // A ring-0 through cardClassName would sort before ring-2 in the built sheet and
+            // silently lose the cascade, which is why `focusRing` is a prop instead.
             cardClassName=""
+            // No ring and no focus-state change: the reference shows the composer looking the
+            // same whether or not it holds focus.
             focusRing={false}
             controlRef={composerRef}
             onSend={onSend}
