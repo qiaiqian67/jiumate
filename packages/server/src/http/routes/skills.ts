@@ -288,12 +288,7 @@ export function projectSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
     await Promise.all(
       agentIds.map(async (agentId) => {
         try {
-          await migrateFlatBundledSkills(
-            deps.config.root,
-            projectId,
-            agentId,
-            libraryMembers,
-          );
+          await migrateFlatBundledSkills(deps.config.root, projectId, agentId, libraryMembers);
         } catch {
           // Best-effort: the worst case is that nothing moved, never that a Skill is lost.
         }

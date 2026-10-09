@@ -232,10 +232,14 @@ describe("buildInstalledSkillsView", () => {
     ]);
     const result = await buildInstalledSkillsView(root, projectId, [agentId], skillsByAgent);
 
-    // Attributed to the plugin the path said, not to one the skill set implied. The card carries
-    // the full id, because that is the directory the skills live in.
-    const plugin = result.plugins.find((p) => p.name === "agent-tuning@jiumate-builtin")!;
+    // Attributed to the plugin the path said, not to one the skill set implied.
+    //
+    // `name` is the library key, not the directory — every caller joins on it, and a card named
+    // `agent-tuning@jiumate-builtin` would not match `p.name === "agent-tuning"` anywhere. The id
+    // travels separately as `id`.
+    const plugin = result.plugins.find((p) => p.name === "agent-tuning")!;
     expect(plugin).toBeDefined();
+    expect(plugin.id).toBe("agent-tuning@jiumate-builtin");
     expect(plugin.skills.map((s) => s.name).sort()).toEqual([
       "agent-evaluation",
       "agent-initialization",
@@ -243,8 +247,10 @@ describe("buildInstalledSkillsView", () => {
     // The whole point: not inferred, because nothing was deduced.
     expect(plugin.inferred).toBe(false);
     expect(plugin.skills.every((s) => s.inferred)).toBe(false);
-    // The id, not the bare library name, is what a skill reports as its owner.
-    expect(plugin.skills.every((s) => s.pluginName === "agent-tuning@jiumate-builtin")).toBe(true);
+    // A Skill reports its owner as the bare library name too, so it joins against the same key the
+    // plugin cards are indexed by.
+    expect(plugin.skills.every((s) => s.pluginName === "agent-tuning")).toBe(true);
+    expect(plugin.skills.every((s) => s.plugin === "agent-tuning")).toBe(true);
     // And still not double-listed as standalone.
     expect(result.skills.map((s) => s.name)).toEqual([]);
   });

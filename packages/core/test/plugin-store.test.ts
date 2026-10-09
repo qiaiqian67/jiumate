@@ -380,10 +380,7 @@ describe("migrateFlatBundledSkills", () => {
       tmpRoot,
       DEFAULT_PROJECT_ID,
       DEFAULT_AGENT_ID,
-      libraryOf(
-        ["alpha", ["shared"]],
-        ["beta", ["shared"]],
-      ),
+      libraryOf(["alpha", ["shared"]], ["beta", ["shared"]]),
     );
 
     expect(report.movedSkills).toEqual([]);
@@ -406,10 +403,7 @@ describe("migrateFlatBundledSkills", () => {
     );
 
     expect(report.movedSkills.sort()).toEqual(["a", "b", "c"]);
-    expect(report.migrated.sort()).toEqual([
-      "other@jiumate-builtin",
-      "tuning@jiumate-builtin",
-    ]);
+    expect(report.migrated.sort()).toEqual(["other@jiumate-builtin", "tuning@jiumate-builtin"]);
   });
 
   it("writes a manifest for each migrated plugin, so the switch has something to rewrite", async () => {
