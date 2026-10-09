@@ -1455,6 +1455,14 @@ export const zh = {
      * 混进一个数字就会重演「19 个技能对 11 个插件，差的 8 个去哪了」。
      */
     installedTitle: (skills: number): string => `已安装技能 (${skills})`,
+    /** 连接器页的计数徒标，与技能页的「已安装」同一位置、同一形状。 */
+    connectorsCount: (n: number): string => `已连接 (${n})`,
+    /** 广场里的三个并列视图：按「是什么」筛，不是按「属于哪个分类」。 */
+    viewPlugins: "插件",
+    viewSkills: "技能",
+    viewHooks: "钩子",
+    /** 钩子卡片的副标题：它响应哪些钩子点。 */
+    hookPoints: (points: readonly string[]): string => `钩子：${points.join("、")}`,
     /** 全屏页的搜索框。 */
     searchInstalledPlaceholder: "搜索已安装的技能",
     searchInstalledLabel: "搜索已安装的技能",

@@ -70,6 +70,7 @@ import { Input } from "../../components/ui/input";
 import {
   ArrowLeftIcon,
   CheckIcon,
+  HOOK_ICON,
   PLUGIN_ICON,
   PlusIcon,
   SEND_ICON,
@@ -240,6 +241,19 @@ export function PluginsPage() {
   const [query, setQuery] = useState("");
   /** Active category chip (null = all): narrows the sections to one, like the reference chips. */
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
+  /**
+   * Which kind of thing the library is showing: a plugin, a bare skill, or a hook package.
+   *
+   * The reference layout puts these as three peer tabs over one card grid, and it is the right
+   * shape here because they really are three things a user looks for separately: a plugin as a
+   * bundle, one skill they want on its own, and a hook that has no skill at all. Filtering to a
+   * single kind rather than blending them stops "which of these do I install" being a question
+   * about cards of different shapes.
+   *
+   * Note this does not change what an install *does* — still the whole plugin, per the decision to
+   * keep installs at the plugin unit; it changes only which things are listed to choose from.
+   */
+  const [libraryView, setLibraryView] = useState<"plugins" | "skills" | "hooks">("plugins");
   /** Add-a-skill dialog (open flag + the source text the caller owns). */
   const [importOpen, setImportOpen] = useState(false);
   const [importSource, setImportSource] = useState("");
@@ -568,10 +582,20 @@ export function PluginsPage() {
    * entirely — an empty group header is noise, and browsing by category is still the point
    * of the page, so the query narrows what is there instead of replacing it with a flat list.
    */
+  /**
+   * The library narrowed by the search box: a plugin matches on its name and on whichever
+   * description applies to the active language, and a category left with no match drops out
+   * entirely — an empty group header is noise, and browsing by category is still the point
+   * of the page, so the query narrows what is there instead of replacing it with a flat list.
+   *
+   * Only the plugin view uses this. The skill and hook views are flat and do not go through a
+   * category at all (see {@link flatLibraryCards}), so mixing the two shapes into one variable
+   * would put a union on every read below for no gain.
+   */
   const visibleGroups = useMemo(() => {
-    if (groups === null) return null;
-    const byCategory = groupFilter === null ? groups : groups.filter((g) => g.id === groupFilter);
+    if (groups === null || libraryView !== "plugins") return null;
     const q = query.trim().toLowerCase();
+    const byCategory = groupFilter === null ? groups : groups.filter((g) => g.id === groupFilter);
     if (q === "") return byCategory;
     return byCategory
       .map((group) => ({
@@ -584,7 +608,54 @@ export function PluginsPage() {
         ),
       }))
       .filter((group) => group.plugins.length > 0);
-  }, [groups, query, locale, groupFilter]);
+  }, [groups, query, locale, groupFilter, libraryView]);
+
+  /**
+   * The skill and hook views as one flat card list.
+   *
+   * Flat rather than per category: a skill belongs to a plugin, but the question here is "which
+   * skill do I want", and nesting that answer under categories buries it a level deeper than it
+   * needs to be. The owning plugin rides on each card's meta line, so the relationship is stated
+   * without being the structure.
+   *
+   * A hook package is identified by its plugin — `installHook` writes `hooks/<plugin name>/` — so
+   * one card per plugin that ships one, naming the hook points it answers at rather than a
+   * description it has none of.
+   */
+  const flatLibraryCards = useMemo<LibraryCardEntry[]>(() => {
+    if (groups === null || libraryView === "plugins") return [];
+    const q = query.trim().toLowerCase();
+    const cards: LibraryCardEntry[] = [];
+    for (const group of groupFilter === null
+      ? groups
+      : groups.filter((g) => g.id === groupFilter)) {
+      for (const plugin of group.plugins) {
+        if (libraryView === "skills") {
+          for (const skill of plugin.skills) {
+            cards.push({
+              key: skill.name,
+              name: skill.name,
+              description: localizedText(locale, skill.description, skill.shortDescriptionZh),
+              ...(skill.icon !== undefined ? { icon: skill.icon } : {}),
+              meta: plugin.name,
+            });
+          }
+        } else if (plugin.hooks.length > 0) {
+          cards.push({
+            key: plugin.name,
+            name: plugin.name,
+            description: localizedText(locale, plugin.description, plugin.descriptionZh),
+            ...(plugin.icon !== undefined ? { icon: plugin.icon } : {}),
+            meta: S.plugins.hookPoints(plugin.hooks),
+          });
+        }
+      }
+    }
+    if (q === "") return cards;
+    return cards.filter((card) =>
+      [card.name, card.description, card.meta].join(" ").toLowerCase().includes(q),
+    );
+  }, [groups, query, locale, groupFilter, libraryView]);
 
   /**
    * The catalog narrowed by the same search box, on the same terms as the library above it: name
@@ -757,30 +828,70 @@ export function PluginsPage() {
               <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
                 {S.plugins.noMatch(query.trim())}
               </p>
+            ) : libraryView !== "plugins" ? (
+              /* The skill and hook views are one grid, not categories: the question is "which one
+                 do I want", and answering it one category deep would bury it. The owning plugin
+                 rides on each card's meta line, so the relationship is stated without being the
+                 structure. */
+              <div className="mt-5 grid grid-cols-1 gap-2.5 p-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {flatLibraryCards.map((card) => (
+                  <LibraryCard
+                    key={card.key}
+                    icon={card.icon}
+                    name={card.name}
+                    fallbackIcon={libraryView === "hooks" ? HOOK_ICON : BOOK_ICON}
+                    description={card.description}
+                    meta={card.meta}
+                  />
+                ))}
+              </div>
+            ) : visibleGroups === null ? (
+              <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+                {S.plugins.noMatch(query.trim())}
+              </p>
             ) : (
               <div className="mt-5">
+                {/* What kind of thing is listed, as the reference layout has it: three peer tabs
+                    over one grid. They are peers because a plugin, a single skill and a hook are
+                    three separate things to look for — a bundle, one unit of it, and something
+                    with no skill at all. Category chips stay below them and only narrow within the
+                    active view. */}
+                <Tabs
+                  items={[
+                    { key: "plugins", label: S.plugins.viewPlugins },
+                    { key: "skills", label: S.plugins.viewSkills },
+                    { key: "hooks", label: S.plugins.viewHooks },
+                  ]}
+                  active={libraryView}
+                  onChange={(key) => setLibraryView(key as typeof libraryView)}
+                  variant="pill"
+                />
+
                 {/* Category chips, as the reference layout has them: one row of categories, the
                     active one filled. Selecting a chip narrows to that category — the same
-                    relationship the search box has to the cards, one level up. */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setGroupFilter(null)}
-                    className={chipClass(groupFilter === null)}
-                  >
-                    {S.plugins.allCategories}
-                  </button>
-                  {(groups ?? []).map((group) => (
+                    relationship the search box has to the cards, one level up. Hidden for the flat
+                    views, where there is no category grouping left to narrow. */}
+                {libraryView === "plugins" && (
+                  <div className="mt-4 flex flex-wrap items-center gap-1.5">
                     <button
-                      key={group.id}
                       type="button"
-                      onClick={() => setGroupFilter(groupFilter === group.id ? null : group.id)}
-                      className={chipClass(groupFilter === group.id)}
+                      onClick={() => setGroupFilter(null)}
+                      className={chipClass(groupFilter === null)}
                     >
-                      {localizedText(locale, group.title, group.titleZh)}
+                      {S.plugins.allCategories}
                     </button>
-                  ))}
-                </div>
+                    {(groups ?? []).map((group) => (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onClick={() => setGroupFilter(groupFilter === group.id ? null : group.id)}
+                        className={chipClass(groupFilter === group.id)}
+                      >
+                        {localizedText(locale, group.title, group.titleZh)}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="mt-6 space-y-7">
                   {(visibleGroups ?? []).map((group) => {
@@ -904,6 +1015,21 @@ export function PluginsPage() {
  * Uses the app's own `agentDisplayName`, which falls back to the raw id — so an Agent deleted
  * since the catalog was fetched still reads as its id rather than as a blank.
  */
+/**
+ * One card in the flat skill / hook views.
+ *
+ * Declared here rather than inline because `visibleGroups` returns two different shapes (category
+ * groups for the plugin view, this flat list for the other two) and the render branch casts to it
+ * — one named type is what keeps that cast honest.
+ */
+type LibraryCardEntry = {
+  key: string;
+  name: string;
+  description: string;
+  icon?: string;
+  meta: string;
+};
+
 function agentNamesOf(agentIds: readonly string[], agents: readonly AgentSummary[]): string[] {
   return agentIds.map((id) => {
     const found = agents.find((a) => a.agentId === id);

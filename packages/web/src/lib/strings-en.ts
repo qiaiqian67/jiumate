@@ -1484,6 +1484,14 @@ export const en: Strings = {
      * 11 plugins — where did the other 8 go?" unanswerable.
      */
     installedTitle: (skills: number): string => `Installed skills (${skills})`,
+    /** The connector tab's count badge, in the same slot and shape as the skills one. */
+    connectorsCount: (n: number): string => `Connected (${n})`,
+    /** The library's three peer views: filtered by what something *is*, not by category. */
+    viewPlugins: "Plugins",
+    viewSkills: "Skills",
+    viewHooks: "Hooks",
+    /** A hook card's meta line: the hook points it answers at. */
+    hookPoints: (points: readonly string[]): string => `Hooks: ${points.join(", ")}`,
     /** The full-screen page's search box. */
     searchInstalledPlaceholder: "Search installed skills",
     searchInstalledLabel: "Search installed skills",

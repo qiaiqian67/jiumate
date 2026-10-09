@@ -714,11 +714,21 @@ export function DraftView({
             So the border and the ring live here, on the wrapper, and neither piece paints its own:
             the card is `border-0` with its own ring off, the strip has no border. One outline, one
             radius, one focus state — and the shade change is the only thing telling the halves
-            apart, which is the point of the frame. */}
-        <div className="rounded-lg border border-gray-300 transition-[border-color,box-shadow] duration-200 has-[:focus-within]:border-gray-500 has-[:focus-within]:ring-2 has-[:focus-within]:ring-gray-400/30 dark:border-gray-700 dark:has-[:focus-within]:border-gray-400">
+            apart, which is the point of the frame.
+
+            The radius follows the reference frame rather than the old all-round box: **top** two
+            corners rounded, the seam with the gray strip square. The two halves are one continuous
+            panel, so rounding the input's bottom edge would put a step in that seam and make the
+            strip read as a separate piece attached underneath instead of the same surface in a
+            second shade. The focus ring takes the strip's own gray, so focusing does not flash a
+            colour the panel does not otherwise contain. */}
+        <div className="rounded-t-lg border border-gray-300 transition-[border-color,box-shadow] duration-200 has-[:focus-within]:border-gray-500 has-[:focus-within]:ring-2 has-[:focus-within]:ring-gray-300/40 dark:border-gray-700 dark:has-[:focus-within]:ring-gray-500/40">
           <ChatInput
             status="idle"
-            cardClassName="rounded-b-none border-0 focus-within:ring-0"
+            // `pb-0` so the white input meets the gray strip flush. The card's own `pb-2` would otherwise
+            // leave a white gap between the two halves, and a gap is a seam: it reads as two
+            // stacked boxes instead of one panel whose colour changes halfway down.
+            cardClassName="rounded-t-lg rounded-b-none border-0 focus-within:ring-0 pb-0"
             controlRef={composerRef}
             onSend={onSend}
             onStop={async () => undefined}
@@ -745,8 +755,11 @@ export function DraftView({
             onTextChange={onTextChange}
           />
 
-          {/* Only the shade differs here — no border, no ring, no corner of its own. */}
-          <div className="rounded-b-lg bg-gray-200 px-3 py-2 dark:bg-gray-700/80">
+          {/* Only the shade differs here — no border, no ring, no corner of its own beyond the frame's
+            bottom two. `pt-3` above the controls is the reference's "the gray block shows less on
+            top than at the bottom": the strip is a visible shelf under the input, not a hairline,
+            so its own top padding is what gives it that height. */}
+          <div className="rounded-b-lg bg-gray-200 px-3 pb-3 pt-3 dark:bg-gray-700/80">
             <div className="flex flex-wrap items-center gap-2">
               <AgentSelect agents={agents} selected={selectedAgent} onSelect={selectAgent} />
               <WorkspaceSelect

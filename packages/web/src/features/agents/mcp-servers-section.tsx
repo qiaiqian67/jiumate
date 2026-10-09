@@ -16,7 +16,7 @@
  * decides which of the server's tool calls stop for approval, and nothing about what the
  * remote server is able to do.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
 import * as api from "../../api/endpoints";
 import type { McpServerTestResponse } from "@prismshadow/jiumate-server/api";
@@ -153,6 +153,17 @@ function targetOf(entry: MCPServerConfig): string {
   return args ? `${command} ${args}` : command;
 }
 
+/**
+ * Everything about an entry that is worth searching on: its name plus its connection target.
+ *
+ * Exported so the tab's search box matches on the same text the card shows. The alternative —
+ * each caller reading `entry.config` for `command`/`url`/`args` — is how a search ends up
+ * matching fields the user cannot see, and then finding nothing that is on screen.
+ */
+export function mcpSearchText(entry: MCPServerConfig): string {
+  return `${entry.name} ${targetOf(entry)}`.toLowerCase();
+}
+
 /** One row's bulk-test outcome ("pending" while its turn runs). */
 type RowTestResult = McpServerTestResponse | "pending";
 
@@ -232,13 +243,29 @@ export function agentMcpTarget(projectId: string, agentId: string): McpSectionTa
 export function McpServersSection({
   initial,
   target,
+  filter,
 }: {
   initial: MCPServerConfig[];
   target: McpSectionTarget;
+  /**
+   * Narrows which entries are **displayed**, by name and connection target.
+   *
+   * A filter rather than a filtered `initial` on purpose: the section holds the whole list and
+   * saves the whole list (`persist` replaces the registry), so handing it a subset would make any
+   * edit — even one to a visible entry — write back only what was shown and silently delete every
+   * entry the query had hidden. The predicate is applied to the view, so the state being edited
+   * stays whole whatever is on screen.
+   */
+  filter?: (entry: MCPServerConfig) => boolean;
 }) {
   const [servers, setServers] = useState<MCPServerConfig[]>(initial);
   const [busy, setBusy] = useState(false);
   const readOnly = target.readOnly ?? false;
+  /** `servers` narrowed for display only; every edit, index and save still refers to `servers`. */
+  const visible = useMemo(
+    () => (filter === undefined ? servers : servers.filter(filter)),
+    [servers, filter],
+  );
   // Modal state: editIndex null = adding, a number = editing that row; closed when form is null.
   const [form, setForm] = useState<McpServerFormState | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -477,49 +504,55 @@ export function McpServersSection({
         <InfoPopover label={S.agent.mcpServers}>{S.agent.mcpDesc}</InfoPopover>
       </p>
 
-      {servers.length === 0 ? (
+      {visible.length === 0 ? (
         <SettingsEmpty>{S.agent.mcpEmpty}</SettingsEmpty>
       ) : target.layout === "cards" ? (
         /* The browsing layout: one card per server, following the library's grid. The
            description is the entry's real connection target — an MCP server has no blurb to
            show, and the target is the thing that tells two servers apart. */
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-          {servers.map((entry, index) => (
-            <LibraryCard
-              key={entry.name}
-              name={entry.name}
-              fallbackIcon={CONNECTOR_ICON}
-              description={targetOf(entry)}
-              meta={`${transportOf(entry)} · ${permissionOf(entry)}`}
-              onOpen={() => setDetailIndex(index)}
-              action={
-                <div className="flex shrink-0 items-center">
-                  {!readOnly && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={busy}
-                        aria-label={`${S.common.edit} ${entry.name}`}
-                        onClick={() => openEdit(index)}
-                      >
-                        {S.common.edit}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={busy}
-                        aria-label={`${S.agent.mcpRemove} ${entry.name}`}
-                        onClick={() => setDeleting(index)}
-                      >
-                        {S.agent.mcpRemove}
-                      </Button>
-                    </>
-                  )}
-                </div>
-              }
-            />
-          ))}
+          {visible.map((entry) => {
+            // The index into the **full** list, not the visible one: every edit, delete and
+            // detail below addresses a position, and a filtered index would silently act on a
+            // neighbouring entry — the worst kind of wrong, since the right card opens.
+            const index = servers.indexOf(entry);
+            return (
+              <LibraryCard
+                key={entry.name}
+                name={entry.name}
+                fallbackIcon={CONNECTOR_ICON}
+                description={targetOf(entry)}
+                meta={`${transportOf(entry)} · ${permissionOf(entry)}`}
+                onOpen={() => setDetailIndex(index)}
+                action={
+                  <div className="flex shrink-0 items-center">
+                    {!readOnly && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={busy}
+                          aria-label={`${S.common.edit} ${entry.name}`}
+                          onClick={() => openEdit(index)}
+                        >
+                          {S.common.edit}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={busy}
+                          aria-label={`${S.agent.mcpRemove} ${entry.name}`}
+                          onClick={() => setDeleting(index)}
+                        >
+                          {S.agent.mcpRemove}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                }
+              />
+            );
+          })}
         </div>
       ) : (
         <div className="overflow-x-auto overflow-y-clip rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
@@ -548,50 +581,55 @@ export function McpServersSection({
               </tr>
             </thead>
             <tbody>
-              {servers.map((entry, index) => (
-                <tr
-                  key={entry.name}
-                  className="border-b border-gray-100 transition-colors duration-150 last:border-b-0 hover:bg-gray-50 dark:border-gray-800/60 dark:hover:bg-gray-800/40"
-                >
-                  <td className="px-3 py-2 font-mono text-xs">{entry.name}</td>
-                  <td className="px-3 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">
-                    {transportOf(entry)}
-                  </td>
-                  <td className="px-3 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">
-                    {permissionOf(entry)}
-                  </td>
-                  <td className="max-w-[360px] truncate px-3 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">
-                    {targetOf(entry)}
-                  </td>
-                  {showBadges && (
-                    <td className="px-3 py-2 text-right">
-                      <TestBadge result={rowResults.get(entry.name)} />
+              {visible.map((entry) => {
+                // Index into the full list, as on the cards branch: the edit/remove buttons below
+                // address positions, and a filtered index edits the wrong row.
+                const index = servers.indexOf(entry);
+                return (
+                  <tr
+                    key={entry.name}
+                    className="border-b border-gray-100 transition-colors duration-150 last:border-b-0 hover:bg-gray-50 dark:border-gray-800/60 dark:hover:bg-gray-800/40"
+                  >
+                    <td className="px-3 py-2 font-mono text-xs">{entry.name}</td>
+                    <td className="px-3 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">
+                      {transportOf(entry)}
                     </td>
-                  )}
-                  <td className="px-3 py-2 text-right whitespace-nowrap">
-                    {!readOnly && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => openEdit(index)}
-                        >
-                          {S.common.edit}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled={busy}
-                          onClick={() => setDeleting(index)}
-                        >
-                          {S.agent.mcpRemove}
-                        </Button>
-                      </>
+                    <td className="px-3 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">
+                      {permissionOf(entry)}
+                    </td>
+                    <td className="max-w-[360px] truncate px-3 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">
+                      {targetOf(entry)}
+                    </td>
+                    {showBadges && (
+                      <td className="px-3 py-2 text-right">
+                        <TestBadge result={rowResults.get(entry.name)} />
+                      </td>
                     )}
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-3 py-2 text-right whitespace-nowrap">
+                      {!readOnly && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => openEdit(index)}
+                          >
+                            {S.common.edit}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => setDeleting(index)}
+                          >
+                            {S.agent.mcpRemove}
+                          </Button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
