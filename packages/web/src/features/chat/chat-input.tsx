@@ -2668,24 +2668,8 @@ export function ChatInput({
                 direction={models && onChangeModel ? "down" : "up"}
               />
             )}
-            {/* 优化提示词 — rewriting a draft is a property of a composer, not of a page, so it
-                lives here and both the new-chat box and a live conversation's Claude Opus 5.5get it
-                without either host doing anything. It reads and writes the text through the handle
-                below rather than props (the earlier prop-from-ref version optimized a stale
-                draft), and resolves the Project itself, so no caller threads an id down for it.
-                After the "+" menu because that one is documented as leading the row, and it is
-                the least-used of the two, so the far-left slot keeps its established occupant.
-
-                `disabled` is **not** gated on `running`: the textarea stays editable while a
-                turn is in flight (that is how a follow-up is queued, and steering too), so
-                rewriting that queued text is a legitimate use — and a control that greys out
-                exactly when the user has just seen the model misread them is the wrong moment to
-                withhold it. It disables only while *its own* request is in flight. */}
-            <EnhancePromptControl
-              readText={getText}
-              subscribeText={subscribeText}
-              onReplace={setPrompt}
-            />
+            {/* 优化提示词 is mounted in the RIGHT group, between the voice button and Send —
+                see the comment there for why. */}
             <ApprovalModeSelect
               value={approvalMode}
               onChange={onChangeApprovalMode}
@@ -2814,6 +2798,19 @@ export function ChatInput({
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
               </svg>
             </button>
+            {/* 优化提示词 — between the voice button and Send, which is where the user reaches
+              for it: rewriting is the last thing done to a draft before it goes out, so it
+              belongs beside the action that sends rather than among the settings on the left.
+              In the **right** group, so it never scrolls away with the crowded left run — a
+              control you have to scroll to find is worse than no control at all. The group is
+              `shrink-0`, so this costs a fixed 32px slot; the voice icon and Send already spend
+              the same fixed width for the same reason (keeping the running-state row inside a
+              320px viewport). */}
+            <EnhancePromptControl
+              readText={getText}
+              subscribeText={subscribeText}
+              onReplace={setPrompt}
+            />
             {/* One action button, never two: while running an empty composer means "Stop"
               (abort), and typing turns the very same button into "Send" — which, mid-run,
               steers or queues per the remembered send mode (the "+" menu's settings row).

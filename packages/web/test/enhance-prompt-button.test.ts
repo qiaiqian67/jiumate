@@ -34,6 +34,33 @@ describe("the control is mounted in the Claude Opus 5.5, so both pages get it", 
     expect(chatInput).toMatch(/onReplace=\{setPrompt\}/);
   });
 
+  it("sits between the voice button and Send, in the right-hand group", () => {
+    // The requested position, asserted as *both* neighbours: mounting it somewhere else in the
+    // toolbar still satisfies a weaker "it is in the toolbar" check, and the whole point of this
+    // change was the position. Ordered by index, so it fails if either neighbour moves.
+    const voice = chatInput.indexOf("M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z");
+    const mount = chatInput.indexOf("<EnhancePromptControl");
+    // The send button: the up-arrow path, and its comment marker.
+    const send = chatInput.indexOf("One action button, never two");
+    expect(voice).toBeGreaterThan(-1);
+    expect(mount).toBeGreaterThan(voice);
+    expect(send).toBeGreaterThan(mount);
+  });
+
+  it("is in the never-shrinking group, so it cannot scroll out of reach", () => {
+    // The right group is `shrink-0`; the left one scrolls horizontally when crowded. A control
+    // you have to scroll to find is worse than no control, so the placement above is only
+    // correct together with this.
+    const rightGroup = chatInput.indexOf("flex shrink-0 items-center gap-2");
+    const mount = chatInput.indexOf("<EnhancePromptControl");
+    expect(rightGroup).toBeGreaterThan(-1);
+    expect(mount).toBeGreaterThan(rightGroup);
+  });
+
+  it("is mounted exactly once", () => {
+    expect(chatInput.match(/<EnhancePromptControl/g) ?? []).toHaveLength(1);
+  });
+
   it("is no longer on the draft page, which would leave the session page without it", () => {
     expect(draftView).not.toMatch(/EnhancePrompt(Control|Button)/);
   });
