@@ -119,7 +119,13 @@ export function searchText(item: {
   shortDescriptionZh?: string | null;
   category?: CategoryId;
 }): string {
-  return [item.name, item.description, item.shortDescription, item.shortDescriptionZh, item.category]
+  return [
+    item.name,
+    item.description,
+    item.shortDescription,
+    item.shortDescriptionZh,
+    item.category,
+  ]
     .filter((p): p is string => typeof p === "string" && p.length > 0)
     .join("\n")
     .toLowerCase();

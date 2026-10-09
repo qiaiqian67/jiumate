@@ -1463,7 +1463,8 @@ export const en: Strings = {
 
     // —— Affected-Agent confirmation ——
     /** Heading above the Agent list in the impact dialog. */
-    affectedAgentsCount: (n: number): string => `${n === 1 ? "1 agent is" : `${n} agents are`} using it:`,
+    affectedAgentsCount: (n: number): string =>
+      `${n === 1 ? "1 agent is" : `${n} agents are`} using it:`,
     /** Overflow line — never left implicit, so a truncated list is never read as the whole one. */
     affectedAgentsMore: (n: number): string => `${n} more not listed.`,
     /** Why an Agent is affected: installed, versus actively selected (the urgent one). */
@@ -1492,7 +1493,8 @@ export const en: Strings = {
 
     // —— Marketplace sources ——
     sourcesTitle: "Sources",
-    sourcesDesc: "Where plugins and skills come from — the official marketplace, third-party repos, or a local path.",
+    sourcesDesc:
+      "Where plugins and skills come from — the official marketplace, third-party repos, or a local path.",
     addSource: "Add source",
     sourceTypeMarket: "Marketplace",
     sourceTypeLocal: "Local path",

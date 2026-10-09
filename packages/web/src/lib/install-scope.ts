@@ -102,6 +102,12 @@ export const KEY_RULES: readonly KeyRule[] = [
     why: "Root font size — a readability preference of this display.",
   },
   {
+    kind: "family",
+    key: "jiumate.ext.",
+    scope: "browser",
+    why: "Extension on/off switches and user-defined categories (extension-state.ts). A preference of this person, not state belonging to an install: someone who has curated a category or deliberately switched something off means to keep that after upgrading or reinstalling the server. Sweeping it would silently re-enable items they turned off and scatter their categories — and unlike the draft cache, none of it is derived from an install id that could be re-fetched.",
+  },
+  {
     kind: "exact",
     key: "jiumate.accent",
     scope: "browser",

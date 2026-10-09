@@ -59,7 +59,10 @@ export function AffectedAgentsDialog({
 }: AffectedAgentsDialogProps) {
   // Sorted upstream by affectedAgents, but re-sorted here so the dialog is safe to call with a
   // list from anywhere — a dialog that reshuffles between opens reads as a glitch.
-  const rows = useMemo(() => [...affected].sort((a, b) => a.agentId.localeCompare(b.agentId)), [affected]);
+  const rows = useMemo(
+    () => [...affected].sort((a, b) => a.agentId.localeCompare(b.agentId)),
+    [affected],
+  );
   const shown = rows.slice(0, MAX_ROWS);
   const hidden = rows.length - shown.length;
 
@@ -91,7 +94,12 @@ export function AffectedAgentsDialog({
           <ul className="mt-2 divide-y divide-gray-100 rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-700">
             {shown.map((a) => (
               <li key={a.agentId} className="flex items-center gap-2 px-2.5 py-2">
-                <AgentAvatar id={a.agentId} name={a.displayName ?? a.agentId} size={20} className="shrink-0 rounded" />
+                <AgentAvatar
+                  id={a.agentId}
+                  name={a.displayName ?? a.agentId}
+                  size={20}
+                  className="shrink-0 rounded"
+                />
                 <span className="min-w-0 flex-1 truncate text-sm text-gray-800 dark:text-gray-100">
                   {a.displayName ?? a.agentId}
                 </span>
@@ -104,7 +112,9 @@ export function AffectedAgentsDialog({
                       : "shrink-0 text-xs text-gray-400 dark:text-gray-500"
                   }
                 >
-                  {a.reason === "selected" ? S.plugins.agentReasonSelected : S.plugins.agentReasonInstalled}
+                  {a.reason === "selected"
+                    ? S.plugins.agentReasonSelected
+                    : S.plugins.agentReasonInstalled}
                 </span>
               </li>
             ))}
@@ -118,7 +128,9 @@ export function AffectedAgentsDialog({
           )}
         </>
       ) : (
-        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{S.plugins.noAffectedAgents}</p>
+        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+          {S.plugins.noAffectedAgents}
+        </p>
       )}
     </Modal>
   );

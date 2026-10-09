@@ -21,9 +21,9 @@
  */
 import type { Category } from "./extension-model";
 
-const NS = "jiumate.ext";
-const STATE_KEY = `${NS}.state`;
-const CATEGORIES_KEY = `${NS}.categories`;
+const NS = "jiumate.ext.";
+const STATE_KEY = `${NS}state`;
+const CATEGORIES_KEY = `${NS}categories`;
 
 /**
  * Switch overrides: itemId -> false means "explicitly off". Absent means on.
@@ -69,7 +69,11 @@ function writeJson(key: string, value: unknown): void {
  * reinstalling the plugin starts from defaults. A standalone item is scoped by kind alone, since
  * two skills of the same name cannot be installed side by side anyway.
  */
-export function scopedId(kind: "plugin" | "skill" | "connector", name: string, parent?: string | null): string {
+export function scopedId(
+  kind: "plugin" | "skill" | "connector",
+  name: string,
+  parent?: string | null,
+): string {
   return parent ? `${kind}:${parent}/${name}` : `${kind}:${name}`;
 }
 
@@ -124,7 +128,10 @@ export function loadCategories(userId?: string | null): Category[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (c): c is Category =>
-      !!c && typeof c === "object" && typeof (c as Category).id === "string" && typeof (c as Category).name === "string",
+      !!c &&
+      typeof c === "object" &&
+      typeof (c as Category).id === "string" &&
+      typeof (c as Category).name === "string",
   );
 }
 
