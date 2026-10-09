@@ -1507,8 +1507,6 @@ export const zh = {
     /** The connectors tab's search box (the registry is a list of its own). */
     searchConnectorsPlaceholder: "搜索连接器",
     searchConnectorsLabel: "搜索连接器",
-    /** Count beside the search box: library plugins installed on the Agent selected right now. */
-    installedForAgent: (n: number): string => `当前 Agent 已装 ${n} 个`,
     /** The leading category chip: no filter. */
     allCategories: "全部",
     /** Add-a-skill button in the header: opens the same source dialog the Agent's Skills tab uses. */
@@ -1540,10 +1538,8 @@ export const zh = {
     installedTitle: (skills: number): string => `已安装技能 (${skills})`,
     /** 连接器页的计数徒标，与技能页的「已安装」同一位置、同一形状。 */
     connectorsCount: (n: number): string => `已连接 (${n})`,
-    /** 广场里的三个并列视图：按「是什么」筛，不是按「属于哪个分类」。 */
-    viewPlugins: "插件",
+    /** 技能 TAB 的副标签（插件库内成员视图）。 */
     viewSkills: "技能",
-    viewHooks: "钩子",
     /** 钩子卡片的副标题：它响应哪些钩子点。 */
     hookPoints: (points: readonly string[]): string => `钩子：${points.join("、")}`,
     /** 全屏页的搜索框。 */
@@ -1607,8 +1603,7 @@ export const zh = {
       `确定从 ${agent} 卸载 ${plugin} 吗？其已安装的技能与钩子文件（含本地改动）将被删除。`,
     /** The page's two tabs. "技能" is the plugin library flattened to what actually lands on an Agent. */
     tabSkills: "技能",
-    /** The inventory tab: what is installed, with origin and on/off. Distinct from the library. */
-    tabInstalled: "已安装",
+    tabPlugins: "插件",
     tabConnectors: "连接器",
     /** Connectors tab (features/plugins/connectors-tab.tsx): the Project's MCP server registry. */
     connectorsDesc:

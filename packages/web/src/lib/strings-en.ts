@@ -1534,8 +1534,6 @@ export const en: Strings = {
     /** The connectors tab's search box (the registry is a list of its own). */
     searchConnectorsPlaceholder: "Search connectors",
     searchConnectorsLabel: "Search connectors",
-    /** Count beside the search box: library plugins installed on the Agent selected right now. */
-    installedForAgent: (n: number): string => `${n} on this Agent`,
     /** The leading category chip: no filter. */
     allCategories: "All",
     /** Add-a-skill button in the header: opens the same source dialog the Agent's Skills tab uses. */
@@ -1566,10 +1564,8 @@ export const en: Strings = {
     installedTitle: (skills: number): string => `Installed skills (${skills})`,
     /** The connector tab's count badge, in the same slot and shape as the skills one. */
     connectorsCount: (n: number): string => `Connected (${n})`,
-    /** The library's three peer views: filtered by what something *is*, not by category. */
-    viewPlugins: "Plugins",
+    /** Sub-label for the skills tab (the flat member view inside the library). */
     viewSkills: "Skills",
-    viewHooks: "Hooks",
     /** A hook card's meta line: the hook points it answers at. */
     hookPoints: (points: readonly string[]): string => `Hooks: ${points.join(", ")}`,
     /** The full-screen page's search box. */
@@ -1636,8 +1632,7 @@ export const en: Strings = {
       `Uninstall ${plugin} from ${agent}? Its installed skill and hook files (local edits included) will be deleted.`,
     /** The page's two tabs. "Skills" is the plugin library flattened to what actually lands on an agent. */
     tabSkills: "Skills",
-    /** The inventory tab: what is installed, with origin and on/off. Distinct from the library. */
-    tabInstalled: "Installed",
+    tabPlugins: "Plugins",
     tabConnectors: "Connectors",
     /** Connectors tab (features/plugins/connectors-tab.tsx): the project's MCP server registry. */
     connectorsDesc:

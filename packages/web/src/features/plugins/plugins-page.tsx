@@ -226,7 +226,8 @@ export function pluginUpdatePlan(
 
 export function PluginsPage() {
   useDocumentTitle(S.nav.plugins);
-  const [tab, setTab] = useState<"skills" | "installed" | "connectors">("skills");
+  const [tab, setTab] = useState<"plugins" | "skills" | "connectors">("plugins");
+  const [libraryView, setLibraryView] = useState<"plugins" | "skills" | "hooks">("plugins");
   /**
    * Whether the installed-skills full-screen page is open.
    *
@@ -243,7 +244,13 @@ export function PluginsPage() {
   /** Active category chip (null = all): narrows the sections to one, like the reference chips. */
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
   /**
-   * Which kind of thing the library is showing: a plugin, a bare skill, or a hook package.
+   * Which kind of thing the library is showing.
+   *
+   * Drives the flat card grid only, and is set from the top tabs rather than by its own row: the
+   * reference has one set of tabs (插件 / 技能 / 连接器), and this is the "which members of a
+   * plugin do I show" switch behind the 技能 one. `hooks` is kept because a hook-only plugin still
+   * needs somewhere to list its hook points, even though no tab selects it directly yet — removing
+   * the value would strand that data rather than delete it.
    *
    * The reference layout puts these as three peer tabs over one card grid, and it is the right
    * shape here because they really are three things a user looks for separately: a plugin as a
@@ -254,7 +261,6 @@ export function PluginsPage() {
    * Note this does not change what an install *does* — still the whole plugin, per the decision to
    * keep installs at the plugin unit; it changes only which things are listed to choose from.
    */
-  const [libraryView, setLibraryView] = useState<"plugins" | "skills" | "hooks">("plugins");
   /** Add-a-skill dialog (open flag + the source text the caller owns). */
   const [importOpen, setImportOpen] = useState(false);
   const [importSource, setImportSource] = useState("");
@@ -721,18 +727,28 @@ export function PluginsPage() {
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <Tabs
             items={[
-              // Three top-level kinds, matching the reference: a plugin is the packaging unit
-              // (skills, hooks, or both — installable on its own), a skill is a standalone
-              // instruction, and a connector is an external MCP service. The reference's second
-              // row of tabs (插件 / 技能 / 钩子) is a *filter within the plugin list*, not a peer
-              // of these three, so it is not repeated here — a skill bundled inside a plugin is
-              // reachable through the plugin's detail view, never as its own top-level card.
+              // Three top-level kinds, exactly as the reference has them. 插件 is the packaging unit (skills,
+              // hooks, or both — installable whole); 技能 is a standalone instruction, and per the
+              // reference's own note the skills *inside* a plugin are NOT listed here, only the
+              // independent ones; 连接器 is an external MCP service.
+              //
+              // The reference's second row (插件 / 技能 / 钩子) is annotated 去掉 — it duplicated
+              // the top tabs with a coarser split, and 钩子 could never have been installable on
+              // its own (a hook ships inside a plugin), so its presence implied an action that
+              // does not exist. `libraryView` now drives only the flat skill/hook rendering that
+              // the top tabs select between.
+              { key: "plugins", label: S.plugins.tabPlugins },
               { key: "skills", label: S.plugins.tabSkills },
-              { key: "installed", label: S.plugins.tabInstalled },
               { key: "connectors", label: S.plugins.tabConnectors },
             ]}
             active={tab}
-            onChange={setTab}
+            onChange={(key) => {
+              setTab(key);
+              // The flat views hang off the top tabs now: 技能 shows standalone skills, and the
+              // plugin list is the categorised grid. Kept in one place so the two can never
+              // disagree about which is on screen.
+              setLibraryView(key === "plugins" ? "plugins" : "skills");
+            }}
             variant="pill"
           />
           <span className="min-w-0 flex-1" />
@@ -792,36 +808,13 @@ export function PluginsPage() {
           <div className="mt-6">
             <ConnectorsTab />
           </div>
-        ) : tab === "installed" ? (
+        ) : tab === "skills" && catalog !== null ? (
+          /* The reference is explicit: the skills tab lists **only standalone** skills — the ones
+             inside a plugin are not repeated here. So this passes `catalog.skills` alone, and not
+             the flattened set an origin-tab would need: a bundled skill appearing in this list
+             beside its plugin is exactly the duplication the reference rules out. */
           <div className="mt-6">
-            {catalog === null ? (
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                {Array.from({ length: 4 }, (_, i) => (
-                  <SkeletonCard key={i} className="p-4">
-                    <Skeleton className="h-4 w-32" />
-                  </SkeletonCard>
-                ))}
-              </div>
-            ) : (
-              /* Flattened: `catalog.skills` carries only the standalone ones, and a bundled skill
-                 lives under its plugin's `skills`. The tab distinguishes the two by origin, so it
-                 has to see both — reading only `catalog.skills` would make 「插件捆绑」永远为空. */
-              <SkillsTab
-                skills={[
-                  ...catalog.skills,
-                  ...catalog.plugins.flatMap((p) =>
-                    p.skills.map((s) => ({
-                      ...s,
-                      origin: "library" as const,
-                      pluginName: p.name,
-                      inferred: false,
-                      agents: p.agents,
-                    })),
-                  ),
-                ]}
-                agentNames={agentNameMap}
-              />
-            )}
+            <SkillsTab skills={catalog.skills} agentNames={agentNameMap} />
           </div>
         ) : (
           <>
@@ -891,17 +884,6 @@ export function PluginsPage() {
                     three separate things to look for — a bundle, one unit of it, and something
                     with no skill at all. Category chips stay below them and only narrow within the
                     active view. */}
-                <Tabs
-                  items={[
-                    { key: "plugins", label: S.plugins.viewPlugins },
-                    { key: "skills", label: S.plugins.viewSkills },
-                    { key: "hooks", label: S.plugins.viewHooks },
-                  ]}
-                  active={libraryView}
-                  onChange={(key) => setLibraryView(key as typeof libraryView)}
-                  variant="pill"
-                />
-
                 {/* Category chips, as the reference layout has them: one row of categories, the
                     active one filled. Selecting a chip narrows to that category — the same
                     relationship the search box has to the cards, one level up. Hidden for the flat
