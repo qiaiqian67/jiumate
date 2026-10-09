@@ -22,6 +22,14 @@ const SRC = fileURLToPath(new URL("../src", import.meta.url));
 const draftView = readFileSync(`${SRC}/features/chat/draft-view.tsx`, "utf8");
 const chatInput = readFileSync(`${SRC}/features/chat/chat-input.tsx`, "utf8");
 
+/**
+ * The one source line that paints the composer's card. Everything the draft page can turn off
+ * about focus lives in this string, so asserting on the line itself (rather than on the whole
+ * file) keeps "is this focus effect conditional?" a question with a single answer.
+ */
+const cardLine = (): string =>
+  chatInput.split("\n").find((l) => l.includes("@container rounded")) ?? "";
+
 describe("homepage composer frame", () => {
   it("makes the gray a slab that surrounds the card, not a strip below it", () => {
     // The single wrapper owns the gray and the padding. `p-3` gives the small even margin the
@@ -58,11 +66,32 @@ describe("homepage composer frame", () => {
     expect(draftView).not.toMatch(/cardClassName="[^"]*ring-0/);
   });
 
+  it("puts the focus border under the same prop as the ring", () => {
+    // The black frame reported after the ring was removed was NOT the ring — it was
+    // `focus-within:border-gray-500`, darkening the border from gray-300 to gray-500 on every
+    // click. Measured: 87.2% lightness → 55.1%, plus a 2px rgba(0,0,0,.12) ring shadow.
+    // Both, and the dark-mode variant, now ride the same conditional as the ring.
+    const line = cardLine();
+    const conditional = line.slice(line.indexOf('focusRing ? "'));
+    // Every focus-within effect must come from inside the ternary — none may sit in the
+    // always-on part of the class string, where it would apply even with focusRing={false}.
+    const alwaysOn = line.slice(0, line.indexOf("${focusRing"));
+    expect(alwaysOn).not.toMatch(/focus-within:border/);
+    expect(alwaysOn).not.toMatch(/focus-within:ring/);
+    expect(conditional).toMatch(
+      /focusRing \? "focus-within:border-gray-500 focus-within:ring-2 focus-within:ring-gray-400\/30 dark:focus-within:border-gray-400"/,
+    );
+  });
+
   it("keeps the ring for the callers that do not opt out", () => {
     // The session and subagent composers rely on the default; removing it globally to fix the
-    // draft page would quietly change two other screens.
+    // draft page would quietly change two other screens. It is a conditional, not a deletion —
+    // the border, ring and dark-mode border all still ship when the prop is on.
     expect(chatInput).toMatch(/focusRing = true/);
-    expect(chatInput).toMatch(/focusRing \? "focus-within:ring-2 focus-within:ring-gray-400\/30"/);
+    const conditional = cardLine().slice(cardLine().indexOf('focusRing ? "'));
+    expect(conditional).toMatch(/focus-within:ring-2/);
+    expect(conditional).toMatch(/focus-within:border-gray-500/);
+    expect(conditional).toMatch(/dark:focus-within:border-gray-400/);
   });
 
   it("draws no focus ring anywhere on the draft wrapper", () => {
