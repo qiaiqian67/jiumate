@@ -43,8 +43,17 @@ describe("the control is mounted in the Claude Opus 5.5, so both pages get it", 
     expect(control).toMatch(/if \(!projectId\) return null;/);
   });
 
-  it("disables itself while the run is busy, where the box is inert", () => {
-    expect(chatInput).toMatch(/disabled=\{running \|\| compacting \|\| busy\}/);
+  it("stays usable while a turn is in flight, since the Claude Opus 5.5itself is", () => {
+    // The textarea is never disabled mid-run — that is how a follow-up (or a steer) gets
+    // queued — so a control that greys out exactly when the user has just watched the model
+    // misread them withholds the fix at the moment it is wanted. It gates only on its own
+    // in-flight request, and takes no `disabled` prop at all.
+    // Scoped to the element itself: a `[\s\S]*?` that runs on finds the next `disabled=` in the
+    // whole file (SkillSelect's), which has nothing to do with this control.
+    const mount = chatInput.match(/<EnhancePromptControl[\s\S]*?\/>/)?.[0] ?? "";
+    expect(mount).not.toMatch(/disabled=/);
+    expect(control).not.toMatch(/disabled\?: boolean/);
+    expect(control).toMatch(/disabled=\{busy \|\| \(!isUndo && !hasDraft\)\}/);
   });
 });
 
@@ -91,7 +100,7 @@ describe("EnhancePromptControl", () => {
     // Restoring after the user edits would throw away their words for a version they have
     // already moved past — irreversible, so the control withdraws instead.
     expect(control).toMatch(
-      /const canRestore = restorePoint !== null && text === restorePoint\.rewritten && !busy && !disabled;/,
+      /const canRestore = restorePoint !== null && text === restorePoint\.rewritten && !busy;/,
     );
   });
 
@@ -114,7 +123,7 @@ describe("EnhancePromptControl", () => {
   });
 
   it("does not call the server at all for an empty draft", () => {
-    expect(control).toMatch(/disabled=\{disabled \|\| busy \|\| \(!isUndo && !hasDraft\)\}/);
+    expect(control).toMatch(/disabled=\{busy \|\| \(!isUndo && !hasDraft\)\}/);
     expect(control).toMatch(/if \(busy \|\| !draft\) return;/);
   });
 

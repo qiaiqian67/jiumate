@@ -61,15 +61,12 @@ interface EnhancePromptControlProps {
   subscribeText: (listener: (text: string) => void) => () => void;
   /** Applies a replacement to the text body — the rewrite, and the undo of it. */
   onReplace: (prompt: string) => void;
-  /** Whether the composer is mid-run: rewriting is pointless then, since the box is inert. */
-  disabled?: boolean;
 }
 
 export function EnhancePromptControl({
   readText,
   subscribeText,
   onReplace,
-  disabled = false,
 }: EnhancePromptControlProps) {
   /**
    * The Project whose default model does the rewriting. Read here rather than passed in: the
@@ -111,7 +108,7 @@ export function EnhancePromptControl({
    * edits it, restoring would throw away their words to bring back a version they have already
    * moved past — a trade that cannot be undone, so the control simply withdraws.
    */
-  const canRestore = restorePoint !== null && text === restorePoint.rewritten && !busy && !disabled;
+  const canRestore = restorePoint !== null && text === restorePoint.rewritten && !busy;
 
   const run = useCallback(async () => {
     const draft = readText().trim();
@@ -178,7 +175,7 @@ export function EnhancePromptControl({
       title={hint}
       aria-label={label}
       aria-busy={busy}
-      disabled={disabled || busy || (!isUndo && !hasDraft)}
+      disabled={busy || (!isUndo && !hasDraft)}
       onClick={() => (isUndo ? restoreOriginal() : void run())}
       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-gray-700/60 dark:hover:text-gray-100"
     >

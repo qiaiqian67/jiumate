@@ -2674,12 +2674,17 @@ export function ChatInput({
                 below rather than props (the earlier prop-from-ref version optimized a stale
                 draft), and resolves the Project itself, so no caller threads an id down for it.
                 After the "+" menu because that one is documented as leading the row, and it is
-                the least-used of the two, so the far-left slot keeps its established occupant. */}
+                the least-used of the two, so the far-left slot keeps its established occupant.
+
+                `disabled` is **not** gated on `running`: the textarea stays editable while a
+                turn is in flight (that is how a follow-up is queued, and steering too), so
+                rewriting that queued text is a legitimate use — and a control that greys out
+                exactly when the user has just seen the model misread them is the wrong moment to
+                withhold it. It disables only while *its own* request is in flight. */}
             <EnhancePromptControl
               readText={getText}
               subscribeText={subscribeText}
               onReplace={setPrompt}
-              disabled={running || compacting || busy}
             />
             <ApprovalModeSelect
               value={approvalMode}
