@@ -341,14 +341,14 @@ describe("listInstalledSkills across both trees", () => {
     await writePlugin("p@m", { dup: "bundled copy" });
     const found = await list();
     expect(found).toHaveLength(1);
-    expect(found[0].description).toBe("bundled copy");
-    expect(found[0].plugin).toBe("p@m");
+    expect(found[0]!.description).toBe("bundled copy");
+    expect(found[0]!.plugin).toBe("p@m");
   });
 
   it("still returns only standalone skills when no plugins directory exists", async () => {
     await install("solo", "just me");
     const found = await list();
     expect(found.map((s) => s.name)).toEqual(["solo"]);
-    expect(found[0].plugin).toBeUndefined();
+    expect(found[0]!.plugin).toBeUndefined();
   });
 });

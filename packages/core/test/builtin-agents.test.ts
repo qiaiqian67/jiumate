@@ -18,6 +18,7 @@ import {
   DEFAULT_PROJECT_ID,
   listInstalledSkills,
   loadAgentState,
+  pluginDir,
   provisionProjectAgents,
   skillsDir,
 } from "../src/state/index.js";
@@ -96,8 +97,21 @@ describe("provisionProjectAgents", () => {
 
     const installed = await listInstalledSkills(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID);
     expect(installed.map((s) => s.name).sort()).toEqual(preinstalledSkillNames());
-    // On-disk content matches the library's SKILL.md verbatim (install copies the full text).
-    const sdkMd = await fs.readFile(skillMdPath(DEFAULT_AGENT_ID, "jiumate-sdk"), "utf8");
+    // Every preinstalled Skill is bundled, so every one carries its plugin id — read off the
+    // directory it was installed into, not deduced from which Skills are present.
+    expect(installed.every((s) => typeof s.plugin === "string" && s.plugin.includes("@"))).toBe(true);
+    // On-disk content matches the library's SKILL.md verbatim (install copies the full text),
+    // read from where a bundled Skill now lives: inside its plugin's directory.
+    const sdk = installed.find((s) => s.name === "jiumate-sdk")!;
+    const sdkMd = await fs.readFile(
+      path.join(
+        pluginDir(tmpRoot, DEFAULT_PROJECT_ID, DEFAULT_AGENT_ID, sdk.plugin!),
+        "skills",
+        "jiumate-sdk",
+        "SKILL.md",
+      ),
+      "utf8",
+    );
     expect(sdkMd).toBe(librarySkill("jiumate-sdk")!.skill.content);
   });
 

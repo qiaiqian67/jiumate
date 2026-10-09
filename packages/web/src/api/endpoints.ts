@@ -1236,6 +1236,36 @@ export const uninstallPlugin = (projectId: string, agentId: string, name: string
     { method: "POST", body: JSON.stringify({ name }) },
   );
 
+/**
+ * Switches an installed plugin on or off for one Agent.
+ *
+ * Takes the plugin **id** (`<name>@<marketplace>`), which is the directory it is installed under —
+ * the same id the Skills report as their owner, so the UI never has to compose one from parts.
+ *
+ * This is a real switch, not a stored preference: a disabled plugin's Skills are absent from the
+ * next Session's system prompt, and the response reports the state actually written.
+ */
+export const setPluginEnabled = (projectId: string, agentId: string, id: string, enabled: boolean) =>
+  apiFetch<{ id: string; enabled: boolean }>(
+    `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}/skills/plugins/enabled`,
+    { method: "POST", body: JSON.stringify({ id, enabled }) },
+  );
+
+/** Every plugin installed on one Agent, with its members and the state of its switch. */
+export interface InstalledPluginEntry {
+  id: string;
+  name: string;
+  version: string;
+  enabled: boolean;
+  installedAt: number;
+  skills: string[];
+}
+
+export const getInstalledPlugins = (projectId: string, agentId: string) =>
+  apiFetch<{ plugins: InstalledPluginEntry[] }>(
+    `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}/skills/plugins/installed`,
+  );
+
 export const getAgentHooks = (projectId: string, agentId: string) =>
   apiFetch<AgentHooksResponse>(
     `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}/hooks`,

@@ -30,6 +30,11 @@ import {
   backupSkillDirectory,
   replaceSkillDirectory,
   skillsDir,
+  assertPluginId,
+  builtinPluginId,
+  listInstalledPlugins,
+  migrateFlatBundledSkills,
+  setPluginEnabled,
   parseSkillFrontmatter,
   LEGACY_SKILL_NAMES,
   PLUGIN_NAME_PATTERN,
@@ -270,6 +275,28 @@ export function projectSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
     deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
     const agents = await deps.agentService.listAgents(projectId);
     const agentIds = agents.map((a) => a.agentId).sort();
+    // Migrate before reading, so the first request after the upgrade already sees the new layout.
+    // Best-effort per Agent and never fatal: a Skill that cannot be moved stays readable from the
+    // flat tree (both are read), so the worst case is that nothing moved — not that the page fails.
+    await Promise.all(
+      agentIds.map(async (agentId) => {
+        try {
+          // The provenance record names the plugins this Agent has installed; the library is not
+          // consulted, because a plugin the current build no longer ships still has members on
+          // disk that belong in the right place.
+          const record = await readInstalls(deps.config.root, projectId, agentId);
+          await migrateFlatBundledSkills(
+            deps.config.root,
+            projectId,
+            agentId,
+            Object.keys(record.plugins),
+          );
+        } catch {
+          // Best-effort: a Skill that cannot be moved stays readable from the flat tree (both
+          // trees are read), so the worst case is that nothing moved — not that the page fails.
+        }
+      }),
+    );
     const skillsByAgent = new Map(
       await Promise.all(
         agentIds.map(async (agentId) => {
@@ -431,7 +458,13 @@ export function agentSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
     const library = libraryPlugin(pluginName);
     const skillNames = before?.skills ?? library?.skills.map((s) => s.name) ?? [];
     const hookNames = before?.hooks ?? (library?.hooks !== undefined ? [pluginName] : []);
-    const removed = await removePluginInstall(deps.config.root, projectId, agentId, pluginName);
+    // The id is what the plugins tree is keyed by; a bare name is accepted and resolved here so a
+    // pre-migration caller can still uninstall, and so the response keeps reporting the bare name
+    // the UI already knows the plugin by.
+    const installed = await listInstalledPlugins(deps.config.root, projectId, agentId);
+    const pluginId =
+      installed.find((p) => p.name === pluginName)?.id ?? builtinPluginId(pluginName);
+    const removed = await removePluginInstall(deps.config.root, projectId, agentId, pluginId);
     // Members the library names but the record did not (a legacy install whose record was lost)
     // still have to go, or "uninstall" would leave the plugin's Skills behind.
     for (const name of skillNames) {
@@ -456,6 +489,51 @@ export function agentSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
       removedHooks: [...new Set([...removed.removedHooks, ...hookNames])].sort(),
     });
   });
+
+  /**
+   * Switches a plugin on or off for one Agent.
+   *
+   * The first endpoint where disabling is *real* rather than a stored preference: the Skills are
+   * read from disk on every Session build, so a plugin with `enabled: false` contributes nothing to
+   * the prompt. The runtime is invalidated because a live Session's system prompt was assembled
+   * while the plugin was still on — without this the Agent would keep offering a skill the user has
+   * just switched off until it happened to be evicted.
+   */
+  app.post("/plugins/enabled", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    const agentId = requireValidId(c, "agentId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    await deps.agentConfigService.requireExists(projectId, agentId);
+    const body = await readJson(c);
+    const pluginId = requireString(body, "id");
+    try {
+      assertPluginId(pluginId);
+    } catch {
+      throw badRequest(`Invalid plugin id: ${pluginId}`);
+    }
+    const enabled = body.enabled;
+    if (typeof enabled !== "boolean") {
+      throw badRequest("enabled must be a boolean.");
+    }
+    const before = await listInstalledPlugins(deps.config.root, projectId, agentId);
+    if (!before.some((p) => p.id === pluginId)) {
+      throw new HttpError(404, "not_found", `Plugin is not installed: ${pluginId}`);
+    }
+    const written = await setPluginEnabled(deps.config.root, projectId, agentId, pluginId, enabled);
+    deps.manager.invalidateAgentRuntimes(projectId, agentId);
+    return c.json({ id: pluginId, enabled: written });
+  });
+
+  /** Every plugin installed on the Agent, with the state of its switch. */
+  app.get("/plugins/installed", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    const agentId = requireValidId(c, "agentId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    await deps.agentConfigService.requireExists(projectId, agentId);
+    const plugins = await listInstalledPlugins(deps.config.root, projectId, agentId);
+    return c.json({ plugins });
+  });
+
 
   const listResponse = async (
     projectId: string,

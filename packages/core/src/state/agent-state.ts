@@ -24,6 +24,15 @@ import {
 } from "../plugins/index.js";
 import type { ToolConfig, ToolDefinitionConfig } from "../interfaces/index.js";
 import { atomicWriteFile } from "../internal/atomic-write.js";
+import { assertSafeSkillFile } from "../internal/skill-file-path.js";
+import { assertValidId } from "../internal/valid-id.js";
+import {
+  assertPluginId,
+  builtinPluginId,
+  pluginDir,
+  pluginNameOf,
+  writePluginInstall,
+} from "./plugin-store.js";
 import {
   AGENT_ID_PLACEHOLDER,
   AGENTS_MD_PLACEHOLDER,
@@ -85,20 +94,8 @@ import {
 } from "./paths.js";
 
 /** project_id / agent_id / skill_name only allow letters, digits, underscore `_`, and hyphen `-` (prevents path traversal). */
-const ID_PATTERN = /^[A-Za-z0-9_-]+$/;
-export type IdKind = "project_id" | "agent_id" | "skill_name";
-
-export function isValidId(id: string): boolean {
-  return ID_PATTERN.test(id);
-}
-
-export function assertValidId(kind: IdKind, id: string): void {
-  if (!ID_PATTERN.test(id)) {
-    throw new Error(
-      `Invalid ${kind} ${JSON.stringify(id)}: only letters, digits, "_" and "-" are allowed.`,
-    );
-  }
-}
+export type { IdKind } from "../internal/valid-id.js";
+export { assertValidId, isValidId } from "../internal/valid-id.js";
 
 /** A loaded Agent State handle. */
 export interface AgentState {
@@ -461,19 +458,12 @@ function schedulesSection(
  * Guards a Skill auxiliary-file path (relative to the skill directory) before it's written:
  * rejects empty, absolute, backslash-bearing, and any `..`-segment path so a file entry can never
  * escape `skills/<name>/`. Mirrors the archive route's zip-slip check for the library-install path.
+ *
+ * Exported because `plugin-store.ts` writes the same auxiliary files into `plugins/<id>/skills/<n>/`
+ * and must enforce the identical rule — a second copy of this check is how the two layouts drift,
+ * and the drift would be a path escape in exactly one of them.
  */
-function assertSafeSkillFile(rel: string): void {
-  if (
-    rel.length === 0 ||
-    path.isAbsolute(rel) ||
-    rel.includes("\\") ||
-    rel.split("/").some((segment) => segment === "..")
-  ) {
-    throw new Error(
-      `Invalid skill file path ${JSON.stringify(rel)}: it must stay within the skill directory.`,
-    );
-  }
-}
+export { assertSafeSkillFile };
 
 /**
  * Installs a Skill into the target Agent: writes `skills/<name>/SKILL.md` verbatim (the full
@@ -545,7 +535,15 @@ export async function replaceSkillDirectory(
   }
 }
 
-/** Uninstalls a Skill: deletes the entire `skills/<name>/` directory; idempotent, no error if it doesn't exist. */
+/**
+ * Uninstalls a Skill: deletes the entire `skills/<name>/` directory; idempotent, no error if it doesn't exist.
+ *
+ * **A bundled Skill cannot be removed this way, and that is structural rather than a policy check.**
+ * A bundled Skill lives at `plugins/<id>/skills/<name>/`, not in `skills/`, so this function simply
+ * has no path that reaches it — there is nothing to guard against here, and adding a "is it bundled?"
+ * lookup would only create a second place where the answer could be got wrong. The two removal
+ * operations are `removeSkill` (standalone) and `removePluginInstall` (takes its Skills with it).
+ */
 export async function removeSkill(
   root: string,
   projectId: string,
@@ -609,32 +607,50 @@ async function forgetSkill(
 }
 
 /**
- * Removes a whole plugin install: every Skill directory it brought, its hook package if it had
- * one, and its record entry.
+ * Removes a whole plugin install: its directory under `plugins/<id>/` (which takes every bundled
+ * Skill with it), any pre-migration flat copies of those Skills in `skills/`, its hook package if
+ * it had one, and its record entry.
  *
  * This is the operation the per-skill delete could not express. Removing members one at a time was
  * possible but left the record claiming a plugin that no longer held anything, which is how a
  * "4 skills" card ends up listing three with no explanation.
+ *
+ * Takes the plugin **id** (`<name>@<marketplace>`). The record is keyed by bare name, so the name
+ * part is what looks it up — the id and the record key name the same plugin by two conventions, and
+ * conflating them is how a plugin ends up half-removed.
  */
 export async function removePluginInstall(
   root: string,
   projectId: string,
   agentId: string,
-  pluginName: string,
+  pluginId: string,
 ): Promise<{ removedSkills: string[]; removedHooks: string[] }> {
   assertValidId("project_id", projectId);
   assertValidId("agent_id", agentId);
+  assertPluginId(pluginId);
+  const pluginName = pluginNameOf(pluginId);
   const file = await readInstalls(root, projectId, agentId);
   const record = file.plugins[pluginName];
   const removedSkills: string[] = [];
-  for (const name of record?.skills ?? []) {
-    assertValidId("skill_name", name);
-    await fs.rm(path.join(skillsDir(root, projectId, agentId), name), {
-      recursive: true,
-      force: true,
-    });
-    removedSkills.push(name);
+
+  // The plugins directory first: that is where a migrated install's Skills live, so it removes the
+  // bulk in one step and is the only thing that can reach them at all.
+  const dir = pluginDir(root, projectId, agentId, pluginId);
+  if (await dirExists(dir)) {
+    await fs.rm(dir, { recursive: true, force: true });
+    for (const name of record?.skills ?? []) removedSkills.push(name);
+  } else {
+    // No directory: a pre-migration install, whose members were written flat into `skills/`.
+    for (const name of record?.skills ?? []) {
+      assertValidId("skill_name", name);
+      await fs.rm(path.join(skillsDir(root, projectId, agentId), name), {
+        recursive: true,
+        force: true,
+      });
+      removedSkills.push(name);
+    }
   }
+
   const removedHooks: string[] = [];
   for (const name of record?.hooks ?? []) {
     assertValidId("skill_name", name);
@@ -649,6 +665,15 @@ export async function removePluginInstall(
     for (const name of removedSkills) delete next.skills[name];
   });
   return { removedSkills, removedHooks };
+}
+
+/** Whether a directory exists (a plugin tree is absent until something is installed into it). */
+async function dirExists(dir: string): Promise<boolean> {
+  try {
+    return (await fs.stat(dir)).isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -860,19 +885,27 @@ async function isPluginDisabled(pluginRoot: string): Promise<boolean> {
 }
 
 /**
- * Installs one library plugin: every skill it ships through `installSkill`, and its hook
- * package (when it has one) through `installHook` — the same writers the library routes use,
- * so a plugin picked at Agent creation and one installed from the library land identically.
- * The plugin's icon lands with both: stamped onto each skill by the loader, and written beside
- * the hook package's manifest here.
+ * Installs one library plugin: its Skills into `plugins/<id>/skills/` and its hook package (when it
+ * has one) through `installHook`.
+ *
+ * **The Skills are no longer copied into `skills/`.** They live inside the plugin's own directory, so
+ * ownership is the path and a bundled Skill has no standalone removal that reaches it. This is the
+ * one behavioural change in the whole migration, and it is what makes 「bundled, uninstall-only-with-
+ * its-plugin」 a property of the layout rather than a rule the UI has to remember.
+ *
+ * Hooks are untouched: they already live in `hooks/<name>/`, which is unchanged.
+ *
+ * The provenance record is still written (see `writePluginInstall`) so a plugin-level upgrade knows
+ * which Skills it brought — but it is now history, not the thing that makes them bundled.
  */
 export async function installPlugin(
   root: string,
   projectId: string,
   agentId: string,
   plugin: LibraryPlugin,
+  id = builtinPluginId(plugin.name),
 ): Promise<void> {
-  for (const skill of plugin.skills) await installSkill(root, projectId, agentId, skill);
+  await writePluginInstall(root, projectId, agentId, plugin, id);
   if (plugin.hooks) {
     await installHook(
       root,
@@ -883,7 +916,6 @@ export async function installPlugin(
       plugin.icon,
     );
   }
-  await recordPluginInstall(root, projectId, agentId, plugin);
 }
 
 /**
