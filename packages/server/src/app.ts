@@ -133,6 +133,7 @@ import {
 } from "./services/preview-token.js";
 import type { PreviewTokenSigner } from "./services/preview-token.js";
 
+import { setPluginStoreRoot } from "@prismshadow/jiumate-core";
 import type { ControlEnvContext, ProxyEnvPolicy } from "@prismshadow/jiumate-core";
 import { declined } from "./hmr/hono-seam.js";
 import { AgentsRepo } from "./db/repos/agents.js";
@@ -166,6 +167,7 @@ import {
   agentPluginsRoutes,
   pluginLibraryRoutes,
 } from "./http/routes/plugins.js";
+import { pluginImportRoutes } from "./http/routes/plugin-import.js";
 import { agentTransferRoutes } from "./http/routes/agent-transfer.js";
 import { agentsRoutes } from "./http/routes/agents.js";
 import { dirsRoutes } from "./http/routes/dirs.js";
@@ -1216,6 +1218,12 @@ export function createApp(
 ): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
 
+  // Core reads locally-added plugins from a path it cannot know: the server's data root comes from
+  // its config, not from `JIUMATE_HOME` (see `setPluginStoreRoot`). Stating it here is what keeps
+  // an imported plugin's directory and the directory the library reads from the same place — a
+  // mismatch would report a successful import that is then invisible.
+  if (deps !== null) setPluginStoreRoot(deps.config.root);
+
   // Error recording is layered in a lambda wrapping onError: handleError stays a
   // pure function with unchanged behavior (HttpError is mapped as-is, unknown
   // exceptions are logged with a stack trace and collapsed to 500), and recording
@@ -1332,6 +1340,8 @@ export function createApp(
   // Project-level skill catalog: what skills exist across every Agent (see projectSkillsRoutes).
   app.route("/api/projects/:projectId/skills", projectSkillsRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId/plugins", agentPluginsRoutes(deps));
+  // Adding a plugin that is not in the shipped library: URL / archive / this machine (plugin-import.ts).
+  app.route("/api/projects/:projectId/plugins/import", pluginImportRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId/hooks", agentHooksRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId", agentTransferRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId/traces", agentTracesRoutes(deps));

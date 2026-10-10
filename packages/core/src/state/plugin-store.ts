@@ -21,12 +21,13 @@
  * belong to an installed plugin; anything it cannot attribute is left exactly where it is, because
  * guessing would claim ownership of a Skill the user installed deliberately on its own.
  */
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { atomicWriteFile } from "../internal/atomic-write.js";
 import { assertSafeSkillFile } from "../internal/skill-file-path.js";
 import { assertValidId } from "../internal/valid-id.js";
-import { pluginsDir, skillsDir } from "./paths.js";
+import { pluginsDir, skillsDir, localPluginsDir } from "./paths.js";
 import type { LibraryPlugin } from "../plugins/index.js";
 
 /** The marketplace that ships with the product. Its name is part of every built-in plugin's id. */
@@ -35,6 +36,42 @@ export const BUILTIN_MARKETPLACE = "jiumate-builtin";
 /** `<name>@<marketplace>` for a plugin installed from the built-in library. */
 export function builtinPluginId(name: string): string {
   return `${name}@${BUILTIN_MARKETPLACE}`;
+}
+
+/** The marketplace that stands for "the user brought this one here". */
+export const LOCAL_MARKETPLACE = "local";
+
+/**
+ * `<name>@local` for a plugin the user added from a URL, an archive or another Agent's tree.
+ *
+ * A distinct marketplace is what keeps an added plugin separate from the built-in one of the same
+ * name: an install is addressed by id, so `foo@local` and `foo@jiumate-builtin` are two entries that
+ * can be installed, upgraded and removed without either reaching the other.
+ */
+export function localPluginId(name: string): string {
+  return `${name}@${LOCAL_MARKETPLACE}`;
+}
+
+/**
+ * The id a plugin of this name is installed under — the copy the library actually holds.
+ *
+ * **An added copy wins over a built-in one of the same name.** A user who brings in `humanizer`
+ * expects what they get to be what they use; falling back to the built-in would install the app's
+ * version under the added plugin's request and report success. And when the name is built-in only,
+ * this is exactly `builtinPluginId`, so nothing changes for the shipped case.
+ *
+ * Existence is checked on disk rather than through `libraryPlugin`, because that resolves by name
+ * too and the two would be the same question asked twice.
+ */
+export function resolvePluginId(root: string, name: string): string {
+  try {
+    if (fsSync.existsSync(path.join(localPluginsDir(root), localPluginId(name)))) {
+      return localPluginId(name);
+    }
+  } catch {
+    // A store that cannot be read is not evidence of an added plugin; fall through to the default.
+  }
+  return builtinPluginId(name);
 }
 
 /**
@@ -84,6 +121,36 @@ export interface InstalledPluginManifest {
 }
 
 const manifestFile = "manifest.json";
+
+/**
+ * Deletes a plugin from the library — the added copy under `<root>/plugins/`, machine-wide.
+ *
+ * **This is the destructive one, and it is machine-wide on purpose.** `卸载` on a card means "this
+ * plugin should no longer be on my computer", which is a different act from taking one Agent's use
+ * of it away; taking that away is `setPluginEnabled(id, false)`, which deletes nothing. Confusing
+ * the two is how a user loses a plugin they meant to keep, so the card's confirm names the Agents
+ * still using it before this runs.
+ *
+ * **Refuses anything that is not an added plugin.** The id carries its own provenance (`@local`,
+ * `@market`), and a built-in plugin's files do not live in this store at all — deleting by path
+ * there would either fail obscurely or, worse, reach a directory it should not.
+ *
+ * **A missing directory is a success.** The user asked for it not to be there, and it is not there;
+ * reporting a failure would make an already-repeated action look broken.
+ */
+export async function removeLocalPlugin(root: string, id: string): Promise<void> {
+  assertPluginId(id);
+  if (!id.endsWith(`@${LOCAL_MARKETPLACE}`)) {
+    throw new Error(`${id} is not a plugin you added, so there is nothing to delete.`);
+  }
+  const dir = path.join(localPluginsDir(root), id);
+  try {
+    await fs.rm(dir, { recursive: true, force: true });
+  } catch (e) {
+    // ENOENT means the goal is already met. Anything else (a lock, a permission) is real.
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+  }
+}
 
 /** `<agentState>/plugins/<id>`. */
 export function pluginDir(root: string, projectId: string, agentId: string, id: string): string {
@@ -257,6 +324,18 @@ export async function listInstalledPlugins(
   projectId: string,
   agentId: string,
 ): Promise<InstalledPluginEntry[]> {
+  // Reconcile before reading, so no caller can see the pre-fix state. Done here rather than in a
+  // route because this is the function every reader goes through — putting it in one endpoint would
+  // leave the others able to observe a plugin twice, or a switch that addresses the wrong
+  // directory. Best-effort and cheap: it is a readdir plus at most one rename per stale entry, and
+  // after the first run there is nothing stale left to find.
+  try {
+    await reconcilePluginIds(root, projectId, agentId);
+  } catch {
+    // A repair that cannot run must not stop the listing. The pre-fix tree still works; it is only
+    // inconsistent, and the next call tries again.
+  }
+
   const base = pluginsDir(root, projectId, agentId);
   let entries;
   try {
@@ -299,6 +378,145 @@ export async function listInstalledPlugins(
     });
   }
   return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/**
+ * Merges install directories whose ids no longer match where the plugin actually lives.
+ *
+ * **The problem.** An install directory is named after the plugin id (`<name>@local` for one the
+ * user added, `<name>@jiumate-builtin` for one that shipped). Before `resolvePluginId`, a plugin the
+ * user added was written under the *built-in* id. A machine that installed one before the fix has
+ * both directories, they carry the same Skills, and the Agent reads both — so:
+ *
+ *   · 禁用 only turns off the directory it was given, and the other keeps serving its Skills;
+ *   · the plugin page lists it twice, under two ids, with two switches;
+ *   · deleting one leaves the other behind, and the plugin "cannot be removed".
+ *
+ * None of that is diagnosable from the UI, which is why it is cleaned up rather than documented.
+ *
+ * **Merged into the id the library resolves, and the stale copy is removed.** The current id wins
+ * because that is what the switches and the routes address; if only the stale one exists it is
+ * renamed, not copied, so no install is duplicated. A merge never loses Skills — both trees are
+ * merged — but it **does** prefer the current copy on a name collision, because two copies of one
+ * Skill under the same directory is the situation being repaired.
+ *
+ * **Switch state comes from the stale copy when the current one has none**, so a disabled plugin
+ * does not come back enabled just because it was migrated. Absent still means enabled everywhere
+ * else, so this only ever preserves a decision the user actually made.
+ *
+ * **Best-effort by design: any failure leaves the tree exactly as it was.** The pre-fix state is
+ * ugly but functional — the Agent can still use the plugin. A cleanup that can break a working
+ * install is a worse trade than a duplicate directory.
+ */
+export async function reconcilePluginIds(
+  root: string,
+  projectId: string,
+  agentId: string,
+): Promise<{ renamed: string[]; removed: string[] }> {
+  assertValidId("project_id", projectId);
+  assertValidId("agent_id", agentId);
+  const renamed: string[] = [];
+  const removed: string[] = [];
+
+  let entries: fsSync.Dirent[];
+  try {
+    entries = await fs.readdir(pluginsDir(root, projectId, agentId), { withFileTypes: true });
+  } catch {
+    return { renamed, removed };
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
+    const staleId = entry.name;
+    const pluginName = pluginNameOf(staleId);
+    if (pluginName === "") continue;
+    const correctId = resolvePluginId(root, pluginName);
+    // Already the right id, or a built-in whose id the library also resolves: nothing to do.
+    if (correctId === staleId) continue;
+
+    // **Only ever move TOWARDS `@local`, never away from it.** `resolvePluginId` answers the
+    // built-in id when the store holds no added copy — which is the case for a plugin the user
+    // genuinely added and then deleted, or whose store entry was lost. Renaming in that direction
+    // would relabel a correctly-installed added plugin as a built-in one, which is a *new* wrong
+    // state introduced by the repair. The damage this function exists to undo is only ever
+    // "added plugin filed under the built-in id", so that is the only move it makes.
+    if (correctId !== localPluginId(pluginName)) continue;
+
+    const base = pluginsDir(root, projectId, agentId);
+    const staleDir = path.join(base, staleId);
+    const correctDir = path.join(base, correctId);
+    const correctExists = await dirExists(correctDir);
+    try {
+      if (correctExists) {
+        // Both present: fold the stale one's Skills into the current one, then drop it. The
+        // reverse order would leave a window where a Skill exists twice.
+        await mergeSkillDirs(staleDir, correctDir);
+        // Carry the switch across: the current manifest wins when it has an opinion, and the
+        // stale one supplies it otherwise — see the note above.
+        await carryEnabled(staleDir, correctDir);
+        await fs.rm(staleDir, { recursive: true, force: true });
+        removed.push(staleId);
+      } else {
+        // Only the stale one: rename it. Cheaper and safer than copying, and leaves no duplicate.
+        await fs.rename(staleDir, correctDir);
+        renamed.push(staleId);
+      }
+    } catch {
+      // Left exactly as found — see the note above.
+    }
+  }
+  return { renamed, removed };
+}
+
+/**
+ * Copies any Skill from `from` that `to` does not already have, leaving existing ones alone.
+ *
+ * **Only adds; never overwrites.** The current directory is the one the library and the routes
+ * address, so its copy of a Skill is the live one, and a local edit made there is worth more than
+ * the copy written under a stale id.
+ */
+async function mergeSkillDirs(from: string, to: string): Promise<void> {
+  let entries: fsSync.Dirent[];
+  try {
+    entries = await fs.readdir(path.join(from, "skills"), { withFileTypes: true });
+  } catch {
+    return; // A plugin with no Skills legitimately has no skills/ directory.
+  }
+  const targetRoot = path.join(to, "skills");
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
+    const dest = path.join(targetRoot, entry.name);
+    if (await dirExists(dest)) continue;
+    await fs.mkdir(targetRoot, { recursive: true });
+    await fs.cp(path.join(from, "skills", entry.name), dest, { recursive: true });
+  }
+}
+
+/**
+ * Copies the stale copy's `enabled` onto the current manifest when the current one has none.
+ *
+ * A manifest with no `enabled` key means enabled (the rule every reader uses), so writing `false`
+ * from a disabled stale copy is the one case where preserving the user's decision matters. An
+ * absent stale manifest means there was no decision to preserve and nothing is written.
+ */
+async function carryEnabled(from: string, to: string): Promise<void> {
+  const read = async (dir: string): Promise<InstalledPluginManifest | null> => {
+    try {
+      const parsed: unknown = JSON.parse(await fs.readFile(path.join(dir, manifestFile), "utf8"));
+      return parsed && typeof parsed === "object" ? (parsed as InstalledPluginManifest) : null;
+    } catch {
+      return null;
+    }
+  };
+  const stale = await read(from);
+  if (stale === null || typeof stale.enabled !== "boolean") return;
+  const current = await read(to);
+  if (current !== null && typeof current.enabled === "boolean") return;
+  const merged: InstalledPluginManifest = {
+    ...(current ?? { id: pluginNameOf(path.basename(to)), version: "", installedAt: Date.now() }),
+    enabled: stale.enabled,
+  };
+  await atomicWriteFile(path.join(to, manifestFile), `${JSON.stringify(merged, null, 2)}\n`);
 }
 
 /** What a migration moved, so a caller can report it rather than guess. */

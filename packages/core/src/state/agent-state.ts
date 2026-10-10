@@ -31,6 +31,7 @@ import {
   builtinPluginId,
   pluginDir,
   pluginNameOf,
+  resolvePluginId,
   writePluginInstall,
 } from "./plugin-store.js";
 import {
@@ -897,13 +898,20 @@ async function isPluginDisabled(pluginRoot: string): Promise<boolean> {
  *
  * The provenance record is still written (see `writePluginInstall`) so a plugin-level upgrade knows
  * which Skills it brought — but it is now history, not the thing that makes them bundled.
+ *
+ * **`id` defaults to the one the library resolves for this plugin, not to the built-in id.** A
+ * plugin the user added has an `@local` id, and installing it under the built-in id would put two
+ * different plugins — one shipped, one added — into one directory under one name. The visible
+ * symptoms are that 卸载 (which refuses built-in ids) refuses to delete a plugin the user added,
+ * and that deleting it takes the built-in one with it. `resolvePluginId` is the single place that
+ * knows which copy of a name the library holds.
  */
 export async function installPlugin(
   root: string,
   projectId: string,
   agentId: string,
   plugin: LibraryPlugin,
-  id = builtinPluginId(plugin.name),
+  id = resolvePluginId(root, plugin.name),
 ): Promise<void> {
   await writePluginInstall(root, projectId, agentId, plugin, id);
   if (plugin.hooks) {

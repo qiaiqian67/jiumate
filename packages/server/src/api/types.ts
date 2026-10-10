@@ -3329,6 +3329,112 @@ export interface PluginLibraryResponse {
   groups: PluginGroupItem[];
 }
 
+/** A plugin package found on this machine (see server/http/routes/plugin-import.ts). */
+export interface DiscoveredPluginItem {
+  /** The plugin's name, as the library keys it. */
+  name: string;
+  /** Where it was found, absolute — shown so a user can recognise their own plugin. */
+  path: string;
+  /** Which probe found it: a known Agent's plugin directory, or the path the user picked. */
+  origin: "known" | "manual";
+  /** The manifest's `YYYY-MM-DD.N` version. */
+  version: string;
+  /** Empty rather than absent, so the UI needs no null check. */
+  description: string;
+  /** The manifest's Chinese description, when it ships one. */
+  descriptionZh?: string;
+  /** Its skills, by name — enough for a preview row without shipping every SKILL.md body. */
+  skills: { name: string; description: string }[];
+  /** This library already has a plugin of this name; importing would only overwrite it. */
+  alreadyInstalled: boolean;
+}
+
+/**
+ * A directory the discovery scan probed.
+ *
+ * Reported whether or not it exists: a user whose Agent installs somewhere else needs to see which
+ * places were checked to understand why nothing was found.
+ */
+export interface PluginProbeItem {
+  path: string;
+  /** Which Agent's tree this is — what the user will recognise it by. */
+  label: string;
+  exists: boolean;
+}
+
+export interface PluginImportDiscoverResponse {
+  plugins: DiscoveredPluginItem[];
+  probes: PluginProbeItem[];
+}
+
+/** The result of any successful import, whatever the source. */
+export interface PluginImportResult {
+  /** The installed id, `<name>@local`. */
+  id: string;
+  /** The plugin's name. */
+  name: string;
+}
+
+/**
+ * What importing a directory of plugins produced.
+ *
+ * **`added` and `failed` are both reported, and both can be non-empty.** A folder of ten plugins
+ * where one has an unreadable manifest imports nine and says which one did not; the alternative —
+ * refusing all ten — makes the button useless on any real collection. Nothing here is installed
+ * into any Agent: adding a directory puts the plugins on this machine, 待启用.
+ */
+export interface PluginImportBatchResponse {
+  added: PluginImportResult[];
+  /** Per-plugin refusals, with the reason. Empty when everything imported. */
+  failed: { name: string; reason: string }[];
+}
+
+/** What deleting an added plugin reports back. */
+export interface PluginDeleteResponse {
+  id: string;
+  /**
+   * The Agents that had it installed, read before the delete.
+   *
+   * **Not filtered by enabled state.** A disabled plugin is still installed, and omitting it would
+   * make the confirm read "no Agent is affected" when several are — a claim the user only finds out
+   * was wrong after the files are gone.
+   */
+  affectedAgents: string[];
+}
+
+/**
+ * What an upgrade attempt found.
+ *
+ * **`upgradable: false` means "there is nothing to check against"** — a plugin added from a folder
+ * has no remote. It is not the same as "already current", which is `upgradable: true, upgraded:
+ * false`. The client says different things for the two, because one is a reason the button does
+ * nothing and the other is the answer to a question the user asked.
+ */
+export interface PluginUpgradeResponse {
+  id: string;
+  /** Whether a newer version was found and written over the installed one. */
+  upgraded: boolean;
+  /** Whether there was a source to check at all. */
+  upgradable: boolean;
+  /** The version now installed, present when `upgraded`. */
+  version?: string;
+}
+
+export type PluginImportLocalResponse = PluginImportResult;
+export type PluginImportArchiveResponse = PluginImportResult;
+
+/**
+ * The result of importing from a repository URL, plus where it was fetched from.
+ *
+ * `sourceUrl` is returned because the client shows it: an import that silently copies code from
+ * somewhere the user cannot see is one they have to trust, and being able to see (and later
+ * re-check) the exact address is the difference between trusting and hoping.
+ */
+export interface PluginImportUrlResponse extends PluginImportResult {
+  /** The archive URL that was resolved from what the user pasted. */
+  sourceUrl: string;
+}
+
 /**
  * GET /api/plugins/:plugin/files: everything a library plugin ships, for the detail view's file
  * browser — each skill's installable SKILL.md and auxiliary files under `skills/<name>/`, the

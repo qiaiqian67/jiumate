@@ -25,9 +25,12 @@
  * format, the versions and the built-in library.
  */
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { localPluginsDir } from "../state/paths.js";
+import { pluginNameOf } from "../state/plugin-store.js";
 
 /** A skill's metadata. A library SKILL.md's frontmatter carries only `name` and `description`; the short descriptions and `version` are stamped from plugin.json by the loader (installed copies then carry the full generated frontmatter, which is what the installed-side readers parse). */
 export interface SkillMetadata {
@@ -271,7 +274,75 @@ function pluginRoots(): Map<string, string> {
     }
     roots.set(dep.slice(PLUGIN_PKG_PREFIX.length), path.dirname(manifest));
   }
+  for (const [name, dir] of localPluginRoots()) {
+    // A locally added plugin may reuse a built-in's name. The local copy wins deliberately: the
+    // user went and imported it, and a library entry shadowed by the thing it was copied from
+    // would be the one case where importing a plugin silently did nothing.
+    roots.set(name, dir);
+  }
   return roots;
+}
+
+/**
+ * Plugins the user added on this machine: one directory per plugin under `<root>/plugins/`.
+ *
+ * **Read after the npm-resolved roots, so it can override them.** These are not npm packages — a
+ * plugin from a URL, an uploaded zip or another Agent's tree has no `@jiumate/` package behind it —
+ * and they are read fresh on every call like everything else here, so adding one takes effect on
+ * the next request without a restart.
+ *
+ * **Only a directory carrying a manifest counts.** `<root>/plugins/` also holds `.staging/` while
+ * an import is being unpacked, and a name that is not a plugin is skipped rather than throwing:
+ * one unrecognised directory must not take the whole library down with it.
+ */
+function localPluginRoots(): Map<string, string> {
+  const roots = new Map<string, string>();
+  const base = pluginRootBase();
+  if (base === null) return roots;
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(base, { withFileTypes: true });
+  } catch {
+    return roots; // Never created — nothing has been imported yet, which is not an error.
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
+    const dir = path.join(base, entry.name);
+    if (pluginManifestPath(dir) === null) continue;
+    // A directory is `<name>@<marketplace>`; the library keys on the name alone.
+    roots.set(pluginNameOf(entry.name), dir);
+  }
+  return roots;
+}
+
+/**
+ * Where locally added plugins live, or null when it cannot be determined.
+ *
+ * **The server's configured root wins over the environment.** This function has no arguments, so the
+ * only other thing it could read is `JIUMATE_HOME` — and the server does not get its root from
+ * there. It is handed a `config.root`, which in a test, a hosted deployment or an Electron app is
+ * a temporary directory that the environment knows nothing about. Resolving from the environment
+ * here while the import routes write to `config.root` would put the two on different paths, and the
+ * symptom would be an import that reports success and is then invisible to the library — the worst
+ * shape a silent failure can take. So the server states its root once at boot.
+ *
+ * Falls back to the environment when nothing was set, which is the CLI and any direct use of core:
+ * there `JIUMATE_HOME` *is* the root, and the two agree.
+ */
+let configuredRoot: string | null = null;
+
+/** Tells core where this process's data root is. Called once by the server, at boot. */
+export function setPluginStoreRoot(root: string | null): void {
+  configuredRoot = root;
+}
+
+function pluginRootBase(): string | null {
+  const root = configuredRoot ?? process.env.JIUMATE_HOME ?? path.join(os.homedir(), ".jiumate", "data");
+  try {
+    return localPluginsDir(root);
+  } catch {
+    return null;
+  }
 }
 
 /**

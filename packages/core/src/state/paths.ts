@@ -154,6 +154,19 @@ export function hooksDir(root: string, projectId: string, agentId: string): stri
   return path.join(agentStateDir(root, projectId, agentId), "hooks");
 }
 
+/**
+ * `<root>/plugins`: plugins the user added on this machine, one directory per plugin.
+ *
+ * **Outside the Project tree on purpose.** Unlike an *installed* plugin, which belongs to one Agent
+ * of one Project, an added plugin is a property of the machine — the same URL, zip or on-disk
+ * directory produces the same plugin for every Project, and it is read by `pluginRoots()` when the
+ * library is listed. Keeping it under a Project would make the library depend on which Project the
+ * page happened to be opened from.
+ */
+export function localPluginsDir(root: string): string {
+  return path.join(root, "plugins");
+}
+
 /** `<agentStateDir>/schedule`, the scheduled-task directory (doesn't exist when unconfigured). */
 export function scheduleDir(root: string, projectId: string, agentId: string): string {
   return path.join(agentStateDir(root, projectId, agentId), "schedule");

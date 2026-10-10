@@ -1503,11 +1503,40 @@ export const en: Strings = {
     // —— Category management ——
     categoryUncategorized: "Uncategorized",
     manageCategories: "Manage categories",
+    /** Its tooltip on the plugins tab: what opening it actually does. */
+    manageCategoriesHint: "Create, rename and delete the category tags plugins and skills share",
     addCategory: "New category",
     /** Per-skill filing select: follow the plugin's own category. */
     categoryInherit: "Follow plugin",
     /** Per-skill filing select: no category at all, which is not the same as following. */
     categoryNone: "Uncategorised",
+    /** The three tabs of Add-plugin, by source. */
+    addFromUrl: "Repository URL",
+    addFromArchive: "Archive",
+    addFromLocal: "On this machine",
+    addFromUrlHint:
+      "Paste a repository archive URL. The server downloads it, validates it and unpacks it into the local plugin directory. On GitHub the /archive/refs/heads/main.zip form works.",
+    addFromUrlLabel: "Archive URL",
+    addFromUrlBadScheme: "Only http and https URLs are supported.",
+    addFromUrlAction: "Fetch and add",
+    addFromArchiveHint:
+      "Choose a plugin archive. The server checks for path traversal, size and manifest before unpacking anything into the local plugin directory.",
+    addFromArchivePick: "Click to choose a .zip",
+    addFromArchiveHint2: "Up to 64MB",
+    addFromArchiveChange: "Click to change",
+    addFromArchiveTooLarge: "The file is over 64MB.",
+    addFromArchiveAction: "Import and add",
+    addFromLocalHint:
+      "Scan plugins already installed by other Agents on this machine and copy the ones you pick into the local plugin directory. You can also type a plugin directory's full path.",
+    addFromLocalLabel: "Plugin directory",
+    addFromLocalScan: "Scan",
+    addFromLocalNone:
+      "No plugins found. Type the full path to a plugin directory above and try again.",
+    addFromLocalProbed: "Directories checked",
+    pluginImported: "Plugin added",
+    pluginApply: "Add",
+    pluginReimport: "Replace",
+    pluginAlreadyAdded: "Added",
     categoryNamePlaceholder: "Category name",
     categoryRename: "Rename",
     categoryDelete: "Delete",
@@ -1522,32 +1551,44 @@ export const en: Strings = {
     categoryAdded: "Category created",
     categoryDeleted: "Category deleted",
 
-    // —— Marketplace sources ——
-    sourcesTitle: "Sources",
-    sourcesDesc:
-      "Where plugins and skills come from — the official marketplace, third-party repos, or a local path.",
-    addSource: "Add source",
-    sourceTypeMarket: "Marketplace",
-    sourceTypeLocal: "Local path",
-    sourceUrlLabel: "Repository URL",
-    sourcePathLabel: "Local path",
-    sourceNameLabel: "Name",
-    sourceNamePlaceholder: "Display name",
-    sourceUrlPlaceholder: "https://example.com/repo",
-    sourcePathPlaceholder: "D:\\skills or ~/skills",
-    sourceKindPlugin: "Plugins",
-    sourceKindSkill: "Skills",
-    sourceEnabled: "Enabled",
-    sourceDisabled: "Added",
-    sourceRemove: "Remove source",
-    sourceRemoveConfirm: (name: string): string =>
-      `Remove “${name}”? Installed items are not deleted, but they will no longer be updated from this source.`,
-    sourceAdded: "Source added",
-    sourceRemoved: "Source removed",
-    /** Neither a URL nor a path — the field is required either way. */
-    sourceInvalid: "Enter a valid URL or path",
-    /** A local path that does not resolve to a directory. */
-    sourcePathMissing: "That path doesn't exist or can't be read",
+    /** Add-whole-directory: import every plugin in the directory the user pointed at. */
+    addWholeDir: "Add whole directory",
+    addWholeDirHint:
+      "Add every plugin in this directory to this machine. All of them start disabled — enable one before an agent can call it.",
+    addedWholeDir: (n: number, names: string): string =>
+      `Added ${n} plugin${n === 1 ? "" : "s"} to this machine: ${names} (disabled)`,
+    addWholeDirPartial: (detail: string): string => `These plugins could not be added: ${detail}`,
+
+    // —— Plugin card actions: install / delete / enable / disable / upgrade ——
+    /** Machine-level uninstall: delete it from this machine's disk, and report who was using it. */
+    /** Agent-level: put it in the current Agent and switch it on. */
+    enableForAgent: "Enable",
+    enableForAgentHint: "Install into the current agent and enable it, so the agent can call it",
+    /** Agent-level: switch off for this agent only; the files stay on the machine. */
+    disableForAgent: "Disable",
+    disableForAgentHint:
+      "The current agent stops calling it. The files stay on this machine, ready to re-enable.",
+    /** Machine-level: delete from this machine entirely. */
+    deleteFromMachine: "Uninstall",
+    deleteFromMachineHint:
+      "Delete from this machine. Agents it was installed in will lose the plugin.",
+    /** Upgrade: return to where the plugin was installed from and fetch a newer version. */
+    upgradeAction: "Upgrade",
+    upgradeHint:
+      "Check the original install source for a newer version, and download over this one if there is one",
+    /** No recorded source — a plugin added from a folder has nothing to check against. */
+    upgradeNoSource: "This plugin was added from a folder on this machine, so there is no source to check",
+    /** Checked, and the installed version is already current. */
+    upgradeUpToDate: "Already up to date",
+    upgradeDone: (v: string): string => `Upgraded to ${v}`,
+    /** The delete confirm: which Agents lose access. */
+    deleteAffectsAgents: (names: string): string =>
+      `These agents are using it and will lose it when it is deleted: ${names}`,
+    deleteAffectsNone: "No agent is using it right now.",
+    deleteConfirmTitle: (name: string): string => `Uninstall “${name}” from this machine?`,
+    deleteConfirmBody: (name: string): string =>
+      `“${name}” will be deleted from this machine's disk. This cannot be undone.`,
+    deletedToast: (name: string): string => `Uninstalled ${name} from this machine`,
 
     pageDesc:
       "Built-in plugin library: each plugin ships skills and/or a hook package — browse, quick-start a chat, or install to agents.",
@@ -1566,7 +1607,7 @@ export const en: Strings = {
     addSkill: "Add skill",
     /** Plugin tab: opens the sources manager (adding a plugin means adding somewhere to get one). */
     addPlugin: "Add plugin",
-    addPluginHint: "Add a plugin from a marketplace or local path",
+    addPluginHint: "Add a plugin from a repository URL, an archive, or a folder on this machine",
     /** Connectors tab: opens the registry's own add dialog. */
     addConnector: "Add connector",
     addConnectorHint: "Add an MCP service",

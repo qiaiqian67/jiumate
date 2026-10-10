@@ -1474,11 +1474,39 @@ export const zh = {
     categoryUncategorized: "未分类",
     /** Manage-categories button. */
     manageCategories: "管理分类",
+    /** Its tooltip on the plugins tab: what opening it actually does. */
+    manageCategoriesHint: "新建、重命名、删除插件与技能共用的分类标签",
     addCategory: "新建分类",
     /** Per-skill filing select: follow the plugin's own category. */
     categoryInherit: "跟随插件",
     /** Per-skill filing select: no category at all, which is not the same as following. */
     categoryNone: "不分类",
+    /** The three tabs of 添加插件, by source. */
+    addFromUrl: "仓库 URL",
+    addFromArchive: "压缩包",
+    addFromLocal: "本机已有",
+    addFromUrlHint:
+      "输入一个仓库的压缩包地址，服务端下载后校验并解压到本地插件目录。GitHub 可直接用 /archive/refs/heads/main.zip 这种地址。",
+    addFromUrlLabel: "压缩包地址",
+    addFromUrlBadScheme: "只支持 http 或 https 开头的地址。",
+    addFromUrlAction: "拉取并添加",
+    addFromArchiveHint:
+      "选择一个插件压缩包。服务端会先校验目录穿越、体积和清单，确认无误后才解压到本地插件目录。",
+    addFromArchivePick: "点击选择 .zip 文件",
+    addFromArchiveHint2: "最大 64MB",
+    addFromArchiveChange: "点击更换",
+    addFromArchiveTooLarge: "文件超过 64MB。",
+    addFromArchiveAction: "导入并添加",
+    addFromLocalHint:
+      "扫描本机其他智能体已安装的插件，选中后复制到本地插件目录。也可以直接填写插件目录的完整路径。",
+    addFromLocalLabel: "插件目录路径",
+    addFromLocalScan: "扫描",
+    addFromLocalNone: "没有找到插件。可以把插件目录的完整路径填到上面再试一次。",
+    addFromLocalProbed: "已扫描的目录",
+    pluginImported: "插件已添加到本地",
+    pluginApply: "添加",
+    pluginReimport: "覆盖",
+    pluginAlreadyAdded: "已添加",
     categoryNamePlaceholder: "分类名称",
     categoryRename: "重命名",
     categoryDelete: "删除",
@@ -1494,31 +1522,38 @@ export const zh = {
     categoryAdded: "分类已创建",
     categoryDeleted: "分类已删除",
 
-    // —— 市场源管理 ——
-    sourcesTitle: "市场源",
-    sourcesDesc: "管理插件与技能的获取来源，支持官方市场、第三方仓库和本地路径。",
-    addSource: "添加来源",
-    sourceTypeMarket: "市场源",
-    sourceTypeLocal: "本地路径",
-    sourceUrlLabel: "仓库地址",
-    sourcePathLabel: "本地路径",
-    sourceNameLabel: "名称",
-    sourceNamePlaceholder: "显示名称",
-    sourceUrlPlaceholder: "https://example.com/repo",
-    sourcePathPlaceholder: "D:\\skills 或 ~/skills",
-    sourceKindPlugin: "插件",
-    sourceKindSkill: "技能",
-    sourceEnabled: "已启用",
-    sourceDisabled: "已添加",
-    sourceRemove: "移除来源",
-    sourceRemoveConfirm: (name: string): string =>
-      `移除来源「${name}」？已安装的项目不会被删除，但将不再从此来源更新。`,
-    sourceAdded: "来源已添加",
-    sourceRemoved: "来源已移除",
-    /** Neither a URL nor a path — the field is required either way. */
-    sourceInvalid: "请填写有效的地址或路径",
-    /** A local path that does not resolve to a directory. */
-    sourcePathMissing: "路径不存在或无法访问",
+    /** 添加整个目录: import every plugin in the directory the user pointed at. */
+    addWholeDir: "添加整个目录",
+    addWholeDirHint: "把该目录下的所有插件添加到本机，全部处于待启用状态（需启用后 Agent 才能调用）",
+    addedWholeDir: (n: number, names: string): string => `已添加 ${n} 个插件到本机：${names}（待启用）`,
+    addWholeDirPartial: (detail: string): string => `以下插件未能添加：${detail}`,
+
+    // —— 插件卡片按钮：安装/卸载/启用/禁用/升级 ——
+    /** Agent 级：装进当前 Agent 并打开开关。 */
+    enableForAgent: "启用",
+    enableForAgentHint: "装进当前 Agent 并启用，此后该 Agent 可以调用它",
+    /** Agent 级：只关当前 Agent，文件留在本机。 */
+    disableForAgent: "禁用",
+    disableForAgentHint: "当前 Agent 不再调用它，文件保留在本机，随时可以再启用",
+    /** 机器级：彻底从本机磁盘删除。 */
+    deleteFromMachine: "卸载",
+    deleteFromMachineHint: "从本机磁盘彻底删除。装过它的 Agent 会失去这个插件。",
+    /** Upgrade: goes back to where the plugin was installed from and fetches a newer version. */
+    upgradeAction: "升级",
+    upgradeHint: "回到当初的安装来源检查新版本，有则重新下载并覆盖",
+    /** No recorded source — a plugin added from a folder has nothing to check against. */
+    upgradeNoSource: "这个插件是从本机文件夹添加的，没有可检查的来源",
+    /** Checked, and the installed version is already current. */
+    upgradeUpToDate: "已是最新版本",
+    upgradeDone: (v: string): string => `已升级到 ${v}`,
+    /** The delete confirm: which Agents lose access. Empty when none have it. */
+    deleteAffectsAgents: (names: string): string => `以下 Agent 正在使用它，删除后它们将无法再调用：${names}`,
+    /** The delete confirm when no Agent has it. */
+    deleteAffectsNone: "当前没有 Agent 使用它。",
+    deleteConfirmTitle: (name: string): string => `从本机卸载「${name}」？`,
+    deleteConfirmBody: (name: string): string =>
+      `将从本机磁盘删除「${name}」，且不可恢复。`,
+    deletedToast: (name: string): string => `已从本机卸载 ${name}`,
 
     pageDesc: "内置插件库：每个插件带有技能和／或钩子包，可浏览、快捷调用，或安装到 Agent。",
     /** Plugin count in the group header (small text to the right of the category name). */
@@ -1538,7 +1573,7 @@ export const zh = {
     addSkill: "添加技能",
     /** Plugin tab: opens the sources manager (adding a plugin means adding somewhere to get one). */
     addPlugin: "添加插件",
-    addPluginHint: "从市场源或本地路径添加插件",
+    addPluginHint: "从仓库 URL、压缩包或本机已有目录添加插件",
     /** Connectors tab: opens the registry's own add dialog. */
     addConnector: "添加连接器",
     addConnectorHint: "添加一个 MCP 服务",

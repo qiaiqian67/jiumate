@@ -1236,6 +1236,149 @@ export const uninstallPlugin = (projectId: string, agentId: string, name: string
     { method: "POST", body: JSON.stringify({ name }) },
   );
 
+/**
+ * Plugin packages found on this machine, and the directories that were probed.
+ *
+ * `localPath` is the user's own pick and accepts either a plugin directory or a folder holding
+ * several — the server tries both, so 「选哪个都行」 is true rather than something to document.
+ */
+export const discoverLocalPlugins = (projectId: string, localPath?: string) =>
+  apiFetch<{
+    plugins: {
+      name: string;
+      path: string;
+      origin: "known" | "manual";
+      version: string;
+      description: string;
+      descriptionZh?: string;
+      skills: { name: string; description: string }[];
+      alreadyInstalled: boolean;
+    }[];
+    probes: { path: string; label: string; exists: boolean }[];
+  }>(
+    `/api/projects/${encodeURIComponent(projectId)}/plugins/import/discover` +
+      (localPath === undefined || localPath === ""
+        ? ""
+        : `?path=${encodeURIComponent(localPath)}`),
+  );
+
+/** The result of any successful import, whatever the source. */
+export interface PluginImportResult {
+  /** The library id, `<name>@local`. */
+  id: string;
+  name: string;
+}
+
+/**
+ * Import a plugin from a directory on this machine.
+ *
+ * The directory is **copied**, never referenced: pointing the library at the source would mean every
+ * later edit of it silently changed an installed plugin, with no install step to account for it.
+ */
+export const importPluginFromLocal = (projectId: string, path: string) =>
+  apiFetch<PluginImportResult>(
+    `/api/projects/${encodeURIComponent(projectId)}/plugins/import/local`,
+    { method: "POST", body: JSON.stringify({ path }) },
+  );
+
+/** Import a plugin from an uploaded zip. Validation happens server-side; the client only sends bytes. */
+export const importPluginFromArchive = (projectId: string, dataBase64: string) =>
+  apiFetch<PluginImportResult>(
+    `/api/projects/${encodeURIComponent(projectId)}/plugins/import/archive`,
+    { method: "POST", body: JSON.stringify({ dataBase64 }) },
+  );
+
+/**
+ * Import a plugin from a repository URL.
+ *
+ * **Any URL shape works** — the bare repo, a `.git` clone URL, `/tree/main`, a deep link — because
+ * the server resolves them all to the same archive (see `resolveRepoUrl`). The client sends what the
+ * user typed without pre-judging it, because any client-side reshaping would have to duplicate that
+ * resolution and would then disagree with it somewhere.
+ *
+ * The returned `sourceUrl` is what was actually fetched, which is what the dialog shows afterwards:
+ * an import that silently pulls code from somewhere the user cannot see is one they can only trust,
+ * and being able to see the address is the difference between trusting and hoping.
+ */
+export const importPluginFromUrl = (projectId: string, url: string) =>
+  apiFetch<PluginImportUrlResult>(
+    `/api/projects/${encodeURIComponent(projectId)}/plugins/import/url`,
+    { method: "POST", body: JSON.stringify({ url }) },
+  );
+
+/**
+ * Import **every** plugin in a directory on this machine — 添加目录.
+ *
+ * **Everything in the directory, and nothing enabled for any Agent.** The plugins land on this
+ * machine 待启用: available, ready, and inert until 启用 points an Agent at them. That separation
+ * is the point — adding ten plugins is a large filesystem effect and should not also switch ten
+ * plugins on for whichever Agent happened to be selected.
+ *
+ * `failed` can be non-empty alongside `added`: a collection with one unreadable plugin imports the
+ * rest and says which one did not, which is why this returns both halves rather than throwing.
+ */
+export const importPluginsFromDirectory = (projectId: string, path: string) =>
+  apiFetch<PluginImportBatchResult>(
+    `/api/projects/${encodeURIComponent(projectId)}/plugins/import/local/batch`,
+    { method: "POST", body: JSON.stringify({ path }) },
+  );
+
+/**
+ * Delete an added plugin from this machine — 卸载.
+ *
+ * **Machine-wide, and destructive.** Taking one Agent's use of a plugin away is disabling it, not
+ * this. The response names the Agents that had it, so the confirm can show who loses access before
+ * the button that cannot be undone is pressed.
+ */
+export const deletePlugin = (projectId: string, id: string) =>
+  apiFetch<PluginDeleteResult>(
+    `/api/projects/${encodeURIComponent(projectId)}/plugins/import/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+
+/**
+ * Check an added plugin for a newer version and upgrade it if there is one — 升级.
+ *
+ * Goes back to the recorded installation source. `upgradable: false` means there was no source to
+ * check (a plugin added from a folder), which is different from `upgraded: false` (checked, nothing
+ * newer); the two produce different messages because one is a reason the button cannot act and the
+ * other is the answer to the question.
+ */
+export const upgradePlugin = (projectId: string, id: string) =>
+  apiFetch<PluginUpgradeResult>(
+    `/api/projects/${encodeURIComponent(projectId)}/plugins/import/${encodeURIComponent(id)}/upgrade`,
+    { method: "POST" },
+  );
+
+/** The result of importing from a repository URL: which plugin, and where it was fetched from. */
+export interface PluginImportUrlResult extends PluginImportResult {
+  /** The archive URL resolved from what the user pasted. */
+  sourceUrl: string;
+}
+
+/** What importing a directory of plugins produced: some added, some refused, both possibly present. */
+export interface PluginImportBatchResult {
+  added: PluginImportResult[];
+  /** Per-plugin refusals with a reason. Empty when everything imported. */
+  failed: { name: string; reason: string }[];
+}
+
+/** What deleting an added plugin reports. */
+export interface PluginDeleteResult {
+  id: string;
+  /** Agents that had it installed, read before the delete. Not filtered by enabled state. */
+  affectedAgents: string[];
+}
+
+/** What an upgrade attempt found. */
+export interface PluginUpgradeResult {
+  upgraded: boolean;
+  /** Whether there was a source to check at all; false for a plugin added from a folder. */
+  upgradable: boolean;
+  /** The version now installed, when `upgraded`. */
+  version?: string;
+}
+
 /** One pre-rebrand Skill this build knows how to rename, and which Agents hold it. */
 export interface RenamableSkill {
   /** The old directory name still installed (`linsight-sdk`). */

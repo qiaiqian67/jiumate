@@ -92,8 +92,15 @@ import { ConnectorsTab } from "./connectors-tab";
 import { SkillsTab } from "./skills-tab";
 import { OriginFilterTabs } from "./extension-ui";
 import { loadFilings, scopedId } from "./extension-state";
-import { SourcesManager, BUILTIN_SOURCE } from "./sources-manager";
+import { AddPluginDialog } from "./add-plugin-dialog";
 import { filtersFor, type ExtensionFilter } from "./extension-model";
+import {
+  loadCategories,
+  removeCategory,
+  saveCategories,
+  type FilingMap,
+} from "./extension-state";
+import { CategoryManagerDialog, newCategory } from "./extension-ui";
 import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
 import { SkillTile } from "../skills/skill-icon-view";
@@ -242,12 +249,12 @@ export function PluginsPage() {
   const [libraryView, setLibraryView] = useState<"plugins" | "skills" | "hooks">("plugins");
   /** Origin filter, shared by the plugin and skills tabs — they file into the SAME categories. */
   const [originFilter, setOriginFilter] = useState<ExtensionFilter>("all");
-  /** Sources dialog (the plugin tab's add button). */
-  const [sourcesOpen, setSourcesOpen] = useState(false);
+  /** Add-plugin dialog: URL / archive / this machine. */
+  const [addOpen, setAddOpen] = useState(false);
+  /** Tags dialog (the plugin tab's 管理标签 button). */
+  const [tagsOpen, setTagsOpen] = useState(false);
   /** Bumped by the connectors tab's add button to ask its own dialog to open. */
   const [connectorsAddNonce, setConnectorsAddNonce] = useState(0);
-  /** Configured marketplace sources; the built-in library is always present. */
-  const [sources, setSources] = useState(() => [BUILTIN_SOURCE]);
   /**
    * Whether the installed-skills full-screen page is open.
    *
@@ -295,6 +302,21 @@ export function PluginsPage() {
   const navigate = useNavigate();
   const { locale } = useLocale();
   const userId = useAuth().user?.userId ?? null;
+  /**
+   * The user's own tags over the library, loaded and saved exactly as the skills tab loads them.
+   * The two tabs list the same plugins and the same skills, so a tag filed on one has to be the
+   * same tag on the other — sharing the storage is what makes that true rather than a coincidence.
+   */
+  const [categories, setCategories] = useState(() => loadCategories(userId));
+  /** Item name -> category id, holding only the user's explicit choices (see extension-state). */
+  const [filings, setFilings] = useState<FilingMap>(() => loadFilings(userId));
+  const persistCategories = useCallback(
+    (next: typeof categories) => {
+      setCategories(next);
+      saveCategories(userId, next);
+    },
+    [userId],
+  );
   const { currentProject, agents, currentAgent, setCurrentAgentId, reloadAgents } = useProject();
   /**
    * Agent id -> display name, for the impact dialog. Built once per agents change rather than
@@ -523,6 +545,29 @@ export function PluginsPage() {
     }
     void reloadAgents();
     reloadCatalog();
+  };
+
+  /**
+   * Machine-level uninstall — the card's 卸载 button.
+   *
+   * Removes the plugin from this machine's disk, and the server reports which Agents had it so the
+   * confirm can name them. Every affected Agent's install state is dropped locally too: leaving a
+   * card claiming an Agent still has a plugin whose files no longer exist would be a lie the UI
+   * tells until it is manually reloaded.
+   */
+  const deleteFromMachine = async (plugin: PluginItem) => {
+    if (!projectId) return;
+    try {
+      const res = await api.deletePlugin(projectId, plugin.id);
+      for (const agentId of res.affectedAgents) {
+        setAgentInstalls(agentId, withPlugin(installed.get(agentId) ?? NO_INSTALLS, plugin, false));
+      }
+      reloadCatalog();
+      void reloadAgents();
+      toastSuccess(S.plugins.deletedToast(plugin.name));
+    } catch (e) {
+      toastError(apiErrorText(e));
+    }
   };
 
   /**
@@ -911,16 +956,29 @@ const visibleGroups = useMemo(() => {
               </Button>
             )}
             {tab === "plugins" && (
-              <Button
-                size="sm"
-                variant="primary"
-                className="shrink-0 whitespace-nowrap"
-                title={S.plugins.addPluginHint}
-                onClick={() => setSourcesOpen(true)}
-              >
-                <PlusIcon size={13} strokeWidth={1.7} />
-                {S.plugins.addPlugin}
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  className="shrink-0 whitespace-nowrap"
+                  title={S.plugins.addPluginHint}
+                  onClick={() => setAddOpen(true)}
+                >
+                  <PlusIcon size={13} strokeWidth={1.7} />
+                  {S.plugins.addPlugin}
+                </Button>
+                {/* How the library is tagged — the same dialog the skills tab opens, over the same
+                    stored tags, so filing a plugin here and a skill there lands in one place. */}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="shrink-0 whitespace-nowrap"
+                  title={S.plugins.manageCategoriesHint}
+                  onClick={() => setTagsOpen(true)}
+                >
+                  {S.plugins.manageCategories}
+                </Button>
+              </>
             )}
             {tab === "connectors" && (
               /* The connectors registry owns its own add dialog, so this opens that one rather
@@ -1015,10 +1073,6 @@ const visibleGroups = useMemo(() => {
                   </SkeletonCard>
                 ))}
               </div>
-            ) : visibleGroups !== null && visibleGroups.length === 0 ? (
-              <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
-                {S.plugins.noMatch(query.trim())}
-              </p>
             ) : libraryView !== "plugins" ? (
               /* The skill and hook views are one grid, not categories: the question is "which one
                  do I want", and answering it one category deep would bury it. The owning plugin
@@ -1144,6 +1198,7 @@ const visibleGroups = useMemo(() => {
                                   onQuickInvoke={quickInvoke}
                                   onToggleInstall={toggleInstall}
                                   onUpdateOutdated={updateOutdated}
+                                  onDeleteFromMachine={deleteFromMachine}
                                 />
                               ))}
                             </div>
@@ -1152,6 +1207,16 @@ const visibleGroups = useMemo(() => {
                       </section>
                     );
                   })}
+
+                  {/* The empty state lives *inside* the list, below the origin tabs — never in
+                      place of them. An empty result is the state in which a user most needs to
+                      change the filter that produced it, so a tab row that disappears with the
+                      content it filters leaves them with no way back and no explanation. */}
+                  {visibleGroups !== null && visibleGroups.length === 0 && (
+                    <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+                      {S.plugins.noMatch(query.trim())}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -1174,18 +1239,35 @@ const visibleGroups = useMemo(() => {
         onOpenChat={openSkillImportChat}
       />
 
-      {/* The plugin tab's add button opens the sources manager — adding a plugin means adding a
-          place to get one from, so the dialog is about sources rather than a single file. */}
-      <SourcesManager
-        open={sourcesOpen}
-        onClose={() => setSourcesOpen(false)}
-        sources={sources}
-        onAdd={(src) => setSources((prev) => [...prev, src])}
-        onRemove={(id) => setSources((prev) => prev.filter((s) => s.id !== id))}
-        onToggle={(id, on) =>
-          setSources((prev) => prev.map((s) => (s.id === id ? { ...s, enabled: on } : s)))
+      {/* The plugin tab's 插件来源 button opens the sources manager. */}
+      {/* Tag management over the library, the same dialog and the same stored tags the skills tab
+          uses. Rendered unconditionally so a rename here is reflected there without a reload. */}
+      <CategoryManagerDialog
+        open={tagsOpen}
+        onClose={() => setTagsOpen(false)}
+        categories={categories}
+        filings={filings}
+        onCreate={(name) => persistCategories([...categories, newCategory(name)])}
+        onRename={(cid, name) =>
+          persistCategories(categories.map((c) => (c.id === cid ? { ...c, name } : c)))
         }
+        onDelete={(cid) => persistCategories(removeCategory(categories, cid, filings).categories)}
       />
+
+      {/* Add plugin: from a URL, an archive, or one already on this machine. The library is reloaded
+          on success because the import writes into the store `loadPluginGroups` reads — the new
+          plugin is not in the data this page already has, and the alternative (patching the list
+          from the name we got back) would re-implement the reader the server already ran. */}
+      {addOpen && projectId !== null && (
+        <AddPluginDialog
+          projectId={projectId}
+          onClose={() => setAddOpen(false)}
+          onImported={() => {
+            setAddOpen(false);
+            void reloadCatalog();
+          }}
+        />
+      )}
       {pendingBulk !== null && (
         <ConfirmModal
           open
@@ -1377,12 +1459,15 @@ function PluginCard({
   onQuickInvoke,
   onToggleInstall,
   onUpdateOutdated,
+  onDeleteFromMachine,
 }: {
   plugin: PluginItem;
   installed: InstalledMap;
   onQuickInvoke: (skillName: string) => void;
   onToggleInstall: (agentId: string, plugin: PluginItem, on: boolean) => Promise<void>;
   onUpdateOutdated: (name: string, agentIds: string[]) => Promise<void>;
+  /** Machine-level uninstall: delete it from this machine's disk, and report who was using it. */
+  onDeleteFromMachine: (plugin: PluginItem) => Promise<void>;
 }) {
   const { locale } = useLocale();
   const { agents, currentAgent, currentProject } = useProject();
@@ -1391,10 +1476,34 @@ function PluginCard({
   // Agents pending an update confirmation (null = none): an update is an overwriting reinstall, so it needs a confirm + a per-agent version list before it runs.
   const [pendingUpdate, setPendingUpdate] = useState<string[] | null>(null);
   const [updating, setUpdating] = useState(false);
-  // Agent pending an uninstall confirmation (null = none): uninstalling deletes the installed files, local edits included.
-  const [pendingUninstall, setPendingUninstall] = useState<string | null>(null);
-  /** The corner install button's own in-flight flag, so a double click cannot land two installs. */
-  const [installing, setInstalling] = useState(false);
+  /**
+   * Awaiting confirmation of a **machine-wide** delete (false = not asking).
+   *
+   * Distinct from the per-Agent removal in 管理安装: this one takes the plugin off this machine's
+   * disk, so every Agent that had it loses it at once. The confirm names those Agents, read from
+   * the server when the confirm opens — a list computed at render time would be stale the moment
+   * anything else changes, and a warning that under-reports is worse than none.
+   */
+  const [pendingDelete, setPendingDelete] = useState(false);
+  /**
+   * The Agents the pending delete would affect. Empty until the confirm opens.
+   *
+   * Computed from the page's install map at the moment the confirm opens, rather than fetched: the
+   * map is re-read after every install action, so it is current, and the server independently
+   * reports the same list on the delete itself — which is what makes the confirm trustworthy
+   * rather than merely reassuring.
+   */
+  const [deleteAffects, setDeleteAffects] = useState<string[]>([]);
+  /**
+   * Agent pending a **per-Agent** removal from 管理安装 (null = not asking).
+   *
+   * A separate flag from `pendingDelete` on purpose: removing one Agent's copy keeps the plugin on
+   * this machine, deleting the plugin does not. Sharing one flag would let a confirm opened for
+   * one be confirmed as the other, and one of those two is irreversible.
+   */
+  const [pendingAgentRemove, setPendingAgentRemove] = useState<string | null>(null);
+  /** In-flight machine delete, so a double click cannot land two. */
+  const [deleting, setDeleting] = useState(false);
   /** Whether the current Agent has this plugin switched on; null while unknown. */
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [togglingEnabled, setTogglingEnabled] = useState(false);
@@ -1456,10 +1565,42 @@ function PluginCard({
     setPendingUpdate(null);
   };
 
-  /** Display name of the Agent pending uninstall (falls back to the raw id below). */
-  const uninstallAgent =
-    pendingUninstall !== null ? agents.find((a) => a.agentId === pendingUninstall) : undefined;
-  const uninstallAgentName = uninstallAgent ? agentDisplayName(uninstallAgent) : undefined;
+  /**
+   * Whether this plugin is an **added** one, i.e. one the user brought onto this machine.
+   *
+   * Read from the id's marketplace segment rather than from the library's own `origin` flag, because
+   * the id is what the delete route checks before it will remove anything — if the two disagreed,
+   * the button would offer a delete the server then refuses.
+   */
+  const isOnThisMachine = plugin.id.endsWith("@local");
+
+  /**
+   * Opens the machine delete confirm.
+   *
+   * The affected Agents are computed here from the page's own install map rather than fetched: the
+   * map is re-read after every install action, so it is current, and a delete is rare enough that
+   * the extra request would buy nothing. The server independently reports the same list on the
+   * delete itself, which is what makes the confirm trustworthy rather than merely informative.
+   */
+  const confirmMachineDelete = () => {
+    const affected: string[] = [];
+    for (const [agentId, installs] of installed) {
+      if (pluginInstalled(plugin, installs)) affected.push(agentId);
+    }
+    setDeleteAffects(affected);
+    setPendingDelete(true);
+  };
+
+  const runMachineDelete = async () => {
+    setDeleting(true);
+    try {
+      await onDeleteFromMachine(plugin);
+      setPendingDelete(false);
+      setDeleteAffects([]);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   let installedCount = 0;
   for (const m of installed.values()) if (pluginInstalled(plugin, m)) installedCount += 1;
@@ -1539,17 +1680,25 @@ function PluginCard({
           // this narrow would otherwise cost the name a third of its width, so they lay over
           // its tail instead — see `actionOverlay`.
           <div className="flex shrink-0 items-center gap-1.5">
-            {/* Upgrade: always present so the affordance is findable, disabled with the reason in
-                its tooltip once the library and every installed copy agree. Carries the update
-                dot itself when something IS waiting — straddling the top-right corner of the
-                button's border, the anchoring rule update-dot.tsx states for a button. */}
+            {/*
+              升级. **Goes back to the source the plugin was installed from and re-fetches** — the
+              behaviour the button is specified to have, and the reason `.provenance.json` exists.
+              Always present so the affordance is findable; a plugin with no recorded source (one
+              added from a folder) says so in its tooltip rather than being hidden, because "why
+              can't I upgrade this" is a question the absence would leave unanswered.
+
+              Carries the update dot itself when something IS waiting — straddling the top-right
+              corner of the button's border, the anchoring rule update-dot.tsx states for a button.
+            */}
             <Button
               size="sm"
               variant="secondary"
               className="relative h-8 w-8 shrink-0 justify-center p-0"
-              aria-label={`${S.skills.updateAction} ${plugin.name}`}
+              aria-label={`${S.plugins.upgradeAction} ${plugin.name}`}
               title={
-                outdated.length > 0 ? S.plugins.updateOutdated(outdated.length) : S.plugins.upToDate
+                outdated.length > 0
+                  ? S.plugins.updateOutdated(outdated.length)
+                  : S.plugins.upgradeHint
               }
               disabled={outdated.length === 0}
               onClick={() => setPendingUpdate(outdated)}
@@ -1597,8 +1746,8 @@ function PluginCard({
                 size="sm"
                 variant={enabled ? "secondary" : "ghost"}
                 className="h-8 w-8 shrink-0 justify-center p-0"
-                aria-label={`${enabled ? S.plugins.disable : S.plugins.enable} ${plugin.name}`}
-                title={enabled ? S.plugins.disable : S.plugins.enable}
+                aria-label={`${enabled ? S.plugins.disableForAgent : S.plugins.enableForAgent} ${plugin.name}`}
+                title={enabled ? S.plugins.disableForAgentHint : S.plugins.enableForAgentHint}
                 aria-pressed={enabled}
                 disabled={togglingEnabled}
                 onClick={() => void toggleEnabled()}
@@ -1606,40 +1755,37 @@ function PluginCard({
                 <GlyphIcon d={POWER_ICON} size={ICON_SIZE.iconButton} />
               </Button>
             )}
-            {/* Install / uninstall on the Agent selected right now, without opening the
-              per-Agent list. Uninstalling deletes that Agent's files, so it wears the danger
-              variant and the trash glyph the Agent's own skill rows use — the same act, marked
-              the same way — and it confirms before it runs. `installing` only stops a double
-              click landing two installs. */}
-            <Button
-              size="sm"
-              variant={isInstalledOnCurrentAgent ? "danger" : "primary"}
-              className="h-8 w-8 shrink-0 justify-center p-0"
-              aria-label={
-                isInstalledOnCurrentAgent
-                  ? `${S.skills.uninstall} ${plugin.name}`
-                  : `${S.skills.install} ${plugin.name}`
-              }
-              title={isInstalledOnCurrentAgent ? S.skills.uninstall : S.skills.install}
-              disabled={currentAgent === null || installing}
-              onClick={() => {
-                if (!currentAgent) return;
-                if (isInstalledOnCurrentAgent) {
-                  setPendingUninstall(currentAgent.agentId);
-                  return;
-                }
-                setInstalling(true);
-                void onToggleInstall(currentAgent.agentId, plugin, true).finally(() =>
-                  setInstalling(false),
-                );
-              }}
-            >
-              {isInstalledOnCurrentAgent ? (
+            {/* 卸载 — delete this plugin from this machine, irreversibly.
+
+                **Only on the machine level, never per-Agent.** Distinct from 管理安装's per-Agent
+                uninstall, which removes one Agent's copy and leaves the files; this one takes the
+                plugin off the disk, so it wears the danger variant and confirms first, naming the
+                Agents that lose access — that list is the difference between a warning the user can
+                reason about and one they have to accept on trust.
+
+                **Only on a plugin the user added.** A built-in plugin ships with the app, so its
+                files are not a library copy the user owns and deleting it would be removing the
+                product rather than a plugin from it. The server refuses it too; hiding it here
+                keeps a button that could only ever fail off the card.
+
+                **No 安装 counterpart on the card, by design.** This is a local client: every plugin
+                the page lists is already on this machine, so a 「下载到本地」 button on a card would
+                be offering to fetch something the user is already looking at. Getting a plugin onto
+                the machine is one act — 添加插件 in the top right — and that is the only place it
+                belongs. */}
+            {isOnThisMachine && (
+              <Button
+                size="sm"
+                variant="danger"
+                className="h-8 w-8 shrink-0 justify-center p-0"
+                aria-label={`${S.plugins.deleteFromMachine} ${plugin.name}`}
+                title={S.plugins.deleteFromMachineHint}
+                disabled={deleting}
+                onClick={confirmMachineDelete}
+              >
                 <GlyphIcon d={TRASH_ICON} size={ICON_SIZE.iconButton} />
-              ) : (
-                <PlusIcon size={ICON_SIZE.iconButton} strokeWidth={1.7} />
-              )}
-            </Button>
+              </Button>
+            )}
           </div>
         }
       />
@@ -1669,9 +1815,11 @@ function PluginCard({
                 installed={pluginInstalled(plugin, installed.get(a.agentId))}
                 outdated={outdated.includes(a.agentId)}
                 onToggle={(on) => {
-                  // Install runs directly; uninstall deletes the installed files, so it confirms first.
+                  // Install runs directly. Uninstall here is the **per-Agent** one — it removes
+                  // that Agent's copy and leaves the plugin on this machine — so it keeps its own
+                  // confirm, distinct from the card's machine-wide 卸载.
                   if (on) void onToggleInstall(a.agentId, plugin, true);
-                  else setPendingUninstall(a.agentId);
+                  else setPendingAgentRemove(a.agentId);
                 }}
                 onUpdate={() => setPendingUpdate([a.agentId])}
               />
@@ -1716,20 +1864,64 @@ function PluginCard({
           </div>
         </ConfirmModal>
       )}
-      {pendingUninstall !== null && (
+      {/*
+        The **per-Agent** removal from 管理安装. Deliberately separate from the machine-wide delete
+        below: this one leaves the plugin on this machine and takes away only this Agent's use of
+        it, which is reversible with 启用. Sharing a confirm between the two would let a user confirm
+        "remove from this agent" and destroy the plugin instead.
+      */}
+      {pendingAgentRemove !== null && (
         <ConfirmModal
           open
           title={S.plugins.uninstallConfirmTitle(plugin.name)}
           confirmLabel={S.skills.uninstall}
-          onClose={() => setPendingUninstall(null)}
+          onClose={() => setPendingAgentRemove(null)}
           onConfirm={() => {
-            const agentId = pendingUninstall;
-            setPendingUninstall(null);
+            const agentId = pendingAgentRemove;
+            setPendingAgentRemove(null);
             void onToggleInstall(agentId, plugin, false);
           }}
         >
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            {S.plugins.uninstallConfirmBody(plugin.name, uninstallAgentName ?? pendingUninstall)}
+            {S.plugins.uninstallConfirmBody(
+              plugin.name,
+              agents.find((a) => a.agentId === pendingAgentRemove)
+                ? agentDisplayName(agents.find((a) => a.agentId === pendingAgentRemove)!)
+                : pendingAgentRemove,
+            )}
+          </p>
+        </ConfirmModal>
+      )}
+      {pendingDelete && (
+        <ConfirmModal
+          open
+          title={S.plugins.deleteConfirmTitle(plugin.name)}
+          confirmLabel={S.plugins.deleteFromMachine}
+          tone="danger"
+          onClose={() => {
+            if (!deleting) setPendingDelete(false);
+          }}
+          onConfirm={() => void runMachineDelete()}
+        >
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            {S.plugins.deleteConfirmBody(plugin.name)}
+          </p>
+          {/*
+            The affected Agents, named before the irreversible button is pressed. Rendered from
+            what the card's own install state says rather than from a separate fetch, because the
+            card already holds that list; an empty one reads as "no agent uses this" only when the
+            state is actually known, hence the explicit no-agents line.
+          */}
+          <p className="mt-2 text-sm text-amber-700 dark:text-amber-400">
+            {deleteAffects.length > 0
+              ? S.plugins.deleteAffectsAgents(
+                  deleteAffects
+                    .map((id) => agents.find((a) => a.agentId === id))
+                    .filter((a) => a !== undefined)
+                    .map(agentDisplayName)
+                    .join("、"),
+                )
+              : S.plugins.deleteAffectsNone}
           </p>
         </ConfirmModal>
       )}
