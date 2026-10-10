@@ -41,18 +41,24 @@ import {
 import {
   isOn,
   loadCategories,
+  loadFilings,
   loadSwitches,
   removeCategory,
   saveCategories,
+  saveFilings,
   saveSwitches,
   scopedId,
   withSwitch,
+  type FilingMap,
   type SwitchMap,
 } from "./extension-state";
 import {
+  CategoryFilterChips,
   CategoryManagerDialog,
+  CategorySelect,
   ExtensionSearch,
   ExtensionSwitch,
+  INHERIT,
   OriginBadge,
   OriginFilterTabs,
   newCategory,
@@ -75,6 +81,7 @@ export function SkillsTab({
   query,
   originFilter,
   setOriginFilter,
+  pluginCategories,
 }: {
   skills: readonly InstalledSkillItem[];
   /** Display names keyed by agent id, for the impact list. */
@@ -89,6 +96,12 @@ export function SkillsTab({
   originFilter: ExtensionFilter;
   /** Shared with the plugin tab: one filter, one taxonomy, both tabs write the same value. */
   setOriginFilter: (next: ExtensionFilter) => void;
+  /**
+   * The installed plugins' own categories, so a bundled Skill inherits its plugin's filing instead
+   * of asking the user to file the same Skill again. Keyed by plugin name; a plugin with no filing
+   * is simply absent, which the tab reads as "inherit nothing".
+   */
+  pluginCategories: Readonly<Record<string, string | undefined>>;
 }) {
   const { user } = useAuth();
   const { locale } = useLocale();
@@ -96,20 +109,48 @@ export function SkillsTab({
 
   const [switches, setSwitches] = useState<SwitchMap>(() => loadSwitches(userId));
   const [categories, setCategories] = useState(() => loadCategories(userId));
+  const [filings, setFilings] = useState<FilingMap>(() => loadFilings(userId));
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [managing, setManaging] = useState(false);
   const [pending, setPending] = useState<PendingToggle | null>(null);
 
   const filters = useMemo(() => filtersFor(true), []);
 
   /**
-   * Filing map: item id -> category. Built from the user's own list plus a file the caller owns —
-   * a skill with no entry is simply uncategorised, which is a real bucket and not a missing one.
+   * Filing map: item id → category id.
+   *
+   * A bundled Skill inherits its **plugin's** category, because that is the filing a user already
+   * made when they filed the plugin — asking them to file the same four Skills again because they
+   * arrived through a plugin would be the tab punishing them for using one. The stored filing wins
+   * when there is one, so a Skill can be pulled out of its plugin's category on purpose.
+   *
+   * A category pointing at a plugin that is no longer installed (or at nothing) reads as
+   * uncategorised rather than throwing: the taxonomy outlives the inventory, which is what makes
+   * it a filing at all.
    */
-  const filings = useMemo(() => {
-    const map: Record<string, string | null> = {};
-    for (const s of skills) map[scopedId("skill", s.name, s.pluginName)] = null;
+  const pluginCategory = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const [name, category] of Object.entries(pluginCategories)) {
+      if (category !== undefined) map[name] = category;
+    }
     return map;
-  }, [skills]);
+  }, [pluginCategories]);
+
+  const effectiveFilings = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    for (const s of skills) {
+      const id = scopedId("skill", s.name, s.pluginName);
+      const own = filings[id];
+      if (own !== undefined) {
+        map[id] = own;
+        continue;
+      }
+      // Unfiled: fall back to the owning plugin's category, if the plugin has one.
+      const inherited = s.pluginName === null ? undefined : pluginCategory[s.pluginName];
+      map[id] = inherited ?? null;
+    }
+    return map;
+  }, [skills, filings, pluginCategory]);
 
   const withOrigin = useMemo(
     () =>
@@ -130,8 +171,11 @@ export function SkillsTab({
     () =>
       withOrigin
         .filter(({ skill }) => matchesQuery(skill, query))
-        .filter(({ origin }) => filterMatches(origin, originFilter)),
-    [withOrigin, query, originFilter],
+        .filter(({ origin }) => filterMatches(origin, originFilter))
+        // Category last: it narrows what the origin filter already narrowed, so the counts below
+        // and the cards on screen always describe the same set.
+        .filter(({ id }) => categoryFilter === null || effectiveFilings[id] === categoryFilter),
+    [withOrigin, query, originFilter, categoryFilter, effectiveFilings],
   );
 
   const counts = useMemo(() => {
@@ -143,6 +187,26 @@ export function SkillsTab({
     }
     return out;
   }, [withOrigin, query]);
+
+  /**
+   * Category counts over the search- and origin-filtered set, plus the uncategorised bucket.
+   *
+   * The `__all__` key carries the total the "全部" chip shows, because that chip is a real choice
+   * (it clears the category filter) and a chip whose number cannot be read would be a dead end.
+   */
+  const categoryCounts = useMemo(() => {
+    const out: Record<string, number> = { __all__: 0 };
+    const inScope = withOrigin
+      .filter(({ skill }) => matchesQuery(skill, query))
+      .filter(({ origin }) => filterMatches(origin, originFilter));
+    out.__all__ = inScope.length;
+    for (const { id } of inScope) {
+      const cat = effectiveFilings[id] ?? null;
+      const key = cat ?? "__uncategorized__";
+      out[key] = (out[key] ?? 0) + 1;
+    }
+    return out;
+  }, [withOrigin, query, originFilter, effectiveFilings]);
 
   const persist = useCallback(
     (next: SwitchMap) => {
@@ -158,6 +222,30 @@ export function SkillsTab({
       saveCategories(userId, next);
     },
     [userId],
+  );
+
+  /**
+   * Files one skill under a category, or clears the filing with `null`.
+   *
+   * The stored map holds **only the user's explicit choices**. An unfiled skill writes nothing
+   * rather than writing `null`, so it keeps inheriting its plugin's category — which means
+   * "unfiled" stays a real state that can fall back, instead of a value that has to be kept in
+   * sync with every plugin's category forever.
+   */
+  const persistFiling = useCallback(
+    (itemId: string, categoryId: string | null) => {
+      const next = { ...filings };
+      if (categoryId === null) delete next[itemId];
+      else next[itemId] = categoryId;
+      setFilings(next);
+      saveFilings(userId, next);
+      // A chip whose count no longer matches the cards would be a dead end, so the filter is
+      // released when the skill leaves the category it was narrowing to.
+      if (categoryFilter !== null && effectiveFilings[itemId] !== categoryFilter) {
+        setCategoryFilter(null);
+      }
+    },
+    [filings, userId, categoryFilter, effectiveFilings],
   );
 
   /**
@@ -215,6 +303,22 @@ export function SkillsTab({
         </Button>
       </div>
 
+      {/* Category chips on their own row, above the origin tabs in reading order — "what is this
+          for" is the question a user arrives with, and "where did it come from" is the follow-up.
+          Hidden until a category exists: with only the "全部" chip on screen there is nothing to
+          choose, and a lone chip reads as a broken control rather than an offer. */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1">
+          <CategoryFilterChips
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            categories={categories}
+            counts={categoryCounts}
+            uncategorizedLabel={S.plugins.allCategories}
+          />
+        </div>
+      )}
+
       {visible.length === 0 ? (
         <EmptyState
           /* Two different empties, because they call for different next moves: a search that
@@ -253,6 +357,28 @@ export function SkillsTab({
                 action={
                   <div className="flex items-center gap-1.5">
                     <OriginBadge origin={origin} />
+                    {/* Filing control, present only once a category exists: a select with one
+                        empty option is a control that does nothing, and it would sit in the same
+                        slot as the switch on every card. */}
+                    {categories.length > 0 && (
+                      <CategorySelect
+                        value={filings[id] ?? null}
+                        categories={categories}
+                        label={skill.name}
+                        inheritLabel={S.plugins.categoryInherit}
+                        uncategorizedLabel={S.plugins.categoryNone}
+                        onChange={(next) => {
+                          if (next === INHERIT) {
+                            const cleared = { ...filings };
+                            delete cleared[id];
+                            setFilings(cleared);
+                            saveFilings(userId, cleared);
+                          } else {
+                            persistFiling(id, next);
+                          }
+                        }}
+                      />
+                    )}
                     <ExtensionSwitch
                       on={on}
                       label={skill.name}

@@ -24,6 +24,7 @@ import type { Category } from "./extension-model";
 const NS = "jiumate.ext.";
 const STATE_KEY = `${NS}state`;
 const CATEGORIES_KEY = `${NS}categories`;
+const FILINGS_KEY = `${NS}filings`;
 
 /**
  * Switch overrides: itemId -> false means "explicitly off". Absent means on.
@@ -137,6 +138,36 @@ export function loadCategories(userId?: string | null): Category[] {
 
 export function saveCategories(userId: string | undefined | null, categories: Category[]): void {
   writeJson(keyFor(userId, CATEGORIES_KEY), categories);
+}
+
+/**
+ * Which category each item is filed under: itemId → category id, or `null` for uncategorised.
+ *
+ * Separate from the category list because the two have different lifetimes: a category can be
+ * renamed or deleted and the filing follows the **id**, while the filing of an item that has since
+ * been uninstalled simply becomes unreadable and is ignored. Keeping them in one blob would make
+ * every category rename rewrite every filing.
+ *
+ * Only the user's own choices are stored — a bundled skill is filed under its plugin's category by
+ * default rather than being written here, so an item that ships with a category does not need a
+ * local record to keep it.
+ */
+export type FilingMap = Record<string, string | null>;
+
+export function loadFilings(userId?: string | null): FilingMap {
+  const raw = readJson<unknown>(keyFor(userId, FILINGS_KEY), {});
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  // Values are category ids or null; anything else is a shape this version cannot use, and
+  // dropping the entry (rather than the whole map) keeps one bad key from losing every filing.
+  const out: FilingMap = {};
+  for (const [itemId, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (value === null || typeof value === "string") out[itemId] = value;
+  }
+  return out;
+}
+
+export function saveFilings(userId: string | undefined | null, filings: FilingMap): void {
+  writeJson(keyFor(userId, FILINGS_KEY), filings);
 }
 
 /**

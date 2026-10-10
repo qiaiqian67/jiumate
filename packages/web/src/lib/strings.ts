@@ -1425,6 +1425,23 @@ export const zh = {
     originBundled: "插件捆绑",
     /** Why a bundled skill cannot be uninstalled on its own. */
     bundledSkillNote: "捆绑技能：不能单独卸载，随所属插件一并移除；可单独启用或禁用。",
+    /**
+     * Skills still installed under a name the library has since renamed. Shown as a banner with one
+     * action rather than as a per-card fix, because the rename applies to every Agent at once —
+     * offering it per card would suggest it only affects that one.
+     */
+    legacyTitle: (n: number): string => `${n} 个技能有新的名称`,
+    legacyBody: (name: string, to: string): string =>
+      `「${name}」在技能库中已改名为「${to}」。改名后它会重新归属到对应插件，旧目录会先备份。`,
+    legacyRenameAction: (to: string): string => `改名为 ${to}`,
+    legacyRenameConfirmTitle: (name: string, to: string): string => `改名 ${name}`,
+    legacyRenameConfirmBody: (name: string, to: string, agents: string): string =>
+      `将「${name}」改名为「${to}」，影响 ${agents}。旧目录会先备份为副本，改名可恢复；技能内容不变。`,
+    legacyRenameDone: (from: string, to: string, agents: string): string =>
+      `已改名为 ${to}（原 ${from}）· ${agents}`,
+    legacyRenamePartial: (from: string, to: string, skipped: string): string =>
+      `${from} → ${to} 已完成，但 ${skipped} 上跳过（目标名称已存在）`,
+    legacyRenameFailed: (name: string): string => `改名 ${name} 失败`,
     /** Why a built-in cannot be uninstalled. */
     builtinSkillNote: "系统内置技能：不可卸载。",
     /** Switch labels, shared by every surface's toggle. */
@@ -1458,6 +1475,10 @@ export const zh = {
     /** Manage-categories button. */
     manageCategories: "管理分类",
     addCategory: "新建分类",
+    /** Per-skill filing select: follow the plugin's own category. */
+    categoryInherit: "跟随插件",
+    /** Per-skill filing select: no category at all, which is not the same as following. */
+    categoryNone: "不分类",
     categoryNamePlaceholder: "分类名称",
     categoryRename: "重命名",
     categoryDelete: "删除",

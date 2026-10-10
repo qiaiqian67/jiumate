@@ -104,6 +104,79 @@ export function OriginFilterTabs({
 }
 
 /**
+ * Category filter chips, plus their live counts.
+ *
+ * **A separate row from {@link OriginFilterTabs}, not a merge.** Origin answers "where did this
+ * come from" and category answers "what is this for" — two independent questions a user asks in
+ * sequence, and stacking them into one set of tabs would make a card match either rather than both,
+ * so the reader would lose the ability to say "built-in **and** my own 常用" at once.
+ *
+ * Counts are per-category over the **search-filtered, origin-filtered** set, so a chip answers
+ * "how many would I get if I clicked this" — the same rule the origin tabs use, and for the same
+ * reason: the active chip's own number is always the number on screen, which tells you nothing.
+ *
+ * **Uncategorised is a real chip, not an absence.** Items the user has not filed are a bucket they
+ * will want to see (and a reminder that some are unfiled), so it gets a label and a count like any
+ * other. Rendering nothing for it would make "I never filed these" invisible.
+ */
+export function CategoryFilterChips({
+  value,
+  onChange,
+  categories,
+  counts,
+  uncategorizedLabel,
+}: {
+  value: string | null;
+  onChange: (next: string | null) => void;
+  categories: readonly { id: string; name: string }[];
+  /** Category id → count. The uncategorised bucket uses the `null` key. */
+  counts: Readonly<Record<string, number>>;
+  uncategorizedLabel: string;
+}) {
+  const chip = (active: boolean) =>
+    `flex h-7 items-center gap-1 rounded-full px-2.5 text-xs transition-colors duration-150 ${
+      active
+        ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+        : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+    }`;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={value === null}
+        onClick={() => onChange(null)}
+        className={chip(value === null)}
+      >
+        {uncategorizedLabel === "" ? "全部" : uncategorizedLabel}
+        <span className={value === null ? "opacity-70" : "text-gray-400 dark:text-gray-500"}>
+          {counts["__all__"] ?? 0}
+        </span>
+      </button>
+      {categories.map((c) => {
+        const active = value === c.id;
+        return (
+          <button
+            key={c.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(active ? null : c.id)}
+            className={chip(active)}
+          >
+            {c.name}
+            <span className={active ? "opacity-70" : "text-gray-400 dark:text-gray-500"}>
+              {counts[c.id] ?? 0}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
  * Search box for a surface.
  *
  * Magnifier glyph with the query as its accessible name (there is no visible label — the row of
@@ -381,6 +454,66 @@ export function CategoryManagerDialog({
 export function categoryOf(itemCategory: string | null | undefined): string | null {
   return itemCategory ?? null;
 }
+
+/**
+ * Per-item filing control: which category this Skill is in.
+ *
+ * A native `<select>` rather than a custom menu, deliberately. It is a small, infrequent, one-value
+ * choice with a long tail of categories — exactly what the platform control is good at — and it
+ * brings keyboard and screen-reader behaviour for free that a bespoke dropdown would have to
+ * reimplement. It sits in the card's action slot, where a per-item control belongs.
+ *
+ * `inherit` is offered as a distinct option rather than being folded into "uncategorised": an
+ * unfiled bundled Skill follows its plugin, and a way to go back to that is not the same action as
+ * choosing no category at all.
+ */
+export function CategorySelect({
+  value,
+  categories,
+  label,
+  onChange,
+  inheritLabel,
+  uncategorizedLabel,
+}: {
+  value: string | null;
+  categories: readonly { id: string; name: string }[];
+  /** The item's name, for the accessible name. */
+  label: string;
+  onChange: (next: string | null | typeof INHERIT) => void;
+  /** Label for "follow whatever the plugin says". */
+  inheritLabel: string;
+  /** Label for "explicitly no category". */
+  uncategorizedLabel: string;
+}) {
+  return (
+    <select
+      aria-label={label}
+      title={label}
+      value={value === null ? "" : value}
+      onChange={(e) => {
+        const next = e.target.value;
+        if (next === UNCATEGORIZED_VALUE) onChange(null);
+        else if (next === "") onChange(INHERIT);
+        else onChange(next);
+      }}
+      className="h-7 max-w-[9rem] cursor-pointer truncate rounded-md border border-gray-200 bg-white px-1.5 text-xs text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-bg)] dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+    >
+      <option value="">{inheritLabel}</option>
+      {categories.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name}
+        </option>
+      ))}
+      <option value={UNCATEGORIZED_VALUE}>{uncategorizedLabel}</option>
+    </select>
+  );
+}
+
+/** Sentinel the native select uses for "explicitly uncategorised", distinct from "inherit". */
+export const UNCATEGORIZED_VALUE = "__none__";
+
+/** Passed to `onChange` when the item should go back to following its plugin. */
+export const INHERIT = Symbol("inherit");
 
 /** Toast helper kept local so callers do not import three modules to report a category change. */
 export function reportCategoryError(e: unknown): void {

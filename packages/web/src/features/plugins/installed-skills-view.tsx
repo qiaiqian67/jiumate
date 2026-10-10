@@ -19,10 +19,17 @@
  * recorded has no authoritative answer, and a badge is more honest than a card that reads like a
  * record.
  */
+import { useState } from "react";
 import type { InstalledPluginItem, InstalledSkillItem } from "@prismshadow/jiumate-server/api";
+import type { RenamableSkill } from "../../api/endpoints";
+import * as api from "../../api/endpoints";
+import { apiErrorText } from "../../lib/api-error";
 import { LibraryCard } from "./library-card.js";
 import { S } from "../../lib/strings.js";
 import { useLocale } from "../../state/locale";
+import { Button } from "../../components/ui/button";
+import { ConfirmModal } from "../../components/ui/confirm-modal";
+import { toastError, toastSuccess } from "../../components/ui/toast";
 import { BOOK_ICON, localizedText } from "../chat/skill-use";
 
 /**
@@ -117,15 +124,135 @@ function Group({
   );
 }
 
+/**
+ * Runs one rename and reports exactly what happened.
+ *
+ * **Partial success is reported, not smoothed over.** The server moves the Skill on every Agent
+ * that holds it and returns per-Agent results; an Agent whose new name is already taken is
+ * skipped rather than merged. Collapsing that into one toast would claim a rename that did not
+ * happen on every Agent, which is the one thing the user could not then check for themselves.
+ */
+async function doRename(
+  projectId: string,
+  item: RenamableSkill,
+  agentNamesOf: (ids: readonly string[]) => string[],
+) {
+  try {
+    const res = await api.renameProjectSkill(projectId, item.from, item.to);
+    const names = agentNamesOf(res.moved);
+    if (res.skipped.length > 0) {
+      toastError(
+        S.plugins.legacyRenamePartial(
+          item.from,
+          item.to,
+          agentNamesOf(res.skipped.map((s) => s.agentId)).join("、"),
+        ),
+      );
+    } else {
+      toastSuccess(S.plugins.legacyRenameDone(item.from, item.to, names.join("、")));
+    }
+  } catch (e) {
+    toastError(`${S.plugins.legacyRenameFailed(item.from)}: ${apiErrorText(e)}`);
+  }
+}
+
+/**
+ * Skills still installed under a name the library has since renamed, offered as a fix rather than
+ * left to be discovered on their own.
+ *
+ * A banner rather than a per-card button, for one reason: the rename applies to **every** Agent
+ * that holds the Skill at once, so a control sitting on one card would imply it only affects that
+ * one. It also explains why the Skill looks wrong — a pre-rebrand copy is filed as the user's own
+ * import and its plugin reads as incomplete, which is otherwise a puzzle with no visible cause.
+ */
+function LegacyRenameBanner({
+  projectId,
+  items,
+  agentNamesOf,
+  onRenamed,
+}: {
+  projectId: string;
+  items: readonly RenamableSkill[];
+  agentNamesOf: (ids: readonly string[]) => string[];
+  /** Re-read the catalog after a rename, so the result is shown rather than assumed. */
+  onRenamed?: () => void;
+}) {
+  const [pending, setPending] = useState<RenamableSkill | null>(null);
+  if (items.length === 0) return null;
+
+  const agentsOf = (item: RenamableSkill) => agentNamesOf(item.agents).join("、");
+
+  return (
+    <>
+      <div
+        role="status"
+        className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700/60 dark:bg-amber-950/30"
+      >
+        <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+          {S.plugins.legacyTitle(items.length)}
+        </p>
+        <ul className="mt-2 space-y-2">
+          {items.map((item) => (
+            <li
+              key={item.from}
+              className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-amber-900 dark:text-amber-200"
+            >
+              <span className="min-w-0 flex-1">
+                {S.plugins.legacyBody(item.from, item.to)}
+              </span>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="shrink-0"
+                onClick={() => setPending(item)}
+              >
+                {S.plugins.legacyRenameAction(item.to)}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {pending !== null && (
+        <ConfirmModal
+          open
+          title={S.plugins.legacyRenameConfirmTitle(pending.from, pending.to)}
+          confirmLabel={S.plugins.legacyRenameAction(pending.to)}
+          onClose={() => setPending(null)}
+          onConfirm={() => {
+            setPending(null);
+            void doRename(projectId, pending, agentNamesOf);
+            // Re-read regardless of outcome: a partial success still moved something, and the
+            // listing has to show the result rather than leave the old name on screen.
+            onRenamed?.();
+          }}
+        >
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            {S.plugins.legacyRenameConfirmBody(pending.from, pending.to, agentsOf(pending))}
+          </p>
+        </ConfirmModal>
+      )}
+    </>
+  );
+}
+
 /** The whole page body, given the resolved view and a name resolver for Agent ids. */
 export function InstalledSkillsView({
   plugins,
   skills,
   agentNamesOf,
+  projectId,
+  legacy,
+  onRenamed,
 }: {
   plugins: InstalledPluginItem[];
   skills: InstalledSkillItem[];
-  agentNamesOf: (ids: string[]) => string[];
+  agentNamesOf: (ids: readonly string[]) => string[];
+  /** The Project these Skills belong to — the rename's scope, so needed only when `legacy` is set. */
+  projectId?: string;
+  /** Installed Skills the library has renamed; drives the banner. Absent = none known. */
+  legacy?: readonly RenamableSkill[];
+  /** Called after a rename attempt, so the caller re-reads the catalog either way. */
+  onRenamed?: () => void;
 }) {
   // The one split needing explanation: a Skill is the user's own when the library does not ship
   // it. Decided by the library's contents rather than by the record, so a stale record cannot make
@@ -134,6 +261,14 @@ export function InstalledSkillsView({
   const library = skills.filter((s) => s.origin === "library");
   return (
     <div>
+      {legacy !== undefined && projectId !== undefined && (
+        <LegacyRenameBanner
+          projectId={projectId}
+          items={legacy}
+          agentNamesOf={agentNamesOf}
+          onRenamed={onRenamed}
+        />
+      )}
       <Group title={S.plugins.groupPluginsCount(plugins.length)} count={plugins.length}>
         <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {plugins.map((plugin) => (

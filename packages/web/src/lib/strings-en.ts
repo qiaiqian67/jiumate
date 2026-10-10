@@ -1457,6 +1457,23 @@ export const en: Strings = {
     /** Why a bundled skill cannot be uninstalled on its own. */
     bundledSkillNote:
       "Bundled skill: can't be uninstalled on its own — it goes with its plugin, but can be switched on or off alone.",
+    /**
+     * Skills still installed under a name the library has since renamed. Shown as a banner with one
+     * action rather than as a per-card fix, because the rename applies to every Agent at once —
+     * offering it per card would suggest it only affects that one.
+     */
+    legacyTitle: (n: number): string => `${n} skill${n === 1 ? "" : "s"} can be renamed`,
+    legacyBody: (name: string, to: string): string =>
+      `“${name}” is now “${to}” in the library. Renaming puts it back with its plugin; the old directory is backed up first.`,
+    legacyRenameAction: (to: string): string => `Rename to ${to}`,
+    legacyRenameConfirmTitle: (name: string, to: string): string => `Rename ${name}`,
+    legacyRenameConfirmBody: (name: string, to: string, agents: string): string =>
+      `Rename “${name}” to “${to}”, affecting ${agents}. The old directory is backed up as a copy first, so this is reversible; the skill's contents are unchanged.`,
+    legacyRenameDone: (from: string, to: string, agents: string): string =>
+      `Renamed to ${to} (was ${from}) · ${agents}`,
+    legacyRenamePartial: (from: string, to: string, skipped: string): string =>
+      `${from} → ${to} done, but skipped on ${skipped} (the new name is already taken)`,
+    legacyRenameFailed: (name: string): string => `Renaming ${name} failed`,
     /** Why a built-in cannot be uninstalled. */
     builtinSkillNote: "Built-in skill: can't be uninstalled.",
     enable: "Enable",
@@ -1487,6 +1504,10 @@ export const en: Strings = {
     categoryUncategorized: "Uncategorized",
     manageCategories: "Manage categories",
     addCategory: "New category",
+    /** Per-skill filing select: follow the plugin's own category. */
+    categoryInherit: "Follow plugin",
+    /** Per-skill filing select: no category at all, which is not the same as following. */
+    categoryNone: "Uncategorised",
     categoryNamePlaceholder: "Category name",
     categoryRename: "Rename",
     categoryDelete: "Delete",

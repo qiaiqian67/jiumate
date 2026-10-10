@@ -91,6 +91,7 @@ import { PluginDetailModal } from "./plugin-detail";
 import { ConnectorsTab } from "./connectors-tab";
 import { SkillsTab } from "./skills-tab";
 import { OriginFilterTabs } from "./extension-ui";
+import { loadFilings, scopedId } from "./extension-state";
 import { SourcesManager, BUILTIN_SOURCE } from "./sources-manager";
 import { filtersFor, type ExtensionFilter } from "./extension-model";
 import { Tabs } from "../../components/ui/tabs";
@@ -258,6 +259,14 @@ export function PluginsPage() {
   const [showInstalled, setShowInstalled] = useState(false);
   /** The full-screen page's own search, independent of the library's. */
   const [installedQuery, setInstalledQuery] = useState("");
+  /**
+   * Installed Skills the library has since renamed (null while unknown, [] when there are none).
+   *
+   * Fetched only while the installed page is open: it is a Project-wide read, and the page is the
+   * only place that offers the fix, so fetching it earlier would be work nobody could see the
+   * result of.
+   */
+  const [legacy, setLegacy] = useState<readonly api.RenamableSkill[] | null>(null);
   /** Library search: filters the cards inside their categories (see the title row). */
   const [query, setQuery] = useState("");
   /** Active category chip (null = all): narrows the sections to one, like the reference chips. */
@@ -414,6 +423,39 @@ export function PluginsPage() {
   }, [projectId]);
 
   useEffect(() => reloadCatalog(), [reloadCatalog]);
+
+  /**
+   * Each installed plugin's own category, so a bundled Skill inherits its plugin's filing instead
+   * of being uncategorised purely for having arrived through one.
+   *
+   * Read from the **same** filing store the Skills write to, keyed by the plugin's scoped id — one
+   * taxonomy, one place. A separate map for plugins would be a second answer to "what category is
+   * this in", and the two would disagree the first time a user filed the same thing twice.
+   */
+  const installedPluginCategories = useMemo(() => {
+    const out: Record<string, string> = {};
+    const filings = userId === null ? {} : loadFilings(userId);
+    for (const p of catalog?.plugins ?? []) {
+      const filed = filings[scopedId("plugin", p.name)];
+      if (filed !== undefined && filed !== null) out[p.name] = filed;
+    }
+    return out;
+  }, [catalog, userId]);
+
+  // The rename candidates, fetched only while the installed page is open — it is a Project-wide
+  // read and the page is the only surface that offers the fix. An error leaves the list null, so
+  // the banner simply does not appear: no renameable Skills is indistinguishable from "could not
+  // check", and showing an empty "nothing to do" would claim a check that never succeeded.
+  useEffect(() => {
+    if (!showInstalled || !projectId) return;
+    void api.getRenamableSkills(projectId).then(
+      (res) => setLegacy(res.items),
+      // Left as null, so the banner does not appear: "no renameable Skills" and "could not check"
+      // are indistinguishable to the user, and claiming the first when it is the second would be
+      // a wrong reassurance.
+      () => setLegacy(null),
+    );
+  }, [showInstalled, projectId]);
 
   /**
    * One Agent's snapshot entry with a plugin marked present (at the library's version) or
@@ -755,6 +797,11 @@ export function PluginsPage() {
           setShowInstalled(false);
         }}
         agentNamesOf={(ids) => agentNamesOf(ids, agents)}
+        // `null` upstream means "no Project chosen"; the page reads that as absent rather than
+        // passing a null through as a string.
+        projectId={projectId ?? undefined}
+        legacy={legacy}
+        reloadCatalog={reloadCatalog}
       />
     );
   }
@@ -916,6 +963,7 @@ export function PluginsPage() {
               query={query}
               originFilter={originFilter}
               setOriginFilter={setOriginFilter}
+              pluginCategories={installedPluginCategories}
             />
           </div>
         ) : (
@@ -1197,12 +1245,21 @@ function InstalledSkillsPage({
   onQueryChange,
   onBack,
   agentNamesOf,
+  projectId,
+  legacy,
+  reloadCatalog,
 }: {
   catalog: InstalledSkillsResponse | null;
   query: string;
   onQueryChange: (next: string) => void;
   onBack: () => void;
   agentNamesOf: (ids: readonly string[]) => string[];
+  /** The Project these Skills belong to; the rename's scope. */
+  projectId: string | undefined;
+  /** Installed Skills the library has since renamed, or null while unknown. */
+  legacy: readonly api.RenamableSkill[] | null;
+  /** Re-reads the catalog, so a rename's effect is shown rather than assumed. */
+  reloadCatalog: () => void;
 }) {
   const { locale } = useLocale();
   const total =
@@ -1285,7 +1342,14 @@ function InstalledSkillsPage({
           </p>
         ) : (
           <div className="mt-6">
-            <InstalledSkillsView plugins={plugins} skills={skills} agentNamesOf={agentNamesOf} />
+            <InstalledSkillsView
+              plugins={plugins}
+              skills={skills}
+              agentNamesOf={agentNamesOf}
+              projectId={projectId}
+              legacy={legacy ?? undefined}
+              onRenamed={() => void reloadCatalog()}
+            />
           </div>
         )}
       </div>

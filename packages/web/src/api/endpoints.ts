@@ -1236,6 +1236,45 @@ export const uninstallPlugin = (projectId: string, agentId: string, name: string
     { method: "POST", body: JSON.stringify({ name }) },
   );
 
+/** One pre-rebrand Skill this build knows how to rename, and which Agents hold it. */
+export interface RenamableSkill {
+  /** The old directory name still installed (`linsight-sdk`). */
+  from: string;
+  /** The library's current name for it (`jiumate-sdk`). */
+  to: string;
+  agents: string[];
+}
+
+/**
+ * Installed Skills that exist under a name the library has since renamed.
+ *
+ * Discovered rather than declared: the server reports a Skill only when it is installed, the
+ * library no longer ships its old name, and this build knows the pairing. Deriving it means a
+ * future rename ships as a data change instead of an edit to a list someone has to remember.
+ */
+export const getRenamableSkills = (projectId: string) =>
+  apiFetch<{ items: RenamableSkill[] }>(
+    `/api/projects/${encodeURIComponent(projectId)}/skills/renamable`,
+  );
+
+/**
+ * Renames one Skill on every Agent that holds it, backing the old directory up first.
+ *
+ * The backup is the point: an installed copy may have been hand-edited, and neither this nor a
+ * later reinstall can tell an edit from an old version of the library's own text, so the outcome
+ * has to be recoverable either way. The body is left alone — upgrading the text is a reinstall's
+ * job, and the rename's purpose is the name.
+ *
+ * `moved` and `skipped` are per Agent because a rename cannot be partial-success or partial-fail:
+ * it is a directory move, and an Agent whose target name is already taken is reported rather than
+ * having its copy merged away.
+ */
+export const renameProjectSkill = (projectId: string, from: string, to: string) =>
+  apiFetch<{ from: string; to: string; moved: string[]; skipped: { agentId: string; reason: string }[] }>(
+    `/api/projects/${encodeURIComponent(projectId)}/skills/rename`,
+    { method: "POST", body: { from, to } },
+  );
+
 /**
  * Switches an installed plugin on or off for one Agent.
  *
