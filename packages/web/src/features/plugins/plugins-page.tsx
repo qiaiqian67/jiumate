@@ -671,12 +671,25 @@ export function PluginsPage() {
    * category at all (see {@link flatLibraryCards}), so mixing the two shapes into one variable
    * would put a union on every read below for no gain.
    */
-  const visibleGroups = useMemo(() => {
+const visibleGroups = useMemo(() => {
     if (groups === null || libraryView !== "plugins") return null;
     const q = query.trim().toLowerCase();
     const byCategory = groupFilter === null ? groups : groups.filter((g) => g.id === groupFilter);
-    if (q === "") return byCategory;
-    return byCategory
+    // The origin tab narrows the list too. It used to only change which pill was filled while the
+    // cards below stayed as they were, which reads as a broken control: a tab that says 「用户安装」
+    // and then shows every built-in plugin is worse than having no tab at all.
+    //
+    // Every library plugin is **built-in** — the library ships with the product and nothing has been
+    // added to it by anyone, which is why 「用户安装」 counts 0. Saying so in one place means the
+    // day a user plugin can actually be added, this is the single line that changes.
+    const byOrigin =
+      originFilter === "all" || originFilter === "builtin"
+        ? byCategory
+        : byCategory
+            .map((group) => ({ ...group, plugins: [] as PluginItem[] }))
+            .filter((group) => group.plugins.length > 0);
+    if (q === "") return byOrigin;
+    return byOrigin
       .map((group) => ({
         ...group,
         plugins: group.plugins.filter((plugin) =>
@@ -687,7 +700,7 @@ export function PluginsPage() {
         ),
       }))
       .filter((group) => group.plugins.length > 0);
-  }, [groups, query, locale, groupFilter, libraryView]);
+  }, [groups, query, locale, groupFilter, libraryView, originFilter]);
 
   /**
    * Library plugins by origin, for the filter tabs.

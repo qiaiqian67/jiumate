@@ -1566,7 +1566,7 @@ export const zh = {
      * 「已装技能」页的总标题。它数的是**技能**，不是安装单位——插件和技能是两种东西，
      * 混进一个数字就会重演「19 个技能对 11 个插件，差的 8 个去哪了」。
      */
-    installedTitle: (skills: number): string => `已安装技能 (${skills})`,
+    installedTitle: (skills: number): string => `已安装 (${skills})`,
     /** 连接器页的计数徒标，与技能页的「已安装」同一位置、同一形状。 */
     connectorsCount: (n: number): string => `已连接 (${n})`,
     /** 技能 TAB 的副标签（插件库内成员视图）。 */

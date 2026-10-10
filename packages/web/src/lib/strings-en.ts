@@ -1593,7 +1593,7 @@ export const en: Strings = {
      * skill are different things, and folding both into one number is what made "19 skills against
      * 11 plugins — where did the other 8 go?" unanswerable.
      */
-    installedTitle: (skills: number): string => `Installed skills (${skills})`,
+    installedTitle: (skills: number): string => `Installed (${skills})`,
     /** The connector tab's count badge, in the same slot and shape as the skills one. */
     connectorsCount: (n: number): string => `Connected (${n})`,
     /** Sub-label for the skills tab (the flat member view inside the library). */
