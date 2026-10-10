@@ -1524,8 +1524,10 @@ export const zh = {
 
     /** 添加整个目录: import every plugin in the directory the user pointed at. */
     addWholeDir: "添加整个目录",
-    addWholeDirHint: "把该目录下的所有插件添加到本机，全部处于待启用状态（需启用后 Agent 才能调用）",
-    addedWholeDir: (n: number, names: string): string => `已添加 ${n} 个插件到本机：${names}（待启用）`,
+    addWholeDirHint:
+      "把该目录下的所有插件添加到本机，全部处于待启用状态（需启用后 Agent 才能调用）",
+    addedWholeDir: (n: number, names: string): string =>
+      `已添加 ${n} 个插件到本机：${names}（待启用）`,
     addWholeDirPartial: (detail: string): string => `以下插件未能添加：${detail}`,
 
     // —— 插件卡片按钮：安装/卸载/启用/禁用/升级 ——
@@ -1547,12 +1549,12 @@ export const zh = {
     upgradeUpToDate: "已是最新版本",
     upgradeDone: (v: string): string => `已升级到 ${v}`,
     /** The delete confirm: which Agents lose access. Empty when none have it. */
-    deleteAffectsAgents: (names: string): string => `以下 Agent 正在使用它，删除后它们将无法再调用：${names}`,
+    deleteAffectsAgents: (names: string): string =>
+      `以下 Agent 正在使用它，删除后它们将无法再调用：${names}`,
     /** The delete confirm when no Agent has it. */
     deleteAffectsNone: "当前没有 Agent 使用它。",
     deleteConfirmTitle: (name: string): string => `从本机卸载「${name}」？`,
-    deleteConfirmBody: (name: string): string =>
-      `将从本机磁盘删除「${name}」，且不可恢复。`,
+    deleteConfirmBody: (name: string): string => `将从本机磁盘删除「${name}」，且不可恢复。`,
     deletedToast: (name: string): string => `已从本机卸载 ${name}`,
 
     pageDesc: "内置插件库：每个插件带有技能和／或钩子包，可浏览、快捷调用，或安装到 Agent。",

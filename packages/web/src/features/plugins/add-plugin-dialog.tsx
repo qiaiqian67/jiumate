@@ -123,13 +123,7 @@ function ImportError({ error }: { error: string | null }) {
  * security — it is so the button can be disabled on a `ftp://` paste before a request is made,
  * rather than the user waiting to learn it will be refused.
  */
-function UrlSource({
-  projectId,
-  onDone,
-}: {
-  projectId: string;
-  onDone: (name: string) => void;
-}) {
+function UrlSource({ projectId, onDone }: { projectId: string; onDone: (name: string) => void }) {
   const [url, setUrl] = useState("");
   const { busy, error, setError, run } = useImporter(onDone);
 
@@ -166,7 +160,9 @@ function UrlSource({
         <Button
           variant="primary"
           disabled={busy || url.trim() === "" || parsed() === null}
-          onClick={() => void run(() => importPluginFromUrl(projectId, url.trim()), S.plugins.pluginImported)}
+          onClick={() =>
+            void run(() => importPluginFromUrl(projectId, url.trim()), S.plugins.pluginImported)
+          }
         >
           {busy ? S.common.loading : S.plugins.addFromUrlAction}
         </Button>
@@ -320,13 +316,7 @@ function DiscoveredRow({
  * **A path the user types wins over the scan.** Their own pick is placed first and deduplicated by
  * resolved path, so pasting a directory the scan also found shows it once rather than twice.
  */
-function LocalSource({
-  projectId,
-  onDone,
-}: {
-  projectId: string;
-  onDone: (name: string) => void;
-}) {
+function LocalSource({ projectId, onDone }: { projectId: string; onDone: (name: string) => void }) {
   const [manualPath, setManualPath] = useState("");
   const [scan, setScan] = useState<{
     plugins: {

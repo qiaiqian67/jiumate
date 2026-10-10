@@ -1257,9 +1257,7 @@ export const discoverLocalPlugins = (projectId: string, localPath?: string) =>
     probes: { path: string; label: string; exists: boolean }[];
   }>(
     `/api/projects/${encodeURIComponent(projectId)}/plugins/import/discover` +
-      (localPath === undefined || localPath === ""
-        ? ""
-        : `?path=${encodeURIComponent(localPath)}`),
+      (localPath === undefined || localPath === "" ? "" : `?path=${encodeURIComponent(localPath)}`),
   );
 
 /** The result of any successful import, whatever the source. */
@@ -1413,10 +1411,15 @@ export const getRenamableSkills = (projectId: string) =>
  * having its copy merged away.
  */
 export const renameProjectSkill = (projectId: string, from: string, to: string) =>
-  apiFetch<{ from: string; to: string; moved: string[]; skipped: { agentId: string; reason: string }[] }>(
-    `/api/projects/${encodeURIComponent(projectId)}/skills/rename`,
-    { method: "POST", body: { from, to } },
-  );
+  apiFetch<{
+    from: string;
+    to: string;
+    moved: string[];
+    skipped: { agentId: string; reason: string }[];
+  }>(`/api/projects/${encodeURIComponent(projectId)}/skills/rename`, {
+    method: "POST",
+    body: { from, to },
+  });
 
 /**
  * Switches an installed plugin on or off for one Agent.

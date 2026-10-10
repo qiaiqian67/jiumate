@@ -94,12 +94,7 @@ import { OriginFilterTabs } from "./extension-ui";
 import { loadFilings, scopedId } from "./extension-state";
 import { AddPluginDialog } from "./add-plugin-dialog";
 import { filtersFor, type ExtensionFilter } from "./extension-model";
-import {
-  loadCategories,
-  removeCategory,
-  saveCategories,
-  type FilingMap,
-} from "./extension-state";
+import { loadCategories, removeCategory, saveCategories, type FilingMap } from "./extension-state";
 import { CategoryManagerDialog, newCategory } from "./extension-ui";
 import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
@@ -716,7 +711,7 @@ export function PluginsPage() {
    * category at all (see {@link flatLibraryCards}), so mixing the two shapes into one variable
    * would put a union on every read below for no gain.
    */
-const visibleGroups = useMemo(() => {
+  const visibleGroups = useMemo(() => {
     if (groups === null || libraryView !== "plugins") return null;
     const q = query.trim().toLowerCase();
     const byCategory = groupFilter === null ? groups : groups.filter((g) => g.id === groupFilter);

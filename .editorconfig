@@ -1,0 +1,32 @@
+# EditorConfig, paired with .gitattributes (core.autocrlf=true).
+#
+# These two do different jobs and neither replaces the other:
+#
+#   .gitattributes  decides what Git stores and what it checks out. `* text=auto eol=lf`
+#                   already normalises the index to LF and asks for LF in the working tree.
+#   .editorconfig   decides what an EDITOR saves. Without it, a Windows editor set to CRLF
+#                   writes CRLF into the working tree, Git then sees a whole-file diff on a
+#                   file nobody edited, and that noise is committed by accident.
+#
+# So the pair closes the loop: Git normalises on the way in and out, editors normalise on
+# save, and a file's line endings stop being a function of which machine touched it last.
+
+root = true
+
+[*]
+charset = utf-8
+# LF, matching `.gitattributes` and Prettier's endOfLine=lf. A CRLF here is what produced
+# the phantom diffs this file exists to prevent.
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+# Trailing whitespace is invisible in review and becomes a diff line on the next edit.
+trim_trailing_whitespace = true
+
+# Markdown: two trailing spaces are a hard line break in CommonMark, so they are content.
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{py,ps1,cmd,bat}]
+indent_size = 4

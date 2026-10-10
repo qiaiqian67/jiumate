@@ -1577,7 +1577,8 @@ export const en: Strings = {
     upgradeHint:
       "Check the original install source for a newer version, and download over this one if there is one",
     /** No recorded source — a plugin added from a folder has nothing to check against. */
-    upgradeNoSource: "This plugin was added from a folder on this machine, so there is no source to check",
+    upgradeNoSource:
+      "This plugin was added from a folder on this machine, so there is no source to check",
     /** Checked, and the installed version is already current. */
     upgradeUpToDate: "Already up to date",
     upgradeDone: (v: string): string => `Upgraded to ${v}`,
