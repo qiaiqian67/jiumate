@@ -8,6 +8,11 @@
  * while reading. The files arrive in one request (GET /api/plugins/:plugin/files) when the
  * Modal opens; a markdown file renders through the chat markdown component with its
  * frontmatter stripped, anything else as a code block.
+ *
+ * **The credential section sits between the stats and the browser**, because it is the one thing
+ * on this screen the user sometimes has to *do* rather than read. Everything else describes what
+ * the plugin ships; a declared API key is a blocked next step, and it belongs next to the
+ * description of what needs it rather than behind a settings page on another screen.
  */
 import { useEffect, useState } from "react";
 import { Modal } from "../../components/ui/modal";
@@ -23,6 +28,7 @@ import { CodeBlock } from "../chat/code-block";
 import { Md } from "../chat/md";
 import { SkillTile } from "../skills/skill-icon-view";
 import { localizedText } from "../chat/skill-use";
+import { PluginCredentials, pluginEnvNames } from "./plugin-credentials";
 
 /** One collapsible group of the tree: a skill's directory, or the hook package's scripts. */
 interface FileGroup {
@@ -101,6 +107,7 @@ export function PluginDetailModal({
   plugin,
   meta,
   installedCount,
+  onCredentialsChanged,
   onClose,
 }: {
   plugin: PluginItem;
@@ -110,6 +117,8 @@ export function PluginDetailModal({
    *  state truthfully. Passed in rather than fetched: the card already counted it to draw `meta`,
    *  and a second request would only be able to disagree with it. */
   installedCount: number;
+  /** Called after a credential is saved, so the card's key glyph can re-read its own state. */
+  onCredentialsChanged?: () => void;
   onClose: () => void;
 }) {
   const { locale } = useLocale();
@@ -198,6 +207,11 @@ export function PluginDetailModal({
           </dd>
         </div>
       </dl>
+
+      {/* Credentials, when this plugin's Skills declare any. Hidden entirely for a plugin that
+          needs none — an empty "API keys" box on a plugin with nothing to key would imply there
+          is something left unconfigured. */}
+      <PluginCredentials names={pluginEnvNames(plugin.skills)} onChanged={onCredentialsChanged} />
 
       {/* The browser: tree left, preview right (stacked on narrow screens). Both panes scroll on
           their own inside fixed heights, so the header above stays put. */}
