@@ -1370,6 +1370,97 @@ export interface DirectorySkillsResponse {
   skills: DirectorySkillItem[];
 }
 
+// ---------------------------------------------------------------------------
+// Machine-level skills (core/state/machine-skill-store.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * 一个技能是从哪儿来的，`.source.json` 的内容。
+ *
+ * **`kind` 必填而不推断**：三种来源的「再取一次」方式没有共同之处，凭文件形状去猜会在某一个来源上
+ * 猜错，而猜错的表现是下载了一个用户没有要求的东西。
+ */
+export type MachineSkillSourceItem =
+  /** 从仓库 URL 拉的。升级 = 重新解析这个 URL 再取一次归档。 */
+  | { kind: "url"; url: string; branch?: string }
+  /** 从上传的压缩包解出来的。原始文件不在机器上，所以**无从升级**。 */
+  | { kind: "archive" }
+  /** 从本机另一个目录复制来的。升级 = 重新读那个目录。 */
+  | { kind: "directory"; path: string };
+
+/** 机器级技能库里的一个技能。 */
+export interface MachineSkillItem {
+  name: string;
+  /** SKILL.md frontmatter 里的 `version`，没有则 null。 */
+  version: string | null;
+  /** 记录的来源；没有记录则 undefined（无从升级）。 */
+  source?: MachineSkillSourceItem;
+  /** 何时添加的（epoch ms）；没有记录时为 0。 */
+  addedAt: number;
+}
+
+/** GET /api/machine-skills：机器级技能库。 */
+export interface MachineSkillsResponse {
+  skills: MachineSkillItem[];
+}
+
+/**
+ * 一次添加的结果。
+ *
+ * **`failed` 与 `added` 可以同时非空**：一批里有三个技能其中一个装不上时，另外两个已经落盘了，
+ * 所以抛错会让用户以为什么都没发生，而只报成功会让用户以为三个都装上了。
+ */
+export interface MachineSkillAddResult {
+  added: { name: string; version: string | null; fileCount: number }[];
+  failed: { name: string; reason: string }[];
+  /** 机器级开关；添加进来的技能一律是「已启用」，因为添加本身不含启用。 */
+  enabled: boolean;
+}
+
+/** 从 URL 添加的结果，带上实际解析出的地址（用户能看见代码是从哪儿取来的）。 */
+export interface MachineSkillFromUrlResponse extends MachineSkillAddResult {
+  /** 真正请求的归档地址。 */
+  sourceUrl: string;
+}
+
+/**
+ * 一次扫描的结果：本机上别的 Agent 装着的技能，**按目录分组**。
+ *
+ * 按目录而不是拍平，是因为「添加的其实是目录」——同一个目录下的一组技能是一起添加的，一次点击对
+ * 应的也是一组，而拍平之后用户要么逐个勾，要么被迫一次性导入整个机器上的所有技能。
+ */
+export interface MachineSkillScanResponse {
+  groups: MachineSkillScanGroup[];
+}
+
+/** 一个 Agent 的技能目录。 */
+export interface MachineSkillScanGroup {
+  /** Agent 的目录名（`<root>/<project>/agents/<id>` 里的 `<id>`）。 */
+  agentId: string;
+  /** 该 Agent 目录的绝对路径——用户要能认出这是谁。 */
+  agentPath: string;
+  /** 该 Agent 的 Project id（`default_project` 之外的也一并列出）。 */
+  projectId: string;
+  skills: { name: string; version: string | null }[];
+}
+
+/**
+ * 升级结果。
+ *
+ * **`upgradable: false` 是如实告知，不是失败**：从压缩包来的技能原始文件不在机器上，没有可查的
+ * 来源。与其假装「已是最新」，不如说清「无从检查」。
+ */
+export interface MachineSkillUpgradeResponse {
+  name: string;
+  upgraded: boolean;
+  /** 有没有可查的来源；压缩包来源与没有记录的技能为 false。 */
+  upgradable: boolean;
+  /** 升级后的版本，仅在 `upgraded` 时有。 */
+  version?: string;
+  /** 当前版本，仅在 `upgradable` 为 false 时有意义——用于说清「无从检查」而不是「没有新版」。 */
+  currentVersion?: string | null;
+}
+
 /**
  * One skill as the catalog sees it, unioned across every Agent in the Project.
  *

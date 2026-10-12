@@ -54,6 +54,26 @@ export interface SkillEntry {
  */
 export async function findSkillsInTree(root: string): Promise<SkillEntry[]> {
   const byName = new Map<string, SkillEntry>();
+
+  // `root` may be the skill itself rather than a folder holding skills. Pointing a picker at
+  // `.../my-skill` is the most natural thing a person does, and a reader that only understands
+  // "a container of skills" answers 「这里没有技能」 about the very directory they picked — which
+  // reads as a broken scan rather than as the wrong interpretation.
+  const asOne = await readSkillTree(root);
+  if (asOne !== null) {
+    const meta = parseSkillFrontmatter(asOne["SKILL.md"]!);
+    return [
+      {
+        name: path.basename(root),
+        files: asOne,
+        // A hand-picked directory is not necessarily named after the skill inside it, and the
+        // frontmatter is the skill's own name — which is what it will be called everywhere else.
+        version: versionOf(asOne["SKILL.md"]!),
+        ...(meta && typeof meta.name === "string" && meta.name !== "" ? { name: meta.name } : {}),
+      },
+    ];
+  }
+
   const tryRoot = async (dir: string): Promise<void> => {
     let entries: import("node:fs").Dirent[];
     try {

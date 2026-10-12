@@ -168,6 +168,7 @@ import {
   pluginLibraryRoutes,
 } from "./http/routes/plugins.js";
 import { pluginImportRoutes } from "./http/routes/plugin-import.js";
+import { machineSkillRoutes } from "./http/routes/machine-skills.js";
 import { agentTransferRoutes } from "./http/routes/agent-transfer.js";
 import { agentsRoutes } from "./http/routes/agents.js";
 import { dirsRoutes } from "./http/routes/dirs.js";
@@ -1319,6 +1320,9 @@ export function createApp(
   app.route("/api/events", eventsRoutes(deps));
   // Plugin library listing: readable once logged in, not nested under a Project prefix.
   app.route("/api/plugins", pluginLibraryRoutes(deps));
+  // Machine-level Skills: added to this machine, not installed into any Agent. No Project in the
+  // path on purpose — the same URL yields the same skill on every Project.
+  app.route("/api/machine-skills", machineSkillRoutes(deps));
   app.route("/api/projects/:projectId/machines", machinesRoutes(deps));
   app.route("/api/projects", projectsRoutes(deps));
   app.route("/api/projects/:projectId/members", membersRoutes(deps));

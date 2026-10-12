@@ -101,6 +101,24 @@ describe("machine skill sources", () => {
       expect((await findSkillsInTree(root)).map((s) => s.name)).toEqual(["eta"]);
     });
 
+    it("accepts a directory that is itself one skill", async () => {
+      // 用户最自然的做法是指向技能自己的目录，而一个只认「装技能的容器」的读者会对用户亲手挑的
+      // 那个目录回答「这里没有技能」——那读起来像是扫描坏了，而不是理解偏了。
+      await putSkill(root, "solo", "solo");
+      const found = await findSkillsInTree(path.join(root, "solo"));
+      expect(found.map((s) => s.name)).toEqual(["solo"]);
+    });
+
+    it("names a hand-picked single skill by its frontmatter name, not the folder", async () => {
+      // 目录名与 frontmatter 里的名字不符是常态（手写、下载来的）；下游处处按 frontmatter
+      // 的名字称呼它，库里的名字不一致会让「装上之后为什么叫另一个名字」无人解释。
+      const dir = path.join(root, "download-2024-11-02");
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(path.join(dir, "SKILL.md"), skillMd("real-name"), "utf8");
+      const found = await findSkillsInTree(dir);
+      expect(found.map((s) => s.name)).toEqual(["real-name"]);
+    });
+
     it("answers empty for a directory that does not exist", async () => {
       // 扫一个不存在的目录是正常操作（用户指的路径可能已被删），不是错误。
       expect(await findSkillsInTree(path.join(root, "nope"))).toEqual([]);
