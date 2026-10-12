@@ -1565,6 +1565,32 @@ export const zh = {
     /** 安装按钮被禁用时的原因。 */
     installNeedsMachineEnabled: "插件已在本机停用，先启用它才能安装到 Agent",
     pageDesc: "内置插件库：每个插件带有技能和／或钩子包，可浏览、快捷调用，或安装到 Agent。",
+    // —— 添加技能：三种来源 ——
+    addSkillCategory: "添加到分类",
+    addSkillUrlHint:
+      "填一个仓库地址——仓库本体、带 .git 的、/tree/main 的、深链到文件的都行，都会解析成同一个分支。技能添加后处于待启用，装到 Agent 上并启用才可被调用。",
+    addSkillUrlInvalid: "请填写 http 或 https 开头的地址。",
+    addSkillArchiveHint:
+      "选一个 zip。技能可以是一个含 SKILL.md 的目录，也可以放在 .agents/skills 或 .claude/skills 之下。添加后处于待启用。",
+    addSkillArchiveTooBig: "压缩包超过 20MB 上限。",
+    addSkillDirectoryHint:
+      "扫描本机各个智能体的技能目录，挑中的整组添加到本机技能库。已在库里的技能默认不勾——覆盖是有后果的，勾上它就是决定覆盖的那一刻。",
+    addSkillNoneAdded: "没有添加任何技能。",
+    addSkillDone: (n: number, names: string): string =>
+      `已添加 ${n} 个技能到本机（待启用）：${names}`,
+    /** 扫描：找出本机别的智能体装了什么。 */
+    scanAgents: "扫描本机智能体",
+    scanAgentsNone: "没有找到任何带技能目录的智能体。",
+    scanAgentEmpty: "这个智能体没有装技能",
+    alreadyInLibrary: "已在本机库",
+    applyToLibrary: "添加到本机库",
+    applyNeedsUnadded: "勾选至少一个尚未添加的技能",
+    /** 技能升级：回到当初的来源去查。 */
+    upgradeSkill: "升级",
+    upgradeSkillNeedsSource: "这个技能没有记录来源（压缩包或手工复制），无从检查新版本",
+    upgradeSkillUpToDate: "已是最新版本",
+    upgradeSkillDone: (v: string): string => `已升级到 ${v}`,
+    upgradeSkillFailed: "检查失败，已保留现有版本",
     /** Plugin count in the group header (small text to the right of the category name). */
     pluginCount: (n: number): string => `${n} 个插件`,
     /** Content badge for each hook point a plugin's hook package answers at (e.g. "stop 钩子"); also the chips on the settings Hooks tab. */

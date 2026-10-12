@@ -1602,6 +1602,31 @@ export const en: Strings = {
     /** Why the install button is disabled. */
     installNeedsMachineEnabled:
       "This plugin is disabled for this machine — enable it before installing to an agent",
+    // —— 添加技能：三种来源 ——
+    addSkillCategory: "Add to category",
+    addSkillUrlHint:
+      "Paste a repository address — the bare repo, one with .git, a /tree/main link, a deep link into a file: all of them resolve to the same branch. Added skills stay pending until mounted to an agent and enabled.",
+    addSkillUrlInvalid: "Enter an address starting with http or https.",
+    addSkillArchiveHint:
+      "Pick a zip. Skills can be a directory holding SKILL.md, or sit under .agents/skills or .claude/skills. Added skills stay pending.",
+    addSkillArchiveTooBig: "The archive exceeds the 20MB limit.",
+    addSkillDirectoryHint:
+      "Scan the skill directories of the agents on this machine, then add a whole group to the machine store. Skills already in the store are unticked by default — overwriting one has consequences, and ticking it is the moment you decide that.",
+    addSkillNoneAdded: "No skills were added.",
+    addSkillDone: (n: number, names: string): string =>
+      `Added ${n} skill(s) to this machine (pending): ${names}`,
+    scanAgents: "Scan this machine's agents",
+    scanAgentsNone: "No agent with a skill directory was found.",
+    scanAgentEmpty: "This agent has no skills installed",
+    alreadyInLibrary: "already in the store",
+    applyToLibrary: "Add to machine store",
+    applyNeedsUnadded: "Tick at least one skill that is not in the store yet",
+    upgradeSkill: "Upgrade",
+    upgradeSkillNeedsSource:
+      "This skill has no recorded source (archive, or copied by hand), so there is nowhere to check",
+    upgradeSkillUpToDate: "Already up to date",
+    upgradeSkillDone: (v: string): string => `Upgraded to ${v}`,
+    upgradeSkillFailed: "The check failed; the installed version was kept",
     pluginCount: (n: number): string => (n === 1 ? "1 plugin" : `${n} plugins`),
     /** Content badge for each hook point a plugin's hook package answers at (e.g. "stop hook"); also the chips on the settings Hooks tab. */
     hookBadge: (event: string): string => `${event} hook`,

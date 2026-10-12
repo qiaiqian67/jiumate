@@ -1471,6 +1471,112 @@ export interface InstalledPluginEntry {
   skills: string[];
 }
 
+// Machine-level skills (GET/POST /api/machine-skills) --------------------------------------------
+//
+// These take no Project or Agent: the store is the machine's, so the same URL yields the same skill
+// wherever the page was opened from.
+
+export type MachineSkillSource =
+  | { kind: "url"; url: string; branch?: string }
+  | { kind: "archive" }
+  | { kind: "directory"; path: string };
+
+export interface MachineSkill {
+  name: string;
+  version: string | null;
+  /** The recorded source; absent for a skill copied in by hand, which therefore has no upgrade. */
+  source?: MachineSkillSource;
+  addedAt: number;
+}
+
+export const getMachineSkills = () => apiFetch<{ skills: MachineSkill[] }>(`/api/machine-skills`);
+
+/**
+ * Adds every Skill in a repository URL.
+ *
+ * **Any URL shape works** — the bare repo, `.git`, `/tree/main`, a deep link — because the server
+ * resolves them all to the same branch archive. The client sends what the user typed: any reshaping
+ * here would have to duplicate that resolution and would then disagree with it somewhere.
+ *
+ * `sourceUrl` is what was actually fetched, which the dialog shows afterwards. An import that pulls
+ * code from somewhere the user cannot see is one they can only trust.
+ */
+export const addMachineSkillsFromUrl = (url: string) =>
+  apiFetch<MachineSkillAddResult & { sourceUrl: string }>(`/api/machine-skills/url`, {
+    method: "POST",
+    body: { url },
+  });
+
+/** Adds every Skill in an uploaded zip. Raw body, not JSON: the archive is the body itself. */
+export const addMachineSkillsFromArchive = (file: File) =>
+  apiFetch<MachineSkillAddResult>(`/api/machine-skills/archive`, {
+    method: "POST",
+    rawBody: file,
+    contentType: "application/octet-stream",
+  });
+
+/** Adds every Skill in a local directory (which may itself be one Skill). */
+export const addMachineSkillsFromDirectory = (path: string) =>
+  apiFetch<MachineSkillAddResult>(`/api/machine-skills/directory`, {
+    method: "POST",
+    body: { path },
+  });
+
+/**
+ * Scans the Skills installed on every Agent on this machine, **grouped by Agent directory**.
+ *
+ * Grouped because the thing being added is a directory: one Agent's whole set goes in together.
+ */
+export const scanMachineSkills = () =>
+  apiFetch<{
+    groups: {
+      agentId: string;
+      agentPath: string;
+      projectId: string;
+      skills: { name: string; version: string | null }[];
+    }[];
+  }>(`/api/machine-skills/scan`);
+
+/**
+ * Checks a Skill against where it was added from, and upgrades if there is a newer one.
+ *
+ * `upgradable: false` is an honest answer rather than a failure: a skill from an uploaded archive
+ * has no source left to check, since the archive is not on the machine after unpacking.
+ */
+export const upgradeMachineSkill = (name: string) =>
+  apiFetch<{
+    name: string;
+    upgraded: boolean;
+    upgradable: boolean;
+    version?: string;
+    currentVersion?: string | null;
+  }>(`/api/machine-skills/${encodeURIComponent(name)}/upgrade`, { method: "POST", body: {} });
+
+/** Switches a Skill on or off for this machine. */
+export const setMachineSkillEnabled = (name: string, enabled: boolean) =>
+  apiFetch<{ name: string; enabled: boolean }>(`/api/machine-skills/enabled`, {
+    method: "POST",
+    body: { name, enabled },
+  });
+
+/**
+ * Removes a Skill from this machine. Any Agent's installed copy is left alone — that is a separate
+ * scope, and conflating them is how a user loses a Skill they meant to keep.
+ */
+export const deleteMachineSkill = (name: string) =>
+  apiFetch<{ name: string; removed: boolean }>(`/api/machine-skills/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
+
+/**
+ * `failed` can be non-empty alongside `added`: a batch with one unreadable Skill adds the rest and
+ * says which one did not, which is why this returns both halves rather than throwing.
+ */
+export interface MachineSkillAddResult {
+  added: { name: string; version: string | null; fileCount: number }[];
+  failed: { name: string; reason: string }[];
+}
+
 export const getInstalledPlugins = (projectId: string, agentId: string) =>
   apiFetch<{ plugins: InstalledPluginEntry[] }>(
     `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}/skills/plugins/installed`,
