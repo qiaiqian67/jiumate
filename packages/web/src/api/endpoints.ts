@@ -1444,6 +1444,23 @@ export const setPluginEnabled = (
     { method: "POST", body: { id, enabled } },
   );
 
+/**
+ * Switches a plugin on or off **for this machine** — the wider of the two switches.
+ *
+ * Unlike `setPluginEnabled`, which is scoped to one Agent and therefore only meaningful for a plugin
+ * installed there, this takes no Project or Agent at all: it answers "should this plugin be available
+ * on this computer", which has to be decidable before anything is installed anywhere. A plugin
+ * switched off here cannot be installed onto an Agent (the install endpoint answers 409), and its
+ * Skills stop loading for every Agent that already has it.
+ *
+ * Takes `id` as either a bare name or a full `<name>@<marketplace>` id; the card holds both.
+ */
+export const setPluginEnabledMachine = (id: string, enabled: boolean) =>
+  apiFetch<{ id: string; enabled: boolean }>(`/api/plugins/enabled`, {
+    method: "POST",
+    body: { id, enabled },
+  });
+
 /** Every plugin installed on one Agent, with its members and the state of its switch. */
 export interface InstalledPluginEntry {
   id: string;

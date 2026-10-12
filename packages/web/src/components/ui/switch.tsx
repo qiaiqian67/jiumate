@@ -5,19 +5,20 @@
  * ease-out color/transform transition; the on-state follows the theme accent variable (same
  * source as Button primary), the off-state is gray.
  *
- * Geometry (all integer pixels): a 16px knob in the 36x20px track, inset 2px on every side
- * in both states (travel 2px -> 18px), and at either end concentric with the track's
- * end-cap circle (center 10px in from the edge), so the gap along the arcs matches the
- * straight runs. The track draws a 1px inset hairline; the knob's hairline is a *border* —
- * inside its own 16px — not an outer ring: an outer ring would fill the gap on the near arc
+ * Geometry (all integer pixels, per size — see `GEOMETRY` below): the knob is inset 1px on every
+ * side and travels between the two end-cap centres, so at either end it is concentric with the
+ * track's end-cap circle and the gap along the arcs matches the straight runs. The track draws a
+ * 1px inset hairline; the knob's hairline is a *border* — inside its own box — not an outer ring:
+ * an outer ring would fill the gap on the near arc
  * and stack on the track hairline as one heavier line, reading as unequal spacing. Net
  * clearance between knob edge and outline is thus a uniform 1px all around. No offset
  * shadow (it reads as vertical asymmetry at this size); the hairlines keep the edges
  * defined on any surface (the dark neutral accent is near-white, where the white knob would
  * otherwise vanish); dark-mode aware; disabled dims and blocks. The focus ring is
  * accent-tinted and `focus-visible`-only, so keyboard focus shows it but a mouse click
- * doesn't leave a lingering halo. Sized for compact (sm) form rows, matching the dialogs'
- * controls.
+ * doesn't leave a lingering halo. `base` (36x20 track, 16px knob) is the default for a
+ * labelled form row; `sm` (28x16 track, 12px knob) is for an unlabelled control sharing a
+ * row with icon buttons, where a base switch would stand taller than every neighbour.
  */
 import type { ButtonHTMLAttributes } from "react";
 
@@ -27,9 +28,33 @@ export interface SwitchProps extends Omit<
 > {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /**
+   * `base` (36x20 track, 16px knob) is the labelled-form-row default.
+   *
+   * `sm` (28x16 track, 12px knob) exists for a control with no label beside it — a card's corner,
+   * where a base switch would be taller than the icon buttons it shares a row with. The geometry
+   * scales rather than being scaled by CSS: the knob and the travel are both derived from the
+   * track, so shrinking the box cannot leave the knob overhanging the track's end-cap.
+   */
+  size?: "sm" | "base";
 }
 
-export function Switch({ checked, onChange, disabled, className, ...rest }: SwitchProps) {
+/** Per-size geometry. Inset stays 1px and the knob stays concentric with each end-cap, which is
+ *  what keeps the gap along the arcs equal to the straight runs. */
+const GEOMETRY = {
+  base: { track: "h-5 w-9", knob: "size-4", off: "translate-x-0.5", on: "translate-x-[18px]" },
+  sm: { track: "h-4 w-7", knob: "size-3", off: "translate-x-px", on: "translate-x-[15px]" },
+} as const;
+
+export function Switch({
+  checked,
+  onChange,
+  disabled,
+  size = "base",
+  className,
+  ...rest
+}: SwitchProps) {
+  const g = GEOMETRY[size];
   return (
     <button
       type="button"
@@ -38,7 +63,9 @@ export function Switch({ checked, onChange, disabled, className, ...rest }: Swit
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={
-        "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full " +
+        "relative inline-flex items-center rounded-full " +
+        g.track +
+        " shrink-0 " +
         "inset-ring inset-ring-black/10 dark:inset-ring-white/10 " +
         "transition-colors duration-200 ease-out " +
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-bg)]/40 " +
@@ -50,8 +77,8 @@ export function Switch({ checked, onChange, disabled, className, ...rest }: Swit
     >
       <span
         aria-hidden
-        className={`inline-block size-4 rounded-full border border-black/10 bg-white transition-transform duration-200 ease-out ${
-          checked ? "translate-x-[18px]" : "translate-x-0.5"
+        className={`inline-block rounded-full border border-black/10 bg-white transition-transform duration-200 ease-out ${g.knob} ${
+          checked ? g.on : g.off
         }`}
       />
     </button>

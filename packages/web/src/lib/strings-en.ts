@@ -1593,6 +1593,15 @@ export const en: Strings = {
 
     pageDesc:
       "Built-in plugin library: each plugin ships skills and/or a hook package — browse, quick-start a chat, or install to agents.",
+    /** Machine-level: off means no Agent can install it, and an Agent that already has it stops using it. */
+    disableMachine: "Disable",
+    disableMachineHint:
+      "Disabled for this machine: no Agent can install it or use it, and an installed copy stops taking effect",
+    enableMachine: "Enable",
+    enableMachineHint: "Enabled for this machine: it can be installed to an agent and used there",
+    /** Why the install button is disabled. */
+    installNeedsMachineEnabled:
+      "This plugin is disabled for this machine — enable it before installing to an agent",
     pluginCount: (n: number): string => (n === 1 ? "1 plugin" : `${n} plugins`),
     /** Content badge for each hook point a plugin's hook package answers at (e.g. "stop hook"); also the chips on the settings Hooks tab. */
     hookBadge: (event: string): string => `${event} hook`,
@@ -1624,6 +1633,16 @@ export const en: Strings = {
     statUsedBy: "Usage",
     /** 钥匙图标的说明：列出这个插件的技能各自还差哪些环境变量。 */
     needsEnv: (names: string[]): string => `Needs: ${names.join(", ")}`,
+    /** API key section of the plugin detail Modal. */
+    credentialsTitle: "API keys",
+    credentialsSubtitle: "Stored in the selected agent's key vault, effective from its next task",
+    /** Names the Agent the key lands in — it reaches that one agent and no other. */
+    credentialsForAgent: (agent: string): string => `Saved to agent “${agent}”'s key vault`,
+    /** No Agent selected: refuse rather than guess one and configure a credential nobody finds. */
+    credentialsNeedsAgent:
+      "Select an agent at the top first — the key is stored in that agent's vault",
+    /** An already-configured key: plaintext is never sent back, so empty means "leave it alone". */
+    credentialsAlreadySet: "Configured — leave empty to keep it",
     /** 已装在几个 Agent 上（总数在第二位，便于对照）。 */
     onAgents: (n: number, total: number): string =>
       total <= 1 ? "installed" : `${n} / ${total} agents`,

@@ -34,6 +34,7 @@ import {
   resolvePluginId,
   writePluginInstall,
 } from "./plugin-store.js";
+import { readMachineDisabled } from "./plugin-machine-state.js";
 import {
   AGENT_ID_PLACEHOLDER,
   AGENTS_MD_PLACEHOLDER,
@@ -826,9 +827,12 @@ export async function listInstalledSkills(
   // off the path rather than deduced from which skills happen to be present, so the answer cannot
   // be wrong: it is where the file is.
   //
-  // Only a plugin that declares `enabled` as false is skipped. Absent means enabled, so a plugin
-  // installed before this flag existed keeps working rather than silently disappearing from every
-  // Agent that has it.
+  // Skipped when **either** switch says off: the manifest's own `enabled` (this Agent) or the
+  // machine-level one (`<root>/plugin-state.json`, every Agent at once). Both default to on, so a
+  // plugin installed before either flag existed keeps working rather than silently disappearing from
+  // every Agent that has it. The machine-level set is read once here rather than per plugin: it is
+  // one file, and a per-plugin read would re-parse it for every directory in the tree.
+  const machineOff = await readMachineDisabled(root);
   const pluginsRoot = pluginsDir(root, projectId, agentId);
   let pluginEntries: Dirent[];
   try {
@@ -838,6 +842,7 @@ export async function listInstalledSkills(
   }
   for (const pluginEntry of pluginEntries) {
     if (!pluginEntry.isDirectory() || pluginEntry.name.startsWith(".")) continue;
+    if (machineOff.has(pluginNameOf(pluginEntry.name))) continue;
     const pluginRoot = path.join(pluginsRoot, pluginEntry.name);
     if (await isPluginDisabled(pluginRoot)) continue;
     const bundled = path.join(pluginRoot, "skills");

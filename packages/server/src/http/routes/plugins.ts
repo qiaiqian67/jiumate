@@ -17,7 +17,10 @@ import {
   installPlugin,
   listInstalledHooks,
   listInstalledSkills,
+  pluginNameOf,
+  readMachineDisabled,
   removeHook,
+  setMachinePluginEnabled,
   libraryPlugin,
   loadPluginGroups,
 } from "@prismshadow/jiumate-core";
@@ -26,11 +29,18 @@ import type {
   AgentPluginsInstallResponse,
   PluginFilesResponse,
   PluginLibraryResponse,
+  PluginMachineEnabledResponse,
 } from "../../api/types.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";
 import { HttpError } from "../errors.js";
-import { badRequest, optionalStringArray, readJson, requireValidId } from "../validate.js";
+import {
+  badRequest,
+  optionalStringArray,
+  readJson,
+  requireString,
+  requireValidId,
+} from "../validate.js";
 import {
   pluginFiles,
   resolveLibraryPlugins,
@@ -39,22 +49,33 @@ import {
   toSkillItem,
 } from "../../services/plugin-library.js";
 
-/** Library listing: the files are the source of truth — read fresh on every request (small files, infrequent requests, no caching). */
-function libraryResponse(): PluginLibraryResponse {
+/**
+ * Library listing: the files are the source of truth — read fresh on every request (small files,
+ * infrequent requests, no caching).
+ *
+ * The machine-level switch is resolved here rather than in the projection, because it is a read of
+ * one file against every plugin in the library: doing it once per group would re-read the same file
+ * a dozen times, and doing it in `toPluginItem` would give that function a side effect it has no
+ * business having.
+ */
+function libraryResponse(disabled: ReadonlySet<string>): PluginLibraryResponse {
   return {
     groups: loadPluginGroups().map((group) => ({
       id: group.id,
       title: group.title,
       ...(group.titleZh !== undefined ? { titleZh: group.titleZh } : {}),
-      plugins: group.plugins.map(toPluginItem),
+      plugins: group.plugins.map((plugin) => toPluginItem(plugin, !disabled.has(plugin.name))),
     })),
   };
 }
 
 /** GET /api/plugins (any logged-in user; no Project check). */
-export function pluginLibraryRoutes(): Hono<AppEnv> {
+export function pluginLibraryRoutes(deps: AppDeps): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
-  app.get("/", (c) => c.json(libraryResponse()));
+  app.get("/", async (c) => {
+    const disabled = await readMachineDisabled(deps.config.root);
+    return c.json(libraryResponse(disabled));
+  });
   // Everything one plugin ships, as text keyed by path, for the library detail view's file
   // browser (the listing never carries bodies or scripts).
   app.get("/:plugin/files", (c) => {
@@ -64,6 +85,43 @@ export function pluginLibraryRoutes(): Hono<AppEnv> {
       throw new HttpError(404, "unknown_plugin", `Plugin is not in the library: ${pluginName}`);
     }
     return c.json({ files: pluginFiles(plugin) } satisfies PluginFilesResponse);
+  });
+
+  /**
+   * POST /api/plugins/enabled — switches a plugin on or off **for this machine**.
+   *
+   * The wider of the two switches, and answerable for a plugin no Agent has installed, which is the
+   * point: "should this plugin be available on this computer" has to be decidable before anything
+   * is installed anywhere, and a per-Agent manifest cannot answer it for a plugin it has no
+   * directory for.
+   *
+   * **Every Project's runtimes are invalidated**, not one Agent's. The Skills are read from disk on
+   * every Session build, but a live Session already assembled its prompt, so each cached runtime
+   * would keep serving the plugin until it happened to be evicted — and this is a machine-level
+   * switch, so there is no single Project to scope the blast radius to.
+   *
+   * **No Project check.** The state is machine-wide, and a user who is a member of some Project but
+   * not another can still switch a plugin off for a machine they share with nobody in particular;
+   * gating it per Project would let the same machine hold both answers at once.
+   */
+  app.post("/enabled", async (c) => {
+    const body = await readJson(c);
+    const pluginId = requireString(body, "id");
+    const enabled = body.enabled;
+    if (typeof enabled !== "boolean") {
+      throw badRequest("enabled must be a boolean.");
+    }
+    // Accepts a bare name or a full id, because the card holds both and a switch that rejected the
+    // form the card carries would be a switch the card cannot use.
+    const written = await setMachinePluginEnabled(
+      deps.config.root,
+      pluginNameOf(pluginId),
+      enabled,
+    );
+    // Unconditional: the switch is installed-but-unusable now, and a user who turns a plugin back
+    // on expects the Agents they already gave it to to be able to use it again.
+    deps.manager.invalidateAllRuntimes();
+    return c.json({ id: pluginId, enabled: written } satisfies PluginMachineEnabledResponse);
   });
   return app;
 }
@@ -82,6 +140,21 @@ export function agentPluginsRoutes(deps: AppDeps): Hono<AppEnv> {
     // Verify every name up front before writing anything: an unknown name rejects the whole
     // request rather than leaving a half-installed state.
     const plugins = resolveLibraryPlugins(names);
+    // A plugin switched off for this machine cannot be installed onto an Agent. Checked here,
+    // next to the library lookup rather than inside `installPlugin`, because core is the SDK and
+    // also serves the CLI: the rule belongs to this product's two-level switch, and a caller
+    // writing the install tree directly is not going through the UI this guards. The whole batch is
+    // rejected rather than filtered, so a request naming two plugins never half-succeeds and leave
+    // the caller guessing which one was refused.
+    const disabled = await readMachineDisabled(deps.config.root);
+    const refused = plugins.filter((plugin) => disabled.has(plugin.name)).map((p) => p.name);
+    if (refused.length > 0) {
+      throw new HttpError(
+        409,
+        "plugin_disabled",
+        `These plugins are switched off for this machine and cannot be installed: ${refused.join(", ")}. Switch one on first.`,
+      );
+    }
     for (const plugin of plugins) {
       await installPlugin(deps.config.root, projectId, agentId, plugin);
     }

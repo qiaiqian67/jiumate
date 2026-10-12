@@ -3308,6 +3308,16 @@ export interface PluginItem {
   shortDescriptionZh?: string;
   /** `YYYY-MM-DD.N`. */
   version: string;
+  /**
+   * Whether this plugin is switched on **for this machine**.
+   *
+   * Always present, never optional: the card shows a switch for every plugin in the library
+   * whether or not any Agent has it installed, so the listing cannot answer "unknown" by omitting
+   * the field. This is the machine-level half of a two-level switch — it decides whether the plugin
+   * can be installed at all, while the per-Agent `manifest.json` decides whether one Agent calls
+   * it. Both must be on for the plugin's Skills to load.
+   */
+  enabled: boolean;
   /** The plugin's skills (metadata only). */
   skills: SkillMetadataItem[];
   /** The hook points the plugin's hook package answers at (`[]` without one). */
@@ -3327,6 +3337,18 @@ export interface PluginGroupItem {
 /** GET /api/plugins: the library by category (any logged-in user). */
 export interface PluginLibraryResponse {
   groups: PluginGroupItem[];
+}
+
+/**
+ * POST /api/plugins/enabled response — the machine-level switch.
+ *
+ * `id` echoes what the caller sent (a bare name or a full id) rather than a normalized form, so a
+ * card can match its own key against the reply without parsing it. `enabled` is the state actually
+ * written, which is the field to trust: it is what a later read would report.
+ */
+export interface PluginMachineEnabledResponse {
+  id: string;
+  enabled: boolean;
 }
 
 /** A plugin package found on this machine (see server/http/routes/plugin-import.ts). */

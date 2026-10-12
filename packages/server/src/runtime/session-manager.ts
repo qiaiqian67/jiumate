@@ -820,6 +820,26 @@ export class SessionManager {
     for (const agentId of agentIds) this.invalidateAgentRuntimes(projectId, agentId);
   }
 
+  /**
+   * After a machine-wide fact changes: invalidate every cached runtime, in every Project.
+   *
+   * For the one change that is not scoped to a Project — the machine-level plugin switch, which
+   * decides whether a plugin's Skills load at all on any Agent anywhere. The narrower
+   * `invalidateProjectRuntimes` cannot express it: there is no Project to scope to, and leaving
+   * other Projects' runtimes cached would mean the same plugin is on for one Agent and off for
+   * another until each happens to be evicted.
+   *
+   * Same effective-value semantics: a Task already in flight keeps the plugin it started with, and
+   * every entry is rebuilt on its next access. Iterating the live table is complete for the same
+   * reason as above — the generation map only matters for a runtime that is already cached.
+   */
+  invalidateAllRuntimes(): void {
+    for (const e of this.entries.values()) {
+      const key = agentKey(e.projectId, e.agentId);
+      this.agentGenerations.set(key, (this.agentGenerations.get(key) ?? 0) + 1);
+    }
+  }
+
   // —— Task / compaction drive ——
 
   /**

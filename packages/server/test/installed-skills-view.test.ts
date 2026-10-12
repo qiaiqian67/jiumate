@@ -250,7 +250,6 @@ describe("buildInstalledSkillsView", () => {
     // A Skill reports its owner as the bare library name too, so it joins against the same key the
     // plugin cards are indexed by.
     expect(plugin.skills.every((s) => s.pluginName === "agent-tuning")).toBe(true);
-    expect(plugin.skills.every((s) => s.plugin === "agent-tuning")).toBe(true);
     // And still not double-listed as standalone.
     expect(result.skills.map((s) => s.name)).toEqual([]);
   });

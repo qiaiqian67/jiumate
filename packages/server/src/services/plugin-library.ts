@@ -103,13 +103,23 @@ export function pluginFiles(plugin: LibraryPlugin): Record<string, string> {
   return files;
 }
 
-/** A library plugin as the listing describes it. Its skills go without their icon: it is the plugin's, sent once on the plugin itself. */
-export function toPluginItem(plugin: LibraryPlugin): PluginItem {
+/**
+ * A library plugin as the listing describes it. Its skills go without their icon: it is the
+ * plugin's, sent once on the plugin itself.
+ *
+ * `enabled` is the **machine-level** switch, and the field is always present rather than optional:
+ * the card shows a switch for every plugin whether or not any Agent has it installed, so the
+ * listing has to carry the answer unconditionally. `id` is still resolved per machine — an added
+ * copy of a built-in name installs under `@local`, so stamping `builtinPluginId` here would name a
+ * directory that copy does not live in.
+ */
+export function toPluginItem(
+  plugin: LibraryPlugin,
+  machineEnabled = true,
+  id = builtinPluginId(plugin.name),
+): PluginItem {
   return {
-    // Stamped with the marketplace it ships in, so the install id is one value the frontend passes
-    // through rather than something it reconstructs — an id assembled from parts can disagree with
-    // the directory the plugin is actually installed under.
-    id: builtinPluginId(plugin.name),
+    id,
     name: plugin.name,
     description: plugin.description,
     ...(plugin.descriptionZh !== undefined ? { descriptionZh: plugin.descriptionZh } : {}),
@@ -118,6 +128,7 @@ export function toPluginItem(plugin: LibraryPlugin): PluginItem {
       ? { shortDescriptionZh: plugin.shortDescriptionZh }
       : {}),
     version: plugin.version,
+    enabled: machineEnabled,
     skills: plugin.skills.map(({ icon: _icon, ...skill }) => toSkillItem(skill)),
     hooks: plugin.hooks ? hookEvents(plugin.hooks.manifest) : [],
     ...(plugin.icon !== undefined ? { icon: plugin.icon } : {}),

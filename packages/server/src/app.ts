@@ -1318,7 +1318,7 @@ export function createApp(
   app.route("/api/admin/settings", adminSettingsRoutes(deps));
   app.route("/api/events", eventsRoutes(deps));
   // Plugin library listing: readable once logged in, not nested under a Project prefix.
-  app.route("/api/plugins", pluginLibraryRoutes());
+  app.route("/api/plugins", pluginLibraryRoutes(deps));
   app.route("/api/projects/:projectId/machines", machinesRoutes(deps));
   app.route("/api/projects", projectsRoutes(deps));
   app.route("/api/projects/:projectId/members", membersRoutes(deps));

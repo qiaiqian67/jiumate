@@ -82,6 +82,7 @@ import { TodoNotice } from "../../components/ui/todo-notice";
 import { UpdateDot } from "../../components/ui/update-dot";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { Skeleton, SkeletonCard } from "../../components/ui/skeleton";
+import { Switch } from "../../components/ui/switch";
 import { toastError, toastSuccess } from "../../components/ui/toast";
 import { DRAFT_SESSION_ID } from "../chat/chat-page";
 import { draftKey, loadDraft, saveDraft } from "../chat/draft-cache";
@@ -90,12 +91,17 @@ import { BOOK_ICON, localizedShortText, localizedText } from "../chat/skill-use"
 import { PluginDetailModal } from "./plugin-detail";
 import { ConnectorsTab } from "./connectors-tab";
 import { SkillsTab } from "./skills-tab";
-import { OriginFilterTabs } from "./extension-ui";
-import { loadFilings, scopedId } from "./extension-state";
+import { CategoryManagerDialog, OriginFilterTabs, newCategory } from "./extension-ui";
 import { AddPluginDialog } from "./add-plugin-dialog";
 import { filtersFor, type ExtensionFilter } from "./extension-model";
-import { loadCategories, removeCategory, saveCategories, type FilingMap } from "./extension-state";
-import { CategoryManagerDialog, newCategory } from "./extension-ui";
+import {
+  loadCategories,
+  loadFilings,
+  removeCategory,
+  saveCategories,
+  scopedId,
+  type FilingMap,
+} from "./extension-state";
 import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
 import { SkillTile } from "../skills/skill-icon-view";
@@ -135,15 +141,6 @@ export type PluginParts = Pick<PluginItem, "name" | "skills" | "hooks">;
 const INSTALL_ICON = "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3";
 /** "Update installs" button icon (rotate-cw, 24×24 line path). */
 const UPDATE_ICON = "M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10";
-/**
- * "Plugin switched on / off" button icon (the standard power glyph, 24×24 line path).
- *
- * One glyph rather than an on/off pair: the state is carried by `aria-pressed` and the muted
- * variant, because a second icon shape would be a *different* symbol for "off" — and "power" is
- * already the universally understood switch mark.
- */
-const POWER_ICON = "M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10";
-
 const NO_INSTALLS: AgentInstalls = { skills: new Map(), hooks: new Map() };
 
 /** The two lists an install response carries, folded into one Agent's snapshot entry. */
@@ -360,6 +357,30 @@ export function PluginsPage() {
       })
       .catch((e: unknown) => {
         if (!cancelled) setError(apiErrorText(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /**
+   * Re-read the plugin library. Exposed because a credential write can change what the listing
+   * says (see the detail Modal's credential section), and the card's key glyph is drawn from
+   * `requiredEnvReady`, which the server resolves per request rather than caching.
+   *
+   * Not re-run on every render — the mount effect below is the page's one initial read, and this
+   * exists so a specific action can ask for a fresh one afterwards.
+   */
+  const reloadLibrary = useCallback(() => {
+    let cancelled = false;
+    api
+      .getPluginLibrary()
+      .then((res) => {
+        if (!cancelled) setGroups(res.groups);
+      })
+      .catch(() => {
+        // A failed refresh keeps the previous list: it is stale rather than wrong, and blanking
+        // the whole page would be a worse answer than a glyph that has not turned yet.
       });
     return () => {
       cancelled = true;
@@ -1194,6 +1215,7 @@ export function PluginsPage() {
                                   onToggleInstall={toggleInstall}
                                   onUpdateOutdated={updateOutdated}
                                   onDeleteFromMachine={deleteFromMachine}
+                                  onRefreshLibrary={reloadLibrary}
                                 />
                               ))}
                             </div>
@@ -1455,6 +1477,7 @@ function PluginCard({
   onToggleInstall,
   onUpdateOutdated,
   onDeleteFromMachine,
+  onRefreshLibrary,
 }: {
   plugin: PluginItem;
   installed: InstalledMap;
@@ -1463,6 +1486,8 @@ function PluginCard({
   onUpdateOutdated: (name: string, agentIds: string[]) => Promise<void>;
   /** Machine-level uninstall: delete it from this machine's disk, and report who was using it. */
   onDeleteFromMachine: (plugin: PluginItem) => Promise<void>;
+  /** Re-read the library listing, so the key glyph reflects a credential the user just saved. */
+  onRefreshLibrary: () => void;
 }) {
   const { locale } = useLocale();
   const { agents, currentAgent, currentProject } = useProject();
@@ -1502,6 +1527,20 @@ function PluginCard({
   /** Whether the current Agent has this plugin switched on; null while unknown. */
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [togglingEnabled, setTogglingEnabled] = useState(false);
+  /**
+   * The machine-level switch, seeded from the listing and then owned locally while a write is in
+   * flight.
+   *
+   * `undefined` means "no local answer yet, use the listing's" — a null would be a third state the
+   * listing cannot produce, and treating it as off would show every plugin as disabled until the
+   * first write. The page re-reads the library on mount and after every install, so the server's
+   * value is the baseline and this only overrides it between a click and its response.
+   */
+  const [machineOverride, setMachineOverride] = useState<boolean | undefined>(undefined);
+  const [togglingMachine, setTogglingMachine] = useState(false);
+  const setMachineEnabled = (next: boolean) => setMachineOverride(next);
+  /** What the card's machine switch shows: the local answer while one exists, else the listing's. */
+  const machineEnabled = machineOverride ?? plugin.enabled;
 
   // The switch's own state, read whenever the current Agent or the plugin changes. Kept separate
   // from the install snapshot because "installed" and "switched on" are different questions, and
@@ -1529,6 +1568,39 @@ function PluginCard({
       cancelled = true;
     };
   }, [projectId, currentAgent?.agentId, plugin.name]);
+
+  /**
+   * Switches the plugin on or off for **this machine**.
+   *
+   * The state lives on the card rather than being read back from a request: `plugin.enabled` is the
+   * listing's answer and the listing is re-read on the next load, so a local copy plus a rollback is
+   * enough and avoids a round trip to confirm a boolean the card already knows.
+   *
+   * **Every Agent's runtime is invalidated server-side** when this lands, so a Session that already
+   * assembled its prompt stops offering the plugin without waiting to be evicted — the reason the
+   * card can claim the change took effect rather than "at your next task".
+   */
+  const toggleMachineEnabled = async () => {
+    if (togglingMachine) return;
+    const next = !machineEnabled;
+    setTogglingMachine(true);
+    setMachineEnabled(next);
+    try {
+      const res = await api.setPluginEnabledMachine(plugin.id, next);
+      setMachineEnabled(res.enabled);
+      // Re-read the listing rather than only trusting the local copy: the per-Agent install
+      // availability is drawn from it, and this is the one moment that changed.
+      onRefreshLibrary();
+      toastSuccess(
+        `${next ? S.plugins.enabledToast(plugin.name) : S.plugins.disabledToast(plugin.name)}${S.agent.takesEffectSuffix}`,
+      );
+    } catch (e) {
+      setMachineEnabled(machineEnabled);
+      toastError(apiErrorText(e));
+    } finally {
+      setTogglingMachine(false);
+    }
+  };
 
   const toggleEnabled = async () => {
     const agentId = currentAgent?.agentId;
@@ -1671,10 +1743,17 @@ function PluginCard({
         onOpen={() => setDetailOpen(true)}
         actionOverlay
         action={
-          // Shown on hover (or focus, so the keyboard reaches them): four buttons on a card
+          // Shown on hover (or focus, so the keyboard reaches them): a group this wide on a card
           // this narrow would otherwise cost the name a third of its width, so they lay over
           // its tail instead — see `actionOverlay`.
-          <div className="flex shrink-0 items-center gap-1.5">
+          //
+          // 28px squares rather than the 32px the app's other icon buttons use. These five sit on
+          // a 3-up grid where the card is a third of the page, so the button group is competing
+          // with the name for the same row; at 32px the group is ~136px and the name truncates
+          // inside fifteen characters. The glyph keeps `iconButton` — at 15px in a 28px button it
+          // still reads as a glyph rather than a speck, and inventing a rung below it for one
+          // card would put two sizes in the scale that no other caller shares.
+          <div className="flex shrink-0 items-center gap-1">
             {/*
               升级. **Goes back to the source the plugin was installed from and re-fetches** — the
               behaviour the button is specified to have, and the reason `.provenance.json` exists.
@@ -1688,7 +1767,7 @@ function PluginCard({
             <Button
               size="sm"
               variant="secondary"
-              className="relative h-8 w-8 shrink-0 justify-center p-0"
+              className="relative h-7 w-7 shrink-0 justify-center p-0"
               aria-label={`${S.plugins.upgradeAction} ${plugin.name}`}
               title={
                 outdated.length > 0
@@ -1710,7 +1789,7 @@ function PluginCard({
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-8 w-8 shrink-0 justify-center p-0"
+                className="h-7 w-7 shrink-0 justify-center p-0"
                 aria-label={`${S.skills.quickInvoke} ${plugin.name}`}
                 title={quickStartSkill ? S.skills.quickInvoke : S.plugins.quickInvokeNeedsInstall}
                 disabled={quickStartSkill === undefined}
@@ -1725,7 +1804,7 @@ function PluginCard({
             <Button
               size="sm"
               variant="secondary"
-              className="h-8 w-8 shrink-0 justify-center p-0"
+              className="h-7 w-7 shrink-0 justify-center p-0"
               aria-label={`${S.skills.manageInstall} ${plugin.name}`}
               title={S.skills.manageInstall}
               onClick={() => setInstallOpen(true)}
@@ -1734,21 +1813,55 @@ function PluginCard({
             </Button>
             {/* Switch the plugin on or off for the Agent selected right now, shown only once it is
               installed there — a switch for something that is not installed has nothing to act on.
-              Switching off keeps the files, so it is reversible without a reinstall, and it wears
-              the secondary variant: it changes what the Agent does, it does not delete anything. */}
-            {isInstalledOnCurrentAgent && enabled !== null && (
-              <Button
+              Switching off keeps the files, so it is reversible without a reinstall.
+
+              {/* **本机开关** — the machine-level switch, on every card.
+
+                Not gated on `isInstalledOnCurrentAgent`, and that is the whole change. A switch that
+                only exists for a plugin installed on the Agent currently selected answers a
+                question about that Agent, not about the plugin: a plugin installed on some other
+                Agent would show no switch at all, as if it could not be turned off. "Should this
+                plugin be available on this computer" is answerable for every plugin in the library,
+                including one no Agent has — which is the state where the decision actually matters.
+
+                Distinct from the per-Agent switch below, and shown **next to** it rather than
+                replacing it: they are two different acts with two different scopes. Switching the
+                machine off stops the plugin loading anywhere and blocks new installs; switching one
+                Agent off leaves the machine-level decision alone. Both must be on for the plugin to
+                run (see plugin-machine-state.ts). */}
+            <span className="inline-flex shrink-0 items-center">
+              <Switch
                 size="sm"
-                variant={enabled ? "secondary" : "ghost"}
-                className="h-8 w-8 shrink-0 justify-center p-0"
-                aria-label={`${enabled ? S.plugins.disableForAgent : S.plugins.enableForAgent} ${plugin.name}`}
-                title={enabled ? S.plugins.disableForAgentHint : S.plugins.enableForAgentHint}
-                aria-pressed={enabled}
-                disabled={togglingEnabled}
-                onClick={() => void toggleEnabled()}
-              >
-                <GlyphIcon d={POWER_ICON} size={ICON_SIZE.iconButton} />
-              </Button>
+                checked={machineEnabled}
+                onChange={() => void toggleMachineEnabled()}
+                disabled={togglingMachine}
+                aria-label={`${machineEnabled ? S.plugins.disableMachine : S.plugins.enableMachine} ${plugin.name}`}
+                title={machineEnabled ? S.plugins.disableMachineHint : S.plugins.enableMachineHint}
+              />
+            </span>
+            {/* The per-Agent switch, shown only once the plugin is installed there — a switch for
+              something that is not installed has nothing to act on. Switching off keeps the files,
+              so it is reversible without a reinstall.
+
+              A `Switch` rather than one more icon button, and that is the point of it. In a row of
+              glyphs the power mark was the only one whose state lived in the glyph rather than in
+              its shape: a filled vs. outline power icon is a difference nobody reads at a glance,
+              while a knob at one end or the other says its own state without being hovered.
+
+              Sized `sm` — the component's `base` is tuned for a labelled form row, and a
+              full-size switch beside 28px glyph buttons would stand taller than every one of
+              them. */}
+            {isInstalledOnCurrentAgent && enabled !== null && (
+              <span className="inline-flex shrink-0 items-center">
+                <Switch
+                  size="sm"
+                  checked={enabled}
+                  onChange={() => void toggleEnabled()}
+                  disabled={togglingEnabled}
+                  aria-label={`${enabled ? S.plugins.disableForAgent : S.plugins.enableForAgent} ${plugin.name}`}
+                  title={enabled ? S.plugins.disableForAgentHint : S.plugins.enableForAgentHint}
+                />
+              </span>
             )}
             {/* 卸载 — delete this plugin from this machine, irreversibly.
 
@@ -1772,7 +1885,7 @@ function PluginCard({
               <Button
                 size="sm"
                 variant="danger"
-                className="h-8 w-8 shrink-0 justify-center p-0"
+                className="h-7 w-7 shrink-0 justify-center p-0"
                 aria-label={`${S.plugins.deleteFromMachine} ${plugin.name}`}
                 title={S.plugins.deleteFromMachineHint}
                 disabled={deleting}
@@ -1789,6 +1902,11 @@ function PluginCard({
           plugin={plugin}
           meta={meta}
           installedCount={installedCount}
+          // Re-read the plugin listing after a credential save, so the card's key glyph turns
+          // green from the server's own answer rather than from an assumption about what the
+          // write did. The listing resolves each variable against the **server's** environment,
+          // which is what the skills' `curl` calls actually inherit.
+          onCredentialsChanged={() => void onRefreshLibrary()}
           onClose={() => setDetailOpen(false)}
         />
       )}
@@ -1809,6 +1927,7 @@ function PluginCard({
                 name={agentDisplayName(a)}
                 installed={pluginInstalled(plugin, installed.get(a.agentId))}
                 outdated={outdated.includes(a.agentId)}
+                machineEnabled={machineEnabled}
                 onToggle={(on) => {
                   // Install runs directly. Uninstall here is the **per-Agent** one — it removes
                   // that Agent's copy and leaves the plugin on this machine — so it keeps its own
@@ -1937,6 +2056,7 @@ function InstallRow({
   name,
   installed,
   outdated,
+  machineEnabled,
   onToggle,
   onUpdate,
 }: {
@@ -1944,6 +2064,12 @@ function InstallRow({
   name: string;
   installed: boolean;
   outdated: boolean;
+  /**
+   * The machine-level switch. Gates the **install** half only: an Agent that already has the plugin
+   * can still uninstall it (that removes files, which a disabled plugin does not stop being able to
+   * do), but cannot install it while the machine has it switched off.
+   */
+  machineEnabled: boolean;
   onToggle: (on: boolean) => void;
   onUpdate: () => void;
 }) {
@@ -1983,6 +2109,11 @@ function InstallRow({
           size="sm"
           className="shrink-0"
           aria-label={`${S.skills.install} ${agentId}`}
+          // Disabled rather than hidden: a user who wants this plugin and finds no install button
+          // cannot tell "switched off on purpose" from "this app cannot install it". The tooltip
+          // names the action that would unblock it.
+          disabled={!machineEnabled}
+          title={machineEnabled ? undefined : S.plugins.installNeedsMachineEnabled}
           onClick={() => onToggle(true)}
         >
           {S.skills.install}

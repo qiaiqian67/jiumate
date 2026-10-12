@@ -1557,6 +1557,13 @@ export const zh = {
     deleteConfirmBody: (name: string): string => `将从本机磁盘删除「${name}」，且不可恢复。`,
     deletedToast: (name: string): string => `已从本机卸载 ${name}`,
 
+    /** 机器级：关闭后任何 Agent 都不能安装/使用它。 */
+    disableMachine: "停用",
+    disableMachineHint: "本机停用：任何 Agent 都不能再安装或使用它，已装的也不再生效",
+    enableMachine: "启用",
+    enableMachineHint: "在本机启用：之后可以安装到 Agent 上使用",
+    /** 安装按钮被禁用时的原因。 */
+    installNeedsMachineEnabled: "插件已在本机停用，先启用它才能安装到 Agent",
     pageDesc: "内置插件库：每个插件带有技能和／或钩子包，可浏览、快捷调用，或安装到 Agent。",
     /** Plugin count in the group header (small text to the right of the category name). */
     pluginCount: (n: number): string => `${n} 个插件`,
@@ -1592,6 +1599,16 @@ export const zh = {
     statUsedBy: "使用情况",
     /** 钥匙图标的说明：列出这个插件的技能各自还差哪些环境变量。 */
     needsEnv: (names: string[]): string => `需要配置：${names.join("、")}`,
+    /** 插件详情弹窗里的 API key 区标题。 */
+    credentialsTitle: "API 密钥",
+    /** 同区的一句说明：值存进 Agent 的保险柜，不进模型上下文。 */
+    credentialsSubtitle: "存入所选 Agent 的密钥保险柜，自下一个任务起生效",
+    /** 点名写入的 Agent——密钥只对这一个 Agent 生效。 */
+    credentialsForAgent: (agent: string): string => `将写入 Agent「${agent}」的密钥保险柜`,
+    /** 没选中任何 Agent 时：宁可不写，也不猜一个写错地方。 */
+    credentialsNeedsAgent: "先在顶部选择一个 Agent，密钥写入该 Agent 的保险柜",
+    /** 已有值的键：明文不回传，输入框留空表示不改。 */
+    credentialsAlreadySet: "已配置，留空表示不修改",
     /** 已装在几个 Agent 上（总数在第二位，便于对照）。 */
     onAgents: (n: number, total: number): string =>
       total <= 1 ? "已安装" : `${n} / ${total} 个 Agent`,
