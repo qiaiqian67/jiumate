@@ -69,6 +69,22 @@ export interface SkillInstallRecord {
   /** The library version, or null for an import (which carries its own, if any). */
   version: string | null;
   source: InstallSource;
+  /**
+   * Whether this Agent calls the Skill. Absent means on.
+   *
+   * **The per-Agent half of a two-level switch**, and stored here rather than beside the files
+   * because it is a property of *this Agent's install of it*, not of the Skill: the same Skill can
+   * be on for one Agent and off for another, and the machine-level flag (see
+   * `machine-skill-store.ts`) is the wider one that takes both down at once. Writing it into
+   * `.installs.json` rather than a marker file in `skills/<name>/` keeps the Skills tree holding
+   * exactly the files the Skill ships — anything else there would be swept up by the next archive
+   * export, which reads the directory verbatim.
+   *
+   * Only meaningful for a **standalone** Skill. A bundled one inherits its plugin's flag: two
+   * switches for one thing is how a half-on plugin that no version of the package described gets
+   * written.
+   */
+  enabled?: boolean;
 }
 
 export interface InstallsFile {

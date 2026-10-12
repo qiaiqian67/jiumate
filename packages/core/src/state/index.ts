@@ -17,6 +17,8 @@ export * from "./agent-state.js";
 export * from "./installs.js";
 export * from "./plugin-store.js";
 export * from "./plugin-machine-state.js";
+export * from "./machine-skill-state.js";
+export * from "./machine-skill-store.js";
 export * from "./plugin-discovery.js";
 export * from "./plugin-import.js";
 export * from "./repo-url.js";

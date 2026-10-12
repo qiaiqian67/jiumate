@@ -167,6 +167,38 @@ export function localPluginsDir(root: string): string {
   return path.join(root, "plugins");
 }
 
+/**
+ * `<root>/skills`: Skills added to this machine, one directory per Skill.
+ *
+ * **The machine-level half of a two-level install, and the reason it exists.** A Skill a user
+ * brought from a URL, an archive or another Agent's tree is a property of the *machine*, not of
+ * whichever Agent happened to be selected when they added it — but an install writes to one Agent,
+ * so without a machine-level home "add" would have to either install straight into an Agent (which
+ * makes "add, then choose where it goes" impossible) or keep the source URL and re-download on
+ * every enable. Both make the thing the user actually wants — add once, enable per Agent — awkward.
+ *
+ * **Outside the Project tree for the same reason as `localPluginsDir`.** The same URL produces the
+ * same Skill on every Project, so keeping it under a Project would make the store depend on which
+ * Project the page was opened from.
+ *
+ * The contents are the Skill's own files, in the same layout an Agent's `skills/<name>/` uses, so
+ * mounting it into an Agent is a copy between two identical shapes rather than a translation.
+ */
+export function machineSkillsDir(root: string): string {
+  return path.join(root, "skills");
+}
+
+/**
+ * `<machineSkillsDir>/<name>`: one machine-level Skill, and the sidecar manifest beside it.
+ *
+ * The manifest records where the Skill came from so 升级 can go back and check — the same reason
+ * `.provenance.json` exists for an added plugin, and the same reason it is *not* trusted by
+ * anything except the upgrade itself.
+ */
+export function machineSkillDir(root: string, name: string): string {
+  return path.join(machineSkillsDir(root), name);
+}
+
 /** `<agentStateDir>/schedule`, the scheduled-task directory (doesn't exist when unconfigured). */
 export function scheduleDir(root: string, projectId: string, agentId: string): string {
   return path.join(agentStateDir(root, projectId, agentId), "schedule");

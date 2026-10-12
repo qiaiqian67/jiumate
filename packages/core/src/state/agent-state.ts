@@ -35,6 +35,7 @@ import {
   writePluginInstall,
 } from "./plugin-store.js";
 import { readMachineDisabled } from "./plugin-machine-state.js";
+import { readMachineDisabledSkills } from "./machine-skill-state.js";
 import {
   AGENT_ID_PLACEHOLDER,
   AGENTS_MD_PLACEHOLDER,
@@ -810,6 +811,18 @@ export async function listInstalledSkills(
   };
 
   // Standalone skills — the user's own and imported ones. Unchanged layout.
+  //
+  // Gated on **both** switches, same as a bundled plugin's members: the machine-level one
+  // (`<root>/skills-state.json`, every Agent at once) and this Agent's own `enabled` in
+  // `.installs.json`. Both default to on, so a Skill installed before either flag existed keeps
+  // working rather than silently disappearing from every Agent that has it.
+  //
+  // The record is read once here rather than per Skill: it is one file, and a per-Skill read would
+  // re-parse it for every directory in the tree. A Skill with no record at all — installed before
+  // the flag existed, or copied in by hand — is treated as on, which is the same rule the file's
+  // own reader uses.
+  const machineOffSkills = await readMachineDisabledSkills(root);
+  const installs = await readInstalls(root, projectId, agentId);
   const standalone = skillsDir(root, projectId, agentId);
   let entries: Dirent[];
   try {
@@ -819,6 +832,8 @@ export async function listInstalledSkills(
   }
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
+    if (machineOffSkills.has(entry.name)) continue;
+    if (installs.skills[entry.name]?.enabled === false) continue;
     const one = await readOne(standalone, entry.name);
     if (one !== null) skills.push(one);
   }
