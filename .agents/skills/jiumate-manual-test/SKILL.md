@@ -62,6 +62,69 @@ Unset it rather than blanking it: `run-with-env` reads empty as unset, but `reso
 A fresh root seeds `admin` with a random `jiumate-<4 digits>` password, printed once at startup.
 `JIUMATE_SEED_ADMIN_PASSWORD` pins it, which is how the e2e harness logs in.
 
+**When you have no password, use the local API token.** The server writes `<root>/api-token` at
+boot; presenting it as `Authorization: Bearer <token>` authenticates as `admin`, because holding it
+proves filesystem access to the data root. That is enough to drive the Web App from Playwright with
+no credentials — see below. The only login wall with no way around it is the token being absent, and
+it is written by every boot.
+
+```js
+// Playwright against a dev server the user is already running
+const token = fs.readFileSync(path.join(os.homedir(), ".jiumate/dev-data/api-token"), "utf8").trim();
+const ctx = await browser.newContext();
+await ctx.setExtraHTTPHeaders({ authorization: `Bearer ${token}` });
+```
+
+## Fixing a UI bug: look before you theorise
+
+**A bug report about visible UI is settled by looking at the running app, not by reading source.**
+A real round of this cost five wrong fixes: each one was a genuine bug, each shipped with passing
+tests, and none of them was the reported one. See
+`changelog/unreleased/2026-10-13-quick-invoke-reaches-composer.md`.
+
+What actually found it, in one pass:
+
+```js
+// Record every write, from inside the page
+await page.addInitScript(() => {
+  window.__writes = [];
+  const orig = Storage.prototype.setItem;
+  Storage.prototype.setItem = function (k, v) {
+    if (String(k).includes("chatDraft")) window.__writes.push(v);
+    return orig.call(this, k, v);
+  };
+});
+```
+
+That showed the pre-selection written correctly and overwritten ~300ms later by code that rebuilt
+the cache from state alone. No amount of source reading had found it, because every layer looked
+correct in isolation — the bug was a *race between two correct writers*.
+
+Rules that follow from it:
+
+- **Reproduce in the browser before editing.** Not after. If you cannot, say so and ask for the
+  reproduction rather than shipping a plausible fix.
+- **An assertion about the shape of a fix is not evidence.** One test in this repo asserted that
+  `persistNow` rebuilt the draft from component state — encoding the very defect — and passed for two
+  commits while the feature was visibly broken. Assert on behaviour, or on the requirement.
+- **"N tests pass" says nothing about whether the bug is fixed.** It says the code matches the
+  expectations, which may themselves be wrong.
+- **Two real fixes in a row with no visible change is evidence about your method, not the codebase.**
+  Stop and get a browser, rather than adding a third layer.
+
+**HMR can silently refuse.** Vite logs `hmr invalidate … Could not Fast Refresh ("X" export is
+incompatible)` and the page keeps running the **old** module — the browser looks like it reloaded and
+your change appears to do nothing. It fires for files that mix component and non-component exports
+(`plugins-page.tsx`, `skills-tab.tsx`, `state/locale.tsx` and others). Check `web.log` for
+`hmr invalidate` before concluding a fix is wrong, and tell the user to hard-refresh.
+
+**A dead backend with a live frontend.** `pnpm dev` prints
+`[dev-prebuild] another dev prestep is running; waiting...` and then goes silent — the lock
+(`%TEMP%/jiumate-dev-<key>.lock`) is held by a leftover process and only clears after its 10-minute
+staleness window. The frontend stays up and every request logs `ECONNREFUSED 127.0.0.1:7368`. Kill
+the `concurrently` / `tsx watch` / `vite` processes and start `dev:server` and `dev:web` separately
+rather than waiting it out.
+
 ## Editing while it runs
 
 Changes to `core` or `skills` do not reach a running dev server — web/server consume snapshot
