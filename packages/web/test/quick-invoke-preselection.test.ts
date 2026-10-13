@@ -53,11 +53,16 @@ describe("quick invoke's preselection reaches the composer", () => {
   });
 
   it("does not let the mount-time persist overwrite the cache it just read", () => {
-    // `persistNow` rebuilds the whole DraftCache from component state. Before the fix, that state
-    // was still empty, so the mount-time write erased what quick-invoke had written. The guard is
-    // that the state is seeded first — which the assertions above cover; this one pins that the
-    // write still exists and therefore the ordering is load-bearing.
-    expect(draftView).toContain("const data: DraftCache = { text: textRef.current");
+    // **This assertion used to pin the bug.** It required `persistNow` to rebuild the draft from
+    // component state alone — which is exactly what dropped the quick-invoke pre-selection ~300ms
+    // after the library page wrote it, before the composer had read anything back. It passed for
+    // two commits while the feature was visibly broken, which is the clearest argument against
+    // writing assertions about how a fix is shaped: this one described the intent correctly and
+    // still encoded the defect.
+    //
+    // What is actually required is that a field written before this page mounted survives — see
+    // quick-invoke-draft-persist.test.ts, and the browser write-trace that found it.
+    expect(draftView).toContain("const data: DraftCache = {");
     expect(draftView).toContain(
       "if (skillsRef.current.length > 0) data.skills = skillsRef.current;",
     );

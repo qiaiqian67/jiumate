@@ -544,7 +544,20 @@ export function DraftView({
   const persistNow = useCallback(() => {
     cancelPendingSave();
     if (!userId) return;
-    const data: DraftCache = { text: textRef.current, workspace, approvalMode };
+    // **Not a fresh object.** `persistNow` runs on mount and on every option change, and this
+    // component owns only part of the draft: the quick-invoke pre-selection is written by the
+    // plugin page before this page mounts, and rebuilding the cache from state alone dropped it.
+    // That is the whole bug — the write was correct, and this overwrote it ~300ms later, before
+    // the composer had read anything back.
+    //
+    // Spreading the stored draft keeps fields this component does not model. The keys assigned
+    // after it still win, so the fields it does own are never stale.
+    const data: DraftCache = {
+      ...loadDraft(draftKey(userId, projectId)),
+      text: textRef.current,
+      workspace,
+      approvalMode,
+    };
     if (agentId) data.agentId = agentId;
     if (modelRef) data.modelRef = modelRef;
     if (skillsRef.current.length > 0) data.skills = skillsRef.current;
