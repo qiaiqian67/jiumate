@@ -70,6 +70,24 @@ behind it. That one only showed up because the browser was asked for the
 computed `pointer-events` rather than the class list — which had looked
 correct.
 
+### The reserved row, and then the row it covered
+
+Keeping the row in flow left **41px of dead space under the counts on every
+card at rest** — 185px tall where 144px would do. It read as the card having
+lost something: the counts looked pushed out of a hole.
+
+An absolutely-positioned overlay removed the dead space, and immediately
+broke something better: anchored to the card's bottom edge, it sat exactly on
+the stats row and swallowed its clicks. `pointer-events: none` on the
+container does not help, because the row underneath is what was under the
+pointer.
+
+It is now anchored to a box holding **only the id and the description**. The
+counts sit below it, permanently visible and permanently clickable, and the
+overlay covers only text that is a preview anyway. Measured in the browser:
+the two boxes do not overlap, the card is 144px at rest and on hover, and
+both the stats button and the overlay's buttons work.
+
 `focus-within` reveals them for keyboard focus too: a hover-only reveal is
 one a keyboard can never reach.
 

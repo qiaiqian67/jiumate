@@ -649,7 +649,7 @@ export function AgentsPage() {
               return (
                 <div
                   key={a.agentId}
-                  className="group flex flex-col rounded-md border border-gray-200 bg-white p-4 transition-shadow hover:shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                  className="group relative flex flex-col overflow-hidden rounded-md border border-gray-200 bg-white p-4 transition-shadow hover:shadow-sm dark:border-gray-800 dark:bg-gray-900"
                 >
                   {/* Title line: avatar + name + version badge. `min-w-0` on the name span is what
                       lets it truncate — a flex child will not shrink below its content on its own,
@@ -677,21 +677,109 @@ export function AgentsPage() {
                       </div>
                     )}
                   </div>
-                  {/* agentId in mono, muted: the stable handle behind the display name, and the
-                      one thing a user needs when wiring an Agent into a config or a command. */}
-                  <span className="mt-1 truncate font-mono text-xs text-gray-400 dark:text-gray-500">
-                    {a.agentId}
-                  </span>
-                  {/* Description clamped to two lines. The `min-h` reserves the first line's height
-                      even when empty, so a grid row of description-less Agents does not collapse
-                      the cards above their neighbours. */}
-                  <p className="mt-2 line-clamp-2 min-h-8 text-xs text-gray-500 dark:text-gray-400">
-                    {a.description ?? ""}
-                  </p>
+                  {/* The id, the description and the hover actions share one relative box.
+
+                      The actions are an **overlay on this region only**, not on the whole card.
+                      An overlay anchored to the card's bottom edge sat exactly on top of the stats
+                      row and swallowed its clicks — `pointer-events: none` on the container does
+                      not help, because the row is what was under the pointer. Anchoring here means
+                      the counts below stay permanently visible and permanently clickable, and the
+                      overlay covers only text that is a preview anyway. */}
+                  <div className="relative mt-1">
+                    <span className="block truncate font-mono text-xs text-gray-400 dark:text-gray-500">
+                      {a.agentId}
+                    </span>
+                    {/* Description clamped to two lines. The `min-h` reserves the first line's
+                        height even when empty, so a grid row of description-less Agents does not
+                        collapse the cards above their neighbours. */}
+                    <p className="mt-2 line-clamp-2 min-h-8 text-xs text-gray-500 dark:text-gray-400">
+                      {a.description ?? ""}
+                    </p>
+
+                    {/* Actions revealed on hover, over the id and description.
+
+                          The card is a preview, and four buttons on every card turned a browsable
+                          grid into a wall of controls competing with the thing being browsed.
+
+                          An overlay rather than a reserved row: keeping the row in flow left 41px
+                          of dead space under the counts on every card at rest, which read as the
+                          card having lost something. Absolutely positioned, so the card is exactly
+                          as tall as its content and hovering cannot reflow the grid.
+
+                          It carries the card's own background and a hairline, so it covers the text
+                          it overlays rather than mixing with it — a translucent bar over text is
+                          worse than no hover state at all. */}
+                    <div
+                      className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center
+                        gap-2 rounded-md border-t border-gray-100 bg-white px-3 pb-1 pt-2.5
+                        opacity-0 transition-opacity focus-within:opacity-100
+                        group-hover:pointer-events-auto group-hover:opacity-100
+                        dark:border-gray-800 dark:bg-gray-900"
+                    >
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        className="flex-1"
+                        onClick={() => newChat(a.agentId)}
+                      >
+                        <GlyphIcon d={CARD_ICONS.newChat} />
+                        {S.chat.newSessionMenu}
+                      </Button>
+                      <Button
+                        size="icon"
+                        title={S.common.settings}
+                        aria-label={S.common.settings}
+                        onClick={() => {
+                          setCurrentAgentId(a.agentId);
+                          navigate(`/agents/${a.agentId}`);
+                        }}
+                      >
+                        <GlyphIcon d={GEAR_ICON} size={15} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        title={S.nav.usage}
+                        aria-label={S.nav.usage}
+                        onClick={() => navigate(`/usage?agentId=${encodeURIComponent(a.agentId)}`)}
+                      >
+                        <GlyphIcon
+                          d={CARD_ICONS.usage}
+                          size={15}
+                          className="text-gray-600 dark:text-gray-300"
+                        />
+                      </Button>
+                      {/* Built-in Agents can't be deleted: a non-button placeholder in the same
+                          box, so column widths stay consistent across the row. */}
+                      {builtin ? (
+                        <span
+                          role="img"
+                          title={S.agent.builtinUndeletable}
+                          aria-label={S.agent.builtinUndeletable}
+                          className="inline-flex cursor-not-allowed items-center justify-center rounded-md border border-transparent p-1.5 text-gray-300 dark:text-gray-600"
+                        >
+                          <GlyphIcon d={CARD_ICONS.trash} size={15} />
+                        </span>
+                      ) : (
+                        <Button
+                          size="icon"
+                          variant="danger"
+                          title={S.agent.deleteAgent}
+                          aria-label={S.agent.deleteAgent}
+                          onClick={() =>
+                            setDeleting({ agentId: a.agentId, name: agentDisplayName(a) })
+                          }
+                        >
+                          <GlyphIcon d={CARD_ICONS.trash} size={15} />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Stats, wrapped. Every item is shrink-0 and the row has no scroll box, so with
                       nowrap the counts simply spill past the card's padding once it is narrow —
                       wrapping spends a second line instead, and never triggers where it already
-                      fits. */}
+                      fits. Below the overlay rather than under it, so it stays visible and
+                      clickable at rest. */}
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
                     <span
                       className="inline-flex shrink-0 items-center gap-1 tabular-nums"
@@ -737,81 +825,6 @@ export function AgentsPage() {
                       <GlyphIcon d={STAT_ICONS.elapsed} size={ICON_SIZE.inlineGlyph} />
                       {a.updatedAt ? formatRelativeDays(a.updatedAt, locale) : "—"}
                     </span>
-                  </div>
-
-                  {/* Actions revealed on hover rather than always shown.
-
-                      The card is a preview — name, id, description, counts — and four buttons on
-                      every card turned a browsable grid into a wall of controls competing with
-                      the thing being browsed. They stay in the layout (`opacity` rather than
-                      `hidden`) so the cards in a row keep the same height whether or not one is
-                      hovered; a card that grew on hover would make the grid reflow under the
-                      pointer.
-
-                      `group` is on the card and the opacity transition on this row, so the whole
-                      card is the hover target, not the strip itself — moving the pointer across
-                      the description does not make the buttons flicker back. */}
-                  <div
-                    className="mt-auto flex items-center gap-2 pt-3 opacity-0 transition-opacity
-                      focus-within:opacity-100 group-hover:opacity-100
-                      group-hover:pointer-events-auto pointer-events-none"
-                  >
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      className="flex-1"
-                      onClick={() => newChat(a.agentId)}
-                    >
-                      <GlyphIcon d={CARD_ICONS.newChat} />
-                      {S.chat.newSessionMenu}
-                    </Button>
-                    <Button
-                      size="icon"
-                      title={S.common.settings}
-                      aria-label={S.common.settings}
-                      onClick={() => {
-                        setCurrentAgentId(a.agentId);
-                        navigate(`/agents/${a.agentId}`);
-                      }}
-                    >
-                      <GlyphIcon d={GEAR_ICON} size={15} />
-                    </Button>
-                    <Button
-                      size="icon"
-                      title={S.nav.usage}
-                      aria-label={S.nav.usage}
-                      onClick={() => navigate(`/usage?agentId=${encodeURIComponent(a.agentId)}`)}
-                    >
-                      <GlyphIcon
-                        d={CARD_ICONS.usage}
-                        size={15}
-                        className="text-gray-600 dark:text-gray-300"
-                      />
-                    </Button>
-                    {/* Built-in Agents can't be deleted: a non-button placeholder in the same box,
-                        so column widths stay consistent across the row. */}
-                    {builtin ? (
-                      <span
-                        role="img"
-                        title={S.agent.builtinUndeletable}
-                        aria-label={S.agent.builtinUndeletable}
-                        className="inline-flex cursor-not-allowed items-center justify-center rounded-md border border-transparent p-1.5 text-gray-300 dark:text-gray-600"
-                      >
-                        <GlyphIcon d={CARD_ICONS.trash} size={15} />
-                      </span>
-                    ) : (
-                      <Button
-                        size="icon"
-                        variant="danger"
-                        title={S.agent.deleteAgent}
-                        aria-label={S.agent.deleteAgent}
-                        onClick={() =>
-                          setDeleting({ agentId: a.agentId, name: agentDisplayName(a) })
-                        }
-                      >
-                        <GlyphIcon d={CARD_ICONS.trash} size={15} />
-                      </Button>
-                    )}
                   </div>
                 </div>
               );

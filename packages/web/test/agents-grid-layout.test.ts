@@ -127,12 +127,42 @@ describe("the featured strip", () => {
 });
 
 describe("the card's actions appear on hover", () => {
-  it("hides them with opacity rather than removing them from layout", () => {
-    // The row keeps its box at all times, so a hovered card does not grow and push the grid
-    // around under the pointer — measured in the browser: 185px before, during and after.
-    expect(page).toMatch(
-      /className="mt-auto flex items-center gap-2 pt-3 opacity-0 transition-opacity[\s\S]{0,200}group-hover:opacity-100/,
+  it("overlays the id and description, not the counts", () => {
+    // An overlay anchored to the card's bottom edge sat exactly on the stats row and swallowed
+    // its clicks. `pointer-events: none` on the container does not help — the row is what was
+    // under the pointer. The overlay is scoped to a `relative` box holding only the id and the
+    // description, so the counts stay visible and clickable at rest. Measured: no overlap.
+    // Indices, not a bounded regex: the comments between the box and the overlay run past any
+    // window short enough to be worth writing, and a distance limit would fail on a reworded
+    // comment rather than on a structural change.
+    const box = page.indexOf('<div className="relative mt-1">');
+    const overlay = page.indexOf("pointer-events-none absolute inset-x-0 bottom-0");
+    expect(box).toBeGreaterThan(-1);
+    expect(overlay).toBeGreaterThan(box);
+  });
+
+  it("reserves no space for them", () => {
+    // A hidden-but-in-flow row kept the layout stable but left 41px of dead space under the
+    // counts on every card, which read as the card having lost something: the stats looked pushed
+    // out of a hole. Absolute positioning removes it — 185px of card became 144px.
+    expect(page).toMatch(/pointer-events-none absolute inset-x-0 bottom-0/);
+    expect(page).not.toMatch(/mt-auto flex items-center gap-2 pt-3 opacity-0/);
+  });
+
+  it("puts the stats row outside that box, below it", () => {
+    // The regression the first overlay caused: the counts ended up inside the overlay's parent.
+    // The stats row must come *after* the overlay's closing tag, or the overlay covers it.
+    const box = page.indexOf('<div className="relative mt-1">');
+    const overlay = page.indexOf("pointer-events-none absolute inset-x-0 bottom-0", box);
+    const stats = page.indexOf(
+      'className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500',
+      overlay,
     );
+    expect(box).toBeGreaterThan(-1);
+    expect(overlay).toBeGreaterThan(box);
+    // A second, later occurrence of the stats class — the one inside the overlay's parent would be
+    // the bug, and would appear before the overlay's own end.
+    expect(stats).toBeGreaterThan(overlay);
   });
 
   it("stops the hidden row from being clickable", () => {
@@ -148,10 +178,11 @@ describe("the card's actions appear on hover", () => {
     expect(page).toContain("focus-within:opacity-100");
   });
 
-  it("makes the whole card the hover target", () => {
+  it("makes the whole card the hover target, and anchors the card", () => {
     // `group` on the card, not on the strip: otherwise moving the pointer across the description
-    // between two clicks makes the buttons disappear mid-interaction.
-    expect(page).toContain("group flex flex-col rounded-md border");
+    // between two clicks makes the buttons disappear mid-interaction. `relative` is what the
+    // overlay's `inset-x-0 bottom-0` resolves against — without it they anchor to the viewport.
+    expect(page).toContain("group relative flex flex-col overflow-hidden rounded-md border");
   });
 });
 
