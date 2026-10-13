@@ -44,10 +44,14 @@ export function ConnectorsTab({
   originFilter: ExtensionFilter;
   setOriginFilter: (next: ExtensionFilter) => void;
   /**
-   * Incremented by the page's add button to ask this tab's own add dialog to open. The dialog is
-   * owned by `McpServersSection`, which is also what renders the cards — putting the button in the
-   * page toolbar keeps it in the same slot as every other tab's add button without duplicating the
-   * dialog or reaching across into the section.
+   * Incremented by the page's add button, forwarded to the section to open its add form.
+   *
+   * **The section owns the dialog**, because it owns the registry that dialog writes. This tab has
+   * no form of its own, and a second one would give two places that could disagree about what a
+   * valid server is — the validation being the interesting part of that form, not an afterthought.
+   *
+   * Forwarded, not handled here: this prop used to arrive and be dropped, which left the page's
+   * button doing nothing while the section drew its own. That is the state this replaced.
    */
   addNonce?: number;
 }) {
@@ -141,7 +145,15 @@ export function ConnectorsTab({
             <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
               {isOwner ? S.plugins.connectorsDesc : S.plugins.connectorsReadOnly}
             </p>
-            <McpServersSection initial={servers} target={target} filter={matches} />
+            <McpServersSection
+              initial={servers}
+              target={target}
+              filter={matches}
+              // The page toolbar owns the add button here (see `addNonce`), so this surface must not
+              // draw a second one — two entries to one dialog under two different names.
+              hideAddButton
+              addNonce={addNonce}
+            />
           </>
         )}
       </div>

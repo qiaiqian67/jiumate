@@ -1,0 +1,67 @@
+/**
+ * 连接器页签的「添加连接器」按钮，必须真的打开那个对话框。
+ *
+ * **这是一个断过的链路。** 页头的按钮已经存在（和别的页签一样占头部同一个位置），文案也已经是
+ * 「添加连接器」；但它只把一个 `addNonce` 传给 `ConnectorsTab`，而那个 tab 接下这个 prop 就再没
+ * 用过。于是页头那个按钮点了什么都不发生，而列表下面另有一个「添加 MCP Server」按钮是唯一有效的
+ * 入口——同一个对话框的两个入口，还用了两个不同的名字。
+ *
+ * 两件事一起坏，比只坏一件更难看出来：底下那个能点，所以功能"看起来是好的"；只是上面那个是死的。
+ *
+ * 所以这里断言的是**链路通**，不是"有一个按钮"：
+ *
+ * 1. 页头有按钮，文案是「添加连接器」；
+ * 2. tab 把 nonce **转发**给 section（不是接下就算）；
+ * 3. section 真的监听它并打开表单；
+ * 4. section 自己**不再画**第二个按钮。
+ *
+ * 全部读源码：这里要抓的是"prop 一路传到没有消费它的地方"这种结构问题，渲染不出来。
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+
+const src = (...parts: string[]): string =>
+  fs.readFileSync(path.join(__dirname, "..", "src", ...parts), "utf8");
+
+const page = src("features", "plugins", "plugins-page.tsx");
+const tab = src("features", "plugins", "connectors-tab.tsx");
+const section = src("features", "agents", "mcp-servers-section.tsx");
+
+describe("the connectors tab has exactly one add button, and it works", () => {
+  it("puts the add button in the page toolbar, labelled 添加连接器", () => {
+    expect(page).toContain("S.plugins.addConnector}");
+    // The page's button is the one that drives the section's form.
+    expect(page).toContain("setConnectorsAddNonce((n) => n + 1)");
+    expect(page).toContain("addNonce={connectorsAddNonce}");
+  });
+
+  it("forwards the nonce instead of swallowing it", () => {
+    // This is the link that was missing: the prop arrived at the tab and stopped there.
+    expect(tab).toContain("addNonce={addNonce}");
+  });
+
+  it("has the section act on the nonce", () => {
+    expect(section).toContain("addNonce");
+    // A ref rather than a bare effect, so the first render (nonce unchanged, form closed) is a
+    // no-op and pressing the button twice opens the form twice.
+    expect(section).toContain("lastAddNonce");
+    expect(section).toMatch(
+      /if \(addNonce === lastAddNonce\.current\) return;[\s\S]{0,200}openAdd\(\)/,
+    );
+  });
+
+  it("does not draw a second add button below the list", () => {
+    // The old state: 「添加连接器」 in the header, 「添加 MCP Server」 under the cards. One dialog,
+    // two doors, two names.
+    expect(tab).toContain("hideAddButton");
+    expect(section).toContain("!readOnly && !hideAddButton");
+  });
+
+  it("keeps the section's own button on the agent Tools tab", () => {
+    // Hiding it everywhere would leave the Agent's Tools tab with no way to add at all — that
+    // surface has no toolbar button of its own, so the section's is the only one there.
+    const agentPage = src("features", "agents", "agent-settings-page.tsx");
+    expect(agentPage).not.toContain("hideAddButton");
+  });
+});

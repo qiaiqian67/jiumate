@@ -16,7 +16,7 @@
  * decides which of the server's tool calls stop for approval, and nothing about what the
  * remote server is able to do.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
 import * as api from "../../api/endpoints";
 import type { McpServerTestResponse } from "@prismshadow/jiumate-server/api";
@@ -220,6 +220,19 @@ export interface McpSectionTarget {
    * follows the library's card grid. Same state, same handlers, same modals either way.
    */
   layout?: "table" | "cards";
+  /**
+   * Hides the section's own add button, for callers that put one in their own toolbar.
+   *
+   * **On the connectors tab the page owns that button.** It sits in the same header slot as every
+   * other tab's add button, so the one inside this section was a second entry to one dialog —
+   * indistinguishable from two different actions, and labelled differently from each other
+   * (「添加连接器」 up top, 「添加 MCP Server」 down here) which is worse: the same action under two
+   * names. The page's button drives the same form through `addNonce`.
+   *
+   * Separate from `readOnly`, which removes the button because the user *cannot* add; this removes
+   * it because the user *already has* one, a few lines up.
+   */
+  hideAddButton?: boolean;
 }
 
 /**
@@ -244,6 +257,8 @@ export function McpServersSection({
   initial,
   target,
   filter,
+  hideAddButton = false,
+  addNonce = 0,
 }: {
   initial: MCPServerConfig[];
   target: McpSectionTarget;
@@ -257,6 +272,17 @@ export function McpServersSection({
    * stays whole whatever is on screen.
    */
   filter?: (entry: MCPServerConfig) => boolean;
+  /** The caller's own toolbar already holds an add button — see `McpSectionTarget`. */
+  hideAddButton?: boolean;
+  /**
+   * Incremented by the caller's toolbar to open this section's add form.
+   *
+   * **Only meaningful with `hideAddButton`.** Together they are "the add button lives in the
+   * caller's header": this prop is how that button reaches the one form, which lives here because
+   * here is the registry it writes. Without the pairing the caller has a button that does nothing
+   * and this section has one of its own — which is the state both were in before.
+   */
+  addNonce?: number;
 }) {
   const [servers, setServers] = useState<MCPServerConfig[]>(initial);
   const [busy, setBusy] = useState(false);
@@ -340,6 +366,16 @@ export function McpServersSection({
     setFieldErrors({});
     setModalError(null);
   };
+
+  // The caller's toolbar button, arriving as a counter rather than a boolean so that pressing it
+  // twice opens the form twice — a boolean would see `true` both times and do nothing the second.
+  // Skipped on the first render, where the nonce has never changed and the form is closed anyway.
+  const lastAddNonce = useRef(addNonce);
+  useEffect(() => {
+    if (addNonce === lastAddNonce.current) return;
+    lastAddNonce.current = addNonce;
+    openAdd();
+  }, [addNonce]);
 
   /**
    * Opens the registry picker, loading the registry fresh on every open — the list is
@@ -635,7 +671,7 @@ export function McpServersSection({
         </div>
       )}
 
-      {!readOnly && (
+      {!readOnly && !hideAddButton && (
         <div className="flex items-center gap-2">
           {target.registry !== undefined && (
             <Button size="sm" disabled={busy} onClick={() => void openPicker()}>
