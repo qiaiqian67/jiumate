@@ -649,7 +649,7 @@ export function AgentsPage() {
               return (
                 <div
                   key={a.agentId}
-                  className="flex flex-col rounded-md border border-gray-200 bg-white p-4 transition-shadow hover:shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                  className="group flex flex-col rounded-md border border-gray-200 bg-white p-4 transition-shadow hover:shadow-sm dark:border-gray-800 dark:bg-gray-900"
                 >
                   {/* Title line: avatar + name + version badge. `min-w-0` on the name span is what
                       lets it truncate — a flex child will not shrink below its content on its own,
@@ -739,10 +739,23 @@ export function AgentsPage() {
                     </span>
                   </div>
 
-                  {/* Actions pinned to the bottom: `mt-auto` against the card's flex column means
-                      they stay on one line across the row whatever the description above does,
-                      which is what makes a row of three cards read as one band of controls. */}
-                  <div className="mt-auto flex items-center gap-2 pt-3">
+                  {/* Actions revealed on hover rather than always shown.
+
+                      The card is a preview — name, id, description, counts — and four buttons on
+                      every card turned a browsable grid into a wall of controls competing with
+                      the thing being browsed. They stay in the layout (`opacity` rather than
+                      `hidden`) so the cards in a row keep the same height whether or not one is
+                      hovered; a card that grew on hover would make the grid reflow under the
+                      pointer.
+
+                      `group` is on the card and the opacity transition on this row, so the whole
+                      card is the hover target, not the strip itself — moving the pointer across
+                      the description does not make the buttons flicker back. */}
+                  <div
+                    className="mt-auto flex items-center gap-2 pt-3 opacity-0 transition-opacity
+                      focus-within:opacity-100 group-hover:opacity-100
+                      group-hover:pointer-events-auto pointer-events-none"
+                  >
                     <Button
                       size="sm"
                       variant="primary"

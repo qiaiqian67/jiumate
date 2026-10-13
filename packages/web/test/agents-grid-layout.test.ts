@@ -126,6 +126,35 @@ describe("the featured strip", () => {
   });
 });
 
+describe("the card's actions appear on hover", () => {
+  it("hides them with opacity rather than removing them from layout", () => {
+    // The row keeps its box at all times, so a hovered card does not grow and push the grid
+    // around under the pointer — measured in the browser: 185px before, during and after.
+    expect(page).toMatch(
+      /className="mt-auto flex items-center gap-2 pt-3 opacity-0 transition-opacity[\s\S]{0,200}group-hover:opacity-100/,
+    );
+  });
+
+  it("stops the hidden row from being clickable", () => {
+    // `opacity-0` alone leaves `pointer-events: auto`, so an invisible row still swallows clicks
+    // aimed at whatever is behind it. Found by reading the computed style, not the class list.
+    expect(page).toContain("pointer-events-none");
+    expect(page).toContain("group-hover:pointer-events-auto");
+  });
+
+  it("also reveals them for keyboard focus, not only for a pointer", () => {
+    // A hover-only reveal is a reveal a keyboard can never get to: tabbing through the card would
+    // focus buttons the user cannot see.
+    expect(page).toContain("focus-within:opacity-100");
+  });
+
+  it("makes the whole card the hover target", () => {
+    // `group` on the card, not on the strip: otherwise moving the pointer across the description
+    // between two clicks makes the buttons disappear mid-interaction.
+    expect(page).toContain("group flex flex-col rounded-md border");
+  });
+});
+
 describe("strings", () => {
   it("has every new key in both dictionaries", () => {
     // `Strings = typeof zh`, so the English catalog is structurally required to match — but only

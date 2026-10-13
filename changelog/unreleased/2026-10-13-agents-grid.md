@@ -53,6 +53,26 @@ One Agent at a time, rotating every six seconds, with arrows to move it
 manually. The arrows appear only when there is more than one — a pair of
 controls that cannot move is a dead affordance.
 
+## The actions appear on hover
+
+Four buttons on every card turned a browsable grid into a wall of controls
+competing with the thing being browsed. The card is a preview — name, id,
+description, counts — so its actions now appear on hover, and the whole card
+is the target rather than the strip, or moving the pointer across the
+description makes the buttons vanish mid-interaction.
+
+They stay in the layout at `opacity-0`, so a hovered card does not grow and
+push the grid around under the pointer.
+
+`pointer-events-none` alongside the opacity: `opacity-0` on its own leaves
+the row clickable, so an invisible row swallows clicks aimed at whatever is
+behind it. That one only showed up because the browser was asked for the
+computed `pointer-events` rather than the class list — which had looked
+correct.
+
+`focus-within` reveals them for keyboard focus too: a hover-only reveal is
+one a keyboard can never reach.
+
 ## Nothing was lost
 
 Every control the row had is on the card: new chat, settings, usage, delete,
