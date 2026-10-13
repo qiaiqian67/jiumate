@@ -1721,11 +1721,14 @@ export const zh = {
     tabSkills: "技能",
     tabPlugins: "插件",
     tabConnectors: "连接器",
-    /** Connectors tab (features/plugins/connectors-tab.tsx): the Project's MCP server registry. */
-    connectorsDesc:
-      "MCP 服务：整个项目共用一份，在这里添加一次，再到各 Agent 的工具设置里勾选。Agent 保存的是选中条目的副本，因此改动这里不会自动影响已有 Agent。",
-    connectorsEmpty: "还没有添加 MCP 服务。添加后即可在智能体的工具设置中勾选。",
-    connectorsReadOnly: "只有项目管理员可以增删改 MCP 服务，你当前是成员，因此这里是只读的。",
+    /* No `connectorsDesc` / `connectorsEmpty` / `connectorsReadOnly`. The tab carried a paragraph
+       explaining that the registry is shared and that Agents keep copies, plus an empty-state
+       line repeating it. Both stated the same fact as the tab's own name and the surrounding
+       chrome, and the empty state is drawn by `SettingsEmpty` — which never used this string.
+       They read as instructions for a page whose header already said what the page is.
+
+       `connectorsSavedToast` stays: it is the one line the user cannot infer, because saving
+       changes nothing visible here and the consequence is on another page. */
     connectorsSavedToast: "已保存，智能体可在工具设置中勾选",
   },
 

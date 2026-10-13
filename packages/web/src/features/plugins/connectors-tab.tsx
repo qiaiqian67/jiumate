@@ -141,20 +141,15 @@ export function ConnectorsTab({
         {servers === null ? (
           <Skeleton className="h-40 w-full" />
         ) : (
-          <>
-            <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-              {isOwner ? S.plugins.connectorsDesc : S.plugins.connectorsReadOnly}
-            </p>
-            <McpServersSection
-              initial={servers}
-              target={target}
-              filter={matches}
-              // The page toolbar owns the add button here (see `addNonce`), so this surface must not
-              // draw a second one — two entries to one dialog under two different names.
-              hideAddButton
-              addNonce={addNonce}
-            />
-          </>
+          <McpServersSection
+            initial={servers}
+            target={target}
+            filter={matches}
+            // The page toolbar owns the add button here (see `addNonce`), so this surface must not
+            // draw a second one — two entries to one dialog under two different names.
+            hideAddButton
+            addNonce={addNonce}
+          />
         )}
       </div>
     </div>

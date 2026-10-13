@@ -24,6 +24,9 @@ import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
 import { useProject } from "../../state/project";
 import { Button } from "../../components/ui/button";
+import { GlyphIcon } from "../../components/ui/glyph-icon";
+import { PENCIL_ICON, TRASH_ICON } from "../../components/ui/session-row-menu";
+import { ICON_SIZE } from "../../lib/icon-scale";
 import { Input, Textarea } from "../../components/ui/input";
 import { Modal } from "../../components/ui/modal";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
@@ -535,10 +538,18 @@ export function McpServersSection({
 
   return (
     <div className="space-y-4">
-      <p className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-        {S.agent.mcpServers}
-        <InfoPopover label={S.agent.mcpServers}>{S.agent.mcpDesc}</InfoPopover>
-      </p>
+      {/* The section's own heading, on the Agent's Tools tab only.
+          **Omitted on the connectors tab**, where the tab is already called 连接器 and the
+          surrounding chrome says what the list is; a second "MCP Server" label under a tab named
+          连接器 is the same fact stated twice, and the user who just clicked the tab has been told
+          it already. The tab is the heading there, exactly as the plugin and skills tabs are their
+          own headings. */}
+      {target.layout !== "cards" && (
+        <p className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+          {S.agent.mcpServers}
+          <InfoPopover label={S.agent.mcpServers}>{S.agent.mcpDesc}</InfoPopover>
+        </p>
+      )}
 
       {visible.length === 0 ? (
         <SettingsEmpty>{S.agent.mcpEmpty}</SettingsEmpty>
@@ -560,27 +571,41 @@ export function McpServersSection({
                 description={targetOf(entry)}
                 meta={`${transportOf(entry)} · ${permissionOf(entry)}`}
                 onOpen={() => setDetailIndex(index)}
+                /* The same overlay the plugin and skill cards use, for the same reason: a group
+                   this wide on a card a third of the page would otherwise cost the name a third of
+                   its width. Without it the two buttons sat inline and pushed 「http · auto」 onto a
+                   second line — which is what made this card read as a different system from the
+                   plugin one rather than the same card in a different list. */
+                actionOverlay
                 action={
-                  <div className="flex shrink-0 items-center">
+                  /* 28px squares with glyphs, the plugin card's scale. The words 「编辑」「删除」 in
+                     ghost buttons were both too wide for a row of controls and one of the two
+                     names this same action carries elsewhere (删除, on the plugin card) — so the
+                     connectors list had a Delete that did not look like the Delete beside it. */
+                  <div className="flex shrink-0 items-center gap-1">
                     {!readOnly && (
                       <>
                         <Button
                           size="sm"
-                          variant="ghost"
-                          disabled={busy}
+                          variant="secondary"
+                          className="h-7 w-7 shrink-0 justify-center p-0"
                           aria-label={`${S.common.edit} ${entry.name}`}
+                          title={S.common.edit}
+                          disabled={busy}
                           onClick={() => openEdit(index)}
                         >
-                          {S.common.edit}
+                          <GlyphIcon d={PENCIL_ICON} size={ICON_SIZE.iconButton} />
                         </Button>
                         <Button
                           size="sm"
-                          variant="ghost"
-                          disabled={busy}
+                          variant="secondary"
+                          className="h-7 w-7 shrink-0 justify-center p-0"
                           aria-label={`${S.agent.mcpRemove} ${entry.name}`}
+                          title={S.agent.mcpRemove}
+                          disabled={busy}
                           onClick={() => setDeleting(index)}
                         >
-                          {S.agent.mcpRemove}
+                          <GlyphIcon d={TRASH_ICON} size={ICON_SIZE.iconButton} />
                         </Button>
                       </>
                     )}

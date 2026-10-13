@@ -1757,13 +1757,9 @@ export const en: Strings = {
     tabSkills: "Skills",
     tabPlugins: "Plugins",
     tabConnectors: "Connectors",
-    /** Connectors tab (features/plugins/connectors-tab.tsx): the project's MCP server registry. */
-    connectorsDesc:
-      "MCP servers: one list shared by the whole project. Add a server here once, then tick it in an agent's tools settings. An agent stores its own copy of what it picked, so editing a server here does not change agents that already picked it.",
-    connectorsEmpty:
-      "No MCP servers yet. Add one and it becomes selectable in agent tool settings.",
-    connectorsReadOnly:
-      "Only a project owner can change MCP servers; you are a member, so this list is read-only.",
+    // No `connectorsDesc` / `connectorsEmpty` / `connectorsReadOnly`. See the Chinese note: all
+    // three stated as prose what the tab's name and the surrounding chrome already said, and the
+    // empty state is drawn by `SettingsEmpty`, which never used the string.
     connectorsSavedToast: "Saved — agents can now pick it in their tools settings",
   },
 

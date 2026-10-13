@@ -65,3 +65,60 @@ describe("the connectors tab has exactly one add button, and it works", () => {
     expect(agentPage).not.toContain("hideAddButton");
   });
 });
+
+describe("the connectors tab states nothing the tab's name does not", () => {
+  it("drops the paragraph explaining that the registry is shared", () => {
+    // It said the same thing as the header: this is the project's one list, and agents keep copies.
+    // A paragraph under a tab called 连接器, repeating that the tab is the project's list.
+    expect(tab).not.toContain("connectorsDesc");
+    expect(tab).not.toContain("connectorsReadOnly");
+  });
+
+  it("drops the section's own heading on this tab only", () => {
+    // 「MCP Server」 under a tab named 连接器 states the same fact twice, and the user who just
+    // clicked the tab has been told it already. Gated on the cards layout, so the Agent's Tools
+    // tab — which has no tab of its own to be its heading — keeps its label.
+    expect(section).toContain('target.layout !== "cards"');
+  });
+
+  it("leaves the saved toast, which is the one line the user cannot infer", () => {
+    // Saving changes nothing visible on this page; the consequence is on another one. That is not
+    // something the header implies, so this one stays.
+    expect(tab).toContain("connectorsSavedToast");
+  });
+
+  it("removes the retired strings from both dictionaries", () => {
+    // Left in place, an unused string is what the next change reaches for without asking why it
+    // stopped being used — and why it was removed in the first place.
+    for (const dict of [src("lib", "strings.ts"), src("lib", "strings-en.ts")]) {
+      expect(dict).not.toContain("connectorsDesc:");
+      expect(dict).not.toContain("connectorsReadOnly:");
+      expect(dict).not.toContain("connectorsEmpty:");
+    }
+  });
+});
+
+describe("a connector card is drawn like a plugin card", () => {
+  it("overlays its controls instead of letting them push the name", () => {
+    // Without the overlay the two buttons sat inline and cost the title a third of its width,
+    // wrapping 「http · auto」 onto a second line — the clearest sign that this list was not the
+    // same card system as the plugins one.
+    expect(section).toContain("actionOverlay");
+  });
+
+  it("uses the plugin card's 28px glyph buttons, not labelled ghost buttons", () => {
+    // 「编辑」「删除」 in ghost buttons were too wide for a row of controls, and one of the two
+    // names this action carries elsewhere (删除, on the plugin card) — so the connectors list had
+    // a Delete that did not look like the Delete beside it.
+    expect(section).toContain("PENCIL_ICON");
+    expect(section).toContain("TRASH_ICON");
+    expect(section).toMatch(/className="h-7 w-7 shrink-0 justify-center p-0"/);
+    // Scoped to the **cards** branch: the table layout on the Agent's Tools tab keeps its own
+    // labelled buttons, which is a different surface with a different row to fit. A file-wide
+    // "no ghost buttons" rule would have been asserting about a screen this change did not touch.
+    const cardsBranch = /target\.layout === "cards" \? \([\s\S]*?\n      \) : \(/.exec(section);
+    expect(cardsBranch, "cards branch not found").not.toBeNull();
+    expect(cardsBranch![0]).not.toMatch(/variant="ghost"/);
+    expect(cardsBranch![0]).toMatch(/GlyphIcon/);
+  });
+});
