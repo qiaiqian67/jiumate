@@ -99,14 +99,14 @@ import {
   loadFilings,
   removeCategory,
   saveCategories,
+  saveFilings,
   scopedId,
   type FilingMap,
 } from "./extension-state";
 import { Tabs } from "../../components/ui/tabs";
 import { formatRelativeDate } from "../../lib/format";
 import { SkillTile } from "../skills/skill-icon-view";
-import { SkillImportDialog } from "../skills/skill-import-dialog";
-import { buildImportPrompt } from "../agents/skill-import-source";
+import { AddSkillDialog } from "./add-skill-dialog";
 import { InfoPopover } from "../../components/ui/info-popover";
 import { HelpFold } from "../../components/ui/help-fold";
 import { ICON_SIZE } from "../../lib/icon-scale";
@@ -288,9 +288,16 @@ export function PluginsPage() {
    * Note this does not change what an install *does* — still the whole plugin, per the decision to
    * keep installs at the plugin unit; it changes only which things are listed to choose from.
    */
-  /** Add-a-skill dialog (open flag + the source text the caller owns). */
+  /** Add-a-skill dialog (open flag). */
   const [importOpen, setImportOpen] = useState(false);
-  const [importSource, setImportSource] = useState("");
+  /**
+   * Bumped on every add, to remount the skills tab so it re-reads the machine store.
+   *
+   * A revision rather than a callback into the tab: the only thing that has to happen after an
+   * add is that the tab notices a new entry, and remounting gets that without the page needing to
+   * know anything about how the tab reads the store.
+   */
+  const [machineStoreRevision, setMachineStoreRevision] = useState(0);
   const navigate = useNavigate();
   const { locale } = useLocale();
   const userId = useAuth().user?.userId ?? null;
@@ -688,35 +695,6 @@ export function PluginsPage() {
   };
 
   /**
-   * "Add skill": opens a chat on the Agent selected up top to run the install prompt for
-   * whatever source was typed. Mirrors quickInvoke — the draft cache is the same mechanism —
-   * with two differences that matter: the text is the generated install prompt rather than a
-   * canned invocation body, and `skills` is cleared because installing a skill is not invoking
-   * one (a leftover pre-selection would ride along). `handoffAgentId` is cleared for the same
-   * reason quickInvoke clears it: a stale handoff target would forward the install prompt to a
-   * different Agent than the one selected here.
-   */
-  const openSkillImportChat = () => {
-    const agentId = currentAgent?.agentId;
-    const trimmed = importSource.trim();
-    if (!agentId || trimmed === "") return;
-    if (userId && projectId) {
-      parkActiveDraft(userId, projectId);
-      const key = draftKey(userId, projectId);
-      saveDraft(key, {
-        ...loadDraft(key),
-        agentId,
-        text: buildImportPrompt(trimmed),
-        skills: [],
-        handoffAgentId: undefined,
-      });
-    }
-    setCurrentAgentId(agentId);
-    setImportOpen(false);
-    navigate(`/chat/${DRAFT_SESSION_ID}`, { state: { agentId } });
-  };
-
-  /**
    * The library narrowed by the search box: a plugin matches on its name and on whichever
    * description applies to the active language, and a category left with no match drops out
    * entirely — an empty group header is noise, and browsing by category is still the point
@@ -962,10 +940,7 @@ export function PluginsPage() {
                 title={
                   currentAgent === null ? S.plugins.addSkillNeedsAgent : S.plugins.addSkillHint
                 }
-                onClick={() => {
-                  setImportSource("");
-                  setImportOpen(true);
-                }}
+                onClick={() => setImportOpen(true)}
               >
                 <PlusIcon size={13} strokeWidth={1.7} />
                 {S.plugins.addSkill}
@@ -1051,6 +1026,7 @@ export function PluginsPage() {
               originFilter={originFilter}
               setOriginFilter={setOriginFilter}
               pluginCategories={installedPluginCategories}
+              machineStoreRevision={machineStoreRevision}
             />
           </div>
         ) : (
@@ -1245,16 +1221,38 @@ export function PluginsPage() {
           overwriting reinstall — and the same primary (overwrite) tone, with the list naming
           every plugin the batch would rewrite. Confirm-first is the point of the button: it
           overwrites many installs in one press, and a single one already asks. */}
-      {/* Add-a-skill: the same source dialog the Agent's Skills tab opens, minus its archive
-          upload — that one writes to an Agent's own directory, which this page has no way to
-          name. The chat it opens lands on the Agent selected up top. */}
-      <SkillImportDialog
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-        source={importSource}
-        onSourceChange={setImportSource}
-        onOpenChat={openSkillImportChat}
-      />
+      {/* Add-a-skill: the machine-store dialog. **This button and this dialog live in the page,
+          not in the tab**, because the button is the page's one action and takes the same header
+          slot on every tab; a second one inside the tab put two identically labelled buttons on
+          one screen opening different things.
+
+          Replaces the old chat-based source dialog, which had no way to name a destination: it
+          wrote to whichever Agent was selected and said so only in a tooltip. The three sources
+          now land in `<root>/skills/` and stay 待启用 — mounted and enabled per Agent as separate
+          acts — so nothing is installed anywhere as a side effect of adding it. */}
+      {importOpen && (
+        <AddSkillDialog
+          categories={categories}
+          onFiled={(names, categoryId) => {
+            // File what was just added, so it lands in the chosen category instead of needing a
+            // second trip round every card. Through this page's own state rather than a bare
+            // load/save, so the chips below reflect it without a reload — and the skills tab
+            // keeps the same taxonomy, since it reads the same storage.
+            if (categoryId !== null) {
+              const next = { ...filings };
+              for (const name of names) next[scopedId("skill", name, null)] = categoryId;
+              setFilings(next);
+              saveFilings(userId, next);
+            }
+            setImportOpen(false);
+            // Makes the skills tab re-read the machine store, so a skill just added from here
+            // gets its machine switch and upgrade button straight away.
+            setMachineStoreRevision((n) => n + 1);
+            reloadLibrary();
+          }}
+          onClose={() => setImportOpen(false)}
+        />
+      )}
 
       {/* The plugin tab's 插件来源 button opens the sources manager. */}
       {/* Tag management over the library, the same dialog and the same stored tags the skills tab

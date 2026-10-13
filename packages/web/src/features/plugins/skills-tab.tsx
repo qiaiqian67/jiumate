@@ -63,7 +63,6 @@ import {
   OriginFilterTabs,
   newCategory,
 } from "./extension-ui";
-import { AddSkillDialog } from "./add-skill-dialog";
 import {
   getMachineSkills,
   setMachineSkillEnabled,
@@ -109,10 +108,7 @@ export function isMachineSkillOn(skills: ReadonlyMap<string, MachineSkill>, name
  * **只有从本机技能库添加来的技能才有。** 内置技能与插件带来的技能不在库里：给它们挂一个机器开关，
  * 写下去的那个值没有任何技能读——一个改不动任何东西的控件比没有更糟。
  */
-export function hasMachineSwitch(
-  skills: ReadonlyMap<string, MachineSkill>,
-  name: string,
-): boolean {
+export function hasMachineSwitch(skills: ReadonlyMap<string, MachineSkill>, name: string): boolean {
   return skills.has(name);
 }
 
@@ -140,6 +136,7 @@ export function SkillsTab({
   originFilter,
   setOriginFilter,
   pluginCategories,
+  machineStoreRevision,
 }: {
   skills: readonly InstalledSkillItem[];
   /** Display names keyed by agent id, for the impact list. */
@@ -160,6 +157,19 @@ export function SkillsTab({
    * is simply absent, which the tab reads as "inherit nothing".
    */
   pluginCategories: Readonly<Record<string, string | undefined>>;
+  /**
+   * Bumped whenever the machine store changes, which makes this tab re-read it.
+   *
+   * **The add dialog lives in the page, not here**, because the add button does too — it is the
+   * page's one action and sits in the same header slot on every tab, so putting a second one in
+   * here would put two identically labelled buttons on one screen opening different things.
+   *
+   * A revision rather than a list of names: the store is keyed by skill name and the whole thing is
+   * one request, so handing back the names would tie this component to the shape of the add result
+   * without saving anything. It is also a plain number rather than a callback, because the only
+   * thing that has to happen after an add is that this tab picks up the new entry.
+   */
+  machineStoreRevision: number;
 }) {
   const { user } = useAuth();
   const { locale } = useLocale();
@@ -171,8 +181,6 @@ export function SkillsTab({
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [managing, setManaging] = useState(false);
   const [pending, setPending] = useState<PendingToggle | null>(null);
-  /** 添加技能弹窗是否打开。 */
-  const [adding, setAdding] = useState(false);
   /**
    * 本机技能库：技能名 → 它的来源与版本。
    *
@@ -196,7 +204,11 @@ export function SkillsTab({
 
   useEffect(() => {
     loadMachineSkills();
-  }, [loadMachineSkills]);
+    // `machineStoreRevision` is the add-from-the-header signal: it changes whenever a skill was
+    // added there, and this is the one thing that has to happen afterwards — the new entry has to
+    // reach the map so its card gets the machine switch and the upgrade button. Depending on the
+    // prop rather than on a remount means the tab can keep its scroll position and its filters.
+  }, [loadMachineSkills, machineStoreRevision]);
 
   /**
    * 本机启用/关闭一个技能。
@@ -435,12 +447,15 @@ export function SkillsTab({
           counts={counts}
         />
         <span className="flex-1" />
-        {/* Add, then manage categories: adding is the action a user arrives with; managing the
-            taxonomy is the occasional one. The dialog states that what it adds lands 待启用, since
-            "added" and "in use" are different states and only one of them is this button. */}
-        <Button size="sm" variant="primary" onClick={() => setAdding(true)}>
-          {S.plugins.addSkill}
-        </Button>
+        {/* **No 添加技能 button here.** Adding a skill is the page's one action, and the page
+            already owns that button in its own header — it sits in the same slot on every tab,
+            because three tabs that each put their add control somewhere else is exactly the kind
+            of inconsistency a user has to re-learn per tab. A second one here put two identically
+            labelled buttons on one screen, which is worse than either placement alone: the user
+            cannot tell which is the real one, and both open different dialogs.
+
+            The category manager stays: it is not an add, and it belongs with the category chips
+            below it. */}
         <Button size="sm" variant="ghost" onClick={() => setManaging(true)}>
           {S.plugins.manageCategories}
         </Button>
@@ -617,26 +632,6 @@ export function SkillsTab({
         affected={pendingAffected}
         confirmLabel={pending?.next ? S.plugins.enable : S.plugins.disable}
       />
-
-      {adding && (
-        <AddSkillDialog
-          categories={categories}
-          onFiled={(names, categoryId) => {
-            // File what was just added, so the skill lands in the chosen category rather than
-            // needing a second trip through every card. Scoped the same way the existing filings
-            // are, so a skill filed here and a skill filed by hand are the same record.
-            if (categoryId !== null) {
-              const next = { ...filings };
-              for (const name of names) next[scopedId("skill", name, null)] = categoryId;
-              setFilings(next);
-              saveFilings(userId, next);
-            }
-            loadMachineSkills();
-            setAdding(false);
-          }}
-          onClose={() => setAdding(false)}
-        />
-      )}
     </div>
   );
 }
