@@ -52,7 +52,20 @@ describe("skill card controls are wired to something real", () => {
   it("has a real quick invoke that navigates, rather than a prop that does nothing", () => {
     // The failure mode being guarded: a handler that sets some state and stops. Asserting on the
     // navigation is the only way to tell "does the thing" from "does something".
-    expect(pluginsPage).toMatch(/const quickInvoke = [\s\S]{0,900}navigate\(/);
+    //
+    // **Bounded to the function, not to a character count.** An earlier version matched
+    // `{0,900}` characters after the signature, which silently depended on how much comment sat
+    // between the two statements — so adding a paragraph of explanation about *why* the body is
+    // empty broke a test about whether it navigates. The two are unrelated, and the assertion
+    // should not have been able to tell them apart.
+    const page = fs.readFileSync(
+      path.join(__dirname, "..", "src", "features", "plugins", "plugins-page.tsx"),
+      "utf8",
+    );
+    const fn = /const quickInvoke = \(skillName: string\) => \{[\s\S]*?\n  \};/.exec(page);
+    expect(fn, "quickInvoke not found in plugins-page.tsx").not.toBeNull();
+    expect(fn![0]).toMatch(/navigate\(\s*`\/chat\//);
+    expect(fn![0]).toContain("saveDraft(");
   });
 
   it("has the API functions the handlers call", () => {

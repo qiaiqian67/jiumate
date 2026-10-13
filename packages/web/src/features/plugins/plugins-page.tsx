@@ -784,7 +784,16 @@ export function PluginsPage() {
       saveDraft(key, {
         ...loadDraft(key),
         agentId,
-        text: S.skills.quickInvokeText(skillName),
+        // **No text.** The skill is preselected through `skills`, which the composer already draws
+        // as a removable pill — so it is visible, it can be taken back before sending, and it
+        // travels with the message in the `[use_skills]` block. Writing 「使用 xxx 技能」 into the
+        // body as well said the same thing twice, in two different shapes: a pill the user has to
+        // read *and* a sentence they have to delete before they can type their own question.
+        //
+        // The empty body is not a gap. `ChatInput` allows sending with skills selected and no text
+        // (chat-input.tsx), falling back to `S.chat.skillsAutoMessage` — so "使用这个技能" is said
+        // by the selection itself, which is the one place the user can change their mind.
+        text: "",
         skills: [skillName],
         handoffAgentId: undefined,
       });

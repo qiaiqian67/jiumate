@@ -1744,8 +1744,11 @@ export const zh = {
 
   skills: {
     quickInvoke: "快捷调用",
-    /** Pre-filled body for quick invoke (per UI language; English is `use the <name> skill`). */
-    quickInvokeText: (name: string): string => `使用 ${name} 技能`,
+    /* No quickInvokeText: it used to pre-fill 「使用 xxx 技能」 into the composer body alongside
+       the skill pill, saying the same thing twice in two shapes. The pill is the whole message —
+       the user can remove it before sending, which a sentence in the body cannot be. Kept out of
+       the file rather than left as an unused string, because an unused string is what the next
+       change reaches for without asking why it stopped being used. */
     /** Bulk controls of the multi-select skill panel; both act on the rows the search box currently leaves visible. */
     selectAll: "全选",
     selectNone: "全不选",

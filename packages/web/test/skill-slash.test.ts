@@ -13,6 +13,8 @@
  *   (zh/en dictionaries).
  */
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import type { SkillMetadataItem } from "@prismshadow/jiumate-server/api";
 import {
   filterSkills,
@@ -127,16 +129,34 @@ describe("skillSlashItems (slash skill command item assembly)", () => {
   });
 });
 
-describe("quickInvokeText (prefill text for skill-library quick invoke, zh/en dictionaries)", () => {
-  it("reads exactly as the empty-body auto-invoke text for the same single skill", () => {
-    for (const [locale, dict] of [
-      ["zh", zh],
-      ["en", en],
-    ] as const) {
-      expect(dict.skills.quickInvokeText("agent-initialization"), locale).toBe(
-        dict.chat.skillsAutoMessage(["agent-initialization"]),
-      );
+describe("quick invoke states the skill through the selection, not through a sentence", () => {
+  it("fills the composer body with nothing, so the pill is the only statement of intent", () => {
+    // 快捷调用 used to write 「使用 xxx 技能」 into the body *and* preselect the skill, so the same
+    // instruction appeared twice in two shapes: a pill, and a sentence the user had to select and
+    // delete before typing their own question. The pill is enough — it can be removed before
+    // sending, which a sentence in the body cannot be.
+    const page = readFileSync(
+      path.join(__dirname, "..", "src", "features", "plugins", "plugins-page.tsx"),
+      "utf8",
+    );
+    const quickInvoke = /const quickInvoke = \(skillName: string\) => \{[\s\S]*?\n  \};/.exec(page);
+    expect(quickInvoke, "quickInvoke not found in plugins-page.tsx").not.toBeNull();
+    // Preselects the skill...
+    expect(quickInvoke![0]).toContain("skills: [skillName]");
+    // ...and leaves the body empty, so no prefill string is needed at all.
+    expect(quickInvoke![0]).toContain('text: ""');
+    // The retired string is gone from the dictionaries rather than left for the next change to
+    // reach for without asking why it stopped being used.
+    for (const dict of [zh, en]) {
+      expect("quickInvokeText" in dict.skills).toBe(false);
     }
+  });
+
+  it("still lets an empty body be sent when a skill is selected", () => {
+    // The empty body above is only safe because the composer falls back to this text — the rule
+    // the deleted prefill string used to mirror by hand.
+    expect(zh.chat.skillsAutoMessage(["agent-initialization"])).toContain("agent-initialization");
+    expect(en.chat.skillsAutoMessage(["agent-initialization"])).toContain("agent-initialization");
   });
 });
 

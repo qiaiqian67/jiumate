@@ -1783,7 +1783,9 @@ export const en: Strings = {
 
   skills: {
     quickInvoke: "Quick start",
-    quickInvokeText: (name: string): string => `use the ${name} skill`,
+    // No quickInvokeText: it used to pre-fill "use the <name> skill" into the composer body
+    // alongside the skill pill, saying the same thing twice in two shapes. The pill is the whole
+    // message — the user can remove it before sending, which a sentence in the body cannot be.
     selectAll: "Select all",
     selectNone: "Select none",
     selectedCount: (n: number): string => `${n} selected`,
