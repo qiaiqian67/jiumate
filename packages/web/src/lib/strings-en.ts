@@ -429,6 +429,9 @@ export const en: Strings = {
     cancel: "Cancel",
     close: "Close",
     back: "Back",
+    all: "All",
+    previous: "Previous",
+    next: "Next",
     create: "Create",
     delete: "Delete",
     edit: "Edit",
@@ -589,6 +592,8 @@ export const en: Strings = {
     takesEffectSuffix:
       " — new conversations pick it up right away, running ones after their next compaction",
     listTitle: "Agents",
+    searchPlaceholder: "Search agents: name / id / description",
+    noMatch: "No matching agents",
     create: "Create agent",
     createTitle: "Create agent",
     id: "Agent id",

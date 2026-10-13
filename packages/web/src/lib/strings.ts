@@ -430,6 +430,12 @@ export const zh = {
     cancel: "取消",
     close: "关闭",
     back: "返回",
+    /** Filter-chip row's reset: back to every item rather than one named category. */
+    all: "全部",
+    /** Carousel arrows. Named once so a control that moves a list never borrows a word from the
+        navigation it happens to sit beside. */
+    previous: "上一个",
+    next: "下一个",
     create: "创建",
     delete: "删除",
     edit: "编辑",
@@ -583,6 +589,11 @@ export const zh = {
     /** Appended to an action's own toast (skill install / uninstall) — same timing statement. */
     takesEffectSuffix: "；新对话立即生效，进行中的对话在下一次压缩后生效",
     listTitle: "Agents",
+    /** Search box in the title row; filters the grid below by name / id / description. */
+    searchPlaceholder: "搜索 Agent：名称 / id / 描述",
+    /** Shown when the Project has Agents but none matches the current search or chip. Distinct
+        from the empty Project case, which reads as the Agents being gone. */
+    noMatch: "没有匹配的 Agent",
     create: "创建 Agent",
     createTitle: "创建 Agent",
     id: "Agent id",

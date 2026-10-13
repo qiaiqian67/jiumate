@@ -56,7 +56,6 @@ import { CloseIcon, GEAR_ICON, HOOK_ICON, PLUGIN_ICON } from "../../components/u
 import { STAT_ICONS } from "../../lib/stat-icons";
 import { DRAFT_SESSION_ID } from "../chat/chat-page";
 import { parkActiveDraft } from "../chat/draft-sessions";
-import { ActivitySparkline } from "./activity-sparkline";
 import {
   SNAPSHOT_ACCEPT,
   SNAPSHOT_BUTTON_CLASS,
@@ -72,6 +71,26 @@ import { ICON_SIZE } from "../../lib/icon-scale";
 
 /** Built-in Agent shipped with every Project (default_agent only; the server also rejects deletion, so no delete entry point is shown here). */
 const BUILTIN_AGENT_IDS = new Set(["default_agent"]);
+
+/** How long each featured panel holds before the strip moves on. */
+const FEATURE_ROTATE_MS = 6000;
+
+/**
+ * Category chip states, in the two halves every filter chip on this page already uses: the active
+ * one is a filled slab, the idle ones are outlined. One definition for both so the row cannot drift
+ * halfway down — a chip row where the selected pill is styled differently from the rest is the
+ * fastest way to make a filter look broken.
+ */
+const CATEGORY_CHIP_ACTIVE =
+  "shrink-0 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-gray-100 dark:text-gray-900";
+const CATEGORY_CHIP_IDLE =
+  "shrink-0 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800";
+
+/** Magnifier (16px line path, rendered via GlyphIcon). */
+const SEARCH_ICON = "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM20 20l-4-4";
+/** Chevron pair for the featured strip's arrows. */
+const CHEVRON_LEFT_ICON = "M14 6l-6 6 6 6";
+const CHEVRON_RIGHT_ICON = "M10 6l6 6-6 6";
 
 /** Card button icons (24x24 line path, rendered via GlyphIcon). */
 const CARD_ICONS = {
@@ -131,6 +150,16 @@ export function AgentsPage() {
   // The id is the only validated create field; format problems and the server's duplicate-id rejection land beside it.
   const [idError, setIdError] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
+  // —— Page browsing state (search / category / the featured panel's position) ——
+  // Purely local presentation over the list the Project hook already holds: it narrows and
+  // reorders nothing, so none of it is persisted and none of it survives a reload.
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<string | null>(null);
+  /**
+   * Which featured panel is showing. Rotates on a timer so the strip is a sampler of the Agents
+   * rather than a wall of them; the manual next/prev just moves the same cursor.
+   */
+  const [featureIndex, setFeatureIndex] = useState(0);
   /**
    * Plugin library for the create dialog's picker, flattened out of its groups: the picker is a
    * flat searchable list (the same panel the composer uses), so the grouping the library page
@@ -400,6 +429,58 @@ export function AgentsPage() {
     }
   };
 
+  // —— Browsing ——
+  //
+  // Search and category narrow the **grid only**. The featured strip above keeps showing the whole
+  // Project: it is a sampler of what exists, so filtering the list out from under it would leave a
+  // panel advertising Agents the page is currently hiding.
+  const matchesQuery = (a: (typeof agents)[number]): boolean => {
+    const q = query.trim().toLowerCase();
+    if (q === "") return true;
+    return (
+      agentDisplayName(a).toLowerCase().includes(q) ||
+      a.agentId.toLowerCase().includes(q) ||
+      (a.description ?? "").toLowerCase().includes(q)
+    );
+  };
+  const visibleAgents = agents.filter(
+    (a) => matchesQuery(a) && (category === null || a.agentId.startsWith(`${category}:`)),
+  );
+
+  /**
+   * Category chips, derived from the Agents themselves rather than from a fixed list.
+   *
+   * `AgentSummary` carries no category field, so a chip that named a real taxonomy would be a
+   * second source of truth that drifts from the data it filters. The chip set is therefore the
+   * id prefixes actually present: an Agent id may be namespaced (`team:writer`), and the prefix
+   * before the colon is the closest thing the data offers to a grouping.
+   */
+  const categories = (() => {
+    const seen = new Map<string, number>();
+    for (const a of agents) {
+      const colon = a.agentId.indexOf(":");
+      if (colon <= 0) continue;
+      const key = a.agentId.slice(0, colon);
+      seen.set(key, (seen.get(key) ?? 0) + 1);
+    }
+    return [...seen.entries()]
+      .sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))
+      .map(([key, count]) => ({ key, count }));
+  })();
+
+  // The strip rotates while the page is mounted, so it never shows the same single Agent for as
+  // long as the tab is open. `agents.length` is in the deps because the index is meaningless past
+  // the end of the list — a rotation loop that kept running after a delete would index into
+  // nothing and blank the panel.
+  useEffect(() => {
+    if (agents.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setFeatureIndex((i) => (i + 1) % agents.length);
+    }, FEATURE_ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, [agents.length]);
+  const featureAgent = agents.length === 0 ? undefined : agents[featureIndex % agents.length];
+
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
       {/* `max-w-6xl`, the width the plugin and skill pages use: one app, one content width. */}
@@ -410,9 +491,29 @@ export function AgentsPage() {
         <div className="mb-4">
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-xl font-semibold">{S.agent.listTitle}</h1>
-            <Button variant="primary" onClick={openCreate}>
-              {S.agent.create}
-            </Button>
+            {/* Search sits between the title and the action rather than under them: it filters the
+                grid below, and putting it on the title row keeps the filter and the list adjacent
+                without spending a second row of vertical space on a control that is usually idle. */}
+            <div className="flex items-center gap-2">
+              <label className="relative hidden sm:block">
+                <span className="sr-only">{S.agent.listTitle}</span>
+                <GlyphIcon
+                  d={SEARCH_ICON}
+                  size={14}
+                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={S.agent.searchPlaceholder}
+                  className="h-9 w-56 rounded-md border border-gray-200 bg-white pl-8 pr-3 text-sm outline-none placeholder:text-gray-400 focus:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:placeholder:text-gray-500"
+                />
+              </label>
+              <Button variant="primary" onClick={openCreate}>
+                {S.agent.create}
+              </Button>
+            </div>
           </div>
 
           {/* Last stop on the kernel trail, in the one shape all four dismissible trails use.
@@ -431,6 +532,84 @@ export function AgentsPage() {
             />
           )}
         </div>
+
+        {/* Featured strip: one Agent at a time, rotating. It is a **sampler**, not a filter — it
+            deliberately keeps drawing from the full Project while a search or category is active,
+            so it never advertises something the grid below is hiding. */}
+        {!agentsLoading && featureAgent !== undefined && (
+          <div className="relative mb-6 overflow-hidden rounded-lg">
+            <div className="flex min-h-[9rem] flex-col justify-end bg-gradient-to-r from-violet-100 via-fuchsia-50 to-emerald-100 p-5 dark:from-violet-950 dark:via-fuchsia-950 dark:to-emerald-950">
+              <div className="flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="truncate text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {agentDisplayName(featureAgent)}
+                  </h2>
+                  {featureAgent.description !== null && featureAgent.description !== "" && (
+                    <p className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+                      {featureAgent.description}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  className="shrink-0"
+                  onClick={() => newChat(featureAgent.agentId)}
+                >
+                  <GlyphIcon d={CARD_ICONS.newChat} />
+                  {S.chat.newSessionMenu}
+                </Button>
+              </div>
+            </div>
+            {/* Arrows only when there is somewhere to go: with one Agent a pair of controls that
+                cannot move is a dead affordance, so the strip stays a single panel. */}
+            {agents.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  aria-label={S.common.previous}
+                  onClick={() => setFeatureIndex((i) => (i - 1 + agents.length) % agents.length)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/70 p-1 text-gray-700 hover:bg-white dark:bg-gray-900/70 dark:text-gray-300"
+                >
+                  <GlyphIcon d={CHEVRON_LEFT_ICON} size={16} />
+                </button>
+                <button
+                  type="button"
+                  aria-label={S.common.next}
+                  onClick={() => setFeatureIndex((i) => (i + 1) % agents.length)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/70 p-1 text-gray-700 hover:bg-white dark:bg-gray-900/70 dark:text-gray-300"
+                >
+                  <GlyphIcon d={CHEVRON_RIGHT_ICON} size={16} />
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Category chips: horizontally scrollable rather than wrapping. A wrap would push the grid
+            down by a line that changes width as categories change; a scroll strip keeps the row a
+            fixed height and lets a long taxonomy stay on one line. */}
+        {categories.length > 0 && (
+          <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              onClick={() => setCategory(null)}
+              className={category === null ? CATEGORY_CHIP_ACTIVE : CATEGORY_CHIP_IDLE}
+            >
+              {S.common.all}
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => setCategory(category === c.key ? null : c.key)}
+                className={category === c.key ? CATEGORY_CHIP_ACTIVE : CATEGORY_CHIP_IDLE}
+              >
+                {c.key}
+              </button>
+            ))}
+          </div>
+        )}
 
         {agentsLoading ? (
           /* Same single-column row styling as the real list (space-y-3 + px-5 py-4), with a
@@ -454,167 +633,135 @@ export function AgentsPage() {
           </div>
         ) : agents.length === 0 ? (
           <EmptyState title={S.common.none} />
+        ) : visibleAgents.length === 0 ? (
+          /* Distinct from "no Agents at all": the Project has Agents, the current search or chip
+             just does not match any of them. Saying "none" here would read as the Project having
+             lost them. */
+          <EmptyState title={S.agent.noMatch} />
         ) : (
-          /* GitHub-repo-list-style single column: separate cards with row spacing; each row is
-             one horizontal band of "info | sparkline | button group", with the info column
-             compressed to two lines of text (name line + combined description/stats line) to
-             minimize row height */
-          <div className="space-y-3">
-            {agents.map((a) => {
+          /* Three columns, and one column on a phone. `auto-rows-fr` keeps every card in a row the
+             same height without measuring anything: the row takes the tallest card and the rest
+             stretch to match, so a long description on one Agent does not leave its neighbours
+             with ragged bottoms. */
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
+            {visibleAgents.map((a) => {
               const builtin = BUILTIN_AGENT_IDS.has(a.agentId);
               return (
                 <div
                   key={a.agentId}
-                  className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-md border border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-900"
+                  className="flex flex-col rounded-md border border-gray-200 bg-white p-4 transition-shadow hover:shadow-sm dark:border-gray-800 dark:bg-gray-900"
                 >
-                  {/* Info column: once it can't fit within 14rem, everything after it
-                      (sparkline/buttons) wraps as a whole. The avatar counts as the first line
-                      (same line as the name); description/stats share the same left edge as the
-                      avatar (the column's left edge) */}
-                  <div className="min-w-[14rem] flex-1">
-                    {/* Title line: small avatar + name + agentId + version badge */}
-                    <div className="flex items-center gap-2">
-                      <AgentAvatar
-                        id={a.agentId}
-                        name={agentDisplayName(a)}
-                        size={18}
-                        className="shrink-0 rounded"
-                      />
-                      {/* min-w-0: flex children don't shrink below their content by default; needed here to truncate overly long names */}
-                      <span className="min-w-0 truncate text-base font-bold">
-                        {agentDisplayName(a)}
-                      </span>
-                      <span className="hidden shrink-0 font-mono text-xs text-gray-400 md:inline dark:text-gray-500">
-                        {a.agentId}
-                      </span>
-                      <Badge tone="gray">v{a.version}</Badge>
-                      {/* Kernel-outdated pill: the card the sidebar's Agents dot leads to, so it
-                          names the state in words rather than as another bare dot — a capsule in
-                          the version badge's own geometry, tinted the same pale red the dots on
-                          this trail carry, opening the settings overview where the update action
-                          lives. */}
-                      {a.kernelOutdated && (
+                  {/* Title line: avatar + name + version badge. `min-w-0` on the name span is what
+                      lets it truncate — a flex child will not shrink below its content on its own,
+                      and a long Agent name would otherwise push the badges out of the card. */}
+                  <div className="flex items-center gap-2">
+                    <AgentAvatar
+                      id={a.agentId}
+                      name={agentDisplayName(a)}
+                      size={22}
+                      className="shrink-0 rounded"
+                    />
+                    <span className="min-w-0 truncate text-sm font-semibold">
+                      {agentDisplayName(a)}
+                    </span>
+                    <Badge tone="gray">v{a.version}</Badge>
+                    {/* Kernel-outdated pill: the card the sidebar's Agents dot leads to, so it
+                        names the state in words rather than as another bare dot. It sits on its own
+                        line under the title: at card width there is no room for it beside the name,
+                        and shrinking the name to make room would hurt the more important text. */}
+                    {a.kernelOutdated && (
+                      <div className="mt-2">
                         <UpdatePill onClick={() => openSettingsTab(a.agentId, "overview")}>
                           {S.agent.kernelUpdateNeeded}
                         </UpdatePill>
-                      )}
-                    </div>
-                    {/* Description truncated to one line (an empty description still takes up a line, keeping card heights equal) */}
-                    <p className="mt-1.5 min-h-4 truncate text-xs text-gray-500 dark:text-gray-400">
-                      {a.description ?? ""}
-                    </p>
-                    {/* Stats on their own line: same color/font size as the description; each
-                        item hugs its content, with spacing left to the container's uniform
-                        gap-x-4; meaning folded into the hover title. Tool/skill/hook/memory/
-                        vault/schedule counts are buttons deep-linking to the matching settings tab,
-                        listed in the settings tabs' order (also for built-in Agents — their
-                        Settings entry point has no gating either); session count and
-                        last-modified stay plain text.
-                        flex-wrap is load-bearing: every item is shrink-0 (a count must not be
-                        cut in half) and the row has no scroll box, so with nowrap the seven
-                        items simply spill past the card's padding once the info column is
-                        narrower than they are — a phone. Wrapping spends a second line instead,
-                        and never triggers where the row already fits. */}
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                      <span
-                        className="inline-flex shrink-0 items-center gap-1 tabular-nums"
-                        title={S.agent.sessionCount(a.sessionCount)}
-                      >
-                        <GlyphIcon d={CARD_ICONS.sessions} size={ICON_SIZE.inlineGlyph} />
-                        {a.sessionCount}
-                      </span>
-                      <button
-                        type="button"
-                        className={STAT_LINK_CLASS}
-                        title={S.agent.toolCount(a.toolCount)}
-                        aria-label={S.agent.toolCount(a.toolCount)}
-                        onClick={() => openSettingsTab(a.agentId, "tools")}
-                      >
-                        <GlyphIcon d={STAT_ICONS.toolCalls} size={ICON_SIZE.inlineGlyph} />
-                        {a.toolCount}
-                      </button>
-                      <button
-                        type="button"
-                        className={STAT_LINK_CLASS}
-                        title={S.skills.skillCount(a.skillCount)}
-                        aria-label={S.skills.skillCount(a.skillCount)}
-                        onClick={() => openSettingsTab(a.agentId, "skills")}
-                      >
-                        <GlyphIcon d={CARD_ICONS.skills} size={ICON_SIZE.inlineGlyph} />
-                        {a.skillCount}
-                      </button>
-                      <button
-                        type="button"
-                        className={STAT_LINK_CLASS}
-                        title={S.hooks.hookCount(a.hookCount)}
-                        aria-label={S.hooks.hookCount(a.hookCount)}
-                        onClick={() => openSettingsTab(a.agentId, "hooks")}
-                      >
-                        <GlyphIcon d={HOOK_ICON} size={ICON_SIZE.inlineGlyph} />
-                        {a.hookCount}
-                      </button>
-                      <button
-                        type="button"
-                        className={STAT_LINK_CLASS}
-                        title={S.agent.memoryCount(a.memoryCount)}
-                        aria-label={S.agent.memoryCount(a.memoryCount)}
-                        onClick={() => openSettingsTab(a.agentId, "memory")}
-                      >
-                        <GlyphIcon d={CARD_ICONS.memory} size={ICON_SIZE.inlineGlyph} />
-                        {a.memoryCount}
-                      </button>
-                      <button
-                        type="button"
-                        className={STAT_LINK_CLASS}
-                        title={S.agent.vaultKeyCount(a.vaultKeyCount)}
-                        aria-label={S.agent.vaultKeyCount(a.vaultKeyCount)}
-                        onClick={() => openSettingsTab(a.agentId, "vault")}
-                      >
-                        <GlyphIcon d={CARD_ICONS.vaultKeys} size={ICON_SIZE.inlineGlyph} />
-                        {a.vaultKeyCount}
-                      </button>
-                      <button
-                        type="button"
-                        className={STAT_LINK_CLASS}
-                        title={S.agent.scheduleCount(a.scheduleCount)}
-                        aria-label={S.agent.scheduleCount(a.scheduleCount)}
-                        onClick={() => openSettingsTab(a.agentId, "schedules")}
-                      >
-                        <GlyphIcon d={CARD_ICONS.schedules} size={ICON_SIZE.inlineGlyph} />
-                        {a.scheduleCount}
-                      </button>
-                      <span
-                        className="inline-flex shrink-0 items-center gap-1"
-                        title={`${S.agent.updatedAt} ${a.updatedAt ? formatDateTime(a.updatedAt) : "—"}`}
-                      >
-                        <GlyphIcon d={STAT_ICONS.elapsed} size={ICON_SIZE.inlineGlyph} />
-                        {a.updatedAt ? formatRelativeDays(a.updatedAt, locale) : "—"}
-                      </span>
-                    </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* agentId in mono, muted: the stable handle behind the display name, and the
+                      one thing a user needs when wiring an Agent into a config or a command. */}
+                  <span className="mt-1 truncate font-mono text-xs text-gray-400 dark:text-gray-500">
+                    {a.agentId}
+                  </span>
+                  {/* Description clamped to two lines. The `min-h` reserves the first line's height
+                      even when empty, so a grid row of description-less Agents does not collapse
+                      the cards above their neighbours. */}
+                  <p className="mt-2 line-clamp-2 min-h-8 text-xs text-gray-500 dark:text-gray-400">
+                    {a.description ?? ""}
+                  </p>
+                  {/* Stats, wrapped. Every item is shrink-0 and the row has no scroll box, so with
+                      nowrap the counts simply spill past the card's padding once it is narrow —
+                      wrapping spends a second line instead, and never triggers where it already
+                      fits. */}
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                    <span
+                      className="inline-flex shrink-0 items-center gap-1 tabular-nums"
+                      title={S.agent.sessionCount(a.sessionCount)}
+                    >
+                      <GlyphIcon d={CARD_ICONS.sessions} size={ICON_SIZE.inlineGlyph} />
+                      {a.sessionCount}
+                    </span>
+                    <button
+                      type="button"
+                      className={STAT_LINK_CLASS}
+                      title={S.agent.toolCount(a.toolCount)}
+                      aria-label={S.agent.toolCount(a.toolCount)}
+                      onClick={() => openSettingsTab(a.agentId, "tools")}
+                    >
+                      <GlyphIcon d={STAT_ICONS.toolCalls} size={ICON_SIZE.inlineGlyph} />
+                      {a.toolCount}
+                    </button>
+                    <button
+                      type="button"
+                      className={STAT_LINK_CLASS}
+                      title={S.skills.skillCount(a.skillCount)}
+                      aria-label={S.skills.skillCount(a.skillCount)}
+                      onClick={() => openSettingsTab(a.agentId, "skills")}
+                    >
+                      <GlyphIcon d={CARD_ICONS.skills} size={ICON_SIZE.inlineGlyph} />
+                      {a.skillCount}
+                    </button>
+                    <button
+                      type="button"
+                      className={STAT_LINK_CLASS}
+                      title={S.hooks.hookCount(a.hookCount)}
+                      aria-label={S.hooks.hookCount(a.hookCount)}
+                      onClick={() => openSettingsTab(a.agentId, "hooks")}
+                    >
+                      <GlyphIcon d={HOOK_ICON} size={ICON_SIZE.inlineGlyph} />
+                      {a.hookCount}
+                    </button>
+                    <span
+                      className="inline-flex shrink-0 items-center gap-1 tabular-nums"
+                      title={`${S.agent.updatedAt} ${a.updatedAt ? formatDateTime(a.updatedAt) : "—"}`}
+                    >
+                      <GlyphIcon d={STAT_ICONS.elapsed} size={ICON_SIZE.inlineGlyph} />
+                      {a.updatedAt ? formatRelativeDays(a.updatedAt, locale) : "—"}
+                    </span>
                   </div>
 
-                  {/* Session activity sparkline (hidden on narrow screens first, giving the horizontal space back to content and buttons) */}
-                  <ActivitySparkline
-                    data={a.sessionActivity}
-                    label={S.agent.activity(a.sessionActivity.length || 30)}
-                    className="hidden shrink-0 md:block"
-                  />
-
-                  {/* Button group to the right of the sparkline: "New Chat" shows text, the rest are square icon buttons (tooltip shows the full name) */}
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Button size="sm" variant="primary" onClick={() => newChat(a.agentId)}>
+                  {/* Actions pinned to the bottom: `mt-auto` against the card's flex column means
+                      they stay on one line across the row whatever the description above does,
+                      which is what makes a row of three cards read as one band of controls. */}
+                  <div className="mt-auto flex items-center gap-2 pt-3">
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      className="flex-1"
+                      onClick={() => newChat(a.agentId)}
+                    >
                       <GlyphIcon d={CARD_ICONS.newChat} />
                       {S.chat.newSessionMenu}
                     </Button>
                     <Button
-                      size="sm"
+                      size="icon"
+                      title={S.common.settings}
+                      aria-label={S.common.settings}
                       onClick={() => {
                         setCurrentAgentId(a.agentId);
                         navigate(`/agents/${a.agentId}`);
                       }}
                     >
-                      <GlyphIcon d={GEAR_ICON} />
-                      {S.common.settings}
+                      <GlyphIcon d={GEAR_ICON} size={15} />
                     </Button>
                     <Button
                       size="icon"
@@ -628,10 +775,8 @@ export function AgentsPage() {
                         className="text-gray-600 dark:text-gray-300"
                       />
                     </Button>
-                    {/* Built-in Agents can't be deleted: shown as a non-button light gray
-                        placeholder (no border/background, no hover response, disabled cursor,
-                        explained via tooltip); the transparent border keeps the same box size as
-                        an icon button so column widths stay consistent across cards */}
+                    {/* Built-in Agents can't be deleted: a non-button placeholder in the same box,
+                        so column widths stay consistent across the row. */}
                     {builtin ? (
                       <span
                         role="img"
