@@ -55,11 +55,8 @@ import {
 import {
   CategoryFilterChips,
   CategoryManagerDialog,
-  CategorySelect,
   ExtensionSearch,
-  ExtensionSwitch,
-  INHERIT,
-  OriginBadge,
+  ORIGIN_LABEL,
   OriginFilterTabs,
   newCategory,
 } from "./extension-ui";
@@ -72,6 +69,7 @@ import {
 import { Switch } from "../../components/ui/switch";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { ICON_SIZE } from "../../lib/icon-scale";
+import { INSTALL_ICON, SEND_ICON, TRASH_ICON, UPDATE_ICON } from "./card-icons";
 import { toastError, toastInfo, toastSuccess } from "../../components/ui/toast";
 import { apiErrorText } from "../../lib/api-error";
 import { Button } from "../../components/ui/button";
@@ -79,15 +77,6 @@ import { EmptyState } from "../../components/ui/empty-state";
 import { LibraryCard } from "./library-card";
 
 const BOOK_ICON = "M4 5a2 2 0 0 1 2-2h11v18H6a2 2 0 0 1-2-2V5zM7 3v14";
-
-/**
- * 升级图标（rotate-cw，24×24 线性路径）。
- *
- * 与插件卡片上那个是同一条路径，这里各写一份而不是从 `plugins-page.tsx` 导入：那个常量没有导出，
- * 而为一个图标在两个 feature 之间开一条跨目录依赖，比重复这一行路径更糟——两处将来会各自改一处，
- * 然后两个页面的同一个动作长得不一样。
- */
-const UPDATE_ICON = "M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10";
 
 /**
  * 一个技能在本机是否启用。
@@ -137,6 +126,10 @@ export function SkillsTab({
   setOriginFilter,
   pluginCategories,
   machineStoreRevision,
+  onQuickInvoke,
+  onManageInstall,
+  onDeleteSkill,
+  currentAgentId,
 }: {
   skills: readonly InstalledSkillItem[];
   /** Display names keyed by agent id, for the impact list. */
@@ -170,6 +163,27 @@ export function SkillsTab({
    * thing that has to happen after an add is that this tab picks up the new entry.
    */
   machineStoreRevision: number;
+  /**
+   * The three actions a Skill shares with a plugin card, handed down from the page.
+   *
+   * **They live in the page because the dialogs and the draft they write do.** 快捷调用 parks a
+   * draft and navigates to a chat; 管理安装 opens a modal over the page's own agent list; 删除
+   * needs the page's confirm. Each of those is one implementation — a second copy here would be
+   * two places where "which agent did this install to" could be answered differently, which is the
+   * question the whole plugin page exists to keep one answer to.
+   */
+  onQuickInvoke: (skillName: string) => void;
+  /** Opens 管理安装 for this Skill. */
+  onManageInstall: (skillName: string) => void;
+  /** Removes this Skill from the machine store. */
+  onDeleteSkill: (skillName: string) => Promise<void>;
+  /**
+   * The Agent selected on the page, or null when there is none.
+   *
+   * Read here rather than fetched, because 快捷调用 can only offer a Skill this Agent holds — the
+   * same rule the plugin card follows — and the page already knows which Agent that is.
+   */
+  currentAgentId: string | null;
 }) {
   const { user } = useAuth();
   const { locale } = useLocale();
@@ -374,30 +388,6 @@ export function SkillsTab({
   );
 
   /**
-   * Files one skill under a category, or clears the filing with `null`.
-   *
-   * The stored map holds **only the user's explicit choices**. An unfiled skill writes nothing
-   * rather than writing `null`, so it keeps inheriting its plugin's category — which means
-   * "unfiled" stays a real state that can fall back, instead of a value that has to be kept in
-   * sync with every plugin's category forever.
-   */
-  const persistFiling = useCallback(
-    (itemId: string, categoryId: string | null) => {
-      const next = { ...filings };
-      if (categoryId === null) delete next[itemId];
-      else next[itemId] = categoryId;
-      setFilings(next);
-      saveFilings(userId, next);
-      // A chip whose count no longer matches the cards would be a dead end, so the filter is
-      // released when the skill leaves the category it was narrowing to.
-      if (categoryFilter !== null && effectiveFilings[itemId] !== categoryFilter) {
-        setCategoryFilter(null);
-      }
-    },
-    [filings, userId, categoryFilter, effectiveFilings],
-  );
-
-  /**
    * Toggling routes through the impact dialog only when an Agent would actually be reached.
    *
    * The affected list comes from the skill's own `agents` (the server's install list) unioned with
@@ -502,9 +492,30 @@ export function SkillsTab({
             // switch instead — two switches for one thing is how a half-on plugin gets written.
             const machineSkill = machineSkills.get(skill.name);
             const machineOn = isMachineSkillOn(machineSkills, skill.name);
+            // The machine switch **is** the enable/disable the row shows, so there is one knob and
+            // not two: a machine-store Skill answers both scopes at once (the write reaches every
+            // Agent), while a built-in or bundled one has no machine entry and keeps the per-Agent
+            // switch. Either way exactly one control, and it means the same thing to the user.
+            const switchOn = machineSkill === undefined ? on : machineOn;
+            const switchOff =
+              machineSkill === undefined
+                ? (s: InstalledSkillItem) =>
+                    requestToggle(s, !isOn(switches, scopedId("skill", s.name, s.pluginName)))
+                : (s: InstalledSkillItem) => {
+                    const entry = machineSkills.get(s.name);
+                    if (entry !== undefined) void toggleMachineSkill(entry);
+                  };
+            // 快捷调用 needs a Skill the current Agent actually has, the same as the plugin card:
+            // invoking a Skill no Agent holds would write a draft that names something unusable.
+            const quickInvokeSkill = skill.agents.includes(currentAgentId ?? "")
+              ? skill
+              : undefined;
             const meta = [
               skill.version === null ? undefined : skill.version,
-              origin === "bundled" && skill.pluginName ? skill.pluginName : undefined,
+              ORIGIN_LABEL[origin],
+              effectiveFilings[id] === null
+                ? undefined
+                : categories.find((c) => c.id === effectiveFilings[id])?.name,
             ]
               .filter((p): p is string => p !== undefined)
               .join(" · ");
@@ -518,76 +529,80 @@ export function SkillsTab({
                 {...(meta === "" ? {} : { meta })}
                 actionOverlay
                 action={
-                  <div className="flex items-center gap-1.5">
-                    <OriginBadge origin={origin} />
-                    {/* Filing control, present only once a category exists: a select with one
-                        empty option is a control that does nothing, and it would sit in the same
-                        slot as the switch on every card. */}
-                    {categories.length > 0 && (
-                      <CategorySelect
-                        value={filings[id] ?? null}
-                        categories={categories}
-                        label={skill.name}
-                        inheritLabel={S.plugins.categoryInherit}
-                        uncategorizedLabel={S.plugins.categoryNone}
-                        onChange={(next) => {
-                          if (next === INHERIT) {
-                            const cleared = { ...filings };
-                            delete cleared[id];
-                            setFilings(cleared);
-                            saveFilings(userId, cleared);
-                          } else {
-                            persistFiling(id, next);
-                          }
-                        }}
-                      />
-                    )}
-                    <ExtensionSwitch
-                      on={on}
-                      label={skill.name}
-                      disabled={!toggleable}
-                      onToggle={() => requestToggle(skill, !on)}
-                    />
-                    {/* A machine-store skill carries its own two switches, because it genuinely has
-                        two: this one for the machine, and the ExtensionSwitch above for whichever
-                        Agent is selected. Only added skills have them — a built-in or a
-                        plugin-bundled skill has no machine-store entry, and giving it a machine
-                        switch would be a control that writes nothing.
+                  /* The same five controls the plugin card has, in the same glyph style and the
+                     same order — 升级 / 快捷调用 / 管理安装 / 启用禁用 / 删除 — so the two tabs
+                     read as one page. A Skill is not a lesser plugin here: it is added from a URL
+                     or an archive rather than chosen from a library, but once installed it is
+                     the same unit of work and it answers the same five actions.
 
-                        The machine switch is the wider one and is drawn first: switching it off
-                        stops the skill for every Agent at once, which is the act a user reaches for
-                        when they want it gone from their machine's behaviour. */}
-                    {machineSkill !== undefined && (
-                      <>
-                        <Switch
-                          size="sm"
-                          checked={machineOn}
-                          onChange={() => void toggleMachineSkill(machineSkill)}
-                          disabled={togglingMachine === skill.name}
-                          aria-label={`${machineOn ? S.plugins.disableMachine : S.plugins.enableMachine} ${skill.name}`}
-                          title={
-                            machineOn ? S.plugins.disableMachineHint : S.plugins.enableMachineHint
-                          }
-                        />
-                        {/* Upgrade only where there is something to check. A skill from an archive
-                            has no source left, so the button is absent rather than present-and-
-                            apologetic: the user learns why from its absence, and the tooltip on a
-                            permanently-disabled button is a thing nobody reads twice. */}
-                        {machineSkill.source !== undefined && (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="h-7 w-7 shrink-0 justify-center p-0"
-                            aria-label={`${S.plugins.upgradeSkill} ${skill.name}`}
-                            title={S.plugins.upgradeSkill}
-                            disabled={upgrading === skill.name}
-                            onClick={() => void upgradeSkill(machineSkill)}
-                          >
-                            <GlyphIcon d={UPDATE_ICON} size={ICON_SIZE.iconButton} />
-                          </Button>
-                        )}
-                      </>
-                    )}
+                     **No dropdowns.** The badge and the category select that used to sit here are
+                     gone, and neither of them was an action: a badge states a fact, and filing a
+                     Skill into a category is what the category chips and 管理分类 above are for.
+                     Two text-bearing controls in a row of glyphs is what made this row read as a
+                     different system from the plugin card's.
+
+                     The origin moves to the meta line, where the version already is — it is
+                     information about the Skill, not a control. The category moves there too, as
+                     a trailing word, so the filing is still visible without costing the row a
+                     control. */
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-7 w-7 shrink-0 justify-center p-0"
+                      aria-label={`${S.plugins.upgradeSkill} ${skill.name}`}
+                      title={
+                        machineSkill?.source === undefined
+                          ? S.plugins.upgradeSkillNeedsSource
+                          : S.plugins.upgradeSkill
+                      }
+                      disabled={machineSkill === undefined || upgrading === skill.name}
+                      onClick={() => machineSkill && void upgradeSkill(machineSkill)}
+                    >
+                      <GlyphIcon d={UPDATE_ICON} size={ICON_SIZE.iconButton} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-7 w-7 shrink-0 justify-center p-0"
+                      aria-label={`${S.skills.quickInvoke} ${skill.name}`}
+                      title={S.skills.quickInvoke}
+                      disabled={!quickInvokeSkill}
+                      onClick={() => quickInvokeSkill && onQuickInvoke(quickInvokeSkill.name)}
+                    >
+                      <GlyphIcon d={SEND_ICON} size={ICON_SIZE.iconButton} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-7 w-7 shrink-0 justify-center p-0"
+                      aria-label={`${S.skills.manageInstall} ${skill.name}`}
+                      title={S.skills.manageInstall}
+                      onClick={() => onManageInstall(skill.name)}
+                    >
+                      <GlyphIcon d={INSTALL_ICON} size={ICON_SIZE.iconButton} />
+                    </Button>
+                    <span className="inline-flex shrink-0 items-center">
+                      <Switch
+                        size="sm"
+                        checked={switchOn}
+                        onChange={() => void switchOff(skill)}
+                        disabled={!toggleable}
+                        aria-label={`${switchOn ? S.plugins.disable : S.plugins.enable} ${skill.name}`}
+                        title={switchOn ? S.plugins.disableHint : S.plugins.enableHint}
+                      />
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-7 w-7 shrink-0 justify-center p-0"
+                      aria-label={`${S.plugins.deleteFromMachine} ${skill.name}`}
+                      title={S.plugins.deleteFromMachine}
+                      disabled={!removable}
+                      onClick={() => void onDeleteSkill(skill.name)}
+                    >
+                      <GlyphIcon d={TRASH_ICON} size={ICON_SIZE.iconButton} />
+                    </Button>
                   </div>
                 }
                 /* A bundled skill cannot be uninstalled on its own — the plugin takes it — and a

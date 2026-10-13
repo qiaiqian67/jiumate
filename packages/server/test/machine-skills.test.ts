@@ -75,6 +75,65 @@ describe("machine-level skills", () => {
       zipSync(Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, strToU8(v)]))),
     );
 
+  it("mounts a machine-store skill onto one agent, and only that one", async () => {
+    // 管理安装's 安装. The whole point of the machine store is that adding and mounting are two
+    // acts, so this is where the second one happens.
+    await client.postBytes(
+      "/api/machine-skills/archive",
+      zipOf({
+        "eta/SKILL.md": skillMd("eta"),
+        "eta/reference/deep.md": "the payload",
+      }),
+    );
+    const second = await client.post(`/api/projects/${projectId}/agents`, {
+      agentId: "skilluser_second",
+      name: "B",
+    });
+    expect(second.status === 201 || second.status === 200).toBe(true);
+
+    const mount = await client.post(`/api/projects/${projectId}/agents/${agentId}/skills/eta`, {});
+    expect(mount.status).toBe(201);
+
+    // Only the Agent it was mounted on has it.
+    const mine = await listInstalledSkills(t.root, projectId, agentId);
+    expect(mine.map((s) => s.name)).toContain("eta");
+    const other = await listInstalledSkills(t.root, projectId, "skilluser_second");
+    expect(other.map((s) => s.name)).not.toContain("eta");
+
+    // The payload travelled with it — the reference file is what the SKILL.md points at, and a
+    // mount that dropped it would leave a Skill that cannot do its own job.
+    const dir = path.join(t.root, projectId, "agents", agentId, "agent_state", "skills", "eta");
+    expect(fs.existsSync(path.join(dir, "SKILL.md"))).toBe(true);
+    expect(fs.existsSync(path.join(dir, "reference", "deep.md"))).toBe(true);
+  });
+
+  it("refuses to mount a skill switched off for this machine", async () => {
+    await client.postBytes(
+      "/api/machine-skills/archive",
+      zipOf({ "theta/SKILL.md": skillMd("theta") }),
+    );
+    await client.post("/api/machine-skills/enabled", { name: "theta", enabled: false });
+
+    const mount = await client.post(
+      `/api/projects/${projectId}/agents/${agentId}/skills/theta`,
+      {},
+    );
+    // The machine entry is what gates new mounts, exactly as it gates new plugin installs.
+    expect(mount.status).toBe(409);
+    const listed = await listInstalledSkills(t.root, projectId, agentId);
+    expect(listed.map((s) => s.name)).not.toContain("theta");
+  });
+
+  it("refuses to mount a skill that was never added to this machine", async () => {
+    // There is no "send me a body" branch: a client cannot put a Skill on an Agent that the user
+    // never added here.
+    const mount = await client.post(
+      `/api/projects/${projectId}/agents/${agentId}/skills/never-added`,
+      {},
+    );
+    expect(mount.status).toBe(404);
+  });
+
   it("adds a skill from an archive without installing it into any agent", async () => {
     const res = await client.postBytes(
       "/api/machine-skills/archive",

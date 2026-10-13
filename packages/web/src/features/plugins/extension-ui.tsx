@@ -33,7 +33,14 @@ const FILTER_LABEL: Record<ExtensionFilter, string> = {
   bundled: S.plugins.filterBundled,
 };
 
-const ORIGIN_LABEL: Record<ExtensionOrigin, string> = {
+/**
+ * The origin word shown on a card's meta line — 系统内置 / 用户安装 / 插件捆绑.
+ *
+ * **Exported so the meta line can render it as text** rather than the corner slot carrying a badge
+ * with a border: a badge next to a row of borderless glyphs is the one element in the row that does
+ * not look like the others, and what it says is information about the Skill rather than an action.
+ */
+export const ORIGIN_LABEL: Record<ExtensionOrigin, string> = {
   builtin: S.plugins.originBuiltin,
   user: S.plugins.originUser,
   bundled: S.plugins.originBundled,

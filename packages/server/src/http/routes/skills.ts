@@ -26,6 +26,9 @@ import {
   recordSkillInstall,
   removePluginInstall,
   removeSkill,
+  installSkill,
+  isMachineSkillEnabled,
+  readMachineSkillFiles,
   renameSkill,
   backupSkillDirectory,
   replaceSkillDirectory,
@@ -649,6 +652,68 @@ export function agentSkillsRoutes(deps: AppDeps): Hono<AppEnv> {
         "X-Content-Type-Options": "nosniff",
       },
     });
+  });
+
+  /**
+   * Mount a machine-store Skill onto one Agent — 管理安装's 「安装」.
+   *
+   * **Only from the machine store.** A Skill reaches this machine by one of the three add paths, so
+   * the store is the one place every installable Skill is guaranteed to be; this route therefore
+   * has no "search the library for a body to send" branch, and that absence is deliberate — it
+   * means the name has to be something the user actually added, not something a client invented.
+   *
+   * The Skill's files are copied whole, including the auxiliary files its SKILL.md references, and
+   * recorded in `.installs.json` as an import — the same shape as an archive install, because by the
+   * time it lands on an Agent it *is* an import from the Agent's point of view.
+   *
+   * **Idempotent**: mounting a Skill the Agent already has replaces that directory outright, so a
+   * re-mount brings the current content and drops files the new copy no longer ships, rather than
+   * merging the two into a directory that never existed.
+   */
+  app.post("/:name", async (c) => {
+    const projectId = requireValidId(c, "projectId");
+    const agentId = requireValidId(c, "agentId");
+    deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
+    await deps.agentConfigService.requireExists(projectId, agentId);
+    const name = requireValidId(c, "name");
+
+    // The machine switch is the wider of the two, and it is read the same way `listInstalledSkills`
+    // reads it: a Skill switched off for this machine cannot be mounted anywhere.
+    const machineOff = await isMachineSkillEnabled(deps.config.root, name);
+    if (!machineOff) {
+      throw new HttpError(
+        409,
+        "skill_disabled",
+        `Skill is disabled for this machine — enable it before installing: ${name}`,
+      );
+    }
+
+    const files = await readMachineSkillFiles(deps.config.root, name);
+    if (files === null) {
+      throw new HttpError(
+        404,
+        "not_found",
+        `Skill is not in the machine store: ${name}. Add it first.`,
+      );
+    }
+    const content = files["SKILL.md"];
+    if (content === undefined) {
+      // `readMachineSkillFiles` returning non-null means a SKILL.md was read; the check is here
+      // because the install below must not write a Skill directory without one.
+      throw new HttpError(400, "bad_skill", `Skill has no SKILL.md: ${name}`);
+    }
+    const { ["SKILL.md"]: _skillMd, ...auxiliary } = files;
+    await installSkill(deps.config.root, projectId, agentId, {
+      name,
+      content,
+      ...(Object.keys(auxiliary).length > 0 ? { files: auxiliary } : {}),
+    });
+    // Recorded as an import with no version: the machine store is the source now, and it carries
+    // its own, which is what 升级 reads (see the machine store's `.source.json`).
+    await recordSkillInstall(deps.config.root, projectId, agentId, name, null, "import");
+    // Skills are read from disk per session build, so the next prompt already sees it; no runtime
+    // invalidation is needed for a mount (same as the archive install beside it).
+    return c.json({ name, installed: true }, 201);
   });
 
   app.delete("/:name", async (c) => {

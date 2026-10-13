@@ -83,7 +83,7 @@ import { UpdateDot } from "../../components/ui/update-dot";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { Skeleton, SkeletonCard } from "../../components/ui/skeleton";
 import { Switch } from "../../components/ui/switch";
-import { toastError, toastSuccess } from "../../components/ui/toast";
+import { toastError, toastInfo, toastSuccess } from "../../components/ui/toast";
 import { DRAFT_SESSION_ID } from "../chat/chat-page";
 import { draftKey, loadDraft, saveDraft } from "../chat/draft-cache";
 import { parkActiveDraft } from "../chat/draft-sessions";
@@ -142,6 +142,19 @@ const INSTALL_ICON = "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 
 /** "Update installs" button icon (rotate-cw, 24×24 line path). */
 const UPDATE_ICON = "M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10";
 const NO_INSTALLS: AgentInstalls = { skills: new Map(), hooks: new Map() };
+
+/**
+ * An Agent's display name, falling back to its raw id.
+ *
+ * **The fallback is not cosmetic.** An Agent deleted between the list being read and a toast being
+ * written is missing from `agents`, and `agentDisplayName` needs a full summary; passing a stub
+ * would either fail to type or print an empty row. The id is the one string that always identifies
+ * it, which is what the user needs to recognise the row the toast is about.
+ */
+function labelOf(agents: readonly AgentSummary[], agentId: string): string {
+  const found = agents.find((a) => a.agentId === agentId);
+  return found === undefined ? agentId : agentDisplayName(found);
+}
 
 /** The two lists an install response carries, folded into one Agent's snapshot entry. */
 function installsOf(
@@ -298,6 +311,28 @@ export function PluginsPage() {
    * know anything about how the tab reads the store.
    */
   const [machineStoreRevision, setMachineStoreRevision] = useState(0);
+  /**
+   * 管理安装 for a **Skill** — which Agents have it, and mounting/unmounting there.
+   *
+   * **Separate from the plugin's install dialog, over the same agent list.** A Skill and a plugin
+   * are mounted through different endpoints and held in different files, but the question the dialog
+   * answers is identical, so it is the same shape and the same wording. Only one is open at a time
+   * because the two dialogs cover the screen and a page with both is unreachable.
+   */
+  const [skillInstallOpen, setSkillInstallOpen] = useState(false);
+  const [skillInstallTarget, setSkillInstallTarget] = useState<string | null>(null);
+  /**
+   * Whether the machine store currently allows mounts at all.
+   *
+   * Read from the store rather than remembered from the click that opened the dialog, because the
+   * switch may have been flipped from the card underneath while this was closed — and a dialog that
+   * offers a button the server will refuse is worse than one that explains it.
+   *
+   * **The dialog closes if it ever goes false**, rather than showing disabled rows: the user got
+   * here to add a Skill to an Agent, and the one thing they cannot do means the dialog has nothing
+   * left to be for.
+   */
+  const [skillMachineOn, setSkillMachineOn] = useState(true);
   const navigate = useNavigate();
   const { locale } = useLocale();
   const userId = useAuth().user?.userId ?? null;
@@ -588,6 +623,70 @@ export function PluginsPage() {
       reloadCatalog();
       void reloadAgents();
       toastSuccess(S.plugins.deletedToast(plugin.name));
+    } catch (e) {
+      toastError(apiErrorText(e));
+    }
+  };
+
+  /**
+   * Removes a Skill from the machine store — the card's 卸载 on the skills tab.
+   *
+   * **The Agents' own copies are left alone**, and that is the whole reason this is separate from
+   * unmounting: this takes the Skill off this computer, while taking it off one Agent is what
+   * 管理安装 does. Conflating them is how a user loses a Skill they meant to keep for next time.
+   */
+  const deleteMachineSkillByName = async (skillName: string) => {
+    try {
+      await api.deleteMachineSkill(skillName);
+      setMachineStoreRevision((n) => n + 1);
+      reloadLibrary();
+      toastSuccess(S.plugins.deletedToast(skillName));
+    } catch (e) {
+      toastError(apiErrorText(e));
+    }
+  };
+
+  /**
+   * Mounts a machine-store Skill onto one Agent, from 管理安装.
+   *
+   * **Keeps the machine-store entry and every other Agent's copy untouched.** This is the per-Agent
+   * half of the two-level model: the Skill stays on this computer and stays available to every other
+   * Agent, and only this one gains it.
+   */
+  const mountSkill = async (agentId: string, skillName: string) => {
+    if (!projectId) return;
+    try {
+      await api.mountMachineSkill(projectId, agentId, skillName);
+      // The row's own state, updated in place rather than by re-reading every Agent: this is the
+      // same approach the plugin install takes, and the full listing is refreshed below anyway.
+      setAgentInstalls(agentId, {
+        ...(installed.get(agentId) ?? NO_INSTALLS),
+        skills: new Map(installed.get(agentId)?.skills ?? []).set(skillName, skillName),
+      });
+      reloadLibrary();
+      toastSuccess(S.skills.mountedToast(skillName, labelOf(agents, agentId)));
+    } catch (e) {
+      toastError(apiErrorText(e));
+    }
+  };
+
+  /**
+   * Unmounts a Skill from one Agent, from 管理安装.
+   *
+   * **Removes that Agent's directory only** — the machine-store copy stays, so re-mounting is one
+   * click and the Skill is not lost. Same split as the plugin's per-Agent uninstall, and the reason
+   * this row and the card's 卸载 are different buttons.
+   */
+  const unmountSkill = async (agentId: string, skillName: string) => {
+    if (!projectId) return;
+    try {
+      await api.removeAgentSkill(projectId, agentId, skillName);
+      const prev = installed.get(agentId) ?? NO_INSTALLS;
+      const skills = new Map(prev.skills);
+      skills.delete(skillName);
+      setAgentInstalls(agentId, { ...prev, skills });
+      reloadLibrary();
+      toastSuccess(S.skills.unmountedToast(skillName, labelOf(agents, agentId)));
     } catch (e) {
       toastError(apiErrorText(e));
     }
@@ -1027,6 +1126,27 @@ export function PluginsPage() {
               setOriginFilter={setOriginFilter}
               pluginCategories={installedPluginCategories}
               machineStoreRevision={machineStoreRevision}
+              currentAgentId={currentAgent?.agentId ?? null}
+              onQuickInvoke={quickInvoke}
+              onManageInstall={(skillName) => {
+                // Read the machine state at the moment the dialog opens, so it can refuse to open
+                // at all if the Skill has been switched off since the card was drawn.
+                void api
+                  .getMachineSkills()
+                  .then((res) => {
+                    const entry = res.skills.find((s) => s.name === skillName);
+                    const on = (entry as { enabled?: boolean } | undefined)?.enabled !== false;
+                    setSkillMachineOn(on);
+                    if (!on) {
+                      toastInfo(S.plugins.skillMountDisabled);
+                      return;
+                    }
+                    setSkillInstallTarget(skillName);
+                    setSkillInstallOpen(true);
+                  })
+                  .catch((e: unknown) => toastError(apiErrorText(e)));
+              }}
+              onDeleteSkill={deleteMachineSkillByName}
             />
           </div>
         ) : (
@@ -1252,6 +1372,78 @@ export function PluginsPage() {
           }}
           onClose={() => setImportOpen(false)}
         />
+      )}
+
+      {/* 管理安装 for a Skill: the same agent list and the same install/uninstall wording as the
+          plugin's, over the skill endpoints. **No 更新 column** — a plugin has a library version to
+          compare against, and a Skill mounted from the machine store is by definition the current
+          copy of itself, so an "update" here would always say "already current".
+
+          **At the page level, not inside a card**, because it needs the page's agent list and the
+          page's install snapshot — neither of which a card owns. A card-scoped copy would fetch them
+          again and could answer "which Agent has this Skill" differently from the plugin dialog.
+
+          **Install is refused while the machine switch is off**, the same rule the plugin rows use
+          and for the same reason: the machine entry is what gates new mounts. An Agent that already
+          has it can still unmount — that removes files, which being disabled does not stop being able
+          to do — so the button stays available and only its meaning changes. */}
+      {skillInstallOpen && skillInstallTarget !== null && skillMachineOn && (
+        <Modal
+          open
+          title={S.skills.manageInstallTitle(skillInstallTarget)}
+          onClose={() => setSkillInstallOpen(false)}
+        >
+          <div className="space-y-0.5">
+            {agents.length === 0 && (
+              <p className="py-1.5 text-xs text-gray-400">{S.common.loading}</p>
+            )}
+            {agents.map((a) => {
+              const has = (installed.get(a.agentId)?.skills ?? new Map()).has(skillInstallTarget);
+              return (
+                <div
+                  key={a.agentId}
+                  className="flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                >
+                  <AgentAvatar
+                    id={a.agentId}
+                    name={agentDisplayName(a)}
+                    size={22}
+                    className="shrink-0 rounded"
+                  />
+                  <span className="min-w-0 flex-1 truncate text-sm" title={a.agentId}>
+                    {agentDisplayName(a)}
+                  </span>
+                  {has ? (
+                    // One button for both directions, as on the plugin rows: hover swaps the copy,
+                    // so the destructive half is the one you land on deliberately.
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="group shrink-0"
+                      aria-label={`${S.skills.uninstall} ${a.agentId}`}
+                      onClick={() => void unmountSkill(a.agentId, skillInstallTarget)}
+                    >
+                      <span className="group-hover:hidden">{S.skills.installed}</span>
+                      <span className="hidden text-red-600 group-hover:inline dark:text-red-400">
+                        {S.skills.uninstall}
+                      </span>
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="shrink-0"
+                      aria-label={`${S.skills.install} ${a.agentId}`}
+                      onClick={() => void mountSkill(a.agentId, skillInstallTarget)}
+                    >
+                      {S.skills.install}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Modal>
       )}
 
       {/* The plugin tab's 插件来源 button opens the sources manager. */}

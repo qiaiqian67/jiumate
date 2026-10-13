@@ -192,6 +192,12 @@ export async function readMachineSkillFiles(
     for (const entry of await fs.readdir(abs, { withFileTypes: true })) {
       if (entry.name === SOURCE_FILE) continue; // 我们的记录，不是技能的一部分
       const relChild = rel === "" ? entry.name : `${rel}/${entry.name}`;
+      if (entry.isDirectory()) {
+        // 递归：技能的辅助文件常在子目录里（`reference/API.md`、`scripts/run.sh`），而它们正是
+        // SKILL.md 会指向的东西——漏掉它们会装出一个引用不到自己文档的技能。
+        await walk(path.join(abs, entry.name), relChild);
+        continue;
+      }
       // 非普通条目一律跳过，符号链接在内：链接是把目录外的文件读进来的方式。
       if (!entry.isFile()) continue;
       assertSafeSkillFile(relChild);

@@ -1591,6 +1591,8 @@ export const zh = {
     upgradeSkillUpToDate: "已是最新版本",
     upgradeSkillDone: (v: string): string => `已升级到 ${v}`,
     upgradeSkillFailed: "检查失败，已保留现有版本",
+    /** 技能的管理安装：本机关闭着，所以不能挂载到任何 Agent。 */
+    skillMountDisabled: "这个技能在本机关闭着，先启用才能装到 Agent 上",
     /** Plugin count in the group header (small text to the right of the category name). */
     pluginCount: (n: number): string => `${n} 个插件`,
     /** Content badge for each hook point a plugin's hook package answers at (e.g. "stop 钩子"); also the chips on the settings Hooks tab. */
@@ -1759,6 +1761,10 @@ export const zh = {
     updateAction: "更新",
     /** Settings Skills tab: toast after uninstalling one skill. */
     uninstalledToast: (skill: string, agent: string): string => `已从 ${agent} 卸载 ${skill}`,
+    /** 技能的「管理安装」：挂载到某个 Agent 之后。 */
+    mountedToast: (skill: string, agent: string): string => `已装到 ${agent}`,
+    /** 技能的「管理安装」：从某个 Agent 上卸载之后。 */
+    unmountedToast: (skill: string, agent: string): string => `已从 ${agent} 卸载 ${skill}`,
     /** Uninstall confirmation: removing the installed copy deletes its files (local edits included). */
     uninstallConfirmTitle: (name: string): string => `卸载 ${name}`,
     uninstallConfirmBody: (skill: string, agent: string): string =>

@@ -1627,6 +1627,8 @@ export const en: Strings = {
     upgradeSkillUpToDate: "Already up to date",
     upgradeSkillDone: (v: string): string => `Upgraded to ${v}`,
     upgradeSkillFailed: "The check failed; the installed version was kept",
+    skillMountDisabled:
+      "This skill is off for this machine — enable it before mounting it to an agent",
     pluginCount: (n: number): string => (n === 1 ? "1 plugin" : `${n} plugins`),
     /** Content badge for each hook point a plugin's hook package answers at (e.g. "stop hook"); also the chips on the settings Hooks tab. */
     hookBadge: (event: string): string => `${event} hook`,
@@ -1796,6 +1798,10 @@ export const en: Strings = {
     /** Settings Skills tab: toast after uninstalling one skill. */
     uninstalledToast: (skill: string, agent: string): string =>
       `Uninstalled ${skill} from ${agent}`,
+    /** A Skill's 管理安装, after mounting it onto an Agent. */
+    mountedToast: (skill: string, agent: string): string => `Mounted ${skill} to ${agent}`,
+    /** A Skill's 管理安装, after unmounting it from one Agent. */
+    unmountedToast: (skill: string, agent: string): string => `Unmounted ${skill} from ${agent}`,
     /** Uninstall confirmation: removing the installed copy deletes its files (local edits included). */
     uninstallConfirmTitle: (name: string): string => `Uninstall ${name}`,
     uninstallConfirmBody: (skill: string, agent: string): string =>

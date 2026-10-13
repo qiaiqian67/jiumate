@@ -1612,6 +1612,23 @@ export const agentSkillArchiveUrl = (projectId: string, agentId: string, name: s
   `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}` +
   `/skills/${encodeURIComponent(name)}/archive`;
 
+/**
+ * Mounts a Skill from the machine store onto one Agent (管理安装's 安装).
+ *
+ * **The only way a Skill reaches an Agent from this page**, and deliberately so: the machine store
+ * is where every add path lands, so the name has to be something the user actually added. There is
+ * no "send me a body" branch — a client cannot put a Skill on an Agent that was never added here.
+ *
+ * Re-mounting replaces the Agent's directory outright, so it brings the current content and drops
+ * files the new copy no longer ships.
+ */
+export const mountMachineSkill = (projectId: string, agentId: string, name: string) =>
+  apiFetch<{ name: string; installed: boolean }>(
+    `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}` +
+      `/skills/${encodeURIComponent(name)}`,
+    { method: "POST", body: {} },
+  );
+
 export const removeAgentSkill = (projectId: string, agentId: string, name: string) =>
   apiFetch<void>(
     `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}` +
