@@ -1766,22 +1766,42 @@ export function ChatInput({
 
   // Installed skills change (Agent switch triggers a refetch: parent clears first, then
   // updates): the selection keeps only skills that are still available — the tick where it's
-  // cleared wipes the whole selection, so nothing lingers across Agents. The first tick on mount
-  // is skipped: at that point the installed list hasn't been fetched yet (skills is empty), and
-  // pruning would wrongly clear initialSkills (quick-invoke pre-selection); prune only once the
-  // list is ready for the first time (the parent's clear uses functional setState to preserve
-  // reference identity, so an empty-to-empty clear doesn't trigger this effect).
-  const skillsPruneReady = useRef(false);
+  // cleared wipes the whole selection, so nothing lingers across Agents.
+  //
+  // **Prune once, when the list is genuinely ready — not "skip the first tick".** Those are not
+  // the same condition, and conflating them is what broke quick-invoke: an Agent can be set more
+  // than once before the user touches anything. Quick-invoke writes its Agent into the draft
+  // *and* passes it through route state, which outranks the cache, so `setAgentId` fires twice —
+  // and the second one refetches the skill list, which is a second list update with the guard
+  // already spent. The preselected skill was pruned by a list update that carried no new
+  // information about it.
+  //
+  // So the guard is on the *content*: prune only once the list has arrived, and only ever once.
+  // The first non-empty list is the one that answers "is this still installed"; every list after
+  // that either repeats the answer or reflects an Agent the user chose to switch to, and in that
+  // second case the user has just asked for a different Agent, so pruning is right — and by then
+  // the quick-invoke restore is long since applied and gone from `initialSkills`.
+  const skillsPruned = useRef(false);
   useEffect(() => {
-    if (!skillsPruneReady.current) {
-      skillsPruneReady.current = true;
-      if (skills.length === 0) return;
-    }
+    if (skillsPruned.current) return;
+    // Empty means "not fetched yet" (the parent's clear preserves the array reference), and
+    // pruning against it would clear the very selection it is meant to protect.
+    if (skills.length === 0) return;
+    skillsPruned.current = true;
     const next = selectedSkills.filter((n) => skills.some((s) => s.name === n));
     if (next.length === selectedSkills.length) return;
     setSelectedSkills(next);
     onSkillsChange?.(next);
   }, [skills, selectedSkills, onSkillsChange]);
+
+  /** An Agent switch after the first prune must prune again, or a stale skill lingers on the new Agent. */
+  const lastPrunedAgent = useRef(currentAgentId ?? null);
+  useEffect(() => {
+    const id = currentAgentId ?? null;
+    if (id === lastPrunedAgent.current) return;
+    lastPrunedAgent.current = id;
+    skillsPruned.current = false;
+  }, [currentAgentId]);
 
   /**
    * The two chips are restored from the draft cache by two effects that fire whenever their own

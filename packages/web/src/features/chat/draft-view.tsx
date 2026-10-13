@@ -301,7 +301,15 @@ export function DraftView({
       appliedStateKey.current = location.key;
       saveAppliedRouteKey("agentId", location.key);
       if (valid(stateAgentId)) {
-        setAgentId(stateAgentId);
+        // **Only when it actually changes something.** Quick-invoke writes its Agent into the
+        // draft *and* passes the same one through route state, so both paths set it and the
+        // second `setAgentId` refetched the skill list for an Agent that was already selected.
+        // That refetch is what carried the preselected skill past the composer's restore: the
+        // Agent was already right, so the user had asked for no change, and the churn was ours.
+        //
+        // `applyCached` may not have run yet (it waits for the user id), so `agentId` can still
+        // be the pre-cache value here and a genuine change still has to go through.
+        if (agentId !== stateAgentId) setAgentId(stateAgentId);
         return;
       }
     }
