@@ -139,50 +139,105 @@ export function DraftView({
   // key that isn't account-scoped.
   const userId = useAuth().user?.userId ?? null;
 
-  // The cache is read only once, on mount: the component remounts keyed by Project (and
-  // by parked-draft id), so switching Projects or parked drafts automatically switches to
-  // the corresponding content; switching accounts always goes through logout (clearing
-  // the user unmounts the whole route tree), so logging back in is likewise a fresh
-  // mount. A parked draft reads its own entry instead of the active slot.
+  // The cache is read once, when it can first be read **meaningfully** — which is not necessarily
+  // on mount: `AuthProvider` starts with `user` undefined and fills it from `GET /api/me`, so the
+  // first render of this component routinely has no `userId` and therefore no key to read under.
+  // The component remounts keyed by Project (and by parked-draft id), so switching Projects or
+  // parked drafts automatically switches to the corresponding content; switching accounts goes
+  // through logout (clearing the user unmounts the whole route tree). A parked draft reads its own
+  // entry instead of the active slot.
+  //
+  // **Waiting for `userId` is the fix, not a detail.** Reading on mount instead produced an empty
+  // cache for every draft reached on a fresh page load — which is exactly where quick-invoke lands.
+  // The preselected skill never reached `skillsRef`, and the mount-time `persistNow()` then wrote
+  // that emptiness back over the draft, erasing the pre-selection the library page had just
+  // written. The user landed on an empty composer having clicked a button whose entire purpose is
+  // to fill it. A parked draft reads its own entry instead of the active slot.
   const [parkedMissing] = useState(
     () =>
       draftId !== undefined && (!userId || getDraftSession(userId, projectId, draftId) === null),
   );
-  const [cached] = useState<DraftCache>(() => {
-    if (!userId) return {};
-    if (draftId !== undefined) return getDraftSession(userId, projectId, draftId)?.draft ?? {};
-    return loadDraft(draftKey(userId, projectId));
-  });
-
-  // A parked id that no longer exists (deleted in the sidebar, stale bookmark): fall
-  // back to the plain new-chat draft instead of editing into a void.
+  /**
+   * `undefined` until the cache has actually been read — the third state that tells "there is no
+   * draft" apart from "not looked yet". Seeding the refs from it before that read is how the
+   * preselection was lost.
+   */
+  const [cached, setCached] = useState<DraftCache | undefined>(undefined);
   useEffect(() => {
-    if (parkedMissing) navigate("/chat/new", { replace: true });
-  }, [parkedMissing, navigate]);
+    if (!userId) return;
+    setCached(
+      draftId !== undefined
+        ? (getDraftSession(userId, projectId, draftId)?.draft ?? {})
+        : loadDraft(draftKey(userId, projectId)),
+    );
+  }, [userId, projectId, draftId]);
 
-  const [agentId, setAgentId] = useState<string | null>(
-    cached.agentId ?? currentAgent?.agentId ?? null,
+  // Every value below seeds **once**, from the cache, and only after it has been read. Seeding at
+  // first render instead would read an empty cache on every fresh page load and bake that in —
+  // which is the bug this whole mechanism exists to fix.
+  //
+  // `applyCached` runs for the one render where `cached` first becomes defined and never again
+  // (`applied` flips in the same pass), so a later Project switch — which does remount — reseeds
+  // from the new key rather than being ignored as stale.
+  const [appliedCache, setAppliedCache] = useState(false);
+  const applyCached = useCallback(
+    (c: DraftCache) => {
+      setAgentId(c.agentId ?? currentAgent?.agentId ?? null);
+      setWorkspace(c.workspace ?? "");
+      setApprovalMode(c.approvalMode ?? "allow-all");
+      setModelRef(c.modelRef ?? null);
+      textRef.current = c.text ?? "";
+      skillsRef.current = c.skills ?? [];
+    },
+    [currentAgent?.agentId],
   );
-  const [workspace, setWorkspace] = useState(cached.workspace ?? "");
+  useEffect(() => {
+    if (cached === undefined || appliedCache) return;
+    setAppliedCache(true);
+    applyCached(cached);
+  }, [cached, appliedCache, applyCached]);
+
+  /**
+   * The cache as a plain object, for the "did the cache pin this?" checks scattered below.
+   *
+   * **Not a convenience: those checks are a question about the user's own draft, and an
+   * unread cache has not answered it.** "Not read yet" and "nothing pinned" happen to lead to the
+   * same action — fall through to the Project default — so merging them is correct rather than a
+   * shortcut. Reading the real `cached` and getting `undefined` would be a *different* answer, and
+   * a wrong one.
+   */
+  const cachedCache = (): DraftCache => cached ?? {};
+
+  const [agentId, setAgentId] = useState<string | null>(null);
+  const [workspace, setWorkspace] = useState("");
   // A terminal opened while drafting starts in the Workspace chosen here; "" is the
   // temporary Workspace, whose directory the server only creates with the Session, so
   // that case falls back to home (setDockCwd's null).
   useEffect(() => {
     setDockCwd(workspace || null);
   }, [workspace]);
-  const [approvalMode, setApprovalMode] = useState<ApprovalMode>(
-    cached.approvalMode ?? "allow-all",
-  );
-  const [modelRef, setModelRef] = useState<ModelRefDto | null>(cached.modelRef ?? null);
-  const textRef = useRef(cached.text ?? "");
+  const [approvalMode, setApprovalMode] = useState<ApprovalMode>("allow-all");
+  const [modelRef, setModelRef] = useState<ModelRefDto | null>(null);
+  const textRef = useRef("");
   /**
    * Selected skills (prefilled by "quick invoke" from the Skills page + checked in
-   * the input area): passed to ChatInput as the initial selection via initialSkills
-   * on mount, then written back through onSkillsChange and persisted immediately
+   * the input area): passed to ChatInput as the initial selection via initialSkills,
+   * then written back through onSkillsChange and persisted immediately
    * (discrete clicks) — survives a refresh; cleared along with the whole draft on
    * successful send, kept on failure so it can be resent.
+   *
+   * **Seeded by `applyCached`, not by `useRef`'s initial argument**, because on a fresh page load
+   * the cache is still being read when this line would run. The library page's quick-invoke writes
+   * its pre-selection into that cache; reading it too early produced an empty composer, which is
+   * the one outcome the button exists to avoid.
    */
-  const skillsRef = useRef<string[]>(cached.skills ?? []);
+  const skillsRef = useRef<string[]>([]);
+
+  // A parked id that no longer exists (deleted in the sidebar, stale bookmark): fall
+  // back to the plain new-chat draft instead of editing into a void.
+  useEffect(() => {
+    if (parkedMissing) navigate("/chat/new", { replace: true });
+  }, [parkedMissing, navigate]);
 
   // —— Project new-chat defaults ([default_chat]) ——
   // Fetched once per Project mount (fail-soft: an error reads as "no defaults", so the
@@ -259,7 +314,7 @@ export function DraftView({
       appliedDefaultAgent.current = true;
       if (
         appliedStateKey.current === null &&
-        cached.agentId === undefined &&
+        cachedCache().agentId === undefined &&
         !touchedRef.current.agent &&
         valid(chatDefaults.agentId)
       ) {
@@ -269,7 +324,7 @@ export function DraftView({
     }
     if (valid(agentId)) return;
     setAgentId((agents.find((a) => a.agentId === "default_agent") ?? agents[0])?.agentId ?? null);
-  }, [agents, agentId, location.key, stateAgentId, chatDefaults, cached.agentId]);
+  }, [agents, agentId, location.key, stateAgentId, chatDefaults, cachedCache().agentId]);
 
   // Explicit Workspace from route state (the workspace-mode group header "+"): applied once per
   // location.key, same convention as the Agent above, overriding the cached selection ("" pre-fills
@@ -303,19 +358,19 @@ export function DraftView({
     if (
       chatDefaults.workspace !== undefined &&
       stateWorkspace === undefined &&
-      cached.workspace === undefined &&
+      cachedCache().workspace === undefined &&
       !touchedRef.current.workspace
     ) {
       setWorkspace(chatDefaults.workspace);
     }
     if (
       chatDefaults.approvalMode !== undefined &&
-      cached.approvalMode === undefined &&
+      cachedCache().approvalMode === undefined &&
       !touchedRef.current.approval
     ) {
       setApprovalMode(chatDefaults.approvalMode);
     }
-  }, [chatDefaults, stateWorkspace, cached.workspace, cached.approvalMode]);
+  }, [chatDefaults, stateWorkspace, cachedCache().workspace, cachedCache().approvalMode]);
 
   // Model fallback: once config is ready, if nothing is selected or the selection is no longer valid, fall back to the project default → the first model (always as a paired reference).
   useEffect(() => {
@@ -731,7 +786,18 @@ export function DraftView({
             popover escaping upward is not a corner case to clip, it is the whole point of it
             opening. `relative` is what lets those `bottom-full` layers anchor to the card. */}
         <div className="relative rounded-2xl bg-gray-100 p-3 pb-6 dark:bg-gray-800/60">
+          {/* Keyed on whether the cache has been read: `ChatInput` takes `initialSkills` **once**, as a
+            `useState` initial value, so a prop that arrives after it mounted is never read. The
+            key remounts it once the cache lands — and only once, because `appliedCache` flips
+            immediately afterwards. That is what makes quick-invoke's pre-selection reach the
+            composer on a page load where the cache is read after the first render.
+
+            Remounting a whole composer is not free, so this is deliberately gated on that one
+            transition rather than used to push every later change down: by the time the cache
+            has been applied, `skillsRef` already holds the names and `initialSkills` no longer
+            decides anything. */}
           <ChatInput
+            key={appliedCache ? "ready" : "unread"}
             status="idle"
             // No clipping here either — see above. The card's own `rounded-lg` carries the shape
             // and nothing inside it overflows except the popovers, which must be free to leave.
@@ -761,9 +827,11 @@ export function DraftView({
             agents={agents}
             {...(agentId ? { currentAgentId: agentId } : {})}
             skills={agentSkills}
-            {...(cached.skills && cached.skills.length > 0 ? { initialSkills: cached.skills } : {})}
+            {...(cachedCache().skills !== undefined && cachedCache().skills!.length > 0
+              ? { initialSkills: cachedCache().skills! }
+              : {})}
             onSkillsChange={onSkillsChange}
-            initialText={cached.text ?? ""}
+            initialText={cachedCache().text ?? ""}
             onTextChange={onTextChange}
           />
 
