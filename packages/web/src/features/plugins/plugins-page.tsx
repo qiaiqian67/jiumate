@@ -1522,72 +1522,52 @@ function PluginCard({
   const [pendingAgentRemove, setPendingAgentRemove] = useState<string | null>(null);
   /** In-flight machine delete, so a double click cannot land two. */
   const [deleting, setDeleting] = useState(false);
-  /** Whether the current Agent has this plugin switched on; null while unknown. */
-  const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [togglingEnabled, setTogglingEnabled] = useState(false);
   /**
-   * The machine-level switch, seeded from the listing and then owned locally while a write is in
-   * flight.
+   * The plugin's switch, seeded from the listing and then owned locally while a write is in flight.
    *
    * `undefined` means "no local answer yet, use the listing's" — a null would be a third state the
    * listing cannot produce, and treating it as off would show every plugin as disabled until the
-   * first write. The page re-reads the library on mount and after every install, so the server's
+   * first write. The page re-reads the library on mount and after every switch, so the server's
    * value is the baseline and this only overrides it between a click and its response.
+   *
+   * **There is no separate per-Agent state on this card any more.** It used to read
+   * `getInstalledPlugins` for the Agent selected at the time, which was what made a plugin
+   * installed on some *other* Agent show no switch at all — the card was answering for one Agent
+   * and the user read it as an answer about the plugin. The switch is now one control whose scope is
+   * "everywhere", so there is nothing per-Agent left to keep in sync.
    */
   const [machineOverride, setMachineOverride] = useState<boolean | undefined>(undefined);
-  const [togglingMachine, setTogglingMachine] = useState(false);
+  const [togglingEnabled, setTogglingEnabled] = useState(false);
   const setMachineEnabled = (next: boolean) => setMachineOverride(next);
-  /** What the card's machine switch shows: the local answer while one exists, else the listing's. */
+  /** What the card's switch shows: the local answer while one exists, else the listing's. */
   const machineEnabled = machineOverride ?? plugin.enabled;
 
-  // The switch's own state, read whenever the current Agent or the plugin changes. Kept separate
-  // from the install snapshot because "installed" and "switched on" are different questions, and
-  // answering the second from the first would make a disabled plugin look uninstalled.
-  useEffect(() => {
-    const agentId = currentAgent?.agentId;
-    if (!projectId || agentId === undefined) {
-      setEnabled(null);
-      return;
-    }
-    let cancelled = false;
-    void api
-      .getInstalledPlugins(projectId, agentId)
-      .then((res) => {
-        if (cancelled) return;
-        const entry = res.plugins.find((p) => p.name === plugin.name);
-        setEnabled(entry?.enabled ?? null);
-      })
-      .catch(() => {
-        // Unreadable is "unknown", not "off": showing the switch as on when it is off would be a
-        // claim we cannot support, and hiding it would strand the user with no way back.
-        if (!cancelled) setEnabled(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId, currentAgent?.agentId, plugin.name]);
-
   /**
-   * Switches the plugin on or off for **this machine**.
+   * Switches the plugin on or off **everywhere it is installed**.
    *
-   * The state lives on the card rather than being read back from a request: `plugin.enabled` is the
-   * listing's answer and the listing is re-read on the next load, so a local copy plus a rollback is
-   * enough and avoids a round trip to confirm a boolean the card already knows.
+   * **One switch, and it acts on the machine and on every Agent holding it.** The card does not
+   * pick a scope: two switches that look identical and usually agree leave the user unable to tell
+   * which one they are about to flip, and a switch that only reached the Agent selected at the time
+   * meant a plugin installed on some other Agent showed no switch at all — as if it could not be
+   * turned off.
    *
-   * **Every Agent's runtime is invalidated server-side** when this lands, so a Session that already
-   * assembled its prompt stops offering the plugin without waiting to be evicted — the reason the
-   * card can claim the change took effect rather than "at your next task".
+   * **The listing's `enabled` is the single source of truth on the card**, seeded from the library
+   * and owned locally while the write is in flight; a rollback restores it on failure.
+   *
+   * **Every Agent's runtime is invalidated server-side**, so a Session that already assembled its
+   * prompt stops offering the plugin without waiting to be evicted — the reason the card can say the
+   * change took effect rather than "at your next task".
    */
-  const toggleMachineEnabled = async () => {
-    if (togglingMachine) return;
+  const toggleEnabled = async () => {
+    if (togglingEnabled) return;
     const next = !machineEnabled;
-    setTogglingMachine(true);
+    setTogglingEnabled(true);
     setMachineEnabled(next);
     try {
       const res = await api.setPluginEnabledMachine(plugin.id, next);
       setMachineEnabled(res.enabled);
-      // Re-read the listing rather than only trusting the local copy: the per-Agent install
-      // availability is drawn from it, and this is the one moment that changed.
+      // Re-read the listing: this is the one moment the install availability changes, and it is
+      // drawn from there.
       onRefreshLibrary();
       toastSuccess(
         `${next ? S.plugins.enabledToast(plugin.name) : S.plugins.disabledToast(plugin.name)}${S.agent.takesEffectSuffix}`,
@@ -1596,30 +1576,8 @@ function PluginCard({
       setMachineEnabled(machineEnabled);
       toastError(apiErrorText(e));
     } finally {
-      setTogglingMachine(false);
-    }
-  };
-
-  const toggleEnabled = async () => {
-    const agentId = currentAgent?.agentId;
-    if (!projectId || agentId === undefined || enabled === null || togglingEnabled) return;
-    const next = !enabled;
-    setEnabled(next);
-    setTogglingEnabled(true);
-    try {
-      // Optimistic, like the install toggle; rolled back below on failure.
-      const res = await api.setPluginEnabled(projectId, agentId, plugin.id, next);
-      setEnabled(res.enabled);
-    } catch (e) {
-      setEnabled(enabled);
-      toastError(apiErrorText(e));
-      return;
-    } finally {
       setTogglingEnabled(false);
     }
-    toastSuccess(
-      `${next ? S.plugins.enabledToast(plugin.name) : S.plugins.disabledToast(plugin.name)}${S.agent.takesEffectSuffix}`,
-    );
   };
 
   const confirmUpdate = async () => {
@@ -1669,9 +1627,6 @@ function PluginCard({
 
   let installedCount = 0;
   for (const m of installed.values()) if (pluginInstalled(plugin, m)) installedCount += 1;
-  /** Whether the Agent selected right now has this plugin — what the corner button toggles. */
-  const isInstalledOnCurrentAgent =
-    currentAgent !== null && pluginInstalled(plugin, installed.get(currentAgent.agentId));
   // The server's list of Agents behind on this plugin, minus any this page has since uninstalled
   // it from (the list is re-read after every install action, but the snapshot moves first).
   const outdated = outdatedAgentIds(agents, plugin.name).filter((agentId) =>
@@ -1809,37 +1764,24 @@ function PluginCard({
             >
               <GlyphIcon d={INSTALL_ICON} size={ICON_SIZE.iconButton} />
             </Button>
-            {/* Switch the plugin on or off for the Agent selected right now, shown only once it is
-              installed there — a switch for something that is not installed has nothing to act on.
-              Switching off keeps the files, so it is reversible without a reinstall.
+            {/* Switch the plugin on or off **everywhere it is installed**.
+              Switching off keeps the files, so it is reversible without a reinstall, and it also
+              blocks installing it onto any further Agent — which is the whole of the requirement,
+              and one control rather than a knob per scope.
 
-              {/* **本机开关** — the machine-level switch, on every card.
+              **One switch, not two.** There was briefly a second, machine-level switch beside this
+              one. That answered a question nobody was asking: a plugin's availability on this
+              computer and the Agents' use of it are almost always the same decision, and two knobs
+              in one row that look identical and usually agree is the worst of both — the user
+              cannot tell which one they are about to flip, and when they do disagree it is
+              invisible. An earlier attempt also made a plugin installed on some *other* Agent show
+              no switch at all, which read as "this cannot be turned off"; the fix for that was
+              showing the switch on every card and letting it act everywhere, not adding a second.
 
-                Not gated on `isInstalledOnCurrentAgent`, and that is the whole change. A switch that
-                only exists for a plugin installed on the Agent currently selected answers a
-                question about that Agent, not about the plugin: a plugin installed on some other
-                Agent would show no switch at all, as if it could not be turned off. "Should this
-                plugin be available on this computer" is answerable for every plugin in the library,
-                including one no Agent has — which is the state where the decision actually matters.
-
-                Distinct from the per-Agent switch below, and shown **next to** it rather than
-                replacing it: they are two different acts with two different scopes. Switching the
-                machine off stops the plugin loading anywhere and blocks new installs; switching one
-                Agent off leaves the machine-level decision alone. Both must be on for the plugin to
-                run (see plugin-machine-state.ts). */}
-            <span className="inline-flex shrink-0 items-center">
-              <Switch
-                size="sm"
-                checked={machineEnabled}
-                onChange={() => void toggleMachineEnabled()}
-                disabled={togglingMachine}
-                aria-label={`${machineEnabled ? S.plugins.disableMachine : S.plugins.enableMachine} ${plugin.name}`}
-                title={machineEnabled ? S.plugins.disableMachineHint : S.plugins.enableMachineHint}
-              />
-            </span>
-            {/* The per-Agent switch, shown only once the plugin is installed there — a switch for
-              something that is not installed has nothing to act on. Switching off keeps the files,
-              so it is reversible without a reinstall.
+              **Shown unconditionally**, so every plugin in the library has one — including one no
+              Agent has, which is exactly the state where the decision is being made. The listing
+              carries `enabled` for every entry, so there is never a moment where the card cannot
+              answer.
 
               A `Switch` rather than one more icon button, and that is the point of it. In a row of
               glyphs the power mark was the only one whose state lived in the glyph rather than in
@@ -1849,18 +1791,16 @@ function PluginCard({
               Sized `sm` — the component's `base` is tuned for a labelled form row, and a
               full-size switch beside 28px glyph buttons would stand taller than every one of
               them. */}
-            {isInstalledOnCurrentAgent && enabled !== null && (
-              <span className="inline-flex shrink-0 items-center">
-                <Switch
-                  size="sm"
-                  checked={enabled}
-                  onChange={() => void toggleEnabled()}
-                  disabled={togglingEnabled}
-                  aria-label={`${enabled ? S.plugins.disableForAgent : S.plugins.enableForAgent} ${plugin.name}`}
-                  title={enabled ? S.plugins.disableForAgentHint : S.plugins.enableForAgentHint}
-                />
-              </span>
-            )}
+            <span className="inline-flex shrink-0 items-center">
+              <Switch
+                size="sm"
+                checked={machineEnabled}
+                onChange={() => void toggleEnabled()}
+                disabled={togglingEnabled}
+                aria-label={`${machineEnabled ? S.plugins.disable : S.plugins.enable} ${plugin.name}`}
+                title={machineEnabled ? S.plugins.disableHint : S.plugins.enableHint}
+              />
+            </span>
             {/* 卸载 — delete this plugin from this machine, irreversibly.
 
                 **Only on the machine level, never per-Agent.** Distinct from 管理安装's per-Agent

@@ -134,6 +134,34 @@ describe("machine-level plugin switch", () => {
     expect(fs.existsSync(path.join(dir, "agent-tuning@jiumate-builtin"))).toBe(false);
   });
 
+  it("turns a plugin off on every Agent holding it, not just one", async () => {
+    await client.post(`/api/projects/${projectId}/agents/${agentId}/plugins`, {
+      names: ["humanizer"],
+    });
+    const other = await client.post(`/api/projects/${projectId}/agents`, {
+      agentId: "switcher_other",
+      name: "B",
+    });
+    expect(other.status === 201 || other.status === 200).toBe(true);
+    await client.post(`/api/projects/${projectId}/agents/switcher_other/plugins`, {
+      names: ["humanizer"],
+    });
+
+    const off = await client.post("/api/plugins/enabled", { id: "humanizer", enabled: false });
+    expect(off.status).toBe(200);
+
+    // 一个开关、一个作用域：两个 Agent 都要变。少改一个就意味着用户看到的开关没有做到卡片上
+    // 声称的事——而界面上没有任何东西能显示这两个 Agent 现在状态不同。
+    for (const id of [agentId, "switcher_other"]) {
+      const listed = await client.get(
+        `/api/projects/${projectId}/agents/${id}/skills/plugins/installed`,
+      );
+      expect(listed.status).toBe(200);
+      const body = (await listed.json()) as { plugins: { name: string; enabled: boolean }[] };
+      expect(body.plugins.find((p) => p.name === "humanizer")?.enabled).toBe(false);
+    }
+  });
+
   it("rejects a non-boolean enabled rather than coercing it", async () => {
     // `"false"` is truthy. Coercing it would write the opposite of what the caller meant.
     const res = await client.post("/api/plugins/enabled", { id: PLUGIN, enabled: "false" });

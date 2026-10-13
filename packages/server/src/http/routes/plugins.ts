@@ -16,11 +16,13 @@ import {
   hooksDir,
   installPlugin,
   listInstalledHooks,
+  listInstalledPlugins,
   listInstalledSkills,
   pluginNameOf,
   readMachineDisabled,
   removeHook,
   setMachinePluginEnabled,
+  setPluginEnabled,
   libraryPlugin,
   loadPluginGroups,
 } from "@prismshadow/jiumate-core";
@@ -88,21 +90,25 @@ export function pluginLibraryRoutes(deps: AppDeps): Hono<AppEnv> {
   });
 
   /**
-   * POST /api/plugins/enabled — switches a plugin on or off **for this machine**.
+   * POST /api/plugins/enabled — switches a plugin on or off **everywhere it is installed**.
    *
-   * The wider of the two switches, and answerable for a plugin no Agent has installed, which is the
-   * point: "should this plugin be available on this computer" has to be decidable before anything
-   * is installed anywhere, and a per-Agent manifest cannot answer it for a plugin it has no
-   * directory for.
+   * **One switch, two things written.** The machine-level entry in `<root>/plugin-state.json` gates
+   * new installs and every Agent; each Agent's own `manifest.json` is set to match, so every Agent
+   * holding the plugin agrees with it. Both are written because they are read *together* — a plugin
+   * runs only where both say on — and writing just one leaves a state no single switch can
+   * describe: "off on the machine, on in the manifest" is not something a user can ask for, and
+   * "off in one manifest, on in another" is exactly what made two switches on one card useless.
    *
-   * **Every Project's runtimes are invalidated**, not one Agent's. The Skills are read from disk on
-   * every Session build, but a live Session already assembled its prompt, so each cached runtime
-   * would keep serving the plugin until it happened to be evicted — and this is a machine-level
-   * switch, so there is no single Project to scope the blast radius to.
+   * **Writing every manifest is the point, not a side effect.** Machine entry only would mean
+   * turning the plugin back on has to *restore* whatever each Agent individually wanted, which is a
+   * decision the one switch no longer carries.
    *
-   * **No Project check.** The state is machine-wide, and a user who is a member of some Project but
-   * not another can still switch a plugin off for a machine they share with nobody in particular;
-   * gating it per Project would let the same machine hold both answers at once.
+   * **Every Project's runtimes are invalidated**: the Skills are read from disk on every Session
+   * build, but a live Session already assembled its prompt, so a cached runtime would keep serving
+   * the plugin until it happened to be evicted — and there is no single Project to scope to.
+   *
+   * **No Project check.** The answer is machine-wide; gating it per Project would let one machine
+   * hold two contradictory answers.
    */
   app.post("/enabled", async (c) => {
     const body = await readJson(c);
@@ -113,17 +119,67 @@ export function pluginLibraryRoutes(deps: AppDeps): Hono<AppEnv> {
     }
     // Accepts a bare name or a full id, because the card holds both and a switch that rejected the
     // form the card carries would be a switch the card cannot use.
-    const written = await setMachinePluginEnabled(
-      deps.config.root,
-      pluginNameOf(pluginId),
-      enabled,
-    );
+    const name = pluginNameOf(pluginId);
+    const written = await setMachinePluginEnabled(deps.config.root, name, enabled);
+    // Bring every Agent's own copy into line, so the two readings can never disagree.
+    await setPluginEnabledEverywhere(deps, name, enabled);
     // Unconditional: the switch is installed-but-unusable now, and a user who turns a plugin back
     // on expects the Agents they already gave it to to be able to use it again.
     deps.manager.invalidateAllRuntimes();
     return c.json({ id: pluginId, enabled: written } satisfies PluginMachineEnabledResponse);
   });
   return app;
+}
+
+/**
+ * Sets one plugin's switch on every Agent that has it installed, across every Project.
+ *
+ * **Best-effort per Agent.** One unwritable manifest must not leave the machine switch written
+ * while some Agent disagrees with it — but it also must not roll the machine switch back, since
+ * that would make a single locked file silently undo the user's decision everywhere else. So the
+ * failures are swallowed and the machine entry stands: it is the wider of the two, and it is what
+ * the next install reads.
+ *
+ * Walking `<root>/<project>/agents/<agent>/agent_state/plugins` rather than asking the database is
+ * deliberate: the manifests are the answer (see `setPluginEnabled`), and a Project whose Agent has
+ * the plugin installed but no database row would still be found, which a query would miss.
+ */
+async function setPluginEnabledEverywhere(
+  deps: AppDeps,
+  name: string,
+  enabled: boolean,
+): Promise<void> {
+  let projects: import("node:fs").Dirent[];
+  try {
+    projects = await fs.readdir(deps.config.root, { withFileTypes: true });
+  } catch {
+    return; // Never created — nothing is installed anywhere.
+  }
+  const jobs: Promise<unknown>[] = [];
+  for (const project of projects) {
+    if (!project.isDirectory() || project.name.startsWith(".")) continue;
+    const agentsRoot = path.join(deps.config.root, project.name, "agents");
+    let agents: import("node:fs").Dirent[];
+    try {
+      agents = await fs.readdir(agentsRoot, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const agent of agents) {
+      if (!agent.isDirectory() || agent.name.startsWith(".")) continue;
+      const installed = await listInstalledPlugins(deps.config.root, project.name, agent.name);
+      // Matched on the **name**, not the id: the id carries an `@marketplace` suffix that depends
+      // on which copy this machine resolves, and the switch is about the plugin, not the copy.
+      const hit = installed.find((p) => pluginNameOf(p.id) === name);
+      if (hit === undefined) continue;
+      jobs.push(
+        setPluginEnabled(deps.config.root, project.name, agent.name, hit.id, enabled).catch(
+          () => false,
+        ),
+      );
+    }
+  }
+  await Promise.all(jobs);
 }
 
 /** /api/projects/:p/agents/:a/plugins: install is a Project-member operation. */
