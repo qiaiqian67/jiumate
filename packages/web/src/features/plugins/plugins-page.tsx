@@ -512,6 +512,24 @@ export function PluginsPage() {
    * taxonomy, one place. A separate map for plugins would be a second answer to "what category is
    * this in", and the two would disagree the first time a user filed the same thing twice.
    */
+  /**
+   * Skill name -> the catalog's record of where it is installed.
+   *
+   * **The catalog and the plugin library answer two different questions** and only the first one
+   * knows about Agents: `catalog.skills` is the union of every Agent's installed skills and carries
+   * `agents`; `catalog.plugins` is the library — what a plugin *ships* — and a `PluginItem` has no
+   * `agents` field at all. Reading one from the other produced `undefined`, which is what made
+   * quick-invoke permanently disabled on plugin-bundled skills.
+   *
+   * Keyed by name because that is the join: a plugin ships a Skill by the name its SKILL.md
+   * declares, and that is also the directory name the Agent has installed it under.
+   */
+  const catalogByName = useMemo(() => {
+    const m = new Map<string, InstalledSkillItem>();
+    for (const s of catalog?.skills ?? []) m.set(s.name, s);
+    return m;
+  }, [catalog]);
+
   const installedPluginCategories = useMemo(() => {
     const out: Record<string, string> = {};
     const filings = userId === null ? {} : loadFilings(userId);
@@ -1120,13 +1138,27 @@ export function PluginsPage() {
               skills={[
                 ...catalog.skills,
                 ...catalog.plugins.flatMap((p) =>
-                  p.skills.map((s) => ({
-                    ...s,
-                    origin: "library" as const,
-                    pluginName: p.name,
-                    inferred: false,
-                    agents: p.agents,
-                  })),
+                  p.skills.map((s) => {
+                    // **Which Agents have a bundled Skill comes from the skill catalog, not from
+                    // the plugin.** A `PluginItem` has no `agents` field at all — the plugin library
+                    // is a catalogue of what exists, with no notion of where it is installed — so
+                    // `p.agents` was `undefined`, and quick-invoke's gate
+                    // (`skill.agents.includes(currentAgent)`) was therefore never true for any
+                    // plugin-bundled Skill. The button was permanently disabled on exactly the
+                    // skills it was written for.
+                    //
+                    // The catalog *is* the per-Project union of every Agent's installed skills and
+                    // carries that list, so the same name in it is the answer. Indexed once rather
+                    // than searched per card: the list is O(skills × cards) otherwise.
+                    const installed = catalogByName.get(s.name);
+                    return {
+                      ...s,
+                      origin: "library" as const,
+                      pluginName: p.name,
+                      inferred: false,
+                      agents: installed?.agents ?? [],
+                    };
+                  }),
                 ),
               ]}
               agentNames={agentNameMap}
