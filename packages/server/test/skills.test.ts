@@ -29,6 +29,7 @@ import type {
   ProjectCreateResponse,
   SkillCatalogResponse,
 } from "../src/api/types.js";
+import { MAX_FILE_BYTES, MAX_TOTAL_BYTES } from "../src/services/skill-import-limits.js";
 import { apiClient, createTestApp, provisionUser } from "./helpers.js";
 import type { TestApp } from "./helpers.js";
 
@@ -874,13 +875,20 @@ describe("skills api", () => {
     // Per-file > 5MB uncompressed (zeros compress tiny, so the wire stays small).
     const big: Record<string, Uint8Array> = {
       "zip-skill/SKILL.md": strToU8(ZIP_SKILL_MD),
-      "zip-skill/big.bin": new Uint8Array(5 * 1024 * 1024 + 1),
+      "zip-skill/big.bin": new Uint8Array(MAX_FILE_BYTES + 1),
     };
     expect((await owner.post(url, { dataBase64: zipB64(big) })).status).toBe(400);
-    // Total > 20MB uncompressed across files that each stay under the per-file cap.
+    // Total > MAX_TOTAL_BYTES uncompressed across files that each stay under the per-file cap.
+    //
+    // Sized from the constant, not from a literal. A hand-written "5 × 4200KB to clear 20MB" is a
+    // second copy of the limit: when the total moved to 64MB the payload quietly fell back under
+    // it, the route accepted the archive, and this assertion failed as `expected 201 to be 400` —
+    // with nothing in the message pointing at the number that had moved.
     const total: Record<string, Uint8Array> = { "zip-skill/SKILL.md": strToU8(ZIP_SKILL_MD) };
-    for (let i = 0; i < 5; i++) {
-      total[`zip-skill/part${i}.bin`] = new Uint8Array(4200 * 1024);
+    const partSize = Math.floor(MAX_FILE_BYTES * 0.9);
+    const parts = Math.ceil(MAX_TOTAL_BYTES / partSize) + 1;
+    for (let i = 0; i < parts; i++) {
+      total[`zip-skill/part${i}.bin`] = new Uint8Array(partSize);
     }
     expect((await owner.post(url, { dataBase64: zipB64(total) })).status).toBe(400);
   });

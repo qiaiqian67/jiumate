@@ -55,7 +55,7 @@ import {
   skillsInAgentDir,
   type SkillEntry,
 } from "../../services/machine-skills.js";
-import { MAX_TOTAL_BYTES } from "../../services/skill-import-limits.js";
+import { MAX_TOTAL_BYTES, archiveTooLarge } from "../../services/skill-import-limits.js";
 
 /**
  * 上传 zip 的大小上限。
@@ -160,7 +160,10 @@ export function machineSkillRoutes(deps: AppDeps): Hono<AppEnv> {
     }
     const bytes = await download(new URL(resolved.archiveUrl));
     if (bytes.byteLength > MAX_ARCHIVE_BYTES) {
-      throw badRequest("The downloaded archive exceeds the size limit.");
+      // The number, not just "too large": the user cannot act on the second without knowing the
+      // first. The upload path beside this one has always said it — this one did not, which is why
+      // a 21MB archive reported the same opaque sentence on one route and a figure on the other.
+      throw badRequest(archiveTooLarge(MAX_ARCHIVE_BYTES));
     }
     const entries = extractZipSkills(bytes);
     if (entries.length === 0) {
@@ -194,12 +197,12 @@ export function machineSkillRoutes(deps: AppDeps): Hono<AppEnv> {
     // (a client can lie about it) and once on what actually arrived.
     const declared = Number(c.req.header("content-length") ?? "");
     if (Number.isFinite(declared) && declared > MAX_ARCHIVE_BYTES) {
-      throw new HttpError(413, "skill_archive_too_large", "压缩包太大。");
+      throw new HttpError(413, "skill_archive_too_large", archiveTooLarge(MAX_ARCHIVE_BYTES));
     }
     const raw = new Uint8Array(await c.req.arrayBuffer());
     if (raw.byteLength === 0) throw badRequest("压缩包是空的。");
     if (raw.byteLength > MAX_ARCHIVE_BYTES) {
-      throw badRequest(`压缩包超过 ${Math.round(MAX_ARCHIVE_BYTES / 1024 / 1024)}MB 上限。`);
+      throw badRequest(archiveTooLarge(MAX_ARCHIVE_BYTES));
     }
     const entries = extractZipSkills(Buffer.from(raw));
     if (entries.length === 0) {
