@@ -68,6 +68,16 @@ describe("the card's actions menu", () => {
     expect(menu).toMatch(/items\.some\(\(i\) => i\.updated\)[\s\S]*<UpdateDot/);
   });
 
+  it("shows the switch's label without the subject, but names it for a screen reader", () => {
+    // Every card on the page carries this switch, and the panel is opened from the card whose
+    // name is already on screen — so repeating the name beside the knob says nothing. It is NOT
+    // dropped from the accessible name either: fifteen identical 「启用」 switches are unusable.
+    expect(menu).toContain("aria-label={`${toggle.label} ${toggle.subject}`}");
+    expect(menu).toMatch(/<Switch[\s\S]*aria-label/);
+    // The visible text is the bare label, not the composed name.
+    expect(menu).toMatch(/<span className="min-w-0 truncate[\s\S]*>\s*\{toggle\.label\}/);
+  });
+
   it("keeps unavailable commands listed and muted rather than removing them", () => {
     // "Why can't I upgrade this" is a question the absence would leave unanswered.
     expect(menu).toContain("disabled:opacity-50");

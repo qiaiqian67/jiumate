@@ -592,7 +592,10 @@ export function SkillsTab({
                     switch={{
                       // The same reasoning as the plugin card's: a knob whose position is its
                       // state, in the panel's foot rather than among the commands.
-                      label: `${switchOn ? S.plugins.disable : S.plugins.enable} ${skill.name}`,
+                      // 「启用」/「禁用」 with no subject in the visible words — the card it is
+                      // already open from is the one carrying the name.
+                      label: switchOn ? S.plugins.disable : S.plugins.enable,
+                      subject: skill.name,
                       hint: switchOn ? S.plugins.disableHint : S.plugins.enableHint,
                       checked: switchOn,
                       disabled: !toggleable,

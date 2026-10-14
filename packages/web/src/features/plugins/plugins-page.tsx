@@ -2043,7 +2043,10 @@ function PluginCard({
               //
               // Sized `sm` — the component's `base` is tuned for a labelled form row, and a
               // full-size switch beside the menu rows would stand taller than every one of them.
-              label: `${machineEnabled ? S.plugins.disable : S.plugins.enable} ${plugin.name}`,
+              // 「启用」/「禁用」 with no subject in the visible words — the card it is already
+              // open from is the one carrying the name. The subject rides the accessible name.
+              label: machineEnabled ? S.plugins.disable : S.plugins.enable,
+              subject: plugin.name,
               hint: machineEnabled ? S.plugins.disableHint : S.plugins.enableHint,
               checked: machineEnabled,
               disabled: togglingEnabled,

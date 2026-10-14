@@ -58,7 +58,17 @@ export interface CardMenuSwitch {
   checked: boolean;
   onChange: () => void;
   disabled?: boolean;
+  /** The visible words beside the knob — 「启用」/「禁用」, with no subject in them. */
   label: string;
+  /**
+   * The subject, for the accessible name only.
+   *
+   * The panel is per-card and every one of them carries this switch, so a screen reader reading
+   * only 「启用」 announces the same control fifteen times over with nothing to tell them apart.
+   * Naming the subject costs nothing visible — it is already the card's own title, and the panel
+   * is opened from that card.
+   */
+  subject: string;
   hint?: string;
 }
 
@@ -163,8 +173,13 @@ export function CardActionsMenu({
                 checked={toggle.checked}
                 onChange={toggle.onChange}
                 disabled={toggle.disabled}
-                aria-label={toggle.label}
-                title={toggle.hint}
+                // The subject is in the accessible name but not in the visible words: every card
+                // on the page carries this switch, and 「启用」 alone tells a screen reader nothing
+                // about which plugin it acts on.
+                aria-label={`${toggle.label} ${toggle.subject}`}
+                title={
+                  toggle.hint ? `${toggle.label} ${toggle.subject} — ${toggle.hint}` : toggle.label
+                }
               />
             </div>
           </>

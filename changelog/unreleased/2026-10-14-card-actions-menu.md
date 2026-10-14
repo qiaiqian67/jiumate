@@ -52,6 +52,17 @@ so after the move it found one handler and reported five controls with none —
 the exact failure it exists to catch, arrived at from a refactor that changed
 no behaviour. It now counts both syntaxes.
 
+## The switch's label drops the subject
+
+The knob in the panel's foot reads 「启用」 or 「禁用」, with no plugin or
+skill name beside it. The panel is opened from the card whose name is already
+on screen, so repeating it says nothing the user cannot see.
+
+**Not dropped from the accessible name, though.** Every card carries this
+switch, so a screen reader reading only 「启用」 announces the same control
+fifteen times with nothing to tell them apart — `aria-label` composes
+`{label} {subject}`, and the title tooltip does too.
+
 ## Not verified
 
 Keyboard focus does not enter the panel on open (`activeElement` stays on the
