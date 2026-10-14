@@ -45,7 +45,6 @@ import { getUpdaterStatus, handleUpdaterCommand, initUpdater, onUpdaterStatus } 
 import { parseUpdaterCommand, updaterStatusMessage } from "./updater-status.js";
 import { wireExportPdf } from "./export-pdf.js";
 import { createPetWindow, isPetWindowOpen, type PetWindowHandle } from "./pet-window.js";
-import { createSetupWindow, type SetupWindowHandle } from "./setup-window.js";
 import { registerThemePicker } from "./theme-picker.js";
 import { destroyPetTray, syncPetTray, wirePetTrayIpc, type PetTrayDeps } from "./pet-tray.js";
 import {
@@ -70,8 +69,6 @@ if (process.platform === "win32") app.setAppUserModelId(identity.appUserModelId)
 
 let win: BrowserWindow | null = null;
 let petHandle: PetWindowHandle | null = null;
-/** The first-run wizard. Null until a boot creates it; kept across a server restart. */
-let setupHandle: SetupWindowHandle | null = null;
 let server: EmbeddedServer | null = null;
 /** App origin (embedded or attached); null until boot resolves. */
 let appOrigin: string | null = null;
@@ -268,56 +265,8 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
   }
   registerThemePicker();
   const url = desktopLoginUrl(started.origin, started.token);
-  showFirstRunSurface(started.origin, started.token, url, dataRoot);
-}
-
-/**
- * The window to open on a boot: the setup wizard when no completion marker exists yet, and the
- * main window otherwise.
- *
- * Split out because both boot paths reach it — a cold start and a re-launch after the embedded
- * server died — and the decision (does this machine need onboarding?) is the same either way.
- * Deciding it in one place is what keeps the two from drifting, which is the failure this shape
- * exists to prevent.
- *
- * The wizard is a separate window rather than a route the main window opens, so the main window
- * never loads until there is a marker: an unfinished wizard leaves nothing half-started behind
- * it, and the marker is the only thing that decides.
- */
-function showFirstRunSurface(
-  origin: string,
-  token: string,
-  loginUrl: string,
-  dataRoot: string,
-): void {
-  if (setupHandle === null) {
-    setupHandle = createSetupWindow({
-      appOrigin: origin,
-      preloadDir: __dirname,
-      dataRoot,
-      // The wizard redeems the token, not the main window: the token is one-shot, and `/setup`
-      // sits behind the same auth guard as every other route (see SetupWindowOptions).
-      loginToken: token,
-      onDone: () => {
-        // The wizard closed itself; the app starts.
-        if (win === null) createWindow(loginUrl);
-        else void win.loadURL(loginUrl);
-      },
-      onSkip: () => {
-        // Abandoned rather than completed: the app still starts, and the wizard asks again next
-        // launch because no marker was written.
-        if (win === null) createWindow(loginUrl);
-        else void win.loadURL(loginUrl);
-      },
-    });
-    setupHandle.wireIpc();
-  }
-  if (setupHandle.isSetupComplete()) {
-    if (win === null) createWindow(loginUrl);
-    else void win.loadURL(loginUrl);
-    return;
-  }
-  setupHandle.open();
+  if (win === null) createWindow(url);
+  else void win.loadURL(url);
 }
 
 /** Unexpected server death: restart with backoff; give up with an error dialog at the cap. */
