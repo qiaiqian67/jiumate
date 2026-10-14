@@ -10,7 +10,7 @@ Installing a Skill from a URL failed with
 
 > The downloaded archive exceeds the size limit.
 
-The total cap was 20MB. It is now 64MB.
+The total cap was 20MB. It is now 200MB.
 
 ## The message never said which limit
 
@@ -33,9 +33,10 @@ total" into its own string. It reads the constants now.
 ## A test that encoded the limit as a literal
 
 `skills.test.ts` proved the total cap by posting `5 × 4200KB` and expecting
-a rejection. At 64MB that payload is comfortably under the cap, so the route
-accepted it and the assertion failed as `expected 201 to be 400` — with
-nothing in the failure pointing at the number that had moved.
+a rejection. At 64MB that payload is comfortably under the cap — and at 200MB it is
+further under still, so the route accepted it and the assertion failed as
+`expected 201 to be 400`, with nothing in the failure pointing at the number
+that had moved.
 
 It is now sized from `MAX_TOTAL_BYTES`: a part size under `MAX_FILE_BYTES`,
 and enough parts to exceed the total. A hand-written payload that clears a

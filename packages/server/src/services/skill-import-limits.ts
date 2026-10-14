@@ -8,7 +8,7 @@ import { HttpError } from "../http/errors.js";
 
 export const MAX_ARCHIVE_FILES = 200;
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
-export const MAX_TOTAL_BYTES = 64 * 1024 * 1024;
+export const MAX_TOTAL_BYTES = 200 * 1024 * 1024;
 
 /**
  * MB as a whole number, for the messages. Derived rather than written out: a limit raised in one
