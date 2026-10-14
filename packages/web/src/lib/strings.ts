@@ -483,6 +483,102 @@ export const zh = {
       "忘记管理员密码时，停止服务后执行 jiumate server reset-admin-password 重置为新的初始密码",
   },
 
+  /**
+   * 首次运行的安装向导。分四步：语言 / 准备 / 模型 / 外观。
+   *
+   * 这不是 web 页面上的一个入口——它由桌面壳在检测不到完成标记时单独开一个窗口承载
+   * （见 packages/desktop/src/setup-window.ts），所以这里的文案是「装完之后把应用变成
+   * 可用状态」的过程，不是浏览应用的过程。
+   */
+  setup: {
+    productName: "JiuMate",
+    stepLanguage: "语言",
+    stepPrepare: "准备",
+    stepModel: "模型",
+    stepAppearance: "外观",
+
+    // --- ① 语言 ---
+    languageTitle: "选择语言",
+    languageSubtitle: "用于安装过程与应用首次启动。",
+    langZh: "简体中文",
+    langEn: "English",
+    langSystem: "跟随系统",
+    langSystemDetail: "按操作系统的语言设置",
+
+    // --- ② 准备 ---
+    prepareTitle: "准备 JiuMate",
+    prepareSubtitle: "确认数据存放位置，并检查随包携带的组件。",
+    dataDirLabel: "数据目录",
+    dataDirBrowse: "浏览",
+    dataDirHint: "Agent、会话与配置都存放在这里。移动后需要重新指向原位置才能看到旧数据。",
+    dataDirDefault: "默认位置",
+    requiredSpace: "所需空间",
+    // Placeholder on purpose: the packaged size is not known until `pnpm pack` produces an
+    // installer, and a number written before that would be a guess dressed as a measurement.
+    requiredSpacePending: "待测量",
+    availableSpace: "可用空间",
+    componentsTitle: "随包组件",
+    componentGit: "Git",
+    componentGitDetail: "Agent 执行命令时使用的 shell",
+    componentPandoc: "Pandoc",
+    componentPandocDetail: "文档转换",
+    componentPty: "终端",
+    componentPtyDetail: "应用内终端的原生模块",
+    componentOk: "就绪",
+    componentMissing: "缺失",
+    componentChecking: "检查中",
+    optionsTitle: "安装选项",
+    optionCli: "将 jiumate 命令加入 PATH",
+    optionCliDetail: "可以在任意目录用命令行启动本应用",
+    optionLaunch: "安装后启动 JiuMate",
+    preparing: "正在准备…",
+    preparingCli: "正在配置 jiumate 命令",
+    preparingComponents: "正在检查随包组件",
+    prepareDone: "准备完成",
+    cliResultInstalled: "已加入 PATH",
+    cliResultCurrent: "已是最新",
+    cliResultForeign: "路径上已有其他 jiumate，已跳过",
+    cliResultDeferred: "已推迟",
+    cliResultFailed: "失败",
+    cliResultNone: "尚未配置",
+    cliDeclined: "已拒绝管理员授权，不再自动尝试",
+    cliNoBundle: "此版本不附带命令行（开发运行）",
+
+    // --- ③ 模型 ---
+    modelTitle: "连接模型",
+    modelSubtitle: "选择服务商并填写 API 密钥，也可以进入应用后配置。",
+    modelProvider: "选择模型提供商",
+    modelApiKey: "API 密钥",
+    modelEndpoint: "服务端点",
+    modelEndpointDefault: "默认",
+    modelName: "选择模型",
+    modelAdvanced: "高级设置",
+    modelAdvancedNote: "常用预设模型",
+    modelTest: "测试连接",
+    modelTesting: "正在测试…",
+    modelTestOk: "连接成功",
+    modelTestFailed: "连接失败",
+    modelLater: "稍后配置",
+
+    // --- ④ 外观 ---
+    appearanceTitle: "选择外观",
+    appearanceSubtitle: "点击主题即可预览，之后也可以随时更换。",
+    appearanceSystem: "跟随系统",
+    appearanceLight: "亮色",
+    appearanceDark: "暗色",
+    appearanceLaunch: "安装后启动 JiuMate",
+    finish: "完成",
+    finishNow: "现在启动",
+
+    // --- 通用 ---
+    continueLabel: "继续",
+    back: "上一步",
+    stepOf: (current: number, total: number): string => `第 ${current} 步，共 ${total} 步`,
+    windowMinimize: "最小化",
+    windowClose: "关闭",
+    required: "必填",
+  },
+
   account: {
     changePassword: "修改密码",
     oldPassword: "当前密码",

@@ -93,3 +93,46 @@ contextBridge.exposeInMainWorld("theme", themeApi);
 
 /** The shape exposed to the renderer. The web side augments `Window` with this. */
 export type ThemeBridge = typeof themeApi;
+
+/**
+ * The first-run setup wizard, exposed as `window.setup`.
+ *
+ * Its own bridge for the same reason `theme` has one: these are unrelated surfaces, and a name
+ * that said `pet` or `theme` next to "which folder holds my data" would be the same confusion.
+ *
+ * **Window controls are here because the wizard's window is frameless** (setup-window.ts): the
+ * page draws its own title bar, so it has to ask the shell to minimize or close. The whole
+ * bridge is absent in a plain browser, which is what lets the same page render a working layout
+ * with no dead buttons when someone types /setup by hand.
+ */
+const setupApi = {
+  /** Minimize the wizard window. */
+  minimize: (): Promise<void> => ipcRenderer.invoke("setup:minimize"),
+  /**
+   * Close the wizard window, which the shell reads as a skip: it writes no completion marker,
+   * so the wizard asks again next launch. Distinct from `done` on purpose — "I did not finish"
+   * and "I am done" are different answers and get different outcomes.
+   */
+  close: (): Promise<void> => ipcRenderer.invoke("setup:close"),
+  /** Native folder picker for the data directory. Null when the user cancels. */
+  pickDataDir: (): Promise<string | null> => ipcRenderer.invoke("setup:pickDataDir"),
+  /** Put the bundled `jiumate` CLI on PATH. The shell owns the whole decision, including
+   *  refusing to overwrite a command it did not write. */
+  installCli: (): Promise<void> => ipcRenderer.invoke("setup:installCli"),
+  /** The CLI install's current state: one of installed / current / foreign / deferred / failed,
+   *  plus the reason. Read on mount so the page reports what is already true rather than
+   *  re-running the install to find out. */
+  cliState: (): Promise<{
+    kind: string | null;
+    lastResult: "installed" | "current" | "foreign" | "deferred" | "failed" | null;
+    detail: string | null;
+    declined: boolean;
+  }> => ipcRenderer.invoke("setup:cliState"),
+  /** Finish: the shell writes the completion marker, destroys this window and opens the app. */
+  done: (lang: string): Promise<void> => ipcRenderer.invoke("setup:done", { lang }),
+};
+
+contextBridge.exposeInMainWorld("setup", setupApi);
+
+/** The shape exposed to the renderer. The web side augments `Window` with this. */
+export type SetupBridge = typeof setupApi;

@@ -493,6 +493,103 @@ export const en: Strings = {
     changeNow: "Change now",
   },
 
+  /**
+   * The first-run setup wizard: language / prepare / model / appearance.
+   *
+   * Not an entry point inside the web app — the desktop shell opens a separate window for it when
+   * it finds no completion marker (see packages/desktop/src/setup-window.ts). So the copy here
+   * describes turning an installed app into a working one, not browsing one.
+   */
+  setup: {
+    productName: "JiuMate",
+    stepLanguage: "Language",
+    stepPrepare: "Setup",
+    stepModel: "Model",
+    stepAppearance: "Appearance",
+
+    // --- ① Language ---
+    languageTitle: "Choose your language",
+    languageSubtitle: "Used during setup and on first launch.",
+    langZh: "简体中文",
+    langEn: "English",
+    langSystem: "Follow the system",
+    langSystemDetail: "Match the operating system's language",
+
+    // --- ② Prepare ---
+    prepareTitle: "Set up JiuMate",
+    prepareSubtitle: "Confirm where your data lives, and check the bundled components.",
+    dataDirLabel: "Data folder",
+    dataDirBrowse: "Browse",
+    dataDirHint:
+      "Agents, sessions and settings live here. Point an existing install at this folder to keep its data.",
+    dataDirDefault: "Default location",
+    requiredSpace: "Required space",
+    // Deliberately a placeholder: the packaged size is unknown until `pnpm pack` produces an
+    // installer, and a number written before that is a guess dressed as a measurement.
+    requiredSpacePending: "To be measured",
+    availableSpace: "Available space",
+    componentsTitle: "Bundled components",
+    componentGit: "Git",
+    componentGitDetail: "The shell Agents run commands in",
+    componentPandoc: "Pandoc",
+    componentPandocDetail: "Document conversion",
+    componentPty: "Terminal",
+    componentPtyDetail: "The native module behind the in-app terminal",
+    componentOk: "Ready",
+    componentMissing: "Missing",
+    componentChecking: "Checking",
+    optionsTitle: "Options",
+    optionCli: "Add the jiumate command to PATH",
+    optionCliDetail: "Start this app from any directory",
+    optionLaunch: "Launch JiuMate when finished",
+    preparing: "Preparing…",
+    preparingCli: "Setting up the jiumate command",
+    preparingComponents: "Checking bundled components",
+    prepareDone: "Ready",
+    cliResultInstalled: "Added to PATH",
+    cliResultCurrent: "Already up to date",
+    cliResultForeign: "Another jiumate is already on PATH — left alone",
+    cliResultDeferred: "Deferred",
+    cliResultFailed: "Failed",
+    cliResultNone: "Not set up yet",
+    cliDeclined: "Administrator access declined — no longer retried automatically",
+    cliNoBundle: "This build ships no command line (development run)",
+
+    // --- ③ Model ---
+    modelTitle: "Connect a model",
+    modelSubtitle: "Pick a provider and enter your API key — you can also do this later.",
+    modelProvider: "Provider",
+    modelApiKey: "API key",
+    modelEndpoint: "Endpoint",
+    modelEndpointDefault: "Default",
+    modelName: "Model",
+    modelAdvanced: "Advanced",
+    modelAdvancedNote: "Showing the usual presets",
+    modelTest: "Test connection",
+    modelTesting: "Testing…",
+    modelTestOk: "Connected",
+    modelTestFailed: "Connection failed",
+    modelLater: "Set up later",
+
+    // --- ④ Appearance ---
+    appearanceTitle: "Choose an appearance",
+    appearanceSubtitle: "Click a theme to preview it. You can change it whenever you like.",
+    appearanceSystem: "Follow the system",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceLaunch: "Launch JiuMate when finished",
+    finish: "Finish",
+    finishNow: "Launch now",
+
+    // --- Shared ---
+    continueLabel: "Continue",
+    back: "Back",
+    stepOf: (current: number, total: number): string => `Step ${current} of ${total}`,
+    windowMinimize: "Minimize",
+    windowClose: "Close",
+    required: "Required",
+  },
+
   admin: {
     users: "Users",
     roleAdmin: "Admin",

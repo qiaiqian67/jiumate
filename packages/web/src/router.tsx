@@ -19,6 +19,7 @@ import { BenchmarkPage } from "./features/benchmark/benchmark-page";
 import { TerminalPage } from "./features/terminal/terminal-page";
 import { InspirationPage } from "./features/inspiration/inspiration-page";
 import { PetWindowPage } from "./features/pet/pet-window-page";
+import { SetupPage } from "./pages/setup";
 
 /** Route guard: shows blank while initializing, redirects to /login when not authenticated. */
 function RequireAuth() {
@@ -74,6 +75,19 @@ export function AppRouter() {
           element={
             <RequireAuthBare>
               <PetWindowPage />
+            </RequireAuthBare>
+          }
+        />
+        {/* The first-run setup wizard, hosted in the desktop shell's own frameless window
+            (see packages/desktop/src/setup-window.ts). Standalone like /pet — no sidebar, no
+            Project context — but it DOES need a session: it redeems the shell's one-shot
+            sign-in token itself, so loading it bare here is correct. The shell decides whether
+            to open it at all; the route only has to exist for it to have somewhere to land. */}
+        <Route
+          path="/setup"
+          element={
+            <RequireAuthBare>
+              <SetupPage />
             </RequireAuthBare>
           }
         />

@@ -36,5 +36,28 @@ declare global {
       /** Listen for the tray's pet toggle; returns an unsubscribe function. */
       onToggleRequested(listener: () => void): () => void;
     };
+    /**
+     * The first-run setup wizard's bridge. Absent in a plain browser, which is what lets the
+     * page render a working layout with no dead buttons when someone types /setup by hand.
+     */
+    setup?: {
+      /** Minimize the wizard window (it is frameless, so the page owns the title bar). */
+      minimize(): Promise<void>;
+      /** Close, which the shell reads as a skip: no marker, so the wizard asks again. */
+      close(): Promise<void>;
+      /** Native folder picker for the data directory; null when the user cancels. */
+      pickDataDir(): Promise<string | null>;
+      /** Put the bundled `jiumate` CLI on PATH. */
+      installCli(): Promise<void>;
+      /** The CLI install's current state, read on mount rather than by re-running the install. */
+      cliState(): Promise<{
+        kind: string | null;
+        lastResult: "installed" | "current" | "foreign" | "deferred" | "failed" | null;
+        detail: string | null;
+        declined: boolean;
+      }>;
+      /** Finish: the shell writes the marker, destroys this window and opens the app. */
+      done(lang: string): Promise<void>;
+    };
   }
 }
