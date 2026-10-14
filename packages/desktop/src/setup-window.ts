@@ -27,12 +27,9 @@ import {
   type BrowserWindowConstructorOptions,
 } from "electron";
 import * as path from "node:path";
-import fs from "node:fs";
 import { installCliCommand, currentCliInstallKind } from "./cli-install.js";
 import { readCliCommandState } from "./cli-link.js";
 import { isSetupComplete as markerIsComplete, writeSetupMarker } from "./setup-marker.js";
-import { DEV_PANDOC_DIR, PANDOC_RESOURCE_DIR, pandocBinaryName } from "./pandoc-path.js";
-import { NODE_PTY_RELDIR } from "./pty-payload.js";
 
 /** Channels the renderer's `window.setup` invokes. Namespaced like `pet:` and `theme:`. */
 export const SETUP_MINIMIZE_CHANNEL = "setup:minimize";
@@ -40,7 +37,6 @@ export const SETUP_CLOSE_CHANNEL = "setup:close";
 export const SETUP_PICK_DIR_CHANNEL = "setup:pickDataDir";
 export const SETUP_INSTALL_CLI_CHANNEL = "setup:installCli";
 export const SETUP_CLI_STATE_CHANNEL = "setup:cliState";
-export const SETUP_COMPONENTS_CHANNEL = "setup:components";
 export const SETUP_DONE_CHANNEL = "setup:done";
 
 /** The wizard's own size, and the floor it may be dragged down to. */
@@ -99,59 +95,6 @@ function cliStatePayload(): CliStatePayload {
     detail: state.detail ?? null,
     declined: state.decision === "declined",
   };
-}
-
-/** One bundled component's real availability. */
-export interface ComponentProbe {
-  id: "git" | "pandoc" | "pty";
-  ok: boolean;
-  /** Absolute path when found, for the tooltip; null when not. */
-  path: string | null;
-}
-
-/**
- * Where each bundled component lives, in the order electron-builder.yml's `extraResources` and
- * scripts/build-assets.mjs stage it. A packaged app puts git and pandoc under
- * `<resourcesPath>/…`, a dev run stages them under `<appPath>/dist/bin/…`, and node-pty is not an
- * extraResource at all — it is a collected dependency under `dist/node_modules`.
- *
- * The check is "is the file where the build said it would be", which is the only question the
- * wizard can answer honestly: it is not running `git --version`, because a binary that exists and
- * a binary that works are different claims and this page should make only the first one.
- */
-function probeComponents(): ComponentProbe[] {
-  const resourcesPath = app.isPackaged ? process.resourcesPath : null;
-  const appPath = app.getAppPath();
-  const find = (...candidates: string[]): string | null => {
-    for (const c of candidates) {
-      if (c !== "" && fs.existsSync(c)) return c;
-    }
-    return null;
-  };
-
-  const gitExe = process.platform === "win32" ? "git.exe" : "git";
-
-  const pandocBin = pandocBinaryName(process.platform);
-  const pandoc = find(
-    ...(resourcesPath !== null ? [path.join(resourcesPath, PANDOC_RESOURCE_DIR, pandocBin)] : []),
-    path.join(appPath, DEV_PANDOC_DIR, pandocBin),
-  );
-
-  const git = find(
-    ...(resourcesPath !== null ? [path.join(resourcesPath, "git", "bin", gitExe)] : []),
-    path.join(appPath, "dist", "bin", "git", "bin", gitExe),
-  );
-
-  // node-pty is not an extraResource: it is a collected dependency, staged into
-  // dist/node_modules/node-pty (see pty-payload.ts's NODE_PTY_RELDIR), so it lives under the
-  // app path in both forms rather than under resourcesPath.
-  const pty = find(path.join(appPath, ...NODE_PTY_RELDIR));
-
-  return [
-    { id: "git", ok: git !== null, path: git },
-    { id: "pandoc", ok: pandoc !== null, path: pandoc },
-    { id: "pty", ok: pty !== null, path: pty },
-  ];
 }
 
 function buildOptions(o: SetupWindowOptions): BrowserWindowConstructorOptions {
@@ -239,9 +182,6 @@ export function createSetupWindow(options: SetupWindowOptions): SetupWindowHandl
     });
     ipcMain.handle(SETUP_INSTALL_CLI_CHANNEL, async () => installCliCommand(win));
     ipcMain.handle(SETUP_CLI_STATE_CHANNEL, () => cliStatePayload());
-    // Read on mount, same as the CLI state: the page reports what is already on disk rather than
-    // re-running a check to discover it.
-    ipcMain.handle(SETUP_COMPONENTS_CHANNEL, () => probeComponents());
     ipcMain.handle(SETUP_DONE_CHANNEL, (_e, payload: unknown) => {
       const lang =
         typeof payload === "object" &&

@@ -56,11 +56,6 @@ declare global {
         detail: string | null;
         declined: boolean;
       }>;
-      /**
-       * Whether each bundled component is on disk where the build said it would be. "The file
-       * is there", not "the command works" — the wizard cannot make the second claim.
-       */
-      components(): Promise<{ id: "git" | "pandoc" | "pty"; ok: boolean; path: string | null }[]>;
       /** Finish: the shell writes the marker, destroys this window and opens the app. */
       done(lang: string): Promise<void>;
     };

@@ -128,14 +128,6 @@ const setupApi = {
     detail: string | null;
     declined: boolean;
   }> => ipcRenderer.invoke("setup:cliState"),
-  /**
-   * Whether each bundled component is on disk where the build said it would be.
-   *
-   * "The file is there", not "the command works" — the wizard cannot make the second claim, and
-   * a page that reported the first as the second would be lying on exactly the day it matters.
-   */
-  components: (): Promise<{ id: "git" | "pandoc" | "pty"; ok: boolean; path: string | null }[]> =>
-    ipcRenderer.invoke("setup:components"),
   /** Finish: the shell writes the completion marker, destroys this window and opens the app. */
   done: (lang: string): Promise<void> => ipcRenderer.invoke("setup:done", { lang }),
 };

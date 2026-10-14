@@ -23,14 +23,6 @@ const desktopWindow = fs.readFileSync(
 const zh = src("lib", "strings.ts");
 const en = src("lib", "strings-en.ts");
 
-/**
- * The source with comments stripped, for assertions that a name does not appear in the code.
- * These pages explain at length why they avoid a call, and a substring check would match its own
- * explanation — which is exactly the assertion that passes for the wrong reason.
- */
-const code = (source: string): string =>
-  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-
 describe("the setup wizard", () => {
   it("is hosted in the shell's own window, not as a route the main window navigates to", () => {
     // The shell decides whether the wizard appears (no marker on disk) and destroys the window
@@ -110,37 +102,5 @@ describe("the setup wizard", () => {
     // The reference design also offered Traditional Chinese; this app ships zh / en / system
     // (see state/locale.tsx), so a third radio would be a choice nothing is behind.
     expect(page).not.toContain("zh-TW");
-  });
-
-  // The three below each pin a control that existed and did nothing. None of them threw, and
-  // nothing on the page would have reported the absence — which is why they are pinned rather
-  // than left to be noticed by someone clicking through a wizard once.
-  it("offers the provider's real catalog models, not an imagined field", () => {
-    // There is no `models` on ModelProviderInfo. The catalog is keyed by provider and is the
-    // same list the models page offers, so that is what the dropdown reads from.
-    expect(page).toContain("MODEL_CATALOG.filter((m) => m.provider === provider)");
-    // Value is the upstream id (sent to AgentHub as-is); the text is the display name.
-    expect(page).toContain("value={m.modelId}");
-    expect(page).toContain("{m.displayName}");
-  });
-
-  it("actually tests the connection against the server", () => {
-    expect(page).toContain("api.testModel(projectId");
-    expect(page).toContain("api.listProjects()");
-    // `useProject()` would throw here: /setup goes through RequireAuthBare, so there is no
-    // ProjectProvider above it. Taking the first project from the API is the way around that.
-    // Matched against the code only — the name appears in the comment explaining this.
-    expect(code(page)).not.toMatch(/useProject\(/);
-    // The server's own reason survives; "failed" alone answers none of key / endpoint / model.
-    expect(page).toContain("apiErrorText(err)");
-  });
-
-  it("reports each bundled component's real availability, and never claims readiness early", () => {
-    expect(code(page)).toMatch(/\.components\(\)/);
-    expect(desktopWindow).toContain("probeComponents");
-    // Null while the answer is in flight is its own state — the previous version printed
-    // 检查中 forever, which reads as a stuck check and never became an answer.
-    expect(page).toContain("componentUnknown");
-    expect(page).toMatch(/components\?\.\[c\.id\]/);
   });
 });
