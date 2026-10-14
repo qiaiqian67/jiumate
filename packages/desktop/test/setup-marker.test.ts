@@ -71,7 +71,7 @@ describe("setup marker", () => {
   // Every case below is the same failure in different clothing: a marker this build cannot
   // vouch for reads as "not set up", because the cost of that error is a wizard the user has
   // already seen and the cost of the opposite error is never being offered setup at all.
-  const unreadable: readonly [string, () => void][] = [
+  const unreadable: readonly [string, (dir: string) => void][] = [
     ["empty file", (d: string) => fs.writeFileSync(setupMarkerPath(d), "", "utf8")],
     ["malformed JSON", (d: string) => fs.writeFileSync(setupMarkerPath(d), "{oops", "utf8")],
     ["a JSON array", (d: string) => fs.writeFileSync(setupMarkerPath(d), "[]", "utf8")],

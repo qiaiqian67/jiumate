@@ -538,6 +538,8 @@ export const en: Strings = {
     componentOk: "Ready",
     componentMissing: "Missing",
     componentChecking: "Checking",
+    /** The shell has not answered — distinct from "missing", which is an answer. */
+    componentUnknown: "Unknown",
     optionsTitle: "Options",
     optionCli: "Add the jiumate command to PATH",
     optionCliDetail: "Start this app from any directory",

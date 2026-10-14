@@ -527,6 +527,8 @@ export const zh = {
     componentOk: "就绪",
     componentMissing: "缺失",
     componentChecking: "检查中",
+    /** The shell has not answered — distinct from "missing", which is an answer. */
+    componentUnknown: "未知",
     optionsTitle: "安装选项",
     optionCli: "将 jiumate 命令加入 PATH",
     optionCliDetail: "可以在任意目录用命令行启动本应用",

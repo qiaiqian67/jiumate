@@ -20,7 +20,13 @@
  * not drawn. That is why the title bar's window controls are conditional rather than disabled.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MODEL_PROVIDERS } from "@prismshadow/jiumate-core/model-catalog";
+import {
+  MODEL_CATALOG,
+  MODEL_PROVIDERS,
+  providerInfo as providerInfoFor,
+} from "@prismshadow/jiumate-core/model-catalog";
+import * as api from "../api/endpoints";
+import { apiErrorText } from "../lib/api-error";
 import { S } from "../lib/strings";
 import { useDocumentTitle } from "../lib/use-document-title";
 import { useLocale } from "../state/locale";
@@ -71,13 +77,15 @@ interface CliState {
 }
 
 /**
- * The bundled components step 2 reports on.
+ * The bundled components step 2 reports on, and their copy.
  *
- * **None of these are checked over the wire.** The wizard window has a preload bridge and could
- * stat the packaged binaries — but that would mean the page growing a shell-specific question
- * ("is `resources/git` there?") that only means something inside an Electron bundle. What it
- * shows instead is the component and what it is for, which is true everywhere and is the part
- * the user is actually reading for.
+ * **These are really checked** — `window.setup.components()` asks the shell whether each file is
+ * on disk where the build said it would be. The check is deliberately "the file is there", not
+ * "the command works": a wizard can honestly make the first claim about a packaged install, and
+ * reporting the second would be lying precisely on the day a user needs it to be true.
+ *
+ * The rows are still listed with what each component is *for*, because that is the part of the
+ * list a user is actually reading when something is missing.
  */
 const COMPONENTS = [
   { id: "git", labelKey: "componentGit", detailKey: "componentGitDetail" },
@@ -96,11 +104,30 @@ export function SetupPage() {
   const [optionCli, setOptionCli] = useState(true);
   const [optionLaunch, setOptionLaunch] = useState(true);
   const [cli, setCli] = useState<CliState | null>(null);
+  /**
+   * Each bundled component's real availability, or null while the answer has not arrived.
+   *
+   * Null is a third state, not "fine": the page must not print 就绪 before anyone has looked,
+   * which is the claim the previous version of this step made forever.
+   */
+  const [components, setComponents] = useState<Record<
+    string,
+    { ok: boolean; path: string | null }
+  > | null>(null);
   const [busy, setBusy] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [provider, setProvider] = useState<string>(MODEL_PROVIDERS[0]?.id ?? "deepseek");
   const [modelId, setModelId] = useState("");
-  const [testResult, setTestResult] = useState<"ok" | "fail" | null>(null);
+  /**
+   * The test's own answer, kept whole rather than reduced to a boolean: the server reports a
+   * reason and a latency, and a wizard that showed only "failed" would throw both away on
+   * exactly the occasions the user most needs them.
+   */
+  const [testResult, setTestResult] = useState<{
+    ok: boolean;
+    latencyMs?: number;
+    detail?: string;
+  } | null>(null);
 
   const bridge = window.setup;
   const stepIndex = STEPS.indexOf(step);
@@ -114,6 +141,14 @@ export function SetupPage() {
       .cliState()
       .then(setCli)
       .catch(() => setCli(null));
+    // Same read-on-mount contract for the bundled components: the wizard reports what the
+    // installer already put on disk, and never re-checks to find out.
+    void bridge
+      .components()
+      .then((list) =>
+        setComponents(Object.fromEntries(list.map((c) => [c.id, { ok: c.ok, path: c.path }]))),
+      )
+      .catch(() => setComponents(null));
   }, [bridge]);
 
   const finish = useCallback(async () => {
@@ -136,6 +171,43 @@ export function SetupPage() {
     if (picked !== null) setDataDir(picked);
   }, [bridge]);
 
+  /**
+   * Test the draft key against the selected model.
+   *
+   * The project id comes from `listProjects` rather than `useProject()`, and that is not a
+   * shortcut: `/setup` is routed through `RequireAuthBare`, so there is no `ProjectProvider`
+   * above it and `useProject()` would throw on render. A fresh install is also why the first
+   * project is the right one — the server provisions exactly one for the built-in admin
+   * (`provisionInitialProject`), and this wizard runs before any project was ever chosen.
+   */
+  const testConnection = useCallback(async () => {
+    setBusy(true);
+    setTestResult(null);
+    try {
+      const { projects } = await api.listProjects();
+      const projectId = projects[0]?.projectId;
+      if (projectId === undefined) {
+        setTestResult({ ok: false, detail: S.setup.modelTestFailed });
+        return;
+      }
+      const res = await api.testModel(projectId, {
+        provider,
+        modelId,
+        apiKey,
+      });
+      setTestResult({
+        ok: res.ok,
+        ...(res.latencyMs !== undefined ? { latencyMs: res.latencyMs } : {}),
+      });
+    } catch (err) {
+      // The server rejects a bad key, but the request itself can fail too (no project yet, the
+      // server restarting). Either way the user pressed a button and something has to answer.
+      setTestResult({ ok: false, detail: apiErrorText(err) });
+    } finally {
+      setBusy(false);
+    }
+  }, [provider, modelId, apiKey]);
+
   const installCli = useCallback(async () => {
     if (bridge === undefined) return;
     setBusy(true);
@@ -147,18 +219,19 @@ export function SetupPage() {
     }
   }, [bridge]);
 
-  const providerInfo = useMemo(
-    () => MODEL_PROVIDERS.find((p) => p.id === provider) ?? MODEL_PROVIDERS[0],
+  const providerInfo = useMemo(() => providerInfoFor(provider), [provider]);
+
+  /**
+   * The provider's real catalog models.
+   *
+   * From `MODEL_CATALOG` — the same list the models page offers and `presetModelEntries` writes
+   * into a Project. There is no `models` field on a provider, so a provider cannot be asked for
+   * its own list; the catalog is keyed by provider and that is the join.
+   */
+  const providerModels = useMemo(
+    () => MODEL_CATALOG.filter((m) => m.provider === provider),
     [provider],
   );
-
-  /** The provider's own models, or none — a custom provider has no catalog to offer. */
-  const providerModels = useMemo(() => {
-    if (providerInfo === undefined) return [];
-    return MODEL_PROVIDERS.length > 0 && "models" in providerInfo
-      ? ((providerInfo as { models?: readonly { id: string; label?: string }[] }).models ?? [])
-      : [];
-  }, [providerInfo]);
 
   const canFinish = !busy;
 
@@ -336,17 +409,37 @@ export function SetupPage() {
             <div className="mt-8">
               <h3 className="text-sm font-medium">{S.setup.componentsTitle}</h3>
               <ul className="mt-2 space-y-1.5">
-                {COMPONENTS.map((c) => (
-                  <li key={c.id} className="flex items-baseline gap-3 text-sm">
-                    <span className="w-24 shrink-0">{S.setup[c.labelKey]}</span>
-                    <span className="min-w-0 flex-1 text-gray-500 dark:text-gray-400">
-                      {S.setup[c.detailKey]}
-                    </span>
-                    <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
-                      {S.setup.componentChecking}
-                    </span>
-                  </li>
-                ))}
+                {COMPONENTS.map((c) => {
+                  // Null until the shell answers. Showing 就绪 before anyone looked is the claim
+                  // that made this row useless, so the unknown case says so.
+                  const probe = components?.[c.id];
+                  return (
+                    <li key={c.id} className="flex items-baseline gap-3 text-sm">
+                      <span className="w-24 shrink-0">{S.setup[c.labelKey]}</span>
+                      <span className="min-w-0 flex-1 text-gray-500 dark:text-gray-400">
+                        {S.setup[c.detailKey]}
+                      </span>
+                      {probe === undefined ? (
+                        <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
+                          {components === null
+                            ? S.setup.componentUnknown
+                            : S.setup.componentChecking}
+                        </span>
+                      ) : (
+                        <span
+                          title={probe.path ?? undefined}
+                          className={
+                            probe.ok
+                              ? "shrink-0 text-xs text-emerald-600 dark:text-emerald-400"
+                              : "shrink-0 text-xs text-red-600 dark:text-red-400"
+                          }
+                        >
+                          {probe.ok ? S.setup.componentOk : S.setup.componentMissing}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -432,14 +525,19 @@ export function SetupPage() {
                 <span className="w-32 shrink-0 text-sm font-medium">{S.setup.modelName}</span>
                 <div className="min-w-0 flex-1">
                   {providerModels.length > 0 ? (
+                    /* A provider with catalog entries gets a dropdown of them. The value is the
+                       upstream `modelId` — the one AgentHub is sent as-is — and the text is the
+                       display name, which is what the user recognizes the model by. */
                     <Select value={modelId} onChange={(e) => setModelId(e.target.value)}>
                       {providerModels.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.label ?? m.id}
+                        <option key={m.modelId} value={m.modelId}>
+                          {m.displayName}
                         </option>
                       ))}
                     </Select>
                   ) : (
+                    /* Free text, because a provider with no catalog entries cannot enumerate
+                       anything — typing the upstream id is the only honest option left. */
                     <Input
                       value={modelId}
                       onChange={(e) => setModelId(e.target.value)}
@@ -450,23 +548,38 @@ export function SetupPage() {
               </div>
             </div>
 
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-              {S.setup.modelAdvancedNote}
-            </p>
+            {/* Only true when a dropdown is actually listing presets. With free text above it
+                would be claiming a filter that does not exist. */}
+            {providerModels.length > 0 && (
+              <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                {S.setup.modelAdvancedNote}
+              </p>
+            )}
 
             <div className="mt-6 flex items-center gap-3">
-              <Button onClick={() => setTestResult(null)} disabled={!apiKey}>
-                {S.setup.modelTest}
+              {/* Disabled until there is something to test. `busy` doubles as the CLI install's
+                  in-flight flag, so the two controls cannot claim the same moment — a test
+                  firing while a CLI install is already asking for an admin prompt would leave
+                  two native dialogs stacked. */}
+              <Button onClick={() => void testConnection()} disabled={!apiKey || !modelId || busy}>
+                {busy ? S.setup.modelTesting : S.setup.modelTest}
               </Button>
               {testResult !== null && (
                 <span
                   className={
-                    testResult === "ok"
+                    testResult.ok
                       ? "text-sm text-emerald-600 dark:text-emerald-400"
                       : "text-sm text-red-600 dark:text-red-400"
                   }
                 >
-                  {testResult === "ok" ? S.setup.modelTestOk : S.setup.modelTestFailed}
+                  {/* The server's own reason, not a generic failure: a test can fail on the key,
+                      the endpoint, the model id or the quota, and "failed" answers none of
+                      those. `latencyMs` rides along when it answered. */}
+                  {testResult.ok
+                    ? testResult.latencyMs !== undefined
+                      ? `${S.setup.modelTestOk} · ${testResult.latencyMs} ms`
+                      : S.setup.modelTestOk
+                    : (testResult.detail ?? S.setup.modelTestFailed)}
                 </span>
               )}
             </div>
