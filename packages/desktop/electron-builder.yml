@@ -145,6 +145,15 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  # The installer UI: build/installer.nsh. Two things happen there, both read from the file
+  # itself rather than from this config — `customInstallMode` drops the "install for all users /
+  # for me" page by forcing per-user, and `customWelcomePage` + `customPageAfterChangeDir` add
+  # the first-run pages (language, prepare, model, appearance) that write %APPDATA%\JiuMate\setup.ini.
+  #
+  # `perMachine` is deliberately left false. Setting it true would also remove that page, but it
+  # installs machine-wide and demands elevation; this app is per-user throughout (app-identity.ts,
+  # cli-install.ts install into HKCU and the user profile).
+  include: build/installer.nsh
 
 linux:
   # Pre-rendered freedesktop icon set (scripts/render-icon.mjs): a directory of NxN.png
