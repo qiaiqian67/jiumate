@@ -75,6 +75,7 @@ import { apiErrorText } from "../../lib/api-error";
 import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/empty-state";
 import { LibraryCard } from "./library-card";
+import { CardActionsMenu } from "./card-actions-menu";
 
 const BOOK_ICON = "M4 5a2 2 0 0 1 2-2h11v18H6a2 2 0 0 1-2-2V5zM7 3v14";
 
@@ -529,81 +530,75 @@ export function SkillsTab({
                 {...(meta === "" ? {} : { meta })}
                 actionOverlay
                 action={
-                  /* The same five controls the plugin card has, in the same glyph style and the
-                     same order — 升级 / 快捷调用 / 管理安装 / 启用禁用 / 删除 — so the two tabs
-                     read as one page. A Skill is not a lesser plugin here: it is added from a URL
-                     or an archive rather than chosen from a library, but once installed it is
-                     the same unit of work and it answers the same five actions.
+                  /* The same five controls the plugin card has, in the same glyph style and
+                     the same order — 升级 / 快捷调用 / 管理安装 / 启用禁用 / 删除 — so the two
+                     tabs read as one page. A Skill is not a lesser plugin here: it is added
+                     from a URL or an archive rather than chosen from a library, but once
+                     installed it is the same unit of work and it answers the same five
+                     actions. **Where they live changed; what they do did not.**
 
-                     **No dropdowns.** The badge and the category select that used to sit here are
-                     gone, and neither of them was an action: a badge states a fact, and filing a
-                     Skill into a category is what the category chips and 管理分类 above are for.
-                     Two text-bearing controls in a row of glyphs is what made this row read as a
-                     different system from the plugin card's.
+                     **No text-bearing controls.** The badge and the category select that used
+                     to sit here are gone, and neither of them was an action: a badge states a
+                     fact, and filing a Skill into a category is what the category chips and
+                     管理分类 above are for.
 
                      The origin moves to the meta line, where the version already is — it is
-                     information about the Skill, not a control. The category moves there too, as
-                     a trailing word, so the filing is still visible without costing the row a
-                     control. */
-                  <div className="flex shrink-0 items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-7 w-7 shrink-0 justify-center p-0"
-                      aria-label={`${S.plugins.upgradeSkill} ${skill.name}`}
-                      title={
-                        machineSkill?.source === undefined
-                          ? S.plugins.upgradeSkillNeedsSource
-                          : S.plugins.upgradeSkill
-                      }
-                      disabled={machineSkill === undefined || upgrading === skill.name}
-                      onClick={() => machineSkill && void upgradeSkill(machineSkill)}
-                    >
-                      <GlyphIcon d={UPDATE_ICON} size={ICON_SIZE.iconButton} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-7 w-7 shrink-0 justify-center p-0"
-                      aria-label={`${S.skills.quickInvoke} ${skill.name}`}
-                      title={S.skills.quickInvoke}
-                      disabled={!quickInvokeSkill}
-                      onClick={() => quickInvokeSkill && onQuickInvoke(quickInvokeSkill.name)}
-                    >
-                      <GlyphIcon d={SEND_ICON} size={ICON_SIZE.iconButton} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-7 w-7 shrink-0 justify-center p-0"
-                      aria-label={`${S.skills.manageInstall} ${skill.name}`}
-                      title={S.skills.manageInstall}
-                      onClick={() => onManageInstall(skill.name)}
-                    >
-                      <GlyphIcon d={INSTALL_ICON} size={ICON_SIZE.iconButton} />
-                    </Button>
-                    <span className="inline-flex shrink-0 items-center">
-                      <Switch
-                        size="sm"
-                        checked={switchOn}
-                        onChange={() => void switchOff(skill)}
-                        disabled={!toggleable}
-                        aria-label={`${switchOn ? S.plugins.disable : S.plugins.enable} ${skill.name}`}
-                        title={switchOn ? S.plugins.disableHint : S.plugins.enableHint}
-                      />
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-7 w-7 shrink-0 justify-center p-0"
-                      aria-label={`${S.plugins.deleteFromMachine} ${skill.name}`}
-                      title={S.plugins.deleteFromMachine}
-                      disabled={!removable}
-                      onClick={() => void onDeleteSkill(skill.name)}
-                    >
-                      <GlyphIcon d={TRASH_ICON} size={ICON_SIZE.iconButton} />
-                    </Button>
-                  </div>
+                     information about the Skill, not a control. The category moves there too,
+                     as a trailing word, so the filing is still visible without costing the row
+                     a control. */
+                  <CardActionsMenu
+                    menuLabel={S.plugins.cardActions(skill.name)}
+                    triggerLabel={skill.name}
+                    items={[
+                      {
+                        key: "upgrade",
+                        label: S.plugins.upgradeSkill,
+                        icon: UPDATE_ICON,
+                        disabled: machineSkill === undefined || upgrading === skill.name,
+                        disabledReason:
+                          machineSkill?.source === undefined
+                            ? S.plugins.upgradeSkillNeedsSource
+                            : S.plugins.upgradeSkill,
+                        onClick: () => machineSkill && void upgradeSkill(machineSkill),
+                      },
+                      {
+                        key: "invoke",
+                        label: S.skills.quickInvoke,
+                        icon: SEND_ICON,
+                        disabled: !quickInvokeSkill,
+                        onClick: () => quickInvokeSkill && onQuickInvoke(quickInvokeSkill.name),
+                      },
+                      {
+                        // The per-Agent list: what is installed where is a fact about the Skill,
+                        // and where it is installed is what this opens.
+                        key: "install",
+                        label: S.skills.manageInstall,
+                        icon: INSTALL_ICON,
+                        onClick: () => onManageInstall(skill.name),
+                      },
+                      {
+                        // 卸载. The row stays listed even when it cannot run — a bundled Skill
+                        // is removed with its plugin and a built-in not at all, and "why can't I
+                        // remove this" deserves an answer rather than a missing row. The card
+                        // also carries the reason in its description tooltip.
+                        key: "delete",
+                        label: S.plugins.deleteFromMachine,
+                        icon: TRASH_ICON,
+                        danger: true,
+                        disabled: !removable,
+                        onClick: () => void onDeleteSkill(skill.name),
+                      },
+                    ]}
+                    switch={{
+                      // The same reasoning as the plugin card's: a knob whose position is its
+                      // state, in the panel's foot rather than among the commands.
+                      label: `${switchOn ? S.plugins.disable : S.plugins.enable} ${skill.name}`,
+                      hint: switchOn ? S.plugins.disableHint : S.plugins.enableHint,
+                      checked: switchOn,
+                      disabled: !toggleable,
+                      onChange: () => void switchOff(skill),
+                    }}
+                  />
                 }
                 /* A bundled skill cannot be uninstalled on its own — the plugin takes it — and a
                    built-in cannot be uninstalled at all. Rather than show a control that would do

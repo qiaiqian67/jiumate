@@ -27,9 +27,16 @@ describe("skill card controls are wired to something real", () => {
   it("gives every control an onClick or onChange", () => {
     // Five controls, five handlers. The count is the point: a sixth button added later without a
     // handler would break this, which is the moment to notice.
-    const handlers = skillsTab.match(/on(?:Click|Change)=\{\(\) => /g) ?? [];
+    //
+    // **Both syntaxes, because the card's actions are now menu items rather than JSX attributes.**
+    // The handlers did not stop being real when they moved from `onClick={() => …}` on a `<Button>`
+    // into `onClick: () => …` on a `CardMenuItem`. Counting only the attribute form would have
+    // reported this as five controls with no handlers — the same failure this test exists to catch,
+    // arrived at from a refactor that changed no behaviour.
+    const attribute = skillsTab.match(/on(?:Click|Change)=\{\(\) => /g) ?? [];
+    const property = skillsTab.match(/on(?:Click|Change): \(\) => /g) ?? [];
     // 升级 / 快捷调用 / 管理安装 / 开关 / 删除, plus the category filter and the tab-level controls.
-    expect(handlers.length).toBeGreaterThanOrEqual(5);
+    expect(attribute.length + property.length).toBeGreaterThanOrEqual(5);
   });
 
   it("routes each control to a handler rather than to nothing", () => {

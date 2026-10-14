@@ -1577,6 +1577,8 @@ export const en: Strings = {
     deleteFromMachine: "Uninstall",
     deleteFromMachineHint:
       "Delete from this machine. Agents it was installed in will lose the plugin.",
+    /** The card's "more" menu, named after its subject — a menu needs a name of its own, not just an ellipsis glyph. */
+    cardActions: (name: string): string => `Actions for ${name}`,
     /** Upgrade: return to where the plugin was installed from and fetch a newer version. */
     upgradeAction: "Upgrade",
     upgradeHint:

@@ -1551,6 +1551,8 @@ export const zh = {
     /** 机器级：彻底从本机磁盘删除。 */
     deleteFromMachine: "卸载",
     deleteFromMachineHint: "从本机磁盘彻底删除。装过它的 Agent 会失去这个插件。",
+    /** 卡片上「更多」菜单的无障碍名称，参数是主体名——菜单本身要有名字，不能只靠省略号图标。 */
+    cardActions: (name: string): string => `${name} 的操作`,
     /** Upgrade: goes back to where the plugin was installed from and fetches a newer version. */
     upgradeAction: "升级",
     upgradeHint: "回到当初的安装来源检查新版本，有则重新下载并覆盖",

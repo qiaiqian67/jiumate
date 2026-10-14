@@ -77,6 +77,7 @@ import {
 } from "../../components/ui/icons";
 import { TRASH_ICON } from "../../components/ui/session-row-menu";
 import { LibraryCard } from "./library-card";
+import { CardActionsMenu } from "./card-actions-menu";
 import { Modal } from "../../components/ui/modal";
 import { TodoNotice } from "../../components/ui/todo-notice";
 import { UpdateDot } from "../../components/ui/update-dot";
@@ -1929,143 +1930,126 @@ function PluginCard({
         onOpen={() => setDetailOpen(true)}
         actionOverlay
         action={
-          // Shown on hover (or focus, so the keyboard reaches them): a group this wide on a card
-          // this narrow would otherwise cost the name a third of its width, so they lay over
-          // its tail instead — see `actionOverlay`.
+          // The five commands, folded into one ellipsis menu.
           //
-          // 28px squares rather than the 32px the app's other icon buttons use. These five sit on
-          // a 3-up grid where the card is a third of the page, so the button group is competing
-          // with the name for the same row; at 32px the group is ~136px and the name truncates
-          // inside fifteen characters. The glyph keeps `iconButton` — at 15px in a 28px button it
-          // still reads as a glyph rather than a speck, and inventing a rung below it for one
-          // card would put two sizes in the scale that no other caller shares.
-          <div className="flex shrink-0 items-center gap-1">
-            {/*
-              升级. **Goes back to the source the plugin was installed from and re-fetches** — the
-              behaviour the button is specified to have, and the reason `.provenance.json` exists.
-              Always present so the affordance is findable; a plugin with no recorded source (one
-              added from a folder) says so in its tooltip rather than being hidden, because "why
-              can't I upgrade this" is a question the absence would leave unanswered.
-
-              Carries the update dot itself when something IS waiting — straddling the top-right
-              corner of the button's border, the anchoring rule update-dot.tsx states for a button.
-            */}
-            <Button
-              size="sm"
-              variant="secondary"
-              className="relative h-7 w-7 shrink-0 justify-center p-0"
-              aria-label={`${S.plugins.upgradeAction} ${plugin.name}`}
-              title={
-                outdated.length > 0
-                  ? S.plugins.updateOutdated(outdated.length)
-                  : S.plugins.upgradeHint
-              }
-              disabled={outdated.length === 0}
-              onClick={() => setPendingUpdate(outdated)}
-            >
-              <GlyphIcon d={UPDATE_ICON} size={ICON_SIZE.iconButton} />
-              {outdated.length > 0 && (
-                <UpdateDot
-                  size="inline"
-                  position="right-0.5 top-0.5 -translate-y-1/2 translate-x-1/2"
-                />
-              )}
-            </Button>
-            {plugin.skills.length > 0 && (
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-7 w-7 shrink-0 justify-center p-0"
-                aria-label={`${S.skills.quickInvoke} ${plugin.name}`}
-                title={quickStartSkill ? S.skills.quickInvoke : S.plugins.quickInvokeNeedsInstall}
-                disabled={quickStartSkill === undefined}
-                onClick={() => {
-                  if (quickStartSkill) onQuickInvoke(quickStartSkill.name);
-                }}
-              >
-                <GlyphIcon d={SEND_ICON} size={ICON_SIZE.iconButton} />
-              </Button>
-            )}
-            {/* Managing the other Agents: the per-Agent list, unchanged. */}
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-7 w-7 shrink-0 justify-center p-0"
-              aria-label={`${S.skills.manageInstall} ${plugin.name}`}
-              title={S.skills.manageInstall}
-              onClick={() => setInstallOpen(true)}
-            >
-              <GlyphIcon d={INSTALL_ICON} size={ICON_SIZE.iconButton} />
-            </Button>
-            {/* Switch the plugin on or off **everywhere it is installed**.
-              Switching off keeps the files, so it is reversible without a reinstall, and it also
-              blocks installing it onto any further Agent — which is the whole of the requirement,
-              and one control rather than a knob per scope.
-
-              **One switch, not two.** There was briefly a second, machine-level switch beside this
-              one. That answered a question nobody was asking: a plugin's availability on this
-              computer and the Agents' use of it are almost always the same decision, and two knobs
-              in one row that look identical and usually agree is the worst of both — the user
-              cannot tell which one they are about to flip, and when they do disagree it is
-              invisible. An earlier attempt also made a plugin installed on some *other* Agent show
-              no switch at all, which read as "this cannot be turned off"; the fix for that was
-              showing the switch on every card and letting it act everywhere, not adding a second.
-
-              **Shown unconditionally**, so every plugin in the library has one — including one no
-              Agent has, which is exactly the state where the decision is being made. The listing
-              carries `enabled` for every entry, so there is never a moment where the card cannot
-              answer.
-
-              A `Switch` rather than one more icon button, and that is the point of it. In a row of
-              glyphs the power mark was the only one whose state lived in the glyph rather than in
-              its shape: a filled vs. outline power icon is a difference nobody reads at a glance,
-              while a knob at one end or the other says its own state without being hovered.
-
-              Sized `sm` — the component's `base` is tuned for a labelled form row, and a
-              full-size switch beside 28px glyph buttons would stand taller than every one of
-              them. */}
-            <span className="inline-flex shrink-0 items-center">
-              <Switch
-                size="sm"
-                checked={machineEnabled}
-                onChange={() => void toggleEnabled()}
-                disabled={togglingEnabled}
-                aria-label={`${machineEnabled ? S.plugins.disable : S.plugins.enable} ${plugin.name}`}
-                title={machineEnabled ? S.plugins.disableHint : S.plugins.enableHint}
-              />
-            </span>
-            {/* 卸载 — delete this plugin from this machine, irreversibly.
-
-                **Only on the machine level, never per-Agent.** Distinct from 管理安装's per-Agent
-                uninstall, which removes one Agent's copy and leaves the files; this one takes the
-                plugin off the disk, so it wears the danger variant and confirms first, naming the
-                Agents that lose access — that list is the difference between a warning the user can
-                reason about and one they have to accept on trust.
-
-                **Only on a plugin the user added.** A built-in plugin ships with the app, so its
-                files are not a library copy the user owns and deleting it would be removing the
-                product rather than a plugin from it. The server refuses it too; hiding it here
-                keeps a button that could only ever fail off the card.
-
-                **No 安装 counterpart on the card, by design.** This is a local client: every plugin
-                the page lists is already on this machine, so a 「下载到本地」 button on a card would
-                be offering to fetch something the user is already looking at. Getting a plugin onto
-                the machine is one act — 添加插件 in the top right — and that is the only place it
-                belongs. */}
-            {isOnThisMachine && (
-              <Button
-                size="sm"
-                variant="danger"
-                className="h-7 w-7 shrink-0 justify-center p-0"
-                aria-label={`${S.plugins.deleteFromMachine} ${plugin.name}`}
-                title={S.plugins.deleteFromMachineHint}
-                disabled={deleting}
-                onClick={confirmMachineDelete}
-              >
-                <GlyphIcon d={TRASH_ICON} size={ICON_SIZE.iconButton} />
-              </Button>
-            )}
-          </div>
+          // **Where they live changed; what they do did not.** Five icon buttons laid over the
+          // name were a control strip rather than an affordance: at a third of the page width the
+          // group cost the name a third of its own width, and five glyphs side by side carry no
+          // hierarchy — they read as five unrelated commands rather than one row of things you
+          // can do to this plugin.
+          <CardActionsMenu
+            menuLabel={S.plugins.cardActions(plugin.name)}
+            triggerLabel={plugin.name}
+            items={[
+              {
+                // 升级. **Goes back to the source the plugin was installed from and re-fetches** —
+                // the behaviour the button is specified to have, and the reason
+                // `.provenance.json` exists.
+                //
+                // Always listed so the affordance is findable; a plugin with no recorded source
+                // (one added from a folder) shows the row disabled with the reason in its tooltip
+                // rather than being hidden, because "why can't I upgrade this" is a question the
+                // absence would leave unanswered.
+                key: "upgrade",
+                label: S.plugins.upgradeAction,
+                icon: UPDATE_ICON,
+                disabled: outdated.length === 0,
+                disabledReason: S.plugins.upgradeHint,
+                updated: outdated.length > 0,
+                onClick: () => setPendingUpdate(outdated),
+              },
+              ...(plugin.skills.length > 0
+                ? [
+                    {
+                      key: "invoke",
+                      label: S.skills.quickInvoke,
+                      icon: SEND_ICON,
+                      disabled: quickStartSkill === undefined,
+                      disabledReason: S.plugins.quickInvokeNeedsInstall,
+                      onClick: () => {
+                        if (quickStartSkill) onQuickInvoke(quickStartSkill.name);
+                      },
+                    },
+                  ]
+                : []),
+              {
+                // The per-Agent list, unchanged: what is installed where is a fact about the
+                // plugin, not a command.
+                key: "install",
+                label: S.skills.manageInstall,
+                icon: INSTALL_ICON,
+                onClick: () => setInstallOpen(true),
+              },
+              ...(isOnThisMachine
+                ? [
+                    {
+                      // 卸载 — delete this plugin from this machine, irreversibly.
+                      //
+                      // **Only on the machine level, never per-Agent.** Distinct from 管理安装's
+                      // per-Agent uninstall, which removes one Agent's copy and leaves the files;
+                      // this one takes the plugin off the disk, so it wears the danger variant and
+                      // confirms first, naming the Agents that lose access — that list is the
+                      // difference between a warning the user can reason about and one they have
+                      // to accept on trust.
+                      //
+                      // **Only on a plugin the user added.** A built-in plugin ships with the app,
+                      // so its files are not a library copy the user owns and deleting it would be
+                      // removing the product rather than a plugin from it. The server refuses it
+                      // too; omitting the row here keeps a command that could only ever fail off
+                      // the card.
+                      //
+                      // **No 安装 counterpart on the card, by design.** This is a local client:
+                      // every plugin the page lists is already on this machine, so a 「下载到本地」
+                      // command would be offering to fetch something the user is already looking
+                      // at. Getting a plugin onto the machine is one act — 添加插件 in the top
+                      // right — and that is the only place it belongs.
+                      key: "delete",
+                      label: S.plugins.deleteFromMachine,
+                      icon: TRASH_ICON,
+                      danger: true,
+                      disabled: deleting,
+                      onClick: confirmMachineDelete,
+                    },
+                  ]
+                : []),
+            ]}
+            switch={{
+              // Switch the plugin on or off **everywhere it is installed**.
+              // Switching off keeps the files, so it is reversible without a reinstall, and it
+              // also blocks installing it onto any further Agent — which is the whole of the
+              // requirement, and one control rather than a knob per scope.
+              //
+              // **One switch, not two.** There was briefly a second, machine-level switch beside
+              // this one. That answered a question nobody was asking: a plugin's availability on
+              // this computer and the Agents' use of it are almost always the same decision, and
+              // two knobs in one row that look identical and usually agree is the worst of both —
+              // the user cannot tell which one they are about to flip, and when they do disagree it
+              // is invisible. An earlier attempt also made a plugin installed on some *other*
+              // Agent show no switch at all, which read as "this cannot be turned off"; the fix
+              // for that was showing the switch on every card and letting it act everywhere, not
+              // adding a second.
+              //
+              // **Shown unconditionally**, so every plugin in the library has one — including one
+              // no Agent has, which is exactly the state where the decision is being made. The
+              // listing carries `enabled` for every entry, so there is never a moment where the
+              // card cannot answer.
+              //
+              // A `Switch` rather than a menu row, and that is the point of it. In a list of
+              // commands the power mark was the only one whose state lived in the glyph rather
+              // than in its shape: a filled vs. outline power icon is a difference nobody reads at
+              // a glance, while a knob at one end or the other says its own state without being
+              // hovered. It sits in the panel's foot rather than among the commands, which is the
+              // same distinction made with a separator.
+              //
+              // Sized `sm` — the component's `base` is tuned for a labelled form row, and a
+              // full-size switch beside the menu rows would stand taller than every one of them.
+              label: `${machineEnabled ? S.plugins.disable : S.plugins.enable} ${plugin.name}`,
+              hint: machineEnabled ? S.plugins.disableHint : S.plugins.enableHint,
+              checked: machineEnabled,
+              disabled: togglingEnabled,
+              onChange: () => void toggleEnabled(),
+            }}
+          />
         }
       />
       {detailOpen && (
