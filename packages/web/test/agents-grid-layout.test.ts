@@ -42,6 +42,36 @@ describe("the grid", () => {
   });
 });
 
+describe("the agent id", () => {
+  it("is not shown on the card", () => {
+    // The display name is what the user recognises. The id is a configuration handle, and
+    // printing it in a quieter weight a few characters from the name spent a line of every card
+    // on one copy of it.
+    //
+    // Scoped to the card's own markup rather than the file: `agentId` legitimately appears all
+    // over this page as a key, a prop and a URL, and only its *rendering* was removed.
+    //
+    // Asserted on `font-mono` — the id's own display class. The remaining uses in the card are
+    // `key={...}`, `id={...}` and a `navigate()` URL, none of which put the id on screen, so
+    // matching the string itself would flag exactly the code that has to stay.
+    const card = page.slice(page.indexOf("visibleAgents.map"), page.indexOf("setDeleting({"));
+    expect(card).not.toContain("font-mono");
+  });
+
+  it("still drives the search box", () => {
+    // Hiding it must not stop it matching: an Agent is referenced by its id in configs and
+    // commands, so a user who knows the id must still be able to find it.
+    expect(page).toContain("a.agentId.toLowerCase().includes(q)");
+  });
+
+  it("still drives the category chips", () => {
+    // The chips are derived from namespaced id prefixes, which is the only grouping the data
+    // offers — removing the display does not change where the grouping comes from.
+    expect(page).toMatch(/const colon = a\.agentId\.indexOf\(":"\)/);
+    expect(page).toContain("a.agentId.startsWith(`${category}:`)");
+  });
+});
+
 describe("search and chips", () => {
   it("searches name, id and description", () => {
     // id and description matter as much as the display name: an Agent is referenced by its id in
@@ -127,11 +157,11 @@ describe("the featured strip", () => {
 });
 
 describe("the card's actions appear on hover", () => {
-  it("overlays the id and description, not the counts", () => {
+  it("overlays the description, not the counts", () => {
     // An overlay anchored to the card's bottom edge sat exactly on the stats row and swallowed
     // its clicks. `pointer-events: none` on the container does not help — the row is what was
-    // under the pointer. The overlay is scoped to a `relative` box holding only the id and the
-    // description, so the counts stay visible and clickable at rest. Measured: no overlap.
+    // under the pointer. The overlay is scoped to a `relative` box holding the description, so
+    // the counts stay visible and clickable at rest. Measured: no overlap.
     // Indices, not a bounded regex: the comments between the box and the overlay run past any
     // window short enough to be worth writing, and a distance limit would fail on a reworded
     // comment rather than on a structural change.

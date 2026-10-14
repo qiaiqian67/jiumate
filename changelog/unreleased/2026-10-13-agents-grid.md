@@ -47,6 +47,20 @@ advertising Agents the page is currently hiding is worse than no panel.
 "No matching agents" is now distinct from "no agents": the first means the
 filter excludes them, the second that the Project has none.
 
+## The card no longer prints the agent id
+
+The display name is what the user recognises. The id is a configuration
+handle, and printing it in a quieter weight a few characters from the name
+spent a line of every card on a second copy of something already there.
+
+Removing the *display* does not remove the *use*: the search box still matches
+on it, and the category chips are still derived from namespaced id prefixes.
+Verified in the browser — typing `default_agent` into the search still finds
+the card, and the card renders no `font-mono` element at all.
+
+The card is 120px tall now, down from 144px with the id line and 185px before
+the actions moved out of flow.
+
 ## The featured strip
 
 One Agent at a time, rotating every six seconds, with arrows to move it

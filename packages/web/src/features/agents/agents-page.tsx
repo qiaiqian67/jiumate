@@ -677,7 +677,7 @@ export function AgentsPage() {
                       </div>
                     )}
                   </div>
-                  {/* The id, the description and the hover actions share one relative box.
+                  {/* The description and the hover actions share one relative box.
 
                       The actions are an **overlay on this region only**, not on the whole card.
                       An overlay anchored to the card's bottom edge sat exactly on top of the stats
@@ -686,17 +686,19 @@ export function AgentsPage() {
                       the counts below stay permanently visible and permanently clickable, and the
                       overlay covers only text that is a preview anyway. */}
                   <div className="relative mt-1">
-                    <span className="block truncate font-mono text-xs text-gray-400 dark:text-gray-500">
-                      {a.agentId}
-                    </span>
+                    {/* No id on the card: the display name is what the user recognises, and the
+                        id is a configuration handle — it still drives the search box above and the
+                        category chips, both of which match on it. Showing it cost a line of every
+                        card to repeat something one copy of, in a quieter weight, a few characters
+                        from the name. */}
                     {/* Description clamped to two lines. The `min-h` reserves the first line's
                         height even when empty, so a grid row of description-less Agents does not
                         collapse the cards above their neighbours. */}
-                    <p className="mt-2 line-clamp-2 min-h-8 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="line-clamp-2 min-h-8 text-xs text-gray-500 dark:text-gray-400">
                       {a.description ?? ""}
                     </p>
 
-                    {/* Actions revealed on hover, over the id and description.
+                    {/* Actions revealed on hover, over the description.
 
                           The card is a preview, and four buttons on every card turned a browsable
                           grid into a wall of controls competing with the thing being browsed.
