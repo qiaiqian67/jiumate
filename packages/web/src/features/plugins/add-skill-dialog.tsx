@@ -141,7 +141,15 @@ function useAdder(onDone: (names: readonly string[]) => void) {
         const names = result.added.map((s) => s.name);
         if (names.length === 0) {
           // 一次都没有成功，而服务端没有报错——这必须是一个看得见的失败，而不是一个静默的空操作。
-          setError(S.plugins.addSkillNoneAdded);
+          //
+          // **说出原因，而不是只说「一个都没加」。** 服务端已经把每个技能的 `reason` 算好放在
+          // `failed` 里了（部分成功的分支一直用它），这里原来直接丢掉，于是用户拿到的唯一信息是
+          // 「没有添加任何技能」——它没有告诉他任何能据以行动的东西。而这里的每一条 reason 都是
+          // 服务端给出的具体原因，直接就能看见。
+          const reasons = result.failed.map((f) => `${f.name}（${f.reason}）`).join("、");
+          setError(
+            reasons === "" ? S.plugins.addSkillNoneAdded : S.plugins.addSkillAllFailed(reasons),
+          );
           return false;
         }
         if (result.failed.length > 0) {

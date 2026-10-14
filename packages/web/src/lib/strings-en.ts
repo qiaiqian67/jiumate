@@ -1618,6 +1618,13 @@ export const en: Strings = {
     addSkillDirectoryHint:
       "Scan the skill directories of the agents on this machine, then add a whole group to the machine store. Skills already in the store are unticked by default — overwriting one has consequences, and ticking it is the moment you decide that.",
     addSkillNoneAdded: "No skills were added.",
+    /**
+     * Nothing was added, and the server gave a per-skill reason. Kept apart from
+     * `addSkillNoneAdded`: that one is the fallback for "not even a reason came back", while this
+     * one speaks the reasons the server already computed. With only the generic sentence the user
+     * has nothing they can act on.
+     */
+    addSkillAllFailed: (reasons: string): string => `No skills were added: ${reasons}`,
     addSkillDone: (n: number, names: string): string =>
       `Added ${n} skill(s) to this machine (pending): ${names}`,
     scanAgents: "Scan this machine's agents",

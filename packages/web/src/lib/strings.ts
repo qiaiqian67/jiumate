@@ -1587,6 +1587,12 @@ export const zh = {
     addSkillDirectoryHint:
       "扫描本机各个智能体的技能目录，挑中的整组添加到本机技能库。已在库里的技能默认不勾——覆盖是有后果的，勾上它就是决定覆盖的那一刻。",
     addSkillNoneAdded: "没有添加任何技能。",
+    /**
+     * 一个都没加，而服务端给出了每个技能的具体原因。与 `addSkillNoneAdded` 分开：后者是「连原因
+     * 都没有」时的兜底，而这里是把服务端已经算好的 reason 原样说出来——只有笼统的「没有添加任何
+     * 技能」时，用户拿到的信息不足以做任何事。
+     */
+    addSkillAllFailed: (reasons: string): string => `没有添加任何技能：${reasons}`,
     addSkillDone: (n: number, names: string): string =>
       `已添加 ${n} 个技能到本机（待启用）：${names}`,
     /** 扫描：找出本机别的智能体装了什么。 */
