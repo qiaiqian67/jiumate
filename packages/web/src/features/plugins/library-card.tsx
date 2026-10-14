@@ -51,10 +51,20 @@ export function LibraryCard({
    * reveal and no reason to cover anything.
    */
   actionOverlay?: boolean;
-  /** Optional bottom line of real data (version, usage, connection target). */
+  /**
+   * One line of real data at the bottom: what kind of thing this is, where it comes from, what it
+   * is attached to.
+   *
+   * **Not a version and not a timestamp.** Both were here and both moved to the detail modal,
+   * which is where a number you might need to quote belongs. On a card they were `text-[11px]`
+   * grey — a third line of small print competing with the description for the same attention,
+   * saying things the user has no reason to want while scrolling a grid of candidates.
+   */
   meta?: string;
-  /** Key state for a subject that needs credentials: yellow unset, green ready, undefined when
-   *  it needs none. Rendered at the bottom-right of the meta row. */
+  /**
+   * Key state for a subject that needs credentials: yellow unset, green ready, undefined when
+   * it needs none. Shares the meta row, at its right end.
+   */
   keyState?: "unset" | "ready";
   /** Tooltip naming the variables a keyState subject waits on. */
   keyLabel?: string;
@@ -119,6 +129,13 @@ export function LibraryCard({
         // The meta line and the key mark share one row so the key sits at the card's
         // bottom-right rather than adding a row of its own — a subject needing credentials is a
         // fact about it, not a second line of copy.
+        //
+        // **A version and an updated-ago date used to lead this line** and do not any more. Both
+        // are in the detail modal, which is where a number you might need to quote belongs; here
+        // they were `text-[11px]` grey, a third line of small print competing with the
+        // description for attention while the user scrolls a grid of candidates. What stays is
+        // what identifies the thing rather than dates it — which plugin owns this skill, how many
+        // hook points a hook has.
         <div className="mt-auto flex items-end gap-2 pt-3">
           {meta !== undefined && (
             <p className="min-w-0 flex-1 text-[11px] text-gray-400 dark:text-gray-500">{meta}</p>

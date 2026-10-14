@@ -56,7 +56,6 @@ import {
   CategoryFilterChips,
   CategoryManagerDialog,
   ExtensionSearch,
-  ORIGIN_LABEL,
   OriginFilterTabs,
   newCategory,
 } from "./extension-ui";
@@ -511,15 +510,6 @@ export function SkillsTab({
             const quickInvokeSkill = skill.agents.includes(currentAgentId ?? "")
               ? skill
               : undefined;
-            const meta = [
-              skill.version === null ? undefined : skill.version,
-              ORIGIN_LABEL[origin],
-              effectiveFilings[id] === null
-                ? undefined
-                : categories.find((c) => c.id === effectiveFilings[id])?.name,
-            ]
-              .filter((p): p is string => p !== undefined)
-              .join(" · ");
             return (
               <LibraryCard
                 key={id}
@@ -527,7 +517,6 @@ export function SkillsTab({
                 name={skill.name}
                 fallbackIcon={BOOK_ICON}
                 description={localizedText(locale, skill.description, skill.shortDescriptionZh)}
-                {...(meta === "" ? {} : { meta })}
                 actionOverlay
                 action={
                   /* The same five controls the plugin card has, in the same glyph style and

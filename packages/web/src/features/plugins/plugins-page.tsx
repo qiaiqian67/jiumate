@@ -1924,7 +1924,6 @@ function PluginCard({
         fallbackIcon={PLUGIN_ICON}
         description={description}
         descriptionTitle={fullDescription}
-        meta={meta}
         keyState={keyState}
         keyLabel={envNames.length === 0 ? undefined : S.plugins.needsEnv(envNames)}
         onOpen={() => setDetailOpen(true)}
