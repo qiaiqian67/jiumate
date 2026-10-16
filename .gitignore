@@ -6,6 +6,10 @@ node_modules/
 # build output
 dist/
 *.tsbuildinfo
+
+# `pnpm pack` in a package drops the tarball in that package's root, next to package.json
+# rather than under dist/. Nothing consumes it and it is 200MB+.
+*.tgz
 # web assets copied into the server package at npm publish time
 packages/server/web-dist/
 
