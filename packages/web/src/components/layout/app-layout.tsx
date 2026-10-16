@@ -7,7 +7,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useMatch, useNavigate } from "react-router";
 import * as api from "../../api/endpoints";
-import { NAV_ROUTES } from "../../lib/nav-group-collapse";
+import { NAV_ROUTES } from "../../lib/nav-manifest";
 import { S } from "../../lib/strings";
 import { latestConversation } from "../../lib/session-grouping";
 import { navNoteFor, useUpdateBadges } from "../../lib/use-update-badges";
@@ -252,10 +252,14 @@ export function AppLayout() {
 
   return (
     <PetProvider>
-      <div className="flex h-full">
-        {/* Desktop: single-column sidebar (collapsible to a narrow rail) */}
+      {/* 一整块灰底：左侧导航与内容面板共用外层这一种灰色，导航继承它而不另填色，
+          分界由内容面板自身的边缘提供。 */}
+      <div className="flex h-full bg-gray-100 dark:bg-gray-900">
+        {/* Desktop: single-column sidebar (collapsible to a narrow rail). No right border and
+            no fill of its own: the rail and the frame around the content pane share ONE
+            gray (the outer wrapper above), so the pane's own edge is what separates them. */}
         <aside
-          className={`hidden shrink-0 border-r border-gray-200 bg-gray-50 md:block dark:border-gray-800 dark:bg-gray-900 ${
+          className={`hidden shrink-0 md:block ${
             collapsed ? "w-12" : "w-64 lg:w-72"
           }`}
         >
@@ -266,7 +270,14 @@ export function AppLayout() {
           )}
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        {/* Content column. Inset on all four sides at md+ (the rail sits flush to the left edge,
+            sharing the frame's gray with its own background), so the main area reads as a
+            white panel floating ON the gray frame. All four corners are rounded, not just the
+            top-left: with the panel inset on every side, a square corner anywhere would sit
+            against gray with nothing to explain it, and the one rounded corner read as an
+            oversight rather than as a decision. The inset is md+ only: a phone has no room for
+            a gutter, and its top bar already paints the same seam. */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white md:mt-2 md:mr-2 md:mb-2 md:rounded-lg dark:bg-gray-950">
           {/* Mobile: top thin bar (hamburger + brand) */}
           <header className="flex h-12 shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-2 md:hidden dark:border-gray-800 dark:bg-gray-950">
             {/* The outermost menu on a phone: it carries a dot for EITHER trail, so its wording
@@ -350,15 +361,16 @@ export function AppLayout() {
           onClose={() => setChangePasswordOpen(false)}
         />
 
-        {/* Mobile: sidebar drawer */}
-        <Drawer
-          open={drawerOpen}
-          side="left"
-          title={S.appName}
-          onClose={() => setDrawerOpen(false)}
-        >
+        {/* Mobile: sidebar drawer. No `title` — the column carries its own top row (app name + close
+            button), and a header here as well put the name twice on one screen. The column is given
+            `onClose` so its own row offers the way out; Escape and the scrim still close it
+            regardless (see Drawer). */}
+        <Drawer open={drawerOpen} side="left" onClose={() => setDrawerOpen(false)}>
           <div className="h-full bg-gray-50 dark:bg-gray-900">
-            <Sidebar onNavigate={() => setDrawerOpen(false)} />
+            <Sidebar
+              onNavigate={() => setDrawerOpen(false)}
+              onClose={() => setDrawerOpen(false)}
+            />
           </div>
         </Drawer>
       </div>
