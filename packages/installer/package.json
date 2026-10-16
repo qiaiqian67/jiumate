@@ -1,0 +1,15 @@
+{
+  "name": "@prismshadow/jiumate-installer",
+  "version": "0.3.0",
+  "private": true,
+  "description": "The JiuMate installer. A small Electron app whose UI *is* the installer, wrapping a payload archive of the desktop build.",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "pack": "node build.mjs && electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^43.2.0",
+    "electron-builder": "^26.0.12"
+  }
+}

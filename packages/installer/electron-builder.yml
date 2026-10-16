@@ -1,0 +1,66 @@
+# Build config for the installer app itself.
+#
+# The installer ships as a portable single exe, and portable only. It is run once, installs
+# something else, and registers its own uninstaller against the folder it wrote (see
+# writeUninstallRecord in src/main.cjs). An NSIS target is deliberately not configured: wrapping this
+# app in NSIS would put the stock Win32 dialogs back in front of the window this package exists to
+# draw, which is the exact thing this work removed.
+#
+# No publish target: this artifact is not distributed on its own. The desktop package's installers
+# remain what users download; this one is built separately and tested by hand.
+appId: com.prismshadow.jiumate.installer
+productName: JiuMate Installer
+directories:
+  output: out
+
+# asar is off on purpose. The two files the install cannot work without -- payload.7z and 7za.exe --
+# have to exist as real files on disk: 7za.exe is a program that gets spawned, and reading it out of
+# an archive would not make it runnable. With asar on, both ended up inside app.asar, resources/ held
+# only app.asar and elevate.exe, and every packaged install failed with `no-unpacker` -- while the same
+# code worked under `electron .`, which is exactly the gap only running the real artifact finds. They
+# go to extraResources instead, which is the on-disk location process.resourcesPath points at in both
+# modes.
+files:
+  - dist/main.cjs
+  - dist/preload.cjs
+  - dist/renderer/**/*
+  - package.json
+asar: false
+
+extraResources:
+  # Everything build.mjs stages in dist/, copied wholesale.
+  #
+  # Listing these one by one is what left catalog.json and then themes.json behind: both were
+  # generated into dist/ and used by the packaged app, and both failed on the real artifact while
+  # working under electron ., because a file that exists in dist/ is not automatically part of the
+  # package. Copying dist whole covers what the build stages now and anything added later.
+  - from: dist
+    to: .
+
+win:
+  target:
+    # Kept as a single portable exe — that is what the user double-clicks.
+    #
+    # Portable re-compresses its whole archive into a temp .7z and unpacks it again on EVERY launch:
+    # a double round-trip of ~240 MB before any window appears, measured at 17.6-20.8 s. Trimming the
+    # locales (47 -> 2, 47 MB of .pak) moved it not at all, which confirms the cost is the payload
+    # (152 MB) plus the Electron runtime being round-tripped, neither of which is reachable from this
+    # app's code.
+    #
+    # Nothing in this package can show a window before extraction finishes, because there is no
+    # process yet. An earlier version of this comment claimed the launcher's own progress page was
+    # configured below to cover those 20 seconds; it was not — the `nsis` block it referred to was
+    # rejected by electron-builder's schema and the build failed. The block has been removed rather
+    # than "fixed" untested, and this comment says so instead of promising something untrue.
+    #
+    # For the same reason a `compression`/`differentialPackage` tuning note used to sit here: both
+    # were measured and neither moved the number. `store` made the artefact 514 MB instead of 242 MB
+    # and was reverted.
+    - target: portable
+  artifactName: jiumate-installer-${version}-portable.${ext}
+  icon: ../desktop/build/icon.png
+
+# Only the two locales the installer can actually render. The default ships all 47 (~47 MB of .pak).
+electronLanguages:
+  - zh-CN
+  - en-US

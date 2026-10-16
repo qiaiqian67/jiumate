@@ -1,0 +1,800 @@
+﻿<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      script-src needs 'self' explicitly: the file: origin is not covered by it, and renderer.js is
+      loaded from disk. With only 'unsafe-inline' here the page rendered its CSS and preload's API
+      was present, but the script never ran — every list stayed empty, which reads like a data bug
+      rather than a policy one.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; img-src 'self' data:;"
+    />
+    <title>JiuMate 安装</title>
+    <!--
+      The chosen theme's CSS lands here at runtime (skins' own renderSkinCss output). It is a separate
+      style element rather than being appended to the sheet below so that clearing the preview is one
+      assignment, and so the theme's :root[data-skin] rules outrank this file's :root without needing
+      !important on every override.
+    -->
+    <style id="themeCss"></style>
+    <style>
+      /* The chosen theme's own CSS, rendered from the skins package and attached at runtime. Empty
+         until a theme is picked, and the installer's tokens below fall back to their own values, so
+         the page is fully styled with no theme applied. */
+      #themeCss:empty {
+        display: none;
+      }
+      /* Rounded corners need the transparent frameless window (frame/transparent in main.cjs), and the
+         white card has to be painted on body, not html: html stays transparent so the corners read as
+         see-through, body supplies the surface the user sees. Leaving body with only a 1px border and
+         no background is what made the page look hollow, and with the radius on html only, content
+         spilled past the rounded edge.
+         overflow:hidden on body keeps the scrollbar off the window; scrolling happens in .page. */
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+      html {
+        background: transparent;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+          "PingFang SC", "Hiragino Sans GB", sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        background: var(--surface);
+        border-radius: 12px;
+      }
+      /* The theme's own ramp, attached at runtime when the user previews a theme. */
+      .mark-img {
+        width: 15px;
+        height: 15px;
+        border-radius: 3px;
+        flex: none;
+        object-fit: contain;
+      }
+      /* Sizes below are deliberately tighter than the reference's proportions. Every control was a
+         few pixels oversized — 44px inputs and a 132px hero mark on a 1010px window read as a page
+         zoomed up, and the reference is a compact desktop utility rather than a marketing surface. */
+      .brand-icon {
+        width: 104px;
+        height: 104px;
+        object-fit: contain;
+        margin-bottom: 2px;
+      }
+      .prog-icon {
+        width: 88px;
+        height: 68px;
+        object-fit: contain;
+        opacity: 0.9;
+      }
+      /* Drawn inside the radius so the border follows the curve rather than squaring it off. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        border: 1px solid rgba(0, 0, 0, 0.07);
+        border-radius: 12px;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      /* Every colour the installer paints is declared here and nowhere else, and each falls back to
+         the theme's own token when one is applied. That indirection is what makes the preview real:
+         the theme's CSS lands on :root[data-skin], these read from it, and the page becomes the theme.
+         Hard-coding #fff or #1b1b1b at every use site is why the earlier repaint fought itself — the
+         page was half themed and half hard-coded, which is what produced unreadable dark-on-dark. */
+      :root {
+        --ink: #1b1b1b;
+        --muted: #8d8d8d;
+        --line: #e9e9e9;
+        --chip: #f5f5f6;
+        --sel-bg: rgba(0, 180, 200, 0.07);
+        --accent: #00b4c8;
+        /* Reserved for destructive choices only. It is not part of the theme palette: a theme supplies
+           ink, surfaces and an accent, and none of them mean "this cannot be undone", so the red is
+           ours and stays ours under every skin. */
+        --danger: #d0342c;
+        /* A soft grey rather than pure white. #fff against a rounded window edge reads as a hole
+           punched in the desktop, and it was the one thing still un-themed once the rest was wired to
+           the token system. The panels inside sit a step lighter than the page, so the two read as
+           distinct surfaces rather than one flat block. */
+        --surface: #f4f5f7;
+        --surface-alt: #ffffff;
+        --on-accent: #ffffff;
+      }
+
+      /* Applied-theme overrides, reading the tokens skins actually emits.
+         The names were wrong for several rounds — `--color-background-primary`, `--color-text-primary`
+         and `--color-border-primary` do not exist, so every one of those lookups silently fell through
+         to the fallback and the page stayed white with only the text colour changing. A dark theme is
+         900/950 on the gray ramp and light text on `--color-white`; the installer reads those.
+         The two overrides that did work came from gray-900, which is why the headings tinted while
+         nothing else did. */
+      :root[data-skin] {
+        --ink: var(--color-gray-900);
+        --muted: var(--color-gray-500);
+        --line: var(--color-gray-200);
+        /* Page then panel, one step apart — the same relationship the unthemed default has, so the
+           depth does not change when a theme is applied. Using the theme's two lightest values in the
+           other order made the panel darker than the page behind it. */
+        --surface: var(--color-gray-100);
+        --surface-alt: var(--color-gray-50);
+        --chip: var(--color-gray-100);
+        --accent: var(--accent-bg);
+        --sel-bg: color-mix(in srgb, var(--accent-bg) 10%, transparent);
+        --on-accent: var(--color-gray-950);
+      }
+
+      /* A dark theme's ramp inverts: the light end of the gray scale becomes the text, and the dark
+         end becomes the page. Without this a dark theme rendered light-on-light. */
+      :root[data-skin].dark {
+        --ink: var(--color-gray-50);
+        --muted: var(--color-gray-400);
+        --line: var(--color-gray-800);
+        --surface: var(--color-gray-950);
+        --surface-alt: var(--color-gray-900);
+        --chip: var(--color-gray-900);
+        --on-accent: var(--color-gray-950);
+      }
+
+      /* --- title bar --- */
+      .titlebar {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 8px 0 18px;
+        -webkit-app-region: drag;
+        user-select: none;
+      }
+      .titlebar .mark {
+        width: 17px;
+        height: 17px;
+        border-radius: 5px;
+        background: var(--ink);
+        position: relative;
+        flex: none;
+      }
+      .titlebar .mark::after {
+        content: "";
+        position: absolute;
+        inset: 4px 4px auto auto;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      .titlebar .name {
+        font-size: 13px;
+        color: var(--muted);
+        flex: 1;
+      }
+      .titlebar .wbtn {
+        -webkit-app-region: no-drag;
+        width: 40px;
+        height: 32px;
+        border: 0;
+        background: transparent;
+        border-radius: 7px;
+        cursor: pointer;
+        color: var(--muted);
+        display: grid;
+        place-items: center;
+      }
+      .titlebar .wbtn:hover {
+        background: var(--chip);
+      }
+      .titlebar .wbtn.close:hover {
+        background: #e81123;
+        color: var(--on-accent);
+      }
+      .titlebar svg {
+        width: 11px;
+        height: 11px;
+      }
+
+      /* A page fills what the title bar leaves and is a flex column, so the footer is pushed to the
+         bottom instead of following the content. The reference shows every step whole, with no
+         scrollbar: the tallest step (the model form) is what sets the window height, and a fixed
+         height per page plus a scrolling .scroll is what put a scrollbar on the window itself. */
+      .page {
+        display: none;
+        height: calc(100% - 46px);
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .page.on {
+        display: flex;
+      }
+      .scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0 34px 24px;
+      }
+      /* The footer is chrome, not content: it must not shrink, and it must never scroll away. */
+      .foot {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 34px 26px;
+      }
+
+      /* --- step strip --- */
+      .steps {
+        display: flex;
+        gap: 28px;
+        padding: 12px 34px 0;
+      }
+      .steps span {
+        font-size: 14px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .steps span.on {
+        color: var(--ink);
+        font-weight: 700;
+      }
+      .steps span.done {
+        color: var(--muted);
+      }
+
+      h1 {
+        font-size: 24px;
+        line-height: 1.25;
+        margin: 16px 0 6px;
+        letter-spacing: -0.2px;
+      }
+      .sub {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 0 0 26px;
+      }
+
+      /* The language step is the only one without a step strip, so it centres within the space the
+         other pages give to their strip + heading. flex:1 rather than height:100%, which inside the
+         flex .page overflowed and produced the scrollbar. */
+      .lang {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        flex: 1;
+        min-height: 0;
+        align-items: center;
+      }
+      .lang .brand {
+        text-align: center;
+      }
+      .lang .brand h2 {
+        font-size: 46px;
+        margin: 26px 0 4px;
+        letter-spacing: -1px;
+      }
+      .lang .brand .ver {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .lang .choice {
+        padding-right: 46px;
+      }
+      .lang .choice h1 {
+        font-size: 24px;
+        margin: 0 0 8px;
+      }
+
+      /* --- controls --- */
+      .opt {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 15px;
+      }
+      .opt:hover {
+        background: var(--surface-alt);
+      }
+      /* The reference's selected row is a cool near-white tinted with the accent, not neutral grey —
+         and it has to stay readable against the swatch sitting to its right. */
+      .opt.sel {
+        background: var(--sel-bg);
+      }
+      /* A radio drawn rather than a real one: the reference's ring is a thin circle that fills
+         on selection, and a native control cannot be styled to that on Windows. */
+      .dot {
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        border: 1.5px solid #d3d3d3;
+        flex: none;
+        display: grid;
+        place-items: center;
+      }
+      .opt.sel .dot {
+        border-color: var(--accent);
+        border-width: 5.5px;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .row + .row {
+        margin-top: 17px;
+      }
+      .row > label.f {
+        width: 108px;
+        flex: none;
+        font-size: 13.5px;
+        font-weight: 600;
+        text-align: right;
+      }
+      input[type="text"],
+      input[type="password"],
+      select {
+        flex: 1;
+        min-width: 0;
+        height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 0 14px;
+        font: inherit;
+        font-size: 13.5px;
+        background: var(--surface);
+        color: var(--ink);
+        outline: none;
+      }
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+      }
+      select {
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, #b5b5b5 50%),
+          linear-gradient(135deg, #b5b5b5 50%, transparent 50%);
+        background-position: calc(100% - 19px) 20px, calc(100% - 14px) 20px;
+        background-size: 5px 5px;
+        background-repeat: no-repeat;
+        cursor: pointer;
+      }
+      .reveal {
+        background: none;
+        border: 0;
+        color: var(--accent);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13.5px;
+        padding: 0 4px;
+      }
+
+      .btn {
+        height: 38px;
+        padding: 0 22px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--ink);
+        color: var(--on-accent);
+        font: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .btn:hover {
+        background: #333;
+      }
+      .btn[disabled] {
+        background: var(--line);
+        cursor: default;
+      }
+      .btn.ghost {
+        background: var(--chip);
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .btn.ghost:hover {
+        background: var(--chip);
+      }
+      .link {
+        background: none;
+        border: 0;
+        color: var(--accent);
+        font: inherit;
+        font-size: 13.5px;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .foot .left {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 13.5px;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13.5px;
+        cursor: pointer;
+      }
+      /* A row that states what will happen rather than offering a choice. The tick stays — it reads as
+         "this is included" — but the cursor and the hover state go, so it cannot look clickable. */
+      .check.locked {
+        cursor: default;
+      }
+      .check.locked .box {
+        cursor: default;
+      }
+      .box {
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        border: 1.5px solid #d3d3d3;
+        flex: none;
+        display: grid;
+        place-items: center;
+        color: var(--on-accent);
+        font-size: 11px;
+        line-height: 1;
+      }
+      .check.on .box {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      /* The one destructive choice on the uninstall page. Ticking it turns the row red — label and
+         box alike — because it removes the user's sessions and projects irrecoverably, and a tick in
+         the same accent as every other row reads as "included" rather than "you are about to delete
+         your work". The red is the whole point: it is the last moment the user can back out. */
+      .check.danger.on .box {
+        background: var(--danger);
+        border-color: var(--danger);
+      }
+      .check.danger.on span {
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      .note {
+        font-size: 13.5px;
+        color: var(--muted);
+        margin: 9px 0 0;
+      }
+      .sizes {
+        display: flex;
+        gap: 22px;
+        margin-top: 9px;
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+      .sizes b {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .group {
+        margin-top: 26px;
+      }
+      .group > .lbl {
+        font-size: 13.5px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .sub2 {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 26px 0 10px;
+        font-weight: 600;
+      }
+
+      /* --- progress: centred, no chrome --- */
+      .prog {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 60px;
+      }
+      .prog h1 {
+        font-size: 30px;
+        margin: 30px 0 8px;
+      }
+      .bar {
+        width: 100%;
+        max-width: 490px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--line);
+        margin-top: 30px;
+        overflow: hidden;
+      }
+      .bar > i {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: var(--accent);
+        transition: width 0.18s linear;
+      }
+      .bar2 {
+        width: 100%;
+        max-width: 490px;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+
+      /* --- theme grid: two columns, swatch on the right of each row --- */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 34px;
+      }
+      .grid .opt {
+        padding: 11px 4px;
+      }
+      .sw {
+        margin-left: auto;
+        width: 78px;
+        height: 28px;
+        border-radius: 7px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        flex: none;
+      }
+
+      .adv {
+        margin-top: 22px;
+        font-size: 13.5px;
+        color: var(--muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .adv i {
+        width: 7px;
+        height: 7px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(-45deg);
+        transition: transform 0.15s;
+      }
+      .adv.open i {
+        transform: rotate(45deg);
+      }
+      .err {
+        color: #d0342c;
+        font-size: 13.5px;
+        margin-top: 9px;
+      }
+      .ok {
+        color: #1c8a4a;
+        font-size: 13.5px;
+        margin-top: 9px;
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="titlebar">
+      <img data-icon alt="" class="mark-img" />
+      <div class="name" id="titleName">JiuMate</div>
+      <button class="wbtn" id="btnMin" title="最小化">
+        <svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      <button class="wbtn close" id="btnClose" title="关闭">
+        <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <!-- 1. language -->
+    <section class="page on" id="p-lang">
+      <div class="lang">
+        <div class="brand">
+          <!-- The project's own icon, not an approximation of it: the previous mark here was a
+               hand-drawn SVG hexagon that resembled nothing in the repo. -->
+          <img data-icon alt="JiuMate" class="brand-icon" />
+          <h2>JiuMate</h2>
+          <div class="ver" id="brandVer">版本 —</div>
+        </div>
+        <div class="choice">
+          <h1 id="langTitle">选择语言</h1>
+          <div class="sub" id="langSub">用于安装过程与应用首次启动。</div>
+          <div id="langList"></div>
+        </div>
+      </div>
+      <div class="foot">
+        <div></div>
+        <button class="btn" id="langNext" data-i18n="continue">继续</button>
+      </div>
+    </section>
+
+    <!-- 2. install -->
+    <section class="page" id="p-install">
+      <div class="steps" id="steps2"></div>
+      <div class="scroll">
+        <h1 data-i18n="installTitle">安装 JiuMate</h1>
+        <div class="row" style="margin-top: 24px">
+          <label class="f" data-i18n="installPath">安装路径</label>
+          <input type="text" id="target" spellcheck="false" />
+          <button class="btn ghost" id="browse" data-i18n="browse">浏览</button>
+        </div>
+        <div class="sizes">
+          <span><span data-i18n="need">所需空间</span>: <b id="reqSize">—</b></span>
+          <span><span data-i18n="avail">可用空间</span>: <b id="freeSize">—</b></span>
+        </div>
+        <div class="group">
+          <div class="lbl" data-i18n="options">安装选项</div>
+          <div class="check on" id="ckDesktop">
+            <div class="box">✓</div><span data-i18n="desktop">创建桌面快捷方式</span>
+          </div>
+          <div style="height: 14px"></div>
+          <div class="check on" id="ckMenu">
+            <div class="box">✓</div><span data-i18n="startMenu">添加到开始菜单</span>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <button class="link" id="switchLang" data-i18n="switchLang">切换语言</button>
+        <button class="btn" id="doInstall" data-i18n="install">安装</button>
+      </div>
+    </section>
+
+    <!-- 3. progress -->
+    <section class="page" id="p-prog">
+      <div class="prog">
+        <img data-icon alt="" class="prog-icon" />
+        <h1 data-i18n="installing">安装中</h1>
+        <div class="sub" id="progSub">正在为你准备工作空间。</div>
+        <div class="bar"><i id="barFill"></i></div>
+        <div class="bar2"><span id="progStage">正在解压文件</span><span id="progPct">0%</span></div>
+      </div>
+    </section>
+
+    <!-- 4. model -->
+    <section class="page" id="p-model">
+      <div class="steps" id="steps4"></div>
+      <div class="scroll">
+        <h1 data-i18n="modelTitle">连接模型</h1>
+        <div class="sub" data-i18n="modelSub">选择服务商并填写 API 密钥，也可以进入应用后配置。</div>
+        <div class="row">
+          <label class="f" data-i18n="provider">选择模型提供商</label>
+          <select id="provider"></select>
+        </div>
+        <div class="row">
+          <label class="f" data-i18n="apiKey">API密钥</label>
+          <input type="password" id="apiKey" spellcheck="false" autocomplete="off" />
+          <button class="reveal" id="reveal" data-i18n="show">显示</button>
+        </div>
+        <div class="row">
+          <label class="f" data-i18n="endpoint">服务端点</label>
+          <select id="baseUrl"></select>
+        </div>
+        <div class="row">
+          <label class="f" data-i18n="model">选择模型</label>
+          <select id="model"></select>
+        </div>
+        <div class="note" data-i18n="presetNote">当前显示的是常用预设模型</div>
+        <div class="adv" id="advToggle"><i></i><span data-i18n="advanced">高级设置</span></div>
+        <div id="advBox" class="hidden" style="margin-top: 16px">
+          <div class="row">
+            <label class="f" data-i18n="proxy">代理</label>
+            <input type="text" id="proxy" spellcheck="false" placeholder="http://127.0.0.1:7890" />
+          </div>
+        </div>
+        <button class="btn ghost" id="testConn" style="margin-top: 22px" data-i18n="test">测试连接</button>
+        <div id="testMsg"></div>
+      </div>
+      <div class="foot">
+        <button class="link" id="later" data-i18n="later">稍后配置</button>
+        <button class="btn" id="toTheme"><span data-i18n="nextTheme">下一步：主题</span></button>
+      </div>
+    </section>
+
+    <!-- 5. appearance -->
+    <section class="page" id="p-theme">
+      <div class="steps" id="steps5"></div>
+      <div class="scroll">
+        <h1 data-i18n="themeTitle">选择外观</h1>
+        <div class="sub" data-i18n="themeSub">点击主题即可预览，之后也可以随时更换。</div>
+        <div class="grid" id="themeList"></div>
+      </div>
+      <div class="foot">
+        <div class="check on" id="ckLaunch">
+            <div class="box">✓</div><span id="launchLabel">安装后启动 JiuMate</span>
+          </div>
+          <button class="btn" id="finish" data-i18n="done">完成</button>
+    </section>
+
+    <!-- 6. uninstall -->
+    <!--
+      Same window, same stylesheet, same icon as the installer. The uninstaller used to be a
+      uninstall.cmd that flashed a console window and deleted files, which is the one thing this UI
+      exists to avoid — a stock dialog in front of a hand-drawn window.
+    -->
+    <section class="page" id="p-uninstall">
+      <div class="scroll">
+        <h1 data-i18n="uninstallTitle">卸载 JiuMate</h1>
+        <div class="sub" data-i18n="uninstallSub">将移除应用文件与快捷方式。你的项目数据不会被删除。</div>
+        <div class="group">
+          <div class="lbl" data-i18n="uninstallItems">将要移除</div>
+          <div class="check on locked"><div class="box">✓</div><span data-i18n="uninstallApp">应用文件</span></div>
+          <div style="height: 10px"></div>
+          <div class="check on locked"><div class="box">✓</div><span data-i18n="uninstallLinks">快捷方式</span></div>
+          <div style="height: 10px"></div>
+          <!--
+            The one real choice on this page, and it is OFF by default.
+
+            This is the user's sessions, projects and settings — resolved the same way the app
+            resolves it (core/src/state/paths.ts), so the path shown is the real one. It is not
+            something the uninstaller should take on its own: leaving it behind is what makes a
+            reinstall find the previous work still there, and that is the common case. Ticking this
+            is how someone who wants a clean slate says so.
+          -->
+          <div class="check danger" id="ckData"><div class="box">✓</div><span data-i18n="uninstallData">历史数据</span></div>
+          <div class="note" data-i18n="uninstallDataNote">默认保留。重新安装后会继续使用这些会话和项目。</div>
+        </div>
+        <div class="sizes">
+          <span><span data-i18n="reclaim">可释放</span>: <b id="uninstallSize">—</b></span>
+          <span id="uninstallDataSizeWrap" class="hidden"><span data-i18n="uninstallDataSize">用户数据</span>: <b id="uninstallDataSize">—</b></span>
+        </div>
+      </div>
+      <div class="foot">
+        <button class="link" id="uninstallCancel" data-i18n="cancel">取消</button>
+        <button class="btn" id="uninstallGo" data-i18n="uninstall">卸载</button>
+      </div>
+    </section>
+
+    <!-- 7. uninstall progress -->
+    <section class="page" id="p-unprog">
+      <div class="prog">
+        <img data-icon alt="" class="prog-icon" />
+        <h1 data-i18n="uninstalling">正在卸载</h1>
+        <div class="sub" id="unprogSub" data-i18n="unprogSub">请稍候，正在移除 JiuMate。</div>
+        <div class="bar"><i id="unbarFill"></i></div>
+        <div class="bar2"><span id="unprogStage">正在移除文件</span><span id="unprogPct">0%</span></div>
+      </div>
+    </section>
+
+    <!--
+      8. uninstall done.
+
+      No scroll container here, deliberately. Wrapping this in .scroll made .prog's `height: 100%`
+      resolve against it and the content overflowed, which put a scrollbar on a page with a few lines
+      of text on it. The footer is outside the scroll area on every other page for the same reason.
+
+      The button closes the window and quits, which is what lets the last folder be removed: the
+      uninstaller's own executable is mapped inside it and Windows will not delete a directory holding a
+      running image. The exit is the first step of the deletion, not a side effect of it.
+    -->
+    <section class="page" id="p-undone">
+      <div class="prog">
+        <img data-icon alt="" class="prog-icon" />
+        <h1 data-i18n="uninstallDone">卸载完成</h1>
+        <div class="sub" id="undoneSub" data-i18n="uninstallDoneSub">JiuMate 已从这台电脑上移除。</div>
+      </div>
+      <div class="foot">
+        <button class="link" id="undoneClose" data-i18n="close">关闭</button>
+        <button class="btn" id="undonePurge" data-i18n="uninstallPurge">彻底删除</button>
+      </div>
+    </section>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
+

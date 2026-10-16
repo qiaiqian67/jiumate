@@ -1,0 +1,12 @@
+# electron-builder output for the installer package.
+#
+# Same reasoning as packages/desktop/.gitignore: the generated files outlive a branch
+# switch, and an ignore rule that only exists on the branch that generated them leaves
+# ~700 MB of artifacts (a 234 MB portable exe plus its expanded tree) sitting untracked
+# and unignored in every other working copy — one `git add -A` away from a commit.
+#
+#   out/   — electron-builder output: the portable exe and win-unpacked/
+#   dist/  — already ignored by the repo root, but named here too because build.mjs
+#            writes it and a reader of this file should not have to know that
+out/
+dist/
