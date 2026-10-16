@@ -75,10 +75,88 @@ function dirSize(dir) {
   return total
 }
 
+/**
+ * Refuse to build an installer whose payload is older than the sources it is supposed to contain.
+ *
+ * ## Why this exists
+ *
+ * The payload is `packages/desktop/out/win-unpacked`, which is produced by a *separate* command
+ * (`pnpm --dir packages/desktop pack:win`) from `pnpm -r build`. Nothing in the normal build chain
+ * connects the two, so it is entirely possible — and happened — to build the desktop app, edit
+ * three files, run the installer build, and ship an installer carrying the *previous* build.
+ *
+ * The failure is silent and it looks like a bug in the product: the app launches, the code is
+ * subtly the old behaviour, and every symptom is something a user would report as "this feature
+ * does not work". In this repository's case the shipped payload predated the entire
+ * setup-import feature, so a language, a theme and a model chosen in the installer had no effect at
+ * all — and the obvious conclusion ("the importer is broken") was wrong, because the importer was
+ * not in the artifact. Chasing that inside the code would have found nothing.
+ *
+ * So the check is here rather than in a checklist: the newest source file under the desktop
+ * package (and core, which it bundles) must not be newer than the payload directory. That is the
+ * one condition under which the artifact is definitely wrong, so it is the one worth failing on.
+ * An override exists for the case where someone genuinely needs the old payload.
+ */
+function newestSourceMtime(dir) {
+  const stack = [dir]
+  let newest = 0
+  let newestFile = ""
+  while (stack.length) {
+    const d = stack.pop()
+    let entries
+    try {
+      entries = fs.readdirSync(d, { withFileTypes: true })
+    } catch {
+      continue
+    }
+    for (const e of entries) {
+      // Skip build output and dependencies: their timestamps move for reasons that have nothing to
+      // do with the sources, and node_modules alone would always look newer than any artifact.
+      if (e.name === "node_modules" || e.name === "dist" || e.name === "out" || e.name === "build") {
+        continue
+      }
+      const full = path.join(d, e.name)
+      if (e.isDirectory()) stack.push(full)
+      else if (/\.(ts|tsx|mjs|cjs|js|json|css)$/.test(e.name)) {
+        try {
+          const m = fs.statSync(full).mtimeMs
+          if (m > newest) {
+            newest = m
+            newestFile = full
+          }
+        } catch {
+          // A file that vanished mid-walk is not worth failing the build over.
+        }
+      }
+    }
+  }
+  return { newest, newestFile }
+}
+
 if (!fs.existsSync(unpacked)) {
   throw new Error(
     `${unpacked} is missing. Build the desktop app first:\n  pnpm --dir packages/desktop build\n  pnpm --dir packages/desktop pack:win`,
   )
+}
+
+// The payload is a directory, so compare against the oldest thing inside it that must have been
+// written during packing: the app directory itself. Using the directory's own mtime would miss an
+// artifact whose contents were refreshed without the top level changing.
+const payloadMtime = fs.statSync(unpacked).mtimeMs
+for (const pkgDir of ["desktop", "core", "web"]) {
+  const { newest, newestFile } = newestSourceMtime(path.join(repoRoot, "packages", pkgDir))
+  if (newest > payloadMtime && !process.env.JIUMATE_ALLOW_STALE_PAYLOAD) {
+    const rel = path.relative(repoRoot, newestFile)
+    throw new Error(
+      `The payload is older than the sources it is meant to contain.\n\n` +
+        `  newest source: ${rel}\n` +
+        `  payload:       ${path.relative(repoRoot, unpacked)}\n\n` +
+        `Rebuild it, or the installer will ship the previous build:\n` +
+        `  pnpm --dir packages/desktop build\n` +
+        `  pnpm --dir packages/desktop pack:win\n\n` +
+        `Set JIUMATE_ALLOW_STALE_PAYLOAD=1 only if you mean to ship the old payload.`,
+    )
+  }
 }
 
 // dist is wiped first, then the catalog is generated into it — the other order deletes the file it
