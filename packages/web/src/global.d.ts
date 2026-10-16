@@ -19,6 +19,15 @@ declare global {
       /** Native folder picker; null when the user cancels. */
       pickFolder(): Promise<string | null>;
     };
+    /**
+     * The desktop shell's Workspace bridge. Absent in a plain browser — a browser cannot ask
+     * the OS for a directory, and the paths it can name are resolved on the SERVER, so on a
+     * plain browser there is no such control and the entry is hidden rather than disabled.
+     */
+    workspace?: {
+      /** Native directory chooser; null when the user cancels. */
+      pickFolder(): Promise<string | null>;
+    };
     pet?: {
       open(savedPos?: { x: number; y: number } | null): Promise<void>;
       close(): Promise<void>;

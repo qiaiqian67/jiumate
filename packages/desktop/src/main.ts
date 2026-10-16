@@ -47,6 +47,7 @@ import { parseUpdaterCommand, updaterStatusMessage } from "./updater-status.js";
 import { wireExportPdf } from "./export-pdf.js";
 import { createPetWindow, isPetWindowOpen, type PetWindowHandle } from "./pet-window.js";
 import { registerThemePicker } from "./theme-picker.js";
+import { registerWorkspacePicker } from "./workspace-picker.js";
 import { destroyPetTray, syncPetTray, wirePetTrayIpc, type PetTrayDeps } from "./pet-tray.js";
 import {
   desktopLoginUrl,
@@ -330,6 +331,7 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
     wirePetTrayIpc(petTrayDeps());
   }
   registerThemePicker();
+  registerWorkspacePicker();
   const url = desktopLoginUrl(started.origin, started.token);
   if (win === null) createWindow(url);
   else void win.loadURL(url);
@@ -383,6 +385,7 @@ async function boot(): Promise<void> {
       wirePetTrayIpc(petTrayDeps());
     }
     registerThemePicker();
+    registerWorkspacePicker();
     createWindow(`${appOrigin}/`);
     return;
   }

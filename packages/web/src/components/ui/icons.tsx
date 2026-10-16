@@ -219,7 +219,7 @@ export const MESSAGING_RELAY_ICON = "M22 2 11 13M22 2l-7 20-4-9-9-4z";
 export const SEND_ICON = "M22 2 11 13M22 2 15 22 11 13 2 9 22 2";
 
 /**
- * Heart (lucide's outline): the inspiration library's favourite mark. Its "on" state is the same
+ * Heart (lucide's outline): the plaza's favourite mark. Its "on" state is the same
  * path filled in currentColor (`GlyphIcon filled`), which is what a star/favourite toggle reads as
  * — one shape that changes weight, rather than two shapes that have to be kept in step.
  */
@@ -229,6 +229,20 @@ export const HEART_ICON =
 /** Standard gear (lucide settings): full tooth outline + center circle, crisp and undistorted at 16px. */
 export const GEAR_ICON =
   "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z";
+
+/**
+ * Magnifier (lucide `search`, on the shared 24x24 stroke grid). The workspace picker's search
+ * field is the one place in the app that filters a plain list of names in place, and it needs a
+ * leading glyph that says so — without it the field is just a border.
+ */
+export const SEARCH_ICON = "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35";
+
+/**
+ * Tick (lucide `check`). The "already selected" mark inside a picker's own list:
+ * `CheckIcon` draws the same shape as a standalone component, but a row here needs it as path
+ * data to hand to `GlyphIcon` alongside the leading folder glyph.
+ */
+export const CHECK_ICON = "M20 6L9 17l-5-5";
 
 /**
  * Page-nav glyphs (moved from sidebar.tsx: the sidebar nav, the collapsed rail in

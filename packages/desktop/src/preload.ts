@@ -93,3 +93,26 @@ contextBridge.exposeInMainWorld("theme", themeApi);
 
 /** The shape exposed to the renderer. The web side augments `Window` with this. */
 export type ThemeBridge = typeof themeApi;
+
+/**
+ * The native folder picker for choosing a Workspace directory, as `window.workspace`.
+ *
+ * Its own bridge for the same reason `theme` has one: a method on `theme` named
+ * `pickWorkspaceFolder` would put a workspace call under a name that says "theme", and the two
+ * will want different dialog copy anyway.
+ */
+const workspaceApi = {
+  /**
+   * Open the OS directory chooser. Resolves to null when the user cancels, so the caller can
+   * treat "cancelled" and "chose nothing" identically.
+   *
+   * Optional on the web side: in a plain browser this bridge does not exist, and the renderer
+   * hides the entry rather than showing a control that cannot work.
+   */
+  pickFolder: (): Promise<string | null> => ipcRenderer.invoke("workspace:pickFolder"),
+};
+
+contextBridge.exposeInMainWorld("workspace", workspaceApi);
+
+/** The shape exposed to the renderer. The web side augments `Window` with this. */
+export type WorkspaceBridge = typeof workspaceApi;
