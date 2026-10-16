@@ -6,6 +6,7 @@
   "main": "dist/main.cjs",
   "scripts": {
     "build": "node build.mjs",
+    "build:stage": "node build.mjs --stage-only",
     "pack": "node build.mjs && electron-builder --win portable"
   },
   "devDependencies": {

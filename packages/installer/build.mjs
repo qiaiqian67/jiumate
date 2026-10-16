@@ -133,7 +133,22 @@ function newestSourceMtime(dir) {
   return { newest, newestFile }
 }
 
-if (!fs.existsSync(unpacked)) {
+/**
+ * `--stage-only` stages the installer's own UI and stops before touching the payload.
+ *
+ * This exists because `pnpm -r build` walks every package including this one, and this package's
+ * real `build` needs a payload that only `pack:win` can produce. Left as one script, the
+ * recursive build could never pass on a clean checkout — the freshness check would correctly
+ * refuse, and `pnpm -r build` would fail for a reason that has nothing to do with what it is for.
+ *
+ * So the split is: `build` is the shipping path and enforces that the payload is current;
+ * `build:stage` is the recursive-build path and only stages the UI, which is all a plain
+ * `pnpm -r build` needs to do for this package. `pack` never passes the flag, so shipping always
+ * goes through the check.
+ */
+const stageOnly = process.argv.includes("--stage-only")
+
+if (!fs.existsSync(unpacked) && !stageOnly) {
   throw new Error(
     `${unpacked} is missing. Build the desktop app first:\n  pnpm --dir packages/desktop build\n  pnpm --dir packages/desktop pack:win`,
   )
@@ -142,20 +157,22 @@ if (!fs.existsSync(unpacked)) {
 // The payload is a directory, so compare against the oldest thing inside it that must have been
 // written during packing: the app directory itself. Using the directory's own mtime would miss an
 // artifact whose contents were refreshed without the top level changing.
-const payloadMtime = fs.statSync(unpacked).mtimeMs
-for (const pkgDir of ["desktop", "core", "web"]) {
-  const { newest, newestFile } = newestSourceMtime(path.join(repoRoot, "packages", pkgDir))
-  if (newest > payloadMtime && !process.env.JIUMATE_ALLOW_STALE_PAYLOAD) {
-    const rel = path.relative(repoRoot, newestFile)
-    throw new Error(
-      `The payload is older than the sources it is meant to contain.\n\n` +
-        `  newest source: ${rel}\n` +
-        `  payload:       ${path.relative(repoRoot, unpacked)}\n\n` +
-        `Rebuild it, or the installer will ship the previous build:\n` +
-        `  pnpm --dir packages/desktop build\n` +
-        `  pnpm --dir packages/desktop pack:win\n\n` +
-        `Set JIUMATE_ALLOW_STALE_PAYLOAD=1 only if you mean to ship the old payload.`,
-    )
+if (!stageOnly) {
+  const payloadMtime = fs.statSync(unpacked).mtimeMs
+  for (const pkgDir of ["desktop", "core", "web"]) {
+    const { newest, newestFile } = newestSourceMtime(path.join(repoRoot, "packages", pkgDir))
+    if (newest > payloadMtime && !process.env.JIUMATE_ALLOW_STALE_PAYLOAD) {
+      const rel = path.relative(repoRoot, newestFile)
+      throw new Error(
+        `The payload is older than the sources it is meant to contain.\n\n` +
+          `  newest source: ${rel}\n` +
+          `  payload:       ${path.relative(repoRoot, unpacked)}\n\n` +
+          `Rebuild it, or the installer will ship the previous build:\n` +
+          `  pnpm --dir packages/desktop build\n` +
+          `  pnpm --dir packages/desktop pack:win\n\n` +
+          `Set JIUMATE_ALLOW_STALE_PAYLOAD=1 only if you mean to ship the old payload.`,
+      )
+    }
   }
 }
 
@@ -180,36 +197,42 @@ fs.copyFileSync(path.join(desktopPkg, "build", "icon.png"), path.join(dist, "ico
 const sevenZip = find7za()
 fs.copyFileSync(sevenZip, path.join(dist, "7za.exe"))
 
-const expandedBytes = dirSize(unpacked)
-console.log(`[build] payload source: ${(expandedBytes / 1024 / 1024).toFixed(1)} MB`)
+if (stageOnly) {
+  // The UI is staged and the payload is untouched: this run exists for `pnpm -r build`, and the
+  // shipping `pack` re-runs without the flag and does the archiving below.
+  console.log("[build] staged UI only (--stage-only); payload not repacked")
+} else {
+  const expandedBytes = dirSize(unpacked)
+  console.log(`[build] payload source: ${(expandedBytes / 1024 / 1024).toFixed(1)} MB`)
 
-if (fs.existsSync(payload)) fs.rmSync(payload)
-console.log("[build] packing payload.7z ...")
-// `cd` into the folder rather than `-w`: 7za's -w sets the *working directory for the archive*,
-// not the source root, so passing it alongside "." pulled in the whole `out` directory and the
-// archive grew to 619 MB with an `out\win-unpacked\` prefix on every entry. Running from inside
-// win-unpacked with a relative "." is what makes the entries land at the archive root.
-execFileSync(sevenZip, ["a", "-t7z", payload, ".", "-mx=3", "-bso0", "-bsp0"], {
-  cwd: path.join(desktopPkg, "out", "win-unpacked"),
-  stdio: ["ignore", "inherit", "inherit"],
-})
+  if (fs.existsSync(payload)) fs.rmSync(payload)
+  console.log("[build] packing payload.7z ...")
+  // `cd` into the folder rather than `-w`: 7za's -w sets the *working directory for the archive*,
+  // not the source root, so passing it alongside "." pulled in the whole `out` directory and the
+  // archive grew to 619 MB with an `out\win-unpacked\` prefix on every entry. Running from inside
+  // win-unpacked with a relative "." is what makes the entries land at the archive root.
+  execFileSync(sevenZip, ["a", "-t7z", payload, ".", "-mx=3", "-bso0", "-bsp0"], {
+    cwd: path.join(desktopPkg, "out", "win-unpacked"),
+    stdio: ["ignore", "inherit", "inherit"],
+  })
 
-const payloadBytes = fs.statSync(payload).size
-console.log(`[build] payload.7z: ${(payloadBytes / 1024 / 1024).toFixed(1)} MB`)
+  const payloadBytes = fs.statSync(payload).size
+  console.log(`[build] payload.7z: ${(payloadBytes / 1024 / 1024).toFixed(1)} MB`)
 
-fs.writeFileSync(
-  path.join(dist, "meta.json"),
-  JSON.stringify(
-    {
-      version: pkg.version,
-      // The number the window shows. The expanded size rather than the compressed one: it is what
-      // the folder will actually occupy, and it is the figure a user choosing a drive cares about.
-      requiredBytes: expandedBytes,
-      payloadBytes,
-    },
-    null,
-    2,
-  ),
-)
+  fs.writeFileSync(
+    path.join(dist, "meta.json"),
+    JSON.stringify(
+      {
+        version: pkg.version,
+        // The number the window shows. The expanded size rather than the compressed one: it is what
+        // the folder will actually occupy, and it is the figure a user choosing a drive cares about.
+        requiredBytes: expandedBytes,
+        payloadBytes,
+      },
+      null,
+      2,
+    ),
+  )
+}
 
 console.log("[build] done")
