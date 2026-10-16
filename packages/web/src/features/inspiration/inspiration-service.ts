@@ -1,5 +1,5 @@
 /**
- * Inspiration library client — the catalog, its two sources, and the write calls an admin makes.
+ * Plaza client — the catalog, its two sources, and the write calls an admin makes.
  *
  * ## Two sources, one list
  *

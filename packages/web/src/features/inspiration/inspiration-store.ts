@@ -1,5 +1,5 @@
 /**
- * The inspiration library, loaded once per browser session and shared by every surface that shows
+ * The plaza catalog, loaded once per browser session and shared by every surface that shows
  * it — the gallery page and the draft screen's picker.
  *
  * **One read, two consumers.** The library is server state plus a bundled built-in half, so a

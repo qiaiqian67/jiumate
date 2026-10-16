@@ -1,5 +1,5 @@
 /**
- * The inspiration library page (`/app-center`): every case in the library, filed into tabs.
+ * The plaza page (`/app-center`): every case in the library, filed into tabs.
  *
  * ## Why it looks like a gallery rather than a list
  *

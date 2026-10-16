@@ -1,6 +1,13 @@
 /**
  * Drawer component (for mobile nav/panels): overlay fades in + panel slides in from the side; Esc or clicking the overlay closes it.
  * `side` determines the docking direction; the panel width defaults to 80vw, capped by widthClass.
+ *
+ * With NO `title` the drawer draws no header row at all — the panel's own content is then
+ * responsible for a way out. The nav drawer works that way: the sidebar column it holds
+ * already has a top row carrying the app name, and giving the drawer a title as well put the
+ * same name twice on one screen. Pass `title` only for panels whose content has no header of
+ * its own (the session-info panel, etc.), where the row is the only title and the only place
+ * the close button can live.
  */
 import { useEffect } from "react";
 import type { ReactNode } from "react";
@@ -37,10 +44,12 @@ export function Drawer({ open, side = "left", title, onClose, children, widthCla
             : "anim-drawer-right right-0 border-l border-gray-200 dark:border-gray-800"
         }`}
       >
+        {title !== undefined && (
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
-          <span className="text-base font-semibold">{title ?? ""}</span>
+          <span className="text-base font-semibold">{title}</span>
           <CloseButton onClose={onClose} />
         </div>
+      )}
         <div className="min-h-0 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
           {children}
         </div>

@@ -96,26 +96,34 @@ describe("the sidebar user menu", () => {
 
   it("reaches the settings it no longer holds through one ungated System settings entry", () => {
     // The preference rows, change password and user management all moved into the settings
-    // dialog, whose own section registry decides which pages this viewer sees — so the row
+    // page, whose own section registry decides which pages this viewer sees — so the row
     // itself carries no isAdmin test, or a non-admin would lose the personal pages along
-    // with the admin ones.
-    expect(source).toContain("setSettingsOpen(true)");
+    // with the admin ones. The row opens the route (not a dialog): settings are a
+    // destination now, and the row must not re-wrap the page back into a modal.
+    expect(source).toContain("openSettings()");
     expect(source).not.toContain("offersChangePassword");
-    expect(source).not.toContain("S.settings.language");
-    expect(source).not.toContain("S.settings.mode");
+    // The individual preference rows, by their exact `S.settings.<key>` reads. A bare
+    // `S.settings.mode` substring is not enough: it also matches `modelsTitle` (and did,
+    // once the settings menu came to live in this file), so the guard has to be the whole
+    // member expression.
+    expect(source).not.toMatch(/S\.settings\.(language|mode)\b/);
     expect(source).not.toContain('go("/settings")');
     expect(source).not.toContain('go("/admin/users")');
   });
 
-  it("mounts no dialog for a surface the settings dialog owns", () => {
+  it("mounts no dialog for a surface the settings page owns", () => {
     // A stale mount would be a build failure rather than a silent one, but the menu
     // keeping an opener for a surface reachable elsewhere is the regression worth naming.
     expect(source).not.toContain("ProxySettingsDialog");
     expect(source).not.toContain("UploadLimitsDialog");
     expect(source).not.toContain("ChangePasswordDialog");
+    // The System settings page's own dialog, spelled exactly: ProjectSettingsDialog (the
+    // per-project one) legitimately shares the suffix, so a bare `SettingsDialog` substring
+    // check would fail on it.
+    expect(source).not.toMatch(/["'`]SettingsDialog["'`]/);
   });
 
-  it("keeps the one update row outside the settings dialog, opening the modal the layout mounts", () => {
+  it("keeps the one update row outside the settings page, opening the modal the layout mounts", () => {
     // Updating is deliberately not a settings page: the menu carries the entry itself. One
     // row serves both backends (the server release, the shell's own updater in the desktop
     // window) and hides itself where the session can update nothing; every click opens the

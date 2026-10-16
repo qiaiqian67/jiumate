@@ -1,20 +1,23 @@
 /**
- * Collapse state of the sidebar's page-nav group (pure decisions, unit tested): the
- * 智能体 → 词元图 run of entries collapses as one group behind a nav-row-wide chevron
- * button under the group's last entry (arrow up = collapse; collapsed, the button
- * stays — arrow down — as the way back). The pinned "新会话" block above is NOT
- * part of the group — it stays visible in both states (the manifest below simply never
- * contains it).
+ * The sidebar's page-nav manifest and its routes (pure data, no behaviour).
  *
- * One global storage key, not per Project: the nav is identical everywhere, so like the
- * grouping mode (GROUP_MODE_KEY) this is a single user preference — toggling it anywhere
- * toggles it everywhere. Storage is injectable (model-group-expansion.ts convention:
- * vitest runs in Node, no localStorage); nothing stored, unrecognized values, and
- * throwing storage all fall back to expanded — the default.
+ * ## What this file used to hold
+ *
+ * It also owned the COLLAPSE state of the nav group — the 智能体 → 词元 run collapsed as one
+ * behind a slim chevron button under the group's last entry, persisted in one global
+ * `localStorage` key. That control is gone (the button, the height tween, the `inert`
+ * bookkeeping and this module's storage API with it): on the screens that actually needed it
+ * it cost a full row of vertical space to hide about 150px of entries in a column whose only
+ * job is to be read, and the sidebar's one exception to flat-at-rest styling read as a seam
+ * nobody had asked for. Nothing reads the preference any more, so persisting it would be
+ * writing a key no code can act on.
+ *
+ * What remains is the manifest and the route map, which both nav surfaces (the expanded
+ * sidebar and the collapsed rail) depend on.
  */
 
 /**
- * Page entries of the collapsible nav group, in rendered order. Each key names its
+ * Page entries of the nav group, in rendered order. Each key names its
  * route (see `NAV_ROUTES`), its S.nav label, and its NAV_ICONS glyph — the sidebar derives
  * its nav rows from this manifest, so the covered range is pinned here (and in the
  * unit tests) rather than duplicated.
@@ -75,52 +78,4 @@ export const NAV_ROUTES: Record<NavPageKey, string> = {
  */
 export function navKeysFor(): readonly NavGroupKey[] {
   return NAV_GROUP_KEYS;
-}
-
-/**
- * Page entries that are visible and reachable: collapsing hides the whole group (the
- * chevron-button toggle and the pinned "新会话" block above are outside it and stay).
- * The sidebar keeps the rows mounted while collapsed — the collapse is an animated
- * height tween — but at zero height, faded out, and inert: exactly this empty set of
- * reachable entries.
- */
-export function visibleNavKeys(collapsed: boolean): readonly NavGroupKey[] {
-  return collapsed ? [] : navKeysFor();
-}
-
-/** Minimal storage interface (the subset of localStorage used here); tests inject an in-memory implementation. */
-export interface NavCollapseStorage {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-}
-
-/** The single global key (`jiumate.…` naming convention); holds "collapsed" / "expanded". */
-export const NAV_GROUP_COLLAPSED_KEY = "jiumate.sidebarNavGroupCollapsed";
-
-/**
- * Reads the persisted choice; only an explicit "collapsed" collapses — anything else
- * (absent / unrecognized / throwing storage) is the expanded default. `localStorage` is
- * resolved INSIDE the try, never as a default parameter: merely touching it throws a
- * SecurityError when site data is blocked (or in a partitioned iframe), and this runs
- * from a useState initializer — an escaping throw would take the sidebar's first render
- * down.
- */
-export function initialNavGroupCollapsed(storage?: NavCollapseStorage): boolean {
-  try {
-    return (storage ?? localStorage).getItem(NAV_GROUP_COLLAPSED_KEY) === "collapsed";
-  } catch {
-    return false;
-  }
-}
-
-/** Writes the choice on every toggle (best-effort: quota limits / private browsing fail silently). */
-export function storeNavGroupCollapsed(collapsed: boolean, storage?: NavCollapseStorage): void {
-  try {
-    (storage ?? localStorage).setItem(
-      NAV_GROUP_COLLAPSED_KEY,
-      collapsed ? "collapsed" : "expanded",
-    );
-  } catch {
-    /* best-effort persistence (quota limits / private browsing) */
-  }
 }

@@ -172,21 +172,75 @@
   .dark ::selection {
     background: rgb(255 255 255 / 0.18);
   }
-  /* Thin scrollbar. */
+  /* Thin scrollbar, painted only while the pointer is over the scroller.
+     Chrome/Firefox have no "show on hover" pseudo-class, so this is done by suppressing
+     only the THUMB's paint (`scrollbar-color: transparent transparent`) and restoring it
+     on hover. Crucially the track's reserved width is untouched — `scrollbar-width: thin`
+     still applies at all times — so the gutter never collapses and nothing reflows when
+     the thumb appears; without that, hovering a list would nudge its content sideways.
+     `:focus-within` rides along so keyboard users (Tab into a scroller) still get the bar.
+     The webkit rules cover the engines that ignore `scrollbar-color` (older WebKit /
+     Electron builds): there the thumb is made transparent via a colored track + hidden
+     thumb instead, again keeping the track's width so no reflow occurs.
+     A permanently visible bar costs a 10px strip out of every scroll pane — a third of
+     the collapsed rail — and reads louder than the content it annotates, so it only
+     appears when the user is actually pointing at the thing it describes. */
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgb(60 64 67 / 0.28) transparent;
+    scrollbar-color: transparent transparent;
   }
   .dark * {
+    scrollbar-color: transparent transparent;
+  }
+  *:hover,
+  *:focus-within {
+    scrollbar-color: rgb(60 64 67 / 0.28) transparent;
+  }
+  .dark *:hover,
+  .dark *:focus-within {
     scrollbar-color: rgb(232 234 237 / 0.2) transparent;
   }
-  /* Hide the native scrollbar (replaced with custom controls, e.g. zoom/pan sliders in trace viewing). */
+  *::-webkit-scrollbar {
+    width: thin;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+  }
+  *:hover::-webkit-scrollbar-thumb,
+  *:focus-within::-webkit-scrollbar-thumb {
+    background-color: rgb(60 64 67 / 0.28);
+  }
+  .dark *:hover::-webkit-scrollbar-thumb,
+  .dark *:focus-within::-webkit-scrollbar-thumb {
+    background-color: rgb(232 234 237 / 0.2);
+  }
+  /* Hide the native scrollbar entirely (replaced with custom controls, e.g. zoom/pan
+     sliders in trace viewing, and the collapsed rail's icon column). Wins over the rules
+     above because it sets the WIDTH, not just the color. */
   .no-scrollbar {
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+  /* Opt-out for the rare scroller that must always show its bar (a scroll position that
+     is itself information — see usages). Restores the always-on thumb. */
+  .scrollbar-always {
+    scrollbar-color: rgb(60 64 67 / 0.28) transparent;
+  }
+  .dark .scrollbar-always {
+    scrollbar-color: rgb(232 234 237 / 0.2) transparent;
+  }
+  .scrollbar-always::-webkit-scrollbar-thumb {
+    background-color: rgb(60 64 67 / 0.28);
+  }
+  .dark .scrollbar-always::-webkit-scrollbar-thumb {
+    background-color: rgb(232 234 237 / 0.2);
   }
 }
 
@@ -494,9 +548,24 @@
 
 /* ---------- Minimal typography for Markdown body content (no typography plugin) ---------- */
 
+/* Reader font size for the chat prose (lib/chat-font-size.ts). Declared on :root with the
+   app's current size as the fallback so the FIRST paint — before any effect writes it — is
+   already correct, and a reader with a stored preference never sees a flash of the default
+   mid-render. Set on the root rather than threaded through a context so every Markdown body
+   (main stream, subagent streams, workspace preview) follows it with no wiring.
+   Code blocks keep their own fixed size and are NOT scaled: monospace source reflows into
+   unreadable prose at 18px. */
+:root {
+  --chat-font-size: 16px;
+}
+
 .md-body {
   /* Long unspaced strings like attachment paths / long URLs wrap within the narrow container instead of breaking the layout (especially important for mobile message streams). */
   overflow-wrap: break-word;
+  /* The reader's chosen size. `.md-body` had no font-size of its own — it inherited from the
+     `text-base` utility on its wrapper — so this is the one declaration that makes the whole
+     stream respond. em-based children (h1..h4, small) keep scaling relative to it. */
+  font-size: var(--chat-font-size);
 }
 .md-body :is(p, ul, ol, pre, blockquote, table) {
   margin: 0.5rem 0;

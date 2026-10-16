@@ -1,5 +1,5 @@
 /**
- * The inspiration library's per-user favourites (`ui_prefs.inspirationFavorites`).
+ * The plaza's per-user favourites (`ui_prefs.inspirationFavorites`).
  *
  * **Per account, not per browser**, for the reason `todo-dismissals.ts` states: a star says what
  * one person has picked out, so `localStorage` would be wrong in both directions — a shared

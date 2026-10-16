@@ -27,7 +27,7 @@ export interface ModalProps {
   widthClass?: string;
   /** No header bar (no visible title, no close button): compact dialogs like confirmations — the title still names the dialog for assistive tech. */
   headerless?: boolean;
-  /** Render children full-bleed: no built-in padding or 70vh scroller. For dialogs that own their inner layout and scroll regions (PagedDialog); the caller then also owns a close control. */
+  /** Render children full-bleed: no built-in padding or 70vh scroller. For dialogs that own their inner layout and scroll regions (Project settings); the caller then also owns a close control. */
   bare?: boolean;
 }
 
