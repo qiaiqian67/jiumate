@@ -34,6 +34,7 @@ import { app, BrowserWindow, dialog, shell } from "electron";
 import { resolveRoot } from "@prismshadow/jiumate-core";
 import { liveServerLock } from "@prismshadow/jiumate-server/lock";
 import { appIdentity, desktopDataRoot } from "./app-identity.js";
+import { readSetupAnswers, seedStorage } from "./setup-import.js";
 import { webDistEntry, webDistFor } from "./web-dist.js";
 import { resolveTrayIcon, resolveWindowIcon } from "./app-icon.js";
 import { installCliCommand, ensureCliCommand, currentCliInstallKind } from "./cli-install.js";
@@ -194,7 +195,72 @@ function createWindow(url: string): void {
   });
   win.webContents.on("render-process-gone", () => win?.webContents.reload());
   armSmokeProbe(win);
+  // Seeded before the load rather than after it: see seedSetupPreferences.
+  seedSetupPreferences(win);
   void win.loadURL(url);
+}
+
+/**
+ * Apply the answers the installer collected.
+ *
+ * Injected with `executeJavaScript` on `dom-ready`, before the web app's React root mounts. That
+ * ordering matters: the locale and theme stores build their initial state from `localStorage`, so a
+ * value written later is ignored on this load and only takes effect on the *next* start — the user
+ * would see the default appearance first, every launch.
+ *
+ * `dom-ready` rather than `did-finish-load` because the latter waits for subresources, which is
+ * comfortably after mount.
+ *
+ * Best-effort throughout: site data can be blocked or full, and neither is a reason to stop the app
+ * from starting — it would simply open in the default appearance.
+ */
+function seedSetupPreferences(target: BrowserWindow): void {
+  const answers = readSetupAnswers(app.getPath("userData"));
+  if (!answers) return;
+  const seed = seedStorage(answers);
+  if (Object.keys(seed).length > 0) {
+    const script = `(() => { const seed = ${JSON.stringify(seed)};
+      for (const [k, v] of Object.entries(seed)) { try { localStorage.setItem(k, v); } catch {} }
+      // The pre-paint appearance cache has to agree with the store, or the first paint uses the old
+      // one and the theme visibly snaps a frame later.
+      try {
+        const prev = localStorage.getItem("jiumate.skin.bootstrap");
+        if (prev) {
+          const p = JSON.parse(prev);
+          if (seed["jiumate.theme"]) p.skin = seed["jiumate.theme"];
+          if (seed["jiumate.mode"]) p.dark = seed["jiumate.mode"] === "dark";
+          localStorage.setItem("jiumate.skin.bootstrap", JSON.stringify(p));
+        }
+      } catch {}
+      return true })()`;
+    target.webContents.on("dom-ready", () => {
+      void target.webContents.executeJavaScript(script, true).catch((err: unknown) => {
+        process.stdout.write(`[setup] could not seed preferences: ${String(err)}\n`);
+      });
+    });
+  }
+  // The model answer is written alongside rather than applied: the default model is project-scoped
+  // (`PUT /api/projects/:id/models/default`) and no project id exists at first launch, so there is
+  // nothing to write it onto. The settings page adopts this file on its next open.
+  try {
+    fs.writeFileSync(
+      path.join(app.getPath("userData"), "setup-model.json"),
+      JSON.stringify(
+        {
+          provider: answers.provider ?? null,
+          model: answers.model ?? null,
+          baseUrl: answers.baseUrl ?? null,
+          skipModel: answers.skipModel ?? true,
+          apiKey: answers.apiKey ?? null,
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+  } catch (err) {
+    process.stdout.write(`[setup] could not hand over the model choice: ${String(err)}\n`);
+  }
 }
 
 /**
