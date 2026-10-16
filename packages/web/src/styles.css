@@ -471,55 +471,10 @@
   animation: compact-squeeze 1.8s ease-in-out infinite;
 }
 
-/* Login page circuit traces (login-circuit.tsx): pathLength=1 normalization, draw-in -> hold -> fade-out
-   loop. Base state is fully hidden: the positive animation-delay wait keeps the first paint blank, and
-   lines only start growing after load; once reduced-motion globally disables animation, the override below
-   restores fully static lines. */
-@keyframes login-trace-draw {
-  0% {
-    stroke-dashoffset: 1;
-    opacity: 0;
-  }
-  6% {
-    opacity: 1;
-  }
-  45% {
-    stroke-dashoffset: 0;
-  }
-  78% {
-    stroke-dashoffset: 0;
-    opacity: 1;
-  }
-  92%,
-  100% {
-    stroke-dashoffset: 0;
-    opacity: 0;
-  }
-}
-@keyframes login-via-blink {
-  0%,
-  40% {
-    opacity: 0;
-  }
-  50%,
-  78% {
-    opacity: 1;
-  }
-  92%,
-  100% {
-    opacity: 0;
-  }
-}
-.login-trace {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  opacity: 0;
-  animation: login-trace-draw var(--trace-dur, 14s) linear infinite;
-}
-.login-via {
-  opacity: 0;
-  animation: login-via-blink var(--trace-dur, 14s) linear infinite;
-}
+/* The login page's circuit traces used to live here, and so did the stylesheet's only
+   reduced-motion block. Both are gone: the login page now has the watchers panel
+   (pages/login-figures.css, which carries its own reduced-motion rules for the blink and the
+   lean), and the blanket override below still applies to everything else. */
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -528,14 +483,6 @@
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
-  }
-  /* With the trace animation disabled, the base state is fully hidden; this overrides it back to static full lines. */
-  .login-trace {
-    stroke-dashoffset: 0;
-    opacity: 1;
-  }
-  .login-via {
-    opacity: 1;
   }
   /* The truncated-title scroll reveal (#309) needs no override here: it is delivered
      entirely by the `title-scroll-reveal` keyframes above — including the inline-block

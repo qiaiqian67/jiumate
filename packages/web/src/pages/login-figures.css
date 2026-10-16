@@ -1,0 +1,207 @@
+/**
+ * The login page's watchers: four CSS figures, their eyes, mouths, and the three reactions.
+ *
+ * ## Why these are classes rather than inline styles
+ *
+ * Each figure's geometry is a handful of numbers, but the *reactions* are state machines —
+ * lean, look away, gape — and the same rules apply to all four figures. Spelling those out as
+ * class names on the elements (or as data attributes the CSS keys off, which is what
+ * `login-figures.tsx` emits) keeps the rules in one place: adding a fifth figure means adding
+ * its color, not copying four state blocks.
+ *
+ * ## The travel numbers are the whole trick
+ *
+ * A pupil is a black circle inside a white one of the same size, so it can only move by being
+ * scaled down. That leaves a gap of about 3px to move within — hence `--watch-pupil-travel`.
+ * The original demo's `translate(-8px)` and `scale(0.5)` would have pushed every pupil outside
+ * its white; the values here are sized to the geometry rather than copied from it.
+ */
+@layer components {
+  /* ── Figure bodies ──────────────────────────────────────────────────────────────
+     Widths differ per figure as well as heights: the two small ones are wider than they are
+     tall (domes), the two large ones are tall pills. `transform-origin: bottom center` is what
+     makes a lean read as the figure tipping over rather than sliding sideways. */
+  .watch-figure {
+    width: 125px;
+    border-radius: 8px;
+    transform-origin: bottom center;
+    transition:
+      transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
+      top 0.35s ease;
+  }
+
+  .watch-figure.purple {
+    width: 125px;
+    background-color: #6829ff;
+  }
+  .watch-figure.black {
+    width: 80px;
+    background-color: #1f2430;
+  }
+  /* Dome: a tall top radius on a short body reads as a rounded head rather than a pill. */
+  .watch-figure.yellow {
+    width: 73px;
+    border-top-left-radius: 50px;
+    border-top-right-radius: 50px;
+    background-color: #ffd700;
+  }
+  .watch-figure.orange {
+    width: 150px;
+    border-top-left-radius: 130px;
+    border-top-right-radius: 130px;
+    background-color: #ff7b00;
+  }
+
+  /* Leaning toward the username, or back from the startled click. Both tip from the bottom, so
+     the figure stays planted on the ground line instead of lifting off it. */
+  .watch-figure[data-leaning] {
+    transform: translate(-10px, -50%) rotate(-8deg);
+  }
+  /* Startled: the lean is undone (`translateY(-50%)` only) so the figures stand up straight with
+     their mouths open. A figure that stayed tipped over would read as falling, not as surprise. */
+  .watch-figure[data-surprised] {
+    transform: translateY(-50%);
+  }
+
+  /* ── Eyes ─────────────────────────────────────────────────────────────────────
+     A fixed 10px white with a black pupil inside it. Both are the same size on purpose: the
+     pupil is visible only because it is scaled to half and offset, which is what leaves room for
+     it to move. */
+  .watch-eyes {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    display: flex;
+    gap: 22px;
+    transform: translateX(-50%);
+  }
+
+  .watch-eye {
+    position: relative;
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #fff;
+    /* The blink collapses the white; the pupil is inside it, so both vanish together. */
+    animation: watch-blink var(--watch-blink, 4s) infinite ease-in-out;
+    animation-delay: var(--watch-blink-delay, 0s);
+  }
+
+  .watch-pupil {
+    position: absolute;
+    inset: 0;
+    display: block;
+    border-radius: 50%;
+    background-color: #111;
+    /* The inline transform the pointer handler writes goes here. The transition is what turns a
+       per-pixel jump into a glance; without it the pupils would snap, which reads as a glitch
+       rather than as looking. */
+    transform: translate(0px, 0px);
+    transition: transform 0.12s ease-out;
+  }
+
+  /* Looking away while a password is typed: the pupils shift left and shrink, so the gaze reads
+     as averted even though the eyes themselves have not moved. */
+  .watch-pupil[data-look-away] {
+    transform: translate(-3px, 0) scale(0.82);
+  }
+
+  /* ── Mouth ───────────────────────────────────────────────────────────────────
+     A short bar by default. Open and round when startled — taller *and* fully rounded, because a
+     taller rectangle alone reads as a bigger line rather than as an open mouth. */
+  .watch-mouth {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    display: block;
+    width: 12px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: #111;
+    transition:
+      height 0.18s ease,
+      border-radius 0.18s ease;
+  }
+
+  /* The black figure has no dark mouth to lose against its own body, so its mouth is white. */
+  .watch-figure.black .watch-mouth {
+    background-color: #fff;
+  }
+
+  .watch-mouth[data-surprised] {
+    height: 9px;
+    border-radius: 50%;
+  }
+
+  /*
+   * Blink. The keyframes spend almost all of their time open and close in a two-frame window
+   * near 10% — a blink is fast, and a symmetric open/close (the obvious way to write this) reads
+   * as a slow, sleepy sway. The two-percent windows at either end are what make it read as a
+   * blink rather than a flicker.
+   */
+  @keyframes watch-blink {
+    0%,
+    9%,
+    11%,
+    89%,
+    91%,
+    100% {
+      height: 10px;
+    }
+    10%,
+    90% {
+      height: 1px;
+    }
+  }
+
+  /*
+   * Reduced motion. The figures stop blinking and stop leaning, and the pupils stop easing
+   * between positions. What is left is four coloured shapes with eyes — the page still looks
+   * designed, and nothing moves. Without this, a user who asked for less motion would get a
+   * panel that never stops moving on its own.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .watch-eye {
+      animation: none;
+    }
+    .watch-figure,
+    .watch-pupil,
+    .watch-mouth {
+      transition: none;
+    }
+  }
+
+  /* ── Dark mode ─────────────────────────────────────────────────────────────────
+     Two of the four need changing, and only the two that would otherwise vanish.
+
+     The black figure (#1f2430) is a near-match for the dark panel (#111827): on its own it
+     would be an invisible silhouette with floating eyes. Lightened to a slate that still reads
+     as "the dark one" against the panel but keeps its edges.
+
+     The yellow one (#ffd700) keeps its color but loses its white eyes' contrast — a white eye on
+     bright yellow is the weakest pairing in the set, so the eyes go dark there instead. It also
+     keeps a white mouth, because a dark mouth on yellow is nearly as low-contrast as the eye.
+
+     Purple and orange are left alone: both are saturated mid-tones that hold up against a dark
+     panel without being re-tuned, and changing them would only be churn. */
+  .dark .watch-panel {
+    background-color: #111827;
+  }
+
+  .dark .watch-figure.black {
+    background-color: #394150;
+  }
+
+  .dark .watch-figure.yellow .watch-eye {
+    background-color: #1f2430;
+  }
+
+  .dark .watch-figure.yellow .watch-pupil {
+    background-color: #ffd700;
+  }
+
+  .dark .watch-figure.yellow .watch-mouth {
+    background-color: #1f2430;
+  }
+}

@@ -488,6 +488,8 @@ export const en: Strings = {
     showPassword: "Show password",
     hidePassword: "Hide password",
     login: "Sign in",
+    /** The line under the login page's title: says what the page wants, not what it is called. */
+    loginSubtitle: "Enter your username and password",
     logout: "Sign out",
     admin: "Admin",
     defaultAdminNote:

@@ -489,6 +489,9 @@ export const zh = {
     showPassword: "显示密码",
     hidePassword: "隐藏密码",
     login: "登录",
+    /** 登录页标题下方那行字。说明这是什么页面（而不是再说一遍"登录"），也给面板一个
+        对话式的开场：参考设计里是 "Welcome back! Please enter your details"。 */
+    loginSubtitle: "请输入你的账号与密码",
     logout: "退出",
     admin: "管理员",
     defaultAdminNote:
