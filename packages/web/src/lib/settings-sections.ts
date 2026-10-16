@@ -24,6 +24,10 @@ import type { AccountMenuSession } from "./account-menu";
 
 /** A page of the System settings dialog. */
 export type SettingsSectionKey =
+  | "projectManage"
+  | "projectMembers"
+  | "projectDefaults"
+  | "projectSecurity"
   | "general"
   | "appearance"
   | "application"
@@ -34,8 +38,8 @@ export type SettingsSectionKey =
   | "uploads"
   | "users";
 
-/** Rail heading a page sits under: the viewer's own preferences vs. the whole server's. */
-export type SettingsGroupKey = "personal" | "server";
+/** Rail heading a page sits under: the Project itself, the viewer's own preferences, or the whole server's. */
+export type SettingsGroupKey = "project" | "personal" | "server";
 
 export interface SettingsSection {
   readonly key: SettingsSectionKey;
@@ -53,6 +57,14 @@ export interface SettingsViewer extends AccountMenuSession {
  */
 const SECTION_RULES: ReadonlyArray<SettingsSection & { visible(viewer: SettingsViewer): boolean }> =
   [
+    // 项目分组：关于**当前项目本身**的四页（管理 / 成员 / 默认值 / 安全策略）。它们排在个人
+    // 分组之前，因为项目是一个比个人偏好更外层的对象——先确定在哪个项目里工作，再谈这个
+    // 人怎么配置。原来的入口是侧边栏用户菜单里的一个项目设置弹窗，现在统一收进系统设置，
+    // 于是"改项目"和"改个人"在同一个地方，不用在两个入口之间来回找。
+    { key: "projectManage", group: "project", visible: () => true },
+    { key: "projectMembers", group: "project", visible: (v) => !v.desktopMode },
+    { key: "projectDefaults", group: "project", visible: () => true },
+    { key: "projectSecurity", group: "project", visible: () => true },
     { key: "general", group: "personal", visible: () => true },
     { key: "appearance", group: "personal", visible: () => true },
     // The model library: providers, API keys, pricing and grouping. It used to be a nav entry;

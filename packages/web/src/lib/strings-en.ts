@@ -13,12 +13,12 @@ export const en: Strings = {
   nav: {
     chat: "Chat",
     newChat: "New session",
-    appCenter: "Inspiration",
+    appCenter: "Plaza",
     agents: "Agents",
     plugins: "Plugins & Skills",
     models: "Models",
     machines: "Machines",
-    usage: "Token Map",
+    usage: "Tokens",
     traces: "Trajectories",
     benchmark: "Evaluation Center",
     // Collapsed-rail tooltip (product-specified wording; 新会话 reuses chat.newSessionMenu, the other pages reuse the page names above).
@@ -168,8 +168,10 @@ export const en: Strings = {
     applicationPetImportFailed: "Could not import the pet.",
     applicationPetImported: (name: string) => `Imported “${name}”`,
     applicationPetDeleted: "Pet deleted.",
-    /** Sidebar user-menu row opening the System settings dialog. */
+    /** Sidebar user-menu row opening the System settings page. */
     systemSettings: "System settings",
+    /** The full-page settings' own exit row: the modal's close button had no equivalent. */
+    backToWorkspace: "Back to workspace",
     /** Rail headings: the viewer's own preferences vs. the whole server's. */
     groupPersonal: "Personal",
     groupServer: "Server",
@@ -270,6 +272,17 @@ export const en: Strings = {
     themeBackgroundDimInfo:
       "A scrim over the artwork, so a busy image does not compete with the text in the gaps between panels. 0 leaves it undimmed.",
     currencyInfo: "Display currency for prices; storage is always USD.",
+    /**
+     * Chat prose font size. Deliberately a SEPARATE setting from Appearance's 字号
+     * (fontSize / fontSmall…): that one scales the whole interface via the html root font
+     * size, this one scales only the Markdown in the message stream. The `chat` prefix keeps
+     * the two apart; they coexist without either affecting the other.
+     */
+    chatFontSize: "Chat text size",
+    chatFontSizeInfo: "Font size of conversation text. The interface and code blocks are unaffected.",
+    chatFontSmall: "Small",
+    chatFontMedium: "Medium",
+    chatFontLarge: "Large",
     changePasswordInfo: "Change this account's sign-in password.",
     accentNames: {
       neutral: "Neutral",
@@ -455,6 +468,9 @@ export const en: Strings = {
     moreInfo: "More info",
     /** The same, named for what it explains — so the trigger never repeats the heading it sits in. */
     moreInfoAbout: (subject: string) => `More info: ${subject}`,
+    /** Accessible name of the warning-tone popover (circled "!"). Kept apart from "More info":
+        a warning announced under that name understates exactly what it warns about. */
+    warningAbout: (subject: string) => (subject ? `Warning: ${subject}` : "Warning"),
     name: "Name",
     username: "Username",
     role: "Role",
@@ -533,7 +549,6 @@ export const en: Strings = {
     displayName: "Display name",
     /** Create dialog only: leaving the name empty falls back to the id. In Project settings the saved name cannot be blanked. */
     displayNameHint: "Leave empty to use the Project id as the name",
-    settings: "Project settings",
     settingsTitle: "Project settings",
     members: "Members",
     addMember: "Add member",
@@ -553,6 +568,18 @@ export const en: Strings = {
     settingsTabMembers: "Members",
     settingsTabDefaults: "Defaults",
     settingsTabSecurity: "Security policy",
+    /**
+     * The 「项目」heading in the System settings menu and its four pages. The Project
+     * settings' 「通用」is renamed 「管理」— it is not general preferences but the three
+     * operations on the Project ITSELF (rename, create, delete), which "General" never said.
+     */
+    settingsGroupProject: "Project",
+    settingsTabManage: "Project",
+    settingsTabManageInfo: "Project name, creation and deletion.",
+    newProject: "New project",
+    newProjectInfo: "Create a new project and switch to it.",
+    /** Shown on the 「项目」settings pages when there is no current Project (they all need one). */
+    noCurrentProject: "No current project. Pick or create one from the sidebar first.",
     projectIdLabel: "Project ID",
     deleteProjectDesc: "The project directory is removed recursively and cannot be recovered.",
     /** Security-policy page (Project settings): disclosed by the "?" beside the tab heading. */
@@ -578,7 +605,7 @@ export const en: Strings = {
     deleteLastForbidden:
       "This is the last Project on this account; create another Project before deleting it",
     deleteDefaultForbidden:
-      "default_project is shared with the CLI and cannot be deleted from the web",
+      "default_project is shared with the CLI and cannot be deleted from the web. Its directory is deleted recursively and cannot be recovered.",
     noCredentialTitle: "No model credential configured",
     noCredentialBody:
       "The default model of this Project has no API key yet. Configure it on the Models page before chatting.",
@@ -965,12 +992,12 @@ export const en: Strings = {
     visionOffProxyHint: "Images are read via the vision proxy model",
     fastMode: "Fast mode",
     fastModeHint:
-      "Faster output, billed at the provider's premium tier; the Token Map still counts it at the entry's standard prices",
+      "Faster output, billed at the provider's premium tier; the Tokens page still counts it at the entry's standard prices",
     fastModeUnsupported:
       "This model does not support fast mode — turn it off, or its requests will fail",
     fastModeConfirmTitle: "Enable fast mode",
     fastModeConfirmBody:
-      "Fast mode is billed at the provider's premium price list (MiniMax charges 1.5x standard; OpenAI and Anthropic publish separate premium rates). The entry's recorded per-token prices are not adjusted, so the Token Map will under-report this usage.",
+      "Fast mode is billed at the provider's premium price list (MiniMax charges 1.5x standard; OpenAI and Anthropic publish separate premium rates). The entry's recorded per-token prices are not adjusted, so the Tokens page will under-report this usage.",
     fastModeConfirmPreview:
       "Anthropic's fast mode is a limited research preview: until your organization is granted access, requests return a 429 rate-limit error.",
     fastModeBadge: "Fast",
@@ -1287,13 +1314,13 @@ export const en: Strings = {
   },
 
   /**
-   * Inspiration library (features/inspiration/*): the built-in cases plus the ones admins authored,
+   * Plaza (features/inspiration/*): the built-in cases plus the ones admins authored,
    * filed into categories. The built-in cases' own copy is NOT here — it travels with the case, as
    * the `title`/`titleZh` fields in `@prismshadow/jiumate-inspirations/presets`, which is what lets
    * an admin's case and a built-in one be the same kind of thing. This group carries the chrome.
    */
   inspiration: {
-    pageTitle: "Inspiration",
+    pageTitle: "Plaza",
     /** 新会话页输入框下方那条封面卡片条的标题。 */
     stripTitle: "From inspiration",
     /** 卡片条右上角的按钮：换下一组卡片。 */
@@ -1338,7 +1365,7 @@ export const en: Strings = {
     searchEmpty: (query: string) => `No case matches "${query}".`,
     /** Shown when the server's catalog could not be read (only the built-ins are listed). */
     offlineHint:
-      "Could not read the inspiration library from the server — showing the built-in cases only.",
+      "Could not read the plaza catalog from the server — showing the built-in cases only.",
     /** Detail modal section headings. */
     previewLabel: "Preview",
     promptLabel: "Prompt",
@@ -1928,6 +1955,16 @@ export const en: Strings = {
     workspaceNoSubdirs: "No subdirectories",
     workspaceAuto: "Temporary workspace",
     workspaceClear: "Use a temporary workspace instead",
+    /**
+     * The menu's newer parts: the search field, the recently-used list, and the desktop
+     * shell's native folder chooser. The size of the recent list is decided in
+     * `workspace-select.tsx` — mentioned here so the reason is traceable.
+     */
+    workspaceSearch: "Search workspaces",
+    workspaceSearchEmpty: "No matching workspaces",
+    workspaceRecent: "Recently used",
+    workspaceOpenLocal: "Open local folder",
+    workspaceOpenLocalHint: "Choose a folder on this computer as the workspace",
     workspaceDirInvalid: "Directory does not exist or is inaccessible; reverted",
     /** Sidebar conversation-list grouping toggle (workspace is the default) + workspace groups. */
     groupByWorkspace: "Group by workspace",
@@ -2829,7 +2866,7 @@ export const en: Strings = {
   },
 
   usage: {
-    title: "Token Map",
+    title: "Tokens",
     today: "Today",
     last7d: "Last 7 days",
     total: "Total",

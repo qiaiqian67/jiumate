@@ -180,43 +180,9 @@ export function CreateProjectDialog({
   );
 }
 
-/** Path data for the settings tabs' small icons (24px viewBox, stroked like NAV_ICONS). */
-const TAB_ICON_PATHS = {
-  general: GEAR_ICON,
-  /** Two people (lucide users). Project members are humans — the Agent glyph used to stand in here. */
-  members:
-    "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
-  /** Sliders (lucide sliders-vertical). */
-  defaults: "M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6m2-6h6m2 8h6",
-  /** Shield (lucide shield). */
-  security: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
-} as const;
-
-type SettingsTab = keyof typeof TAB_ICON_PATHS;
-
-function TabIcon({ d }: { d: string }) {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      className="shrink-0"
-    >
-      <path d={d} />
-    </svg>
-  );
-}
-
 /**
- * One row of a settings page: title plus a one-line gray description on the left, the
- * control on the right. Rows are separated by the parent container's divide-y hairlines
- * (ruled sections, not card boxes).
+ * 项目设置各页的一行：左边标题（可带一行说明），右边控件。与系统设置的 PrefRow 同一形状，
+ * 因为这几页现在也挂在系统设置里，混用两种行样式会让同一个设置菜单看起来像两个产品。
  */
 function SettingRow({
   title,
@@ -239,104 +205,22 @@ function SettingRow({
 }
 
 /**
- * Project settings dialog: a left tab rail (General / Members / Defaults / Security
- * policy) with a row-styled content pane per tab; on narrow screens the rail degrades to a
- * horizontally scrollable strip above the content. Members does not exist in the
- * single-user desktop app (the server answers desktop_single_user on those routes), so the
- * tab is hidden there outright. Each page component owns its data and save flow; the
- * dialog only routes tabs, resetting to General per open.
+ * 管理页（原 Project settings 的「通用」）：显示名（Project 唯一可编辑的字段——id 命名
+ * 目录与所有存储引用，所以不可变，只给一行只读展示）、新建项目入口，以及删除区。
+ *
+ * `onGone` 是删除成功后的离场回调，而不是弹窗的 onClose：弹窗时代它关弹窗，而这一页现在
+ * 挂在系统设置里、删掉当前项目后已经没有"上一层"可关，必须由调用方决定去哪（设置页选择
+ * 回到工作区）。
  */
-export function ProjectSettingsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { desktopMode } = useAuth();
-  const { currentProject } = useProject();
-  const [tab, setTab] = useState<SettingsTab>("general");
-
-  useEffect(() => {
-    if (open) setTab("general");
-  }, [open]);
-
-  const projectId = currentProject?.projectId;
-  const isOwner = currentProject?.role === "owner";
-  if (!currentProject || !projectId) return null;
-
-  // `info` is the page's semantic explanation, disclosed by a "?" beside the pane heading —
-  // the only title these pages have, since each section renders its rows without repeating it.
-  const tabs: { key: SettingsTab; label: string; info?: string }[] = [
-    { key: "general", label: S.project.settingsTabGeneral },
-    ...(!desktopMode ? [{ key: "members" as const, label: S.project.settingsTabMembers }] : []),
-    { key: "defaults", label: S.project.settingsTabDefaults },
-    {
-      key: "security",
-      label: S.project.settingsTabSecurity,
-      info: S.project.commandPolicyInfo,
-    },
-  ];
-  const active = tabs.find((t) => t.key === tab) ?? tabs[0]!;
-
-  return (
-    <Modal open={open} title={S.project.settingsTitle} onClose={onClose} widthClass="sm:max-w-3xl">
-      <div className="flex flex-col gap-3 sm:min-h-[26rem] sm:flex-row sm:gap-0">
-        <nav
-          aria-label={S.project.settingsTitle}
-          className="flex shrink-0 gap-1 overflow-x-auto sm:w-44 sm:flex-col sm:overflow-x-visible sm:border-r sm:border-gray-100 sm:pr-3 dark:sm:border-gray-800"
-        >
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              aria-current={active.key === t.key ? "page" : undefined}
-              onClick={() => setTab(t.key)}
-              className={`flex shrink-0 items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors duration-150 ${
-                active.key === t.key
-                  ? "bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                  : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/60"
-              }`}
-            >
-              <TabIcon d={TAB_ICON_PATHS[t.key]} />
-              <span className="truncate">{t.label}</span>
-            </button>
-          ))}
-        </nav>
-        <section className="min-w-0 flex-1 sm:pl-5">
-          <h3 className="flex items-center gap-1.5 text-base font-semibold">
-            {active.label}
-            {active.info !== undefined && (
-              <InfoPopover label={active.label}>{active.info}</InfoPopover>
-            )}
-          </h3>
-          <div className="mt-2">
-            {active.key === "general" && (
-              <GeneralSection projectId={projectId} isOwner={isOwner} onClose={onClose} />
-            )}
-            {active.key === "members" && <MembersSection projectId={projectId} isOwner={isOwner} />}
-            {active.key === "defaults" && (
-              <ChatDefaultsSection projectId={projectId} isOwner={isOwner} />
-            )}
-            {active.key === "security" && (
-              <SecurityPolicySection projectId={projectId} isOwner={isOwner} />
-            )}
-          </div>
-        </section>
-      </div>
-    </Modal>
-  );
-}
-
-/**
- * General page: the display name (the Project's only editable field — the id names the
- * directory and every stored reference, so it stays immutable and gets a read-only row),
- * plus the delete zone. Saving the name is explicit; success needs no toast (the switcher,
- * this field and every Project list re-render once reloadProjects settles, #54), only
- * failures pop one, and the field keeps what was typed so it can be retried.
- */
-function GeneralSection({
+export function ProjectManageSection({
   projectId,
   isOwner,
-  onClose,
+  onGone,
 }: {
   projectId: string;
   isOwner: boolean;
-  onClose: () => void;
+  /** Current Project deleted: leave this page. */
+  onGone?: () => void;
 }) {
   const { currentProject, setCurrentProjectId, projects, reloadProjects } = useProject();
   /** The saved display name, with the same id fallback the switcher shows. */
@@ -346,6 +230,7 @@ function GeneralSection({
   const [nameBusy, setNameBusy] = useState(false);
   const [nameError, setNameError] = useState<string | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const saveName = async () => {
     const next = name.trim();
@@ -365,7 +250,9 @@ function GeneralSection({
   const doDelete = async () => {
     try {
       await api.deleteProject(projectId);
-      onClose();
+      // 先离场再切换：onGone 可能卸载整个页面（设置页 → 工作区），而下面还要读
+      // projects / reloadProjects，过早卸载会让后续的状态更新打在一个已消失的组件上。
+      onGone?.();
       const next = projects.find((p) => p.projectId !== projectId);
       await reloadProjects();
       if (next) setCurrentProjectId(next.projectId);
@@ -376,6 +263,15 @@ function GeneralSection({
 
   return (
     <div className="divide-y divide-gray-100 dark:divide-gray-800/60">
+      {/* 新建项目：本页的入口，而不是侧边栏或用户菜单里的一处。它和"改名 / 删除"是同一件
+          事的三面——都在管理**项目**本身——所以放在这里，读起来是"关于项目的操作都在这一
+          页"。弹窗复用 CreateProjectDialog，所以字段、校验和建完后的切换行为与原来的入口
+          完全一致，这里只决定"什么时候能打开它"。 */}
+      <SettingRow title={S.project.newProject} description={S.project.newProjectInfo}>
+        <Button size="sm" onClick={() => setCreating(true)}>
+          {S.project.newProject}
+        </Button>
+      </SettingRow>
       <SettingRow title={S.project.displayName}>
         {isOwner ? (
           <div className="flex flex-col items-end gap-1">
@@ -413,10 +309,14 @@ function GeneralSection({
       </SettingRow>
       {isOwner &&
         (projectId === DEFAULT_PROJECT_ID ? (
-          <SettingRow
-            title={S.project.deleteProject}
-            description={S.project.deleteDefaultForbidden}
-          />
+          // 默认项目：两句话（"与 CLI 共用" + "目录会被递归删除"）合成一个感叹号。分开摆
+          // 会占掉两行常驻文字；而后者恰恰是最该在按下按钮前被读到的那句，藏在第二行
+          // 说明里等于没写。感叹号的语气也在说"先看这个"。
+          <SettingRow title={S.project.deleteProject}>
+            <InfoPopover label={S.project.deleteProject} tone="warn">
+              {S.project.deleteDefaultForbidden}
+            </InfoPopover>
+          </SettingRow>
         ) : projects.length <= 1 ? (
           // Last accessible Project: deleting it would leave the account with no Project to
           // select (the page would get stuck on the skeleton screen), so the entry point is
@@ -429,6 +329,19 @@ function GeneralSection({
             </Button>
           </SettingRow>
         ))}
+
+      {/* Create-project, opened from this page's button. Mounted here rather than at the app
+          root so it unmounts with the page — the dialog is only reachable while it is up. */}
+      <CreateProjectDialog
+        open={creating}
+        onClose={() => setCreating(false)}
+        onCreated={(newId) => {
+          // 建完就切过去，和原来从侧边栏新建的行为一致：新建的用途就是马上用。列表先刷新
+          // 再切，否则新项目还不在列表里、当前项目却已经指向它。
+          setCreating(false);
+          void reloadProjects().then(() => setCurrentProjectId(newId));
+        }}
+      />
 
       {/* Delete confirmation (shared ConfirmModal, stacked above the settings dialog). */}
       <ConfirmModal
@@ -448,7 +361,7 @@ function GeneralSection({
  * members read). Only the initial load shows inline (in place of the table); action
  * failures pop a toast. Mounted per tab visit, so revisiting refetches.
  */
-function MembersSection({ projectId, isOwner }: { projectId: string; isOwner: boolean }) {
+export function MembersSection({ projectId, isOwner }: { projectId: string; isOwner: boolean }) {
   const { user } = useAuth();
   const [members, setMembers] = useState<MemberInfo[] | null>(null);
   const [newMemberId, setNewMemberId] = useState("");
@@ -571,7 +484,7 @@ function MembersSection({ projectId, isOwner }: { projectId: string; isOwner: bo
  * values are the confirmation); members see the values read-only. Mounted per dialog open
  * (the Modal unmounts its children when closed), so reopening always refetches.
  */
-function ChatDefaultsSection({ projectId, isOwner }: { projectId: string; isOwner: boolean }) {
+export function ChatDefaultsSection({ projectId, isOwner }: { projectId: string; isOwner: boolean }) {
   const { user } = useAuth();
   const { agents } = useProject();
   /** Saved block (null while loading); edit buffers below use "" for "not set". */
@@ -952,7 +865,7 @@ export function RuleEditor({
  * saved); members see the effective state read-only. The list dims AND disables while the
  * master switch is off, but Save stays live so the toggle itself can be saved.
  */
-function SecurityPolicySection({ projectId, isOwner }: { projectId: string; isOwner: boolean }) {
+export function SecurityPolicySection({ projectId, isOwner }: { projectId: string; isOwner: boolean }) {
   const [saved, setSaved] = useState<CommandPolicyDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

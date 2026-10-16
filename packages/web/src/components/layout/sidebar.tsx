@@ -1,6 +1,6 @@
 /**
  * Single-column sidebar, top to bottom:
- * Project switcher -> new chat (default_agent draft) + page nav (Agents → Evaluation Center,
+ * Project switcher -> new chat (default_agent draft) + page nav (Agents �?Evaluation Center,
  * one collapsible group behind a nav-row-wide chevron button under its last entry: arrow
  * up = click to collapse, arrow down while collapsed = the way back; state persists in
  * localStorage, the pinned new-chat block never collapses) -> Session area with three grouping
@@ -13,7 +13,7 @@
  * bucketed on last activity; the buckets span every Agent, so the Subagents / Scheduled /
  * Archived folders and the paging row sit below them as one Project-wide set). Groups can
  * be pinned via the header's hover pin toggle: pinned groups sort before unpinned within
- * their mode, keeping each partition's own order — the time buckets excepted, whose order
+ * their mode, keeping each partition's own order �?the time buckets excepted, whose order
  * IS the timeline and which therefore carry no pin. Conversations can be pinned too (row
  * context menu; persisted per Project in
  * localStorage): pinned rows bubble to the top of their group's active list. Each row's
@@ -29,7 +29,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent as ReactDragEvent, ReactNode } from "react";
-import { NavLink, useMatch, useNavigate } from "react-router";
+import { NavLink, useMatch, useNavigate, useSearchParams } from "react-router";
 import type {
   SessionCategory,
   SessionCategoryCounts,
@@ -71,12 +71,7 @@ import {
   workspaceLabel,
 } from "../../lib/session-grouping";
 import type { FolderCategory, SessionPartition } from "../../lib/session-grouping";
-import {
-  initialNavGroupCollapsed,
-  navKeysFor,
-  NAV_ROUTES,
-  storeNavGroupCollapsed,
-} from "../../lib/nav-group-collapse";
+import { navKeysFor, NAV_ROUTES } from "../../lib/nav-manifest";
 import {
   loadPinnedSessions,
   removePinnedSession,
@@ -92,6 +87,7 @@ import {
   unregisterWorkspace,
 } from "../../lib/workspace-registry";
 import type { WorkspaceEntry } from "../../lib/workspace-registry";
+import { recentWorkspaces } from "../../lib/recent-workspaces";
 import {
   applyManualReorder,
   initialSessionSortMode,
@@ -126,6 +122,7 @@ import {
 } from "../ui/session-row-menu";
 import type { SessionRowAction } from "../ui/session-row-menu";
 import { AgentAvatar } from "../ui/agent-avatar";
+import { JiuMateLogo } from "../ui/jiumate-logo";
 import { CheckIcon, ChevronDown, GEAR_ICON, MESSAGING_RELAY_ICON, NAV_ICONS } from "../ui/icons";
 import {
   FOLDER_ICON,
@@ -164,12 +161,16 @@ import {
   useDraftSessions,
 } from "../../features/chat/draft-sessions";
 import type { DraftSessionEntry } from "../../features/chat/draft-sessions";
-import { CreateProjectDialog, ProjectSettingsDialog } from "./project-dialogs";
 import { UpdateRow } from "../account/update-row";
 import { openUpdateModal } from "../../lib/use-update-flow";
 import { navNoteFor, useUpdateBadges } from "../../lib/use-update-badges";
-import { SettingsDialog } from "../../features/settings/settings-dialog";
 import { subscribeOpenSettings } from "../../lib/open-settings";
+import { settingsGroups, resolveSettingsSection, visibleSettingsSections } from "../../lib/settings-sections";
+import {
+  SETTINGS_SECTION_ICONS,
+  settingsGroupLabel,
+  settingsSectionLabel,
+} from "../../lib/settings-labels";
 import type { SettingsSectionKey } from "../../lib/settings-sections";
 import { ICON_SIZE } from "../../lib/icon-scale";
 
@@ -199,7 +200,7 @@ const CLOSE_ICON = "M18 6L6 18M6 6l12 12";
 /**
  * Private drag payload type of a manual session reorder. Deliberately NOT `text/plain`:
  * the composer is a controlled textarea with no drop guard, and a native text drop
- * mutates its value and fires `input` — a mis-aimed reorder would paste a session id
+ * mutates its value and fires `input` �?a mis-aimed reorder would paste a session id
  * into the user's message. Nothing outside these rows reads this type.
  */
 const SESSION_DRAG_MIME = "application/x-jiumate-session-id";
@@ -211,17 +212,17 @@ const GROUP_DRAG_MIME = "application/x-jiumate-group-key";
  * Is the drag in flight one of our group reorders? `types` is readable during dragover
  * (unlike getData), so the payload GROUP_DRAG_MIME carries is what authorizes the drop
  * rather than React state alone: a `dragGroup` left behind by a source header that
- * unmounted mid-drag can no longer make the sidebar swallow an unrelated drag — a file
- * from the desktop, a Session row — paint a phantom drop line, and commit on release.
+ * unmounted mid-drag can no longer make the sidebar swallow an unrelated drag �?a file
+ * from the desktop, a Session row �?paint a phantom drop line, and commit on release.
  */
 const isGroupDrag = (e: ReactDragEvent): boolean => e.dataTransfer.types.includes(GROUP_DRAG_MIME);
 
-/** Manual drag-reordering needs a pointer that can drag (HTML5 DnD never fires from touch) — the outline rail's query. */
+/** Manual drag-reordering needs a pointer that can drag (HTML5 DnD never fires from touch) �?the outline rail's query. */
 const DRAG_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
 
 /**
  * Mode-dependent create glyph: the entity's own icon (folder / robot) shrunk toward
- * the top-left, with a plus badge in the freed bottom-right corner — no knockout disc
+ * the top-left, with a plus badge in the freed bottom-right corner �?no knockout disc
  * needed (a background-colored punch would mismatch the hover pill), so it stays
  * legible at icon size in both themes. Stroke style matches the shared Icon set.
  */
@@ -249,7 +250,7 @@ function AddBadgeIcon({ base, size = 15 }: { base: string; size?: number }) {
 const menuItemClass =
   "block w-full px-3.5 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800";
 
-/** Section-header icon control (search / list settings / create): the grouping-toggle button look — active renders as a pressed fill. */
+/** Section-header icon control (search / list settings / create): the grouping-toggle button look �?active renders as a pressed fill. */
 const headerControlClass = (active: boolean) =>
   `flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors duration-150 ${
     active
@@ -263,7 +264,7 @@ const menuSectionClass =
 
 /**
  * Collapsed-group and pinned-group persistence (survives a refresh), one storage key
- * per Project and concern — group keys are Agent ids / Workspace paths, which are
+ * per Project and concern �?group keys are Agent ids / Workspace paths, which are
  * Project-scoped. Both grouping modes share one set per concern (their key spaces
  * never collide); stray keys left by deleted Agents or Workspaces are harmless
  * (never matched) and the per-Project sets stay tiny.
@@ -303,7 +304,7 @@ const DRAFTS_GROUP_KEY = "\0drafts";
 
 /**
  * Session status glyph: a turning hourglass while the Session is busy, a green dot once it has
- * finished with a reply the user has not seen, and nothing once that reply has been read — or
+ * finished with a reply the user has not seen, and nothing once that reply has been read �?or
  * if the Session never ran at all. See sessionActivity.
  */
 function StatusGlyph({ activity }: { activity: SessionActivity }) {
@@ -317,9 +318,21 @@ function StatusGlyph({ activity }: { activity: SessionActivity }) {
 export function Sidebar({
   onNavigate,
   onCollapse,
+  onClose,
 }: {
   onNavigate?: () => void;
   onCollapse?: () => void;
+  /**
+   * This column's way out, shown in its own top row.
+   *
+   * The mobile drawer used to supply a titled header (name + close button) and mount this
+   * column under it �?which put two app names and two close affordances on one screen and
+   * read as a duplicated header rather than a header. The column's top row already says what
+   * the app is, so in the drawer the drawer passes `onClose` and omits its own header: one
+   * name, one way out. The far-edge control becomes the close button instead of the collapse
+   * toggle, because a drawer has no narrower state �?it dismisses.
+   */
+  onClose?: () => void;
 }) {
   const navigate = useNavigate();
   const { user, logout, desktopMode, sessionVia } = useAuth();
@@ -348,38 +361,58 @@ export function Sidebar({
   const chatMatch = useMatch("/chat/:sessionId");
   const activeSessionId = chatMatch?.params.sessionId ?? null;
 
-  const [projectOpen, setProjectOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
-  const [createProjectOpen, setCreateProjectOpen] = useState(false);
-  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  /** Page the dialog opens on; set by the desktop pet's "switch pet" menu item. */
-  const [settingsSection, setSettingsSection] = useState<SettingsSectionKey | null>(null);
   /** The badges over the update and to-do trails (use-update-badges.ts); the avatar's dot follows the update flow's offer / restart states. */
   const badges = useUpdateBadges();
   // The anomaly trail's raised todo. The error log lives inside System settings now, so the dot
-  // is raised on that menu entry (and on the 日志 row inside the dialog) instead of on a nav
-  // route — see use-update-badges.ts.
+  // is raised on that menu entry (and on the 日志 row inside the page) instead of on a nav
+  // route �?see use-update-badges.ts.
   const logsTodo = badges.todos.errors;
   const logsNote = logsTodo === undefined ? null : S.todo.unexpectedErrors(logsTodo.count);
 
-  // The floating pet window cannot reach this dialog (separate window, no router),
-  // so its "switch pet" menu item relays through the chat window as a DOM event.
-  useEffect(
-    () =>
-      subscribeOpenSettings((section) => {
-        setSettingsSection(section);
-        setSettingsOpen(true);
-      }),
-    [],
-  );
+  /**
+   * System settings is a route now, not a dialog, so every way in goes through the router:
+   * one place decides where it lives and the back button works from all of them.
+   * `section` names the page; the page resolves a page this viewer may not open (see
+   * resolveSettingsSection), so the pet relay can ask for any page without a gate here.
+   */
+  const openSettings = (section?: SettingsSectionKey) =>
+    navigate(section === undefined ? "/settings" : `/settings?section=${section}`);
+
+  /* Settings mode: while a settings route is open the column shows the settings categories
+     instead of the page nav + session list (see the branch in the returned JSX). Its own
+     `useMatch`, not the chat one above �?that answers null everywhere else, and the two being
+     separate routes is exactly what lets one replace the other. */
+  const settingsOpen = useMatch("/settings") !== null;
+  // The categories, gated by the same registry the pane uses
+  // (features/settings/settings-page.tsx): the menu must never offer a page the pane would
+  // refuse, or a row would lead nowhere for a hand-edited URL.
+  const settingsSections = visibleSettingsSections({
+    isAdmin: user?.isAdmin === true,
+    desktopMode,
+    sessionVia,
+  });
+  const settingsGroupList = settingsGroups(settingsSections);
+  /** Category name + glyph for one row; reads the live locale, so call inside render. */
+  const settingsNameOf = (key: SettingsSectionKey) => settingsSectionLabel(key);
+  /**
+   * Which row wears the active treatment, resolved through the SAME gate the pane resolves
+   * through. That gate matters: `/settings` with no query is not "no row active" �?the pane
+   * redirects it to its first visible category, so the menu has to agree or the first row
+   * would sit there unhighlighted while the pane showed exactly that page.
+   */
+  const [settingsSearchParams] = useSearchParams();
+  const requestedSection = settingsSearchParams.get("section");
+  const openSection = resolveSettingsSection(requestedSection, settingsSections);
+
+  // The floating pet window cannot reach the app's router (separate window, no router of its
+  // own), so its "switch pet" menu item relays through the chat window as a DOM event.
+  useEffect(() => subscribeOpenSettings((section) => openSettings(section)), []);
   const currentProjectId = currentProject?.projectId ?? null;
   /** This Project's read markers; re-renders the rows whenever one is stamped. */
   const sessionSeen = useSessionSeen(currentProjectId);
   const collapseStoreKey = currentProjectId === null ? null : collapsedGroupsKey(currentProjectId);
   const pinStoreKey = currentProjectId === null ? null : pinnedGroupsKey(currentProjectId);
-  /** Collapsed page-nav group (the 智能体 → 评估中心 entries; expanded by default, the choice persists across sessions). */
-  const [navCollapsed, setNavCollapsed] = useState(initialNavGroupCollapsed);
   /** Grouping mode of the Session list (Workspace by default; the choice persists across sessions). */
   const [groupMode, setGroupModeState] = useState<GroupMode>(initialGroupMode);
   /** Collapsed groups (expanded by default), keyed by Agent id or Workspace group key depending on the mode; persisted per Project. */
@@ -396,21 +429,21 @@ export function Sidebar({
   );
   /** Row sort mode ("recent" default / "manual" drag order; the choice persists across sessions like the grouping mode). */
   const [sortMode, setSortModeState] = useState<SessionSortMode>(initialSessionSortMode);
-  /** Manual row order (Session ids; only relative order within a co-rendered partition matters); persisted per Project AND grouping mode — the modes cut different partitions. */
+  /** Manual row order (Session ids; only relative order within a co-rendered partition matters); persisted per Project AND grouping mode �?the modes cut different partitions. */
   const [sessionOrder, setSessionOrder] = useState<readonly string[]>(() =>
     loadSessionOrder(currentProjectId, initialGroupMode()),
   );
   /**
    * Manual GROUP order (Workspace keys / Agent ids), persisted per Project and grouping
    * mode like the row order. Independent of `sortMode`: dragging a group is itself the
-   * intent, so there is no second toggle — an empty array is the identity and the list
+   * intent, so there is no second toggle �?an empty array is the identity and the list
    * keeps its automatic sort. Empty in time mode, whose buckets are chronological
    * (group-order.ts).
    */
   const [groupOrder, setGroupOrder] = useState<readonly string[]>(() =>
     loadGroupOrder(currentProjectId, initialGroupMode()),
   );
-  /** Manually-added Workspaces (header 新建工作区; render as empty groups until Sessions exist, with optional display aliases); persisted per Project. */
+  /** Manually-added Workspaces (header 新建工作�? render as empty groups until Sessions exist, with optional display aliases); persisted per Project. */
   const [registeredWorkspaces, setRegisteredWorkspaces] = useState<readonly WorkspaceEntry[]>(() =>
     loadWorkspaceRegistry(currentProjectId),
   );
@@ -422,7 +455,7 @@ export function Sidebar({
     path: string;
     label: string;
   } | null>(null);
-  /** Live title search: the input's visibility and its query (transient — never persisted). */
+  /** Live title search: the input's visibility and its query (transient �?never persisted). */
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   /** Header list-settings dropdown (grouping + sort radios). */
@@ -431,7 +464,7 @@ export function Sidebar({
    * Whether a pointer that can drag is present (the outline rail's HOVER_QUERY idiom).
    * HTML5 drag-and-drop never fires from touch, and the sort mode is one GLOBAL
    * preference: offering 手动排序 in the mobile drawer would freeze that list in an
-   * order the phone has no gesture to change — and flip the desktop too. The option is
+   * order the phone has no gesture to change �?and flip the desktop too. The option is
    * hidden there; an already-stored "manual" degrades to recency on such a device.
    */
   const [canDrag, setCanDrag] = useState(() => window.matchMedia(DRAG_POINTER_QUERY).matches);
@@ -460,9 +493,9 @@ export function Sidebar({
     setGroupCaps(new Map());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collapseStoreKey, pinStoreKey, currentProjectId]);
-  /** Expanded folders (subagent / scheduled / archived; collapsed by default), keyed by folderKey — each folder has its own open state. */
+  /** Expanded folders (subagent / scheduled / archived; collapsed by default), keyed by folderKey �?each folder has its own open state. */
   const [openFolders, setOpenFolders] = useState<ReadonlySet<string>>(new Set());
-  /** "More" rows with a fetch in flight, keyed `${category}\0${groupKey}` — the row disables and reads "loading" so a page that lands entirely in other groups still visibly did something. */
+  /** "More" rows with a fetch in flight, keyed `${category}\0${groupKey}` �?the row disables and reads "loading" so a page that lands entirely in other groups still visibly did something. */
   const [pendingLoads, setPendingLoads] = useState<ReadonlySet<string>>(new Set());
   /** Per-group display cap for active rows (keyed by group key; absent = SIDEBAR_PAGE_SIZE). "More" raises it a page at a time. */
   const [groupCaps, setGroupCaps] = useState<ReadonlyMap<string, number>>(new Map());
@@ -489,21 +522,14 @@ export function Sidebar({
     // The modes have unrelated group lists: go back to the first page, drop the per-group
     // reveal state (a cap keyed by an Agent id means nothing to a Workspace group), and
     // swap in this mode's own manual order (the stored sequence is read within partitions,
-    // whose boundaries are exactly what the mode decides — one shared array would scramble).
+    // whose boundaries are exactly what the mode decides �?one shared array would scramble).
     setSessionOrder(loadSessionOrder(currentProjectId, mode));
     setGroupOrder(loadGroupOrder(currentProjectId, mode));
     setGroupPage(0);
     setGroupCaps(new Map());
   };
 
-  /** Collapse/expand the page-nav group (same store-then-set convention as setGroupMode). */
-  const toggleNavGroup = () => {
-    const next = !navCollapsed;
-    storeNavGroupCollapsed(next);
-    setNavCollapsed(next);
-  };
-
-  /** Workspace groups (workspace mode): computed from the flat list, temp directories merged last, plus the manually-added Workspaces as empty groups on top (newest registration first). */
+    /** Workspace groups (workspace mode): computed from the flat list, temp directories merged last, plus the manually-added Workspaces as empty groups on top (newest registration first). */
   const workspaceGroups = useMemo(
     () => mergeRegisteredWorkspaces(groupSessionsByWorkspace(sessions), registeredWorkspaces),
     [sessions, registeredWorkspaces],
@@ -539,7 +565,7 @@ export function Sidebar({
     [workspaceGroups, pinnedGroups, groupOrder, groupMode],
   );
 
-  // The FULL displayed group sequences a drop commits — every group of the mode, not the
+  // The FULL displayed group sequences a drop commits �?every group of the mode, not the
   // page of groups on screen (see groupDragProps).
   const agentGroupSequence = useMemo(() => orderedAgents.map((a) => a.agentId), [orderedAgents]);
   const workspaceGroupSequence = useMemo(
@@ -557,7 +583,7 @@ export function Sidebar({
 
   const toggleGroup = (key: string) => {
     // Inert while searching: groups render force-opened then, so a click would change
-    // nothing on screen while silently rewriting the persisted collapse state — the user
+    // nothing on screen while silently rewriting the persisted collapse state �?the user
     // would find groups flipped once the query clears.
     if (searching) return;
     // Computed outside the state updater (theme.tsx convention): the persistence write is a
@@ -585,7 +611,7 @@ export function Sidebar({
     savePinnedSessions(currentProjectId, next);
   };
 
-  /** Switch the row sort mode (store-then-set convention). Leaving manual KEEPS the stored order — toggling back restores it. */
+  /** Switch the row sort mode (store-then-set convention). Leaving manual KEEPS the stored order �?toggling back restores it. */
   const setSortMode = (mode: SessionSortMode) => {
     storeSessionSortMode(mode);
     setSortModeState(mode);
@@ -595,10 +621,10 @@ export function Sidebar({
   const searching = searchQuery.trim() !== "";
 
   /**
-   * Group pagination (Workspace / Agent modes — time mode has at most three buckets and
+   * Group pagination (Workspace / Agent modes �?time mode has at most three buckets and
    * pages nothing). A pure display window: the manual group order still commits over the
    * FULL sequence (see groupDragProps), and no group's data loading depends on which page
-   * it sits on. Search bypasses paging entirely — a match on page 3 would read as no match
+   * it sits on. Search bypasses paging entirely �?a match on page 3 would read as no match
    * at all, which is the same reason a collapsed group is forced open while searching.
    */
   const pagedGroupTotal =
@@ -615,7 +641,7 @@ export function Sidebar({
   const groupsOnPage = <T,>(groups: T[]): T[] =>
     searching ? groups : groupPageSlice(groups, shownGroupPage);
 
-  /** Pager below the group list — rendered only once the groups overflow a single page. */
+  /** Pager below the group list �?rendered only once the groups overflow a single page. */
   const groupPagerRow = () =>
     !searching && groupPageTotal > 1 ? (
       <GroupPager page={shownGroupPage} pageCount={groupPageTotal} onChange={setGroupPage} />
@@ -624,13 +650,13 @@ export function Sidebar({
   /** The sort actually applied: a stored "manual" needs a drag-capable pointer to mean anything (see canDrag). */
   const effectiveSortMode: SessionSortMode = sortMode === "manual" && canDrag ? "manual" : "recent";
 
-  /** Title filter of one group's loaded rows (search only sees loaded pages — there is no server-side search). */
+  /** Title filter of one group's loaded rows (search only sees loaded pages �?there is no server-side search). */
   const filterRows = (rows: SessionInfo[]) =>
     searching ? rows.filter((s) => matchesSessionQuery(s, searchQuery)) : rows;
 
   /**
    * Time mode's split of the loaded rows: the buckets take the active conversations, the
-   * shared folders below take the rest. Deliberately NOT memoized — the bucket boundary is
+   * shared folders below take the rest. Deliberately NOT memoized �?the bucket boundary is
    * `Date.now()`, and a memo would freeze it at its last dependency change; the compact
    * relative timestamps rendered beside these rows are recomputed every render for exactly
    * the same reason. Null outside time mode, so no other mode pays for the two passes.
@@ -641,7 +667,7 @@ export function Sidebar({
   /** Time mode's exact server share, Project-wide: its buckets span every Agent, so the shared folders and the whole-list "More" read the summed counts. */
   const projectCounts = totalCategoryCounts(countsByAgent);
 
-  /** Agents holding rows of a category anywhere in this Project — time mode's fetch fan-out (the counts are kept in step locally, so they cover freshly added rows too). */
+  /** Agents holding rows of a category anywhere in this Project �?time mode's fetch fan-out (the counts are kept in step locally, so they cover freshly added rows too). */
   const projectAgentsFor = (category: SessionCategory) =>
     [...countsByAgent].filter(([, counts]) => counts[category] > 0).map(([agentId]) => agentId);
 
@@ -681,13 +707,13 @@ export function Sidebar({
   /**
    * Drop of a group drag: splice the dragged group in beside its target and persist.
    *
-   * `sequence` is the mode's FULL rendered key list — every group of the mode, not the
-   * page of groups on screen — and commitGroupOrder folds it into the stored array
+   * `sequence` is the mode's FULL rendered key list �?every group of the mode, not the
+   * page of groups on screen �?and commitGroupOrder folds it into the stored array
    * where those groups already render, so a Workspace whose Sessions have not paged in
    * yet keeps its stored place instead of being pushed behind the ones that have.
    *
    * Nothing prunes here. Deciding a stored key is DEAD needs the mode's complete live
-   * key set, and this component cannot prove one — the per-Workspace counts that look
+   * key set, and this component cannot prove one �?the per-Workspace counts that look
    * like a proof are filtered by the "show CLI sessions" preference, and a settled Agent
    * fetch may simply have failed. Stale keys are inert (group-order.ts), so the cost of
    * keeping them is a map entry; the cost of a wrong proof is an arrangement the user
@@ -704,15 +730,15 @@ export function Sidebar({
 
   /**
    * Drag-reorder wiring of one group header, given the mode's FULL ordered key list
-   * (not the page of groups on screen — committing only the visible groups would drop
+   * (not the page of groups on screen �?committing only the visible groups would drop
    * the hidden ones out of the stored sequence and bring them back as newcomers).
    *
    * Offered only where the groups have an order to change (isOrderableGroupMode: time
    * mode's buckets are a fixed chronological ladder), never on a search-filtered view,
-   * and only where a pointer that can drag exists — HTML5 drag-and-drop never fires
+   * and only where a pointer that can drag exists �?HTML5 drag-and-drop never fires
    * from touch. A stored order still APPLIES on such a device: unlike the rows' global
    * sort mode, a group order is per Project and implicit, so there is nothing to
-   * degrade — a phone renders the arrangement its owner made at a desk.
+   * degrade �?a phone renders the arrangement its owner made at a desk.
    *
    * A drop stays inside the dragged group's own pin partition, so dragging can reorder
    * but never pin or unpin (the rows' rule, one axis up).
@@ -724,7 +750,7 @@ export function Sidebar({
     const dragging = dragGroup;
     const samePartition =
       dragging !== null && dragging !== key && pinnedGroups.has(dragging) === pinnedGroups.has(key);
-    /** Which half of the header the pointer is in — the edge the drop would land on. */
+    /** Which half of the header the pointer is in �?the edge the drop would land on. */
     const edgeOf = (e: ReactDragEvent) => {
       const rect = e.currentTarget.getBoundingClientRect();
       return e.clientY - rect.top > rect.height / 2;
@@ -754,8 +780,8 @@ export function Sidebar({
           );
         },
         // dragleave also fires when the pointer merely crosses onto one of the header's
-        // OWN children — the collapse toggle spans most of the row, and up to three
-        // action buttons follow it — so clearing unconditionally strobes the indicator.
+        // OWN children �?the collapse toggle spans most of the row, and up to three
+        // action buttons follow it �?so clearing unconditionally strobes the indicator.
         // relatedTarget is where the drag is going: still inside means nothing changed
         // (the idiom features/chat/drop-zone.tsx already uses).
         onDragLeave: (e: ReactDragEvent) => {
@@ -791,7 +817,7 @@ export function Sidebar({
       )
     : draftEntries;
 
-  /** Whether the active search hits anything anywhere (drafts included) — drives the quiet no-match line. */
+  /** Whether the active search hits anything anywhere (drafts included) �?drives the quiet no-match line. */
   const hasSearchMatches =
     shownDrafts.length > 0 ||
     (groupMode === "agent"
@@ -805,13 +831,13 @@ export function Sidebar({
 
   /**
    * The server stream a group's fetches walk: its own, under Workspace grouping, or the
-   * Agent's whole one otherwise. Only Workspace groups need their own — an Agent group IS
+   * Agent's whole one otherwise. Only Workspace groups need their own �?an Agent group IS
    * the whole stream, and a time bucket is cut from rows that are already loaded, so it
    * fetches nothing of its own at all.
    *
    * This is what makes the groups independent. Sharing one per-Agent cursor meant a group's
    * "load more" consumed the page its siblings were about to read: their rows appeared,
-   * their reveal counts moved, and the group that asked could grow by less than a page — or
+   * their reveal counts moved, and the group that asked could grow by less than a page �?or
    * by nothing at all.
    */
   const fetchScope = (groupKey: string): string | undefined =>
@@ -833,7 +859,7 @@ export function Sidebar({
   /**
    * Open/close a group's folder. A folder's content is loaded on demand: the first
    * expand fetches its category's first page for every contributing Agent that hasn't
-   * been asked yet (already-loaded rows stay put — re-expanding never refetches; the
+   * been asked yet (already-loaded rows stay put �?re-expanding never refetches; the
    * folder's own "More" row does the paging from there).
    */
   const toggleFolder = (groupKey: string, category: FolderCategory, agentIds: string[]) => {
@@ -860,7 +886,7 @@ export function Sidebar({
   // expansion on archiving the open chat; archived wins, so an archived Session is left to
   // that folder). Auto-expansion fires ONCE per (grouping mode, active session): the ref guard
   // keeps list mutations (status ticks, reloads) from re-opening a folder the user explicitly
-  // collapsed while that chat stays open. `sessions` must remain a dependency — the active
+  // collapsed while that chat stays open. `sessions` must remain a dependency �?the active
   // session may not be in the list yet on first render, and the guard is only set once the
   // row is actually found and expanded.
   const lastAutoExpandedRef = useRef<string | null>(null);
@@ -890,13 +916,13 @@ export function Sidebar({
 
   /**
    * Workspace mode: give every rendered group its own first page. The initial load reads
-   * the Agent's whole stream, which is one stream cut by Workspace — it fills the groups
+   * the Agent's whole stream, which is one stream cut by Workspace �?it fills the groups
    * unevenly, so a group can come up with two rows while the neighbour it shares an Agent
    * with got eight. Any group left short of a full first page (or of its own total, if that
    * is smaller) asks for one down its own stream, once: the scoped pair is loaded from then
    * on and this is inert.
    *
-   * Only the groups on screen ask — the pager bounds that to one page of groups — and a
+   * Only the groups on screen ask �?the pager bounds that to one page of groups �?and a
    * search is left alone, since it renders loaded matches only and fetching cannot find more.
    */
   useEffect(() => {
@@ -969,7 +995,7 @@ export function Sidebar({
       // The session is gone, so clear its input draft too (no orphaned keys left in localStorage; keys are scoped per user, #68).
       if (user) clearDraft(sessionDraftKey(user.userId, target.sessionId));
       // Prune its pin and manual-order entry as well (both helpers return the same
-      // reference when the id wasn't present — the write is skipped then).
+      // reference when the id wasn't present �?the write is skipped then).
       const prunedPins = removePinnedSession(pinnedSessions, target.sessionId);
       if (prunedPins !== pinnedSessions) {
         setPinnedSessions(prunedPins);
@@ -984,7 +1010,7 @@ export function Sidebar({
       setDeletingSession(null);
       // The deleted session was the one open: jump to this Agent's next conversation, otherwise
       // fall back to the chat home page. Auto-opened conversations are never archived (hidden by
-      // default — landing there would look like the chat vanished into thin air) and never
+      // default �?landing there would look like the chat vanished into thin air) and never
       // subagent children (they belong to some other conversation).
       if (activeSessionId === target.sessionId) {
         const rest = (byAgent.get(target.agentId) ?? []).filter((s) => {
@@ -1008,7 +1034,7 @@ export function Sidebar({
   };
 
   /**
-   * New chat: enters draft state (/chat/new) without creating a Session — Model / Workspace /
+   * New chat: enters draft state (/chat/new) without creating a Session �?Model / Workspace /
    * approval mode are all chosen on the draft input card, and the Session is only actually
    * created when the first message is sent. The route state explicitly carries the target
    * Agent: the agent-mode group header's "+" uses that group's Agent, while the menu's "New
@@ -1019,7 +1045,7 @@ export function Sidebar({
    */
   const newChat = (agentId?: string, workspace?: string) => {
     // Typed-but-unsent text in the ACTIVE new-chat draft becomes a parked draft
-    // conversation first (a row in the list below, sendable anytime — draft-sessions.ts),
+    // conversation first (a row in the list below, sendable anytime �?draft-sessions.ts),
     // so this click always lands on an empty composer and never silently shelves content.
     if (user && currentProjectId) parkActiveDraft(user.userId, currentProjectId);
     if (agentId) setCurrentAgentId(agentId);
@@ -1064,9 +1090,9 @@ export function Sidebar({
   };
 
   /**
-   * 新建工作区: register the browsed pick so it surfaces as a group immediately, Sessions
+   * 新建工作�? register the browsed pick so it surfaces as a group immediately, Sessions
    * or not. An empty registered group is appended and nothing pins or orders it yet, so it
-   * lands last — turn to the page that now holds it, or to the page of the group that was
+   * lands last �?turn to the page that now holds it, or to the page of the group that was
    * already there. Otherwise, past ten groups, the freshly added Workspace would sit on a
    * page the user is not looking at and the click would read as a no-op.
    */
@@ -1079,7 +1105,7 @@ export function Sidebar({
     setGroupPage(groupPageOf(existing >= 0 ? existing : orderedWorkspaceGroups.length));
   };
 
-  /** Paths with a registry entry — only their groups offer the rename/remove overflow. */
+  /** Paths with a registry entry �?only their groups offer the rename/remove overflow. */
   const registeredPaths = useMemo(
     () => new Set(registeredWorkspaces.map((e) => e.path)),
     [registeredWorkspaces],
@@ -1091,7 +1117,7 @@ export function Sidebar({
     setRenamingWorkspace({ path });
   };
 
-  /** Commit the alias (blank reverts the label to the directory basename). Direct save — no server, nothing destructive. */
+  /** Commit the alias (blank reverts the label to the directory basename). Direct save �?no server, nothing destructive. */
   const confirmRenameWorkspace = () => {
     if (!renamingWorkspace) return;
     applyRegistryChange(
@@ -1101,8 +1127,8 @@ export function Sidebar({
   };
 
   /**
-   * 删除工作区 (confirmed via the shared ConfirmModal, like every destructive-looking
-   * action): drops the sidebar registry entry only — disk and Sessions are never
+   * 删除工作�?(confirmed via the shared ConfirmModal, like every destructive-looking
+   * action): drops the sidebar registry entry only �?disk and Sessions are never
    * touched, the confirm copy says exactly that, and re-adding restores it. A group
    * that still has Sessions simply persists as session-derived.
    */
@@ -1120,7 +1146,7 @@ export function Sidebar({
     go(`/chat/${s.sessionId}`);
   };
 
-  /** agentId → display name (row hint tooltips in workspace mode). */
+  /** agentId �?display name (row hint tooltips in workspace mode). */
   const agentNameById = useMemo(
     () => new Map(agents.map((a) => [a.agentId, agentDisplayName(a)])),
     [agents],
@@ -1130,14 +1156,14 @@ export function Sidebar({
   const renderRows = (
     rows: SessionInfo[],
     withAgentHint: boolean,
-    /** Manual sort only: the drag scope (group key) plus the group's FULL ordered active list — the drop must commit every loaded row of the partition, not the display-capped slice the user happens to see. */
+    /** Manual sort only: the drag scope (group key) plus the group's FULL ordered active list �?the drop must commit every loaded row of the partition, not the display-capped slice the user happens to see. */
     dragCtx?: { scope: string; fullRows: SessionInfo[] },
     /** Whether these rows are the group's ACTIVE list (the only rows pinning can reorder). */
     activeList = false,
   ) => (
     <ul className="space-y-0.5">
       {rows.map((s) => {
-        // Manual-sort drag wiring (active lists only; never while searching — a filtered
+        // Manual-sort drag wiring (active lists only; never while searching �?a filtered
         // view is not the real order). A drop stays within its own scope AND its own
         // pin partition: dragging can reorder but never pin or unpin.
         const dragging =
@@ -1152,7 +1178,7 @@ export function Sidebar({
             : {
                 draggable: true,
                 onDragStart: (e: ReactDragEvent) => {
-                  // Firefox refuses to start a drag without payload data — but the id must
+                  // Firefox refuses to start a drag without payload data �?but the id must
                   // NOT ride on text/plain: the composer is a controlled textarea with no
                   // drop guard, so a mis-aimed reorder would paste a session id straight
                   // into the user's message. A private type is invisible to text drops.
@@ -1213,11 +1239,11 @@ export function Sidebar({
             // Pinning is an ACTIVE-list priority: folder rows (subagent / scheduled /
             // archived) are ordered chronologically inside their folder and never pass
             // through orderSessionRows, so a pin there would write an id, light the
-            // glyph, move nothing — and then shift the active list's drag partition.
+            // glyph, move nothing �?and then shift the active list's drag partition.
             canPin={activeList}
             // Last ACTIVITY, not creation: the server stamps lastActiveAt when a run
             // starts and again when it ends, so a running row shows its run-start time
-            // (it recedes while the run continues — the hourglass beside it is what says
+            // (it recedes while the run continues �?the hourglass beside it is what says
             // "active right now"). CLI-adopted and subagent rows are not
             // driven by this server, so theirs stays at createdAt.
             lastActive={formatRelativeShort(s.lastActiveAt, locale)}
@@ -1243,13 +1269,13 @@ export function Sidebar({
    * Collapsed-by-default lazy folder (subagent / scheduled / archived): nothing is
    * fetched until the first expand, and once open the folder pages independently with
    * its own "More" row. Everything is driven by the group's **own** exact server share
-   * (`totals` — the Agent's counts in agent mode, the per-Workspace fold in workspace
+   * (`totals` �?the Agent's counts in agent mode, the per-Workspace fold in workspace
    * mode): the folder exists only while its share is non-zero, the label shows that
-   * share, and "More" shows only while loaded rows fall short of it — an Agent's
+   * share, and "More" shows only while loaded rows fall short of it �?an Agent's
    * content in *other* Workspaces can never surface a folder here. The folder's "More"
    * pages independently of the active list's; in workspace mode a fetched page can land
    * rows in other groups' folders too, so one click may grow this folder by fewer than
-   * a full page — the row shows a loading state while the fetch runs and stays until
+   * a full page �?the row shows a loading state while the fetch runs and stays until
    * this group's share is fully loaded.
    */
   const renderFolder = (
@@ -1285,7 +1311,7 @@ export function Sidebar({
         onToggle={() => toggleFolder(groupKey, category, agentIds)}
         more={more}
         // The folder shows every row it has loaded, so its remainder is its own share
-        // minus those — the same count the active list's reveal row names one level up.
+        // minus those �?the same count the active list's reveal row names one level up.
         moreLabel={S.chat.expandRestSessions(Math.max(total - rows.length, 0))}
         pending={pendingLoads.has(loadKey(groupKey, category))}
         onMore={() => trackedLoadMore(groupKey, category, agentIds)}
@@ -1298,8 +1324,7 @@ export function Sidebar({
   /**
    * Active-list "Show N more chats": reveal one more page of this group's already-loaded
    * active rows, and fetch the next active server page only when the reveal actually runs
-   * past what is loaded. A group whose next page is already in memory spends no request —
-   * in workspace mode a fetch fans out to every Agent contributing to the group and its
+   * past what is loaded. A group whose next page is already in memory spends no request �?   * in workspace mode a fetch fans out to every Agent contributing to the group and its
    * rows may land in other groups entirely, so a pointless one is not free.
    */
   const showMore = (groupKey: string, agentIds: string[], loaded: number) => {
@@ -1324,7 +1349,7 @@ export function Sidebar({
 
   /**
    * Expanded group body shared by both modes: active user rows (display-capped; "More"
-   * reveals and loads further **active-only** pages — the folders below never feed it) +
+   * reveals and loads further **active-only** pages �?the folders below never feed it) +
    * the collapsed-by-default subagent / scheduled / archived folders, each loading on
    * first expand and paging on its own. `totals` / `agentsFor` carry the group's exact
    * server share and its fetch fan-out set per category.
@@ -1337,13 +1362,13 @@ export function Sidebar({
     agentsFor: (category: SessionCategory) => string[],
   ) => {
     const cap = groupCaps.get(groupKey) ?? SIDEBAR_PAGE_SIZE;
-    // Row order: the pinned cluster first, then — under manual sort — the stored order
+    // Row order: the pinned cluster first, then �?under manual sort �?the stored order
     // within each pin partition (lib/session-order.ts). Both reorder only rows already
     // FETCHED: a pinned conversation that lives past the loaded pages does not surface
     // until "More" pulls its page in (the list has no server-side pin), so the pinned
     // cluster leads what is loaded, not the Agent's whole history. Folder rows keep
     // their chronological order: pinning and manual order are active-list concerns.
-    // While searching, the display cap is bypassed — every loaded match shows, and
+    // While searching, the display cap is bypassed �?every loaded match shows, and
     // "More" hides (it pages the unfiltered list and would read as "more matches",
     // which the server cannot promise).
     const orderedActive = orderSessionRows(parts.active, (s) => s.sessionId, {
@@ -1358,7 +1383,7 @@ export function Sidebar({
       effectiveSortMode === "manual" && !searching
         ? { scope: groupKey, fullRows: orderedActive }
         : undefined;
-    // The reveal row counts THIS group's own hidden conversations and nothing else — the
+    // The reveal row counts THIS group's own hidden conversations and nothing else �?the
     // folders never feed it, and no other group's numbers reach it. `fullyLoaded` says the
     // group's whole active share is already in memory (every Agent that could hold a row of
     // it is fetched out), which is when the loaded rows become the truth: server counts
@@ -1390,8 +1415,7 @@ export function Sidebar({
         {empty ? (
           loading ? (
             // The same window the chat pane's skeleton covers: the Agent groups render as
-            // soon as the Agents arrive, but the session pages are still being fetched —
-            // "no Sessions yet" is not the honest answer until they land.
+            // soon as the Agents arrive, but the session pages are still being fetched �?            // "no Sessions yet" is not the honest answer until they land.
             <SkeletonList rows={2} />
           ) : (
             <p className="px-2.5 py-1 text-xs text-gray-400 dark:text-gray-600">
@@ -1425,8 +1449,8 @@ export function Sidebar({
           />
         )}
 
-        {/* Folders (collapsed by default): subagent first — spawned from the conversations
-            at hand — then scheduled background runs, then archived (archived wins over the
+        {/* Folders (collapsed by default): subagent first �?spawned from the conversations
+            at hand �?then scheduled background runs, then archived (archived wins over the
             origin folders). */}
         {folders}
       </>
@@ -1437,8 +1461,7 @@ export function Sidebar({
    * Time mode's one shared, Project-wide set of folders (rendered once below the buckets):
    * their rows load only on first expand, so an unloaded Session has no known bucket and no
    * bucket could honestly claim a share of them. Counts and fetch fan-out are summed over
-   * every Agent. A null entry means the Project holds no rows of that category at all —
-   * which is also what tells the empty-list line whether it is telling the truth.
+   * every Agent. A null entry means the Project holds no rows of that category at all �?   * which is also what tells the empty-list line whether it is telling the truth.
    */
   const timeFolders =
     timeParts === null
@@ -1454,7 +1477,7 @@ export function Sidebar({
           ),
         );
 
-  /** Page entries of the collapsible nav group (智能体 → 词元图, driven by the NAV_GROUP_KEYS manifest). Always mounted — the collapse animates their height to zero and turns them inert. */
+  /** Page entries of the collapsible nav group (智能�?�?词元, driven by the NAV_GROUP_KEYS manifest). Always mounted �?the collapse animates their height to zero and turns them inert. */
   const navItems: Array<{ to: string; label: string; icon: string }> = navKeysFor().map((key) => ({
     to: NAV_ROUTES[key],
     label: S.nav[key],
@@ -1463,9 +1486,32 @@ export function Sidebar({
 
   return (
     <div className="flex h-full w-full flex-col">
-      {/* Project switcher (+ collapse sidebar) */}
-      <div className="flex shrink-0 items-center gap-1 px-2 pt-2">
-        {onCollapse && (
+      {/* Top row: brand mark on the left, the collapse toggle pushed to the right edge.
+          The Project switcher that used to live here moved into the user menu at the bottom,
+          which left this row holding one lone icon and reading as an accidental gap; the
+          product name is what actually belongs at the top of a column �?it is the one thing
+          on screen that does not change when you navigate or switch projects. The collapse
+          control keeps the far edge so it stays reachable by the same muscle memory as the
+          rest of the app's right-edge controls.
+          In the mobile drawer the far-edge control is the CLOSE button, not the collapse
+          toggle: a drawer has no narrower state to collapse to, it simply dismisses, and
+          keeping the collapse control there would have meant the only way out was the
+          scrim. The drawer therefore passes `onClose` and drops its own header, so this row
+          is the single top of the column. */}
+      <div className="flex h-12 shrink-0 items-center gap-2 px-3">
+        <JiuMateLogo className="h-6 w-6 shrink-0 rounded-md" />
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{S.appName}</span>
+        {onClose ? (
+          <button
+            type="button"
+            title={S.common.close}
+            aria-label={S.common.close}
+            onClick={onClose}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          >
+            <Icon d="M6 6l12 12M18 6L6 18" size={18} />
+          </button>
+        ) : onCollapse ? (
           <button
             type="button"
             title={S.nav.collapseSidebar}
@@ -1475,70 +1521,132 @@ export function Sidebar({
           >
             <Icon d="M15 6l-6 6 6 6M4 4v16" size={18} />
           </button>
-        )}
-        <Dropdown
-          open={projectOpen}
-          setOpen={setProjectOpen}
-          className="min-w-0 flex-1"
-          menuClass="left-0 right-0 top-full mt-1 origin-top"
-          button={
-            <button
-              type="button"
-              onClick={() => setProjectOpen(!projectOpen)}
-              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-base font-semibold transition-colors duration-150 hover:bg-gray-200/70 dark:hover:bg-gray-800"
-            >
-              <span className="min-w-0 flex-1 truncate text-left">
-                {currentProject ? projectDisplayName(currentProject) : S.common.loading}
-              </span>
-              <span className="text-gray-400">
-                <ChevronDown />
-              </span>
-            </button>
-          }
-        >
-          {projects.map((p) => (
-            <button
-              key={p.projectId}
-              type="button"
-              onClick={() => {
-                setCurrentProjectId(p.projectId);
-                setProjectOpen(false);
-              }}
-              className={`flex w-full items-center justify-between gap-2 px-3.5 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                p.projectId === currentProject?.projectId ? "font-semibold" : ""
-              }`}
-            >
-              <span className="truncate">{projectDisplayName(p)}</span>
-              <Badge tone="gray">{projectRoleLabel(p.role)}</Badge>
-            </button>
-          ))}
-          <div className="mt-1.5 border-t border-gray-100 pt-1.5 dark:border-gray-800">
-            <button
-              type="button"
-              className={menuItemClass}
-              onClick={() => {
-                setProjectOpen(false);
-                setCreateProjectOpen(true);
-              }}
-            >
-              + {S.project.create}
-            </button>
-            {currentProject && (
-              <button
-                type="button"
-                className={menuItemClass}
-                onClick={() => {
-                  setProjectOpen(false);
-                  setProjectSettingsOpen(true);
-                }}
-              >
-                {S.project.settings}
-              </button>
-            )}
-          </div>
-        </Dropdown>
+        ) : null}
       </div>
 
+      {/* System settings takes over the column. Settings are a destination, and the sidebar is
+          where this app keeps every other destination, so walking into them answers with "here
+          are the settings you can change" and the normal column (new chat, page nav, session
+          list) steps aside �?rather than nesting a SECOND menu inside the content pane beside
+          the nav the user just left, which is where this first went and read as two competing
+          menus in one screen.
+          The brand row above and the user row below are deliberately kept: the app is still the
+          app, so collapsing the column and signing out stay reachable without walking back out
+          first. The gate and the grouping come from the same visibleSettingsSections the pane
+          uses (features/settings/settings-page.tsx), so the menu can never offer a category the
+          pane would refuse. */}
+      {settingsOpen && (
+        <>
+          {/* The exit row. It does NOT take the active row's styling even when /chat is where
+              you already were: it is a command ("take me back"), not a statement about where
+              you are, and a filled row here would read as "you are on the workspace already".
+              Hover-only, like every other command row in this column. */}
+          <div className="shrink-0 px-2 pb-1 pt-2">
+            <NavLink
+              to="/chat"
+              onClick={() => onNavigate?.()}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-gray-600 transition-colors duration-150 hover:bg-gray-200/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
+            >
+              <span className="shrink-0 text-gray-400 dark:text-gray-500">
+                <Icon d="M19 12H5m6-6-6 6 6 6" size={16} />
+              </span>
+              {S.settings.backToWorkspace}
+            </NavLink>
+          </div>
+
+          {/* The category list, on the product's reference styling:
+              a rounded light fill plus a DARK VERTICAL BAR down the active row's left edge,
+              with the row's icon picking up the same dark ink. The bar is what makes the
+              active row findable in a nine-item column at a glance �?a fill alone washes out
+              against its neighbours' hover fills, and the sidebar's own nav rows use a fill
+              precisely because they are wider-spaced and fewer.
+              The bar is drawn as a pseudo-element rather than a border so it can sit flush
+              against the row's rounded left edge (a border would be clipped by the radius);
+              `overflow-hidden` on the row keeps it from escaping the corners. */}
+          <div className="relative min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+            {settingsGroupList.map((group) => (
+              <div key={group} className="mt-4 first:mt-0">
+                {/* Group heading. Uppercase small grey, matching the session-list section
+                    label's role: it names a block, not a row. */}
+                {settingsGroupList.length > 1 && (
+                  <p className="px-2.5 pb-1.5 pt-1 text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    {/* From the same map the rows' labels come from, so a group can never be
+                        headed by a name that disagrees with the pages under it. */}
+                    {settingsGroupLabel(group)}
+                  </p>
+                )}
+                {/* `space-y-1` �?a step looser than the page-nav group's `space-y-0.5`. These
+                    rows are the whole content of the column while in settings (no session
+                    list below them), and at the tighter rhythm the nine fills still touch into
+                    something slab-like. */}
+                <div className="space-y-1">
+                {settingsSections
+                  .filter((s) => s.group === group)
+                  .map((s) => {
+                    const note = s.key === "logs" ? logsNote : null;
+                    // Whether this row is the open page. Resolved from the router HERE rather
+                    // than from NavLink's render-prop, because children-as-function is not a
+                    // shape NavLink accepts �?and the bar, the fill and the icon's ink must all
+                    // read from this ONE value, so they cannot drift apart.
+                    const active = openSection === s.key;
+                    return (
+                      <NavLink
+                        key={s.key}
+                        to={`/settings?section=${s.key}`}
+                        onClick={() => onNavigate?.()}
+                        {...(note !== null
+                          ? {
+                              title: note,
+                              "aria-label": `${settingsNameOf(s.key)} · ${note}`,
+                            }
+                          : {})}
+                        /* The fill comes from `active` �?OUR resolve �?and deliberately NOT from
+                           NavLink's own `isActive`. Every row's `to` is the same path
+                           (`/settings?section=…`; react-router matches on path, not query), so
+                           `isActive` is true for ALL NINE rows at once and would paint the whole
+                           column grey. The query is what distinguishes them, and only
+                           `resolveSettingsSection` reads it. */
+                        aria-current={active ? "page" : undefined}
+                        className={`relative flex items-center gap-2.5 overflow-hidden rounded-md px-2.5 py-2 text-sm transition-colors duration-150 ${
+                          active
+                            ? "bg-gray-200/70 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
+                        }`}
+                      >
+                        {/* The active bar: an absolutely-positioned pseudo-element so it sits
+                            flush against the row's rounded left edge (a border would be clipped
+                            by the radius), with the row's `overflow-hidden` keeping it inside
+                            the corners. */}
+                        <span
+                          aria-hidden
+                          className={`absolute inset-y-1.5 left-0 w-0.5 rounded-full transition-opacity duration-150 ${
+                            active ? "bg-gray-800 opacity-100 dark:bg-gray-100" : "opacity-0"
+                          }`}
+                        />
+                        <span
+                          aria-hidden
+                          className={`shrink-0 transition-colors duration-150 ${
+                            active ? "text-gray-800 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"
+                          }`}
+                        >
+                          <Icon d={SETTINGS_SECTION_ICONS[s.key]} size={16} />
+                        </span>
+                        <span className="min-w-0 truncate">{settingsNameOf(s.key)}</span>
+                        {note !== null && (
+                          <UpdateDot size="inline" position="right-2.5 top-1/2 -translate-y-1/2" />
+                        )}
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {!settingsOpen && (
+        <>
       {/* New chat: the only pinned entry besides the Project switcher above and the user row
           below. No background fill, the same gray hover/active styling as the nav items,
           distinguished only by its position and font-medium; shows the same gray active state
@@ -1546,8 +1654,7 @@ export function Sidebar({
           The gap to the scroll area below is this block's OWN pb-2, not padding inside the
           scroller: padding-top there belongs to the scrollable content and slides away with
           it, so a scrolled nav entry ended up flush against this pinned button, the two
-          labels touching. Outside the scroller the 8px stays put at every scroll offset —
-          the same text-to-text rhythm two adjacent nav rows have. */}
+          labels touching. Outside the scroller the 8px stays put at every scroll offset �?          the same text-to-text rhythm two adjacent nav rows have. */}
       <div className="shrink-0 px-2 pb-2 pt-2">
         <button
           type="button"
@@ -1566,116 +1673,79 @@ export function Sidebar({
       </div>
 
       {/* Scroll area: the page nav and the session list scroll together, so the nav rides up
-          as the list is scrolled. It is the sidebar's only shrinkable block — with the nav
+          as the list is scrolled. It is the sidebar's only shrinkable block �?with the nav
           pinned, the column's fixed height (Project switcher + New chat + eight nav entries +
-          user row ≈ 412px) exceeded a short window, and the overflow, clipped by nothing,
+          user row �?412px) exceeded a short window, and the overflow, clipped by nothing,
           grew the document into a second scrollbar.
           relative: the scroller acts as its own containing block, so absolute descendants
-          (each row's sr-only Agent name) anchor and scroll inside it — anchored to the
+          (each row's sr-only Agent name) anchor and scroll inside it �?anchored to the
           initial containing block instead, rows past the fold would bypass this
           overflow-y-auto and stretch the **document**, so expanding "More" / a source
           folder made the whole page scroll (composer pushed up, blank space below). */}
       <div className="relative min-h-0 flex-1 overflow-y-auto px-2 pb-2">
         <nav className="space-y-0.5">
-          {/* Expand/collapse SLIDE: grid-template-rows tweens between 0fr and 1fr with the
-              inner overflow-hidden clipping the rows (the skills/models-page convention) —
-              the moving clip edge reveals/hides the entries while the toggle button and the
-              Session list below glide up/down with it; a subtle opacity fade rides along,
-              both 200ms, moving as one with the chevron flip below. The rows stay mounted
-              for the tween but go inert while collapsed (zero-height rows must not stay
-              Tab-focusable or clickable). Transitions fire only on state CHANGES, so a mount
-              restoring a persisted collapsed state renders collapsed instantly — only user
-              toggles animate; reduced motion is covered by the global
-              prefers-reduced-motion override in styles.css. */}
-          <div
-            className={`grid transition-[grid-template-rows] duration-200 ease-out ${
-              navCollapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
-            }`}
-          >
-            <div className="overflow-hidden" inert={navCollapsed}>
-              <div
-                className={`space-y-0.5 transition-opacity duration-200 ${
-                  navCollapsed ? "opacity-0" : "opacity-100"
-                }`}
-              >
-                {navItems.map((item) => {
-                  /* Four nav entries sit on a badge trail — Agents (an outdated kernel, fixed on
-                     the Agent settings page two clicks down), Skills, Models and the Cost Center
-                     (each cleared on the page itself). The dot is anchored to the row, not to the
-                     label text (where it would float over whatever follows the word): at the
-                     row's right edge, on the same inset as its horizontal padding, and vertically
-                     centred on the row rather than on the line of text. */
-                  const note = navNoteFor(badges, item.to);
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => onNavigate?.()}
-                      {...(note !== null
-                        ? {
-                            // The row's own label is visible, so the tooltip only adds what
-                            // the dot means; the accessible name keeps that label as its
-                            // prefix. (The collapsed rail's icon-only twin has no visible
-                            // label, so its tooltip carries both.)
-                            title: note,
-                            "aria-label": `${item.label} · ${note}`,
-                          }
-                        : {})}
-                      className={({ isActive }) =>
-                        `relative flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors duration-150 ${
-                          isActive
-                            ? "bg-gray-200/70 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                            : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
-                        }`
+          {/* The page-nav entries, always expanded.
+              They used to sit behind a slim chevron strip that collapsed the group
+              (智能�?�?词元) �?a whole row of vertical space spent on a control that saved
+              about 150px, in a column whose only job on this screen is to be read. It is
+              gone: the entries are what the sidebar is for, so they are simply there. The
+              slide machinery (grid-rows tween, inert-while-collapsed) went with it, which
+              also removes the persisted `navCollapsed` preference and the nav-group-collapse
+              module �?nothing else read either. */}
+          <div className="space-y-0.5">
+            {navItems.map((item) => {
+              /* Four nav entries sit on a badge trail �?Agents (an outdated kernel, fixed on
+                 the Agent settings page two clicks down), Skills, Models and the Cost Center
+                 (each cleared on the page itself). The dot is anchored to the row, not to the
+                 label text (where it would float over whatever follows the word): at the
+                 row's right edge, on the same inset as its horizontal padding, and vertically
+                 centred on the row rather than on the line of text. */
+              const note = navNoteFor(badges, item.to);
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => onNavigate?.()}
+                  {...(note !== null
+                    ? {
+                        // The row's own label is visible, so the tooltip only adds what
+                        // the dot means; the accessible name keeps that label as its
+                        // prefix. (The collapsed rail's icon-only twin has no visible
+                        // label, so its tooltip carries both.)
+                        title: note,
+                        "aria-label": `${item.label} · ${note}`,
                       }
-                    >
-                      <span className="text-gray-500 dark:text-gray-400">
-                        <Icon d={item.icon} />
-                      </span>
-                      {item.label}
-                      {note !== null && (
-                        <UpdateDot size="inline" position="right-2.5 top-1/2 -translate-y-1/2" />
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </div>
+                    : {})}
+                  className={({ isActive }) =>
+                    `relative flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors duration-150 ${
+                      isActive
+                        ? "bg-gray-200/70 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                        : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
+                    }`
+                  }
+                >
+                  <span className="text-gray-500 dark:text-gray-400">
+                    <Icon d={item.icon} />
+                  </span>
+                  {item.label}
+                  {note !== null && (
+                    <UpdateDot size="inline" position="right-2.5 top-1/2 -translate-y-1/2" />
+                  )}
+                </NavLink>
+              );
+            })}
           </div>
-          {/* Collapse toggle of the page-nav group (智能体 → 评估中心): a slim (h-4)
-              nav-row-wide button directly under the group's last entry — a centered chevron
-              pointing UP while expanded (click to collapse) and DOWN while collapsed (the
-              button stays as the only way back, right under the new-chat boundary once the
-              entries are hidden). The soft resting band is deliberate — the sidebar's one
-              exception to flat-at-rest: it makes the strip read as the seam between the
-              page nav above and the Session list below (the ruled separator it replaces
-              was rejected as a line under the button); hover deepens it a step further so
-              it stays clearly interactive. Icon-only, so tooltip + aria carry the name
-              (GroupHeader's collapse/expand wording). */}
-          <button
-            type="button"
-            onClick={toggleNavGroup}
-            aria-expanded={!navCollapsed}
-            aria-label={navCollapsed ? S.nav.expandGroup : S.nav.collapseGroup}
-            title={navCollapsed ? S.nav.expandGroup : S.nav.collapseGroup}
-            className="flex h-4 w-full items-center justify-center rounded-md bg-gray-200/70 text-gray-400 transition-colors duration-150 hover:bg-gray-300/60 hover:text-gray-700 dark:bg-gray-800/70 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-          >
-            <ChevronDown
-              size={12}
-              className={`transition-transform duration-200 ${navCollapsed ? "" : "rotate-180"}`}
-            />
-          </button>
         </nav>
 
         {/* Section header: list label + right-aligned controls (icon + tooltip family):
-            search, list settings (grouping + sort radios — the old inline grouping
+            search, list settings (grouping + sort radios �?the old inline grouping
             toggle relocated into this menu), and the mode-dependent create button (the
             created object follows the grouping mode). The search is a mac-style
-            IN-PLACE expansion — no extra row: the two grid columns tween (the 0fr/1fr
+            IN-PLACE expansion �?no extra row: the two grid columns tween (the 0fr/1fr
             trick, horizontal), the label's column collapsing while the controls column
             takes the full width and the field inside grows leftward over the label's
             place; the magnifier morphs from toggle button into the field's leading
-            glyph. No ruled separator at this boundary — see the nav toggle above. */}
+            glyph. No ruled separator at this boundary �?see the nav toggle above. */}
         <div
           className={`mt-3 grid items-center px-1 pt-2 transition-[grid-template-columns] duration-200 ease-out ${
             searchOpen ? "grid-cols-[0fr_1fr]" : "grid-cols-[1fr_1fr]"
@@ -1804,11 +1874,11 @@ export function Sidebar({
                 }}
               />
             </Dropdown>
-            {/* Mode-dependent create — 具体新建的对象按分组方式决定, the icon following
+            {/* Mode-dependent create �?具体新建的对象按分组方式决定, the icon following
                 suit (folder+ / robot+, a bottom-right plus badge on the entity's glyph):
                 agent grouping opens the Agents page's existing create dialog (route
                 state); workspace grouping opens the SAME directory-browse menu the
-                draft's workspace picker uses — the picked directory registers as a
+                draft's workspace picker uses �?the picked directory registers as a
                 workspace group immediately, Sessions or not. Time buckets are not
                 something to create into, so that mode starts a plain new conversation
                 and wears the compose glyph without a plus badge. */}
@@ -1845,7 +1915,14 @@ export function Sidebar({
                 projectId={currentProjectId ?? ""}
                 workspace=""
                 onChange={addWorkspace}
+                // 近期使用 = 最近在里面聊过天的工作区（按各工作区最新会话的时间排序），没用过但已
+                // 注册的补在后面。不用注册顺序：那是**添加**顺序，而"近期"问的是**最近用过**
+                // ——先建 A 后建 B 却一直用 A 的话，注册顺序会把 B 排在前面。
+                recent={recentWorkspaces(sessions, registeredWorkspaces.map((e) => e.path))}
                 trigger={(open, toggle) => (
+                  // 触发器保持原来的 24x24 加号按钮（文件夹 + 右下角加号徽标），与同一条
+                  // 标题栏里的「新建智能体 / 新会话」完全一致。改的是它唤起的那个弹窗
+                  // （搜索 / 近期使用 / 打开本地文件夹），不是这个按钮本身。
                   <button
                     type="button"
                     title={newEntityLabel}
@@ -1863,7 +1940,7 @@ export function Sidebar({
         </div>
 
         {/* Parked draft conversations (unsent new chats, newest first): pinned above both
-            grouping modes — they belong to no Agent or Workspace until sent. Hidden
+            grouping modes �?they belong to no Agent or Workspace until sent. Hidden
             entirely while there are none; the search filter applies to their titles too. */}
         {shownDrafts.length > 0 && (
           <div className="pt-2.5">
@@ -1900,7 +1977,7 @@ export function Sidebar({
             <SkeletonList rows={5} />
           ) : (
             // While searching: every group renders (paging bypassed), zero-match groups
-            // hide, and the rest are forced open — a hit inside a collapsed group would
+            // hide, and the rest are forced open �?a hit inside a collapsed group would
             // look like a missing result.
             groupsOnPage(orderedAgents).map((agent) => {
               const groupRows = filterRows(byAgent.get(agent.agentId) ?? []);
@@ -1991,7 +2068,7 @@ export function Sidebar({
               <GroupBlock key={group.key} dropEdge={drag.dropEdge}>
                 {/* Group header: collapse toggle (folder icon + directory basename + count, full
                     path in the tooltip; the count = the group's active conversations only, exact
-                    server share, loaded rows win a disagreement — the folders never feed it) +
+                    server share, loaded rows win a disagreement �?the folders never feed it) +
                     pin + new chat in this Workspace; also the group's drag handle. */}
                 <GroupHeader
                   {...drag.header}
@@ -2043,7 +2120,7 @@ export function Sidebar({
 
                 {/* A workspace group can span Agents: the group body fans folder loads and "More"
                     out per category to the Agents whose share of THIS group is non-zero (plus the
-                    Agents already contributing loaded rows) — the active list and each folder
+                    Agents already contributing loaded rows) �?the active list and each folder
                     page independently. */}
                 {collapsed
                   ? null
@@ -2055,7 +2132,7 @@ export function Sidebar({
         {groupMode === "workspace" ? groupPagerRow() : null}
 
         {/* Time mode: last day / last month / earlier, bucketed on each conversation's last
-            activity — the same stamp the rows' compact timestamps and the recency sort read,
+            activity �?the same stamp the rows' compact timestamps and the recency sort read,
             so a row can never sit under a bucket its own timestamp contradicts. Empty buckets
             are dropped, and there are at most three, so this mode never paginates its groups.
             The buckets span every Agent and every Workspace: a bucket's "More" only reveals
@@ -2103,8 +2180,7 @@ export function Sidebar({
             )}
 
             {/* Whole-list paging: a fetched page lands in whichever bucket its rows' activity
-                puts them, so the row that pulls one belongs to the list, not to a bucket —
-                and its label says "conversations" where a bucket's says "more". */}
+                puts them, so the row that pulls one belongs to the list, not to a bucket �?                and its label says "conversations" where a bucket's says "more". */}
             {!searching &&
               timeParts.active.length < projectCounts.active &&
               timeMoreAgents.length > 0 && (
@@ -2122,13 +2198,15 @@ export function Sidebar({
           </>
         )}
 
-        {/* Quiet no-match line: the search is live and nothing — drafts included — hit. */}
+        {/* Quiet no-match line: the search is live and nothing �?drafts included �?hit. */}
         {searching && !hasSearchMatches && (
           <p className="px-2.5 pt-3 text-xs text-gray-400 dark:text-gray-600">
             {S.chat.searchNoMatches}
           </p>
         )}
       </div>
+        </>
+      )}
 
       {/* Bottom user config */}
       <div className="shrink-0 border-t border-gray-200 p-2 dark:border-gray-800">
@@ -2164,12 +2242,46 @@ export function Sidebar({
           }
         >
           <div className="py-1">
-            {/* System settings dialog: everyone gets the row — the dialog always has the
+            {/* Project switcher, now the FIRST entry of this menu (it used to sit at the top
+                of the column as its own switcher, so the sidebar wore two independent
+                "what am I looking at" controls at opposite ends). Picking one here closes
+                the menu: a switch is a completed action, and the list below it belongs to
+                the project it just left. The current project is marked bold + a check,
+                the same "you are here" reading the old switcher gave it. */}
+            <div className="px-3.5 pb-1 pt-1 text-[11px] font-medium text-gray-400 dark:text-gray-500">
+              {S.project.switcher}
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              {projects.map((p) => (
+                <button
+                  key={p.projectId}
+                  type="button"
+                  onClick={() => {
+                    setCurrentProjectId(p.projectId);
+                    setUserOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between gap-2 px-3.5 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                    p.projectId === currentProject?.projectId
+                      ? "font-semibold text-gray-900 dark:text-gray-100"
+                      : ""
+                  }`}
+                >
+                  <span className="min-w-0 truncate">{projectDisplayName(p)}</span>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    {p.projectId === currentProject?.projectId && (
+                      <CheckIcon className="text-gray-500 dark:text-gray-400" />
+                    )}
+                    <Badge tone="gray">{projectRoleLabel(p.role)}</Badge>
+                  </span>
+                </button>
+              ))}
+            </div>
+            {/* System settings dialog: everyone gets the row �?the dialog always has the
                 personal pages, and the server-global ones inside it stay gated by the
                 section registry rather than by this row. The preference rows that used to
                 stack here live on its pages now. It wears the anomaly trail's dot, which the
-                error log took with it when it moved inside (see use-update-badges.ts) — without
-                it here, the dot would only be visible after opening the dialog. */}
+                error log took with it when it moved inside (see use-update-badges.ts) �?without
+                it here, the dot would only be visible after opening the page. */}
             <button
               type="button"
               className={`relative ${menuItemClass}`}
@@ -2178,7 +2290,7 @@ export function Sidebar({
                 : {})}
               onClick={() => {
                 setUserOpen(false);
-                setSettingsOpen(true);
+                openSettings();
               }}
             >
               {S.settings.systemSettings}
@@ -2189,7 +2301,7 @@ export function Sidebar({
             {/* Update entry, directly under the settings entry rather than on a page inside
                 it: one row for both backends (the server release here, the shell's own
                 updater in the desktop window), naming where the update flow stands and
-                opening the update modal — where the flow is explained and acted on. The
+                opening the update modal �?where the flow is explained and acted on. The
                 modal is mounted by the app layout, so it outlives this menu. Hidden where
                 this session can update nothing (a browser signed into a desktop-mode
                 server, see updateModeFor). */}
@@ -2200,7 +2312,7 @@ export function Sidebar({
                 openUpdateModal();
               }}
             />
-            {/* Hidden in desktop mode: the window IS the session — logging out would
+            {/* Hidden in desktop mode: the window IS the session �?logging out would
                 strand the user on a login page whose password was never shown. */}
             {!desktopMode && (
               <button
@@ -2218,26 +2330,6 @@ export function Sidebar({
         </Dropdown>
       </div>
 
-      <SettingsDialog
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        initialSection={settingsSection}
-      />
-
-      <CreateProjectDialog
-        open={createProjectOpen}
-        onClose={() => setCreateProjectOpen(false)}
-        onCreated={(projectId) => {
-          setCreateProjectOpen(false);
-          void reloadProjects().then(() => setCurrentProjectId(projectId));
-        }}
-      />
-      {currentProject && (
-        <ProjectSettingsDialog
-          open={projectSettingsOpen}
-          onClose={() => setProjectSettingsOpen(false)}
-        />
-      )}
       {/* Rename chat */}
       <Modal
         open={renamingSession !== null}
@@ -2274,7 +2366,7 @@ export function Sidebar({
         />
       </Modal>
 
-      {/* Messaging binding dialog (row menu "Messaging binding…"): the row indicator
+      {/* Messaging binding dialog (row menu "Messaging binding�?): the row indicator
           updates in place from the dialog's own save/unbind outcome. */}
       {messagingSession && (
         <MessagingBindingModal
@@ -2293,7 +2385,7 @@ export function Sidebar({
 
       {/* Rename workspace (alias edit, same Modal + Input idiom as rename chat): the alias
           replaces the directory basename as the group label; leaving it blank reverts to
-          the basename — so an empty save is valid here, unlike the chat rename. */}
+          the basename �?so an empty save is valid here, unlike the chat rename. */}
       <Modal
         open={renamingWorkspace !== null}
         title={S.chat.renameWorkspace}
@@ -2340,7 +2432,7 @@ export function Sidebar({
       </ConfirmModal>
 
       {/* Remove-workspace confirmation (shared ConfirmModal, same stop as the other
-          destructive-looking actions): the copy is honest about the scope — sidebar
+          destructive-looking actions): the copy is honest about the scope �?sidebar
           registry entry only, disk and Sessions untouched, re-addable anytime. */}
       <ConfirmModal
         open={deletingWorkspace !== null}
@@ -2432,7 +2524,7 @@ function DraftRow({
 }
 
 /**
- * One group's block — its header and body — carrying the manual group order's drop
+ * One group's block �?its header and body �?carrying the manual group order's drop
  * indicator: a thin accent line in the gap the drop would land in, drawn against the
  * WHOLE group rather than its header, so "below" reads as "after this group and its
  * conversations" instead of "between the header and its own first row".
@@ -2470,7 +2562,7 @@ function GroupBlock({
  * pinned indicator. The header row carries the `group/header` scope so the reveal only
  * reacts to its own row, not to the session rows' plain `group` scope.
  * The accessible name stays STATIC and aria-pressed alone carries the state (the toggle
- * pattern the grouping-mode buttons use) — a name that swaps Pin/Unpin alongside
+ * pattern the grouping-mode buttons use) �?a name that swaps Pin/Unpin alongside
  * aria-pressed reads as "Unpin group, pressed", saying the state twice in conflicting
  * ways. The title tooltip may still swap: it is presentation for pointer users and does
  * not feed the accessible name while aria-label is present.
@@ -2496,15 +2588,15 @@ function GroupPinButton({ pinned, onToggle }: { pinned: boolean; onToggle: () =>
 
 /**
  * Single Session row: title + pinned indicator + status dot/approval badge, and one
- * trailing slot that swaps its content — at rest it shows the compact last-active time,
- * on row hover — or on either of them taking focus — it shows archive and delete as
+ * trailing slot that swaps its content �?at rest it shows the compact last-active time,
+ * on row hover �?or on either of them taking focus �?it shows archive and delete as
  * direct icon buttons.
  * That pair is the affordance every release up to v0.2.2 shipped (as icon buttons in
  * exactly this slot), restored here: the 0.3 line had replaced it with an ellipsis
  * dropdown carrying pin / rename / archive / delete, which cost two clicks for the two
  * actions people actually reach for.
  *
- * The rest of the set did not disappear — **right-clicking the row** opens all four as a
+ * The rest of the set did not disappear �?**right-clicking the row** opens all four as a
  * context menu at the pointer (useRowContextMenu; also Shift+F10 from the keyboard and
  * press-and-hold on touch, since neither hover nor a secondary click exists there). Both
  * panels go through the Dropdown body portal so the sidebar scroller can't clip them, and
@@ -2541,7 +2633,7 @@ function SessionRow({
   activity: SessionActivity;
   /** Row is pinned (bubbled to its group's top; small pin glyph on the title). */
   pinned: boolean;
-  /** Whether pinning can actually reorder this row — active-list rows only; folder rows hide the action (see renderRows). */
+  /** Whether pinning can actually reorder this row �?active-list rows only; folder rows hide the action (see renderRows). */
   canPin?: boolean;
   /** Preformatted compact last-active time ("" hides the slot's resting text). */
   lastActive: string;
@@ -2586,7 +2678,7 @@ function SessionRow({
   /**
    * Menu items hand focus back to the row before acting: the panel unmounts under the
    * user, and the context menu is the only keyboard route to pin and rename, so a
-   * Shift+F10 → Enter user would otherwise be dropped onto <body> and lose their place in
+   * Shift+F10 �?Enter user would otherwise be dropped onto <body> and lose their place in
    * the list. Actions that open a dialog (rename, delete) take focus from there as usual.
    */
   const runFromMenu = (action: SessionRowAction) => {
@@ -2616,7 +2708,7 @@ function SessionRow({
         data-title-reveal
         ref={ctx.rowRef}
         // Right-click / Shift+F10 / press-and-hold open the row's context menu. The
-        // native menu is suppressed inside this handler only — the rest of the app keeps
+        // native menu is suppressed inside this handler only �?the rest of the app keeps
         // the browser's own. select-none keeps a held press from raising the text
         // selection callout on touch instead of the menu.
         {...ctx.rowProps}
@@ -2650,7 +2742,7 @@ function SessionRow({
           {/* Truncated titles reveal their full text on row hover / keyboard focus by
               scrolling the tail into view (#309; scrollReveal, no-op when the title fits).
               The conditional `title` stays as the pointer-hover fallback under
-              prefers-reduced-motion — not as a touch path: mobile browsers do not surface
+              prefers-reduced-motion �?not as a touch path: mobile browsers do not surface
               `title` on long-press. Touch reaches the full text by opening the Session. */}
           <Truncated
             scrollReveal
@@ -2694,9 +2786,8 @@ function SessionRow({
           )}
         </button>
         {/* Trailing swap slot: resting last-active time / hover-focus archive + delete.
-            The buttons form a CONSTANT-width group anchored at the slot's right edge —
-            NOT a whole-slot overlay: the slot's width rides the time string (2 分钟前 vs
-            31 分钟前), and slot-centered glyphs landed at a different x per row, so the
+            The buttons form a CONSTANT-width group anchored at the slot's right edge �?            NOT a whole-slot overlay: the slot's width rides the time string (2 分钟�?vs
+            31 分钟�?, and slot-centered glyphs landed at a different x per row, so the
             icons never formed a vertical column (the user saw them shift with the time's
             character count). Right-anchored, every row's icons share one x. min-w-12
             reserves the pair's own width, so on a row with no time they still don't
@@ -2705,7 +2796,7 @@ function SessionRow({
             group precedes the time span so the peer combinator can reach it). */}
         <div className="relative flex h-6 min-w-12 shrink-0 items-center justify-end">
           {/* No hover pill on these (a fill as wide as the date read ugly); feedback is
-              the glyph color deepening — red for delete. */}
+              the glyph color deepening �?red for delete. */}
           <div className="peer absolute right-0 top-1/2 flex -translate-y-1/2 items-center">
             <SessionRowHoverActions
               actions={HOVER_ROW_ACTIONS}
@@ -2723,7 +2814,7 @@ function SessionRow({
             </span>
           )}
         </div>
-        {/* The full set, one right-click away (also Shift+F10 / press-and-hold — see
+        {/* The full set, one right-click away (also Shift+F10 / press-and-hold �?see
             useRowContextMenu). `contents` keeps this wrapper out of the row's flex
             layout: it renders no box of its own, the panel is portaled, and the anchor
             is the viewport point the gesture landed on rather than this element. */}
@@ -2750,9 +2841,9 @@ function SessionRow({
 }
 
 /**
- * Registry-backed workspace group's overflow (… to the right of the header's "+"):
- * 重命名工作区 / 删除工作区 in the session-row menu's compact style. Sits among the
- * header's action buttons — outside the header's collapse toggle, so opening it never
+ * Registry-backed workspace group's overflow (�?to the right of the header's "+"):
+ * 重命名工作区 / 删除工作�?in the session-row menu's compact style. Sits among the
+ * header's action buttons �?outside the header's collapse toggle, so opening it never
  * expands/collapses the group. Body-portaled like every menu inside the scroller.
  */
 function GroupOverflowMenu({ onRename, onDelete }: { onRename: () => void; onDelete: () => void }) {
@@ -2771,10 +2862,10 @@ function GroupOverflowMenu({ onRename, onDelete }: { onRename: () => void; onDel
       className="shrink-0"
       button={
         /* No hover pill on this trigger (user: color, not background, should carry the
-           hover hint) — feedback is the glyph deepening in light / brightening in dark,
+           hover hint) �?feedback is the glyph deepening in light / brightening in dark,
            the session-row ellipsis treatment. Geometry: the same h-7 w-7 square as the
            sibling "+" and the LAST action in the header, flush at GroupHeader's px-1
-           inset — which equals the session rows' pr-1, so with the row trigger's 16px
+           inset �?which equals the session rows' pr-1, so with the row trigger's 16px
            glyph the dot columns line up with the rows' trailing slot below. */
         <button
           type="button"
@@ -2806,10 +2897,10 @@ function GroupOverflowMenu({ onRename, onDelete }: { onRename: () => void; onDel
 /**
  * List-settings menu option: leading glyph + label, with a checkmark marking the active
  * choice (reference-style radio row; aria-pressed carries the state). Same type scale and
- * leading-glyph column as the session/workspace overflow menus (用户口径: 字体和 Session
- * 更多一样), so the two menus read as one family.
+ * leading-glyph column as the session/workspace overflow menus (用户口径: 字体�?Session
+ * 更多一�?, so the two menus read as one family.
  *
- * The glyph is decorative — it names the option's subject (a folder for Workspace
+ * The glyph is decorative �?it names the option's subject (a folder for Workspace
  * grouping, a clock for recency) beside a label that is never dropped, so the row's
  * accessible name stays the label alone.
  */

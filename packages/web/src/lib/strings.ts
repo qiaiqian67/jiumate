@@ -8,7 +8,7 @@
  * Only Token and Agent stay as untranslated English domain terms; translate all other
  * surface labels (Session, Requests, Workspace, Task, Project, Trace) to Chinese in zh.
  * **One page overrides the Token half of that rule**: the cost center says 词元 throughout
- * (`S.usage.*`), because that page is titled 词元图 and its own heatmap already counted 词元 —
+ * (`S.usage.*`), because that page is titled 词元 and its own heatmap already counted 词元 —
  * half a page in one term and half in the other read as two different quantities. Everywhere
  * else (the trace panel, the model tables, the settings forms) Token stays English.
  * "agent" is a common noun: lowercase mid-sentence, capitalized only at the start of a
@@ -22,12 +22,12 @@ export const zh = {
   nav: {
     chat: "对话",
     newChat: "新会话",
-    appCenter: "灵感库",
+    appCenter: "广场",
     agents: "智能体",
     plugins: "插件·技能",
     models: "模型库",
     machines: "机器",
-    usage: "词元图",
+    usage: "词元",
     traces: "轨迹观测",
     benchmark: "评估中心",
     // Collapsed-rail tooltip (product-specified wording; 新会话 reuses chat.newSessionMenu, the other pages reuse the page names above).
@@ -180,8 +180,10 @@ export const zh = {
     applicationPetImportFailed: "导入宠物失败。",
     applicationPetImported: (name: string) => `已导入「${name}」`,
     applicationPetDeleted: "已删除该宠物。",
-    /** Sidebar user-menu row opening the System settings dialog. */
-    systemSettings: "系统设置",
+    /** Sidebar user-menu row opening the System settings page. */
+    systemSettings: "设置",
+    /** The full-page settings' own exit row: the modal's close button had no equivalent. */
+    backToWorkspace: "返回工作区",
     /** Rail headings: the viewer's own preferences vs. the whole server's. */
     groupPersonal: "个人",
     groupServer: "服务器",
@@ -278,6 +280,16 @@ export const zh = {
     themeBackgroundDimInfo:
       "盖在画作上的一层遮罩，用来压住过于花哨的图片，让面板之间的空隙不跟文字抢注意力。0 表示不压暗。",
     currencyInfo: "价格显示币种；存储始终为美元。",
+    /**
+     * 聊天正文字号。注意与外观页的「字号」(fontSize / fontSmall…) 是**两个独立设置**：
+     * 那个缩放整个界面（改 html 根字号），这个只缩放对话正文里的 Markdown。所以这里用
+     * chat 前缀区分，两套并存、互不影响。
+     */
+    chatFontSize: "聊天字号",
+    chatFontSizeInfo: "对话正文的字号。界面和代码块不受影响。",
+    chatFontSmall: "小",
+    chatFontMedium: "中",
+    chatFontLarge: "大",
     changePasswordInfo: "更改当前账号的登录密码。",
     accentNames: {
       neutral: "灰白",
@@ -308,7 +320,7 @@ export const zh = {
     /** The combined wording for an anchor covering several update trails at once. */
     updatesAvailable: "有可用更新",
     // —— the account-menu row ——
-    checkNow: "检查更新",
+    checkNow: "更新",
     checking: "检查中…",
     rowDownloading: (v: string | null, percent: number | null) =>
       `正在下载${v !== null ? ` v${v}` : "更新"}${percent !== null ? ` ${percent}%` : "…"}`,
@@ -458,6 +470,9 @@ export const zh = {
     moreInfo: "说明",
     /** The same, named for what it explains — so the trigger never repeats the heading it sits in. */
     moreInfoAbout: (subject: string) => `说明：${subject}`,
+    /** 警告式弹出的可访问名（圆圈感叹号）。与「说明」分开：警告若以"说明"的名义念出来，
+        恰好弱化了它要警告的那件事。 */
+    warningAbout: (subject: string) => (subject ? `警告：${subject}` : "警告"),
     name: "名称",
     username: "用户名",
     role: "角色",
@@ -474,7 +489,7 @@ export const zh = {
     showPassword: "显示密码",
     hidePassword: "隐藏密码",
     login: "登录",
-    logout: "登出",
+    logout: "退出",
     admin: "管理员",
     defaultAdminNote:
       "首次使用请打开服务端启动输出中的首次登录链接，认领内置管理员 admin 并设置密码。这里没有可输入的初始密码",
@@ -531,7 +546,6 @@ export const zh = {
     displayName: "显示名",
     /** Create dialog only: leaving the name empty falls back to the id. In Project settings the saved name cannot be blanked. */
     displayNameHint: "留空则使用项目 ID 作为名称",
-    settings: "项目设置",
     settingsTitle: "项目设置",
     members: "成员",
     addMember: "添加成员",
@@ -550,6 +564,18 @@ export const zh = {
     settingsTabMembers: "成员",
     settingsTabDefaults: "默认值",
     settingsTabSecurity: "安全策略",
+    /**
+     * 「项目」在系统设置菜单里的标题与四个子页面。「通用」在项目设置里改名为「管理」——
+     * 它不只是通用偏好，而是改名、新建、删除这三个**项目本身**的操作，放在"通用"这个词
+     * 底下说不清它到底管什么。
+     */
+    settingsGroupProject: "项目",
+    settingsTabManage: "项目",
+    settingsTabManageInfo: "项目名称、新建与删除。",
+    newProject: "新建项目",
+    newProjectInfo: "创建一个新的项目，并切换过去。",
+    /** 系统设置的「项目」页在没有当前项目时显示（项目是那四页的前提）。 */
+    noCurrentProject: "当前没有项目。请先在侧边栏选择一个或新建一个。",
     projectIdLabel: "项目 ID",
     deleteProjectDesc: "项目目录将被递归删除，不可恢复。",
     /** Security-policy page (Project settings): disclosed by the "?" beside the tab heading. */
@@ -571,7 +597,9 @@ export const zh = {
     commandPolicyInvalidPattern: "正则表达式无效",
     deleteProject: "删除项目",
     deleteConfirm: "确认删除该项目？项目目录将被递归删除，不可恢复。",
-    deleteDefaultForbidden: "默认项目与 CLI 共用，不允许在 Web 端删除",
+    /** 默认项目删除说明（感叹号里的一句话）。递归删除不可恢复这句对任何项目都成立，但默认
+        项目根本删不了，所以那半句在删除确认框里已经出现过一次；这里只说"为什么不能删"。 */
+    deleteDefaultForbidden: "默认项目与 CLI 共用，不允许在 Web 端删除。项目目录将被递归删除，不可恢复。",
     deleteLastForbidden: "这是当前账号最后一个项目，删除后将无项目可用；请先创建新的项目",
     noCredentialTitle: "尚未配置模型 credential",
     noCredentialBody: "当前项目的默认模型尚未配置 API key，发起对话前请先前往模型页配置。",
@@ -949,14 +977,14 @@ export const zh = {
     /** Switch label for the per-model fast mode (the provider's premium faster serving tier); the switch is only rendered for models whose AgentHub client can carry the parameter. */
     fastMode: "快速模式",
     /** Shown while the fast-mode switch is ON (and as the label's hover title): what it buys, and that the recorded prices do not follow the premium rate. */
-    fastModeHint: "输出更快，按厂商的溢价档位计费；词元图仍按条目记录的标准单价统计",
+    fastModeHint: "输出更快，按厂商的溢价档位计费；词元页仍按条目记录的标准单价统计",
     /** Amber line under an ON switch on a model whose client rejects the parameter (a hand-edited config or a renamed id): the switch stays visible only so it can be turned off. */
     fastModeUnsupported: "该模型不支持快速模式，请关闭，否则请求会失败",
     /** Accessible name of the warning dialog raised when the fast-mode switch is turned ON. */
     fastModeConfirmTitle: "开启快速模式",
     /** Body of that warning: premium billing, and that the recorded prices do not follow it. */
     fastModeConfirmBody:
-      "快速模式按厂商的溢价价目计费（MiniMax 为标准价的 1.5 倍，OpenAI 与 Anthropic 另有溢价价目表）。条目记录的按 Token 单价不会随之调整，词元图会低估这部分用量。",
+      "快速模式按厂商的溢价价目计费（MiniMax 为标准价的 1.5 倍，OpenAI 与 Anthropic 另有溢价价目表）。条目记录的按 Token 单价不会随之调整，词元页会低估这部分用量。",
     /** Extra paragraph shown only for Anthropic-protocol models: fast mode there is a gated research preview. */
     fastModeConfirmPreview:
       "Anthropic 的快速模式目前是限量的 research preview：在你的组织获得授权之前，请求会返回 429 限流错误。",
@@ -1269,13 +1297,13 @@ export const zh = {
   },
 
   /**
-   * 灵感库（features/inspiration/*）：内置案例 + 管理员自建案例，按分类归档。
+   * 广场（features/inspiration/*）：内置案例 + 管理员自建案例，按分类归档。
    * 内置案例的标题／描述／提示词不在这里——它们随案例本身放在
    * `@prismshadow/jiumate-inspirations/presets` 的 title/titleZh 等字段里，这样管理员自建的
    * 案例与内置案例是同一种东西。这一组只放 chrome。
    */
   inspiration: {
-    pageTitle: "灵感库",
+    pageTitle: "广场",
     /** 新会话页输入框下方那条封面卡片条的标题。 */
     stripTitle: "来源于灵感",
     /** 卡片条右上角的按钮：换下一组卡片。 */
@@ -1310,7 +1338,7 @@ export const zh = {
     openDetail: "查看详情",
     /** 草稿页行上的第二行 tooltip：点击只填入，不发送。 */
     fillHint: "点击填入输入框，可修改后自行发送",
-    /** 草稿页最后一行：进入完整灵感库。带总数时说明还有多少条。 */
+    /** 草稿页最后一行：进入完整广场。带总数时说明还有多少条。 */
     browseAll: (total?: number) =>
       total === undefined ? "浏览全部灵感 →" : `浏览全部灵感（共 ${total} 条）→`,
     /** 空状态。 */
@@ -1318,7 +1346,7 @@ export const zh = {
     favoritesEmpty: "还没有收藏。点卡片上的心形，把常用的收进来。",
     searchEmpty: (query: string) => `没有匹配「${query}」的案例。`,
     /** 服务端读目录失败时的提示（此时列表只剩内置案例）。 */
-    offlineHint: "未能读取服务器上的灵感库，当前只显示内置案例。",
+    offlineHint: "未能读取服务器上的广场内容，当前只显示内置案例。",
     /** 详情弹窗里的分组标题。 */
     previewLabel: "效果预览",
     promptLabel: "提示词",
@@ -1335,8 +1363,8 @@ export const zh = {
       tool: "工具",
       prompt: "提示词",
     },
-    /** 管理员：从会话收进灵感库（会话详情卡底部的入口）。 */
-    capture: "收进灵感库",
+    /** 管理员：从会话收进广场（会话详情卡底部的入口）。 */
+    capture: "收进广场",
     captureHint: "把这段会话的开场提问存成可复用的灵感案例",
     captureNoPrompt: "这段会话还没有用户提问，先聊一句再收进来",
     /** 管理员：新建 / 编辑 / 删除案例。 */
@@ -1407,8 +1435,8 @@ export const zh = {
     /** 管理员：分类管理。 */
     categoriesTitle: "管理分类",
     categoriesDesc:
-      "分类是灵感库的页签。产品自带的三个分类首次启动时写入，之后和你自建的完全一样，可以改名、调序、删除；但下面还有案例时不能删除。",
-    categoriesEmpty: "还没有分类。新建一个，灵感库就有了第一个页签。",
+      "分类是广场的页签。产品自带的三个分类首次启动时写入，之后和你自建的完全一样，可以改名、调序、删除；但下面还有案例时不能删除。",
+    categoriesEmpty: "还没有分类。新建一个，广场就有了第一个页签。",
     categoryNew: "新建分类",
     categoryNameZh: "名称（中文）",
     categoryNameEn: "名称（英文）",
@@ -1898,6 +1926,16 @@ export const zh = {
     workspaceNoSubdirs: "无子目录",
     workspaceAuto: "临时工作区",
     workspaceClear: "改用临时工作区",
+    /**
+     * 工作区选择菜单的新增部分：搜索框、近期使用、以及桌面端的本地目录选择。
+     * recentWorkspaces 的数字上限由 workspace-select.tsx 决定（写在这里是为了让"为什么是
+     * 这个数"有个可查的地方）。
+     */
+    workspaceSearch: "搜索工作区",
+    workspaceSearchEmpty: "没有匹配的工作区",
+    workspaceRecent: "近期使用",
+    workspaceOpenLocal: "打开本地文件夹",
+    workspaceOpenLocalHint: "从这台电脑上选择一个文件夹作为工作区",
     workspaceDirInvalid: "目录不存在或无法访问，已回退",
     /** Grouping toggle of the sidebar conversation list (workspace grouping is the default) and the workspace groups. */
     groupByWorkspace: "按工作区分组",
@@ -2781,7 +2819,7 @@ export const zh = {
   },
 
   usage: {
-    title: "词元图",
+    title: "词元",
     today: "今日",
     last7d: "近 7 天",
     total: "累计",
