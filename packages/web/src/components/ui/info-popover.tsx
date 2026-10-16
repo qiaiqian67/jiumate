@@ -22,9 +22,21 @@ import { S } from "../../lib/strings";
 import { ICON_SIZE } from "../../lib/icon-scale";
 import { usePortalPanel } from "./use-portal-panel";
 
-/** Circled question mark: the app's 9-radius status circle, with a mark and a dot inside it. */
+/**
+ * Marks: a circled "?" for an explanation, a circled "!" for a warning.
+ *
+ * The two are not interchangeable, and the difference is the whole reason for `tone`: a "?"
+ * says "here is background you may want", a "!" says "this is a consequence you should not
+ * read past". The destructive-confirmation text ("the directory is deleted recursively and
+ * cannot be recovered") is the second kind — behind a "?" it reads as a footnote, and behind a
+ * plain visible paragraph it cries wolf on every page load whether or not anyone deletes
+ * anything. So it goes behind a "!", which is the one mark that means "read this before you
+ * touch the button next to it".
+ */
 const HELP_ICON =
   "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.6 9.3a2.5 2.5 0 0 1 4.9.8c0 1.7-2.5 2.5-2.5 2.5M12 16.8h.01";
+const WARN_ICON =
+  "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.6v5.2M12 16.4h.01";
 
 const PANEL_WIDTH = 288; // w-72, the OptionMenu panel width
 
@@ -33,6 +45,7 @@ export function InfoPopover({
   label,
   size = ICON_SIZE.inlineGlyph,
   className = "",
+  tone = "help",
 }: {
   /** The explanation. Plain text in almost every case; nodes are allowed for the rare inline code. */
   children: ReactNode;
@@ -45,6 +58,13 @@ export function InfoPopover({
   label?: string;
   size?: number;
   className?: string;
+  /**
+   * "help" (circled "?") for background, "warn" (circled "!") for a consequence the reader
+   * should not pass over. See the icon constants for why a destructive confirmation needs the
+   * second kind. The accessible name changes with it — a warning announced as "More info"
+   * understates exactly what it is warning about.
+   */
+  tone?: "help" | "warn";
 }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -55,7 +75,12 @@ export function InfoPopover({
     estimatedHeight: 160,
     panelWidth: PANEL_WIDTH,
   });
-  const name = label !== undefined ? S.common.moreInfoAbout(label) : S.common.moreInfo;
+  const name =
+    tone === "warn"
+      ? S.common.warningAbout(label ?? "")
+      : label !== undefined
+        ? S.common.moreInfoAbout(label)
+        : S.common.moreInfo;
   return (
     <>
       <button
@@ -69,7 +94,11 @@ export function InfoPopover({
         // explanation on focus rather than only announcing that something expanded.
         aria-describedby={open ? panelId : undefined}
         onClick={() => setOpen((v) => !v)}
-        className={`inline-flex shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors duration-150 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 ${className}`}
+        className={`inline-flex shrink-0 items-center justify-center rounded-full transition-colors duration-150 ${
+          tone === "warn"
+            ? "text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300"
+            : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+        } ${className}`}
       >
         <svg
           width={size}
@@ -83,7 +112,7 @@ export function InfoPopover({
           aria-hidden
           className="block shrink-0"
         >
-          <path d={HELP_ICON} />
+          <path d={tone === "warn" ? WARN_ICON : HELP_ICON} />
         </svg>
       </button>
       {open &&

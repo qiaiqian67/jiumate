@@ -1,11 +1,23 @@
 /**
  * The rule that decides which disclosure a site gets (src/components/ui/info-popover.tsx and
- * help-fold.tsx): **the circled "?" may only appear beside a title.**
+ * help-fold.tsx): **the circled "?" may only appear beside a title — the circled "!" may not.**
  *
  * A "?" is an anchored mark — it reads as help because it modifies the title next to it. Standing
  * alone at the top of a panel it modifies nothing, and a reader has to click it to find out what
  * it even refers to. Where there is no title, the disclosure has to name itself, which is what
  * `HelpFold` is for.
+ *
+ * The "!" is exempt, and deliberately so. It marks a CONSEQUENCE — "this directory is deleted
+ * recursively and cannot be recovered" — and its whole job is to sit next to the *button* it
+ * warns about, in the slot the button is not in. Requiring a title beside it would push those
+ * warnings onto the page title, which is the one place they cannot protect anyone: the reader
+ * has to be looking at the delete button to be at risk of pressing it, and that is exactly when
+ * the mark is beside them rather than across the page. A warning that can only be found by
+ * scrolling back to the top is a warning nobody reads.
+ *
+ * So the check is per-tone: a "?" needs a title, a "!" needs nothing. Reading `tone` off the
+ * element is what keeps the two from drifting into each other — a "?" that lost its anchor and
+ * a "!" that grew one are both wrong in opposite directions.
  *
  * This is a rule rather than a preference, so it is checked rather than remembered. The check
  * parses the real JSX with the TypeScript parser instead of matching text: whether a title sits
@@ -65,7 +77,24 @@ function slotIn(node: ts.Node): { host: ts.JsxElement | ts.JsxFragment; slot: ts
   return null;
 }
 
-/** Every `<InfoPopover>` in the tree that has no title among its preceding siblings. */
+/** The `tone` prop's literal, read off the element's attributes. Defaults to "help". */
+function toneOf(node: ts.Node): string {
+  const attrs = ts.isJsxSelfClosingElement(node)
+    ? node.attributes.properties
+    : ts.isJsxElement(node)
+      ? node.openingElement.attributes.properties
+      : [];
+  for (const attr of attrs) {
+    if (ts.isJsxAttribute(attr) && ts.isIdentifier(attr.name) && attr.name.text === "tone") {
+      return attr.initializer !== undefined && ts.isStringLiteral(attr.initializer)
+        ? attr.initializer.text
+        : "warn"; // {tone} is dynamic; treat it as the stricter of the two.
+    }
+  }
+  return "help";
+}
+
+/** Every `InfoPopover` that breaks the rule for ITS OWN tone. */
 function findOrphans(): string[] {
   const orphans: string[] = [];
   for (const path of tsxFiles()) {
@@ -77,7 +106,7 @@ function findOrphans(): string[] {
       ts.ScriptKind.TSX,
     );
     const visit = (node: ts.Node): void => {
-      if (jsxTag(node) === "InfoPopover") {
+      if (jsxTag(node) === "InfoPopover" && toneOf(node) === "help") {
         const here = slotIn(node);
         const anchored =
           here !== null &&
@@ -94,6 +123,32 @@ function findOrphans(): string[] {
     visit(source);
   }
   return orphans.sort();
+}
+
+/** Run the per-tone orphan check over a JSX snippet rather than the whole tree. */
+function orphansIn(jsx: string): string[] {
+  const source = ts.createSourceFile(
+    "t.tsx",
+    `const x = ${jsx};`,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  const found: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (jsxTag(node) === "InfoPopover" && toneOf(node) === "help") {
+      const here = slotIn(node);
+      const anchored =
+        here !== null &&
+        here.host.children
+          .slice(0, here.host.children.indexOf(here.slot as never))
+          .some(rendersTitle);
+      if (!anchored) found.push(node.getText(source));
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
 }
 
 describe("disclosure anchoring", () => {
@@ -120,7 +175,7 @@ describe("disclosure anchoring", () => {
       const source = parse(jsx);
       let result = false;
       const visit = (node: ts.Node): void => {
-        if (jsxTag(node) === "InfoPopover") {
+        if (jsxTag(node) === "InfoPopover" && toneOf(node) === "help") {
           const here = slotIn(node);
           result =
             here !== null &&
@@ -145,6 +200,15 @@ describe("disclosure anchoring", () => {
     expect(anchoredOf("<div>{/* why */}<InfoPopover>d</InfoPopover></div>")).toBe(false);
     expect(anchoredOf("<div><InfoPopover>d</InfoPopover><Button>Import</Button></div>")).toBe(
       false,
+    );
+    // The warning tone is exempt from the anchor requirement, and exempt only there: the same
+    // three shapes with tone="warn" must NOT be reported, and a "?" beside them must still be.
+    expect(orphansIn('<div><InfoPopover tone="warn">d</InfoPopover></div>')).toEqual([]);
+    expect(
+      orphansIn('<div><InfoPopover tone="warn">d</InfoPopover><Button>Delete</Button></div>'),
+    ).toEqual([]);
+    expect(orphansIn('<div><InfoPopover>d</InfoPopover><Button>Delete</Button></div>')).toHaveLength(
+      1,
     );
   });
 });
