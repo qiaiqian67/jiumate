@@ -181,9 +181,9 @@ export const KEY_RULES: readonly KeyRule[] = [
   },
   {
     kind: "exact",
-    key: "jiumate.sidebarNavGroupCollapsed",
+    key: "jiumate.chatFontSize",
     scope: "browser",
-    why: "Whether the static page-nav group is folded; the nav is built from a compile-time manifest.",
+    why: "Reader font size for the chat prose (small/medium/large); a per-user reading preference, not a property of this install.",
   },
   {
     kind: "exact",

@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { LocaleProvider, LocaleScope } from "./state/locale";
 import { ThemeProvider } from "./state/theme";
 import { AuthProvider } from "./state/auth";
+import { ChatFontSizeScope } from "./state/chat-font-size";
 import { AppRouter } from "./router";
 import { Toaster } from "./components/ui/toast";
 import { guardWindowDragOver, guardWindowDrop } from "./lib/file-drop";
@@ -32,6 +33,9 @@ export function App() {
   return (
     <LocaleProvider>
       <ThemeProvider>
+        {/* Reader font size: applied to :root from here rather than from the settings page,
+            which is not mounted most of the time — see ChatFontSizeScope's own doc. */}
+        <ChatFontSizeScope />
         <AuthProvider>
           <LocaleScope>
             <AppRouter />

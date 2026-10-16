@@ -77,7 +77,7 @@ function populated(): ReturnType<typeof memStorage> {
     "jiumate.panelWidth": "420",
     "jiumate.sidebarGroupMode": "agent",
     "jiumate.sidebarSortMode": "manual",
-    "jiumate.sidebarNavGroupCollapsed": "collapsed",
+    "jiumate.chatFontSize": "large",
     "jiumate.steerMode": "followup",
   });
 }
@@ -98,7 +98,7 @@ const PREFERENCE_KEYS = [
   "jiumate.panelWidth",
   "jiumate.sidebarGroupMode",
   "jiumate.sidebarSortMode",
-  "jiumate.sidebarNavGroupCollapsed",
+  "jiumate.chatFontSize",
   "jiumate.steerMode",
 ];
 
