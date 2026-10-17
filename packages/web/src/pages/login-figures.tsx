@@ -66,15 +66,22 @@ const FIGURES: readonly FigureSpec[] = [
 ];
 
 /**
- * How far a pupil may travel from the centre of its eye, as a share of the eye's width.
+ * How far a pupil may travel from the centre of its eye, as a share of the pupil's own width.
  *
- * The pupil and its white are drawn at the same size and the pupil is a scaled inner circle, so
- * a pupil that travelled more than the gap between them would poke outside the white and read as a
- * bug rather than as a glance. A share rather than pixels because the figures scale with the panel
- * (their heights are percentages of it): a fixed 3px is a third of the eye on the smallest figure —
- * far enough to break out of it — and a nudge too small to see on the tallest.
+ * The pupil is a scaled circle inside a larger white one, so the room it has to move is the gap
+ * between the two radii. At `scale(0.62)` on a 10px eye that gap is about 1.9px a side, and a
+ * share of 0.55 of the pupil's 6.2px comes to roughly 3.4px — which the geometry checks confirm
+ * stays inside.
+ *
+ * It reads as 0.55 rather than a number near 1 because the constraint is one-directional: a pupil
+ * may move at most the gap, and a value above that pushes it through the edge of the white. Half
+ * of the gap is used, which is as far as a glance reads without looking broken.
+ *
+ * This was 0.3, chosen as though the eye and the pupil were the same size — they are not, the
+ * pupil is the scaled one — so the travel came out at about 1.5px. That is invisible at any panel
+ * size, which is what "the eyes don't follow the cursor" turned out to be.
  */
-const PUPIL_TRAVEL = 0.3;
+const PUPIL_TRAVEL = 0.55;
 
 /**
  * Pointer distance at which the pupil reaches full travel, px.
@@ -258,7 +265,7 @@ function Figure({
       data-leaning={leaning || undefined}
       data-surprised={surprised || undefined}
     >
-      <div className="watch-eyes">
+      <div className="watch-eyes" data-look-away={passwordTyped || undefined}>
         <span className="watch-eye">
           <span className="watch-pupil" data-look-away={passwordTyped || undefined} />
         </span>

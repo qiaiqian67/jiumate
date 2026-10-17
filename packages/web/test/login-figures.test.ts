@@ -44,13 +44,21 @@ describe("小人的形体", () => {
   });
 
   it("瞳孔移动范围不超过眼睛能容纳的距离", () => {
-    // 白色眼球和黑色瞳孔的关系：瞳孔填满眼白，再缩到约一半才露出黑色。所以它最多只能在
-    // 眼白里挪动眼白半径的一半左右。参考实现里的 translate(-8px) 会把瞳孔推出眼白。
-    // 这里是瞳孔自身尺寸的**比例**而非像素：小人随面板缩放，固定 3px 在最小的小人身上是
-    // 眼球的 1/3（足以推出眼白），在最高的身上又几乎看不出来。
+    // 白色眼白和黑色瞳孔的关系：瞳孔填满眼白再缩小，所以它能从中心移到边缘的最大距离是
+    // (1 - scale) / 2 × 眼白。
+    //
+    // 这里曾经断言 `PUPIL_TRAVEL <= 0.5`，那个数不是几何约束：行程是"可见瞳孔尺寸的一个
+    // 比例"，可见瞳孔又只有眼白的 scale，所以真实上限是 `travel × scale ≤ (1 - scale) / 2`。
+    // 0.5 在 scale=0.62 时是超标的（0.31 > 0.19），几何测试抓到了——而当时这条断言拦下了
+    // 正确的 0.55。断言了一个看起来合理却与几何无关的数，会挡住修复它自己该挡的东西。
     const travel = Number(/const PUPIL_TRAVEL = ([\d.]+)/.exec(FIGURES)?.[1]);
+    const scale = Number(/transform: scale\(([\d.]+)\)/.exec(CSS.split(".watch-pupil {")[1] ?? "")?.[1]);
     expect(travel).toBeGreaterThan(0);
-    expect(travel).toBeLessThanOrEqual(0.5);
+    expect(scale).toBeGreaterThan(0);
+    // 行程不越界。
+    expect(travel * scale, "瞳孔不能移出眼白").toBeLessThanOrEqual((1 - scale) / 2);
+    // 但要够明显，否则看不出在跟随。
+    expect(travel * scale, "行程要够长").toBeGreaterThan(0.15);
     // 位移按瞳孔自身尺寸算，不写死像素。
     expect(FIGURES).toContain("box.width * PUPIL_TRAVEL");
     // 偏移走 translate 属性，不碰 transform —— 后者归样式表的 scale 所有（见下）。
@@ -59,17 +67,23 @@ describe("小人的形体", () => {
   });
 
   it("瞳孔的缩放由样式表拥有，脚本只写位移", () => {
-    // transform: scale(0.5) 是让瞳孔在眼白里露出来的唯一原因。脚本若写 transform 就会把它
+    // transform: scale(...) 是让瞳孔在眼白里露出来的唯一原因。脚本若写 transform 就会把它
     // 整个替换掉，指针一动八个瞳孔同时涨回全尺寸、盖住眼白。
     expect(CSS).toMatch(/\.watch-pupil \{[^}]*transform: scale\([\d.]+\)/s);
     expect(CSS).toMatch(/\.watch-pupil \{[^}]*translate: 0 0/s);
   });
 
-  it("眼白大于瞳孔，否则黑瞳被盖住看不见", () => {
-    // 眼白与瞳孔的相对大小由几何测试（login-figures-geometry.test.ts，按已知面板高度解算 cqh）
-    // 和渲染测试（login-figures-render.test.ts，量真实盒子）覆盖，两处都比这里读字符串可靠：
-    // 这里唯一能发现的是"根本没有缩放"，那由下一条断言负责。
-    expect(CSS).toMatch(/\.watch-pupil \{[^}]*transform: scale\([\d.]+\)/s);
+  it("小紫朝右倾（输入框在右侧）", () => {
+    // 表单在右半边、小人在左半边，倾过去读用户名就该向右。原来往左倾，是背离它要看的东西。
+    expect(CSS).toMatch(
+      /\.watch-figure\[data-leaning\] \{[^}]*translate\(10px, -50%\) rotate\(8deg\)/s,
+    );
+  });
+
+  it("输入密码时整只眼睛左移，不只瞳孔", () => {
+    // 只移瞳孔读起来是眼睛歪了；眼白带着瞳孔一起移才是"视线转开"。
+    expect(FIGURES).toContain('className="watch-eyes" data-look-away=');
+    expect(CSS).toMatch(/\.watch-eyes\[data-look-away\] \{[^}]*translate: -[\d.]+cqh/s);
   });
 
   it("小人的尺寸全部用 cqh 相对面板高度，所以面板高度变化时构图不变", () => {

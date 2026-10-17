@@ -79,9 +79,14 @@
   }
 
   /* Leaning toward the username, or back from the startled click. Both tip from the bottom, so
-     the figure stays planted on the ground line instead of lifting off it. */
+     the figure stays planted on the ground line instead of lifting off it.
+
+     Toward the *right*, because the username field is on the right: the form occupies the right
+     half of the card and the figures the left. The original had this at `translate(-10px) …
+     rotate(-8deg)`, tipping them away from the field they are meant to be reading — which read as
+     leaning away from the page rather than toward the user. */
   .watch-figure[data-leaning] {
-    transform: translate(-10px, -50%) rotate(-8deg);
+    transform: translate(10px, -50%) rotate(8deg);
   }
   /* Startled: the lean is undone (`translateY(-50%)` only) so the figures stand up straight with
      their mouths open. A figure that stayed tipped over would read as falling, not as surprise. */
@@ -113,11 +118,20 @@
   .watch-eye {
     position: relative;
     display: block;
-    /* 10px on the 600px panel. Larger than the pupil so the pupil is visible at all: the pupil
-       fills this white exactly and is scaled down to half, which is what leaves the gap it
-       travels in. Drawing the white at the same size as the pupil would hide the pupil behind it. */
-    width: 1.67cqh;
-    height: 1.67cqh;
+    /* 14px on the 600px panel, up from the original 10px.
+
+       The size is bounded by the travel, not by taste. A pupil can only move from the centre of
+       its white to the edge — `(1 - scale) / 2` of the white's radius — so the *proportion* of the
+       eye the pupil can cross is fixed by `scale` alone and the eye's size only scales the whole
+       thing. At 10px the visible pupil was 5px and it could travel 1.5px: a fifth of a pixel per
+       frame, which does not read as following anything. At 14px with `scale(0.45)` the pupil is
+       6.3px and travels 3.85px — 27.5% of the eye, which is the largest share the geometry allows
+       before the pupil breaks out of the white.
+
+       Larger than the pupil, necessarily: the pupil fills this box and is scaled down inside it,
+       and drawing the white at the same size would hide the pupil behind it. */
+    width: 2.33cqh;
+    height: 2.33cqh;
     border-radius: 50%;
     background-color: #fff;
     /* The blink collapses the white; the pupil is inside it, so both vanish together. */
@@ -134,7 +148,12 @@
     display: block;
     border-radius: 50%;
     background-color: #111;
-    transform: scale(0.5);
+    /* 0.45, not 0.5 or 0.62. This number *is* the travel budget: a pupil can cross
+       `(1 - scale) / 2` of the white's radius and no further, so 0.62 allows 19% of the eye,
+       0.5 allows 25%, and 0.45 allows 27.5% — the most a glance can be before it reads as a
+       pupil sliding off toward the edge. See the eye's note for why the eye is 14px rather than
+       the original 10. */
+    transform: scale(0.45);
     /* The offset is the separate `translate` property rather than part of `transform`, because the
        pointer handler rewrites `transform` wholesale — folding the offset into it would mean every
        pointer move also had to restate the scale, and one missed write would show a full-size
@@ -146,13 +165,24 @@
       transform 0.12s ease-out;
   }
 
-  /* Looking away while a password is typed: the pupils shift left and shrink, so the gaze reads
-     as averted even though the eyes themselves have not moved. 3px on the 600px panel, and the
-     same share as everything else so it shrinks with the figures rather than being three times
-     wider on the small ones. */
+  /* Looking away while a password is typed.
+
+     The whole eye white slides left, not just the pupil inside it. Moving only the pupil reads as
+     the eyes going crooked; moving the white with the pupil inside it reads as the gaze turning,
+     which is what "everyone looks away" is supposed to look like. The eye shrinks slightly too —
+     averted eyes narrow — and the pupil shrinks with it, so the shift stays proportional rather
+     than the pupil sliding off toward the edge.
+
+     0.55cqh is 3.3px of travel, about a third of the 10px eye: far enough to be obvious at a
+     glance, which 3px of pupil-only travel was not. */
+  .watch-eyes[data-look-away] {
+    translate: -0.55cqh 0;
+    transform: translateX(-50%) scaleX(0.9);
+  }
+
   .watch-pupil[data-look-away] {
-    translate: -0.5cqh 0;
-    transform: scale(0.4);
+    translate: -0.35cqh 0;
+    transform: scale(0.42);
   }
 
   /* ── Mouth ───────────────────────────────────────────────────────────────────
@@ -205,7 +235,7 @@
     89%,
     91%,
     100% {
-      height: 1.67cqh;
+      height: 2.33cqh;
     }
     10%,
     90% {

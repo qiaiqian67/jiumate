@@ -24,11 +24,11 @@ const SHORT_PANEL_HEIGHT = 380;
 
 const cssPath = join(process.cwd(), "src/pages/login-figures.css");
 const css = readFileSync(cssPath, "utf8");
-const tsx = readFileSync(join(process.cwd(), "src/pages/login-figures.tsx"), "utf8");
+const FIGURES = readFileSync(join(process.cwd(), "src/pages/login-figures.tsx"), "utf8");
 
 /** The height percentage the component passes for a figure, read off its spec table. */
 function heightPct(key: string): number {
-  const m = new RegExp(`key: "${key}", height: "([\\d.]+)%"`).exec(tsx);
+  const m = new RegExp(`key: "${key}", height: "([\\d.]+)%"`).exec(FIGURES);
   if (m?.[1] === undefined) throw new Error(`no height for ${key}`);
   return Number(m[1]);
 }
@@ -52,7 +52,7 @@ function ruleOutsideKeyframes(selector: string): string | null {
   return m?.[1] ?? null;
 }
 
-/** One declaration's numeric value, e.g. `("width", ".watch-eye")` → 33.6. */
+/** One declaration's numeric value, e.g. `("width", ".watch-eye")` → 14. */
 function value(prop: string, selector: string): number {
   const block = ruleOutsideKeyframes(selector);
   if (block === null) throw new Error(`no rule for ${selector}`);
@@ -87,7 +87,7 @@ const FIGURE_HEIGHTS = { purple: 44, black: 32, yellow: 21, orange: 14 } as cons
 const DESIGN_PX = {
   widths: { purple: 125, black: 80, yellow: 73, orange: 150 } as const,
   heights: { purple: 265, black: 190, yellow: 125, orange: 84 } as const,
-  eye: 10,
+  eye: 14, // not the original 10: the travel budget needs it, see the note in .watch-eye
   eyesTop: 20,
   eyesGap: 22,
   mouthTop: 50,
@@ -121,11 +121,11 @@ describe("小人渲染后的实际尺寸", () => {
   });
 
   it("眼睛是身体的合理比例，不是三分之一", () => {
-    // 换算错成 47cqh 时眼宽 33.6px 对上 125px 的身体 —— 27%。当前 10/125 = 8%，
-    // 最窄的黑色小人 10/80 = 12.5%，所以上界取 15%：能挡住"胖了一圈"，又不误伤天生窄的那个。
+    // 换算错成 47cqh 时眼宽 33.6px 对上 125px 的身体 —— 27%。当前 14/125 = 11.2%，
+    // 最窄的黑色小人 14/80 = 17.5%，所以上界取 20%：能挡住"胖了一圈"，又不误伤天生窄的那个。
     const eye = value("width", ".watch-eye");
     for (const [key, design] of Object.entries(DESIGN_PX.widths)) {
-      expect(eye / design, `${key} 眼睛占身宽`).toBeLessThan(0.15);
+      expect(eye / design, `${key} 眼睛占身宽`).toBeLessThan(0.2);
     }
   });
 
@@ -173,8 +173,48 @@ describe("小人渲染后的实际尺寸", () => {
     expect(scale).toBeGreaterThan(0);
     expect(scale).toBeLessThan(1);
     // 瞳孔填满眼白后缩到 scale —— 可见的黑就是 scale 那一块，必须明显小于眼白。
-    expect(scale).toBeLessThanOrEqual(0.5);
+    expect(scale).toBeLessThanOrEqual(0.7);
     expect(eye * scale).toBeLessThan(eye);
+  });
+
+  it("小紫朝输入框方向（右侧）倾，不是相反方向", () => {
+    // 表单在卡片右半边、小人在左半边。倾过去凑近看用户名框就该向右倾。原来是
+    // translate(-10px) rotate(-8deg)，往左——那是背离它要读的东西，读起来像躲开页面。
+    expect(css).toMatch(
+      /\.watch-figure\[data-leaning\] \{[^}]*translate\(10px, -50%\) rotate\(8deg\)/s,
+    );
+  });
+
+  it("瞳孔够大、行程够长，看得出在跟随", () => {
+    // 眼白 14px、瞳孔 scale(0.45) → 可见直径 6.3px，行程 0.55 × 6.3 ≈ 3.5px（眼白的 25%）。
+    // 原来是眼白 10px、scale(0.5)、行程 0.3 → 可见 5px、行程 1.5px（眼白的 15%）——
+    // 每次移动不到 0.3px，看不出在动。
+    //
+    // 注意：行程占眼白的比例**只由 scale 决定**，与眼白大小无关（都是 (1-scale)/2）。
+    // 所以想加大行程只能减小 scale，而想同时让瞳孔看得见就得放大眼白——两者一起才行。
+    const scale = Number(/transform: scale\(([\d.]+)\)/.exec(ruleOutsideKeyframes(".watch-pupil") ?? "")?.[1]);
+    expect(scale, "瞳孔要够大").toBeGreaterThanOrEqual(0.4);
+    expect(scale, "但不能太大，否则没行程").toBeLessThanOrEqual(0.5);
+    const eye = value("width", ".watch-eye");
+    const travel = Number(/const PUPIL_TRAVEL = ([\d.]+)/.exec(FIGURES)?.[1]);
+    const reach = eye * scale * travel;
+    // 行程至少要达到眼白的五分之一，否则看不出在跟随。
+    expect(reach / eye, "行程要够长").toBeGreaterThan(0.2);
+    // 但不能超出眼白：可见瞳孔从中心移到边缘最多走 (1 - scale) / 2 × 眼白。
+    const maxSafe = ((1 - scale) / 2) * eye;
+    expect(reach, "行程不能超出眼白").toBeLessThanOrEqual(maxSafe);
+  });
+
+  it("输入密码 → 整只眼睛往左看，不只是瞳孔", () => {
+    // 只移瞳孔读起来是眼睛歪了；眼白带着瞳孔一起左移才是"视线转开"。
+    expect(FIGURES).toContain(
+      '<div className="watch-eyes" data-look-away={passwordTyped || undefined}>',
+    );
+    expect(css).toMatch(/\.watch-eyes\[data-look-away\] \{[^}]*translate: -[\d.]+cqh/s);
+    // 幅度要够明显（约眼白的五分之一以上），3px 的瞳孔位移是不够看的。
+    const awayBlock = css.split(".watch-eyes[data-look-away]")[1] ?? "";
+    const away = Number(/translate: -([\d.]+)cqh/.exec(awayBlock)?.[1]);
+    expect(away * (PANEL_HEIGHT / 100) / value("width", ".watch-eye")).toBeGreaterThan(0.2);
   });
 
   it("矮面板下仍然成立（笔记本 768px 高的屏幕）", () => {
