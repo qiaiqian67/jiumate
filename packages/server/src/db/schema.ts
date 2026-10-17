@@ -52,6 +52,34 @@ CREATE TABLE IF NOT EXISTS agents (           -- index only; name/description li
   created_at TEXT NOT NULL,
   PRIMARY KEY (project_id, agent_id)
 );
+-- Per-Agent public API settings, and the keys that authenticate against it (amsp/*). Neither
+-- table is rebuildable from files: dropping them turns every exposed Agent off and invalidates
+-- every key, so they are part of the database rather than derived state.
+CREATE TABLE IF NOT EXISTS agent_api (
+  project_id    TEXT NOT NULL,
+  agent_id      TEXT NOT NULL,
+  enabled       INTEGER NOT NULL DEFAULT 0,     -- the API tab's switch; off = every /api/amsp request for it is 404 agent_not_found
+  open          INTEGER NOT NULL DEFAULT 0,     -- keyless access: a request without Authorization is accepted; off = 401 unauthorized
+  approval_mode TEXT NOT NULL DEFAULT 'allow-all', -- copied onto each new API Session
+  provider      TEXT,                           -- NULL pair follows the Project default model
+  model_id      TEXT,
+  thinking_level TEXT,                           -- NULL follows Agent/Project configuration
+  workspace     TEXT,                           -- NULL creates a temporary Workspace
+  max_concurrent_runs INTEGER NOT NULL DEFAULT 4,
+  updated_at    TEXT NOT NULL,
+  PRIMARY KEY (project_id, agent_id)
+);
+CREATE TABLE IF NOT EXISTS agent_api_keys (    -- one row per key the API tab or the CLI minted; the caller alone holds the key
+  key_id       TEXT PRIMARY KEY,                -- 16 base64url chars, shown in the list
+  project_id   TEXT NOT NULL,
+  agent_id     TEXT NOT NULL,
+  token_hash   TEXT NOT NULL UNIQUE,            -- sha256(key) hex; authenticating is a lookup of a fixed-length digest
+  prefix       TEXT NOT NULL,                   -- the key's first 16 characters ("jiumate_" + 8), shown in the list
+  name         TEXT NOT NULL,                   -- 1-64 characters
+  created_by   TEXT NOT NULL REFERENCES users(user_id),
+  created_at   TEXT NOT NULL,
+  last_used_at TEXT                             -- stamped once per run request that authenticated with it; NULL = never
+);
 CREATE TABLE IF NOT EXISTS sessions (
   session_id    TEXT PRIMARY KEY,
   project_id    TEXT NOT NULL,

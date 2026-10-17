@@ -17,6 +17,17 @@ const PROXY_FOR_APP_KEY = "proxy_for_app";
 const PROXY_FOR_AGENT_KEY = "proxy_for_agent";
 
 /**
+ * Key of the server-wide Agent API switch; default on.
+ *
+ * A master switch above the per-Agent ones, and the reason the API tab shows "serverEnabled"
+ * next to its own toggle: an admin who has turned this off has turned the whole feature off for
+ * every Project, and a per-Agent switch reading as on while every request 404s would be a lie.
+ * Read by admins only — who may expose an Agent to programs outside this server is not a fact
+ * every member of a Project needs.
+ */
+const AGENT_API_ENABLED_KEY = "agent_api_enabled";
+
+/**
  * Legacy single-switch key from the unreleased #225 iteration (never in a release): read
  * as the fallback default for BOTH new switches while their own keys are absent, so a
  * main-branch deployment that had toggled it keeps its choice. Read-only adoption — the
@@ -74,6 +85,21 @@ export class ServerSettingsRepo {
 
   setProxyForAgent(value: boolean): void {
     this.set(PROXY_FOR_AGENT_KEY, JSON.stringify(value));
+  }
+
+  /**
+   * Whether Agents may be exposed as public APIs at all on this server.
+   *
+   * Defaults to on: an absent row is a server that has never been told otherwise, and the
+   * per-Agent switch is what actually admits traffic. Defaulting to off would mean a fresh install
+   * silently refuses every API request with no switch anywhere explaining why.
+   */
+  getAgentApiEnabled(): boolean {
+    return this.get(AGENT_API_ENABLED_KEY) !== "false";
+  }
+
+  setAgentApiEnabled(value: boolean): void {
+    this.set(AGENT_API_ENABLED_KEY, JSON.stringify(value));
   }
 
   /**

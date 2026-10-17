@@ -45,6 +45,7 @@ import {
 import type { ProxyControl } from "./hmr/capabilities.js";
 import { openDatabase } from "./db/database.js";
 import { MachinesRepo } from "./db/repos/machines.js";
+import { AgentApiRepo } from "./db/repos/agent-api.js";
 import { migrate } from "./db/migrations.js";
 import { ErrorsRepo } from "./db/repos/errors.js";
 import { MessagingBindingsRepo } from "./db/repos/messaging-bindings.js";
@@ -171,6 +172,7 @@ import { pluginImportRoutes } from "./http/routes/plugin-import.js";
 import { machineSkillRoutes } from "./http/routes/machine-skills.js";
 import { agentTransferRoutes } from "./http/routes/agent-transfer.js";
 import { agentsRoutes } from "./http/routes/agents.js";
+import { agentApiRoutes } from "./http/routes/agent-api.js";
 import { dirsRoutes } from "./http/routes/dirs.js";
 import { directorySkillsRoutes } from "./http/routes/directory-skills.js";
 import { agentConfigRoutes } from "./http/routes/agent-config.js";
@@ -200,6 +202,13 @@ export interface AppDeps {
   modelOAuth: ModelOAuthService;
   agentService: AgentService;
   agentConfigService: AgentConfigService;
+  /**
+   * Per-Agent public API settings and keys (http/routes/agent-api.ts, amsp/*).
+   *
+   * A repo rather than a service: nothing here is business logic beyond the row mapping, and the
+   * AMSP routes need the lookup by key digest on every request, which is a query.
+   */
+  agentApiRepo: AgentApiRepo;
   memoryService: MemoryService;
   sessionService: SessionService;
   traceService: TraceService;
@@ -911,6 +920,7 @@ export function buildAppDeps(
       projectConfigService.setGroupApiKey(projectId, provider, apiKey),
   });
   const agentConfigService = new AgentConfigService(config.root);
+  const agentApiRepo = new AgentApiRepo(db);
   const snapshots = new SnapshotService(config.root);
   const agentService = new AgentService(config.root, agentsRepo, agentConfigService, snapshots);
   const memoryService = new MemoryService(config.root, agentConfigService);
@@ -1149,6 +1159,7 @@ export function buildAppDeps(
     modelOAuth,
     agentService,
     agentConfigService,
+    agentApiRepo,
     memoryService,
     sessionService,
     traceService,
@@ -1333,6 +1344,7 @@ export function createApp(
   app.route("/api/projects/:projectId/command-policy", commandPolicyRoutes(deps));
   app.route("/api/projects/:projectId/mcp-servers", mcpServersRoutes(deps));
   app.route("/api/projects/:projectId/agents", agentsRoutes(deps));
+  app.route("/api/projects/:projectId/agents/:agentId/api", agentApiRoutes(deps));
   app.route("/api/projects/:projectId/dirs", dirsRoutes(deps));
   app.route("/api/projects/:projectId/dir-skills", directorySkillsRoutes(deps));
   app.route("/api/projects/:projectId/agents/:agentId/config", agentConfigRoutes(deps));

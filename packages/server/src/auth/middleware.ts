@@ -100,6 +100,32 @@ export function bearerToken(header: string | undefined): string | null {
   return m === null ? null : m[1]!.trim();
 }
 
+/**
+ * Requires that the caller signed in as a person, not as a local API token.
+ *
+ * The local token is handed to every tool subprocess an Agent spawns, so an Agent can present it.
+ * That is what makes it unusable for the settings that decide how exposed that same Agent is: a
+ * shell that could turn on its own public API, or loosen the approval mode its future callers
+ * start under, would be a shell that could grant itself more than its owner intended. The reads
+ * stay open to the token — `status` and `keys ls` are how a script inspects what it may not change.
+ *
+ * The session kind is `SessionVia`'s `"token"` — the case the auth middleware assigns to a
+ * request authenticated by the local API token. The database's own spelling is `SessionViaValue`'s
+ * `"cli"` (db/repos/auth-sessions.ts); `SessionVia` is the same union under the name the
+ * middleware carries, and it is the middleware's own type this function reads, so comparing
+ * against a value that union does not contain would make the guard pass for every token-signed
+ * request — the exact opposite of what it is for.
+ */
+export function requireHuman(c: { var: { sessionVia: SessionVia } }): void {
+  if (c.var.sessionVia === "token") {
+    throw new HttpError(
+      403,
+      "human_required",
+      "Sign in with your password to do this; an API token cannot.",
+    );
+  }
+}
+
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 /**
