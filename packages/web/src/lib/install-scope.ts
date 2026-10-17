@@ -139,6 +139,12 @@ export const KEY_RULES: readonly KeyRule[] = [
   },
   {
     kind: "exact",
+    key: "jiumate.setupModelConsumed",
+    scope: "browser",
+    why: "The latch marking the installer's model choice as applied (see lib/setup-model.ts). It is browser-scoped because the handover itself is: the shell passes it in the window's command line, so it describes this install's first launch rather than anything the server stores. The model's worst case after a data-root wipe is that a stale latch suppresses a re-apply that would only have restored the installer's original pick.",
+  },
+  {
+    kind: "exact",
     key: "jiumate.currency",
     scope: "browser",
     why: "Display currency for prices; a formatting choice, prices are stored in USD either way.",

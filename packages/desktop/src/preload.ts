@@ -16,6 +16,92 @@
  */
 import { contextBridge, ipcRenderer } from "electron";
 
+/**
+ * The installer's answers, seeded into localStorage before any page script runs.
+ *
+ * ## Why preload, and why synchronously
+ *
+ * This is the only point guaranteed to be earlier than the web app's own scripts. The main process
+ * used to do it with `executeJavaScript` on `dom-ready`, which is too late in two independent ways,
+ * and both of them made a language, a theme and a model chosen in the installer silently do
+ * nothing:
+ *
+ *  1. The window navigates to `/api/auth/claim?token=…`, which 302s to the app. `dom-ready` fires
+ *     for the *resolved* document — after the React root has mounted and the locale/theme stores
+ *     have read `localStorage` for their initial state. A write there fills a key nobody reads
+ *     again this load: the user sees the default, and the value would only surface on the *next*
+ *     launch, if ever.
+ *  2. `executeJavaScript` returns a promise the call site did not await, so the write raced the
+ *     mount even on a frame where the timing happened to work.
+ *
+ * ## Why the values arrive as an argument, not over IPC
+ *
+ * A preload that awaits `ipcRenderer.invoke` yields to the event loop, and the document's scripts
+ * get their turn in that gap — which is the same race, just relocated. Electron runs the preload
+ * synchronously during navigation setup, so the seed has to be synchronous too: the values ride
+ * in on `additionalArguments`, and this block is plain top-level code that runs to completion
+ * before the document loads.
+ */
+const SEED_ARG_PREFIX = "--jiumate-setup-seed=";
+const seedArg = process.argv.find((a) => a.startsWith(SEED_ARG_PREFIX));
+if (seedArg !== undefined) {
+  try {
+    const seed = JSON.parse(seedArg.slice(SEED_ARG_PREFIX.length)) as Record<string, string>;
+    for (const [key, value] of Object.entries(seed)) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        // Blocked or full storage is not a reason to fail the launch; the app opens on defaults.
+      }
+    }
+    // The pre-paint appearance cache has to agree with the store, or the first paint uses the old
+    // one and the theme visibly snaps a frame later.
+    try {
+      const prev = localStorage.getItem("jiumate.skin.bootstrap");
+      if (prev) {
+        const cached = JSON.parse(prev) as Record<string, unknown>;
+        const theme = localStorage.getItem("jiumate.theme");
+        const mode = localStorage.getItem("jiumate.mode");
+        if (theme !== null) cached.skin = theme;
+        if (mode !== null) cached.dark = mode === "dark";
+        localStorage.setItem("jiumate.skin.bootstrap", JSON.stringify(cached));
+      }
+    } catch {
+      // A malformed cache is not worth failing over: the store re-derives it on mount.
+    }
+  } catch {
+    // Unparseable seed (a hand-edited profile, say): the app starts on its own defaults.
+  }
+}
+
+/**
+ * The installer's model choice, handed to the web app.
+ *
+ * Not localStorage and not a `store` applied at mount: the default model is project-scoped
+ * (`PUT /api/projects/:id/models/default`), and at first launch no Project exists yet — so there is
+ * nothing to write it onto. The web app therefore holds it and applies it the moment a Project
+ * appears (see web/src/lib/setup-model.ts).
+ *
+ * Exposed on `window.jiumateSetup` rather than as its own bridge, because it is not a capability
+ * the page asks for — it is a handover that happens once, whether or not the page ever looks at it.
+ */
+const MODEL_ARG_PREFIX = "--jiumate-setup-model=";
+const modelArg = process.argv.find((a) => a.startsWith(MODEL_ARG_PREFIX));
+contextBridge.exposeInMainWorld(
+  "jiumateSetup",
+  modelArg === undefined ? null : safeParseModel(modelArg.slice(MODEL_ARG_PREFIX.length)),
+);
+
+function safeParseModel(encoded: string): unknown {
+  try {
+    return JSON.parse(decodeURIComponent(encoded));
+  } catch {
+    // A hand-edited or truncated argument is not worth failing the launch over.
+    return null;
+  }
+}
+
+
 /** Two-element screen position. Mirror of `petWindowPosition` in `UiPrefs`. */
 export interface FloatingPosition {
   x: number;

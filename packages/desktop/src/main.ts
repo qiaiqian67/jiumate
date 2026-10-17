@@ -49,6 +49,7 @@ import { createPetWindow, isPetWindowOpen, type PetWindowHandle } from "./pet-wi
 import { registerThemePicker } from "./theme-picker.js";
 import { registerWorkspacePicker } from "./workspace-picker.js";
 import { destroyPetTray, syncPetTray, wirePetTrayIpc, type PetTrayDeps } from "./pet-tray.js";
+import { destroyAppTray, ensureAppTray, type AppTrayDeps } from "./tray.js";
 import {
   desktopLoginUrl,
   isAppUrl,
@@ -90,11 +91,15 @@ function fatal(context: string, err: unknown): void {
  * Bring the main window to the front. The floating pet is a separate window, so
  * a click on the pet — or on one of its bubbles — can only ask the shell to
  * raise the app; it has no router or session store of its own.
+ *
+ * `show()` comes before `restore()` in effect, because the window is usually *hidden* rather than
+ * minimized now that the close button hides it — `restore()` alone would leave it invisible, and
+ * a tray click or a second launch would look like it did nothing.
  */
 function focusMain(): void {
   if (win === null || win.isDestroyed()) return;
-  if (win.isMinimized()) win.restore();
   win.show();
+  if (win.isMinimized()) win.restore();
   win.focus();
 }
 
@@ -117,8 +122,38 @@ function petTrayDeps(): PetTrayDeps {
     iconPath: resolveTrayIcon(app.getAppPath()),
     onTogglePet: requestPetToggle,
     onShowMain: focusMain,
-    onQuit: () => app.quit(),
+    onQuit: quitApp,
   };
+}
+
+/** The app tray's relay. Built fresh each call because the pet's deps are passed around. */
+function appTrayDeps(): AppTrayDeps {
+  return {
+    iconPath: resolveTrayIcon(app.getAppPath()),
+    onShowMain: focusMain,
+    onShowPet: showPet,
+    // Quit through the same path as File → Quit, so the tray's Quit stops the embedded server
+    // instead of killing the process with the server still up.
+    onQuit: quitApp,
+  };
+}
+
+/**
+ * Quit for real: from the tray menu, the app menu, or the OS.
+ *
+ * The `quitting` flag is what makes this distinguishable from the window's close button, which
+ * only hides (see the `close` handler in createWindow). It is set here rather than read from
+ * `before-quit` because the tray's Quit is a *request* to quit, and the window close handler has to
+ * be able to tell it apart from the user clicking the X.
+ */
+function quitApp(): void {
+  quitting = true;
+  app.quit();
+}
+
+/** Raise the floating pet window, if it exists. A no-op when the pet is off. */
+function showPet(): void {
+  petHandle?.show();
 }
 
 function createWindow(url: string): void {
@@ -143,12 +178,32 @@ function createWindow(url: string): void {
       // `.cjs`, not `.js`: a sandboxed renderer loads the preload as CommonJS and this
       // package is `"type": "module"` (see tsup.preload.config.ts).
       preload: path.join(__dirname, "preload.cjs"),
+      // The installer's answers, handed to the preload synchronously. See setupSeedArg for why this
+      // travels as an argument rather than over IPC or on `dom-ready`.
+      additionalArguments: setupSeedArg(),
     },
   });
   win.once("ready-to-show", () => win?.show());
   win.on("closed", () => {
     win = null;
   });
+  // The close button hides the window instead of destroying it; the tray is how it comes back.
+  //
+  // `quitting` is what tells the two apart: the tray's Quit sets it before calling `app.quit()`, so
+  // a real exit is never intercepted here and the window really goes. Without that flag this would
+  // make the app unquittable — the window would survive its own Quit menu item.
+  //
+  // `before-quit` alone is not enough to distinguish them, because closing the last window does not
+  // raise it (see `window-all-closed`): the two paths arrive at the same place by different routes.
+  win.on("close", (event) => {
+    if (quitting) return;
+    event.preventDefault();
+    win?.hide();
+  });
+  // The tray goes up with the first window, not at app start: it is the window's home in the
+  // notification area, and creating it before there is a window to hide would put an entry in the
+  // tray with nothing behind it if startup then failed.
+  ensureAppTray(appTrayDeps());
   // "Open in a new tab" (Workspace HTML previews) is an app-origin link that mints a
   // token and 302s to the preview origin — it needs the session cookie, so it must open
   // in a window of this app; handing it to the system browser would land on a 401.
@@ -196,72 +251,60 @@ function createWindow(url: string): void {
   });
   win.webContents.on("render-process-gone", () => win?.webContents.reload());
   armSmokeProbe(win);
-  // Seeded before the load rather than after it: see seedSetupPreferences.
-  seedSetupPreferences(win);
+  // The window's arguments already carry the installer's answers; nothing is injected here. See
+  // setupSeedArg and the preload's own note for why that has to happen before navigation.
   void win.loadURL(url);
 }
 
 /**
- * Apply the answers the installer collected.
+ * The installer's answers, as the command-line arguments the preload reads.
  *
- * Injected with `executeJavaScript` on `dom-ready`, before the web app's React root mounts. That
- * ordering matters: the locale and theme stores build their initial state from `localStorage`, so a
- * value written later is ignored on this load and only takes effect on the *next* start — the user
- * would see the default appearance first, every launch.
+ * Two arguments, because the two kinds of answer have different homes:
  *
- * `dom-ready` rather than `did-finish-load` because the latter waits for subresources, which is
- * comfortably after mount.
+ *  - `--jiumate-setup-seed` — appearance and language, which the web app keeps in localStorage and
+ *    whose stores read at mount. The preload writes them before any page script runs.
+ *  - `--jiumate-setup-model` — the model choice. It cannot be a localStorage key: the default
+ *    model is project-scoped (`PUT /api/projects/:id/models/default`) and no project exists at
+ *    first launch, so there is nothing for the shell to write it onto. The web app applies this one
+ *    once a Project is available.
  *
- * Best-effort throughout: site data can be blocked or full, and neither is a reason to stop the app
- * from starting — it would simply open in the default appearance.
+ * The model answer used to be written to `setup-model.json` and nothing ever read it: the file was
+ * the visible half of the bug, something clearly intended to be consumed with no consumer. It is
+ * still written, purely so a diagnostic can see what was chosen.
+ *
+ * Read once per window. The window cannot get the values any other way — its preload is sandboxed
+ * and has no `fs`, and asking over IPC would make the seed asynchronous, which is the race this
+ * replaces (see preload.ts).
  */
-function seedSetupPreferences(target: BrowserWindow): void {
+function setupSeedArg(): string[] {
   const answers = readSetupAnswers(app.getPath("userData"));
-  if (!answers) return;
-  const seed = seedStorage(answers);
-  if (Object.keys(seed).length > 0) {
-    const script = `(() => { const seed = ${JSON.stringify(seed)};
-      for (const [k, v] of Object.entries(seed)) { try { localStorage.setItem(k, v); } catch {} }
-      // The pre-paint appearance cache has to agree with the store, or the first paint uses the old
-      // one and the theme visibly snaps a frame later.
-      try {
-        const prev = localStorage.getItem("jiumate.skin.bootstrap");
-        if (prev) {
-          const p = JSON.parse(prev);
-          if (seed["jiumate.theme"]) p.skin = seed["jiumate.theme"];
-          if (seed["jiumate.mode"]) p.dark = seed["jiumate.mode"] === "dark";
-          localStorage.setItem("jiumate.skin.bootstrap", JSON.stringify(p));
-        }
-      } catch {}
-      return true })()`;
-    target.webContents.on("dom-ready", () => {
-      void target.webContents.executeJavaScript(script, true).catch((err: unknown) => {
-        process.stdout.write(`[setup] could not seed preferences: ${String(err)}\n`);
-      });
-    });
-  }
-  // The model answer is written alongside rather than applied: the default model is project-scoped
-  // (`PUT /api/projects/:id/models/default`) and no project id exists at first launch, so there is
-  // nothing to write it onto. The settings page adopts this file on its next open.
+  if (answers === null) return [];
+
+  const model = {
+    provider: answers.provider ?? null,
+    model: answers.model ?? null,
+    baseUrl: answers.baseUrl ?? null,
+    skipModel: answers.skipModel ?? true,
+    apiKey: answers.apiKey ?? null,
+  };
   try {
     fs.writeFileSync(
       path.join(app.getPath("userData"), "setup-model.json"),
-      JSON.stringify(
-        {
-          provider: answers.provider ?? null,
-          model: answers.model ?? null,
-          baseUrl: answers.baseUrl ?? null,
-          skipModel: answers.skipModel ?? true,
-          apiKey: answers.apiKey ?? null,
-        },
-        null,
-        2,
-      ),
+      JSON.stringify(model, null, 2),
       "utf8",
     );
   } catch (err) {
-    process.stdout.write(`[setup] could not hand over the model choice: ${String(err)}\n`);
+    process.stdout.write(`[setup] could not record the model choice: ${String(err)}\n`);
   }
+
+  // URL-encoded because this travels as one argv entry, and an API key can contain characters that
+  // would otherwise split it.
+  const args = [`--jiumate-setup-model=${encodeURIComponent(JSON.stringify(model))}`];
+  const seed = seedStorage(answers);
+  // JSON rather than `key=value` pairs: a value containing a space or a quote would otherwise be
+  // split by the shell-style argument parsing this has to survive.
+  if (Object.keys(seed).length > 0) args.push(`--jiumate-setup-seed=${JSON.stringify(seed)}`);
+  return args;
 }
 
 /**
@@ -398,10 +441,10 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.on("second-instance", () => {
-    if (win !== null) {
-      if (win.isMinimized()) win.restore();
-      win.focus();
-    }
+    // focusMain rather than restore+focus: with close now hiding the window, the running instance
+    // is usually alive but invisible, and `restore()` does not un-hide it — `show()` has to happen
+    // or a second launch appears to do nothing at all.
+    focusMain();
   });
 
   app.on("window-all-closed", () => {
@@ -414,18 +457,25 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on("activate", () => {
-    if (win === null && appOrigin !== null) {
-      // macOS dock activate after the user closed every window: bring the main
-      // window back, but only if the pet window isn't the one still alive.
-      if (isPetWindowOpen()) return;
-      createWindow(`${appOrigin}/`);
+    // Both branches matter now that close hides rather than destroys: the window usually still
+    // exists and only needs raising, and `win === null` is the rarer path (a real window close,
+    // e.g. from the renderer). Routing both through focusMain means one rule for "bring it back".
+    if (appOrigin === null) return;
+    if (win !== null && !win.isDestroyed()) {
+      focusMain();
+      return;
     }
+    if (isPetWindowOpen()) return;
+    createWindow(`${appOrigin}/`);
   });
 
   // Quit path: stop the embedded server gracefully first (shutdown endpoint → kill),
   // then let the quit proceed. Attach mode has no child to stop.
   app.on("before-quit", (event) => {
     quitting = true;
+    // Both trays go, not just the pet's: the app tray outlives the pet by design, so leaving it
+    // behind would strand a notification-area entry for a process that is on its way out.
+    destroyAppTray();
     destroyPetTray();
     if (server !== null && stopPromise === null) {
       event.preventDefault();

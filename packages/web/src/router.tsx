@@ -20,6 +20,7 @@ import { TerminalPage } from "./features/terminal/terminal-page";
 import { InspirationPage } from "./features/inspiration/inspiration-page";
 import { SettingsPage } from "./features/settings/settings-page";
 import { PetWindowPage } from "./features/pet/pet-window-page";
+import { SetupModelApplier } from "./features/settings/setup-model-applier";
 
 /** Route guard: shows blank while initializing, redirects to /login when not authenticated. */
 function RequireAuth() {
@@ -28,6 +29,10 @@ function RequireAuth() {
   if (user === null) return <Navigate to="/login" replace />;
   return (
     <ProjectProvider>
+      {/* The installer's model choice, applied here rather than from App: the default model is
+          project-scoped, so there is nothing to apply it to until this Provider has one — and
+          `useProject` only works inside it. See lib/setup-model.ts. */}
+      <SetupModelApplier />
       <SessionsProvider>
         <AppLayout />
       </SessionsProvider>

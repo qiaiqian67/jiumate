@@ -28,6 +28,17 @@ declare global {
       /** Native directory chooser; null when the user cancels. */
       pickFolder(): Promise<string | null>;
     };
+    /**
+     * The installer's model choice, handed over once by the desktop shell. Null on an ordinary
+     * launch, and absent in a plain browser. See lib/setup-model.ts.
+     */
+    jiumateSetup?: {
+      provider: string | null;
+      model: string | null;
+      baseUrl: string | null;
+      skipModel: boolean;
+      apiKey: string | null;
+    } | null;
     pet?: {
       open(savedPos?: { x: number; y: number } | null): Promise<void>;
       close(): Promise<void>;

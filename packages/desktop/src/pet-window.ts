@@ -47,6 +47,15 @@ export interface PetWindowOptions {
 export interface PetWindowHandle {
   wireIpc(): void;
   isOpen(): boolean;
+  /**
+   * Raise the pet window if it is open.
+   *
+   * Exists for the app tray's "show desktop pet" item: the pet is a separate window that can end up
+   * behind the chat window (or hidden behind other apps), and a menu item that brought it forward
+   * was the way to get it back without hunting the taskbar. A no-op when the pet is off, so the
+   * tray item does not have to know whether the feature is enabled.
+   */
+  show(): void;
 }
 
 interface PositionResult {
@@ -363,6 +372,15 @@ export function createPetWindow(options: PetWindowOptions): PetWindowHandle {
   return {
     isOpen(): boolean {
       return state.win !== null && !state.win.isDestroyed();
+    },
+    show(): void {
+      const pet = state.win;
+      if (pet === null || pet.isDestroyed()) return;
+      // Restoring first: `focus` alone does nothing for a minimized window, and `show` on a
+      // minimized one leaves it minimized on some window managers.
+      if (pet.isMinimized()) pet.restore();
+      pet.show();
+      pet.focus();
     },
     wireIpc(): void {
       ipcMain.handle("pet:open", (_event, payload: unknown) => {
