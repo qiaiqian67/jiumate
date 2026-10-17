@@ -68,18 +68,39 @@ importers:
 
   packages/cli:
     dependencies:
+      '@jiumate/a2ui':
+        specifier: workspace:*
+        version: link:../../plugins/a2ui
+      '@jiumate/ace-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/ace-rsi-toolkit
       '@jiumate/agent-development':
         specifier: workspace:*
         version: link:../../plugins/agent-development
+      '@jiumate/agent-evaluation':
+        specifier: workspace:*
+        version: link:../../plugins/agent-evaluation
       '@jiumate/agent-tuning':
         specifier: workspace:*
         version: link:../../plugins/agent-tuning
+      '@jiumate/ape-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/ape-rsi-toolkit
+      '@jiumate/awm-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/awm-rsi-toolkit
+      '@jiumate/browser-automation':
+        specifier: workspace:*
+        version: link:../../plugins/browser-automation
       '@jiumate/continual-learning':
         specifier: workspace:*
         version: link:../../plugins/continual-learning
       '@jiumate/data-analysis':
         specifier: workspace:*
         version: link:../../plugins/data-analysis
+      '@jiumate/default-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/default-rsi-toolkit
       '@jiumate/goal':
         specifier: workspace:*
         version: link:../../plugins/goal
@@ -89,6 +110,9 @@ importers:
       '@jiumate/model-development':
         specifier: workspace:*
         version: link:../../plugins/model-development
+      '@jiumate/opro-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/opro-rsi-toolkit
       '@jiumate/skill-porting':
         specifier: workspace:*
         version: link:../../plugins/skill-porting
@@ -147,18 +171,39 @@ importers:
 
   packages/core:
     dependencies:
+      '@jiumate/a2ui':
+        specifier: workspace:*
+        version: link:../../plugins/a2ui
+      '@jiumate/ace-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/ace-rsi-toolkit
       '@jiumate/agent-development':
         specifier: workspace:*
         version: link:../../plugins/agent-development
+      '@jiumate/agent-evaluation':
+        specifier: workspace:*
+        version: link:../../plugins/agent-evaluation
       '@jiumate/agent-tuning':
         specifier: workspace:*
         version: link:../../plugins/agent-tuning
+      '@jiumate/ape-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/ape-rsi-toolkit
+      '@jiumate/awm-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/awm-rsi-toolkit
+      '@jiumate/browser-automation':
+        specifier: workspace:*
+        version: link:../../plugins/browser-automation
       '@jiumate/continual-learning':
         specifier: workspace:*
         version: link:../../plugins/continual-learning
       '@jiumate/data-analysis':
         specifier: workspace:*
         version: link:../../plugins/data-analysis
+      '@jiumate/default-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/default-rsi-toolkit
       '@jiumate/goal':
         specifier: workspace:*
         version: link:../../plugins/goal
@@ -168,6 +213,9 @@ importers:
       '@jiumate/model-development':
         specifier: workspace:*
         version: link:../../plugins/model-development
+      '@jiumate/opro-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/opro-rsi-toolkit
       '@jiumate/skill-porting':
         specifier: workspace:*
         version: link:../../plugins/skill-porting
@@ -256,18 +304,39 @@ importers:
 
   packages/desktop:
     dependencies:
+      '@jiumate/a2ui':
+        specifier: workspace:*
+        version: link:../../plugins/a2ui
+      '@jiumate/ace-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/ace-rsi-toolkit
       '@jiumate/agent-development':
         specifier: workspace:*
         version: link:../../plugins/agent-development
+      '@jiumate/agent-evaluation':
+        specifier: workspace:*
+        version: link:../../plugins/agent-evaluation
       '@jiumate/agent-tuning':
         specifier: workspace:*
         version: link:../../plugins/agent-tuning
+      '@jiumate/ape-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/ape-rsi-toolkit
+      '@jiumate/awm-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/awm-rsi-toolkit
+      '@jiumate/browser-automation':
+        specifier: workspace:*
+        version: link:../../plugins/browser-automation
       '@jiumate/continual-learning':
         specifier: workspace:*
         version: link:../../plugins/continual-learning
       '@jiumate/data-analysis':
         specifier: workspace:*
         version: link:../../plugins/data-analysis
+      '@jiumate/default-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/default-rsi-toolkit
       '@jiumate/goal':
         specifier: workspace:*
         version: link:../../plugins/goal
@@ -277,6 +346,9 @@ importers:
       '@jiumate/model-development':
         specifier: workspace:*
         version: link:../../plugins/model-development
+      '@jiumate/opro-rsi-toolkit':
+        specifier: workspace:*
+        version: link:../../plugins/opro-rsi-toolkit
       '@jiumate/skill-porting':
         specifier: workspace:*
         version: link:../../plugins/skill-porting
@@ -691,13 +763,27 @@ importers:
         specifier: ^3.2.6
         version: 3.2.7(@types/debug@4.1.13)(@types/node@24.19.0)(jiti@2.7.0)(lightningcss@1.32.0)(supports-color@10.2.2)(tsx@4.23.15)(yaml@2.9.1)
 
+  plugins/a2ui: {}
+
+  plugins/ace-rsi-toolkit: {}
+
   plugins/agent-development: {}
 
+  plugins/agent-evaluation: {}
+
   plugins/agent-tuning: {}
+
+  plugins/ape-rsi-toolkit: {}
+
+  plugins/awm-rsi-toolkit: {}
+
+  plugins/browser-automation: {}
 
   plugins/continual-learning: {}
 
   plugins/data-analysis: {}
+
+  plugins/default-rsi-toolkit: {}
 
   plugins/editable-doc: {}
 
@@ -706,6 +792,8 @@ importers:
   plugins/humanizer: {}
 
   plugins/model-development: {}
+
+  plugins/opro-rsi-toolkit: {}
 
   plugins/skill-porting: {}
 
@@ -1236,17 +1324,38 @@ packages:
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
 
+  '@jiumate/a2ui@file:plugins/a2ui':
+    resolution: {directory: plugins/a2ui, type: directory}
+
+  '@jiumate/ace-rsi-toolkit@file:plugins/ace-rsi-toolkit':
+    resolution: {directory: plugins/ace-rsi-toolkit, type: directory}
+
   '@jiumate/agent-development@file:plugins/agent-development':
     resolution: {directory: plugins/agent-development, type: directory}
 
+  '@jiumate/agent-evaluation@file:plugins/agent-evaluation':
+    resolution: {directory: plugins/agent-evaluation, type: directory}
+
   '@jiumate/agent-tuning@file:plugins/agent-tuning':
     resolution: {directory: plugins/agent-tuning, type: directory}
+
+  '@jiumate/ape-rsi-toolkit@file:plugins/ape-rsi-toolkit':
+    resolution: {directory: plugins/ape-rsi-toolkit, type: directory}
+
+  '@jiumate/awm-rsi-toolkit@file:plugins/awm-rsi-toolkit':
+    resolution: {directory: plugins/awm-rsi-toolkit, type: directory}
+
+  '@jiumate/browser-automation@file:plugins/browser-automation':
+    resolution: {directory: plugins/browser-automation, type: directory}
 
   '@jiumate/continual-learning@file:plugins/continual-learning':
     resolution: {directory: plugins/continual-learning, type: directory}
 
   '@jiumate/data-analysis@file:plugins/data-analysis':
     resolution: {directory: plugins/data-analysis, type: directory}
+
+  '@jiumate/default-rsi-toolkit@file:plugins/default-rsi-toolkit':
+    resolution: {directory: plugins/default-rsi-toolkit, type: directory}
 
   '@jiumate/goal@file:plugins/goal':
     resolution: {directory: plugins/goal, type: directory}
@@ -1256,6 +1365,9 @@ packages:
 
   '@jiumate/model-development@file:plugins/model-development':
     resolution: {directory: plugins/model-development, type: directory}
+
+  '@jiumate/opro-rsi-toolkit@file:plugins/opro-rsi-toolkit':
+    resolution: {directory: plugins/opro-rsi-toolkit, type: directory}
 
   '@jiumate/skill-porting@file:plugins/skill-porting':
     resolution: {directory: plugins/skill-porting, type: directory}
@@ -6088,19 +6200,35 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
+  '@jiumate/a2ui@file:plugins/a2ui': {}
+
+  '@jiumate/ace-rsi-toolkit@file:plugins/ace-rsi-toolkit': {}
+
   '@jiumate/agent-development@file:plugins/agent-development': {}
 
+  '@jiumate/agent-evaluation@file:plugins/agent-evaluation': {}
+
   '@jiumate/agent-tuning@file:plugins/agent-tuning': {}
+
+  '@jiumate/ape-rsi-toolkit@file:plugins/ape-rsi-toolkit': {}
+
+  '@jiumate/awm-rsi-toolkit@file:plugins/awm-rsi-toolkit': {}
+
+  '@jiumate/browser-automation@file:plugins/browser-automation': {}
 
   '@jiumate/continual-learning@file:plugins/continual-learning': {}
 
   '@jiumate/data-analysis@file:plugins/data-analysis': {}
+
+  '@jiumate/default-rsi-toolkit@file:plugins/default-rsi-toolkit': {}
 
   '@jiumate/goal@file:plugins/goal': {}
 
   '@jiumate/humanizer@file:plugins/humanizer': {}
 
   '@jiumate/model-development@file:plugins/model-development': {}
+
+  '@jiumate/opro-rsi-toolkit@file:plugins/opro-rsi-toolkit': {}
 
   '@jiumate/skill-porting@file:plugins/skill-porting': {}
 
@@ -6404,13 +6532,21 @@ snapshots:
 
   '@prismshadow/jiumate-cli@file:packages/cli(supports-color@10.2.2)':
     dependencies:
+      '@jiumate/a2ui': file:plugins/a2ui
+      '@jiumate/ace-rsi-toolkit': file:plugins/ace-rsi-toolkit
       '@jiumate/agent-development': file:plugins/agent-development
+      '@jiumate/agent-evaluation': file:plugins/agent-evaluation
       '@jiumate/agent-tuning': file:plugins/agent-tuning
+      '@jiumate/ape-rsi-toolkit': file:plugins/ape-rsi-toolkit
+      '@jiumate/awm-rsi-toolkit': file:plugins/awm-rsi-toolkit
+      '@jiumate/browser-automation': file:plugins/browser-automation
       '@jiumate/continual-learning': file:plugins/continual-learning
       '@jiumate/data-analysis': file:plugins/data-analysis
+      '@jiumate/default-rsi-toolkit': file:plugins/default-rsi-toolkit
       '@jiumate/goal': file:plugins/goal
       '@jiumate/humanizer': file:plugins/humanizer
       '@jiumate/model-development': file:plugins/model-development
+      '@jiumate/opro-rsi-toolkit': file:plugins/opro-rsi-toolkit
       '@jiumate/skill-porting': file:plugins/skill-porting
       '@jiumate/software-development': file:plugins/software-development
       '@jiumate/use-bento-slides': file:plugins/use-bento-slides
@@ -6438,13 +6574,21 @@ snapshots:
 
   '@prismshadow/jiumate-core@file:packages/core(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(supports-color@10.2.2)(ws@8.22.0)(zod@4.6.5)':
     dependencies:
+      '@jiumate/a2ui': file:plugins/a2ui
+      '@jiumate/ace-rsi-toolkit': file:plugins/ace-rsi-toolkit
       '@jiumate/agent-development': file:plugins/agent-development
+      '@jiumate/agent-evaluation': file:plugins/agent-evaluation
       '@jiumate/agent-tuning': file:plugins/agent-tuning
+      '@jiumate/ape-rsi-toolkit': file:plugins/ape-rsi-toolkit
+      '@jiumate/awm-rsi-toolkit': file:plugins/awm-rsi-toolkit
+      '@jiumate/browser-automation': file:plugins/browser-automation
       '@jiumate/continual-learning': file:plugins/continual-learning
       '@jiumate/data-analysis': file:plugins/data-analysis
+      '@jiumate/default-rsi-toolkit': file:plugins/default-rsi-toolkit
       '@jiumate/goal': file:plugins/goal
       '@jiumate/humanizer': file:plugins/humanizer
       '@jiumate/model-development': file:plugins/model-development
+      '@jiumate/opro-rsi-toolkit': file:plugins/opro-rsi-toolkit
       '@jiumate/skill-porting': file:plugins/skill-porting
       '@jiumate/software-development': file:plugins/software-development
       '@jiumate/use-bento-slides': file:plugins/use-bento-slides
@@ -6477,13 +6621,21 @@ snapshots:
 
   '@prismshadow/jiumate-core@file:packages/core(supports-color@10.2.2)(ws@8.22.0)':
     dependencies:
+      '@jiumate/a2ui': file:plugins/a2ui
+      '@jiumate/ace-rsi-toolkit': file:plugins/ace-rsi-toolkit
       '@jiumate/agent-development': file:plugins/agent-development
+      '@jiumate/agent-evaluation': file:plugins/agent-evaluation
       '@jiumate/agent-tuning': file:plugins/agent-tuning
+      '@jiumate/ape-rsi-toolkit': file:plugins/ape-rsi-toolkit
+      '@jiumate/awm-rsi-toolkit': file:plugins/awm-rsi-toolkit
+      '@jiumate/browser-automation': file:plugins/browser-automation
       '@jiumate/continual-learning': file:plugins/continual-learning
       '@jiumate/data-analysis': file:plugins/data-analysis
+      '@jiumate/default-rsi-toolkit': file:plugins/default-rsi-toolkit
       '@jiumate/goal': file:plugins/goal
       '@jiumate/humanizer': file:plugins/humanizer
       '@jiumate/model-development': file:plugins/model-development
+      '@jiumate/opro-rsi-toolkit': file:plugins/opro-rsi-toolkit
       '@jiumate/skill-porting': file:plugins/skill-porting
       '@jiumate/software-development': file:plugins/software-development
       '@jiumate/use-bento-slides': file:plugins/use-bento-slides

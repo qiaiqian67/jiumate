@@ -1,0 +1,24 @@
+{
+  "name": "@jiumate/ape-rsi-toolkit",
+  "version": "0.2.16",
+  "description": "The APE RSI Toolkit: Large Language Models are Human-Level Prompt Engineers (Zhou et al., 2022, https://arxiv.org/abs/2211.01910), non-iterative forward generation with execution scoring — the proposer induces candidate instructions from input/output demonstrations, every candidate is measured on the frozen Benchmark, and the best is kept. Self-contained: it creates the Target's instruction slot, evaluates its own cells and writes the Evaluation Center's scoreboard.",
+  "license": "Apache-2.0",
+  "keywords": [
+    "jiumate-plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Prism-Shadow/penguin-harness",
+    "directory": "plugins/ape-rsi-toolkit"
+  },
+  "files": [
+    "plugin.json",
+    "icon.svg",
+    "skills",
+    "hooks",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
