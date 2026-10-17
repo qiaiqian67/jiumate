@@ -29,22 +29,15 @@ import { S } from "../lib/strings";
 import { apiErrorText } from "../lib/api-error";
 import { useDocumentTitle } from "../lib/use-document-title";
 import { useAuth } from "../state/auth";
-import { useLocale } from "../state/locale";
-import type { LangPref } from "../state/locale";
-import { useTheme } from "../state/theme";
-import type { ThemeMode } from "../state/theme";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { PasswordInput } from "../components/ui/password-input";
 import { JiuMateLogo } from "../components/ui/jiumate-logo";
-import { Segmented } from "../components/ui/segmented";
 import { WatchFigures } from "./login-figures";
 
 export function LoginPage() {
   useDocumentTitle(S.auth.login);
   const { login } = useAuth();
-  const { mode, setMode } = useTheme();
-  const { lang, setLang } = useLocale();
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -88,17 +81,6 @@ export function LoginPage() {
     }
   };
 
-  const themeOptions: ReadonlyArray<{ value: ThemeMode; label: string }> = [
-    { value: "light", label: S.settings.themeLight },
-    { value: "dark", label: S.settings.themeDark },
-    { value: "system", label: S.settings.followSystem },
-  ];
-  const langOptions: ReadonlyArray<{ value: LangPref; label: string }> = [
-    { value: "en", label: S.settings.langEn },
-    { value: "zh", label: S.settings.langZh },
-    { value: "system", label: S.settings.followSystem },
-  ];
-
   return (
     <div className="flex min-h-full w-full items-center justify-center bg-gray-100 p-0 dark:bg-gray-950 lg:p-6">
       {/*
@@ -127,22 +109,9 @@ export function LoginPage() {
             clipping it: the panel is fixed-height, and the fields are the part that must stay
             reachable. */}
         <div className="flex w-full min-w-0 flex-col justify-center overflow-y-auto px-6 py-8 sm:px-10 lg:w-1/2 lg:shrink-0 lg:px-12 lg:py-10">
-          {/* Language / theme: top-right on desktop, above the form on narrow screens. */}
-          <div className="mb-8 flex items-center justify-end gap-2">
-            <div aria-label={S.settings.language}>
-              <Segmented options={langOptions} value={lang} onChange={setLang} />
-            </div>
-            <div aria-label={S.settings.mode}>
-              <Segmented options={themeOptions} value={mode} onChange={setMode} />
-            </div>
-          </div>
-
           {/* Brand jiumate logo, then the title. */}
           <JiuMateLogo className="mx-auto mb-3 h-14 w-14 rounded-2xl" />
-          <h1 className="mb-1 text-center text-2xl font-semibold tracking-tight">{S.appName}</h1>
-          <p className="mb-8 text-center text-sm text-gray-500 dark:text-gray-400">
-            {S.auth.loginSubtitle}
-          </p>
+          <h1 className="text-center text-2xl font-semibold tracking-tight">{S.appName}</h1>
 
           <form
             className="space-y-4"
@@ -193,11 +162,23 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
-            {S.auth.defaultAdminNote}
-          </p>
-          <p className="mt-1.5 text-center text-xs text-gray-400 dark:text-gray-500">
-            {S.auth.forgotAdminNote}
+          {/*
+            The copyright line, at the bottom of the form column.
+
+            The two admin notes that used to sit here are gone: how to claim the built-in admin
+            account, and how to reset its password. Both are instructions for someone who already
+            runs the server — on the login page they were four lines of grey text under the button
+            that no one logging in needs, and the second one names a CLI command, which is not a
+            thing a browser user can act on. Where they went is not obvious from here, so the
+            wording lives in the server's startup output instead, which is where a first-time
+            operator is actually looking when they need it.
+
+            Spacing is `mt-auto` rather than a fixed gap: the column is a flex column that centres
+            its contents, so the copyright ends up at the bottom of the card at any window height
+            instead of drifting up with the form on a tall one.
+          */}
+          <p className="mt-auto pt-8 text-center text-xs text-gray-400 dark:text-gray-500">
+            ©2026-2028 安徽经邦软件技术有限公司 版权所有
           </p>
         </div>
       </div>

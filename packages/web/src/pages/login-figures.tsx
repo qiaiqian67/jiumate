@@ -69,19 +69,19 @@ const FIGURES: readonly FigureSpec[] = [
  * How far a pupil may travel from the centre of its eye, as a share of the pupil's own width.
  *
  * The pupil is a scaled circle inside a larger white one, so the room it has to move is the gap
- * between the two radii. At `scale(0.62)` on a 10px eye that gap is about 1.9px a side, and a
- * share of 0.55 of the pupil's 6.2px comes to roughly 3.4px — which the geometry checks confirm
- * stays inside.
+ * between the two radii: at `scale(0.45)` on a 14px eye that is 3.85px a side, and half of that
+ * is what this share produces.
  *
- * It reads as 0.55 rather than a number near 1 because the constraint is one-directional: a pupil
- * may move at most the gap, and a value above that pushes it through the edge of the white. Half
- * of the gap is used, which is as far as a glance reads without looking broken.
+ * It sits at 0.5 rather than the 0.55 tried first because 0.55 lands within 0.4px of the limit,
+ * and the render test caught a pupil poking outside its white by 1.5px once the figures were
+ * rendered at a non-integer scale — sub-pixel rounding eats the margin entirely. Half the gap
+ * leaves the rounding somewhere to go, and is as far as a glance reads without looking broken.
  *
  * This was 0.3, chosen as though the eye and the pupil were the same size — they are not, the
  * pupil is the scaled one — so the travel came out at about 1.5px. That is invisible at any panel
  * size, which is what "the eyes don't follow the cursor" turned out to be.
  */
-const PUPIL_TRAVEL = 0.55;
+const PUPIL_TRAVEL = 0.5;
 
 /**
  * Pointer distance at which the pupil reaches full travel, px.
@@ -106,6 +106,25 @@ export interface WatchFiguresProps {
 }
 
 export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchFiguresProps) {
+  /**
+   * Whether the pointer should be ignored entirely because a password is being typed.
+   *
+   * Held as a ref rather than read from the closure so the window listener can consult it without
+   * being torn down and re-bound on every keystroke — re-binding on each character of a password
+   * would drop and re-add the listener mid-typing. The `data-look-away` attribute on the markup
+   * carries the same fact to the stylesheet, which is what actually turns the eyes left; this
+   * only has to make sure the script stops overwriting it.
+   */
+  const lookingAway = useRef(passwordTyped);
+  useEffect(() => {
+    lookingAway.current = passwordTyped;
+    // The pupils were moved by the pointer before the password started; the stylesheet's own
+    // `data-look-away` offset takes over from here, but the inline transform is still whatever the
+    // last pointer move left behind and would fight it. Clearing it hands the eyes to CSS.
+    if (passwordTyped) {
+      for (const pupil of pupils()) pupil.style.translate = "0 0";
+    }
+  }, [passwordTyped]);
   const panelRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -124,15 +143,12 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
   };
 
   useEffect(() => {
-    const panel = panelRef.current;
-    if (panel === null) return;
-
-    /**
+    /*
      * Point every pupil at the pointer, or recentre it when there is no pointer.
      *
-     * The pointer's position is converted to panel coordinates once and then compared against
-     * each pupil's own centre — one event moves eight pupils, and each needs the distance to
-     * *itself*, which differs.
+     * Viewport coordinates throughout: the listener is on the window, so no conversion is needed
+     * and each pupil's own rect — also viewport-relative — can be compared to it directly. One
+     * event moves eight pupils, and each needs the distance to *itself*, which differs.
      */
     const paint = (pointer: { x: number; y: number } | null) => {
       for (const pupil of pupils()) {
@@ -158,39 +174,54 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
         );
         const ux = dist === 0 ? 0 : dx / dist;
         const uy = dist === 0 ? 0 : dy / dist;
-        // `translate`, not `transform`: the stylesheet's `transform: scale(0.5)` is what makes the
-        // pupil visible inside its white, and writing `transform` here would replace it, snapping
-        // every pupil to full size the moment the pointer moved.
+        // `translate`, not `transform`: the stylesheet's `transform: scale(0.45)` is what makes
+        // the pupil visible inside its white, and writing `transform` here would replace it,
+        // snapping every pupil to full size the moment the pointer moved.
         pupil.style.translate = `${ux * reach}px ${uy * reach}px`;
       }
     };
 
     const onMove = (e: PointerEvent) => {
-      const box = panel.getBoundingClientRect();
-      paint({ x: e.clientX - box.left, y: e.clientY - box.top });
+      // Viewport coordinates, matching what `getBoundingClientRect` returns for each pupil. No
+      // conversion through the panel, because the listener is on the window rather than the panel
+      // (see the note on where this is bound).
+      if (lookingAway.current) {
+        // A password is being typed. Leave every pupil alone so the stylesheet's `data-look-away`
+        // offset survives — writing here would overwrite it on the next pointer move, which is why
+        // the eyes did not turn left.
+        return;
+      }
+      paint({ x: e.clientX, y: e.clientY });
     };
-    /** Pointer left the panel: recentre, so the eyes do not stay locked on wherever it exited. */
-    const onLeave = () => paint(null);
 
-    panel.addEventListener("pointermove", onMove);
-    panel.addEventListener("pointerleave", onLeave);
+    /*
+     * Bound to the window, not the panel.
+     *
+     * The watchers track the cursor across the whole window — that is the effect — so listening on
+     * the panel meant the eyes froze the moment the cursor crossed onto the form, which is where
+     * the cursor spends most of its time on this page. The red box in the screenshot was the
+     * region that worked, and it was half the card.
+     *
+     * The window's `pointerout` (rather than the panel's `pointerleave`) covers the case of the
+     * cursor leaving the window entirely, so the eyes do not stay locked on wherever it went.
+     */
+    window.addEventListener("pointermove", onMove);
+    // `pointerout` with no `relatedTarget` means the cursor left the window entirely (into another
+    // application, or off the screen edge). With a relatedTarget it is just moving between elements
+    // inside, which `pointermove` already covers — recentring on that would make the eyes snap back
+    // every time the cursor crossed an edge.
+    const onExit = (e: PointerEvent) => {
+      if (e.relatedTarget === null) paint(null);
+    };
+    window.addEventListener("pointerout", onExit);
     return () => {
-      panel.removeEventListener("pointermove", onMove);
-      panel.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerout", onExit);
     };
+    // `lookingAway` is a ref, not a dependency: the effect is bound once for the panel's lifetime
+    // and reads the ref's current value on every event, so it neither re-binds on each keystroke
+    // nor closes over a stale `passwordTyped`.
   }, []);
-
-  /**
-   * The pointer must not steer the eyes while a password is being typed: the panel is the one
-   * thing a user might rest the cursor on while reading what they typed, and having it track
-   * there would be the opposite of discreet. React re-runs this when `passwordTyped` flips, and
-   * the cleanup recentres — so the eyes return to centre the moment the password starts.
-   */
-  useEffect(() => {
-    if (passwordTyped) {
-      for (const pupil of pupils()) pupil.style.translate = "0 0";
-    }
-  }, [passwordTyped]);
 
   return (
     <div

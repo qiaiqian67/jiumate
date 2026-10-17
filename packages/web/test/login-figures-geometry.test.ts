@@ -200,9 +200,11 @@ describe("小人渲染后的实际尺寸", () => {
     const reach = eye * scale * travel;
     // 行程至少要达到眼白的五分之一，否则看不出在跟随。
     expect(reach / eye, "行程要够长").toBeGreaterThan(0.2);
-    // 但不能超出眼白：可见瞳孔从中心移到边缘最多走 (1 - scale) / 2 × 眼白。
+    // 不能超出眼白：可见瞳孔从中心移到边缘最多走 (1 - scale) / 2 × 眼白。
+    // 还要留出余量——实际渲染时尺寸带亚像素，恰好贴边会因舍入溢出（渲染测试抓到过 1.5px 的越界）。
     const maxSafe = ((1 - scale) / 2) * eye;
     expect(reach, "行程不能超出眼白").toBeLessThanOrEqual(maxSafe);
+    expect(maxSafe - reach, "行程需留亚像素余量").toBeGreaterThan(0.4);
   });
 
   it("输入密码 → 整只眼睛往左看，不只是瞳孔", () => {

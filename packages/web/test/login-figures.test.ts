@@ -141,16 +141,31 @@ describe("三种反应", () => {
 });
 
 describe("页面", () => {
-  it("保留原有的登录流程与文案，没有引入注册或找回密码", () => {
+  it("保留原有的登录流程，没有引入注册或找回密码", () => {
     // 参考设计有「记住密码」和「忘记密码?」。本项目没有自助注册（账号由管理员创建），
     // 也没有找回密码功能——放一个点不动的链接比不放更糟。
     expect(PAGE).toContain("await login(userId.trim(), password)");
-    expect(PAGE).toContain("S.auth.defaultAdminNote");
-    expect(PAGE).toContain("S.auth.forgotAdminNote");
     // 断言的是没有对应的**控件**，而不是源码里没有这些词——本页的注释本来就解释了
     // 为什么不做它们（"remember me" / "forgot password?" 出现在那段说明里）。
     expect(PAGE).not.toMatch(/<(input|button|a)[^>]*type="checkbox"/);
     expect(PAGE).not.toMatch(/rememberMe|forgotPassword|onForgot/);
+  });
+
+  it("登录页已去掉管理员说明、副标题和语言/主题切换", () => {
+    // 三处都是登录页上没人需要的东西：管理员认领与重置密码是给运维看的（且其中一条是 CLI 命令，
+    // 浏览器用户根本无法照做），副标题和语言/主题切换属于应用内设置，登录页不是设置的地方。
+    expect(PAGE).not.toContain("S.auth.defaultAdminNote");
+    expect(PAGE).not.toContain("S.auth.forgotAdminNote");
+    expect(PAGE).not.toContain("S.auth.loginSubtitle");
+    expect(PAGE).not.toContain("Segmented");
+    // 连带的 hook 与选项数组一并移除，否则会留下未使用的导入。
+    expect(PAGE).not.toMatch(/useLocale|useTheme|LangPref|ThemeMode|langOptions|themeOptions/);
+  });
+
+  it("底部有版权", () => {
+    expect(PAGE).toContain("©2026-2028 安徽经邦软件技术有限公司 版权所有");
+    // `mt-auto` 让它落在卡片底部，而不是跟着表单往上飘。
+    expect(PAGE).toMatch(/mt-auto[^"]*"[\s\S]{0,120}版权所有/);
   });
 
   it("电路背景已移除，相关的 CSS 也一起删干净", () => {

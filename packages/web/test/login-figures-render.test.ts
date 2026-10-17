@@ -157,6 +157,32 @@ const panelBox = () =>
     return { w: r.width, h: r.height };
   });
 
+/**
+ * Moves the pointer and settles.
+ *
+ * `mouse.move` to a point the cursor is already at produces no movement, and therefore no
+ * `pointermove` — so a test that reads positions after "moving" to where the last test left the
+ * cursor measures nothing and reports zero. Stepping to a far corner first makes every call an
+ * actual move, which is what keeps the assertions independent of each other's order.
+ */
+async function movePointerTo(x: number, y: number): Promise<void> {
+  await page.mouse.move(5, 5);
+  await page.mouse.move(x, y);
+  await page.waitForTimeout(250);
+  // Playwright's mouse.move drives the CDP mouse, which reaches the page as mousemove. The panel
+  // listens for pointermove, so dispatch it too — and the inline style is checked below, which
+  // would otherwise pass on a rect that never changed.
+  await page.evaluate(
+    ([px, py]) => {
+      window.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: px, clientY: py, bubbles: true }),
+      );
+    },
+    [x, y],
+  );
+  await page.waitForTimeout(250);
+}
+
 describe("登录页小人的实际渲染", () => {
   it("面板有高度", async () => {
     const panel = await panelBox();
@@ -223,12 +249,95 @@ describe("登录页小人的实际渲染", () => {
     }
   });
 
+  it("指针在面板外也跟随（监听窗口，不只面板）", async () => {
+    // 这是本次修复的核心：监听原本挂在面板上，指针一跨到表单区（页面上停留时间最长的地方）
+    // 眼睛就冻住了。截图里红框标出的就是当时唯一有效的区域——只有卡片的一半。
+    const before = await boxes();
+    const panel = (await panelBox())!;
+    // 面板在卡片左半边，所以 x = panel.w * 0.8 + 面板偏移 = 表单区内的一点。
+    // 关键是这个点在**面板之外**。
+    const panelLeft = await page.evaluate(() => {
+      const p = document.querySelector(".watch-panel");
+      return p === null ? 0 : p.getBoundingClientRect().left;
+    });
+    const outsideX = panelLeft + panel.w * 0.85;
+    await movePointerTo(outsideX, 200);
+    const after = await boxes();
+    let moved = 0;
+    for (const [i, afterFig] of after.entries()) {
+      const now = afterFig.pupil;
+      const was = before[i]?.pupil;
+      if (now === null || now === undefined || was === null || was === undefined) continue;
+      moved += Math.abs(now.x - was.x) + Math.abs(now.y - was.y);
+    }
+    // 指针在面板外，八个瞳孔仍应有明显位移。
+    expect(moved, "面板外的指针也应驱动瞳孔").toBeGreaterThan(0.5);
+  });
+
+  it("输入密码 → 眼睛整体向左，且指针不再干扰", async () => {
+    // 两件事一起验证，因为它们曾互相抵消：
+    //   1. 样式表的 `data-look-away` 让眼白带着瞳孔一起左移；
+    //   2. 指针处理器必须停手 —— 它每帧覆写内联 `translate`，会把 (1) 冲掉。
+    // 所以只要 (2) 坏了，(1) 就永远看不见，表现为"眼睛没有向左"。这里分别检查。
+    await movePointerTo(400, 250);
+    const before = await boxes();
+    await page.evaluate(() => window.__watchers({ passwordTyped: true }));
+    await page.waitForTimeout(300);
+
+    // 指针仍在原处，若脚本继续覆写，瞳孔会保持原位；CSS 的左移必须能独立生效。
+    const after = await boxes();
+    let leftShift = 0;
+    for (const [i, fig] of after.entries()) {
+      const now = fig.eye;
+      const was = before[i]?.eye;
+      if (now === null || now === undefined || was === null || was === undefined) continue;
+      // 眼白整体应向左（x 变小）。
+      leftShift += was.x - now.x;
+    }
+    expect(leftShift, "输入密码后八只眼睛应整体左移").toBeGreaterThan(1);
+
+    // 移动指针不应改变位置（脚本已停手）。
+    const held = await boxes();
+    await movePointerTo(300, 180);
+    const afterMove = await boxes();
+    let drift = 0;
+    for (const [i, fig] of afterMove.entries()) {
+      const now = fig.eye;
+      const was = held[i]?.eye;
+      if (now === null || now === undefined || was === null || was === undefined) continue;
+      drift += Math.abs(now.x - was.x) + Math.abs(now.y - was.y);
+    }
+    expect(drift, "输入密码时指针不应再驱动眼睛").toBeLessThan(0.5);
+
+    // 复原，免得影响后面的测试。
+    await page.evaluate(() => window.__watchers({ passwordTyped: false }));
+    await page.waitForTimeout(200);
+  });
+
+  it("内联 translate 真的被写入了（rect 变化可能来自别处）", async () => {
+    // Rect-based assertions can pass for the wrong reason: a pupil that never moved and one that
+    // moved back to where it started measure the same. Reading the inline style the handler writes
+    // is the direct check.
+    //
+    // This is the test that would have caught the bug where `lookingAway` — a ref object, always
+    // truthy — was tested instead of `lookingAway.current`, so `onMove` returned early on every
+    // event and no pupil was ever written to. The figures rendered and every rect-based assertion
+    // still passed, because nothing moved *correctly*.
+    await movePointerTo(400, 300);
+    const written = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".watch-pupil")].map((p) => p.style.translate),
+    );
+    expect(written).toHaveLength(8);
+    for (const [i, value] of written.entries()) {
+      expect(value, `第 ${i} 个瞳孔的内联 translate`).not.toBe("");
+      expect(value, `第 ${i} 个瞳孔应被写入非零位移`).not.toBe("0 0");
+    }
+  });
+
   it("指针移动时瞳孔跟随，且不越出眼白", async () => {
     const before = await boxes();
     const panel = (await panelBox())!;
-    // A point well inside the panel, up and to the left of centre, so every pupil should move.
-    await page.mouse.move(panel.w * 0.2, panel.h * 0.2);
-    await page.waitForTimeout(250);
+    await movePointerTo(panel.w * 0.2, panel.h * 0.2);
     const after = await boxes();
     // `zip`-style walk: index access on an array is possibly-undefined, and the paired elements are
     // what the comparison needs, so the shape is read once and skipped if either side is missing.
