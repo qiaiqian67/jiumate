@@ -130,7 +130,7 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
     const paint = (pointer: { x: number; y: number } | null) => {
       for (const pupil of pupils()) {
         if (pointer === null) {
-          pupil.style.transform = "translate(0px, 0px)";
+          pupil.style.translate = "0 0";
           continue;
         }
         const box = pupil.getBoundingClientRect();
@@ -145,10 +145,16 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
         // the panel (their heights are percentages of it), so a fixed 3px would be a third of the
         // eye on the smallest figure and barely a nudge on the largest — and on the small one it
         // would carry the pupil past the edge of its white.
-        const reach = Math.min(box.width * PUPIL_TRAVEL, (dist / POINTER_RANGE) * box.width * PUPIL_TRAVEL);
+        const reach = Math.min(
+          box.width * PUPIL_TRAVEL,
+          (dist / POINTER_RANGE) * box.width * PUPIL_TRAVEL,
+        );
         const ux = dist === 0 ? 0 : dx / dist;
         const uy = dist === 0 ? 0 : dy / dist;
-        pupil.style.transform = `translate(${ux * reach}px, ${uy * reach}px)`;
+        // `translate`, not `transform`: the stylesheet's `transform: scale(0.5)` is what makes the
+        // pupil visible inside its white, and writing `transform` here would replace it, snapping
+        // every pupil to full size the moment the pointer moved.
+        pupil.style.translate = `${ux * reach}px ${uy * reach}px`;
       }
     };
 
@@ -175,7 +181,7 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
    */
   useEffect(() => {
     if (passwordTyped) {
-      for (const pupil of pupils()) pupil.style.transform = "translate(0px, 0px)";
+      for (const pupil of pupils()) pupil.style.translate = "0 0";
     }
   }, [passwordTyped]);
 
@@ -234,20 +240,17 @@ function Figure({
         left: spec.left,
         height: spec.height,
         /*
-         * The eyes and the mouth are placed in px inside the body, so they cannot follow a body
-         * whose height is now a percentage: at the smallest figure (14% of a short panel) a fixed
-         * `top: 20px` would sit below its head entirely, and at the largest it would be a different
-         * place on the face.
+         * No font-size here on purpose. An earlier version set it to the height as a percentage
+         * and sized everything in `em`, which is wrong twice over: `font-size: 44%` resolves
+         * against the parent's inherited font size (about 16px), not against any height, so the em
+         * basis was ~7px and every dimension collapsed — the figures rendered as thin lines with no
+         * eyes or mouths. The stylesheet now uses `cqh` against the panel's container height,
+         * which is the unit that actually means what the numbers need to mean.
          *
-         * So the body's own height becomes its em basis, and the two offsets become `em` in the
-         * stylesheet. One number then scales the whole figure — body, eyes, mouth — together,
-         * which is what keeps the faces at any window size instead of only at the one the numbers
-         * were measured at.
+         * The blink period is per figure (see FigureSpec.blink). Handed to CSS as a custom
+         * property rather than as an inline `animation` shorthand, so the keyframes in the
+         * stylesheet stay the single definition of what a blink is.
          */
-        fontSize: spec.height,
-        // The blink period is per figure (see FigureSpec.blink). Handed to CSS as a custom
-        // property rather than as an inline `animation` shorthand, so the keyframes in the
-        // stylesheet stay the single definition of what a blink is.
         "--watch-blink": `${spec.blink}s`,
       } as CSSProperties}
       // Set as attributes rather than class names so the CSS can key off the state itself; a

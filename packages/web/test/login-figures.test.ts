@@ -44,40 +44,54 @@ describe("小人的形体", () => {
   });
 
   it("瞳孔移动范围不超过眼睛能容纳的距离", () => {
-    // 白色眼球和黑色瞳孔同样大小，瞳孔靠缩到一半露出来，所以它最多只能在眼球里挪动。
-    // 参考实现里的 translate(-8px) 会把瞳孔推出眼白。这里是眼球宽度的**比例**而非像素：
-    // 小人的尺寸跟着面板缩放（身高是面板的百分比），固定 3px 在最小的小人身上是眼球的
-    // 三分之一——足以把瞳孔推出眼白——在最高的那个身上又几乎看不出来。
+    // 白色眼球和黑色瞳孔的关系：瞳孔填满眼白，再缩到约一半才露出黑色。所以它最多只能在
+    // 眼白里挪动眼白半径的一半左右。参考实现里的 translate(-8px) 会把瞳孔推出眼白。
+    // 这里是瞳孔自身尺寸的**比例**而非像素：小人随面板缩放，固定 3px 在最小的小人身上是
+    // 眼球的 1/3（足以推出眼白），在最高的身上又几乎看不出来。
     const travel = Number(/const PUPIL_TRAVEL = ([\d.]+)/.exec(FIGURES)?.[1]);
     expect(travel).toBeGreaterThan(0);
     expect(travel).toBeLessThanOrEqual(0.5);
     // 位移按瞳孔自身尺寸算，不写死像素。
     expect(FIGURES).toContain("box.width * PUPIL_TRAVEL");
-    // 左看时用的偏移同样必须在这个范围内，且同样按比例。
-    const away = /translate\((-?[\d.]+)em, 0\) scale/.exec(CSS)?.[1];
-    expect(Math.abs(Number(away))).toBeLessThanOrEqual(travel);
+    // 偏移走 translate 属性，不碰 transform —— 后者归样式表的 scale 所有（见下）。
+    expect(FIGURES).toContain("pupil.style.translate");
+    expect(FIGURES).not.toContain("pupil.style.transform");
   });
 
-  it("小人的尺寸全部按比例，所以面板高度变化时构图不变", () => {
+  it("瞳孔的缩放由样式表拥有，脚本只写位移", () => {
+    // transform: scale(0.5) 是让瞳孔在眼白里露出来的唯一原因。脚本若写 transform 就会把它
+    // 整个替换掉，指针一动八个瞳孔同时涨回全尺寸、盖住眼白。
+    expect(CSS).toMatch(/\.watch-pupil \{[^}]*transform: scale\([\d.]+\)/s);
+    expect(CSS).toMatch(/\.watch-pupil \{[^}]*translate: 0 0/s);
+  });
+
+  it("眼白大于瞳孔，否则黑瞳被盖住看不见", () => {
+    // 眼白与瞳孔的相对大小由几何测试（login-figures-geometry.test.ts，按已知面板高度解算 cqh）
+    // 和渲染测试（login-figures-render.test.ts，量真实盒子）覆盖，两处都比这里读字符串可靠：
+    // 这里唯一能发现的是"根本没有缩放"，那由下一条断言负责。
+    expect(CSS).toMatch(/\.watch-pupil \{[^}]*transform: scale\([\d.]+\)/s);
+  });
+
+  it("小人的尺寸全部用 cqh 相对面板高度，所以面板高度变化时构图不变", () => {
     // 曾经是写死的像素（最高的 265px），只对 600px 高的卡片是对的：窗口一矮，要么被裁掉，
-    // 要么顶部空一大片。这里身高是面板的百分比，眼睛/嘴巴/宽度/圆角都是 em，跟随它缩放。
-    for (const key of ["purple", "black", "yellow", "orange"]) {
-      const m = new RegExp(`key: "${key}", height: "([\\d.]+%)"`).exec(FIGURES);
-      expect(m, key).not.toBeNull();
-      const pct = Number((m?.[1] ?? "0").replace("%", ""));
-      expect(pct).toBeGreaterThan(0);
-      expect(pct).toBeLessThanOrEqual(100);
-    }
-    // 比例的缩放基准：font-size 就是身高。
-    expect(FIGURES).toContain("fontSize: spec.height");
+    // 要么顶部空一大片。现在一切都相对面板高度。
+    //
+    // 关键：不能用 `em` + `font-size: 百分比` 来间接表达 —— font-size 的百分比是相对父元素
+    // 的字号（约 16px），不是高度，基准会变成约 7px，整个小人塌成细线、眼睛嘴巴消失。
+    // cqh 才是"容器高度的 1%"这个意思。
+    expect(CSS).toContain("container-type: size");
+    expect(CSS).toMatch(/\.watch-figure \{[^}]*width: [\d.]+cqh/s);
+    expect(CSS).not.toMatch(/\.watch-figure \{[^}]*font-size/s);
+    expect(FIGURES).not.toContain("fontSize: spec.height");
     // 不再有写死的 px 尺寸。
     expect(CSS).not.toMatch(/\.watch-eye \{[^}]*width: \d+px/s);
     expect(CSS).not.toMatch(/\.watch-eyes \{[^}]*top: \d+px/s);
+    expect(CSS).not.toMatch(/[\d.]+em/);
   });
 
   it("嘴巴张开时是圆的不是更高的方块", () => {
     // 只加高不圆化会读成"一条更粗的线"，不是张开的嘴。
-    expect(CSS).toMatch(/\.watch-mouth\[data-surprised\] \{[^}]*height: [\d.]+em;[^}]*border-radius: 50%/s);
+    expect(CSS).toMatch(/\.watch-mouth\[data-surprised\] \{[^}]*height: [\d.]+cqh;[^}]*border-radius: 50%/s);
   });
 });
 
@@ -96,7 +110,7 @@ describe("三种反应", () => {
   it("输入密码时指针不再驱动眼睛，并立即回到中间", () => {
     // 指针可能在用户读自己刚输入的密码时停在面板上——这时候眼睛跟着走，正好是最不该发生的。
     expect(FIGURES).toContain("if (passwordTyped)");
-    expect(FIGURES).toContain('pupil.style.transform = "translate(0px, 0px)"');
+    expect(FIGURES).toContain('pupil.style.translate = "0 0"');
   });
 
   it("空提交 → 全体张嘴并站直", () => {
