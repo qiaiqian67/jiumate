@@ -107,14 +107,30 @@ export function LoginPage() {
 
         {/* The form column. `overflow-y-auto` so a short window scrolls the form rather than
             clipping it: the panel is fixed-height, and the fields are the part that must stay
-            reachable. */}
-        <div className="flex w-full min-w-0 flex-col justify-center overflow-y-auto px-6 py-8 sm:px-10 lg:w-1/2 lg:shrink-0 lg:px-12 lg:py-10">
+            reachable.
+
+            Three bands, and the middle one is the reason this is not `justify-center`: the brand
+            sits at the top, the copyright at the bottom, and the form takes the space between,
+            centred in it. Centring the column instead would centre logo + form + copyright as one
+            block, which puts the form wherever the other two happen to weigh — low when the card
+            is tall, and it drifts with the copyright rather than sitting still. */}
+        <div className="flex w-full min-w-0 flex-col overflow-y-auto px-6 py-8 sm:px-10 lg:w-1/2 lg:shrink-0 lg:px-12 lg:py-10">
           {/* Brand jiumate logo, then the title. */}
           <JiuMateLogo className="mx-auto mb-3 h-14 w-14 rounded-2xl" />
           <h1 className="text-center text-2xl font-semibold tracking-tight">{S.appName}</h1>
 
+          {/* `my-auto` is what centres the form in the space between the title and the copyright:
+            auto margins absorb the free space and split it evenly above and below. `flex-1` was
+            tried first and does not work here — a flex item's `flex-basis: 0%` is overridden by
+            its content's min-content size, so the form came out exactly as tall as its fields,
+            the free space went nowhere, and `justify-center` had nothing to distribute. The form
+            measured 166px tall against a 964px column and sat hard against the logo.
+
+            The column itself no longer centres (`justify-center` removed above): with the form
+            taking its own slack, centring the column as well would centre logo + form +
+            copyright as one block, which is what put the form low in the first place. */}
           <form
-            className="space-y-4"
+            className="my-auto w-full space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
               void submit();
@@ -173,11 +189,12 @@ export function LoginPage() {
             wording lives in the server's startup output instead, which is where a first-time
             operator is actually looking when they need it.
 
-            Spacing is `mt-auto` rather than a fixed gap: the column is a flex column that centres
-            its contents, so the copyright ends up at the bottom of the card at any window height
-            instead of drifting up with the form on a tall one.
+            No `mt-auto`: the column is `justify-between`-shaped by the form taking `flex-1`, so
+            the copyright is already the last band at the bottom. An `mt-auto` here would be a
+            second mechanism doing a job the layout does, and on a short window — where the column
+            overflows and scrolls — an auto margin resolves to zero and silently does nothing.
           */}
-          <p className="mt-auto pt-8 text-center text-xs text-gray-400 dark:text-gray-500">
+          <p className="mt-8 shrink-0 pt-2 text-center text-xs text-gray-400 dark:text-gray-500">
             ©2026-2028 安徽经邦软件技术有限公司 版权所有
           </p>
         </div>

@@ -164,8 +164,17 @@ describe("页面", () => {
 
   it("底部有版权", () => {
     expect(PAGE).toContain("©2026-2028 安徽经邦软件技术有限公司 版权所有");
-    // `mt-auto` 让它落在卡片底部，而不是跟着表单往上飘。
-    expect(PAGE).toMatch(/mt-auto[^"]*"[\s\S]{0,120}版权所有/);
+    // `shrink-0` 而不是 `mt-auto`：列靠表单的 `flex-1` 把版权推到最底下，`mt-auto` 是第二套
+    // 机制做同一件事，而且矮窗口下（列溢出滚动）auto 边距解析为 0，会静默失效。
+    expect(PAGE).toMatch(/shrink-0[^"]*"[\s\S]{0,120}版权所有/);
+  });
+
+  it("表单在 logo 与版权之间居中，而不是整列居中", () => {
+    // 整列 justify-center 会把 logo+表单+版权当作一整块居中，表单的位置取决于另外两者的分量：
+    // 卡片一高表单就偏下，还会随版权漂移。改成三段——logo 在上、表单 flex-1 自居中、版权在下。
+    expect(PAGE).not.toMatch(/flex w-full min-w-0 flex-col justify-center/);
+    // `my-auto` 让表单吃掉品牌与版权之间的余量并上下平分。
+    expect(PAGE).toMatch(/<form\s+className="my-auto w-full space-y-4"/);
   });
 
   it("电路背景已移除，相关的 CSS 也一起删干净", () => {
