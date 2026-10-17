@@ -57,7 +57,28 @@ export function LoginPage() {
   const clearErrors = () => setErrors((p) => (p.userId || p.password || p.form ? {} : p));
 
   const usernameTyped = userId.trim() !== "";
-  const passwordTyped = password.trim() !== "";
+  const passwordHasText = password.trim() !== "";
+  /*
+   * Focus, not content.
+   *
+   * These used to be derived from whether the fields held text alone, which made the watchers latch:
+   * once a character was in the password box, the flag stayed true for as long as the value
+   * survived, so the figures kept looking away long after the cursor left the field — and because
+   * the pointer handler stands down entirely while they do, nothing moved at all. Deleting the
+   * password was the only way back, which is not something anyone should have to discover.
+   *
+   * Focus is what the reactions actually describe. The purple one leans in to read the account name
+   * *as it is being entered*; everyone looks away *while the password is being typed*, which ends
+   * when the cursor does. It also means a password left in the box on a forgotten tab does not hold
+   * four figures staring at the wall.
+   *
+   * Both still require text: focusing an empty password field should not start the reaction, since
+   * there is no password yet to be discreet about.
+   */
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [usernameFocused, setUsernameFocused] = useState(false);
+  const usernameReacting = usernameTyped && usernameFocused && !passwordFocused;
+  const passwordReacting = passwordHasText && passwordFocused;
 
   const submit = async () => {
     const next: { userId?: string; password?: string } = {};
@@ -99,8 +120,8 @@ export function LoginPage() {
         {/* The watchers. Half the card on desktop, hidden below lg — see the header note. */}
         <div className="min-w-0 flex-1">
           <WatchFigures
-            usernameTyped={usernameTyped}
-            passwordTyped={passwordTyped}
+            usernameTyped={usernameReacting}
+            passwordTyped={passwordReacting}
             surprised={startled}
           />
         </div>
@@ -147,6 +168,8 @@ export function LoginPage() {
                 // watchers stop gaping the moment there is something to look at.
                 setStartled(false);
               }}
+              onBlur={() => setUsernameFocused(false)}
+              onFocus={() => setUsernameFocused(true)}
               error={errors.userId}
               autoComplete="username"
               autoFocus
@@ -160,6 +183,8 @@ export function LoginPage() {
                 clearErrors();
                 setStartled(false);
               }}
+              onBlur={() => setPasswordFocused(false)}
+              onFocus={() => setPasswordFocused(true)}
               error={errors.password}
               autoComplete="current-password"
             />
