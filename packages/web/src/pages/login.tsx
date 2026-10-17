@@ -101,7 +101,19 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-full w-full items-center justify-center bg-gray-100 p-0 dark:bg-gray-950 lg:p-6">
-      <div className="flex h-full min-h-0 w-full max-w-5xl overflow-hidden lg:h-[600px] lg:rounded-2xl lg:bg-white lg:shadow-lg lg:shadow-black/5 dark:lg:bg-gray-900 dark:lg:shadow-black/40">
+      {/*
+        The card. `h-full` on small screens, a capped 600px on desktop.
+
+        The cap matters: a fixed 600px card is taller than a 1366×768 laptop's usable height once
+        the padding is added, and the outer row centres rather than clips — so the top and bottom
+        of the card (and the form fields inside it) fall off the screen. `max-h-full` lets the card
+        shrink to whatever is actually available, and `min-h-0` on the row above it is what lets
+        that shrink happen at all (a flex item's default min-height is its content's).
+
+        The figures take their height from here as a percentage (see login-figures.tsx), so
+        shrinking the card shrinks them with it rather than cropping them.
+      */}
+      <div className="flex h-full min-h-0 w-full max-w-5xl overflow-hidden lg:h-[600px] lg:max-h-full lg:rounded-2xl lg:bg-white lg:shadow-lg lg:shadow-black/5 dark:lg:bg-gray-900 dark:lg:shadow-black/40">
         {/* The watchers. Half the card on desktop, hidden below lg — see the header note. */}
         <div className="min-w-0 flex-1">
           <WatchFigures

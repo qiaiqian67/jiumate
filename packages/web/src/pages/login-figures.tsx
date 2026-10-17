@@ -32,8 +32,8 @@ type FigureKey = "purple" | "black" | "yellow" | "orange";
 
 interface FigureSpec {
   key: FigureKey;
-  /** Height in px. Width comes from CSS (the figures differ in proportion, not just size). */
-  height: number;
+  /** Height as a share of the panel's. A percentage so the composition holds at any panel height. */
+  height: string;
   /** Placement within the panel, as percentages — the panel is `position: relative`. */
   top: string;
   left: string;
@@ -47,24 +47,34 @@ interface FigureSpec {
 
 /**
  * The four, arranged to read as a group rather than a row: the two tall ones behind, the two
- * small ones in front, so the shapes overlap and the panel gains depth. The percentages are the
- * original demo's, tuned against the same fixed panel size this one uses.
+ * small ones in front, so the shapes overlap and the panel gains depth.
+ *
+ * `height` is a percentage of the panel's, not a pixel count. The panel's height comes from the
+ * card (lg:h-[600px] in login.tsx) and can be shorter on a laptop screen; pixel heights sized for
+ * 600px left the taller figures either hanging off the bottom of a short panel or leaving the top
+ * half of a tall one empty. As a share of the panel they keep the same composition at either size,
+ * and `top` — already a percentage — then lines up with them exactly, so the figures stay on the
+ * same ground line rather than drifting apart as the window changes.
+ *
+ * `left` is a percentage for the same reason.
  */
 const FIGURES: readonly FigureSpec[] = [
-  { key: "purple", height: 265, top: "50%", left: "38%", blink: 4 },
-  { key: "black", height: 190, top: "58%", left: "55%", blink: 4.2 },
-  { key: "yellow", height: 125, top: "63.5%", left: "65%", blink: 3.8 },
-  { key: "orange", height: 84, top: "67%", left: "22%", blink: 4.5 },
+  { key: "purple", height: "44%", top: "50%", left: "38%", blink: 4 },
+  { key: "black", height: "32%", top: "58%", left: "55%", blink: 4.2 },
+  { key: "yellow", height: "21%", top: "63.5%", left: "65%", blink: 3.8 },
+  { key: "orange", height: "14%", top: "67%", left: "22%", blink: 4.5 },
 ];
 
 /**
- * How far a pupil may travel from the centre of its eye, px.
+ * How far a pupil may travel from the centre of its eye, as a share of the eye's width.
  *
  * The pupil and its white are drawn at the same size and the pupil is a scaled inner circle, so
- * a pupil that travelled more than this would poke outside the white and read as a bug rather
- * than as a glance.
+ * a pupil that travelled more than the gap between them would poke outside the white and read as a
+ * bug rather than as a glance. A share rather than pixels because the figures scale with the panel
+ * (their heights are percentages of it): a fixed 3px is a third of the eye on the smallest figure —
+ * far enough to break out of it — and a nudge too small to see on the tallest.
  */
-const PUPIL_TRAVEL = 3;
+const PUPIL_TRAVEL = 0.3;
 
 /**
  * Pointer distance at which the pupil reaches full travel, px.
@@ -73,6 +83,9 @@ const PUPIL_TRAVEL = 3;
  * geometry could not accommodate, so pupils pinned to the edge of the white while the cursor was
  * still halfway across the panel. Normalising to a bearing and scaling to a limit small enough
  * to fit gives the same "looking at it" read, in the range the geometry can actually show.
+ *
+ * This one stays in px on purpose: it is a distance across the *panel*, which has no scale of its
+ * own — a pointer 24px away is near whether the figure beside it is large or small.
  */
 const POINTER_RANGE = 24;
 
@@ -127,7 +140,12 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
         // Normalise to a bearing, then scale: a pupil for a far pointer reaches the same place
         // as one for a near pointer at the same bearing. Without this, moving the mouse across
         // the panel would jolt the pupils instead of leading them.
-        const reach = Math.min(PUPIL_TRAVEL, (dist / POINTER_RANGE) * PUPIL_TRAVEL);
+        //
+        // The reach is a share of the pupil's own size, not a pixel count: the figures scale with
+        // the panel (their heights are percentages of it), so a fixed 3px would be a third of the
+        // eye on the smallest figure and barely a nudge on the largest — and on the small one it
+        // would carry the pupil past the edge of its white.
+        const reach = Math.min(box.width * PUPIL_TRAVEL, (dist / POINTER_RANGE) * box.width * PUPIL_TRAVEL);
         const ux = dist === 0 ? 0 : dx / dist;
         const uy = dist === 0 ? 0 : dy / dist;
         pupil.style.transform = `translate(${ux * reach}px, ${uy * reach}px)`;
@@ -167,7 +185,13 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
       // Decorative: nothing here is announced, and a screen reader reading "four watchers" at the
       // login form would be noise. The form is the content; this is the wallpaper.
       aria-hidden
-      className="watch-panel relative hidden w-full overflow-hidden bg-gray-100 lg:block dark:bg-gray-900"
+      // `h-full` is load-bearing, not decoration: the figures are `position: absolute` and are
+      // placed with percentage `top` values, so they need a parent with a resolved height to be
+      // positioned against — and being absolutely positioned, they contribute none themselves.
+      // Without it the panel's height is 0, every `top: 50%` resolves to 0, and the card's
+      // `overflow-hidden` clips all four figures away: the half of the page that was supposed to
+      // hold them renders as blank gray. The card sets the height (lg:h-[600px]); this fills it.
+      className="watch-panel relative hidden h-full w-full overflow-hidden bg-gray-100 lg:block dark:bg-gray-900"
     >
       {FIGURES.map((f) => (
         <Figure
@@ -209,6 +233,18 @@ function Figure({
         top: spec.top,
         left: spec.left,
         height: spec.height,
+        /*
+         * The eyes and the mouth are placed in px inside the body, so they cannot follow a body
+         * whose height is now a percentage: at the smallest figure (14% of a short panel) a fixed
+         * `top: 20px` would sit below its head entirely, and at the largest it would be a different
+         * place on the face.
+         *
+         * So the body's own height becomes its em basis, and the two offsets become `em` in the
+         * stylesheet. One number then scales the whole figure — body, eyes, mouth — together,
+         * which is what keeps the faces at any window size instead of only at the one the numbers
+         * were measured at.
+         */
+        fontSize: spec.height,
         // The blink period is per figure (see FigureSpec.blink). Handed to CSS as a custom
         // property rather than as an inline `animation` shorthand, so the keyframes in the
         // stylesheet stay the single definition of what a blink is.

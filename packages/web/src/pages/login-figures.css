@@ -20,10 +20,16 @@
   /* ── Figure bodies ──────────────────────────────────────────────────────────────
      Widths differ per figure as well as heights: the two small ones are wider than they are
      tall (domes), the two large ones are tall pills. `transform-origin: bottom center` is what
-     makes a lean read as the figure tipping over rather than sliding sideways. */
+     makes a lean read as the figure tipping over rather than sliding sideways.
+
+     Every dimension here is in `em` against the figure's own `font-size`, which login-figures.tsx
+     sets to the figure's *height* as a share of the panel. That is what lets one percentage-sized
+     height scale the whole figure — body, eyes, mouth — together. In px they were tuned against a
+     600px panel and were simply wrong at any other height: a 14%-tall figure with a fixed
+     `top: 20px` for its eyes had them below its head. */
   .watch-figure {
-    width: 125px;
-    border-radius: 8px;
+    width: 1em;
+    border-radius: 0.064em;
     transform-origin: bottom center;
     transition:
       transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
@@ -31,24 +37,24 @@
   }
 
   .watch-figure.purple {
-    width: 125px;
+    width: 1em;
     background-color: #6829ff;
   }
   .watch-figure.black {
-    width: 80px;
+    width: 0.64em;
     background-color: #1f2430;
   }
   /* Dome: a tall top radius on a short body reads as a rounded head rather than a pill. */
   .watch-figure.yellow {
-    width: 73px;
-    border-top-left-radius: 50px;
-    border-top-right-radius: 50px;
+    width: 0.58em;
+    border-top-left-radius: 0.4em;
+    border-top-right-radius: 0.4em;
     background-color: #ffd700;
   }
   .watch-figure.orange {
-    width: 150px;
-    border-top-left-radius: 130px;
-    border-top-right-radius: 130px;
+    width: 1.2em;
+    border-top-left-radius: 1.04em;
+    border-top-right-radius: 1.04em;
     background-color: #ff7b00;
   }
 
@@ -64,23 +70,25 @@
   }
 
   /* ── Eyes ─────────────────────────────────────────────────────────────────────
-     A fixed 10px white with a black pupil inside it. Both are the same size on purpose: the
-     pupil is visible only because it is scaled to half and offset, which is what leaves room for
-     it to move. */
+     Sized and offset in `em`, so they sit in the same place on a face of any height (see the
+     figure-body note above). The white and the pupil are the same size on purpose: the pupil is
+     visible only because it is scaled to half and offset, which is what leaves room for it to
+     move. The original demo's `translate(-8px)` and `scale(0.5)` would have pushed every pupil
+     outside its white; these are sized to the geometry rather than copied from it. */
   .watch-eyes {
     position: absolute;
-    top: 20px;
+    top: 0.16em;
     left: 50%;
     display: flex;
-    gap: 22px;
+    gap: 0.176em;
     transform: translateX(-50%);
   }
 
   .watch-eye {
     position: relative;
     display: block;
-    width: 10px;
-    height: 10px;
+    width: 0.08em;
+    height: 0.08em;
     border-radius: 50%;
     background-color: #fff;
     /* The blink collapses the white; the pupil is inside it, so both vanish together. */
@@ -102,9 +110,10 @@
   }
 
   /* Looking away while a password is typed: the pupils shift left and shrink, so the gaze reads
-     as averted even though the eyes themselves have not moved. */
+     as averted even though the eyes themselves have not moved. The shift is scaled too, or it
+     would be three times wider on the small figures than on the tall one. */
   .watch-pupil[data-look-away] {
-    transform: translate(-3px, 0) scale(0.82);
+    transform: translate(-0.024em, 0) scale(0.82);
   }
 
   /* ── Mouth ───────────────────────────────────────────────────────────────────
@@ -112,12 +121,12 @@
      taller rectangle alone reads as a bigger line rather than as an open mouth. */
   .watch-mouth {
     position: absolute;
-    top: 50px;
+    top: 0.4em;
     left: 50%;
     display: block;
-    width: 12px;
-    height: 4px;
-    border-radius: 2px;
+    width: 0.096em;
+    height: 0.032em;
+    border-radius: 0.016em;
     background-color: #111;
     transition:
       height 0.18s ease,
@@ -130,7 +139,7 @@
   }
 
   .watch-mouth[data-surprised] {
-    height: 9px;
+    height: 0.072em;
     border-radius: 50%;
   }
 
@@ -139,6 +148,10 @@
    * near 10% — a blink is fast, and a symmetric open/close (the obvious way to write this) reads
    * as a slow, sleepy sway. The two-percent windows at either end are what make it read as a
    * blink rather than a flicker.
+   *
+   * The heights are in `em` for the same reason as the eye itself: in px, the closed frame
+   * (1px) was a fixed sliver, so on the smallest figure the blink barely narrowed it while on
+   * the largest it collapsed the whole eye.
    */
   @keyframes watch-blink {
     0%,
@@ -147,11 +160,11 @@
     89%,
     91%,
     100% {
-      height: 10px;
+      height: 0.08em;
     }
     10%,
     90% {
-      height: 1px;
+      height: 0.008em;
     }
   }
 

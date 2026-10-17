@@ -44,19 +44,40 @@ describe("小人的形体", () => {
   });
 
   it("瞳孔移动范围不超过眼睛能容纳的距离", () => {
-    // 白色眼球和黑色瞳孔同样大小，瞳孔靠缩到一半露出来，所以它最多只能在眼球里挪动
-    // （眼白半径 - 瞳孔半径）≈3px。参考实现里的 translate(-8px) 会把瞳孔推出眼白。
-    const travel = Number(/const PUPIL_TRAVEL = (\d+)/.exec(FIGURES)?.[1]);
+    // 白色眼球和黑色瞳孔同样大小，瞳孔靠缩到一半露出来，所以它最多只能在眼球里挪动。
+    // 参考实现里的 translate(-8px) 会把瞳孔推出眼白。这里是眼球宽度的**比例**而非像素：
+    // 小人的尺寸跟着面板缩放（身高是面板的百分比），固定 3px 在最小的小人身上是眼球的
+    // 三分之一——足以把瞳孔推出眼白——在最高的那个身上又几乎看不出来。
+    const travel = Number(/const PUPIL_TRAVEL = ([\d.]+)/.exec(FIGURES)?.[1]);
     expect(travel).toBeGreaterThan(0);
-    expect(travel).toBeLessThanOrEqual(4);
-    // 左看时用的偏移同样必须在这个范围内。
-    const away = /translate\((-?\d+)px, 0\) scale/.exec(CSS)?.[1];
+    expect(travel).toBeLessThanOrEqual(0.5);
+    // 位移按瞳孔自身尺寸算，不写死像素。
+    expect(FIGURES).toContain("box.width * PUPIL_TRAVEL");
+    // 左看时用的偏移同样必须在这个范围内，且同样按比例。
+    const away = /translate\((-?[\d.]+)em, 0\) scale/.exec(CSS)?.[1];
     expect(Math.abs(Number(away))).toBeLessThanOrEqual(travel);
+  });
+
+  it("小人的尺寸全部按比例，所以面板高度变化时构图不变", () => {
+    // 曾经是写死的像素（最高的 265px），只对 600px 高的卡片是对的：窗口一矮，要么被裁掉，
+    // 要么顶部空一大片。这里身高是面板的百分比，眼睛/嘴巴/宽度/圆角都是 em，跟随它缩放。
+    for (const key of ["purple", "black", "yellow", "orange"]) {
+      const m = new RegExp(`key: "${key}", height: "([\\d.]+%)"`).exec(FIGURES);
+      expect(m, key).not.toBeNull();
+      const pct = Number(m?.[1].replace("%", ""));
+      expect(pct).toBeGreaterThan(0);
+      expect(pct).toBeLessThanOrEqual(100);
+    }
+    // 比例的缩放基准：font-size 就是身高。
+    expect(FIGURES).toContain("fontSize: spec.height");
+    // 不再有写死的 px 尺寸。
+    expect(CSS).not.toMatch(/\.watch-eye \{[^}]*width: \d+px/s);
+    expect(CSS).not.toMatch(/\.watch-eyes \{[^}]*top: \d+px/s);
   });
 
   it("嘴巴张开时是圆的不是更高的方块", () => {
     // 只加高不圆化会读成"一条更粗的线"，不是张开的嘴。
-    expect(CSS).toMatch(/\.watch-mouth\[data-surprised\] \{[^}]*height: 9px;[^}]*border-radius: 50%/s);
+    expect(CSS).toMatch(/\.watch-mouth\[data-surprised\] \{[^}]*height: [\d.]+em;[^}]*border-radius: 50%/s);
   });
 });
 
@@ -115,7 +136,18 @@ describe("页面", () => {
 
   it("面板在 lg 以下隐藏，表单占满宽度", () => {
     // 断点是 Tailwind 的 lg: 变体，直接写在组件的 className 上，不是自定义 CSS。
-    expect(FIGURES).toContain("hidden w-full overflow-hidden bg-gray-100 lg:block");
+    expect(FIGURES).toContain("hidden h-full w-full overflow-hidden bg-gray-100 lg:block");
+  });
+
+  it("面板有高度，否则四个小人一个都不显示", () => {
+    // 这一条钉的是"左边空白"的根因。小人是 position: absolute 且用百分比 top 定位：绝对
+    // 定位的元素不撑起父容器，所以没有 h-full 时面板高度为 0，每个 top: 50% 都解析成 0，
+    // 而卡片有 overflow-hidden —— 四个小人被整体裁掉，左半边只剩一片灰。
+    // 高度由卡片给（下面这条断言），面板负责填满它。
+    expect(FIGURES).toContain("relative hidden h-full w-full overflow-hidden");
+    // 整条链：卡片给高度 → 面板 h-full 继承 → 小人百分比定位有参照。
+    expect(PAGE).toContain("lg:h-[600px]");
+    expect(PAGE).toMatch(/<div className="min-w-0 flex-1">\s*<WatchFigures/);
   });
 
   it("面板是装饰性的，不进无障碍树", () => {
