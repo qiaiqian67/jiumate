@@ -64,7 +64,7 @@ describe("小人的形体", () => {
     for (const key of ["purple", "black", "yellow", "orange"]) {
       const m = new RegExp(`key: "${key}", height: "([\\d.]+%)"`).exec(FIGURES);
       expect(m, key).not.toBeNull();
-      const pct = Number(m?.[1].replace("%", ""));
+      const pct = Number((m?.[1] ?? "0").replace("%", ""));
       expect(pct).toBeGreaterThan(0);
       expect(pct).toBeLessThanOrEqual(100);
     }
