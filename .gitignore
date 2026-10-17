@@ -49,3 +49,6 @@ packages/landing/.blog-assets/
 /design
 /AGENTS.md
 /CLAUDE.md
+
+# Playwright screenshots from the render test: regenerated on every run, not source.
+packages/web/test-output/
