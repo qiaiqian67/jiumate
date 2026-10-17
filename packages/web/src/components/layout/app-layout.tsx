@@ -20,6 +20,7 @@ import { GlyphIcon } from "../ui/glyph-icon";
 import { UpdateDot } from "../ui/update-dot";
 import { CloseIcon, NAV_ICONS } from "../ui/icons";
 import { NEW_CHAT_ICON, Sidebar } from "./sidebar";
+import { DesktopTitleBar } from "./desktop-title-bar";
 import { DRAFT_SESSION_ID } from "../../features/chat/chat-page";
 import { parkActiveDraft } from "../../features/chat/draft-sessions";
 import { ChangePasswordDialog } from "../account/change-password-dialog";
@@ -253,8 +254,16 @@ export function AppLayout() {
   return (
     <PetProvider>
       {/* 一整块灰底：左侧导航与内容面板共用外层这一种灰色，导航继承它而不另填色，
-          分界由内容面板自身的边缘提供。 */}
-      <div className="flex h-full bg-gray-100 dark:bg-gray-900">
+          分界由内容面板自身的边缘提供。列布局：标题栏在最上，其下是导航与内容。 */}
+      <div className="flex h-full flex-col bg-gray-100 dark:bg-gray-900">
+        {/* Desktop shell only: the window has no native title bar, so the page draws one
+            (desktop-title-bar.tsx). The same gray as this frame, so the window reads as one
+            surface at the top with the content card inset below it — see that file for why it
+            spans the full width. Skipped in a browser, where the tab strip is the title bar. */}
+        {desktopMode && <DesktopTitleBar />}
+        {/* A row inside the frame: the title bar above is the frame's own top edge, so below it
+            the sidebar and the content panel sit side by side on the same gray. */}
+        <div className="flex min-h-0 flex-1">
         {/* Desktop: single-column sidebar (collapsible to a narrow rail). No right border and
             no fill of its own: the rail and the frame around the content pane share ONE
             gray (the outer wrapper above), so the pane's own edge is what separates them. */}
@@ -373,6 +382,7 @@ export function AppLayout() {
             />
           </div>
         </Drawer>
+        </div>
       </div>
     </PetProvider>
   );

@@ -47,6 +47,14 @@ declare global {
     trayNavigate?: {
       onNavigate(listener: (path: string) => void): () => void;
     };
+    /**
+     * The window's chrome state, for the page-drawn title bar. Absent in a browser and on the
+     * platforms that keep a native title bar. See components/layout/desktop-title-bar.tsx.
+     */
+    titleBar?: {
+      isMaximized(): Promise<boolean>;
+      onMaximizeChanged(listener: (maximized: boolean) => void): () => void;
+    };
     pet?: {
       open(savedPos?: { x: number; y: number } | null): Promise<void>;
       close(): Promise<void>;

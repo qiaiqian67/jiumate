@@ -936,6 +936,31 @@ html.jiumate-pet-host body {
 
 /* Context menu (the pet itself, and each bubble). Anchored to the window's
    bottom-right corner so it survives the resize that opening it triggers. */
+/* Desktop shell's own title bar (the window has no native one — see main.ts's titleBarStyle).
+   Same gray as the layout frame the sidebar sits on, so the top of the window reads as one surface
+   with the content card inset below it rather than as a strip of a third colour. The height must
+   equal TITLE_BAR_HEIGHT in main.ts: the caption buttons are positioned against it. */
+.jiumate-title-bar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 32px;
+  padding-left: 0.75rem;
+  /* Room for the native caption buttons, which float over this strip on the right. A maximized
+     window drops it (desktop-title-bar.tsx sets the inline padding to 8px) because Windows shrinks
+     the buttons back to their restored width. */
+  padding-right: 138px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  user-select: none;
+  @apply bg-gray-100 dark:bg-gray-900 dark:text-gray-400;
+  /* The whole strip drags the window, empty middle included — which is why the app-region is on
+     the element and not on a child. */
+  -webkit-app-region: drag;
+}
+
+/* Context menu (the pet itself, and each bubble). Anchored to the window's
+   bottom-right corner so it survives the resize that opening the menu triggers. */
 .jiumate-pet-menu__backdrop {
   position: fixed;
   inset: 0;

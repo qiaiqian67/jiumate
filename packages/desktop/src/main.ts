@@ -69,6 +69,17 @@ import {
 // identity so it runs beside an installed release build instead of quitting into its
 // window (#292; see app-identity.ts).
 const identity = appIdentity(app.isPackaged);
+
+/**
+ * Height of the page-drawn title bar, in CSS pixels.
+ *
+ * Duplicated on purpose rather than shared: the desktop package is a separate build from the web
+ * app and cannot import its stylesheet, and the renderer cannot import a constant from the main
+ * process either (its preload is sandboxed). The web side's copy lives in styles.css as
+ * `--jiumate-titlebar-height`; if one changes, the other has to follow, because a mismatch shows up
+ * as content tucked under the window buttons.
+ */
+const TITLE_BAR_HEIGHT = 32;
 app.setName(identity.name);
 // Windows toasts (the web app's task-completion notifications) need the AppUserModelID
 // of the installed shortcuts; electron-builder stamps them with the appId. Keep the
@@ -199,6 +210,31 @@ function wireTrayIpc(): void {
     }
     setPetEnabled(payload);
   });
+
+  /*
+   * The title bar is the page's (see the `titleBarStyle` note in createWindow), so the page needs
+   * to know when the window is maximized: Windows swaps the caption buttons to "restore" and grows
+   * them, and without this the bar would keep the wrong right-hand inset.
+   */
+  ipcMain.handle("titlebar:isMaximized", (event) => {
+    const target = BrowserWindow.fromWebContents(event.sender);
+    return target?.isMaximized() ?? false;
+  });
+}
+
+/** Forward maximize / unmaximize to the renderer, which draws the title bar. */
+function wireTitleBarEvents(target: BrowserWindow): void {
+  const send = () => {
+    if (target.isDestroyed()) return;
+    target.webContents.send("titlebar:maximizeChanged", target.isMaximized());
+  };
+  target.on("maximize", send);
+  target.on("unmaximize", send);
+  // `enter-full-screen` / `leave-full-screen` too: a maximized window that goes full-screen keeps
+  // `isMaximized()` true on Windows, but the caption buttons are replaced by their own full-screen
+  // row, so the inset the page reserved is no longer the right one.
+  target.on("enter-full-screen", send);
+  target.on("leave-full-screen", send);
 }
 
 /**
@@ -224,6 +260,32 @@ function createWindow(url: string): void {
     show: false,
     autoHideMenuBar: true,
     ...(iconPath !== null ? { icon: iconPath } : {}),
+    /*
+     * The title bar is drawn by the page, not by Windows.
+     *
+     * With the default frame it is a native control: Windows paints it in the system accent colour
+     * and no CSS can reach it. That is why it stayed pale while the rest of the window followed the
+     * selected theme — the sidebar behind it was already themed, and this one strip was not.
+     *
+     * `hidden` removes the frame (so there is no native bar at all); `titleBarOverlay` keeps the
+     * minimise / maximise / close buttons but positions them over the page, which is what lets the
+     * strip be themed like everything else. The height is what the renderer reserves space for, so
+     * the two have to agree — see TITLE_BAR_HEIGHT in the web app's styles.
+     *
+     * Windows-only: on macOS this is a different mechanism entirely (the traffic lights live in the
+     * frame), and on Linux the overlay support varies by toolkit. Both keep the native bar rather
+     * than losing their window controls.
+     */
+    ...(process.platform === "win32"
+      ? {
+          titleBarStyle: "hidden" as const,
+          titleBarOverlay: {
+            color: "#00000000",
+            symbolColor: "#6b7280",
+            height: TITLE_BAR_HEIGHT,
+          },
+        }
+      : {}),
     webPreferences: {
       // Same hardening as before, plus the pet preload bridge. The bridge
       // exposes only `window.pet.open / close / savePosition` — enough for the
@@ -242,6 +304,9 @@ function createWindow(url: string): void {
     },
   });
   win.once("ready-to-show", () => win?.show());
+  // Only where the title bar is the page's. On macOS and Linux the frame is native, so there is
+  // nothing for the renderer to adjust and the events would be dead weight.
+  if (process.platform === "win32") wireTitleBarEvents(win);
   win.on("closed", () => {
     win = null;
   });

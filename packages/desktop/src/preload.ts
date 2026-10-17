@@ -159,6 +159,38 @@ contextBridge.exposeInMainWorld("trayNavigate", trayNavigateApi);
 
 export type TrayNavigateBridge = typeof trayNavigateApi;
 
+/**
+ * The window's own chrome state, as `window.titleBar`.
+ *
+ * The title bar is drawn by the page (see web/src/components/layout/desktop-title-bar.tsx) so it
+ * can follow the selected theme, with the native caption buttons floating over it. Two things the
+ * page cannot know on its own:
+ *
+ *  - whether the window is maximized, which changes both the caption buttons' size and whether a
+ *    sliver of page would show above the frame;
+ *  - nothing else — dragging is `-webkit-app-region: drag` in CSS, no bridge needed.
+ *
+ * Desktop shell only; absent in a browser and on the platforms that keep a native title bar.
+ */
+const titleBarApi = {
+  /** Whether the window is maximized right now. */
+  isMaximized: (): Promise<boolean> => ipcRenderer.invoke("titlebar:isMaximized"),
+  /** Subscribe to maximize / unmaximize. Returns an unsubscribe function. */
+  onMaximizeChanged: (listener: (maximized: boolean) => void): (() => void) => {
+    const handler = (_event: unknown, value: unknown) => {
+      if (typeof value === "boolean") listener(value);
+    };
+    ipcRenderer.on("titlebar:maximizeChanged", handler);
+    return () => {
+      ipcRenderer.removeListener("titlebar:maximizeChanged", handler);
+    };
+  },
+};
+
+contextBridge.exposeInMainWorld("titleBar", titleBarApi);
+
+export type TitleBarBridge = typeof titleBarApi;
+
 
 /** Content size the floating window should adopt (pet alone, or pet + bubble). */
 export interface FloatingSize {
