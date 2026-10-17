@@ -12,29 +12,43 @@
 
 export interface AppTrayLabels {
   tooltip: string;
-  /** Bring the main window back from the tray. */
-  showMain: string;
-  /** Bring the main window back and put the caret in it. */
-  focusMain: string;
-  /** Bring the floating pet window back, if it is hidden behind the chat window. */
-  showPet: string;
+  /** Section heading above the recent-conversation list. */
+  recent: string;
+  /** Submenu holding the conversations that did not fit above. */
+  more: string;
+  newChat: string;
+  settings: string;
   quit: string;
+  /** Placeholder when the renderer has not reported any conversation yet. */
+  noRecent: string;
+  /** Suffix for a subagent conversation, so the row says what kind it is. */
+  subagentSuffix: string;
+  /** Suffix for a scheduled conversation. */
+  scheduleSuffix: string;
 }
 
 const ZH: AppTrayLabels = {
   tooltip: "JiuMate",
-  showMain: "显示主窗口",
-  focusMain: "显示并定位到主窗口",
-  showPet: "显示桌面宠物",
+  recent: "最近任务",
+  more: "更多",
+  newChat: "新对话",
+  settings: "设置",
   quit: "退出",
+  noRecent: "（暂无对话）",
+  subagentSuffix: "子智能体",
+  scheduleSuffix: "定时任务",
 };
 
 const EN: AppTrayLabels = {
   tooltip: "JiuMate",
-  showMain: "Show main window",
-  focusMain: "Show and focus main window",
-  showPet: "Show desktop pet",
+  recent: "Recent",
+  more: "More",
+  newChat: "New chat",
+  settings: "Settings",
   quit: "Quit",
+  noRecent: "(no conversations)",
+  subagentSuffix: "subagent",
+  scheduleSuffix: "scheduled",
 };
 
 /** Labels for an Electron locale tag (`app.getLocale()`, e.g. "zh-CN", "en-US"). */

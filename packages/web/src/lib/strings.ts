@@ -1892,6 +1892,19 @@ export const zh = {
     },
   },
 
+  /**
+   * System tray menu copy. The tray lives in the main process, which has no dictionary, so the
+   * tray's own labels live in desktop/src/tray-labels.ts (resolved from the OS locale). These are
+   * only the parts the renderer needs: the row title and the kind suffix, so a tray row and the
+   * sidebar row it mirrors are the same sentence.
+   */
+  tray: {
+    /** The untitled placeholder, reused from the sidebar so both read the same. */
+    untitled: "新对话",
+    subagentSuffix: "子智能体",
+    scheduleSuffix: "定时任务",
+  },
+
   chat: {
     /** Footnote of the session picker's menu — the pre-pick reminder: a change applies right away but costs the model's cached context, so compacting first is recommended. */
     thinkingLevelChangeNote: "立即生效。更换思考等级会使模型缓存失效，建议先压缩上下文。",

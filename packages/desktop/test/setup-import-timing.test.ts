@@ -69,6 +69,18 @@ describe("系统托盘", () => {
     expect(MAIN).toContain("ensureAppTray");
   });
 
+  it("会话列表由渲染进程推送，主进程不自己拉", () => {
+    // 主进程没有 Project/Agent，无法向服务端要列表；那是渲染进程的状态。
+    expect(MAIN).toContain('ipcMain.handle("tray:setRecent"');
+    expect(PRELOAD).toContain("trayRecent");
+    expect(ROUTER).toContain("<TrayRecentSync />");
+  });
+
+  it("托盘点击由页面路由，shell 不自己导航", () => {
+    expect(MAIN).toContain('win?.webContents.send("tray:navigate", path)');
+    expect(PRELOAD).toContain("trayNavigate");
+  });
+
   it("关闭按钮只是隐藏窗口", () => {
     expect(MAIN).toMatch(/win\.on\("close",[\s\S]{0,220}preventDefault\(\)/);
     expect(MAIN).toMatch(/win\.on\("close",[\s\S]{0,220}win\?\.hide\(\)/);

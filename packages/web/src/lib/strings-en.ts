@@ -1923,6 +1923,19 @@ export const en: Strings = {
     },
   },
 
+  /**
+   * System tray menu copy. The tray lives in the main process, which has no dictionary, so the
+   * tray's own labels live in desktop/src/tray-labels.ts (resolved from the OS locale). These are
+   * only the parts the renderer needs: the row title and the kind suffix, so a tray row and the
+   * sidebar row it mirrors are the same sentence.
+   */
+  tray: {
+    /** The untitled placeholder, reused from the sidebar so both read the same. */
+    untitled: "New chat",
+    subagentSuffix: "subagent",
+    scheduleSuffix: "scheduled",
+  },
+
   chat: {
     thinkingLevelChangeNote:
       "Applies right away. Changing it invalidates the model's cached context — compacting first is recommended.",

@@ -108,6 +108,58 @@ export interface FloatingPosition {
   y: number;
 }
 
+/** One recent conversation, as the tray menu shows it. */
+export interface TrayRecentRow {
+  sessionId: string;
+  label: string;
+  kindLabel: string;
+}
+
+/**
+ * The tray menu's recent-conversation list, as `window.trayRecent`.
+ *
+ * A one-way push rather than a pull: the main process could fetch the list itself, but it has no
+ * Project or Agent to ask about (those live in the renderer's stores), so the renderer sends the
+ * rows it already has whenever they change.
+ */
+const trayRecentApi = {
+  /** Replace the list the tray shows. */
+  set: (rows: TrayRecentRow[]): Promise<void> => ipcRenderer.invoke("tray:setRecent", rows),
+};
+
+contextBridge.exposeInMainWorld("trayRecent", trayRecentApi);
+
+export type TrayRecentBridge = typeof trayRecentApi;
+
+/**
+ * The tray's navigation requests, as `window.trayNavigate`.
+ *
+ * The shell has no router — it cannot navigate itself, and re-implementing the app's routing in
+ * the main process would mean two places to keep in step with the URL structure. So a tray click
+ * sends a path and the page navigates, which is also what makes a tray click and an in-app click on
+ * the same target genuinely identical.
+ */
+const trayNavigateApi = {
+  /** Subscribe to navigation requests; returns an unsubscribe function. */
+  onNavigate: (listener: (path: string) => void): (() => void) => {
+    const handler = (_event: unknown, path: unknown) => {
+      // Only app-internal paths: the tray is the app's own UI, but the channel is a plain string
+      // from the main process and a stray value should not be able to push the page off-origin.
+      if (typeof path !== "string" || !path.startsWith("/")) return;
+      listener(path);
+    };
+    ipcRenderer.on("tray:navigate", handler);
+    return () => {
+      ipcRenderer.removeListener("tray:navigate", handler);
+    };
+  },
+};
+
+contextBridge.exposeInMainWorld("trayNavigate", trayNavigateApi);
+
+export type TrayNavigateBridge = typeof trayNavigateApi;
+
+
 /** Content size the floating window should adopt (pet alone, or pet + bubble). */
 export interface FloatingSize {
   width: number;

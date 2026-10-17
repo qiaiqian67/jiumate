@@ -39,6 +39,14 @@ declare global {
       skipModel: boolean;
       apiKey: string | null;
     } | null;
+    /** Push the tray's recent-conversation list. Absent in a browser (no tray to feed). */
+    trayRecent?: {
+      set(rows: { sessionId: string; label: string; kindLabel: string }[]): Promise<void>;
+    };
+    /** Tray clicks arriving as paths; the page navigates. Absent in a browser. */
+    trayNavigate?: {
+      onNavigate(listener: (path: string) => void): () => void;
+    };
     pet?: {
       open(savedPos?: { x: number; y: number } | null): Promise<void>;
       close(): Promise<void>;

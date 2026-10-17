@@ -21,6 +21,7 @@ import { InspirationPage } from "./features/inspiration/inspiration-page";
 import { SettingsPage } from "./features/settings/settings-page";
 import { PetWindowPage } from "./features/pet/pet-window-page";
 import { SetupModelApplier } from "./features/settings/setup-model-applier";
+import { TrayRecentSync } from "./features/chat/tray-recent-sync";
 
 /** Route guard: shows blank while initializing, redirects to /login when not authenticated. */
 function RequireAuth() {
@@ -33,7 +34,10 @@ function RequireAuth() {
           project-scoped, so there is nothing to apply it to until this Provider has one — and
           `useProject` only works inside it. See lib/setup-model.ts. */}
       <SetupModelApplier />
+      {/* Feeds the system tray's recent-conversation list and applies the routes the tray asks
+          for. Needs SessionsProvider for the list, so it sits inside it. */}
       <SessionsProvider>
+        <TrayRecentSync />
         <AppLayout />
       </SessionsProvider>
     </ProjectProvider>

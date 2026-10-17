@@ -30,7 +30,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { app, BrowserWindow, dialog, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { resolveRoot } from "@prismshadow/jiumate-core";
 import { liveServerLock } from "@prismshadow/jiumate-server/lock";
 import { appIdentity, desktopDataRoot } from "./app-identity.js";
@@ -49,7 +49,13 @@ import { createPetWindow, isPetWindowOpen, type PetWindowHandle } from "./pet-wi
 import { registerThemePicker } from "./theme-picker.js";
 import { registerWorkspacePicker } from "./workspace-picker.js";
 import { destroyPetTray, syncPetTray, wirePetTrayIpc, type PetTrayDeps } from "./pet-tray.js";
-import { destroyAppTray, ensureAppTray, type AppTrayDeps } from "./tray.js";
+import {
+  destroyAppTray,
+  ensureAppTray,
+  setTrayRecent,
+  type AppTrayDeps,
+  type TrayRecentRow,
+} from "./tray.js";
 import {
   desktopLoginUrl,
   isAppUrl,
@@ -117,6 +123,10 @@ function requestPetToggle(): void {
   win.webContents.send("pet:toggle-requested");
 }
 
+// Registered once, next to the tray it feeds. Kept out of `createWindow` because a window can be
+// created more than once (macOS activate, a server restart) and re-registering a handle would throw.
+wireTrayIpc();
+
 function petTrayDeps(): PetTrayDeps {
   return {
     iconPath: resolveTrayIcon(app.getAppPath()),
@@ -126,16 +136,63 @@ function petTrayDeps(): PetTrayDeps {
   };
 }
 
-/** The app tray's relay. Built fresh each call because the pet's deps are passed around. */
+/**
+ * The app tray's relay.
+ *
+ * The three navigation actions are all "show the window, then tell the renderer to route". The
+ * shell owns no router, so it cannot navigate itself: it hands the renderer a path and lets the
+ * page do what it would do if the user had clicked the same thing in the UI. That is also what
+ * keeps a tray click and an in-app click on the same target genuinely identical, rather than two
+ * paths that have to be kept in step.
+ */
 function appTrayDeps(): AppTrayDeps {
   return {
     iconPath: resolveTrayIcon(app.getAppPath()),
     onShowMain: focusMain,
-    onShowPet: showPet,
+    onOpenSession: (sessionId) => routeTo(`/chat/${encodeURIComponent(sessionId)}`),
+    onNewChat: () => routeTo("/chat"),
+    onSettings: () => routeTo("/settings"),
     // Quit through the same path as File → Quit, so the tray's Quit stops the embedded server
     // instead of killing the process with the server still up.
     onQuit: quitApp,
   };
+}
+
+/** Bring the window forward and ask the renderer to navigate to `path`. */
+function routeTo(path: string): void {
+  focusMain();
+  win?.webContents.send("tray:navigate", path);
+}
+
+/**
+ * The renderer pushing its recent-conversation list into the tray menu.
+ *
+ * Registered here rather than beside the tray because it is the one place that knows both sides:
+ * the tray takes the rows, the renderer sends them. Idempotent per process, like every other
+ * `ipcMain.handle` in this file.
+ */
+function wireTrayIpc(): void {
+  ipcMain.handle("tray:setRecent", (_event, payload: unknown) => {
+    if (!Array.isArray(payload)) {
+      throw new Error("tray:setRecent requires an array");
+    }
+    // Validated rather than cast: the payload crosses a context boundary, so a shape the menu
+    // cannot render has to be dropped here rather than becoming a blank row in the notification
+    // area. `label` falls back to the id so a row is still openable.
+    const rows = payload.flatMap((raw): TrayRecentRow[] => {
+      if (typeof raw !== "object" || raw === null) return [];
+      const row = raw as Record<string, unknown>;
+      if (typeof row.sessionId !== "string" || row.sessionId === "") return [];
+      return [
+        {
+          sessionId: row.sessionId,
+          label: typeof row.label === "string" && row.label !== "" ? row.label : row.sessionId,
+          kindLabel: typeof row.kindLabel === "string" ? row.kindLabel : "",
+        },
+      ];
+    });
+    setTrayRecent(rows);
+  });
 }
 
 /**
@@ -149,11 +206,6 @@ function appTrayDeps(): AppTrayDeps {
 function quitApp(): void {
   quitting = true;
   app.quit();
-}
-
-/** Raise the floating pet window, if it exists. A no-op when the pet is off. */
-function showPet(): void {
-  petHandle?.show();
 }
 
 function createWindow(url: string): void {
