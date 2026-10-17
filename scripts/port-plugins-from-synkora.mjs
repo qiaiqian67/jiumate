@@ -26,14 +26,34 @@ const SOURCE_ROOT = process.env.SYNKORA_ROOT ?? "E:/MyWork/AIwork/synkora-ai/pen
 /** Plugins to port. `agent-company` (the company-mode content) and `penguin-support` (the product
  *  Q&A assistant) are excluded on purpose, as are the four `sandbox-*` plugins 鈥?they are execution
  *  sandboxes, unrelated to the skills, agent API and browser work this migration is for. */
+/**
+ * Plugins to port.
+ *
+ * Excluded on purpose:
+ *
+ * `agent-company` (company mode) and `penguin-support` (the product Q&A assistant), as asked.
+ *
+ * The four `sandbox-*` plugins: execution sandboxes, unrelated to skills, the agent API or the
+ * browser.
+ *
+ * `agent-evaluation` and `default-rsi-toolkit`: **already here**. This repository's own
+ * `agent-tuning` ships `agent-evaluation`, `benchmark-design`, `agent-optimization` and
+ * `agent-initialization`, and the first two of those are the whole of the upstream
+ * `agent-evaluation` plugin, near enough word for word — the only difference is which CLI it
+ * names. `default-rsi-toolkit`'s single skill *is* upstream's `agent-optimization`. Porting
+ * either would have put two directories in the library claiming the same skill name, and a
+ * preinstall writes by skill name, so whichever loaded second would silently replace the first:
+ * 24 skills became 22 with no error anywhere.
+ *
+ * The four remaining `*-rsi-toolkit` plugins are kept because their skills are distinct — each is
+ * a different published self-improvement method, not a re-badging of the evaluation loop.
+ */
 const PLUGINS = [
   "a2ui",
   "ace-rsi-toolkit",
   "ape-rsi-toolkit",
   "awm-rsi-toolkit",
-  "default-rsi-toolkit",
   "opro-rsi-toolkit",
-  "agent-evaluation",
   "browser-automation",
 ];
 
