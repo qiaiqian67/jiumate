@@ -35,15 +35,21 @@
      passes each figure's height as a percentage of the panel, which is where those percentages
      land in the same unit.
 
-     This was `em` before, against a `font-size` set to the height as a percentage. That is wrong
-     in a way worth recording: `font-size: 44%` resolves against the *parent's inherited font
-     size*, not against any height, so the em basis was about 7px rather than 264px. Every
-     dimension collapsed to a thin vertical line and the eyes and mouths vanished entirely —
-     which looked like the "blank panel" bug returning in a new form. `cqh` is the unit that
-     actually means "a share of the container's height", so it needs no font-size indirection. */
+     The values are the original design's pixel numbers divided by the 600px panel height, and
+     they were wrong by more than a factor of two the first time: `47cqh` for the purple width came
+     from its aspect ratio (125/265 ≈ 0.47) rather than from its share of the panel
+     (125/600 ≈ 0.208). Every figure rendered as a slab roughly twice as wide as intended, with
+     eyes a third of the body across. A ratio and a share are different quantities and only one of
+     them is what `cqh` means.
+
+     This was `em` before that, against a `font-size` set to the height as a percentage. That is
+     wrong in a way worth recording too: `font-size: 44%` resolves against the *parent's inherited
+     font size*, not against any height, so the em basis was about 7px rather than 264px. Every
+     dimension collapsed to a thin vertical line. `cqh` is the unit that actually means "a share of
+     the container's height", so it needs no font-size indirection. */
   .watch-figure {
-    width: 47cqh;
-    border-radius: 3cqh;
+    width: 20.8cqh;
+    border-radius: 1.33cqh;
     transform-origin: bottom center;
     transition:
       transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
@@ -51,24 +57,24 @@
   }
 
   .watch-figure.purple {
-    width: 47cqh;
+    width: 20.8cqh;
     background-color: #6829ff;
   }
   .watch-figure.black {
-    width: 30cqh;
+    width: 13.3cqh;
     background-color: #1f2430;
   }
   /* Dome: a tall top radius on a short body reads as a rounded head rather than a pill. */
   .watch-figure.yellow {
-    width: 27.5cqh;
-    border-top-left-radius: 18.8cqh;
-    border-top-right-radius: 18.8cqh;
+    width: 12.2cqh;
+    border-top-left-radius: 8.33cqh;
+    border-top-right-radius: 8.33cqh;
     background-color: #ffd700;
   }
   .watch-figure.orange {
-    width: 56.6cqh;
-    border-top-left-radius: 49cqh;
-    border-top-right-radius: 49cqh;
+    width: 25cqh;
+    border-top-left-radius: 21.67cqh;
+    border-top-right-radius: 21.67cqh;
     background-color: #ff7b00;
   }
 
@@ -91,27 +97,27 @@
      outside its white; these are sized to the geometry rather than copied from it. */
   .watch-eyes {
     position: absolute;
-    /* Sized against the smallest figure again: on a 600px panel 7.5cqh is 45px, and the orange
-       figure is 84px tall, so the eyes sit just above halfway down its face rather than at the top.
-       A value tuned for the tall purple one would leave them off the small ones entirely. */
-    top: 5cqh;
+    /* The original design's 20px, as a share of the 600px panel. Sized against the smallest
+       figure: at 3.33cqh this is 20px, and the orange figure is 84px tall, so the eyes sit in
+       its upper quarter. The tall purple one (265px) puts the same 20px near its own top, which is
+       the same place on the face — that is what the shared unit is for. */
+    top: 3.33cqh;
     left: 50%;
     display: flex;
-    /* The gap between the eyes. A share of the panel, so it shrinks along with the figures: a
-       fixed 22px overlapped on the smallest (whose eye is only a few px across) and left a gap on
-       the largest. Sized so the two eyes plus this gap stay well inside the narrowest body. */
-    gap: 3cqh;
+    /* 22px between them, as a share of the panel so it shrinks with the figures: a fixed 22px
+       overlapped on the smallest once the eye is only 10px across, and left a gap on the largest. */
+    gap: 3.67cqh;
     transform: translateX(-50%);
   }
 
   .watch-eye {
     position: relative;
     display: block;
-    /* Larger than the pupil so the pupil is visible at all. The pupil fills its white exactly and
-       is scaled down to half, which is what leaves the gap it travels in; drawing the white at
-       the same size as the pupil would hide the pupil behind it. */
-    width: 5.6cqh;
-    height: 5.6cqh;
+    /* 10px on the 600px panel. Larger than the pupil so the pupil is visible at all: the pupil
+       fills this white exactly and is scaled down to half, which is what leaves the gap it
+       travels in. Drawing the white at the same size as the pupil would hide the pupil behind it. */
+    width: 1.67cqh;
+    height: 1.67cqh;
     border-radius: 50%;
     background-color: #fff;
     /* The blink collapses the white; the pupil is inside it, so both vanish together. */
@@ -141,10 +147,11 @@
   }
 
   /* Looking away while a password is typed: the pupils shift left and shrink, so the gaze reads
-     as averted even though the eyes themselves have not moved. The shift is a share of the eye
-     too, or it would be three times wider on the small figures than on the tall one. */
+     as averted even though the eyes themselves have not moved. 3px on the 600px panel, and the
+     same share as everything else so it shrinks with the figures rather than being three times
+     wider on the small ones. */
   .watch-pupil[data-look-away] {
-    translate: -1.5cqh 0;
+    translate: -0.5cqh 0;
     transform: scale(0.4);
   }
 
@@ -153,16 +160,18 @@
      taller rectangle alone reads as a bigger line rather than as an open mouth. */
   .watch-mouth {
     position: absolute;
-    /* The offset has to fit inside the *smallest* figure, not the largest. The heights are
-       proportions of one panel, so an offset tuned against the tall purple one (44% of 600px =
-       264px) put the mouth at 112px — outside the orange figure, which is only 84px tall. Sized
-       so it lands on the orange one's face and therefore on all of them. */
-    top: 10.5cqh;
+    /* The original design's 50px was measured against the tall purple figure; as a share of the
+       panel that is 8.33cqh, which would put the mouth at 50px — outside the orange figure, only
+       84px tall but 150px wide, and below its face. Halved to land on the orange one's too: it is
+       the only offset that is on all four faces at once, since these are proportions of one panel
+       and the figures are 14% to 44% of it. */
+    top: 5.5cqh;
     left: 50%;
     display: block;
-    width: 4.5cqh;
-    height: 1.5cqh;
-    border-radius: 0.75cqh;
+    /* The original 12px × 4px, as shares of the panel. */
+    width: 2cqh;
+    height: 0.67cqh;
+    border-radius: 0.33cqh;
     background-color: #111;
     transition:
       height 0.18s ease,
@@ -175,7 +184,7 @@
   }
 
   .watch-mouth[data-surprised] {
-    height: 3.4cqh;
+    height: 1.5cqh;
     border-radius: 50%;
   }
 
@@ -196,11 +205,11 @@
     89%,
     91%,
     100% {
-      height: 5.6cqh;
+      height: 1.67cqh;
     }
     10%,
     90% {
-      height: 0.5cqh;
+      height: 0.17cqh;
     }
   }
 

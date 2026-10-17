@@ -24,6 +24,14 @@ const SHORT_PANEL_HEIGHT = 380;
 
 const cssPath = join(process.cwd(), "src/pages/login-figures.css");
 const css = readFileSync(cssPath, "utf8");
+const tsx = readFileSync(join(process.cwd(), "src/pages/login-figures.tsx"), "utf8");
+
+/** The height percentage the component passes for a figure, read off its spec table. */
+function heightPct(key: string): number {
+  const m = new RegExp(`key: "${key}", height: "([\\d.]+)%"`).exec(tsx);
+  if (m?.[1] === undefined) throw new Error(`no height for ${key}`);
+  return Number(m[1]);
+}
 
 /**
  * The declaration block of `selector`, ignoring anything inside `@keyframes`.
@@ -65,7 +73,62 @@ function at(px: number, panel: number): number {
 
 const FIGURE_HEIGHTS = { purple: 44, black: 32, yellow: 21, orange: 14 } as const;
 
+/**
+ * The design's original pixel dimensions, on a 600px panel.
+ *
+ * This is the table every `cqh` value has to reproduce. It exists because the conversion was done
+ * twice and was wrong once: the purple width came out as `47cqh`, which is its *aspect ratio*
+ * (125/265) rather than its *share of the panel* (125/600 ≈ 20.8cqh). Every figure rendered twice
+ * as wide as intended, with eyes a third of the body across — and every geometry assertion still
+ * passed, because each one only checked bounds ("the eyes are inside the body"), never the size.
+ *
+ * A bound cannot tell a correct figure from a bloated one. Pinning the numbers themselves can.
+ */
+const DESIGN_PX = {
+  widths: { purple: 125, black: 80, yellow: 73, orange: 150 } as const,
+  heights: { purple: 265, black: 190, yellow: 125, orange: 84 } as const,
+  eye: 10,
+  eyesTop: 20,
+  eyesGap: 22,
+  mouthTop: 50,
+  mouthW: 12,
+  mouthH: 4,
+  mouthOpen: 9,
+  borderRadius: 8,
+} as const;
+
 describe("小人渲染后的实际尺寸", () => {
+  it("cqh 数值换算回原始设计的像素", () => {
+    // 换算错误是两次修复里唯一没被任何断言抓到的问题：范围检查（"眼睛在身体内"）对胖一圈
+    // 的小人照样成立。必须把数值本身钉死。
+    for (const [key, design] of Object.entries(DESIGN_PX.widths)) {
+      expect(value("width", `.watch-figure.${key}`), `${key} 宽`).toBeCloseTo(design, 0);
+    }
+    expect(value("width", ".watch-eye")).toBeCloseTo(DESIGN_PX.eye, 1);
+    expect(value("height", ".watch-eye")).toBeCloseTo(DESIGN_PX.eye, 1);
+    expect(value("top", ".watch-eyes")).toBeCloseTo(DESIGN_PX.eyesTop, 0);
+    expect(value("gap", ".watch-eyes")).toBeCloseTo(DESIGN_PX.eyesGap, 0);
+    expect(value("width", ".watch-mouth")).toBeCloseTo(DESIGN_PX.mouthW, 0);
+    expect(value("height", ".watch-mouth")).toBeCloseTo(DESIGN_PX.mouthH, 1);
+  });
+
+  it("身高与原始设计一致（百分比）", () => {
+    // 这几个是 TS 里的百分比，同样对：265/600 = 44.17%，而不是 44% 之外的任何东西。
+    for (const [key, design] of Object.entries(DESIGN_PX.heights)) {
+      const pct = (heightPct(key) / 100) * PANEL_HEIGHT;
+      expect(pct, `${key} 高`).toBeCloseTo(design, -1); // 百分比取整，容 10px
+    }
+  });
+
+  it("眼睛是身体的合理比例，不是三分之一", () => {
+    // 换算错成 47cqh 时眼宽 33.6px 对上 125px 的身体 —— 27%。当前 10/125 = 8%，
+    // 最窄的黑色小人 10/80 = 12.5%，所以上界取 15%：能挡住"胖了一圈"，又不误伤天生窄的那个。
+    const eye = value("width", ".watch-eye");
+    for (const [key, design] of Object.entries(DESIGN_PX.widths)) {
+      expect(eye / design, `${key} 眼睛占身宽`).toBeLessThan(0.15);
+    }
+  });
+
   it("面板是尺寸容器，否则 cqh 无参照", () => {
     // container-type: size 而非 inline-size —— cqh 需要容器的高度是已定义的。
     expect(css).toContain("container-type: size");
