@@ -32,8 +32,16 @@ import {
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { PetBubble } from "./pet-bubble";
-import { PetMenu, menuAnchorFromEvent, type PetMenuAnchor, type PetMenuItem } from "./pet-menu";
 import { PetPet, type PetAction, type PetMood } from "./pet-pet";
+import {
+  MENU_CHROME_HEIGHT,
+  MENU_MIN_WIDTH,
+  MENU_ROW_HEIGHT,
+  PetMenu,
+  menuAnchorFromEvent,
+  type PetMenuAnchor,
+  type PetMenuItem,
+} from "./pet-menu";
 import { PetProvider, usePetStore } from "./pet-store";
 import {
   aggregatePetMood,
@@ -277,8 +285,31 @@ function PetWindowBody() {
   // The height is handed to the stack inline because a percentage against the dock's
   // auto height resolves to auto, which left the stack overflowing the window unclipped.
   const stackHeight = Math.min(WINDOW_MAX_HEIGHT, Math.max(petHeight, stackContent));
-  const windowWidth = bubbleCount === 0 ? petWidth : petWidth + BUBBLE_GAP + bubbleWidth;
-  const windowHeight = bubbleCount === 0 ? petHeight : stackHeight;
+
+  /*
+   * The context menu's own space.
+   *
+   * The window is sized from the pet and its bubbles alone, so a menu opens inside a box far
+   * narrower than the menu itself: the pet is ~96px and "显示宠物" is wider than that, which cropped
+   * the row to "宠物". The menu is `position: fixed` inside this window, so it is clipped by the
+   * window's edge exactly like anything else in it — growing the window is the only way to give it
+   * room, and it has to happen here because the shell sizes the window from these numbers alone.
+   *
+   * Only while the menu is open: a permanently wider window would leave a large transparent margin
+   * beside the pet at rest, which reads as the pet being off-centre and can swallow clicks meant for
+   * whatever is behind it.
+   */
+  const menuRows = menu === null ? 0 : menu.items.length;
+  const menuWidth = menuRows === 0 ? 0 : MENU_MIN_WIDTH;
+  const menuHeight = menuRows === 0 ? 0 : menuRows * MENU_ROW_HEIGHT + MENU_CHROME_HEIGHT;
+  // The menu opens from the click point and extends up-left, so it needs its own width on top of
+  // whatever the click already left to the left of the pet — approximated by the pet's own width,
+  // which is where a right-click on the sprite lands.
+  const windowWidth = Math.max(
+    bubbleCount === 0 ? petWidth : petWidth + BUBBLE_GAP + bubbleWidth,
+    menuWidth + petWidth,
+  );
+  const windowHeight = Math.max(stackHeight, menuHeight);
 
   // Only the geometry is a dependency: the bubbles' text changes on every streamed
   // token and must not turn into an IPC round trip each time.

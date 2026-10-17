@@ -946,7 +946,14 @@ html.jiumate-pet-host body {
   @apply rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900;
   position: fixed;
   z-index: 11;
-  min-width: 96px;
+  /* Bounded by the window, which is only ~96px wide at rest. A fixed width would either be
+     narrower than its own labels (cropping "显示宠物" to "宠物", which is what the bug report
+     shows) or wider than the window and get clipped by it. `max-width` with wrapping labels is the
+     only shape that fits both constraints at once; the rows keep a floor so a two-character label
+     does not look cramped. */
+  min-width: 88px;
+  max-width: calc(100vw - 2 * var(--jiumate-pet-menu-margin, 6px));
+  box-sizing: border-box;
 }
 
 .jiumate-pet-menu__item {
@@ -955,6 +962,10 @@ html.jiumate-pet-host body {
   background: none;
   border: 0;
   cursor: pointer;
+  /* Labels are short, but a locale or a plugin-added item can be long; wrapping keeps the menu
+     inside the window instead of being cut off mid-glyph. */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .jiumate-pet-menu__item:hover {
