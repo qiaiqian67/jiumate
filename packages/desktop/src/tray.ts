@@ -22,14 +22,19 @@
  * recent-conversation rows come from the renderer, which is the only side that knows about
  * Sessions, Projects and Agents — see tray-menu.ts for why the shell does not fetch them itself.
  *
- * ## Why the pet tray is a separate module
+ * ## One tray for the whole app, pet included
  *
- * `pet-tray.ts` exists only while the floating pet is enabled, and its menu carries the pet's
- * checkbox. Folding the two together would mean this tray appeared and disappeared with the pet —
- * the opposite of what a tray is for here — and would put a checkbox about one feature in a menu
- * that has to stay up regardless. Two Tray objects rather than one shared menu: Windows renders
- * each as its own notification-area entry, and the pet's checkbox has no meaning on a menu that
- * outlives the pet.
+ * The pet used to get a Tray of its own, created only while the pet was enabled. Two icons for one
+ * app in the notification area is the sort of thing a user notices before they can say what is wrong
+ * with it, and the two menus did not agree — the pet's had a checkbox the app's had no way to
+ * reach. The pet toggle is now an item in this menu, and this tray's lifetime no longer has anything
+ * to do with the pet (it never did depend on it; the *other* tray did).
+ *
+ * ## Why the pet tray was a separate module rather than a second one here
+ *
+ * It still is a separate module — `pet-tray-labels.ts` is gone with it, and the pet's own window,
+ * tray relay and enable pref are untouched. What changed is that there is now one Tray object, so
+ * the two menus cannot drift apart again.
  */
 import { Menu, Tray, app, nativeImage } from "electron";
 import { appTrayLabels } from "./tray-labels.js";
@@ -51,6 +56,8 @@ export interface AppTrayDeps {
   onShowMain: () => void;
   /** Open a Session by id: the window comes forward and the router does the rest. */
   onOpenSession: (sessionId: string) => void;
+  /** Ask the renderer to flip `enablePet`. */
+  onTogglePet: () => void;
   /** Start a new conversation in the current Project and Agent. */
   onNewChat: () => void;
   /** Open the settings page. */
@@ -62,6 +69,8 @@ export interface AppTrayDeps {
 let tray: Tray | null = null;
 /** The rows as last reported by the renderer. Kept so a re-open needs no new round trip. */
 let recent: TrayRecentRow[] = [];
+/** Whether the pet is on, as last reported. The renderer owns the pref; this only mirrors it. */
+let petEnabled = false;
 
 function trayIcon(iconPath: string) {
   const image = nativeImage.createFromPath(iconPath);
@@ -70,10 +79,19 @@ function trayIcon(iconPath: string) {
 }
 
 const ACTION_LABELS: Record<TrayActionId, (l: ReturnType<typeof appTrayLabels>) => string> = {
+  "toggle-pet": (l) => l.pet,
   "new-chat": (l) => l.newChat,
   settings: (l) => l.settings,
   quit: (l) => l.quit,
 };
+
+/** Run the action behind a shell-owned entry. Shared by the plain and checkbox branches. */
+function runAction(id: TrayActionId, deps: AppTrayDeps): void {
+  if (id === "toggle-pet") deps.onTogglePet();
+  else if (id === "new-chat") deps.onNewChat();
+  else if (id === "settings") deps.onSettings();
+  else deps.onQuit();
+}
 
 /**
  * One entry in Electron's template shape.
@@ -96,15 +114,20 @@ function toTemplate(item: TrayMenuItem, deps: AppTrayDeps): Electron.MenuItemCon
       submenu: Menu.buildFromTemplate(item.items.map((i) => toTemplate(i, deps))),
     };
   }
-  if (item.kind === "action") {
+  if (item.kind === "checkbox") {
     return {
-      label: ACTION_LABELS[item.id](labels),
-      click: () => {
-        if (item.id === "new-chat") deps.onNewChat();
-        else if (item.id === "settings") deps.onSettings();
-        else deps.onQuit();
-      },
+      label: item.label,
+      type: "checkbox",
+      // Deliberately NOT flipped optimistically. The pref lives in the renderer and the renderer is
+      // the only side that can write it — a local flip that the write then failed would leave the
+      // tick claiming something untrue until the next report. It moves when the state comes back,
+      // which is the same round trip the separate pet tray had.
+      checked: item.checked,
+      click: () => runAction(item.id, deps),
     };
+  }
+  if (item.kind === "action") {
+    return { label: ACTION_LABELS[item.id](labels), click: () => runAction(item.id, deps) };
   }
   // The placeholder row carries no id, so there is nothing to open — clicking it must do nothing
   // rather than navigating to an empty session id.
@@ -122,9 +145,11 @@ function refresh(): void {
   if (tray === null || currentDeps === null) return;
   tray.setContextMenu(
     Menu.buildFromTemplate(
-      buildTrayMenu({ rows: recent, labels: appTrayLabels(app.getLocale()) }).map((i) =>
-        toTemplate(i, currentDeps as AppTrayDeps),
-      ),
+      buildTrayMenu({
+        rows: recent,
+        labels: appTrayLabels(app.getLocale()),
+        petEnabled,
+      }).map((i) => toTemplate(i, currentDeps as AppTrayDeps)),
     ),
   );
 }
@@ -170,9 +195,23 @@ export function setTrayRecent(rows: readonly TrayRecentRow[]): void {
   refresh();
 }
 
+/**
+ * Mirror the pet's on/off state into the menu's checkbox.
+ *
+ * This only records what the renderer already decided — the pref is the renderer's, and it reports
+ * the change here. Nothing in this module turns the pet on or off; the click relays back the same way
+ * it did when the pet had a tray of its own.
+ */
+export function setPetEnabled(next: boolean): void {
+  if (next === petEnabled) return;
+  petEnabled = next;
+  refresh();
+}
+
 export function destroyAppTray(): void {
   tray?.destroy();
   tray = null;
   recent = [];
+  petEnabled = false;
   currentDeps = null;
 }

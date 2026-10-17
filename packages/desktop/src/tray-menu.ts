@@ -18,8 +18,16 @@
  * those two are the renderer's state, not the shell's.
  *
  * So the renderer pushes a flat list of rows and the shell arranges it. The shell still owns the
- * two items that are genuinely its own (new chat, settings, quit), because those navigate or quit
- * rather than open a Session.
+ * items that are genuinely its own (the pet toggle, new chat, settings, quit), because those act on
+ * the shell or the app rather than on a Session.
+ *
+ * ## One tray, not two
+ *
+ * There used to be a second Tray for the pet, created only while the pet was on. Two icons for one
+ * app in the notification area is the sort of thing a user notices before they can say what is
+ * wrong with it, and the two menus disagreed: the pet's had a checkbox the app's had no way to
+ * reach. The pet toggle is now an item inside this one menu, and the tray exists for the whole
+ * session — which it already did, since the app tray does not depend on the pet.
  */
 import type { AppTrayLabels } from "./tray-labels.js";
 
@@ -49,14 +57,23 @@ export type TrayMenuItem =
   | { kind: "item"; label: string; sessionId: string }
   | { kind: "submenu"; label: string; items: TrayMenuItem[] }
   | { kind: "separator" }
+  | { kind: "checkbox"; id: TrayActionId; label: string; checked: boolean }
   | { kind: "action"; id: TrayActionId };
 
-/** The shell-owned entries. Anything that navigates or quits rather than opening a Session. */
-export type TrayActionId = "new-chat" | "settings" | "quit";
+/**
+ * The shell-owned entries. Anything that acts on the app rather than opening a Session.
+ *
+ * `toggle-pet` is a checkbox rather than an action because it holds a state the user can read at a
+ * glance — whether the pet is running — and a checkbox is the only item type that shows that without
+ * opening anything.
+ */
+export type TrayActionId = "toggle-pet" | "new-chat" | "settings" | "quit";
 
 export interface TrayMenuInput {
   rows: readonly TrayRecentRow[];
   labels: AppTrayLabels;
+  /** Whether the floating pet is on. Reported by the renderer, which owns the `enablePet` pref. */
+  petEnabled: boolean;
 }
 
 /**
@@ -76,8 +93,11 @@ export function moreCount(total: number): number {
  * going back to what you were doing — is where the pointer already is), then the actions. "More"
  * sits between them rather than after the actions, because it belongs to the list above it: a
  * submenu that separated its own heading from the section it extends would read as an action.
+ *
+ * The pet toggle sits with the actions rather than above the list: it is a setting, not a
+ * conversation, and putting it at the top would separate it from the other entries of its kind.
  */
-export function buildTrayMenu({ rows, labels }: TrayMenuInput): TrayMenuItem[] {
+export function buildTrayMenu({ rows, labels, petEnabled }: TrayMenuInput): TrayMenuItem[] {
   const menu: TrayMenuItem[] = [];
   const usable = rows.slice(0, RECENT_VISIBLE + MORE_LIMIT);
 
@@ -105,6 +125,7 @@ export function buildTrayMenu({ rows, labels }: TrayMenuInput): TrayMenuItem[] {
   }
 
   menu.push({ kind: "separator" });
+  menu.push({ kind: "checkbox", id: "toggle-pet", label: labels.pet, checked: petEnabled });
   menu.push({ kind: "action", id: "new-chat" });
   menu.push({ kind: "action", id: "settings" });
   menu.push({ kind: "separator" });

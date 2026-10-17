@@ -48,10 +48,10 @@ import { wireExportPdf } from "./export-pdf.js";
 import { createPetWindow, isPetWindowOpen, type PetWindowHandle } from "./pet-window.js";
 import { registerThemePicker } from "./theme-picker.js";
 import { registerWorkspacePicker } from "./workspace-picker.js";
-import { destroyPetTray, syncPetTray, wirePetTrayIpc, type PetTrayDeps } from "./pet-tray.js";
 import {
   destroyAppTray,
   ensureAppTray,
+  setPetEnabled,
   setTrayRecent,
   type AppTrayDeps,
   type TrayRecentRow,
@@ -110,10 +110,10 @@ function focusMain(): void {
 }
 
 /**
- * The tray's "show desktop pet" item. Both the checked state and the `enablePet` pref
- * it flips live in the renderer, so a click is a relay rather than a write. The app can
- * outlive the main window while the pet is open, and then there is nothing left that
- * could write the pref — so the window is brought back first.
+ * The tray's "show desktop pet" checkbox. Both the checked state and the `enablePet` pref it flips
+ * live in the renderer, so a click is a relay rather than a write. The app can outlive the main
+ * window while the pet is open, and then there is nothing left that could write the pref — so the
+ * window is brought back first.
  */
 function requestPetToggle(): void {
   if (win === null || win.isDestroyed()) {
@@ -126,15 +126,6 @@ function requestPetToggle(): void {
 // Registered once, next to the tray it feeds. Kept out of `createWindow` because a window can be
 // created more than once (macOS activate, a server restart) and re-registering a handle would throw.
 wireTrayIpc();
-
-function petTrayDeps(): PetTrayDeps {
-  return {
-    iconPath: resolveTrayIcon(app.getAppPath()),
-    onTogglePet: requestPetToggle,
-    onShowMain: focusMain,
-    onQuit: quitApp,
-  };
-}
 
 /**
  * The app tray's relay.
@@ -150,6 +141,7 @@ function appTrayDeps(): AppTrayDeps {
     iconPath: resolveTrayIcon(app.getAppPath()),
     onShowMain: focusMain,
     onOpenSession: (sessionId) => routeTo(`/chat/${encodeURIComponent(sessionId)}`),
+    onTogglePet: requestPetToggle,
     onNewChat: () => routeTo("/chat"),
     onSettings: () => routeTo("/settings"),
     // Quit through the same path as File → Quit, so the tray's Quit stops the embedded server
@@ -192,6 +184,20 @@ function wireTrayIpc(): void {
       ];
     });
     setTrayRecent(rows);
+  });
+
+  /*
+   * The pet's enabled state, reported so the tray's checkbox can show it.
+   *
+   * This used to create and destroy a second Tray. It now only records the value: the app tray is
+   * already up, and a checkbox that appears and disappears with a feature is worse than one that is
+   * always there and sometimes unticked.
+   */
+  ipcMain.handle("pet:setEnabled", (_event, payload: unknown) => {
+    if (typeof payload !== "boolean") {
+      throw new Error("pet:setEnabled requires a boolean");
+    }
+    setPetEnabled(payload);
   });
 }
 
@@ -423,7 +429,6 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
       focusMain,
     });
     petHandle.wireIpc();
-    wirePetTrayIpc(petTrayDeps());
   }
   registerThemePicker();
   registerWorkspacePicker();
@@ -477,7 +482,6 @@ async function boot(): Promise<void> {
         focusMain,
       });
       petHandle.wireIpc();
-      wirePetTrayIpc(petTrayDeps());
     }
     registerThemePicker();
     registerWorkspacePicker();
@@ -525,10 +529,7 @@ if (!app.requestSingleInstanceLock()) {
   // then let the quit proceed. Attach mode has no child to stop.
   app.on("before-quit", (event) => {
     quitting = true;
-    // Both trays go, not just the pet's: the app tray outlives the pet by design, so leaving it
-    // behind would strand a notification-area entry for a process that is on its way out.
     destroyAppTray();
-    destroyPetTray();
     if (server !== null && stopPromise === null) {
       event.preventDefault();
       const running = server;

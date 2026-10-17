@@ -16,39 +16,35 @@ export interface AppTrayLabels {
   recent: string;
   /** Submenu holding the conversations that did not fit above. */
   more: string;
+  /** The checkable "show desktop pet" item. */
+  pet: string;
   newChat: string;
   settings: string;
   quit: string;
   /** Placeholder when the renderer has not reported any conversation yet. */
   noRecent: string;
-  /** Suffix for a subagent conversation, so the row says what kind it is. */
-  subagentSuffix: string;
-  /** Suffix for a scheduled conversation. */
-  scheduleSuffix: string;
 }
 
 const ZH: AppTrayLabels = {
   tooltip: "JiuMate",
   recent: "最近任务",
   more: "更多",
+  pet: "显示桌面宠物",
   newChat: "新对话",
   settings: "设置",
   quit: "退出",
   noRecent: "（暂无对话）",
-  subagentSuffix: "子智能体",
-  scheduleSuffix: "定时任务",
 };
 
 const EN: AppTrayLabels = {
   tooltip: "JiuMate",
   recent: "Recent",
   more: "More",
+  pet: "Show desktop pet",
   newChat: "New chat",
   settings: "Settings",
   quit: "Quit",
   noRecent: "(no conversations)",
-  subagentSuffix: "subagent",
-  scheduleSuffix: "scheduled",
 };
 
 /** Labels for an Electron locale tag (`app.getLocale()`, e.g. "zh-CN", "en-US"). */

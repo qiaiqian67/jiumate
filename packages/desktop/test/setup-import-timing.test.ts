@@ -59,14 +59,18 @@ describe("安装器选择的生效时机", () => {
 });
 
 describe("系统托盘", () => {
-  it("有主窗口的托盘，而不只是桌宠的", () => {
+  it("只有一个托盘，宠物开关在同一菜单里", () => {
     expect(TRAY).toContain("new Tray(icon)");
     // 托盘随窗口创建而建，不随桌宠开关而开关 —— 否则托盘会在用户没要求的时候消失。
     expect(MAIN).toContain("ensureAppTray(appTrayDeps())");
-    // 两个 Tray 对象：Windows 把每个渲染成各自的通知区条目，而桌宠那个带一个只在桌宠启用时才有
-    // 意义的复选框，所以不能合成一个菜单。
-    expect(MAIN).toContain("syncPetTray");
-    expect(MAIN).toContain("ensureAppTray");
+    // 曾经有两个 Tray 对象（pet-tray.ts + tray.ts），通知区里一个应用两个图标。现在只剩一个。
+    expect(MAIN).not.toContain("syncPetTray");
+    expect(MAIN).not.toContain("destroyPetTray");
+    expect(MAIN).not.toContain("wirePetTrayIpc");
+    // 宠物的启用状态只作为复选框状态镜像进这一个菜单。
+    expect(MAIN).toContain('ipcMain.handle("pet:setEnabled"');
+    expect(MAIN).toContain("setPetEnabled");
+    expect(TRAY).toContain("setPetEnabled");
   });
 
   it("会话列表由渲染进程推送，主进程不自己拉", () => {
