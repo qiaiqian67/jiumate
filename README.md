@@ -89,7 +89,7 @@ Three plugin categories ship in the box ([docs](https://jiumate.ooo/docs/skills)
 | -------------------- | ----------------------------------------------------------------------------- |
 | Office Productivity  | `data-analysis`, `use-firecrawl`, `use-bento-slides`, `humanizer`, `goal`, `continual-learning`, `a2ui`, `browser-automation` |
 | Software Development | `software-development`, `use-claude-code`                              |
-| AI App Development   | `agent-development`, `model-development`, `skill-porting`, `agent-tuning`, `agent-evaluation`, `default-rsi-toolkit`, `ace-rsi-toolkit`, `ape-rsi-toolkit`, `awm-rsi-toolkit`, `opro-rsi-toolkit` |
+| AI App Development   | `agent-development`, `model-development`, `skill-porting`, `agent-tuning`, `ace-rsi-toolkit`, `ape-rsi-toolkit`, `awm-rsi-toolkit`, `opro-rsi-toolkit` |
 
 ## Supported Models
 

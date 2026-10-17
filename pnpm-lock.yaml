@@ -77,9 +77,6 @@ importers:
       '@jiumate/agent-development':
         specifier: workspace:*
         version: link:../../plugins/agent-development
-      '@jiumate/agent-evaluation':
-        specifier: workspace:*
-        version: link:../../plugins/agent-evaluation
       '@jiumate/agent-tuning':
         specifier: workspace:*
         version: link:../../plugins/agent-tuning
@@ -98,9 +95,6 @@ importers:
       '@jiumate/data-analysis':
         specifier: workspace:*
         version: link:../../plugins/data-analysis
-      '@jiumate/default-rsi-toolkit':
-        specifier: workspace:*
-        version: link:../../plugins/default-rsi-toolkit
       '@jiumate/goal':
         specifier: workspace:*
         version: link:../../plugins/goal
@@ -180,9 +174,6 @@ importers:
       '@jiumate/agent-development':
         specifier: workspace:*
         version: link:../../plugins/agent-development
-      '@jiumate/agent-evaluation':
-        specifier: workspace:*
-        version: link:../../plugins/agent-evaluation
       '@jiumate/agent-tuning':
         specifier: workspace:*
         version: link:../../plugins/agent-tuning
@@ -201,9 +192,6 @@ importers:
       '@jiumate/data-analysis':
         specifier: workspace:*
         version: link:../../plugins/data-analysis
-      '@jiumate/default-rsi-toolkit':
-        specifier: workspace:*
-        version: link:../../plugins/default-rsi-toolkit
       '@jiumate/goal':
         specifier: workspace:*
         version: link:../../plugins/goal
@@ -313,9 +301,6 @@ importers:
       '@jiumate/agent-development':
         specifier: workspace:*
         version: link:../../plugins/agent-development
-      '@jiumate/agent-evaluation':
-        specifier: workspace:*
-        version: link:../../plugins/agent-evaluation
       '@jiumate/agent-tuning':
         specifier: workspace:*
         version: link:../../plugins/agent-tuning
@@ -334,9 +319,6 @@ importers:
       '@jiumate/data-analysis':
         specifier: workspace:*
         version: link:../../plugins/data-analysis
-      '@jiumate/default-rsi-toolkit':
-        specifier: workspace:*
-        version: link:../../plugins/default-rsi-toolkit
       '@jiumate/goal':
         specifier: workspace:*
         version: link:../../plugins/goal
@@ -769,8 +751,6 @@ importers:
 
   plugins/agent-development: {}
 
-  plugins/agent-evaluation: {}
-
   plugins/agent-tuning: {}
 
   plugins/ape-rsi-toolkit: {}
@@ -782,8 +762,6 @@ importers:
   plugins/continual-learning: {}
 
   plugins/data-analysis: {}
-
-  plugins/default-rsi-toolkit: {}
 
   plugins/editable-doc: {}
 
@@ -1333,9 +1311,6 @@ packages:
   '@jiumate/agent-development@file:plugins/agent-development':
     resolution: {directory: plugins/agent-development, type: directory}
 
-  '@jiumate/agent-evaluation@file:plugins/agent-evaluation':
-    resolution: {directory: plugins/agent-evaluation, type: directory}
-
   '@jiumate/agent-tuning@file:plugins/agent-tuning':
     resolution: {directory: plugins/agent-tuning, type: directory}
 
@@ -1353,9 +1328,6 @@ packages:
 
   '@jiumate/data-analysis@file:plugins/data-analysis':
     resolution: {directory: plugins/data-analysis, type: directory}
-
-  '@jiumate/default-rsi-toolkit@file:plugins/default-rsi-toolkit':
-    resolution: {directory: plugins/default-rsi-toolkit, type: directory}
 
   '@jiumate/goal@file:plugins/goal':
     resolution: {directory: plugins/goal, type: directory}
@@ -6206,8 +6178,6 @@ snapshots:
 
   '@jiumate/agent-development@file:plugins/agent-development': {}
 
-  '@jiumate/agent-evaluation@file:plugins/agent-evaluation': {}
-
   '@jiumate/agent-tuning@file:plugins/agent-tuning': {}
 
   '@jiumate/ape-rsi-toolkit@file:plugins/ape-rsi-toolkit': {}
@@ -6219,8 +6189,6 @@ snapshots:
   '@jiumate/continual-learning@file:plugins/continual-learning': {}
 
   '@jiumate/data-analysis@file:plugins/data-analysis': {}
-
-  '@jiumate/default-rsi-toolkit@file:plugins/default-rsi-toolkit': {}
 
   '@jiumate/goal@file:plugins/goal': {}
 
@@ -6535,14 +6503,12 @@ snapshots:
       '@jiumate/a2ui': file:plugins/a2ui
       '@jiumate/ace-rsi-toolkit': file:plugins/ace-rsi-toolkit
       '@jiumate/agent-development': file:plugins/agent-development
-      '@jiumate/agent-evaluation': file:plugins/agent-evaluation
       '@jiumate/agent-tuning': file:plugins/agent-tuning
       '@jiumate/ape-rsi-toolkit': file:plugins/ape-rsi-toolkit
       '@jiumate/awm-rsi-toolkit': file:plugins/awm-rsi-toolkit
       '@jiumate/browser-automation': file:plugins/browser-automation
       '@jiumate/continual-learning': file:plugins/continual-learning
       '@jiumate/data-analysis': file:plugins/data-analysis
-      '@jiumate/default-rsi-toolkit': file:plugins/default-rsi-toolkit
       '@jiumate/goal': file:plugins/goal
       '@jiumate/humanizer': file:plugins/humanizer
       '@jiumate/model-development': file:plugins/model-development
@@ -6577,14 +6543,12 @@ snapshots:
       '@jiumate/a2ui': file:plugins/a2ui
       '@jiumate/ace-rsi-toolkit': file:plugins/ace-rsi-toolkit
       '@jiumate/agent-development': file:plugins/agent-development
-      '@jiumate/agent-evaluation': file:plugins/agent-evaluation
       '@jiumate/agent-tuning': file:plugins/agent-tuning
       '@jiumate/ape-rsi-toolkit': file:plugins/ape-rsi-toolkit
       '@jiumate/awm-rsi-toolkit': file:plugins/awm-rsi-toolkit
       '@jiumate/browser-automation': file:plugins/browser-automation
       '@jiumate/continual-learning': file:plugins/continual-learning
       '@jiumate/data-analysis': file:plugins/data-analysis
-      '@jiumate/default-rsi-toolkit': file:plugins/default-rsi-toolkit
       '@jiumate/goal': file:plugins/goal
       '@jiumate/humanizer': file:plugins/humanizer
       '@jiumate/model-development': file:plugins/model-development
@@ -6624,14 +6588,12 @@ snapshots:
       '@jiumate/a2ui': file:plugins/a2ui
       '@jiumate/ace-rsi-toolkit': file:plugins/ace-rsi-toolkit
       '@jiumate/agent-development': file:plugins/agent-development
-      '@jiumate/agent-evaluation': file:plugins/agent-evaluation
       '@jiumate/agent-tuning': file:plugins/agent-tuning
       '@jiumate/ape-rsi-toolkit': file:plugins/ape-rsi-toolkit
       '@jiumate/awm-rsi-toolkit': file:plugins/awm-rsi-toolkit
       '@jiumate/browser-automation': file:plugins/browser-automation
       '@jiumate/continual-learning': file:plugins/continual-learning
       '@jiumate/data-analysis': file:plugins/data-analysis
-      '@jiumate/default-rsi-toolkit': file:plugins/default-rsi-toolkit
       '@jiumate/goal': file:plugins/goal
       '@jiumate/humanizer': file:plugins/humanizer
       '@jiumate/model-development': file:plugins/model-development

@@ -231,11 +231,9 @@ describe("groupPlugins / loadPluginGroups", () => {
     expect(names("ai-app-development")).toEqual([
       "ace-rsi-toolkit",
       "agent-development",
-      "agent-evaluation",
       "agent-tuning",
       "ape-rsi-toolkit",
       "awm-rsi-toolkit",
-      "default-rsi-toolkit",
       "model-development",
       "opro-rsi-toolkit",
       "skill-porting",

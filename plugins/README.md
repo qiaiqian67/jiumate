@@ -10,7 +10,7 @@ Included plugins, by category (`PLUGIN_CATEGORIES` in `packages/core/src/plugins
 | --- | --- |
 | Office Productivity | `data-analysis`, `use-firecrawl`, `use-bento-slides`, `humanizer`, `goal`, `continual-learning`, `a2ui`, `browser-automation` |
 | Software Development | `software-development`, `use-claude-code` |
-| AI App Development | `agent-development`, `model-development`, `skill-porting`, `agent-tuning`, `agent-evaluation`, `default-rsi-toolkit`, `ace-rsi-toolkit`, `ape-rsi-toolkit`, `awm-rsi-toolkit`, `opro-rsi-toolkit` |
+| AI App Development | `agent-development`, `model-development`, `skill-porting`, `agent-tuning`, `ace-rsi-toolkit`, `ape-rsi-toolkit`, `awm-rsi-toolkit`, `opro-rsi-toolkit` |
 
 `humanizer`, `use-claude-code` and `continual-learning` carry `preinstall: false`, so `default_agent` does not get them at initialization — they are installed from the library on demand. `goal` is the stop hook behind goal mode: its `start.mjs` writes the Session's `GOAL.json` and composes round 1, its `stop.mjs` reads the Trace after every Task and injects the next round or ends the goal. `continual-learning` hands a long task's condensed excerpt to a background subagent that folds the findings into the agent's skills.
 
@@ -18,7 +18,7 @@ Included plugins, by category (`PLUGIN_CATEGORIES` in `packages/core/src/plugins
 
 `a2ui` gives a model a vocabulary of rich reply blocks — a choice, a form, a procedure in steps, a callout, a Mermaid diagram, glanceable widgets — written as fenced blocks in an ordinary Markdown reply, with a checker script that validates a draft before it is sent. `browser-automation` drives the built-in browser from the shell to read pages, act on them and extract structured data.
 
-The five `*-rsi-toolkit` plugins are the self-improvement methods, each a port of a published approach: `ace-rsi-toolkit` (Agentic Context Engineering), `ape-rsi-toolkit` (Automatic Prompt Engineer), `awm-rsi-toolkit` (Agent Workflow Memory), `opro-rsi-toolkit` (Large Language Models as Optimizers) and `default-rsi-toolkit`, the trial–reflect–improve loop that runs on top of them. Each measures through the `agent-evaluation` plugin's Benchmark, so the two are installed together: a toolkit without `agent-evaluation` has nothing to measure against.
+The four `*-rsi-toolkit` plugins are the self-improvement *methods*, each a port of a published approach: `ace-rsi-toolkit` (Agentic Context Engineering), `ape-rsi-toolkit` (Automatic Prompt Engineer), `awm-rsi-toolkit` (Agent Workflow Memory) and `opro-rsi-toolkit` (Large Language Models as Optimizers). They carry the method; `agent-tuning` carries the measurement and the round loop they all run inside, so the two are installed together.
 
 ## Documentation
 
