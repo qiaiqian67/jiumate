@@ -3623,6 +3623,57 @@ export interface AgentHooksResponse {
 }
 
 /**
+ * One Agent API key as the list shows it: never the secret, and never its hash. `prefix` is
+ * `jiumate_` plus the first characters of the secret, which is what makes a key recognizable in a
+ * list without being usable.
+ */
+export interface AgentApiKeyInfo {
+  keyId: string;
+  name: string;
+  prefix: string;
+  createdBy: string;
+  createdAt: string;
+  /** null until a request presents this key: an unused key is distinguishable from a broken one. */
+  lastUsedAt: string | null;
+}
+
+/**
+ * One Agent's public API settings.
+ *
+ * `open` is keyless access. The server forces it to 0 while `enabled` is 0, so a read-back may
+ * show `open` as false even if it was true before the switch went off — that is the stored value,
+ * not the value that was asked for.
+ */
+export interface AgentApiSettings {
+  enabled: boolean;
+  open: boolean;
+  approvalMode: ApprovalMode;
+  /** Null follows the Project default model. */
+  model: { provider: string; modelId: string } | null;
+  thinkingLevel: string | null;
+  /** Null creates a temporary Workspace per run. */
+  workspace: string | null;
+  maxConcurrentRuns: number;
+  keys: AgentApiKeyInfo[];
+}
+
+export interface AgentApiResponse {
+  api: AgentApiSettings;
+  /**
+   * The admin's server-wide switch, readable only by an admin. A per-Agent switch reading as on
+   * while every request 503s would be a lie this tab cannot detect on its own, so it is surfaced
+   * here rather than left to be discovered from a failed call.
+   */
+  serverEnabled: boolean;
+}
+
+/** POST …/api/keys: 201, and the only place the secret ever appears. */
+export interface AgentApiKeyCreatedResponse {
+  key: AgentApiKeyInfo;
+  secret: string;
+}
+
+/**
  * POST /api/projects/:p/agents/:a/skills/archive: install one Skill from an uploaded zip.
  * Layout: SKILL.md at the zip root, or exactly one top-level directory containing SKILL.md
  * (the directory name is then the Skill name). 201 returns the refreshed installed list

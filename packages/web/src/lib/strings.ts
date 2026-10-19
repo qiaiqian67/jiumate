@@ -1795,6 +1795,61 @@ export const zh = {
     uninstalledToast: (name: string, agent: string): string => `已从 ${agent} 卸载钩子包 ${name}`,
   },
 
+  agentApi: {
+    tabLabel: "API",
+    tabDesc:
+      "让 Web App 之外的程序调用这个 Agent：创建密钥，程序用密钥发起请求。关闭开关立即生效，无需更换密钥。",
+    enable: "启用 Agent API",
+    enableHint:
+      "关闭后所有外部请求立即返回 404，但密钥保留——重新打开就能继续用原来的密钥。",
+    /** Shown when the admin has turned the whole feature off server-side; the switch cannot work. */
+    serverOff:
+      "管理员已在服务端关闭了整个 Agent API。这个 Agent 的开关打开也不会有请求能进来。",
+    open: "允许免密钥访问",
+    openHint:
+      "打开后，不带密钥的请求也能调用这个 Agent。适合完全可信的本地环境——任何能访问本服务端的程序都可以用它。",
+    approvalMode: "审批模式",
+    approvalHint: "通过 API 创建的会话，默认以哪种审批方式开始。",
+    approvalAllowAll: "全部放行",
+    approvalDenyAll: "全部拒绝",
+    approvalReadOnly: "只读",
+    approvalAlwaysAsk: "每次询问",
+    model: "模型",
+    modelHint: "留空则跟随 Project 的默认模型。",
+    modelProjectDefault: "跟随 Project 默认",
+    thinkingLevel: "思考强度",
+    thinkingDefault: "默认",
+    workspace: "工作区",
+    workspaceHint: "留空则每次运行创建临时工作区。填写必须是已存在的目录。",
+    workspacePlaceholder: "留空 = 每次运行新建临时工作区",
+    maxConcurrentRuns: "并发上限",
+    maxConcurrentHint:
+      "这个 Agent 同时允许运行多少个请求。超出时新请求收到 429 和 Retry-After。按 Agent 计算，不是按密钥。",
+    saved: "已保存",
+    keysTitle: "密钥",
+    keysEmpty: "尚未创建密钥",
+    keysDesc: "密钥只在创建时显示一次，之后无法再查看。丢失只能重新创建。",
+    keyName: "密钥名称",
+    keyNamePlaceholder: "例如：本地脚本",
+    createKey: "创建密钥",
+    keyCreated: "密钥已创建",
+    /** The one-time reveal: the secret, plus the explicit warning that it will not be shown again. */
+    keySecretLabel: "密钥（只显示这一次）",
+    keySecretWarning: "关闭这个对话框后将无法再次查看这个密钥。请立即复制保存。",
+    keyCopied: "已复制到剪贴板",
+    keyLastUsed: (when: string): string => `最后使用：${when}`,
+    keyNeverUsed: "从未使用",
+    keyCreatedAt: (when: string): string => `创建于 ${when}`,
+    deleteKey: "删除密钥",
+    deleteKeyConfirmTitle: (name: string): string => `删除密钥 ${name}`,
+    deleteKeyConfirmBody: (name: string): string =>
+      `删除后，使用这个密钥的请求会立即被拒绝（401）。此操作无法撤销。`,
+    keyDeleted: (name: string): string => `已删除密钥 ${name}`,
+    humanRequired:
+      "这个操作需要用密码登录的本人执行，Agent 自己的本地令牌无法修改自己的对外设置。",
+    notExposedYet: "这个 Agent 还没有对外暴露，也没有密钥。打开上面的开关后即可创建。",
+  },
+
   skills: {
     quickInvoke: "快捷调用",
     /* No quickInvokeText: it used to pre-fill 「使用 xxx 技能」 into the composer body alongside

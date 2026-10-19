@@ -1820,6 +1820,61 @@ export const en: Strings = {
       `Uninstalled the ${name} hook package from ${agent}`,
   },
 
+  agentApi: {
+    tabLabel: "API",
+    tabDesc:
+      "Let programs outside the Web App call this Agent: create a key, and the program presents it. Turning the switch off takes effect immediately — the keys stay valid.",
+    enable: "Enable the Agent API",
+    enableHint:
+      "While off, every outside request gets a 404 straight away. Keys are kept, so switching back on restores access with the same keys.",
+    /** Shown when the admin has turned the whole feature off server-side; the switch cannot work. */
+    serverOff:
+      "An administrator has turned the Agent API off for this whole server. This Agent's switch will not admit requests either.",
+    open: "Allow keyless access",
+    openHint:
+      "With this on, a request without a key can call the Agent too. Suitable for a fully trusted local machine — anything that can reach this server could use it.",
+    approvalMode: "Approval mode",
+    approvalHint: "The mode sessions created through the API start under.",
+    approvalAllowAll: "Allow all",
+    approvalDenyAll: "Deny all",
+    approvalReadOnly: "Read only",
+    approvalAlwaysAsk: "Ask each time",
+    model: "Model",
+    modelHint: "Empty follows the Project's default model.",
+    modelProjectDefault: "Follow the Project default",
+    thinkingLevel: "Thinking level",
+    thinkingDefault: "Default",
+    workspace: "Workspace",
+    workspaceHint: "Empty creates a temporary Workspace per run. A value must be a directory that already exists.",
+    workspacePlaceholder: "Empty = a new temporary Workspace per run",
+    maxConcurrentRuns: "Concurrent runs",
+    maxConcurrentHint:
+      "How many requests this Agent runs at once. Beyond that, new requests get a 429 with Retry-After. Counted per Agent, not per key.",
+    saved: "Saved",
+    keysTitle: "Keys",
+    keysEmpty: "No keys yet",
+    keysDesc: "A key is shown once, at creation, and cannot be read again. If it is lost, create another.",
+    keyName: "Key name",
+    keyNamePlaceholder: "For example: local script",
+    createKey: "Create key",
+    keyCreated: "Key created",
+    /** The one-time reveal: the secret, plus the explicit warning that it will not be shown again. */
+    keySecretLabel: "Key (shown only this once)",
+    keySecretWarning: "Once you close this dialog the key cannot be shown again. Copy it now.",
+    keyCopied: "Copied to the clipboard",
+    keyLastUsed: (when: string): string => `Last used: ${when}`,
+    keyNeverUsed: "Never used",
+    keyCreatedAt: (when: string): string => `Created ${when}`,
+    deleteKey: "Delete key",
+    deleteKeyConfirmTitle: (name: string): string => `Delete the key ${name}`,
+    deleteKeyConfirmBody: (name: string): string =>
+      `Requests presenting this key will be refused (401) immediately afterwards. This cannot be undone.`,
+    keyDeleted: (name: string): string => `Deleted the key ${name}`,
+    humanRequired:
+      "This needs the signed-in person. An Agent's own local token cannot change how that Agent is exposed.",
+    notExposedYet: "This Agent is not exposed and has no keys. Turn on the switch above to create one.",
+  },
+
   skills: {
     quickInvoke: "Quick start",
     // No quickInvokeText: it used to pre-fill "use the <name> skill" into the composer body

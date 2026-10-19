@@ -38,37 +38,19 @@ import {
 } from "../validate.js";
 import { APPROVAL_MODES } from "./sessions.js";
 
-/** A key as the list shows it: never the secret, never its hash. */
-export interface AgentApiKeyInfo {
-  keyId: string;
-  name: string;
-  prefix: string;
-  createdBy: string;
-  createdAt: string;
-  lastUsedAt: string | null;
-}
-
-/** One Agent's public API settings as this server holds them. */
-export interface AgentApiSettings {
-  enabled: boolean;
-  open: boolean;
-  approvalMode: ApprovalMode;
-  model: ModelRefDto | null;
-  thinkingLevel: string | null;
-  workspace: string | null;
-  maxConcurrentRuns: number;
-  keys: AgentApiKeyInfo[];
-}
-
-export interface AgentApiResponse {
-  api: AgentApiSettings;
-  /**
-   * The admin's server-wide switch, which only an admin can read: an admin who has turned the
-   * whole feature off has turned it off for every Project, and a per-Agent switch reading as on
-   * while every request 404s would be a lie the tab cannot tell.
-   */
-  serverEnabled: boolean;
-}
+// Re-exported rather than redefined: the Web App imports these from @prismshadow/jiumate-server/api,
+// so a second copy here would be a type the frontend's DTO is not assignable to — the mismatch
+// shows up as a compile error in the tab, pointing at this file rather than at the duplication.
+export type {
+  AgentApiKeyInfo,
+  AgentApiResponse,
+  AgentApiSettings,
+} from "../../api/types.js";
+import type {
+  AgentApiKeyInfo,
+  AgentApiResponse,
+  AgentApiSettings,
+} from "../../api/types.js";
 
 function keyInfo(row: AgentApiKeyRow): AgentApiKeyInfo {
   return {

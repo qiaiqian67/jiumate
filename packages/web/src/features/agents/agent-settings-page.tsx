@@ -43,6 +43,7 @@ import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { UpdateDot } from "../../components/ui/update-dot";
 import { SkillsTab } from "./skills-tab";
 import { HooksTab } from "./hooks-tab";
+import { AgentApiTab } from "./agent-api-tab";
 import { MemoryTab } from "./memory-tab";
 import { kernelTabLabel } from "./kernel-labels";
 import { VaultTab } from "./vault-tab";
@@ -63,7 +64,8 @@ type TabKey =
   | "hooks"
   | "memory"
   | "vault"
-  | "schedules";
+  | "schedules"
+  | "api";
 
 /**
  * Dropdown rows from a dictionary's [value, description] pairs plus its name table (exported
@@ -132,6 +134,7 @@ export function AgentSettingsPage() {
     { key: "tools", label: S.agent.tabTools },
     { key: "skills", label: S.agent.tabSkills },
     { key: "hooks", label: S.agent.tabHooks },
+    { key: "api", label: S.agentApi.tabLabel },
     { key: "memory", label: S.agent.tabMemory },
     { key: "vault", label: S.agent.tabVault },
     { key: "schedules", label: S.agent.tabSchedules },
@@ -311,6 +314,7 @@ export function AgentSettingsPage() {
           )}
           {tab === "skills" && <SkillsTab agentId={agentId} onConfigChanged={refreshConfig} />}
           {tab === "hooks" && <HooksTab agentId={agentId} />}
+          {tab === "api" && <AgentApiTab agentId={agentId} />}
           {tab === "vault" && <VaultTab agentId={agentId} onConfigChanged={refreshConfig} />}
           {tab === "schedules" && (
             <SchedulesTab agentId={agentId} onConfigChanged={refreshConfig} />

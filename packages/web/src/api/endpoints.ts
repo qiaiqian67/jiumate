@@ -19,6 +19,10 @@ import type {
   AgentKernelUpdateResponse,
   AgentSchedulesConfigDto,
   AgentSkillsConfigDto,
+  AgentApiKeyCreatedResponse,
+  AgentApiKeyInfo,
+  AgentApiResponse,
+  AgentApiSettings,
   AgentHooksResponse,
   AgentPluginsInstallResponse,
   AgentSkillsResponse,
@@ -1594,6 +1598,39 @@ export const uninstallAgentHook = (projectId: string, agentId: string, name: str
       `/hooks/${encodeURIComponent(name)}`,
     { method: "DELETE" },
   );
+
+/**
+ * Agent API: the exposure settings and key list (GET), the settings write (PUT), key minting
+ * (POST /keys) and key removal (DELETE /keys/:keyId).
+ *
+ * Reads are member-level; the writes need a signed-in human, so a token-authenticated caller gets
+ * 403 human_required. The tab surfaces that rather than retrying — a token cannot become a human
+ * by asking again.
+ */
+const agentApiPath = (projectId: string, agentId: string) =>
+  `/api/projects/${encodeURIComponent(projectId)}/agents/${encodeURIComponent(agentId)}/api`;
+
+export const getAgentApi = (projectId: string, agentId: string) =>
+  apiFetch<AgentApiResponse>(agentApiPath(projectId, agentId));
+
+/** Partial: an absent field is left as it is, so the tab sends only what the user changed. */
+export const updateAgentApi = (
+  projectId: string,
+  agentId: string,
+  patch: Partial<Omit<AgentApiSettings, "keys">>,
+) => apiFetch<AgentApiResponse>(agentApiPath(projectId, agentId), { method: "PUT", body: patch });
+
+/** 201 with the secret. It is not retrievable afterwards — only the prefix is kept. */
+export const createAgentApiKey = (projectId: string, agentId: string, name: string) =>
+  apiFetch<AgentApiKeyCreatedResponse>(`${agentApiPath(projectId, agentId)}/keys`, {
+    method: "POST",
+    body: { name },
+  });
+
+export const deleteAgentApiKey = (projectId: string, agentId: string, keyId: string) =>
+  apiFetch<void>(`${agentApiPath(projectId, agentId)}/keys/${encodeURIComponent(keyId)}`, {
+    method: "DELETE",
+  });
 
 /** Installs one skill from an uploaded zip (base64); 409 skill_exists unless overwrite; 201 returns the latest installed list. */
 export const installAgentSkillArchive = (
