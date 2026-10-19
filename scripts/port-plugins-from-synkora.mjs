@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Converts a plugin from the PenguinHarness layout into this repository's.
  *
  * The two projects grew apart on one point: PenguinHarness keeps a plugin's display metadata 鈥? * the Chinese title and descriptions, the category, the icon and the version 鈥?in a `penguin` block
