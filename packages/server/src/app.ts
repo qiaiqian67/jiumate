@@ -536,6 +536,20 @@ export function createRuntimeApp(deps: AppDeps): Hono<AppEnv> {
   // above the blanket /api/* middleware rather than under it.
   app.route("/api/hmr", hmrRoutes(deps));
 
+  // The Agent API's calling side, mounted HERE rather than with the business routes.
+  //
+  // It has to be runtime-owned, above the seam below, for two reasons. The first is that it is a
+  // mechanism surface: it authenticates an `jiumate_` key rather than a session, and a program
+  // outside the Web App calls it — so it belongs with the other mechanism surfaces, not with the
+  // business routes a platform push may replace. The second is concrete: the business routes are
+  // served by the platform bundle, and in a running installation that bundle is whatever was
+  // pushed last. A route added to the platform's own table would therefore not exist in the
+  // bundle the running server has, and the request would fall through to the static handler,
+  // which answers a path it does not know with the SPA's index.html. A key presented to that is
+  // not refused, it is answered with the Web App — which reads, to any client, like a server that
+  // accepts the key.
+  app.route("/amsp/v1", amspRoutes(deps));
+
   // THE seam: from here down, every route is one the platform may take over by push. Mounted
   // after /api/hmr (which stays runtime-owned — see http-seam.ts) and before both the auth
   // gate and the built-in routes, so a pushed platform can add endpoints, replace existing
@@ -1319,17 +1333,6 @@ export function createApp(
       return answer ?? c.notFound();
     },
   );
-
-  // The Agent API's own surface, mounted before the session gate below and outside /api/*.
-  //
-  // It authenticates an `jiumate_` key rather than a cookie, so it must NOT sit behind
-  // authMiddleware: that gate answers 401 for anything without a signed-in session, which would
-  // refuse every keyed request before the key was ever looked at. Mounting it under /amsp/* keeps
-  // it clear of the /api/* pattern the gate matches on. The key check happens inside the route
-  // (amsp/authenticate.ts), and it applies the same refusals the session gate would: 401 for a
-  // bad key, 403-free writes, and no human requirement, because the owner already decided this
-  // program may call by minting the key.
-  app.route("/amsp/v1", amspRoutes(deps));
 
   // Protected routes: cookie -> auth_session -> user, over the runtime's auth service.
   app.use("/api/*", authMiddleware(deps.authService, deps.config.trustProxy));
