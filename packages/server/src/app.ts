@@ -1,4 +1,4 @@
-/**
+﻿/**
  * App assembly, both halves of it.
  *
  * The RUNTIME shell — `createRuntimeApp(deps)` — mounts the mechanism surface: the network
@@ -173,6 +173,7 @@ import { machineSkillRoutes } from "./http/routes/machine-skills.js";
 import { agentTransferRoutes } from "./http/routes/agent-transfer.js";
 import { agentsRoutes } from "./http/routes/agents.js";
 import { agentApiRoutes } from "./http/routes/agent-api.js";
+import { amspRoutes } from "./http/routes/amsp.js";
 import { dirsRoutes } from "./http/routes/dirs.js";
 import { directorySkillsRoutes } from "./http/routes/directory-skills.js";
 import { agentConfigRoutes } from "./http/routes/agent-config.js";
@@ -1318,6 +1319,17 @@ export function createApp(
       return answer ?? c.notFound();
     },
   );
+
+  // The Agent API's own surface, mounted before the session gate below and outside /api/*.
+  //
+  // It authenticates an `jiumate_` key rather than a cookie, so it must NOT sit behind
+  // authMiddleware: that gate answers 401 for anything without a signed-in session, which would
+  // refuse every keyed request before the key was ever looked at. Mounting it under /amsp/* keeps
+  // it clear of the /api/* pattern the gate matches on. The key check happens inside the route
+  // (amsp/authenticate.ts), and it applies the same refusals the session gate would: 401 for a
+  // bad key, 403-free writes, and no human requirement, because the owner already decided this
+  // program may call by minting the key.
+  app.route("/amsp/v1", amspRoutes(deps));
 
   // Protected routes: cookie -> auth_session -> user, over the runtime's auth service.
   app.use("/api/*", authMiddleware(deps.authService, deps.config.trustProxy));

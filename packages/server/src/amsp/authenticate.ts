@@ -2,8 +2,8 @@
  * Authenticating an Agent API key, and refusing the request when the Agent is not exposed.
  *
  * A `jiumate_` key proves which Agent the caller means — it is stored as a sha256 digest and
- * looked up by that digest, so this is a single indexed read whose cost does not depend on how
- * much of a guess was right (see db/repos/agent-api.ts). What the key does *not* prove is that the
+ * looked up by that digest, so this is a single indexed read whose cost does not depend on how much
+ * of a guess was right (see db/repos/agent-api.ts). What the key does *not* prove is that the
  * Agent is currently willing to be called, which is what the rest of this file checks. Those are
  * separate questions on purpose: a key outlives the switch being turned off, and turning the switch
  * off must take effect on the next request without anyone having to delete the keys.
@@ -11,7 +11,7 @@
  * Four things can refuse a call, and they are kept apart because the caller acts differently on
  * each:
  *
- *   1. No key, or a key that matches nothing — 401. Retry with the same key will not help.
+ *   1. No key, or a key that matches nothing — 401. Retrying with the same key will not help.
  *   2. The admin has turned the whole API off — 503, not 404. Every exposed Agent is unreachable,
  *      and a 404 would read as "no such Agent", sending the caller to check a name that is fine.
  *   3. This Agent's switch is off — 404. It is indistinguishable from a wrong Agent id on purpose:
@@ -29,13 +29,6 @@ import type { ApprovalMode } from "../api/types.js";
 import { hashAgentApiKey, AGENT_API_KEY_PREFIX } from "./keys.js";
 import type { AgentApiRepo } from "../db/repos/agent-api.js";
 import type { ServerSettingsRepo } from "../db/repos/server-settings.js";
-
-/** Where the key may appear. Both are accepted because CLI clients differ in which they send. */
-export interface PresentedAgentApiKey {
-  keyId: string;
-  projectId: string;
-  agentId: string;
-}
 
 /**
  * The key a request presented, from the header or the query parameter.
@@ -81,18 +74,21 @@ export interface AgentApiGrant {
 /**
  * Resolves the grant for this request, or throws the refusal that applies.
  *
- * Takes the repo rather than the settings row so the checks happen against storage, not against
+ * Takes the repo rather than a settings row so the checks happen against storage, not against
  * something a caller could have assembled.
+ *
+ * The path names both the Project and the Agent. A key must agree with both: a key minted for one
+ * Agent cannot be used to reach another, and a key whose Project differs from the path is refused
+ * with the same 404 as a key that belongs to no Agent at all — otherwise the error would tell the
+ * caller that the key is real but pointed somewhere else.
  */
 export function authorizeAgentApiCall(
   c: Context,
   deps: { agentApiRepo: AgentApiRepo; serverSettingsRepo: ServerSettingsRepo },
-  agentIdFromPath: string,
+  path: { projectId: string; agentId: string },
 ): AgentApiGrant {
   const presented = presentedKey(c, { allowQuery: c.req.method === "GET" });
 
-  let projectId: string | null = null;
-  let agentId: string | null = null;
   let keyId: string | null = null;
 
   if (presented !== null) {
@@ -100,39 +96,19 @@ export function authorizeAgentApiCall(
     if (row === null) {
       throw new HttpError(401, "unauthorized", "Invalid Agent API key.");
     }
-    projectId = row.projectId;
-    agentId = row.agentId;
+    if (row.projectId !== path.projectId || row.agentId !== path.agentId) {
+      // 404, not 403: telling the caller "that key is real but belongs to another Agent" turns
+      // this into an oracle for testing whether a key exists somewhere else.
+      throw new HttpError(404, "not_found", "No such Agent.");
+    }
     keyId = row.keyId;
   }
 
-  // The Agent id in the path is only trusted when it agrees with the key. Without a key it is the
-  // caller's word for which Agent it means, and that is what `open` consents to.
-  const pathAgentId = agentIdFromPath;
-  if (agentId !== null && agentId !== pathAgentId) {
-    throw new HttpError(404, "not_found", "No such Agent.");
-  }
-
-  const resolvedAgentId = agentId ?? pathAgentId;
-  // Without a key and without a project id there is nothing to look the settings up by, so the
-  // request cannot be attributed to a Project at all. This is the one case where keyless access
-  // cannot work, and it is why `open` still requires the Project to be named in the path.
-  if (projectId === null) {
-    throw new HttpError(
-      400,
-      "bad_request",
-      "An Agent API key or a project id in the path is required.",
-    );
-  }
-
   if (!deps.serverSettingsRepo.getAgentApiEnabled()) {
-    throw new HttpError(
-      503,
-      "api_disabled",
-      "The Agent API is turned off on this server.",
-    );
+    throw new HttpError(503, "api_disabled", "The Agent API is turned off on this server.");
   }
 
-  const settings = deps.agentApiRepo.get(projectId, resolvedAgentId);
+  const settings = deps.agentApiRepo.get(path.projectId, path.agentId);
   // Keyed but the switch is off, and keyless with `open` off: both 404. Deliberately the same
   // answer as an unknown Agent, so this endpoint cannot be used to enumerate what exists.
   if (settings === null || !settings.enabled) {
@@ -149,8 +125,8 @@ export function authorizeAgentApiCall(
   }
 
   return {
-    projectId,
-    agentId: resolvedAgentId,
+    projectId: path.projectId,
+    agentId: path.agentId,
     keyId,
     approvalMode: settings.approvalMode,
     model: settings.model,
