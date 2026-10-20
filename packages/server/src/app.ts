@@ -467,6 +467,23 @@ export function createRuntimeApp(deps: AppDeps): Hono<AppEnv> {
         if (c.req.path.startsWith("/api/")) {
           throw new HttpError(401, "unauthorized", "The API is not served on the preview host.");
         }
+        // The Agent API is served on both loopback names.
+        //
+        // The guard above exists for a browser origin: preview HTML runs on the preview host, and
+        // the App's own API is cookie-authenticated, so a page there must not be able to spend the
+        // user's session. The Agent API is not cookie-authenticated — it authenticates an
+        // `jiumate_` key — so that reasoning does not reach it. Redirecting it instead would be
+        // actively wrong: a 302 turns a POST into a GET for most clients, and the Authorization
+        // header is dropped when the redirect crosses to another host. A program that called the
+        // server by its IP would get a redirect instead of a run, and a 200 with no body.
+        //
+        // The one thing the preview origin can still reach is keyless access, and that is what
+        // `open` says it means: any program that can reach this server may use the Agent. An
+        // owner who leaves `open` off has a key requirement, and a preview page does not have the
+        // key.
+        if (c.req.path.startsWith("/amsp/")) {
+          return next();
+        }
         const url = new URL(c.req.url);
         url.hostname = previewRoles.app;
         return c.redirect(url.toString(), 302);
