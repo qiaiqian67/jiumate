@@ -206,11 +206,104 @@ API 标签页的密钥列表里有"最后使用时间"。每个通过密钥进�
 
 - 密钥认证（`src/amsp/authenticate.ts`）—— 摘要查表，四种拒绝状态码各自区分
 - 并发闸门（`src/amsp/concurrency.ts`）—— 按 Agent 计数，实时读上限
+- 调用侧路由（`src/http/routes/amsp.ts`）—— 挂在 `/amsp/v1`，在会话中间件之外
+- 运行 Agent —— 密钥真的能创建会话、发消息、读回复
+- 流式响应 —— `GET .../sessions/:id/stream` 是 SSE
 
-**还没完成的：**
+**接口：**
 
-- HTTP 路由 —— 认证还没接到任何端点上
-- 运行 Agent —— 网关现在只有门，没有进到 Agent 的路
-- 流式响应 —— 外部调用方还没法订阅回复
+| 方法 | 路径 | 作用 |
+|---|---|---|
+| `POST` | `/amsp/v1/projects/:p/agents/:a/sessions` | 发起一次运行，返回 `202` + `sessionId` |
+| `GET` | `/amsp/v1/projects/:p/agents/:a/sessions/:id` | 读状态和消息 |
+| `GET` | `/amsp/v1/projects/:p/agents/:a/sessions/:id/stream` | SSE 订阅 |
+| `DELETE` | `/amsp/v1/projects/:p/agents/:a/sessions/:id` | 取消运行，`204` |
+
+**`POST` 为什么返回 `202` 而不是答案：**
+
+一次运行要等模型，可能几十秒。请求里等答案，模型一慢就变成客户端超时——和 Agent 卡死看起来一模一样。所以 `POST` 只负责**发起**，返回 `202` 和 `sessionId`；运行在服务端继续，答案用 `GET` 读，或者用 `stream` 订阅。
+
+这和 Web App 自己的做法一致。
+
+---
+
+## 第四段：真的调用一次
+
+### 10. 发起一次运行
+
+**PowerShell：**
+
+```powershell
+$h = @{ Authorization = "Bearer jiumate_你的密钥"; "content-type" = "application/json" }
+$body = @{ prompt = "用一句话介绍你自己" } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:7368/amsp/v1/projects/你的projectId/agents/你的agentId/sessions" -Headers $h -Body $body
+```
+
+**macOS / Linux：**
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer jiumate_你的密钥" \
+  -H "content-type: application/json" \
+  -d '{"prompt":"用一句话介绍你自己"}' \
+  "http://127.0.0.1:7368/amsp/v1/projects/你的projectId/agents/你的agentId/sessions"
+```
+
+期望拿到：
+
+```json
+{ "sessionId": "ses_...", "queued": false }
+```
+
+### 11. 读结果
+
+把上一步的 `sessionId` 填进去：
+
+```bash
+curl -H "Authorization: Bearer jiumate_你的密钥" \
+  "http://127.0.0.1:7368/amsp/v1/projects/你的projectId/agents/你的agentId/sessions/ses_..."
+```
+
+返回 `status`（`running` / `idle`）和 `messages`。运行中先看到 `running`，等一会儿再读就是完整的对话。
+
+### 12. 或者订阅（SSE）
+
+```bash
+curl -N -H "Authorization: Bearer jiumate_你的密钥" \
+  "http://127.0.0.1:7368/amsp/v1/projects/你的projectId/agents/你的agentId/sessions/ses_.../stream"
+```
+
+`-N` 关闭缓冲。不带 `-N` 会看到内容攒着不出来。
+
+### 13. 取消
+
+```bash
+curl -X DELETE -H "Authorization: Bearer jiumate_你的密钥" \
+  "http://127.0.0.1:7368/amsp/v1/projects/你的projectId/agents/你的agentId/sessions/ses_..."
+```
+
+返回 `204`。已经在跑的会被中止。
+
+---
+
+## 调用方**不能**做的事
+
+请求体里这些字段**不被读取**，因为它们该由 owner 在 API 标签页里定：
+
+- `approvalMode` —— 审批模式由 owner 定。调用方能自己挑，就等于能挑一个更宽松的策略。
+- `modelId` / `provider` —— 模型由 owner 定。调用方能自己挑，就等于能让 Agent 跑在更便宜的模型上。
+- `enabled` / `open` —— 开关由 owner 定。
+
+能传的：
+
+- `prompt` —— 必填
+- `workspace` —— 只能**收窄**，必须是已存在的目录
+- `thinkingLevel` —— 思考强度归调用方
+
+### 为什么模型和审批模式不给调用方选
+
+这是"对外暴露一个 Agent"的全部意义所在。owner 点开开关、选好审批模式，是他对"外面这个程序能干什么"的一次表态。如果调用方能改这两项，那 owner 表态的对象就不是调用方能做的事，暴露就变成了对方自己说了算。
+
+集成测试里有一条专门盯这个：请求里塞了 `approvalMode` 和 `modelId`，运行照样用 owner 的设置（会话记录里的 `approvalMode` 和 `modelId` 是 owner 配的那个）。
 
 也就是说：**界面上的开关和密钥现在还是转不起来**，本文档第二段的第 9 步只验证密钥能被读到，**还不能通过 API 真正调用 Agent**。等路由接上之后，这里会补上实际发消息的步骤。
