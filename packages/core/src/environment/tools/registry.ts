@@ -24,6 +24,8 @@ import { READ_IMAGE_NAME, createReadImageTool } from "./read-image.js";
 import { DESCRIBE_IMAGE_NAME, createDescribeImageTool } from "./describe-image.js";
 import { READ_DOCUMENT_NAME, createReadDocumentTool } from "./read-document.js";
 import { PET_NAME, createPetTool } from "./pet.js";
+import { BROWSER_READ_NAME, createBrowserReadTool } from "./browser-read.js";
+import { BROWSER_ACT_NAME, createBrowserActTool } from "./browser-act.js";
 
 /**
  * A factory that constructs a BuiltinTool instance from a tool config entry; optionally
@@ -59,4 +61,11 @@ export const BUILTIN_TOOL_FACTORIES: Record<string, BuiltinToolFactory> = {
   // pet: control over the desktop pet window. A host with no pet surface leaves
   // `petControl` unset and the tool reports that instead of failing.
   [PET_NAME]: (definition, services) => createPetTool(definition, services?.petControl),
+  // browser_read / browser_act: the agent browser, split so that reading a page is `r` and
+  // acting on it is `rw` — a click can commit a purchase, and a script can read document.cookie.
+  // A host with no browser surface leaves `browser` unset and both tools report that instead of
+  // failing.
+  [BROWSER_READ_NAME]: (definition, services) =>
+    createBrowserReadTool(definition, services?.browser),
+  [BROWSER_ACT_NAME]: (definition, services) => createBrowserActTool(definition, services?.browser),
 };

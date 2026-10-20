@@ -289,6 +289,27 @@ interface VisionDescriberService {
 }
 ```
 
+## BrowserPort
+
+The agent browser, as the `browser_read` / `browser_act` tools see it (see [Tools](/tools)):
+
+```ts
+interface BrowserPort {
+  status(): Promise<BrowserStatus>;
+  open(url: string, options?: { newTab?: boolean; tabId?: number }): Promise<BrowserStatus>;
+  close(tabId?: number): Promise<BrowserStatus>;
+  scan(options?: { tabId?: number; textOnly?: boolean }): Promise<BrowserScanResult>;
+  act(request: BrowserActRequest): Promise<BrowserExecResult>;
+  screenshot(options?: { tabId?: number }): Promise<BrowserScreenshot>;
+}
+```
+
+A browser is a host surface rather than a file: the tabs belong to the desktop app's browser panel, and which backend drives them is a user's preference. So the tools own no state and touch no disk — they call the port their host injected, and a host without a browser surface reports that rather than failing with an errno.
+
+What differs between backends — the desktop's built-in browser, the user's own Chrome — is **declared** through `BrowserBackendCapabilities` rather than discovered: the tools branch on it the same way the runtime does. Neither tool picks a backend; that is the user's choice, which is why every call reports which one is in use.
+
+Reading and acting are separate operations on one port because they differ in what they cost and in what they risk: `scan` and `screenshot` change nothing, while `act` can submit an order or read `document.cookie`. The split is what lets the read half ride the approval flow as `r` while the write half is `rw`.
+
 ## Extension seams
 
 | To … | Do … |

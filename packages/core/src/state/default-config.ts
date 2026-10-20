@@ -993,6 +993,110 @@ function defaultBuiltinTools(): ToolDefinitionConfig[] {
       timeoutMs: 15000,
       maxOutputLength: 8000,
     },
+    {
+      name: "browser_read",
+      description:
+        "Read the agent browser: the desktop app's built-in browser, or the user's own Chrome — " +
+        "whichever the user chose. Tabs are shared with the user, who can watch and take over. " +
+        'action="status" / "tabs" reports which backend is in use and which tabs are open; ' +
+        'action="open" (with url) navigates; action="close" closes a tab; ' +
+        'action="scan" reads the page as simplified HTML, or as plain text with text_only=true ' +
+        "(plain text is much cheaper, use it first when the text is enough); " +
+        'action="screenshot" returns the page as an image in this same turn. ' +
+        "Prefer one precise browser_act over repeated scans: a scan costs thousands of tokens.",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["status", "tabs", "open", "close", "scan", "screenshot"],
+            description:
+              'What to do: report the browser and its tabs, "open" a url, "close" a tab, "scan" the page, or "screenshot" it.',
+          },
+          url: {
+            type: "string",
+            description: 'The URL to navigate to. Required for action="open".',
+          },
+          tab_id: {
+            type: "number",
+            description:
+              "Which tab; the active one is used when this is absent. From a previous status or scan.",
+          },
+          new_tab: {
+            type: "boolean",
+            description: 'For action="open": open a new tab instead of reusing the active one.',
+          },
+          text_only: {
+            type: "boolean",
+            description:
+              'For action="scan": return plain text instead of simplified HTML. Cheaper, and enough when only the wording matters.',
+          },
+        },
+        required: ["action"],
+      },
+      // "r": reading a page changes nothing on the user's behalf. `close` is here rather than in
+      // browser_act because closing a tab the agent itself opened discards nothing the user made;
+      // the act-side writes are the ones that need a person to say yes.
+      permission: "r",
+      timeoutMs: 30000,
+      // A scan of a long page runs to thousands of tokens on its own, and Environment truncates
+      // from the front, so the head of the page survives — which is where a document's title
+      // and its opening paragraphs are.
+      maxOutputLength: 30000,
+    },
+    {
+      name: "browser_act",
+      description:
+        "Act on the page in the agent browser: click, type, or run JavaScript in it. " +
+        'action="click" (with selector) makes a trusted click; action="type" (with text) ' +
+        'enters text into the focused element; action="exec" (with script) runs JavaScript ' +
+        "in the page's own origin and returns its result as JSON. " +
+        "Prefer one precise exec over repeated scans — it costs a fraction of the tokens. " +
+        "Every action here can change something real: a click can submit an order, a typed line " +
+        "can commit a purchase. If a page needs something destructive or irreversible, say what " +
+        "it will do and let the user decide.",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["click", "type", "exec"],
+            description:
+              'What to do: "click" an element, "type" text, or "exec" script in the page.',
+          },
+          selector: {
+            type: "string",
+            description:
+              'CSS selector of the element to click, or the text to match. Required for action="click".',
+          },
+          text: {
+            type: "string",
+            description: 'The text to enter. Required for action="type".',
+          },
+          script: {
+            type: "string",
+            description:
+              'JavaScript to run in the page. Required for action="exec". Return exactly the value you need, as compact JSON — the page is left as it was unless the script changes it.',
+          },
+          tab_id: {
+            type: "number",
+            description:
+              "Which tab; the active one is used when this is absent. From a previous browser_read.",
+          },
+          accept_dialogs: {
+            type: "boolean",
+            description:
+              "Whether the page's alert/confirm/prompt dialogs are accepted rather than dismissed. Default false.",
+          },
+        },
+        required: ["action"],
+      },
+      // "rw": these act on the user's behalf in a signed-in browser. A click can submit an
+      // order and a script can read document.cookie, so this rides the approval flow.
+      permission: "rw",
+      timeoutMs: 30000,
+      maxOutputLength: 10000,
+    },
   ];
 }
 

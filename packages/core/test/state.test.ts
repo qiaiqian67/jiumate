@@ -259,6 +259,8 @@ describe("buildToolConfig", () => {
       "read_image",
       "describe_image",
       "pet",
+      "browser_read",
+      "browser_act",
     ]);
     const exec = cfg.customTools.find((t) => t.name === "exec_command")!;
     expect(exec.permission).toBe("rw");
@@ -389,6 +391,8 @@ describe("buildToolConfig", () => {
       "read_image",
       "describe_image",
       "pet",
+      "browser_read",
+      "browser_act",
     ]);
   });
 });

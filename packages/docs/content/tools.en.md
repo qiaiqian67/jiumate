@@ -72,7 +72,7 @@ Each tool is described by one `ToolDefinitionConfig`:
 
 ## Built-in tools
 
-There are 9 built-in tools (assembled via `packages/core/src/environment/tools/registry.ts`):
+There are 12 built-in tools (assembled via `packages/core/src/environment/tools/registry.ts`):
 
 | Tool | Permission | Timeout (ms) | Purpose |
 | --- | --- | --- | --- |
@@ -87,6 +87,8 @@ There are 9 built-in tools (assembled via `packages/core/src/environment/tools/r
 | `read_image` | r | 60000 | Read an image and return it as image content (vision models) |
 | `describe_image` | r | 90000 | Have the configured `vision_model` read the image and answer in text (text-only models) |
 | `pet` | rw | 15000 | Inspect and control the desktop pet: list the available pets, switch to one, show or hide the pet window |
+| `browser_read` | r | 30000 | Read the agent browser: report its backend and tabs, open a URL, close a tab, scan a page as simplified HTML or plain text, or return a screenshot as image content |
+| `browser_act` | rw | 30000 | Act on a page in the agent browser: a trusted click, typed text, or JavaScript run in the page's own origin |
 
 Note that an existing agent's persisted `tools.builtin` list is frozen as written (the settings UI edits rows but adds none): agents created before this toolset do not pick up newer tools (e.g. the file tools) or newer arguments (`run_in_background`, `kill`, `abort`) automatically — and entries for since-removed tools (`kill_command`, `kill_subagent`) simply stop assembling: a model calling them gets the standard unknown-tool failure — hand-edit the agent's `system_config.yaml` and add the new entries (copy them from the default definitions in `packages/core/src/state/default-config.ts`) to adopt them.
 
@@ -244,6 +246,40 @@ The Web App's subagents panel drives a selected child with the **same composer a
 {
   source: string;          // required: as above
   prompt?: string;         // what to ask about the image; defaults to a detailed description
+}
+```
+
+### Browser tools
+
+`browser_read` and `browser_act` drive the **agent browser** — the desktop app's built-in browser, or the user's own Chrome, whichever the user chose. They are two tools rather than one because the two halves differ in what they cost and in what they risk:
+
+- `browser_read` is `r`. It reports the backend and the open tabs, opens a URL, closes a tab, scans a page as simplified HTML (or plain text with `text_only`, which is much cheaper), and returns a screenshot **as image content in the same turn** — no file on disk, no second tool call to look at it.
+- `browser_act` is `rw`, so it rides the approval flow. It clicks, types, and runs JavaScript in the page's own origin. These act on the user's behalf in a signed-in browser: a click can submit an order, a typed line can commit a purchase, and a script can read `document.cookie`.
+
+One tool with one permission would make the frequent read carry the weight of the rare write. The split keeps a model that only wants to look at a page out of the approval flow entirely, while a click still asks.
+
+Which browser is driven is the user's setting, never the model's: the tools report the backend on every call, because a model that assumed it was reading the built-in browser when it was reading Chrome would draw the wrong conclusion from a page that looks the same either way. Tabs are shared with the user, who can watch and take over.
+
+`exec` runs in the page's own origin and nowhere else. It is the sharpest tool here, so the port refuses a script that would cross origins rather than relying on the caller to have meant well. A script should `return` exactly the value it needs, as compact JSON: one precise `exec` costs a fraction of the tokens of a scan, so the loop that works is *look once, act precisely*, not *scan repeatedly*.
+
+```ts
+// browser_read
+{
+  action: "status" | "tabs" | "open" | "close" | "scan" | "screenshot";
+  url?: string;         // required for action="open"
+  tab_id?: number;      // the active tab when absent
+  new_tab?: boolean;    // action="open": open a new tab
+  text_only?: boolean;  // action="scan": plain text instead of simplified HTML
+}
+
+// browser_act
+{
+  action: "click" | "type" | "exec";
+  selector?: string;    // required for action="click"
+  text?: string;        // required for action="type"
+  script?: string;      // required for action="exec"
+  tab_id?: number;      // the active tab when absent
+  accept_dialogs?: boolean;
 }
 ```
 

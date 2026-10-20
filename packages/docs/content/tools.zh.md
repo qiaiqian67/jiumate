@@ -72,7 +72,7 @@ Recovery 文件保存 Environment 收到的未经脱敏的工具文本。误读�
 
 ## 内置工具
 
-共 9 个内置工具(装配入口 `packages/core/src/environment/tools/registry.ts`):
+共 12 个内置工具(装配入口 `packages/core/src/environment/tools/registry.ts`):
 
 | 工具 | 权限 | 超时(ms) | 用途 |
 | --- | --- | --- | --- |
@@ -87,6 +87,8 @@ Recovery 文件保存 Environment 收到的未经脱敏的工具文本。误读�
 | `read_image` | r | 60000 | 读取图片并作为图像内容返回(vision 模型) |
 | `describe_image` | r | 90000 | 由 `vision_model` 代读图片并返回文字回答(text-only 模型) |
 | `pet` | rw | 15000 | 查看与控制桌面宠物：列出可用宠物、切换当前宠物、显示或隐藏宠物浮窗 |
+| `browser_read` | r | 30000 | 读取 Agent 浏览器：报告后端与标签页、打开 URL、关闭标签、把页面扫成简化 HTML 或纯文本、或把截图作为图像内容返回 |
+| `browser_act` | rw | 30000 | 在 Agent 浏览器的页面上动作：可信点击、输入文本、或在页面自身源内运行 JavaScript |
 
 注意：既有 Agent 已落盘的 `tools.builtin` 列表按原样冻结（设置页只能编辑行、不能增行）：较早创建的 Agent 不会自动获得后来新增的工具（如文件工具）与新增参数（`run_in_background`、`kill`、`abort`），已移除工具（`kill_command`、`kill_subagent`）的存量条目则不再装配——模型按旧名调用得到标准的未知工具报错；采纳新条目需手工编辑该 Agent 的 `system_config.yaml`（可从 `packages/core/src/state/default-config.ts` 的默认定义复制），或走「更新内核」。
 
@@ -241,6 +243,40 @@ Web App 的智能体面板用**与主对话相同的 composer**（子会话变�
 {
   source: string;          // 必填:同上
   prompt?: string;         // 要对图片提出的问题;缺省为详细描述
+}
+```
+
+### 浏览器工具
+
+`browser_read` 与 `browser_act` 驱动 **Agent 浏览器**——桌面应用的内置浏览器，或用户自己的 Chrome，由用户选择。之所以是两个工具而不是一个，是因为两半在代价和风险上完全不同：
+
+- `browser_read` 是 `r`。它报告后端与打开的标签页、打开 URL、关闭标签、把页面扫成简化 HTML（或用 `text_only` 取纯文本，便宜得多），并把截图**作为图像内容在同一轮里返回**——不落盘、不需要再调一次工具去看。
+- `browser_act` 是 `rw`，因此走审批流。它点击、输入，并在页面自身的源内运行 JavaScript。这些动作是在用户已登录的浏览器里代表用户做的：一次点击就能提交订单，一行输入就能完成购买，一段脚本就能读走 `document.cookie`。
+
+合成一个工具、只带一个权限，就得让高频的读承担低频的写的分量。拆开之后，只想看一眼页面的模型完全不必经过审批，而点击仍然要问。
+
+驱动哪个浏览器是用户的设置，绝不由模型决定：这两个工具每次调用都报告后端，因为一个以为自己读的是内置浏览器、实际读的是 Chrome 的模型，会从长得一模一样的页面上得出错误的结论。标签页与用户共享，用户可以看着、也可以随时接管。
+
+`exec` 只在页面自身的源内运行，不跨域。它是这里最锋利的工具，所以端口会拒绝一个会跨域的脚本，而不是指望调用方本来就打算老实。脚本应当恰好 `return` 它需要的值，写成紧凑 JSON：一次精准的 `exec` 花掉的 token 只有一次 scan 的零头，所以好用的循环是*看一次、精准动手*，而不是*反复扫*。
+
+```ts
+// browser_read
+{
+  action: "status" | "tabs" | "open" | "close" | "scan" | "screenshot";
+  url?: string;         // action="open" 时必填
+  tab_id?: number;      // 缺省为当前活动标签
+  new_tab?: boolean;    // action="open"：新开一个标签
+  text_only?: boolean;  // action="scan"：返回纯文本而非简化 HTML
+}
+
+// browser_act
+{
+  action: "click" | "type" | "exec";
+  selector?: string;    // action="click" 时必填
+  text?: string;        // action="type" 时必填
+  script?: string;      // action="exec" 时必填
+  tab_id?: number;      // 缺省为当前活动标签
+  accept_dialogs?: boolean;
 }
 ```
 

@@ -287,6 +287,27 @@ interface VisionDescriberService {
 }
 ```
 
+## BrowserPort
+
+Agent 浏览器，在 `browser_read` / `browser_act` 两个工具眼中的样子（见[工具](/tools)）：
+
+```ts
+interface BrowserPort {
+  status(): Promise<BrowserStatus>;
+  open(url: string, options?: { newTab?: boolean; tabId?: number }): Promise<BrowserStatus>;
+  close(tabId?: number): Promise<BrowserStatus>;
+  scan(options?: { tabId?: number; textOnly?: boolean }): Promise<BrowserScanResult>;
+  act(request: BrowserActRequest): Promise<BrowserExecResult>;
+  screenshot(options?: { tabId?: number }): Promise<BrowserScreenshot>;
+}
+```
+
+浏览器是宿主界面而不是文件：标签页属于桌面应用的浏览器面板，而由哪个后端驱动它们是用户的偏好。所以这两个工具自身不持有状态，也不碰磁盘——它们调用宿主注入的端口，而没有浏览器界面的宿主会如实说明，而不是抛一个 errno。
+
+后端之间的差异（桌面端的内置浏览器、用户自己的 Chrome）是**声明**出来的，不是探测出来的：`BrowserBackendCapabilities` 说清各自能做什么，工具像运行时一样据此分支。两个工具都不挑后端——那是用户的选择，这也是为什么每次调用都要报告当前用的是哪一个。
+
+读与写在同一个端口上是两件事，因为它们的代价和风险不同：`scan` 和 `screenshot` 不改变任何东西，而 `act` 可能提交一笔订单、可能读走 `document.cookie`。正是这个拆分，让读的那半以 `r` 走审批流，而写的那半是 `rw`。
+
 ## 扩展点一览
 
 | 想要 | 做法 |

@@ -16,6 +16,7 @@
 import type { OmniMessage, ToolCallPayload, ToolDefinition } from "../omnimessage/types.js";
 import type { ApproveFn, RunCutoff, ThinkingLevelName } from "./shared.js";
 import type { LLMInterface } from "./llm.js";
+import type { BrowserPort } from "./browser.js";
 // Concrete classes, used only for EnvironmentServices type annotations (type-only import; no runtime dependency, no circular reference).
 import type { CommandSessionManager } from "../environment/tools/command/session-manager.js";
 import type { SubagentSessionManager } from "../environment/tools/subagent/session-manager.js";
@@ -264,6 +265,8 @@ export interface EnvironmentServices {
   visionDescriber?: VisionDescriberService;
   /** Desktop pet control for the `pet` tool; absent on hosts with no pet surface. */
   petControl?: PetControlPort;
+  /** The agent browser for the `browser_read` / `browser_act` tools; absent on hosts with no browser surface. */
+  browser?: BrowserPort;
   /** Registry of long-running command sessions (shared by `exec_command` / `input_command`); constructed and injected internally by Environment. */
   commandSessions?: CommandSessionManager;
   /** Registry of background subagent sessions (shared by `run_subagent` / `input_subagent`); constructed and injected internally by Environment. */
