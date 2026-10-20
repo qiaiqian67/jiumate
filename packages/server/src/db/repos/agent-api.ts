@@ -156,6 +156,21 @@ export class AgentApiRepo {
     this.db.prepare("DELETE FROM agent_api WHERE project_id = ?").run(projectId);
   }
 
+  /**
+   * The keys one user minted, dropped with the user.
+   *
+   * `created_by` is a foreign key to users(user_id), and SQLite enforces it, so deleting a user
+   * who minted a key fails on the constraint unless these rows go first. The key rows are the
+   * only thing that stands between "delete this account" and a 500 — and an account that minted a
+   * key is exactly the kind of account someone wants to delete.
+   *
+   * Only the keys are dropped: the settings rows belong to the Agent, not to whoever turned the
+   * switch on, and an Agent exposed by a user who has since left should stay exposed.
+   */
+  deleteKeysByCreatedBy(userId: string): void {
+    this.db.prepare("DELETE FROM agent_api_keys WHERE created_by = ?").run(userId);
+  }
+
   // ── Keys ────────────────────────────────────────────────────────────────────────
 
   listKeys(projectId: string, agentId: string): AgentApiKeyRow[] {

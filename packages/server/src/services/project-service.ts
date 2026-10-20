@@ -15,6 +15,7 @@ import { DEFAULT_PROJECT_ID, projectDir, provisionProjectAgents } from "@prismsh
 import type { MemberInfo, ProjectRole, ProjectSummary } from "../api/types.js";
 import { HttpError } from "../http/errors.js";
 import type { AgentsRepo } from "../db/repos/agents.js";
+import type { AgentApiRepo } from "../db/repos/agent-api.js";
 import type { ErrorsRepo } from "../db/repos/errors.js";
 import type { MembersRepo } from "../db/repos/members.js";
 import type { ProjectRow, ProjectsRepo } from "../db/repos/projects.js";
@@ -58,6 +59,15 @@ export interface ProjectServiceDeps {
   manager: SessionManager;
   /** Trace-index cleanup on Project destruction (rows describe files removed with the Project dir). */
   traceIndex: TraceIndexService;
+  /**
+   * The Agent API's settings and keys, dropped with the Project.
+   *
+   * Neither table has a foreign key to projects, so a destroyed Project left its rows behind: an
+   * `agent_api` row for an Agent that no longer exists, and key rows that still authenticate. A
+   * key that outlives its Agent is not a harmless leftover — it is a live credential for something
+   * that is gone, and the list that would show it is gone too.
+   */
+  agentApiRepo: AgentApiRepo;
 }
 
 export class ProjectService {
@@ -309,6 +319,7 @@ export class ProjectService {
     this.deps.projects.delete(projectId); // project_members and machine_project cascade-deleted
     this.deps.agents.deleteByProject(projectId);
     this.deps.sessions.deleteByProject(projectId);
+    this.deps.agentApiRepo.deleteByProject(projectId);
     this.deps.usage.deleteByProject(projectId);
     this.deps.errors.deleteByProject(projectId);
     this.deps.schedules.deleteByProject(projectId);

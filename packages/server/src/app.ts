@@ -1057,12 +1057,14 @@ export function buildAppDeps(
     projectConfig: projectConfigService,
     manager,
     traceIndex,
+    agentApiRepo,
   });
   const adminService = new AdminService({
     users: usersRepo,
     authSessions: new AuthSessionsRepo(db),
     projects: projectsRepo,
     projectService,
+    agentApiRepo,
     ...(overrides.passwordHashCost !== undefined
       ? { passwordHashCost: overrides.passwordHashCost }
       : {}),

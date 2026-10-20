@@ -15,6 +15,7 @@ import { HttpError } from "../http/errors.js";
 import { ADMIN_USER_ID, MIN_PASSWORD_LENGTH, toUserInfo } from "../auth/service.js";
 import { SCRYPT_COST, hashPassword } from "../auth/password.js";
 import type { ProjectsRepo } from "../db/repos/projects.js";
+import type { AgentApiRepo } from "../db/repos/agent-api.js";
 import type { AuthSessionsRepo } from "../db/repos/auth-sessions.js";
 import type { UserRow, UsersRepo } from "../db/repos/users.js";
 import { SEMANTIC_ID_RULE, USERNAME_PATTERN } from "./ids.js";
@@ -25,6 +26,16 @@ export interface AdminServiceDeps {
   authSessions: AuthSessionsRepo;
   projects: ProjectsRepo;
   projectService: ProjectService;
+  /**
+   * The Agent API's key rows, dropped with the user who minted them.
+   *
+   * `created_by` is a foreign key to users(user_id) and SQLite enforces it, so a user who minted
+   * a key cannot be deleted while that row exists — the delete fails on the constraint and the
+   * account survives, which is the opposite of what the admin asked for. The keys are dropped
+   * first; the settings rows stay, because an Agent exposed by a user who has since left should
+   * stay exposed.
+   */
+  agentApiRepo: AgentApiRepo;
   /**
    * Test double: scrypt work factor for hashes this service writes. Omitted in
    * production, where {@link SCRYPT_COST} applies.
@@ -114,6 +125,9 @@ export class AdminService {
     for (const project of this.deps.projects.listByOwner(userId)) {
       await this.deps.projectService.destroyProject(project.projectId);
     }
+    // After the Projects are gone, so a key minted in a Project that was already deleted — and so
+    // left behind with no Project to clean it — does not hold the account hostage.
+    this.deps.agentApiRepo.deleteKeysByCreatedBy(userId);
     this.deps.users.delete(userId); // project_members / ui_prefs cascade-deleted
   }
 }
