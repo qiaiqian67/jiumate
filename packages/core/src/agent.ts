@@ -86,6 +86,7 @@ import type {
   CommandPolicyConfig,
   GenerativeModelConfig,
   PetControlPort,
+  BrowserPort,
   ProxyEnvPolicy,
   SubagentHandle,
   SubagentRunner,
@@ -134,6 +135,13 @@ export interface CreateAgentOptions {
    * host surface, not a property of a conversation.
    */
   petControl?: PetControlPort;
+  /**
+   * The agent browser for the `browser_read` / `browser_act` tools, for every Session this
+   * Agent creates or resumes. Absent = the tools report that the host has no browser surface
+   * (SDK/CLI standalone use). Like `petControl` it is not per-Session: the browser is a single
+   * host surface, not a property of a conversation.
+   */
+  browser?: BrowserPort;
 }
 
 /** The Session coordinates a {@link CreateAgentOptions.controlEnv} policy is evaluated with. */
@@ -288,7 +296,14 @@ export async function createAgent(opts: CreateAgentOptions = {}): Promise<Agent>
     init: {},
   });
   const projectConfig = await loadProjectConfig(state.root, state.projectId);
-  return new Agent(state, projectConfig, opts.proxyEnv, opts.controlEnv, opts.petControl);
+  return new Agent(
+    state,
+    projectConfig,
+    opts.proxyEnv,
+    opts.controlEnv,
+    opts.petControl,
+    opts.browser,
+  );
 }
 
 export class Agent {
@@ -301,6 +316,8 @@ export class Agent {
     private readonly controlEnv?: (ctx: ControlEnvContext) => Record<string, string>,
     /** See {@link CreateAgentOptions.petControl}; forwarded into every Session's Environment. */
     private readonly petControl?: PetControlPort,
+    /** See {@link CreateAgentOptions.browser}; forwarded into every Session's Environment. */
+    private readonly browser?: BrowserPort,
   ) {}
 
   /**
@@ -1024,6 +1041,7 @@ export class Agent {
         subagentRunner,
         ...(visionDescriber ? { visionDescriber } : {}),
         ...(this.petControl ? { petControl: this.petControl } : {}),
+        ...(this.browser ? { browser: this.browser } : {}),
       },
       ...(Object.keys(initial.vault).length > 0 ? { vault: initial.vault } : {}),
       ...(this.proxyEnv ? { proxyEnv: this.proxyEnv } : {}),

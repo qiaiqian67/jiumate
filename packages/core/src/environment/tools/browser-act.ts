@@ -66,6 +66,7 @@ export function renderBrowserExecResult(result: BrowserExecResult): string {
     }
   }
   if (result.error !== undefined) lines.push(`Error: ${result.error}`);
+  if (result.suggestion !== undefined) lines.push(result.suggestion);
   return lines.join("\n");
 }
 

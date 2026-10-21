@@ -1,4 +1,4 @@
-﻿/**
+/**
  * App assembly, both halves of it.
  *
  * The RUNTIME shell — `createRuntimeApp(deps)` — mounts the mechanism surface: the network
@@ -99,6 +99,12 @@ import type { QQScanTransport } from "./runtime/messaging/qq-scan.js";
 import { TitleGenerator, TitleNotifier } from "./runtime/title-generator.js";
 import { AdminService } from "./services/admin-service.js";
 import { DesktopService } from "./services/desktop-service.js";
+import { BrowserService } from "./browser/service.js";
+import { ShellLink } from "./browser/shell-link.js";
+import { BUILTIN_CAPABILITIES } from "./browser/link.js";
+import type { BrowserLink } from "./browser/link.js";
+import type { ShellPort as ShellPortLike } from "./browser/shell-link.js";
+import type { BrowserPort } from "@prismshadow/jiumate-core/interfaces";
 import { LifecycleService } from "./services/lifecycle-service.js";
 import { desktopRoutes, desktopUpdateRoutes } from "./http/routes/desktop.js";
 import { AgentConfigService } from "./services/agent-config-service.js";
@@ -190,6 +196,14 @@ import { SERVER_PROXY_PREFIX, machinesProxy } from "./machines/proxy.js";
 
 export interface AppDeps {
   config: ServerConfig;
+  /** The agent browser for the `browser_read` / `browser_act` tools; absent without a browser surface. */
+  browser?: BrowserPort;
+  /**
+   * The link to the desktop shell's browser; index.ts attaches the shell's message port to it
+   * with `listen`. Null without a shell — the port is the desktop shell's own, so only a
+   * `ShellLink` has anywhere to listen.
+   */
+  browserLink?: (BrowserLink & { listen(port: ShellPortLike): void }) | null;
   db: DatabaseSync;
   sessionsRepo: SessionsRepo;
   prefsRepo: UiPrefsRepo;
@@ -281,6 +295,10 @@ export interface AppDeps {
 }
 
 export interface BuildDepsOverrides {
+  /** Test double: the agent browser for the `browser_read` / `browser_act` tools. */
+  browser?: BrowserPort;
+  /** Test double: the link to the desktop shell's browser (avoids a real shell message port). */
+  browserLink?: (BrowserLink & { listen(port: ShellPortLike): void }) | null;
   /** Test double: session-manager's underlying loader (avoids the real LLM/SDK path). */
   loader?: SessionLoader;
   /** Test double: Session title generator (avoids real LLM requests). */
@@ -1010,6 +1028,23 @@ export function buildAppDeps(
       channels.peek(userChannelKey(userId))?.publish({ type: "prefs_changed" }, "server_event"),
   });
 
+  // The agent browser for the `browser_read` / `browser_act` tools. It is null without a
+  // desktop shell (the shell owns the tabs), and then the tools say so themselves rather than
+  // failing — the same stance the pet control takes on a host with no pet surface.
+  const browserLink =
+    overrides.browserLink !== undefined
+      ? overrides.browserLink
+      : caps.desktop
+        ? new ShellLink({
+            backend: "builtin",
+            capabilities: BUILTIN_CAPABILITIES,
+            send: (msg) => caps.desktop?.sendBrowser(msg),
+          })
+        : null;
+  const browser =
+    overrides.browser ??
+    (browserLink === null ? undefined : new BrowserService({ link: browserLink }));
+
   const recorder = new UsageRecorder(usageRepo, overrides.now ?? (() => new Date()));
   const errors = new ErrorRecorder(errorsRepo, overrides.now ?? (() => new Date()));
   // Shared by SessionManager (run-state flips) and TitleGenerator (title updates): both are
@@ -1049,6 +1084,7 @@ export function buildAppDeps(
         proxyEnv,
         controlEnv,
         petControl,
+        browser,
       }),
     sources: sessionSources,
     recorder,
@@ -1149,6 +1185,7 @@ export function buildAppDeps(
     proxyEnv,
     controlEnv,
     petControl,
+    browser,
     // List rows carry the ENABLED channel's indicator (saved-but-dark configs stay off
     // the row); a point query per row keeps the repo out of the service. An unknown
     // stored channel reads as none (same defensive skip as the bridge and the routes).
@@ -1241,6 +1278,8 @@ export function buildAppDeps(
         : caps.desktop
           ? new DesktopExportPort((msg) => caps.desktop?.sendExport(msg))
           : null,
+    browserLink,
+    browser,
   };
 }
 

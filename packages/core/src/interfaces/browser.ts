@@ -111,6 +111,11 @@ export interface BrowserExecResult {
   /** Text that appeared during the call and may be gone again (toasts, flashes). */
   transients?: string[];
   diff?: { changed: number; topChange?: string };
+  /**
+   * A note for the model about what to do next, when the action's own result is not enough:
+   * that a popup opened and is listed under `newTabs`, or that nothing on the page changed.
+   */
+  suggestion?: string;
   /** click only: where the trusted click landed. */
   clicked?: { x: number; y: number; tag?: string; text?: string };
   /** The page's dialogs the call answered, in order. */

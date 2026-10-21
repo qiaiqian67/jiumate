@@ -22,6 +22,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { DesktopUpdateStatus, DesktopUpdaterCommandMessage } from "../api/types.js";
 import type { DesktopExportRequest } from "../api/desktop-export.js";
+import type { BrowserCommandMessage } from "../browser/shell-link.js";
 
 /** What the page may ask the shell's updater to do (the relayed command's `action`). */
 export type UpdaterCommand = DesktopUpdaterCommandMessage["action"];
@@ -35,6 +36,7 @@ export class DesktopService {
   private loginConsumed = false;
   private shutdownHandler: (() => void) | null = null;
   private exportCommandSender: ((req: DesktopExportRequest) => void) | null = null;
+  private browserCommandSender: ((command: BrowserCommandMessage) => void) | null = null;
 
   constructor(token: string) {
     this.tokenDigest = digest(token);
@@ -103,5 +105,18 @@ export class DesktopService {
   /** Relayed by buildAppDeps when constructing DesktopExportPort (server in desktop mode). */
   sendExport(req: DesktopExportRequest): void {
     this.exportCommandSender?.(req);
+  }
+
+  /**
+   * Same shape as the export relay: index.ts wires the shell's message-port sender, the
+   * browser's shell link asks us to forward a command to the shell, which owns the tabs.
+   */
+  onBrowserCommand(sender: (command: BrowserCommandMessage) => void): void {
+    this.browserCommandSender = sender;
+  }
+
+  /** Relayed by buildAppDeps when constructing the browser's shell link (server in desktop mode). */
+  sendBrowser(command: BrowserCommandMessage): void {
+    this.browserCommandSender?.(command);
   }
 }

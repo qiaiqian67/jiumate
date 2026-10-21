@@ -59,6 +59,24 @@ export function isLocalSurfaceUrl(url: string, origin: string | null): boolean {
   return loopback.has(target.hostname) && loopback.has(app.hostname);
 }
 
+/**
+ * A URL as the log states it: origin and path, with the query and fragment dropped — a
+ * search term, a token in a redirect, a `#` anchor can all carry something the user did not
+ * mean to put in a log file. A non-web URL is named by its protocol alone, since its path may
+ * be a local file path.
+ */
+export function urlForLog(url: string): string {
+  let target: URL;
+  try {
+    target = new URL(url);
+  } catch {
+    return "an unparsable URL";
+  }
+  return target.protocol === "http:" || target.protocol === "https:"
+    ? `${target.origin}${target.pathname}`
+    : `a ${target.protocol} URL`;
+}
+
 /** Max automatic server restarts before giving up with an error dialog. */
 export const MAX_SERVER_RESTARTS = 3;
 

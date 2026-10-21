@@ -242,7 +242,14 @@ class JiuMateServer {
     // `jiumate server|web` run, or tests) wires nothing.
     if (this.deps.desktop !== null) {
       const shellPort = shellPortOf(process);
-      if (shellPort !== null) wireShellUpdatePort(this.deps.desktop, shellPort);
+      if (shellPort !== null) {
+        wireShellUpdatePort(this.deps.desktop, shellPort);
+        // The agent browser's link rides the same message channel: the shell owns the tabs
+        // and runs their CDP, and this is the only way to reach them. Both relays share the
+        // port, so each filters the frames meant for it.
+        this.deps.desktop.onBrowserCommand((msg) => shellPort.postMessage(msg));
+        this.deps.browserLink?.listen(shellPort);
+      }
     }
 
     // Process-level error fallback: once a background fire-and-forget promise (title

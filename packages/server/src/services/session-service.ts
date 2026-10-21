@@ -15,7 +15,12 @@
  */
 import fs from "node:fs/promises";
 import { agentsDir, createAgent, isSessionMeta } from "@prismshadow/jiumate-core";
-import type { ControlEnvContext, PetControlPort, ProxyEnvPolicy } from "@prismshadow/jiumate-core";
+import type {
+  BrowserPort,
+  ControlEnvContext,
+  PetControlPort,
+  ProxyEnvPolicy,
+} from "@prismshadow/jiumate-core";
 import type {
   ApprovalMode,
   MessagingChannel,
@@ -72,6 +77,12 @@ export interface SessionServiceDeps {
    * assemblies without a pet surface.
    */
   petControl?: PetControlPort;
+  /**
+   * The agent browser handed to every Session this service creates, so `browser_read` and
+   * `browser_act` can read and act on a page. Absent in assemblies without a browser surface,
+   * where the tools say so themselves.
+   */
+  browser?: BrowserPort;
   /**
    * The channel of the Session's ENABLED messaging binding, or null when none is enabled
    * (SessionInfo.messagingChannel, the sidebar row's per-channel indicator — saved-but-
@@ -358,6 +369,7 @@ export class SessionService {
       ...(this.deps.proxyEnv ? { proxyEnv: this.deps.proxyEnv } : {}),
       ...(this.deps.controlEnv ? { controlEnv: this.deps.controlEnv } : {}),
       ...(this.deps.petControl ? { petControl: this.deps.petControl } : {}),
+      ...(this.deps.browser ? { browser: this.deps.browser } : {}),
     });
     let session;
     try {

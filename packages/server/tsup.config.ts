@@ -36,6 +36,7 @@ export default defineConfig({
     // Exported as a subpath so the desktop shell can import just the types without
     // pulling the full server bundle.
     "api/desktop-export": "src/api/desktop-export.ts",
+    "browser/shell-link": "src/browser/shell-link.ts",
     // "./extension": the surface extension PACKAGES compile against. Extensions live outside
     // this bundle entirely — they are configuration resolved from the installation,
     // not platform capability.

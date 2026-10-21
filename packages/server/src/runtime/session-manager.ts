@@ -48,6 +48,7 @@ import type {
   ControlEnvContext,
   OmniMessage,
   PetControlPort,
+  BrowserPort,
   ProxyEnvPolicy,
   SessionMetaPayload,
   SessionTitleResult,
@@ -230,6 +231,8 @@ export function createCoreSessionLoader(
     controlEnv?: (ctx: ControlEnvContext) => Record<string, string>;
     /** See CreateAgentOptions.petControl: desktop pet control for the `pet` tool. */
     petControl?: PetControlPort;
+    /** See CreateAgentOptions.browser: the agent browser for the `browser_read` / `browser_act` tools. */
+    browser?: BrowserPort;
   } = {},
 ): SessionLoader {
   return {
@@ -241,6 +244,7 @@ export function createCoreSessionLoader(
         ...(opts.proxyEnv ? { proxyEnv: opts.proxyEnv } : {}),
         ...(opts.controlEnv ? { controlEnv: opts.controlEnv } : {}),
         ...(opts.petControl ? { petControl: opts.petControl } : {}),
+        ...(opts.browser ? { browser: opts.browser } : {}),
       });
       const located = await findLatestTraceFile(
         tracesDir(root, row.projectId, row.agentId),

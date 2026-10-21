@@ -57,6 +57,10 @@
     "./desktop-export": {
       "types": "./dist/api/desktop-export.d.ts",
       "import": "./dist/api/desktop-export.js"
+    },
+    "./browser": {
+      "types": "./dist/browser/shell-link.d.ts",
+      "import": "./dist/browser/shell-link.js"
     }
   },
   "main": "./dist/index.js",

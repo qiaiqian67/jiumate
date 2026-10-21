@@ -45,6 +45,7 @@ import type { EmbeddedServer } from "./server-process.js";
 import { getUpdaterStatus, handleUpdaterCommand, initUpdater, onUpdaterStatus } from "./updater.js";
 import { parseUpdaterCommand, updaterStatusMessage } from "./updater-status.js";
 import { wireExportPdf } from "./export-pdf.js";
+import { wireBuiltinBrowser } from "./builtin-browser-port.js";
 import { createPetWindow, isPetWindowOpen, type PetWindowHandle } from "./pet-window.js";
 import { registerThemePicker } from "./theme-picker.js";
 import { registerWorkspacePicker } from "./workspace-picker.js";
@@ -301,6 +302,12 @@ function createWindow(url: string): void {
       // The installer's answers, handed to the preload synchronously. See setupSeedArg for why this
       // travels as an argument rather than over IPC or on `dom-ready`.
       additionalArguments: setupSeedArg(),
+      // The built-in browser's guests are <webview> elements this window's page creates, and
+      // Electron only defines the element in the main frame of a window with `webviewTag`.
+      // Every <webview> that reaches the main process afterwards passes `will-attach-webview`
+      // (builtin-browser.ts), which refuses anything outside this app's own browser partition
+      // — so the tag does not widen what the window can load, only where a guest may attach.
+      webviewTag: true,
     },
   });
   win.once("ready-to-show", () => win?.show());
@@ -475,6 +482,10 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
   // relays filter by `type` discriminator before acting, so they coexist on one channel
   // and a crash in one does not affect the other.
   wireExportPdf(started.child);
+  // The agent browser's third inbox on the same port: the shell hosts the <webview> guests and
+  // runs their CDP, which only the main process can do. Like the two relays above it filters
+  // by `type`, so all three coexist on one channel.
+  wireBuiltinBrowser(started.child, () => win);
   // A run that stays up for a minute is healthy: reset the restart budget so a crash
   // days later starts a fresh 1s/2s/4s ladder instead of hitting the cap immediately.
   const healthyTimer = setTimeout(() => {
