@@ -46,6 +46,7 @@ import {
 } from "../lib/session-grouping";
 import { useProject } from "./project";
 import { emitPrefsChanged } from "../features/pet/prefs-events";
+import { noteBrowserState } from "../features/browser/browser-list";
 
 interface SessionsContextValue {
   /** Loaded list (paged per Agent and category; each Agent's entries newest first). */
@@ -566,6 +567,13 @@ export function applyUserEvent(
   // stores that mirror prefs (see features/pet/prefs-events.ts).
   if (ev.type === "prefs_changed") {
     emitPrefsChanged();
+    return;
+  }
+  // The agent browser's state moved: a tab appeared, closed or crashed, or a page was asked
+  // for that a window has yet to open. The browser panel is the only listener, and it acts
+  // on the push rather than polling — so the tab strip does not lag behind the agent's page.
+  if (ev.type === "browser_state") {
+    noteBrowserState(ev.state);
     return;
   }
   // A Session changed run state. This is what keeps every row honest: a tab subscribes to the

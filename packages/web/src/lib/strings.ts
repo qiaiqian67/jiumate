@@ -96,6 +96,33 @@ export const zh = {
   },
 
   /** The dock surfaces (right / bottom) every side element renders in as a tab. */
+  /** The agent browser's dock panel: the pages the agent drives, and the ones the user opened. */
+  browser: {
+    title: "浏览器",
+    /** The panel's empty state: no page is open. */
+    empty: "暂无页面",
+    emptyHint: "让智能体打开一个页面，或在上方输入地址",
+    /** The address bar's placeholder. */
+    addressPlaceholder: "输入网址",
+    /** The address bar's go button. */
+    go: "前往",
+    /** The strip's +: a new blank page. */
+    newTab: "新建标签页",
+    /** A tab that has no title yet shows this. */
+    untitled: "新标签页",
+    /** The panel's body when the host has no browser at all. */
+    unavailable: "此设备没有浏览器",
+    unavailableHint: "内置浏览器是桌面应用的一部分，请在桌面应用中使用。",
+    /** A tab whose renderer died; the page is reloaded when the user asks for it. */
+    crashed: "页面已崩溃",
+    /** The strip ×: closes the tab. */
+    closeTab: "关闭标签页",
+    /** The back/forward buttons, and the reload one. */
+    back: "后退",
+    forward: "前进",
+    reload: "重新加载",
+  },
+
   dock: {
     /** The dock header's "+" menu: panels and shells this dock can take a tab for. */
     addTab: "添加面板",
@@ -602,7 +629,8 @@ export const zh = {
     deleteConfirm: "确认删除该项目？项目目录将被递归删除，不可恢复。",
     /** 默认项目删除说明（感叹号里的一句话）。递归删除不可恢复这句对任何项目都成立，但默认
         项目根本删不了，所以那半句在删除确认框里已经出现过一次；这里只说"为什么不能删"。 */
-    deleteDefaultForbidden: "默认项目与 CLI 共用，不允许在 Web 端删除。项目目录将被递归删除，不可恢复。",
+    deleteDefaultForbidden:
+      "默认项目与 CLI 共用，不允许在 Web 端删除。项目目录将被递归删除，不可恢复。",
     deleteLastForbidden: "这是当前账号最后一个项目，删除后将无项目可用；请先创建新的项目",
     noCredentialTitle: "尚未配置模型 credential",
     noCredentialBody: "当前项目的默认模型尚未配置 API key，发起对话前请先前往模型页配置。",
@@ -1800,11 +1828,9 @@ export const zh = {
     tabDesc:
       "让 Web App 之外的程序调用这个 Agent：创建密钥，程序用密钥发起请求。关闭开关立即生效，无需更换密钥。",
     enable: "启用 Agent API",
-    enableHint:
-      "关闭后所有外部请求立即返回 404，但密钥保留——重新打开就能继续用原来的密钥。",
+    enableHint: "关闭后所有外部请求立即返回 404，但密钥保留——重新打开就能继续用原来的密钥。",
     /** Shown when the admin has turned the whole feature off server-side; the switch cannot work. */
-    serverOff:
-      "管理员已在服务端关闭了整个 Agent API。这个 Agent 的开关打开也不会有请求能进来。",
+    serverOff: "管理员已在服务端关闭了整个 Agent API。这个 Agent 的开关打开也不会有请求能进来。",
     open: "允许免密钥访问",
     openHint:
       "打开后，不带密钥的请求也能调用这个 Agent。适合完全可信的本地环境——任何能访问本服务端的程序都可以用它。",
@@ -1845,8 +1871,7 @@ export const zh = {
     deleteKeyConfirmBody: (name: string): string =>
       `删除后，使用这个密钥的请求会立即被拒绝（401）。此操作无法撤销。`,
     keyDeleted: (name: string): string => `已删除密钥 ${name}`,
-    humanRequired:
-      "这个操作需要用密码登录的本人执行，Agent 自己的本地令牌无法修改自己的对外设置。",
+    humanRequired: "这个操作需要用密码登录的本人执行，Agent 自己的本地令牌无法修改自己的对外设置。",
     notExposedYet: "这个 Agent 还没有对外暴露，也没有密钥。打开上面的开关后即可创建。",
   },
 
@@ -3241,6 +3266,8 @@ export const zh = {
     read_image: "读取/加载图像文件（用于多模态处理）",
     describe_image: "对图像进行描述（调用视觉模型）",
     pet: "与虚拟宠物互动",
+    browser_read: "读取浏览器页面",
+    browser_act: "在浏览器页面上操作",
   } as Readonly<Record<string, string>>,
 };
 

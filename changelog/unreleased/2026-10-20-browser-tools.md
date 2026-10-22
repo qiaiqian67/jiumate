@@ -59,6 +59,16 @@ The panel is a page in the app's window, and it is the only thing that can creat
 guest's id, and claims the request with it. A host with no browser surface answers 503
 `browser_unavailable` rather than 404: the browser is a feature of the host, not a missing path.
 
+The state is pushed, not polled: a tab that appeared, closed or crashed — and a page that was
+asked for and has no window to show it — reach the panel as a `browser_state` event on the user
+channel, the moment they happen. A pull (`GET /api/browser/status`) is the catch-up for a
+window that missed one. So the tab strip does not lag behind the agent's page by a poll
+interval.
+
+A claimed request leaves the pending list at once, and a second window claiming the same one is
+told it made a duplicate — the element it made is removed, because a tab the server does not
+know about is a page the user cannot get back to.
+
 ## Compatibility
 
 - The built-in tool set gained two entries, so the kernel was advanced: `KERNEL_VERSION` is now
@@ -68,4 +78,13 @@ guest's id, and claims the request with it. A host with no browser surface answe
 - An existing Agent's persisted `tools.builtin` list is otherwise frozen as written, as for every
   newly added built-in tool: an Agent created before this change needs the two entries
   hand-added to its `system_config.yaml` to get them.
+- The main window's `webPreferences` gained `webviewTag: true`. It does not widen what the
+  window can load — every `<webview>` still passes `will-attach-webview` and is refused outside
+  this app's own browser partition — only where a guest may attach.
+- The server gained one subpath export (`@prismshadow/jiumate-server/browser`), carrying the
+  wire types between the shell and the runtime.
+- The user channel gained one event (`browser_state`), carrying the browser's state to the
+  window that shows it.
+- The Web App's dock gained a `browser` panel, offered only where Electron defines the
+  `<webview>` element — the desktop app's main window.
 - No data was migrated and no existing behaviour changed.

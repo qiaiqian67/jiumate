@@ -120,8 +120,18 @@ export function browserRoutes(deps: AppDeps): Hono<AppEnv> {
   app.post("/tabs", async (c) => {
     const body = await jsonBody(c);
     const url = optString(body, "url");
+    if (url === undefined || url.trim() === "") {
+      // No address means the browser's own start page. There is no such thing here yet, so
+      // the request is refused rather than answered with an empty navigation — a guest
+      // pointed at "" would be a blank page the user cannot get back from.
+      throw new HttpError(
+        400,
+        "bad_request",
+        "A URL is required to open a tab. The browser has no start page yet.",
+      );
+    }
     const newTab = optBool(body, "newTab");
-    const status = await service().open(url ?? "", {
+    const status = await service().open(url, {
       ...(newTab !== undefined ? { newTab } : {}),
     });
     return c.json(status);
@@ -136,7 +146,11 @@ export function browserRoutes(deps: AppDeps): Hono<AppEnv> {
     }
     const outcome = service().claim(tabId, requestId);
     if (outcome === "unknown") {
-      throw new HttpError(404, "unknown_request", "That open request is not waiting to be claimed.");
+      throw new HttpError(
+        404,
+        "unknown_request",
+        "That open request is not waiting to be claimed.",
+      );
     }
     if (outcome === "duplicate") {
       // A second window claiming the same request: the first one won, so this tab is a

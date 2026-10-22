@@ -44,7 +44,7 @@ export function expressionOf(params: Record<string, unknown> | undefined): strin
 
 export class FakeLink implements BrowserLink {
   readonly backend: BrowserBackend = "builtin";
-  readonly capabilities: BrowserBackendCapabilities = {
+  capabilities: BrowserBackendCapabilities = {
     createsTabs: false,
     throttles: true,
     cookieStore: true,

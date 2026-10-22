@@ -19,6 +19,7 @@ import type {
   ToolCallPayload,
 } from "@prismshadow/jiumate-core/omnimessage";
 import type {
+  BrowserStatus,
   MCPServerConfig,
   ThinkingLevelName,
   ToolDefinitionConfig,
@@ -2533,6 +2534,16 @@ export type ServerEvent =
       lastActiveAt: string;
       hasTrace: boolean;
     }
+  /**
+   * The agent browser's state moved: a tab appeared, closed or crashed, or a page was asked
+   * for that a window has yet to open. The Web App's browser panel is the only listener, and
+   * it acts on the push rather than polling, so the tab strip does not lag behind the
+   * agent's page.
+   *
+   * The state is the same as `GET /api/browser/status` answers, so a window that missed a
+   * push (it was reconnecting) can read the whole thing and catch up.
+   */
+  | { type: "browser_state"; state: BrowserStatus }
   /** Last-Event-ID has been evicted from the buffer: the frontend should re-fetch the history endpoint before continuing to consume this connection. */
   | { type: "resync_required" }
   /**

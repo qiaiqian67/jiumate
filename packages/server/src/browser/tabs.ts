@@ -147,6 +147,11 @@ export class TabRegistry {
   /**
    * The open request a newly created tab answers. The first claim wins; a second window
    * claiming the same request is a duplicate and is told so.
+   *
+   * A claimed request leaves the pending list at once: the tab exists now, so a panel that
+   * is still asking has nothing left to do for it. It is not deleted outright, though — the
+   * request stays as the record of what the tab was opened for, and a late second claim is
+   * still told it is a duplicate rather than "unknown".
    */
   claim(tabId: number, requestId: string): ClaimOutcome {
     const state = this.opens.get(requestId);
@@ -188,6 +193,27 @@ export class TabRegistry {
       if (state.openerTabId === openerTabId && state.createdAt >= since) found.push(state);
     }
     return found;
+  }
+
+  /**
+   * Every open request still waiting to be claimed. This is how a panel learns there is
+   * something to create: the server records the request and waits, because only a page can
+   * make the `<webview>` element the guest is hosted in. A request nobody claims expires on
+   * its own, so this list is never stale — it is bounded by time rather than by a sweep.
+   *
+   * A claimed request is not among them: its tab exists, so there is nothing left to create.
+   */
+  pendingOpens(): OpenRequest[] {
+    return [...this.opens.values()]
+      .filter((state) => state.claimedTabId === null)
+      .map((state) => ({
+        requestId: state.requestId,
+        url: state.url,
+        activate: state.activate,
+        ...(state.openerTabId !== undefined ? { openerTabId: state.openerTabId } : {}),
+        createdAt: state.createdAt,
+        claimedTabId: state.claimedTabId,
+      }));
   }
 
   /** Drops the open requests nobody claimed in time. */

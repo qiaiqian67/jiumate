@@ -4,18 +4,23 @@
  * browser to do and what it makes of the answer.
  */
 import { describe, expect, it, vi } from "vitest";
+import type { BrowserStatus } from "@prismshadow/jiumate-core/interfaces";
 import { BrowserService, originOf } from "../../src/browser/service.js";
 import type { ActionTiming } from "./../../src/browser/actions.js";
 import { TabRegistry, UnknownTabError } from "../../src/browser/tabs.js";
 import { FakeLink, evaluated, expressionOf, tab } from "./fake-link.js";
 
 /** A service over a fake far side, with the waiting taken out of it. */
-function service(link: FakeLink, opts: { timing?: Partial<ActionTiming> } = {}): BrowserService {
+function service(
+  link: FakeLink,
+  opts: { timing?: Partial<ActionTiming>; onChange?: (state: BrowserStatus) => void } = {},
+): BrowserService {
   return new BrowserService({
     link,
     sleep: async () => undefined,
     now: () => 1_700_000_000_000,
     ...(opts.timing !== undefined ? { timing: opts.timing } : {}),
+    ...(opts.onChange !== undefined ? { onChange: opts.onChange } : {}),
   });
 }
 
@@ -298,5 +303,135 @@ describe("BrowserService", () => {
     const id = [...link.tabs.keys()][0]!;
     await svc.close(id);
     expect(link.tabs.size).toBe(0);
+  });
+});
+
+describe("the open requests a panel has to answer", () => {
+  it("records a request the far side cannot answer itself, and names it in the status", async () => {
+    // The far side cannot create tabs (the Web App's `<webview>` does), so the request waits
+    // for a panel to make one. Without it in the status, no panel would ever learn there is
+    // something to open.
+    const link = new FakeLink();
+    link.capabilities.createsTabs = false;
+    const svc = service(link, { timing: FAST });
+    const status = await svc.open("https://example.test/");
+    expect(status.openRequests).toHaveLength(1);
+    expect(status.openRequests?.[0]?.url).toBe("https://example.test/");
+    expect(status.openRequests?.[0]?.requestId).toBeTruthy();
+  });
+
+  it("says nothing about requests when there are none", async () => {
+    // An empty array on every poll would make every panel re-read for nothing.
+    const link = new FakeLink();
+    const status = await service(link, { timing: FAST }).status();
+    expect(status.openRequests).toBeUndefined();
+  });
+
+  it("drops a request once a panel has claimed it", async () => {
+    const link = new FakeLink();
+    link.capabilities.createsTabs = false;
+    const svc = service(link, { timing: FAST });
+    const status = await svc.open("https://example.test/");
+    const requestId = status.openRequests![0]!.requestId;
+    expect(svc.claim(42, requestId)).toBe("claimed");
+    const after = await svc.status();
+    expect(after.openRequests).toBeUndefined();
+  });
+
+  it("tells a second window that it made a duplicate", async () => {
+    // Two windows may both answer the same request. The first one wins, and the second is
+    // told to remove the element it made: a tab the server does not know about is a page the
+    // user cannot get back to.
+    const link = new FakeLink();
+    link.capabilities.createsTabs = false;
+    const svc = service(link, { timing: FAST });
+    const status = await svc.open("https://example.test/");
+    const requestId = status.openRequests![0]!.requestId;
+    expect(svc.claim(42, requestId)).toBe("claimed");
+    expect(svc.claim(43, requestId)).toBe("duplicate");
+    expect(svc.claim(44, "never-asked-for")).toBe("unknown");
+  });
+
+  it("a popup in a page becomes a request the panel can answer", async () => {
+    const link = new FakeLink();
+    link.show(tab(1));
+    const svc = service(link, { timing: FAST });
+    // The far side denies the popup and asks for a tab instead.
+    link.event({
+      kind: "open-request",
+      url: "https://popup.test/",
+      openerTabId: 1,
+    });
+    await vi.waitFor(() => {
+      expect(link.commands.some((c) => c.op === "open-tab")).toBe(true);
+    });
+    const status = await svc.status();
+    expect(status.openRequests?.some((r) => r.url === "https://popup.test/")).toBe(true);
+  });
+});
+
+describe("the push the panel listens to", () => {
+  it("says so the moment a tab appears, so the strip does not wait for a poll", async () => {
+    const link = new FakeLink();
+    const seen: BrowserStatus[] = [];
+    const svc = service(link, { timing: FAST, onChange: (state) => seen.push(state) });
+    link.show(tab(1));
+    await vi.waitFor(() => {
+      expect(seen.length).toBeGreaterThan(0);
+    });
+    expect(seen[seen.length - 1]?.tabs.map((t) => t.id)).toContain(1);
+  });
+
+  it("says so when a tab goes away", async () => {
+    const link = new FakeLink();
+    const seen: BrowserStatus[] = [];
+    const svc = service(link, { timing: FAST, onChange: (state) => seen.push(state) });
+    link.show(tab(1));
+    await vi.waitFor(() => {
+      expect(seen.length).toBeGreaterThan(0);
+    });
+    link.close(1);
+    await vi.waitFor(() => {
+      expect(seen[seen.length - 1]?.tabs).toHaveLength(0);
+    });
+  });
+
+  it("says so when a page is asked for that no window has opened", async () => {
+    // The window that shows the browser has to learn there is something to open; without
+    // this push the request would sit unnoticed until the next poll.
+    const link = new FakeLink();
+    link.capabilities.createsTabs = false;
+    const seen: BrowserStatus[] = [];
+    const svc = service(link, { timing: FAST, onChange: (state) => seen.push(state) });
+    await svc.open("https://example.test/");
+    await vi.waitFor(() => {
+      expect(seen.some((s) => s.openRequests?.length === 1)).toBe(true);
+    });
+  });
+
+  it("says so when a window has claimed the request, so no other window tries", async () => {
+    const link = new FakeLink();
+    link.capabilities.createsTabs = false;
+    const seen: BrowserStatus[] = [];
+    const svc = service(link, { timing: FAST, onChange: (state) => seen.push(state) });
+    const status = await svc.open("https://example.test/");
+    const requestId = status.openRequests![0]!.requestId;
+    svc.claim(42, requestId);
+    await vi.waitFor(() => {
+      expect(seen[seen.length - 1]?.openRequests).toBeUndefined();
+    });
+  });
+
+  it("keeps going when the push itself fails", async () => {
+    // A broken channel costs the panel a delay, not the browser its work.
+    const link = new FakeLink();
+    const svc = service(link, {
+      timing: FAST,
+      onChange: () => {
+        throw new Error("the channel is gone");
+      },
+    });
+    link.show(tab(1));
+    await expect(svc.status()).resolves.toBeTruthy();
   });
 });

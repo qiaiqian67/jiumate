@@ -88,6 +88,33 @@ export const en: Strings = {
     exitedWithCode: (code: string): string => `exit code ${code}`,
   },
 
+  /** The agent browser's dock panel: the pages the agent drives, and the ones the user opened. */
+  browser: {
+    title: "Browser",
+    /** The panel's empty state: no page is open. */
+    empty: "No page open",
+    emptyHint: "Ask the agent to open a page, or type an address above",
+    /** The address bar's placeholder. */
+    addressPlaceholder: "Type an address",
+    /** The address bar's go button. */
+    go: "Go",
+    /** The strip's +: a new blank page. */
+    newTab: "New tab",
+    /** A tab that has no title yet shows this. */
+    untitled: "New tab",
+    /** The panel's body when the host has no browser at all. */
+    unavailable: "This device has no browser",
+    unavailableHint: "The built-in browser is part of the desktop app.",
+    /** A tab whose renderer died; the page is reloaded when the user asks for it. */
+    crashed: "The page crashed",
+    /** The strip ×: closes the tab. */
+    closeTab: "Close tab",
+    /** The back/forward buttons, and the reload one. */
+    back: "Back",
+    forward: "Forward",
+    reload: "Reload",
+  },
+
   dock: {
     addTab: "Add panel",
     closeTab: "Close panel",
@@ -279,7 +306,8 @@ export const en: Strings = {
      * the two apart; they coexist without either affecting the other.
      */
     chatFontSize: "Chat text size",
-    chatFontSizeInfo: "Font size of conversation text. The interface and code blocks are unaffected.",
+    chatFontSizeInfo:
+      "Font size of conversation text. The interface and code blocks are unaffected.",
     chatFontSmall: "Small",
     chatFontMedium: "Medium",
     chatFontLarge: "Large",
@@ -1845,7 +1873,8 @@ export const en: Strings = {
     thinkingLevel: "Thinking level",
     thinkingDefault: "Default",
     workspace: "Workspace",
-    workspaceHint: "Empty creates a temporary Workspace per run. A value must be a directory that already exists.",
+    workspaceHint:
+      "Empty creates a temporary Workspace per run. A value must be a directory that already exists.",
     workspacePlaceholder: "Empty = a new temporary Workspace per run",
     maxConcurrentRuns: "Concurrent runs",
     maxConcurrentHint:
@@ -1853,7 +1882,8 @@ export const en: Strings = {
     saved: "Saved",
     keysTitle: "Keys",
     keysEmpty: "No keys yet",
-    keysDesc: "A key is shown once, at creation, and cannot be read again. If it is lost, create another.",
+    keysDesc:
+      "A key is shown once, at creation, and cannot be read again. If it is lost, create another.",
     keyName: "Key name",
     keyNamePlaceholder: "For example: local script",
     createKey: "Create key",
@@ -1872,7 +1902,8 @@ export const en: Strings = {
     keyDeleted: (name: string): string => `Deleted the key ${name}`,
     humanRequired:
       "This needs the signed-in person. An Agent's own local token cannot change how that Agent is exposed.",
-    notExposedYet: "This Agent is not exposed and has no keys. Turn on the switch above to create one.",
+    notExposedYet:
+      "This Agent is not exposed and has no keys. Turn on the switch above to create one.",
   },
 
   skills: {

@@ -77,6 +77,29 @@ export interface BrowserStatus {
   backends: BrowserBackendInfo[];
   tabs: BrowserTab[];
   activeTabId: number | null;
+  /**
+   * The open requests a window has yet to answer. A request is a page someone asked for
+   * (the agent, or a popup inside a page) that only a page can create: the guest is hosted
+   * in a `<webview>` element, and the Web App's browser panel is what makes one. Until it
+   * does, the request waits here and expires on its own.
+   */
+  openRequests?: BrowserOpenRequest[];
+}
+
+/**
+ * One page that was asked for and has no tab yet. The panel creates a `<webview>` for it,
+ * learns the guest's id, and claims it; a second window claiming the same request is told it
+ * made a duplicate, and removes the element it made.
+ */
+export interface BrowserOpenRequest {
+  requestId: string;
+  url: string;
+  /** Whether the tab becomes the active one once it exists. */
+  activate: boolean;
+  /** The tab whose popup (or "Open link in new tab") asked for it. */
+  openerTabId?: number;
+  /** When the request was recorded, as epoch milliseconds. */
+  createdAt: number;
 }
 
 // ---------------------------------------------------------------------------

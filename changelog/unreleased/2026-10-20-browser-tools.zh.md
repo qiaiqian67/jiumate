@@ -34,8 +34,16 @@
 
 面板是应用窗口里的一个页面，而它是唯一能创建 `<webview>` 的东西——桌面端 shell 托管 guest，却不创建它们。所以浏览器的 HTTP 界面（`/api/browser`）就是"一个打开请求变成一个标签页"的地方：面板创建元素、拿到 guest 的 id、用它认领这个请求。没有浏览器界面的宿主回答 503 `browser_unavailable` 而不是 404：浏览器是宿主的一项能力，不是一个不存在的路径。
 
+状态是**推**过来的，不是轮询的：一个标签页的出现、关闭或崩溃——以及一个被请求却还没有窗口来显示的页面——都在发生的同一刻，以 `browser_state` 事件送到用户频道。拉取（`GET /api/browser/status`）是给错过了推送的窗口补齐用的。所以标签条不会比智能体的页面慢一个轮询周期。
+
+被认领的请求立刻离开待认领列表；而第二个窗口认领同一个请求会被告知它是重复的——它创建的元素会被移除，因为服务器不知道的标签页是用户回不去的页面。
+
 ## 兼容性
 
 - 内置工具集新增两条，因此推进了内核：`KERNEL_VERSION` 现为 `2026-10-20`，工具页此前的默认 hash 移入 `KERNEL_SUPERSEDED_TAB_HASHES`。`tools.builtin` 仍是上一版默认的 Agent 会推进到新版；被用户改过的则保留自己的行。
 - 除此之外，既有 Agent 落盘的 `tools.builtin` 列表按原样冻结，与所有新增内置工具一样：本次变更之前创建的 Agent，需要手工把这两条加进它的 `system_config.yaml` 才会拿到它们。
+- 主窗口的 `webPreferences` 新增了 `webviewTag: true`。它并没有扩大窗口能加载什么——每个 `<webview>` 仍要过 `will-attach-webview`，在本应用自己的浏览器分区之外一律被拒——只是允许 guest 挂载的位置。
+- server 新增一个子路径导出（`@prismshadow/jiumate-server/browser`），承载 shell 与运行时之间的线路类型。
+- 用户频道新增一个事件（`browser_state`），把浏览器的状态送到显示它的窗口。
+- Web App 的 dock 新增一个 `browser` 面板，且只在 Electron 定义了 `<webview>` 元素的地方出现——桌面应用的主窗口。
 - 没有数据迁移，既有行为不变。

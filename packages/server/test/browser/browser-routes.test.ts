@@ -108,6 +108,87 @@ describe("the tab routes", () => {
     }
   });
 
+  it("refuses to open a tab with no address", async () => {
+    // An empty address would be a blank guest the user cannot get back from. There is no
+    // start page yet, so the request is refused rather than answered with one.
+    const t = await createTestApp({ browser: browser(new FakeLink()) });
+    try {
+      const admin = await loginAdmin(t.app);
+      const res = await t.app.request("/api/browser/tabs", {
+        method: "POST",
+        headers: { cookie: admin.cookie, "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      expect(res.status).toBe(400);
+      expect(((await res.json()) as ErrorBody).error.code).toBe("bad_request");
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it("hands a panel the open requests it has to answer, and takes them back once claimed", async () => {
+    const link = new FakeLink();
+    link.capabilities.createsTabs = false;
+    const t = await createTestApp({ browser: browser(link) });
+    try {
+      const admin = await loginAdmin(t.app);
+      const headers = { cookie: admin.cookie, "content-type": "application/json" };
+      // The far side cannot create tabs, so the request waits for a panel.
+      await t.app.request("/api/browser/tabs", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ url: "https://example.test/" }),
+      });
+      const status = await t.app.request("/api/browser/status", { headers });
+      const body = (await status.json()) as {
+        openRequests?: { requestId: string; url: string }[];
+      };
+      expect(body.openRequests).toHaveLength(1);
+      const requestId = body.openRequests![0]!.requestId;
+      expect(body.openRequests![0]!.url).toBe("https://example.test/");
+
+      // The panel claims it with the guest's id.
+      const claimed = await t.app.request("/api/browser/tabs/claim", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ requestId, tabId: 42 }),
+      });
+      expect(claimed.status).toBe(200);
+
+      // A second window claiming the same request is told it made a duplicate.
+      const duplicate = await t.app.request("/api/browser/tabs/claim", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ requestId, tabId: 43 }),
+      });
+      expect(duplicate.status).toBe(409);
+      expect(((await duplicate.json()) as ErrorBody).error.code).toBe("duplicate_claim");
+
+      // And the request is no longer pending: its tab exists.
+      const after = await t.app.request("/api/browser/status", { headers });
+      const afterBody = (await after.json()) as { openRequests?: unknown[] };
+      expect(afterBody.openRequests).toBeUndefined();
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it("answers 404 unknown_request for a claim nobody asked for", async () => {
+    const t = await createTestApp({ browser: browser(new FakeLink()) });
+    try {
+      const admin = await loginAdmin(t.app);
+      const res = await t.app.request("/api/browser/tabs/claim", {
+        method: "POST",
+        headers: { cookie: admin.cookie, "content-type": "application/json" },
+        body: JSON.stringify({ requestId: "never-asked-for", tabId: 42 }),
+      });
+      expect(res.status).toBe(404);
+      expect(((await res.json()) as ErrorBody).error.code).toBe("unknown_request");
+    } finally {
+      await t.cleanup();
+    }
+  });
+
   it("answers 404 no_such_tab for a tab that is not open", async () => {
     const t = await createTestApp({ browser: browser(new FakeLink()) });
     try {

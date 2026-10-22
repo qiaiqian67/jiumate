@@ -52,6 +52,13 @@ export interface BrowserServiceOptions {
   now?: () => number;
   /** The scan's content budget, in characters. */
   scanMaxChars?: number;
+  /**
+   * Called whenever the browser's state changes — a tab appeared, closed or crashed, or a
+   * page was asked for that a window has yet to open. The Web App's panel learns of the
+   * change through this rather than by polling: the change is pushed the moment it happens,
+   * so the strip does not lag behind the agent's page by a poll interval.
+   */
+  onChange?: (state: BrowserStatus) => void;
 }
 
 export class BrowserService implements BrowserPort {
@@ -68,6 +75,8 @@ export class BrowserService implements BrowserPort {
   private refreshing: Promise<void> | null = null;
   /** The tab the user is looking at, or null when no window is showing one. */
   private onScreenTabId: number | null = null;
+  /** The push channel's callback, when the host gave one. */
+  private readonly onChange: ((state: BrowserStatus) => void) | undefined;
 
   constructor(opts: BrowserServiceOptions) {
     this.link = opts.link;
@@ -83,8 +92,38 @@ export class BrowserService implements BrowserPort {
       ...(opts.now !== undefined ? { now: opts.now } : {}),
     });
     this.scanMaxChars = opts.scanMaxChars;
+    this.onChange = opts.onChange;
     this.link.onEvent((event) => this.onLinkEvent(event));
     this.link.onConnect(() => this.refresh());
+  }
+
+  /**
+   * Tells the push channel the browser's state moved. A failure here is not the browser's
+   * problem: the panel will read the state the next time it asks, so a broken push costs a
+   * delay, not a wrong answer.
+   */
+  private announce(): void {
+    if (this.onChange === undefined) return;
+    try {
+      this.onChange(this.statusSync());
+    } catch {
+      // The channel is gone; the next state change tries again.
+    }
+  }
+
+  /** The state as it stands, without waiting for the far side. */
+  private statusSync(): BrowserStatus {
+    const info = this.backendInfo();
+    const opens = this.tabs.pendingOpens();
+    return {
+      available: info.available,
+      ...(info.reason !== undefined ? { reason: info.reason } : {}),
+      backend: info.backend,
+      backends: [info],
+      tabs: this.tabs.list(),
+      activeTabId: this.tabs.active(),
+      ...(opens.length > 0 ? { openRequests: opens } : {}),
+    };
   }
 
   /** The far side's tabs, as the registry reflects them. */
@@ -118,12 +157,15 @@ export class BrowserService implements BrowserPort {
     switch (event.kind) {
       case "tab":
         this.tabs.upsert(event.tab);
+        this.announce();
         return;
       case "tab-closed":
         this.tabs.remove(event.tabId);
+        this.announce();
         return;
       case "tab-crashed":
         this.tabs.markCrashed(event.tabId, event.reason);
+        this.announce();
         return;
       case "open-request": {
         // A popup the page asked for: the far side could not open it as a tab itself, so it
@@ -135,6 +177,9 @@ export class BrowserService implements BrowserPort {
         void this.link
           .request({ op: "open-tab", url: event.url, activate: event.background !== true })
           .catch(() => undefined);
+        // The panel has to learn there is something to open, or the request waits for a poll
+        // that may never come.
+        this.announce();
         void request;
         return;
       }
@@ -171,15 +216,7 @@ export class BrowserService implements BrowserPort {
 
   async status(): Promise<BrowserStatus> {
     await this.ensureTabs();
-    const info = this.backendInfo();
-    return {
-      available: info.available,
-      ...(info.reason !== undefined ? { reason: info.reason } : {}),
-      backend: info.backend,
-      backends: [info],
-      tabs: this.tabs.list(),
-      activeTabId: this.tabs.active(),
-    };
+    return this.statusSync();
   }
 
   async open(
@@ -207,6 +244,8 @@ export class BrowserService implements BrowserPort {
       // recorded and answered when that tab claims it.
       this.tabs.requestOpen(url, { activate: true });
       await this.link.request({ op: "open-tab", url, activate: true }).catch(() => undefined);
+      // A window has to learn there is something to open.
+      this.announce();
     }
     return this.status();
   }
@@ -216,6 +255,7 @@ export class BrowserService implements BrowserPort {
     const tab = this.resolveTab(tabId);
     await this.link.request({ op: "close-tab", tabId: tab.id });
     this.tabs.remove(tab.id);
+    this.announce();
     return this.status();
   }
 
@@ -281,7 +321,10 @@ export class BrowserService implements BrowserPort {
    * closed by the window that made it.
    */
   claim(tabId: number, requestId: string): "claimed" | "duplicate" | "unknown" {
-    return this.tabs.claim(tabId, requestId);
+    const outcome = this.tabs.claim(tabId, requestId);
+    // A claimed request is no longer pending, so every window must stop offering it.
+    this.announce();
+    return outcome;
   }
 
   /**
@@ -307,6 +350,7 @@ export class BrowserService implements BrowserPort {
     const tab = this.resolveTab(tabId);
     this.tabs.activate(tab.id);
     await this.link.request({ op: "activate-tab", tabId: tab.id }).catch(() => undefined);
+    this.announce();
     return this.status();
   }
 

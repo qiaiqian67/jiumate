@@ -1047,7 +1047,22 @@ export function buildAppDeps(
         : null;
   const browser =
     overrides.browser ??
-    (browserLink === null ? undefined : new BrowserService({ link: browserLink }));
+    (browserLink === null
+      ? undefined
+      : new BrowserService({
+          link: browserLink,
+          // The browser's state is pushed to the window that shows it, so the strip does not
+          // lag behind the agent's page by a poll interval. The browser belongs to the
+          // desktop app's own account, which is the built-in admin — the same account the
+          // shell signs in as.
+          onChange: (state) => {
+            const owner = usersRepo.list().find((user) => user.isAdmin)?.userId;
+            if (owner === undefined) return;
+            channels
+              .peek(userChannelKey(owner))
+              ?.publish({ type: "browser_state", state }, "server_event");
+          },
+        }));
 
   const recorder = new UsageRecorder(usageRepo, overrides.now ?? (() => new Date()));
   const errors = new ErrorRecorder(errorsRepo, overrides.now ?? (() => new Date()));

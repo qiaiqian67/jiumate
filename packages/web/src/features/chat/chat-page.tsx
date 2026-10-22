@@ -111,6 +111,7 @@ import { deletedChangeKeys } from "./memory-nav";
 import { SubagentsView } from "./subagents-view";
 import { TracePanel } from "../traces/trace-panel";
 import { MessagingPanel } from "../messaging/messaging-panel";
+import { BrowserPanel } from "../browser/browser-panel";
 import { DockPanel } from "../dock/dock-panel";
 import { useDockMount } from "../dock/use-dock-mount";
 import { panelLabel } from "../dock/panel-meta";
@@ -1638,6 +1639,11 @@ export function ChatPage() {
         return (
           <MessagingPanel key={selected.sessionId} sessionId={selected.sessionId} active={active} />
         );
+      case "browser":
+        // The browser's pages belong to the browser, not to a conversation, so this panel is
+        // not keyed by the Session and stays mounted across a switch — a page the agent
+        // opened must not reload because the user read another conversation.
+        return <BrowserPanel active={active} />;
     }
   };
 

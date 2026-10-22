@@ -52,6 +52,7 @@ import type { TerminalInfo } from "../terminal/terminal-view";
 import { createShellInDock, detachTerminal, openTerminalInDock } from "./dock-terminal";
 import { DockDragOverlay, dockDropCandidate } from "./dock-drag";
 import { panelGlyph, panelLabel } from "./panel-meta";
+import { webviewSupported } from "../browser/browser-panel";
 import {
   DOCK_MIN_HEIGHT_PX,
   DOCK_RATIO_MAX,
@@ -222,11 +223,14 @@ function DockPicker({
   choose,
   chooseTerminal,
   terminalSupported,
+  browserSupported,
   horizontal,
 }: {
   choose: (kind: PanelKind) => void;
   chooseTerminal: () => void;
   terminalSupported: boolean;
+  /** Whether this window can host guests at all (Electron defines `<webview>` only there). */
+  browserSupported: boolean;
   /** The bottom (and merged) surface lays its choices out in a row, the right one as a list. */
   horizontal: boolean;
 }) {
@@ -277,6 +281,7 @@ function DockPicker({
         {row("memory")}
         {row("trace")}
         {row("messaging")}
+        {browserSupported && row("browser")}
       </div>
     </div>
   );
@@ -548,7 +553,7 @@ export function DockPanel({
         </DockButton>
       }
     >
-      {PANEL_KINDS.map((kind) => (
+      {PANEL_KINDS.filter((kind) => kind !== "browser" || webviewSupported()).map((kind) => (
         <button
           key={kind}
           type="button"
@@ -721,6 +726,7 @@ export function DockPanel({
         choose={(kind) => openPanel(kind, merged ? undefined : position)}
         chooseTerminal={() => void openTerminalInDock(merged ? undefined : position)}
         terminalSupported={terminalSupported}
+        browserSupported={webviewSupported()}
         horizontal={horizontal}
       />
     ) : (
