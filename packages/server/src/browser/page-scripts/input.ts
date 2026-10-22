@@ -118,3 +118,37 @@ el.dispatchEvent(new Event('input', { bubbles: true }));
 el.dispatchEvent(new Event('change', { bubbles: true }));
 return { value: el.value, label: (option.textContent || '').trim() };`;
 }
+
+/**
+ * The file input's node, for CDP's `DOM.setFileInputFiles`.
+ *
+ * The node is asked for by marking the element with a temporary attribute and letting the
+ * browser's DOM agent find it — the page cannot hand a node id over, and CDP addresses
+ * nodes by one.
+ */
+export function fileInputScript(selector: string): string {
+  return String.raw`const sel = ${JSON.stringify(selector)};
+const el = document.querySelector(sel);
+if (!el) throw new Error('No element matches ' + sel);
+if (el.tagName !== 'INPUT' || el.type !== 'file') {
+  throw new Error('The element matching ' + sel + ' is not a file input');
+}
+el.setAttribute('data-jiumate-file-input', '1');
+return { count: document.querySelectorAll('input[data-jiumate-file-input]').length };`;
+}
+
+/**
+ * Tells the page its file input now holds files, and clears the marker.
+ *
+ * `DOM.setFileInputFiles` sets the files but does not fire the events, so a page that
+ * listens for `change` would not know anything happened.
+ */
+export function fireChangeScript(selector: string): string {
+  return String.raw`const sel = ${JSON.stringify(selector)};
+const el = document.querySelector(sel);
+if (!el) return false;
+el.dispatchEvent(new Event('input', { bubbles: true }));
+el.dispatchEvent(new Event('change', { bubbles: true }));
+el.removeAttribute('data-jiumate-file-input');
+return true;`;
+}

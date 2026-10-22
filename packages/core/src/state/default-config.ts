@@ -1072,11 +1072,15 @@ function defaultBuiltinTools(): ToolDefinitionConfig[] {
               "forward",
               "reload",
               "navigate",
+              "wait",
+              "upload",
+              "hover",
             ],
             description:
               'What to do: "click" an element, "type" text, "exec" script in the page, ' +
               '"scroll" the page, "press" a key, "select" an option in a dropdown, "navigate" ' +
-              'to a URL, or "back" / "forward" / "reload" in the page\'s history.',
+              'to a URL, "wait" for the page to be ready, "upload" files into a file input, ' +
+              'or "back" / "forward" / "reload" in the page\'s history.',
           },
           selector: {
             type: "string",
@@ -1111,6 +1115,26 @@ function defaultBuiltinTools(): ToolDefinitionConfig[] {
             type: "number",
             description:
               'How far to scroll, in pixels; negative scrolls up. Defaults to about a screen. For action="scroll".',
+          },
+          for: {
+            type: "string",
+            enum: ["visible", "hidden", "stable", "text", "load"],
+            description:
+              'What to wait for, for action="wait": "visible" (the selector appears and can be seen), ' +
+              '"hidden" (it goes away), "stable" (the page stops changing), "text" (the element holds ' +
+              'the given text), "load" (the page is done loading). "stable" is the one to use before ' +
+              "reading a page that is still rendering.",
+          },
+          timeout_ms: {
+            type: "number",
+            description:
+              'How long to wait at most, in milliseconds, for action="wait". Defaults to 10000.',
+          },
+          files: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              'The files to put into a file input, by their paths on this machine. Required for action="upload".',
           },
           tab_id: {
             type: "number",

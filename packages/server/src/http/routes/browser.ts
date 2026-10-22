@@ -286,6 +286,24 @@ export function browserRoutes(deps: AppDeps): Hono<AppEnv> {
     return c.json(await service().act(request));
   });
 
+  app.post("/tabs/:tab/wait", async (c) => {
+    const body = await jsonBody(c);
+    const selector = optString(body, "selector");
+    const forWhat = optString(body, "for");
+    const text = optString(body, "text");
+    const timeoutMs = optInt(body, "timeoutMs");
+    const tabId = tabIdOf(c, body);
+    const request: BrowserActRequest = {
+      action: "wait",
+      ...(selector !== undefined ? { selector } : {}),
+      ...(forWhat !== undefined ? { for: forWhat as BrowserActRequest["for"] } : {}),
+      ...(text !== undefined ? { text } : {}),
+      ...(timeoutMs !== undefined ? { timeout_ms: timeoutMs } : {}),
+      ...(tabId !== undefined ? { tabId } : {}),
+    };
+    return c.json(await service().act(request));
+  });
+
   app.post("/tabs/:tab/back", async (c) => {
     const body = await jsonBody(c);
     const tabId = tabIdOf(c, body);

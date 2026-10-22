@@ -21,6 +21,8 @@ import { execExpression, parseExecOutcome } from "./page-scripts/exec.js";
 import {
   DISPATCH_INPUT_EVENTS_SCRIPT,
   clickTargetScript,
+  fileInputScript,
+  fireChangeScript,
   focusScript,
   pointTargetScript,
   scrollScript,
@@ -32,6 +34,7 @@ import {
   MONITOR_STOP_SCRIPT,
 } from "./page-scripts/monitor.js";
 import { scanScript } from "./page-scripts/simplify.js";
+import { waitScript } from "./page-scripts/wait.js";
 
 /** The scan's content budget. The text form gets a third of it. */
 export const DEFAULT_SCAN_MAX_CHARS = 35_000;
@@ -443,6 +446,141 @@ export class BrowserActions {
       throw new HttpError(502, "cdp_error", "The page returned no screenshot.");
     }
     return { mime: "image/png", data: shot.data };
+  }
+
+  /**
+   * Waits for the page to be ready, and says whether it got there.
+   *
+   * This is the action that saves the model its budget: a page that is still loading is
+   * waited for by ONE call, instead of by a scan every second. A scan of a real page costs
+   * thousands of tokens, and a model that polls spends its whole budget on the polling.
+   *
+   * The page watches itself, so the wait ends the instant the condition holds rather than
+   * on the next tick — and a wait that times out says so, rather than leaving the model to
+   * wonder whether the element is there.
+   */
+  async wait(
+    tabId: number,
+    opts: {
+      selector?: string;
+      for?: "visible" | "hidden" | "stable" | "text" | "load";
+      text?: string;
+      timeoutMs?: number;
+      settleMs?: number;
+    },
+  ): Promise<BrowserExecResult> {
+    const what = opts.for ?? (opts.selector === undefined ? "load" : "visible");
+    const timeoutMs = Math.max(0, Math.min(opts.timeoutMs ?? 10_000, 60_000));
+    const settleMs = Math.max(0, Math.min(opts.settleMs ?? 500, 10_000));
+    return this.observed(tabId, { noMonitor: false, acceptDialogs: false }, async () => {
+      try {
+        const evaluated = await this.driver.evaluate(
+          tabId,
+          waitScript(opts.selector ?? "", what, opts.text ?? null, timeoutMs, settleMs),
+          { timeoutMs: timeoutMs + this.timing.helperTimeoutMs },
+        );
+        if ("reloaded" in evaluated) {
+          // The page navigated while waiting: the condition is unknown, not false.
+          return { ok: false, error: "The page navigated while waiting; wait again." };
+        }
+        const outcome = evaluated.value as
+          { ok?: boolean; waited?: number; reason?: string; settledFor?: number } | undefined;
+        if (outcome === undefined || outcome.ok !== true) {
+          return {
+            ok: false,
+            error: outcome?.reason ?? `The page was still not ready after ${timeoutMs}ms.`,
+            value: { waited: outcome?.waited ?? timeoutMs, what },
+          };
+        }
+        return {
+          ok: true,
+          value: {
+            waited: outcome.waited ?? 0,
+            what,
+            ...(outcome.settledFor !== undefined ? { settledFor: outcome.settledFor } : {}),
+          },
+        };
+      } catch (err) {
+        if (tabGone(err)) throw err;
+        return { ok: false, error: messageOf(err) };
+      }
+    });
+  }
+
+  /**
+   * Hovers an element.
+   *
+   * A mouse MOVED over the element, with no click: many components only reveal themselves
+   * on hover — a menu, a tooltip, a row's actions — and a page that needs one cannot be
+   * driven by clicking and typing alone.
+   */
+  async hover(tabId: number, selector: string): Promise<BrowserExecResult> {
+    return this.observed(tabId, { noMonitor: false, acceptDialogs: false }, async () => {
+      try {
+        const found = (await this.helper(tabId, clickTargetScript(selector, 0))) as {
+          x: number;
+          y: number;
+          tag?: string;
+          text?: string;
+        };
+        await this.driver.cdp(tabId, "Input.dispatchMouseEvent", {
+          type: "mouseMoved",
+          x: found.x,
+          y: found.y,
+          buttons: 0,
+        });
+        return {
+          ok: true,
+          value: { x: found.x, y: found.y, tag: found.tag, text: found.text },
+        };
+      } catch (err) {
+        if (tabGone(err)) throw err;
+        return { ok: false, error: messageOf(err) };
+      }
+    });
+  }
+
+  /**
+   * Puts files into a file input.
+   *
+   * The files are read by the browser process, not by the page: CDP's
+   * `DOM.setFileInputFiles` takes paths and hands the renderer the bytes, so a page that
+   * only accepts a real file gets one. The input's node is found first, because CDP
+   * addresses a node by id and the page has no other way to hand one over.
+   */
+  async upload(tabId: number, selector: string, files: string[]): Promise<BrowserExecResult> {
+    return this.observed(tabId, { noMonitor: false, acceptDialogs: false }, async () => {
+      try {
+        // CDP addresses a node by id, and the page cannot hand one over: so the input is
+        // marked, the browser's DOM agent is asked for the document, and the node is found
+        // in it by the marker.
+        await this.helper(tabId, fileInputScript(selector));
+        const root = (await this.driver.cdp(tabId, "DOM.getDocument", {
+          depth: 1,
+        })) as { root?: { nodeId?: number } };
+        const rootId = root.root?.nodeId;
+        if (rootId === undefined) {
+          return { ok: false, error: "The page's document could not be reached." };
+        }
+        const found = (await this.driver.cdp(tabId, "DOM.querySelector", {
+          nodeId: rootId,
+          selector: "input[data-jiumate-file-input]",
+        })) as { nodeId?: number };
+        const nodeId = found.nodeId;
+        if (nodeId === undefined || nodeId === 0) {
+          return { ok: false, error: `No file input matches ${selector}.` };
+        }
+        await this.driver.cdp(tabId, "DOM.setFileInputFiles", { files, nodeId });
+        // The page hears about the files through a change event, like it does for a person.
+        await this.driver.evaluate(tabId, fireChangeScript(selector), {
+          timeoutMs: this.timing.helperTimeoutMs,
+        });
+        return { ok: true, value: { files: files.length, selector } };
+      } catch (err) {
+        if (tabGone(err)) throw err;
+        return { ok: false, error: messageOf(err) };
+      }
+    });
   }
 
   /**

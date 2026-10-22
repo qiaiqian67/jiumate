@@ -179,7 +179,10 @@ export interface BrowserActRequest {
     | "back"
     | "forward"
     | "reload"
-    | "navigate";
+    | "navigate"
+    | "wait"
+    | "upload"
+    | "hover";
   /** Defaults to the active tab. */
   tabId?: number;
   /** click: the CSS selector to click, or the text to match. */
@@ -196,6 +199,12 @@ export interface BrowserActRequest {
   url?: string;
   /** scroll: how far to scroll, in pixels. Negative scrolls up. */
   amount?: number;
+  /** wait: what to wait for — an element to appear, to vanish, the page to settle, or the load to finish. */
+  for?: "visible" | "hidden" | "stable" | "text" | "load";
+  /** wait: how long to wait at most, in milliseconds. */
+  timeout_ms?: number;
+  /** upload: the files to put into the file input, by their paths on this machine. */
+  files?: string[];
   /** Whether the page's alert/confirm/prompt dialogs are accepted rather than dismissed. */
   acceptDialogs?: boolean;
 }

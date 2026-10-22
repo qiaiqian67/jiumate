@@ -67,7 +67,9 @@ export async function readProvenance(pluginDir: string): Promise<PluginProvenanc
  * that can re-add it, which is an explicit act.
  */
 export function canUpgrade(provenance: PluginProvenance | null): boolean {
-  return provenance !== null && typeof provenance.sourceUrl === "string" && provenance.sourceUrl !== "";
+  return (
+    provenance !== null && typeof provenance.sourceUrl === "string" && provenance.sourceUrl !== ""
+  );
 }
 
 /**

@@ -85,6 +85,19 @@ how tall it is — because a model told "scrolled to the bottom" when nothing mo
 asking. A key is dispatched as a person's keyboard would, so a form that only accepts trusted
 events accepts it. A `<select>` is chosen by its value or by the text the user reads on it.
 
+## Waiting, instead of scanning
+
+`browser_act` grew `wait`: for an element to appear or vanish, for the page to stop
+changing, for the load to finish. The page watches itself, so one call does the waiting and
+ends the instant the condition holds.
+
+This is the action that saves the model its budget. A scan of a real page costs thousands of
+tokens, and a model that polls a loading page spends its whole budget on the polling. A wait
+that times out says so, rather than leaving the model to wonder whether the element is there.
+
+`hover` and `upload` came with it: many components only reveal themselves on a hover, and a
+file input was something the agent could not fill at all.
+
 
 ## Compatibility
 

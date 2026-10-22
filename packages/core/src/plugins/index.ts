@@ -337,7 +337,8 @@ export function setPluginStoreRoot(root: string | null): void {
 }
 
 function pluginRootBase(): string | null {
-  const root = configuredRoot ?? process.env.JIUMATE_HOME ?? path.join(os.homedir(), ".jiumate", "data");
+  const root =
+    configuredRoot ?? process.env.JIUMATE_HOME ?? path.join(os.homedir(), ".jiumate", "data");
   try {
     return localPluginsDir(root);
   } catch {

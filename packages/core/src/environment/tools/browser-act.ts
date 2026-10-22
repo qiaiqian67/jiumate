@@ -137,6 +137,13 @@ export function createBrowserActTool(
         yield delta(`Missing required argument "url" for ${definition.name} action="navigate".`);
         return { stopReason: "fatal" };
       }
+      if (action === "upload") {
+        const files = args["files"];
+        if (!Array.isArray(files) || files.length === 0) {
+          yield delta(`Missing required argument "files" for ${definition.name} action="upload".`);
+          return { stopReason: "fatal" };
+        }
+      }
 
       try {
         const result = await port.act({
@@ -147,8 +154,14 @@ export function createBrowserActTool(
           script: typeof args["script"] === "string" ? args["script"] : undefined,
           key: typeof args["key"] === "string" ? args["key"].trim() : undefined,
           value: typeof args["value"] === "string" ? args["value"] : undefined,
-          url: typeof args["url"] === "string" ? args["url"].trim() : undefined,
+          url: typeof args["url"] !== "string" ? undefined : args["url"].trim(),
           amount: typeof args["amount"] === "number" ? args["amount"] : undefined,
+          for:
+            typeof args["for"] === "string" ? (args["for"] as BrowserActRequest["for"]) : undefined,
+          timeout_ms: typeof args["timeout_ms"] === "number" ? args["timeout_ms"] : undefined,
+          files: Array.isArray(args["files"])
+            ? args["files"].filter((f): f is string => typeof f === "string")
+            : undefined,
           acceptDialogs: args["accept_dialogs"] === true,
         });
         yield delta(renderBrowserExecResult(result));

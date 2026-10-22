@@ -145,7 +145,10 @@ export async function writePluginArchive(entries: ArchiveEntry[], destDir: strin
     const target = path.resolve(root, entry.rel);
     const withinRoot = target === root || target.startsWith(root + path.sep);
     if (!withinRoot) {
-      throw new PluginArchiveError(`Archive entry escapes the destination: ${entry.rel}`, "path_escape");
+      throw new PluginArchiveError(
+        `Archive entry escapes the destination: ${entry.rel}`,
+        "path_escape",
+      );
     }
     await fs.mkdir(path.dirname(target), { recursive: true });
     await atomicWriteFile(target, Buffer.from(entry.data));

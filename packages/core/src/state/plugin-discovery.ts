@@ -121,7 +121,9 @@ function pluginsIn(dir: string): { name: string; path: string }[] {
  * it as "not a plugin" would look like the scanner being broken rather than like a byte the author
  * never meant to put there.
  */
-function readManifest(dir: string): { version: string; description: string; descriptionZh?: string } | null {
+function readManifest(
+  dir: string,
+): { version: string; description: string; descriptionZh?: string } | null {
   const manifestFile = pluginManifestPath(dir);
   if (manifestFile === null) return null;
   let parsed: unknown;
@@ -243,7 +245,11 @@ export function discoverPlugins(
     const resolved = path.resolve(manualPath.trim());
     // A picked path may be the plugin itself or a folder holding plugins; both are reasonable, and
     // trying the manifest first then the listing is what makes 「选哪个都行」 true.
-    const direct = describeDiscovered({ name: path.basename(resolved), path: resolved, origin: "manual" });
+    const direct = describeDiscovered({
+      name: path.basename(resolved),
+      path: resolved,
+      origin: "manual",
+    });
     if (direct !== null) {
       seen.add(resolved.toLowerCase());
       plugins.push({ ...direct, alreadyInstalled: installed.has(direct.name) });

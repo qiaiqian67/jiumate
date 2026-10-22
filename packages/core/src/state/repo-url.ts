@@ -79,7 +79,10 @@ export function resolveRepoUrl(raw: string): ResolvedRepo {
   try {
     url = new URL(trimmed);
   } catch {
-    throw new RepoUrlError("That is not a URL. It should look like https://github.com/owner/repo.", raw);
+    throw new RepoUrlError(
+      "That is not a URL. It should look like https://github.com/owner/repo.",
+      raw,
+    );
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") {
     throw new RepoUrlError(`Only http and https URLs are supported (got ${url.protocol}).`, raw);
@@ -116,9 +119,7 @@ function resolveGithub(url: URL, input: string): ResolvedRepo {
   const third = segments[2];
   if (third === "archive") {
     // Already an archive URL — `https://github.com/o/r/archive/refs/heads/main.zip`. Keep it.
-    const tail = segments
-      .slice(3)
-      .join("/");
+    const tail = segments.slice(3).join("/");
     const branch = tail.replace(/^refs\/heads\//, "").replace(/\.zip$/, "") || DEFAULT_BRANCH;
     return {
       archiveUrl: url.toString(),
@@ -158,7 +159,9 @@ function resolveGithub(url: URL, input: string): ResolvedRepo {
 function nameFromPath(url: URL): string | null {
   const segments = url.pathname.split("/").filter((s) => s !== "");
   if (segments.length < 2) return null;
-  const repo = segments[1]!.toLowerCase().endsWith(".git") ? segments[1]!.slice(0, -4) : segments[1]!;
+  const repo = segments[1]!.toLowerCase().endsWith(".git")
+    ? segments[1]!.slice(0, -4)
+    : segments[1]!;
   return `${segments[0]}/${repo}`;
 }
 
@@ -209,6 +212,8 @@ export function looksLikeArchive(url: string): boolean {
  * other would create a second plugin that the user then has to work out why is a duplicate.
  */
 export function pluginNameFromRepo(resolved: ResolvedRepo): string {
-  const name = resolved.name.includes("/") ? resolved.name.slice(resolved.name.indexOf("/") + 1) : resolved.name;
+  const name = resolved.name.includes("/")
+    ? resolved.name.slice(resolved.name.indexOf("/") + 1)
+    : resolved.name;
   return name.trim().toLowerCase();
 }

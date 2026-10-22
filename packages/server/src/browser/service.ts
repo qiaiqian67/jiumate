@@ -345,6 +345,30 @@ export class BrowserService implements BrowserPort {
         const amount = request.amount ?? 600;
         return this.actions.scroll(tab.id, amount);
       }
+      case "wait": {
+        return this.actions.wait(tab.id, {
+          ...(request.selector !== undefined ? { selector: request.selector } : {}),
+          ...(request.for !== undefined ? { for: request.for } : {}),
+          ...(request.text !== undefined ? { text: request.text } : {}),
+          ...(request.timeout_ms !== undefined ? { timeoutMs: request.timeout_ms } : {}),
+        });
+      }
+      case "upload": {
+        if (request.selector === undefined || request.selector === "") {
+          throw new HttpError(422, "invalid_request", "An upload needs a selector.");
+        }
+        const files = request.files ?? [];
+        if (files.length === 0) {
+          throw new HttpError(422, "invalid_request", "An upload needs at least one file.");
+        }
+        return this.actions.upload(tab.id, request.selector, files);
+      }
+      case "hover": {
+        if (request.selector === undefined || request.selector === "") {
+          throw new HttpError(422, "invalid_request", "A hover needs a selector.");
+        }
+        return this.actions.hover(tab.id, request.selector);
+      }
       case "press": {
         if (request.key === undefined || request.key.trim() === "") {
           throw new HttpError(422, "invalid_request", "Pressing needs a key.");
