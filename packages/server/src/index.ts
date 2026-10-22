@@ -249,6 +249,10 @@ class JiuMateServer {
         // port, so each filters the frames meant for it.
         this.deps.desktop.onBrowserCommand((msg) => shellPort.postMessage(msg));
         this.deps.browserLink?.listen(shellPort);
+        // The link is only "connected" once the shell has answered a hello, and the shell
+        // only exists as a listener once its port is wired — so the greeting comes here,
+        // after the port is there, not when the service was built.
+        void this.deps.browserLink?.handshake();
       }
     }
 

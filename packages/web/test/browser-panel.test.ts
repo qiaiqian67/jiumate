@@ -192,27 +192,43 @@ describe("the guests this window hosts", () => {
 
 describe("the panel's wiring", () => {
   it("mounts a guest's element with the browser's own partition", () => {
-    const panel = read("features/browser/browser-panel.tsx");
+    const runtime = read("features/browser/browser-runtime.tsx");
     // The desktop shell refuses a <webview> outside this partition (builtin-browser-rules.ts),
     // so a guest in another partition would be silently refused and the page would never
     // appear.
-    expect(panel).toContain("persist:jiumate-browser");
+    expect(runtime).toContain("persist:jiumate-browser");
   });
 
-  it("keeps the guests mounted, and only hides the ones that are not in front", () => {
+  it("hosts the guests in the app's runtime, not in the dock panel", () => {
+    const runtime = read("features/browser/browser-runtime.tsx");
     const panel = read("features/browser/browser-panel.tsx");
-    // A <webview> that is moved in the DOM reloads its page, so the elements are only ever
-    // appended or removed — never unmounted and remounted.
-    expect(panel).not.toContain("unmountOnExit");
-    expect(panel).toContain('"hidden"');
+    // A <webview> reloads its page whenever it is moved in the DOM, and the dock's bodies
+    // move between the right and bottom docks, in and out of the merged view, on every
+    // conversation switch. A guest inside a dock body would reload its page each time.
+    expect(panel).not.toContain("<webview\n");
+    expect(panel).not.toContain("<webview ");
+    expect(panel).not.toContain("<webview/>");
+    expect(runtime).toContain("<webview");
+    // And the runtime is mounted once, by AppLayout — not by the panel.
+    const layout = read("components/layout/app-layout.tsx");
+    expect(layout).toContain("BrowserRuntime");
+  });
+
+  it("the panel provides the slot the guest is shown in", () => {
+    const panel = read("features/browser/browser-panel.tsx");
+    const viewport = read("features/browser/browser-viewport.ts");
+    // The runtime and the panel are two different components: neither holds the other, so
+    // the slot is found by an attribute rather than a ref.
+    expect(panel).toContain("BROWSER_VIEWPORT_ATTR");
+    expect(viewport).toContain("BROWSER_VIEWPORT_ATTR");
   });
 
   it("takes the pushed state rather than polling for it", () => {
-    const panel = read("features/browser/browser-panel.tsx");
+    const runtime = read("features/browser/browser-runtime.tsx");
     const list = read("features/browser/browser-list.ts");
     // The state arrives on the user channel; a poll would make the strip lag behind the
     // agent's page by the poll interval.
-    expect(panel).not.toContain("setInterval");
+    expect(runtime).not.toContain("setInterval");
     expect(list).not.toContain("setInterval");
   });
 

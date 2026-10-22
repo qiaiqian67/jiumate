@@ -14,7 +14,7 @@ import type { BuiltinBrowserShell } from "./builtin-browser.js";
 
 /** The slice of the utilityProcess port this relay uses. */
 export interface ShellPort {
-  on(event: "message", listener: (e: { data: unknown }) => void): void;
+  on(event: "message", listener: (message: unknown) => void): void;
   postMessage(message: unknown): void;
 }
 
@@ -23,10 +23,16 @@ export interface ShellPort {
  * a browser command. Returns the relay's teardown, which replaces this port's listener rather
  * than removing it — Electron's port has no `off`, and the caller recreates the port between
  * server restarts anyway.
+ *
+ * `onWindow` is called with the window that may host guests, as soon as there is one. The
+ * relay is wired while the server is still starting and the window comes after it, so the
+ * host cannot be found by asking: the caller has to say when it exists. A shell that never
+ * learned about the window refuses every guest — and the refusal says nothing about the
+ * window being the reason, so the browser just stays empty.
  */
 export function wireBuiltinBrowser(
   port: ShellPort,
-  window: () => BrowserWindow | null,
+  onWindow: (host: (win: BrowserWindow) => void) => void,
 ): () => void {
   const shell: BuiltinBrowserShell = createBuiltinBrowserShell({
     post: (message) => port.postMessage(message),
@@ -35,12 +41,17 @@ export function wireBuiltinBrowser(
     log: (line) => console.log(`[desktop] ${line}`),
   });
 
-  const hostWindow = window();
-  if (hostWindow !== null) shell.host(hostWindow);
+  // The host window is named as soon as it exists: the relay is wired while the server is
+  // still starting, and the window comes after it. A shell that never learned about the
+  // window refuses every guest, and the browser stays empty with nothing to say why.
+  onWindow((win) => shell.host(win));
 
-  const listener = (e: { data: unknown }): void => {
+  const listener = (message: unknown): void => {
     try {
-      shell.handle(e.data);
+      // The utilityProcess port hands over the frame itself, not a `{ data }` wrapper: the
+      // server's side of the same port is Electron's `process.parentPort`, which DOES wrap
+      // it. The two are not the same object, so the shape each one delivers is its own.
+      shell.handle(message);
     } catch (err) {
       // A throw here would take down the main process on a frame from the server; the shell
       // reports its own failures as replies, so anything reaching here is a bug worth a line.

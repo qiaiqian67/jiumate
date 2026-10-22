@@ -370,6 +370,31 @@ describe("the open requests a panel has to answer", () => {
   });
 });
 
+describe("a far side that has not said hello yet", () => {
+  it("greets it before the first action, and the browser becomes available", async () => {
+    // The service is built before the shell's port exists, so a link that is never greeted
+    // stays "unconnected" for the life of the process — and the browser reports itself
+    // unavailable forever. This is the bug that hid behind "not_desktop".
+    const link = new FakeLink();
+    link.connected = false;
+    const svc = service(link, { timing: FAST });
+    // The far side comes up after the service was made.
+    link.connected = true;
+    const status = await svc.status();
+    expect(status.available).toBe(true);
+    expect(status.reason).toBeUndefined();
+  });
+
+  it("says it is unavailable when the far side never answers", async () => {
+    const link = new FakeLink();
+    link.connected = false;
+    const svc = service(link, { timing: FAST });
+    const status = await svc.status();
+    expect(status.available).toBe(false);
+    expect(status.reason).toBe("not_desktop");
+  });
+});
+
 describe("the push the panel listens to", () => {
   it("says so the moment a tab appears, so the strip does not wait for a poll", async () => {
     const link = new FakeLink();

@@ -26,6 +26,7 @@ import { parkActiveDraft } from "../../features/chat/draft-sessions";
 import { ChangePasswordDialog } from "../account/change-password-dialog";
 import { UpdateModal } from "../account/update-modal";
 import { TerminalDockRuntime } from "../../features/terminal/terminal-view-pool";
+import { BrowserRuntime } from "../../features/browser/browser-runtime";
 import { setDockScope } from "../../features/dock/dock-state";
 import { toneStrip } from "../../lib/tone";
 import { PetProvider } from "../../features/pet/pet-store";
@@ -360,6 +361,11 @@ export function AppLayout() {
             views live in this pool and are adopted into dock tab bodies by DOM handoff,
             so navigating between pages never reconnects a terminal. */}
           <TerminalDockRuntime />
+          {/* The browser's pages, for the same reason and one more: a <webview> reloads its
+            page whenever it is moved in the DOM, and the dock's bodies move constantly. So
+            the guests live in this one layer, in creation order, and the dock panel is
+            only the slot they are shown in. */}
+          <BrowserRuntime />
         </div>
 
         {/* The software-update modal, opened from the sidebar's update row and the draft

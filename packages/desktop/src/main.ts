@@ -89,6 +89,12 @@ app.setName(identity.name);
 if (process.platform === "win32") app.setAppUserModelId(identity.appUserModelId);
 
 let win: BrowserWindow | null = null;
+/**
+ * Tells the browser's shell that a window may host guests. It is set when the shell's relay
+ * is wired and called when the window exists — the two happen at different times, and the
+ * shell refuses every guest in a window it does not know.
+ */
+let hostBrowserWindow: ((win: BrowserWindow) => void) | null = null;
 let petHandle: PetWindowHandle | null = null;
 let server: EmbeddedServer | null = null;
 /** App origin (embedded or attached); null until boot resolves. */
@@ -310,6 +316,9 @@ function createWindow(url: string): void {
       webviewTag: true,
     },
   });
+  // The browser's shell learns about the window here: the shell's relay was wired before
+  // this window existed, and a shell that does not know the window refuses every guest.
+  hostBrowserWindow?.(win);
   win.once("ready-to-show", () => win?.show());
   // Only where the title bar is the page's. On macOS and Linux the frame is native, so there is
   // nothing for the renderer to adjust and the events would be dead weight.
@@ -485,7 +494,13 @@ async function startServerAndWindow(dataRoot: string): Promise<void> {
   // The agent browser's third inbox on the same port: the shell hosts the <webview> guests and
   // runs their CDP, which only the main process can do. Like the two relays above it filters
   // by `type`, so all three coexist on one channel.
-  wireBuiltinBrowser(started.child, () => win);
+  //
+  // The shell is told which window may host guests, and told it when the window exists —
+  // this runs before the window is created, so asking here would find nothing and every
+  // guest would be refused.
+  wireBuiltinBrowser(started.child, (host) => {
+    hostBrowserWindow = host;
+  });
   // A run that stays up for a minute is healthy: reset the restart budget so a crash
   // days later starts a fresh 1s/2s/4s ladder instead of hitting the cap immediately.
   const healthyTimer = setTimeout(() => {

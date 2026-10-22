@@ -32,7 +32,7 @@ import type {
 
 /** The slice of Electron's ParentPort this relay uses. Mirrors server/desktop-export-port.ts. */
 export interface ShellPort {
-  on(event: "message", listener: (e: { data: unknown }) => void): void;
+  on(event: "message", listener: (message: unknown) => void): void;
   postMessage(message: unknown): void;
 }
 
@@ -131,8 +131,10 @@ function timeoutAfter(ms: number, step: string): Promise<never> {
  * (the port itself only carries one inbox per channel). Returns an unsubscribe.
  */
 export function wireExportPdf(port: ShellPort): () => void {
-  const listener = (e: { data: unknown }): void => {
-    void handleFrame(port, e.data);
+  const listener = (message: unknown): void => {
+    // The utilityProcess port hands over the frame itself, not a `{ data }` wrapper — the
+    // server's side of the same port is Electron's `process.parentPort`, which DOES wrap it.
+    void handleFrame(port, message);
   };
   port.on("message", listener);
   return () => {

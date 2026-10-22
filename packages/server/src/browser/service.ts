@@ -95,6 +95,24 @@ export class BrowserService implements BrowserPort {
     this.onChange = opts.onChange;
     this.link.onEvent((event) => this.onLinkEvent(event));
     this.link.onConnect(() => this.refresh());
+    // The far side is only "connected" once it has answered a hello. Nobody else does that
+    // handshake: the link is created here, before the shell's port exists, and the port is
+    // handed over later. So the service makes it, and a far side that is not there yet simply
+    // does not answer — the next call tries again.
+    void this.handshake();
+  }
+
+  /**
+   * Greets the far side, so the link knows it is there. A far side that does not answer is
+   * not an error: the shell may not have started yet, and the browser is reported as
+   * unavailable until it does.
+   */
+  private async handshake(): Promise<void> {
+    try {
+      await this.link.handshake();
+    } catch {
+      // The link reports an unconnected far side itself; nothing to add.
+    }
   }
 
   /**
@@ -142,8 +160,14 @@ export class BrowserService implements BrowserPort {
    * Reads the far side's tab list once, before the first action. A tab that already existed
    * when this service was made would otherwise be missed: the far side reports its tabs as
    * events, and a service that was built after them has already missed those.
+   *
+   * A far side that has not said hello yet is greeted here first: the shell may have come up
+   * after the service was built, and without the greeting the browser would stay
+   * "unavailable" for the rest of the process's life.
    */
   private async ensureTabs(): Promise<void> {
+    if (this.refreshed) return;
+    if (!this.link.connected) await this.handshake();
     if (this.refreshed || !this.link.connected) return;
     if (this.refreshing === null) {
       this.refreshing = this.refresh().finally(() => {
