@@ -219,11 +219,17 @@ export function isKernelOutdated(kernelVersion: string | null | undefined): bool
  * - `2026-10-20` (current) — `browser_read` and `browser_act` joined the built-in set, so a model
  *   can read and act on a page without a shell command and the CLI's own browser verb. They are
  *   one tab's worth of change: the tools tab moved, and the other six are unchanged.
+ * - `2026-10-20` (the same day, the version reused) — the browser's tools grew: `browser_act`
+ *   gained `scroll`, `press`, `select`, `navigate`, `back`, `forward` and `reload`, and both
+ *   tools' `url` argument learned the address bar's rules — a bare host gets a scheme and
+ *   words become a search — so the model does not have to spell out a URL, and the user and
+ *   the agent can never disagree about what a string means. The tools tab moved again; the
+ *   other six are unchanged.
  */
 export const KERNEL_DEFAULT_TAB_HASHES: Readonly<Record<KernelTab, string>> = {
   prompt: "8e8cea5706a281e5944eae60ce9930eead848ce3f97d361e5b31f32ca46f9f2f",
   runtime: "5dfea06a5e801950c24f44f5527e62435ae4facc311a6587e53aa69983ab0346",
-  tools: "74525b589db93f8576e73c27cda4cbb9e1ef1e54ad62a4e07d95f10c8cf5d598",
+  tools: "ba888dc6c2ee6ffa977be3ad904671dceb91dc25172b46e910d9dfde6d20e611",
   skills: "7e343aa692e5eaeadfc8add6bb375fb50ac33ef81ebe460490fc219b0f3d707f",
   memory: "53d190390829cc0132bb12e468a6891f2e0576ec0c4022a9b4a5d9233666900d",
   vault: "19bd36a6d4ab442b66583c423450602b817990a9a79bafa21c9b6137fb6b47d8",
@@ -291,6 +297,7 @@ export const KERNEL_SUPERSEDED_TAB_HASHES: KernelSupersededTabHashes = {
     "c24bcf47b1377e9da4dcfb69a1f7240dcdbfff2d420df5db0a5eaec2b7d4087d", // before the companion tools became the single `pet` tool
     "5832198f35418754fb96351c7214bcb642f2cf095f1fc62fafb0f903a71b3195", // before `read_document` joined the set
     "3fc74b9382421b9a0b92e8e87764bbd8f1b45a4d636516e32f5ae4c74ef7ee49", // before `browser_read` / `browser_act` joined the set
+    "74525b589db93f8576e73c27cda4cbb9e1ef1e54ad62a4e07d95f10c8cf5d598", // before the browser's tools grew (scroll / press / select / navigate) and their `url` learned the address bar's rules
   ],
   // The memory prompt's wording before #397 named when a fact is worth saving.
   memory: ["c28acdda755552967cd0c99ba4ced407eddfa843b3dce228a965da4674676dc7"],

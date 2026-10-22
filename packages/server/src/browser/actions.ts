@@ -23,6 +23,8 @@ import {
   clickTargetScript,
   focusScript,
   pointTargetScript,
+  scrollScript,
+  selectScript,
 } from "./page-scripts/input.js";
 import {
   MONITOR_BEGIN_SCRIPT,
@@ -85,6 +87,57 @@ interface ActOutcome {
   value?: unknown;
   error?: string;
   reloaded?: boolean;
+}
+
+/**
+ * A key, as CDP's `Input.dispatchKeyEvent` wants it.
+ *
+ * The named keys are the ones a page handles by name; anything else is a single character
+ * and is typed as such. The codes and the virtual key codes are Chromium's own, so a page
+ * that reads `event.key` or `event.keyCode` sees what a person's keyboard would send.
+ */
+function keyEvent(key: string): {
+  key: string;
+  code: string;
+  windowsVirtualKeyCode: number;
+  nativeVirtualKeyCode: number;
+  text?: string;
+} {
+  const named: Record<string, { code: string; vk: number; text?: string }> = {
+    Enter: { code: "Enter", vk: 13, text: "\r" },
+    Tab: { code: "Tab", vk: 9 },
+    Escape: { code: "Escape", vk: 27 },
+    Backspace: { code: "Backspace", vk: 8 },
+    Delete: { code: "Delete", vk: 46 },
+    ArrowUp: { code: "ArrowUp", vk: 38 },
+    ArrowDown: { code: "ArrowDown", vk: 40 },
+    ArrowLeft: { code: "ArrowLeft", vk: 37 },
+    ArrowRight: { code: "ArrowRight", vk: 39 },
+    Home: { code: "Home", vk: 36 },
+    End: { code: "End", vk: 35 },
+    PageUp: { code: "PageUp", vk: 33 },
+    PageDown: { code: "PageDown", vk: 34 },
+    Space: { code: "Space", vk: 32, text: " " },
+  };
+  const found = named[key] ?? named[key.toLowerCase()];
+  if (found !== undefined) {
+    return {
+      key: key.length === 1 ? key : key.charAt(0).toUpperCase() + key.slice(1),
+      code: found.code,
+      windowsVirtualKeyCode: found.vk,
+      nativeVirtualKeyCode: found.vk,
+      ...(found.text !== undefined ? { text: found.text } : {}),
+    };
+  }
+  // A single character: typed as it is.
+  const upper = key.toUpperCase();
+  return {
+    key: key,
+    code: /^\p{L}$/u.test(key) ? `Key${upper}` : key,
+    windowsVirtualKeyCode: upper.charCodeAt(0),
+    nativeVirtualKeyCode: upper.charCodeAt(0),
+    text: key,
+  };
 }
 
 interface MonitorEnd {
@@ -390,6 +443,95 @@ export class BrowserActions {
       throw new HttpError(502, "cdp_error", "The page returned no screenshot.");
     }
     return { mime: "image/png", data: shot.data };
+  }
+
+  /**
+   * Scrolls the page, and says where it ended up.
+   *
+   * The answer matters more than the scroll: a model that is told "scrolled to the bottom"
+   * when the page did not move will keep asking, and one that is told the page's height
+   * and its position can decide for itself whether there is more to read.
+   */
+  async scroll(tabId: number, amount: number): Promise<BrowserExecResult> {
+    return this.observed(tabId, { noMonitor: false, acceptDialogs: false }, async () => {
+      try {
+        const outcome = (await this.helper(tabId, scrollScript(amount))) as {
+          moved: boolean;
+          x: number;
+          y: number;
+          atBottom: boolean;
+          atTop: boolean;
+          height: number;
+          viewport: number;
+        };
+        return {
+          ok: true,
+          value: {
+            moved: outcome.moved,
+            x: outcome.x,
+            y: outcome.y,
+            atBottom: outcome.atBottom,
+            atTop: outcome.atTop,
+            pageHeight: outcome.height,
+            viewportHeight: outcome.viewport,
+          },
+        };
+      } catch (err) {
+        if (tabGone(err)) throw err;
+        return { ok: false, error: messageOf(err) };
+      }
+    });
+  }
+
+  /**
+   * Presses a key, the way a person's keyboard would.
+   *
+   * The key is dispatched through CDP, so the page cannot tell it from a person typing —
+   * which is the point: a form that only accepts trusted events would ignore a script.
+   */
+  async press(tabId: number, key: string, acceptDialogs?: boolean): Promise<BrowserExecResult> {
+    const event = keyEvent(key);
+    return this.observed(
+      tabId,
+      { noMonitor: false, acceptDialogs: acceptDialogs === true },
+      async () => {
+        try {
+          await this.driver.cdp(tabId, "Input.dispatchKeyEvent", {
+            type: "keyDown",
+            ...event,
+            ...(event.text === undefined ? {} : { text: event.text, unmodifiedText: event.text }),
+          });
+          await this.driver
+            .cdp(tabId, "Input.dispatchKeyEvent", { type: "keyUp", ...event })
+            .catch(() => undefined);
+          return { ok: true, value: { key } };
+        } catch (err) {
+          if (tabGone(err)) throw err;
+          return { ok: false, error: messageOf(err) };
+        }
+      },
+    );
+  }
+
+  /**
+   * Chooses an option in a `<select>`.
+   *
+   * The option is named by its value, or by the text the user reads on it — a model that
+   * saw "United States" in a scan should be able to choose it without knowing the value.
+   */
+  async select(tabId: number, selector: string, value: string): Promise<BrowserExecResult> {
+    return this.observed(tabId, { noMonitor: false, acceptDialogs: false }, async () => {
+      try {
+        const outcome = (await this.helper(tabId, selectScript(selector, value))) as {
+          value: string;
+          label: string;
+        };
+        return { ok: true, value: { selected: outcome.value, label: outcome.label } };
+      } catch (err) {
+        if (tabGone(err)) throw err;
+        return { ok: false, error: messageOf(err) };
+      }
+    });
   }
 
   /**

@@ -184,8 +184,12 @@ export function browserRoutes(deps: AppDeps): Hono<AppEnv> {
     const body = await jsonBody(c);
     const url = requiredString(body, "url");
     const tabId = tabIdOf(c, body);
-    await service().navigate(url, tabId);
-    return c.json(await service().status());
+    const request: BrowserActRequest = {
+      action: "navigate",
+      url,
+      ...(tabId !== undefined ? { tabId } : {}),
+    };
+    return c.json(await service().act(request));
   });
 
   app.post("/tabs/:tab/scan", async (c) => {
@@ -252,6 +256,58 @@ export function browserRoutes(deps: AppDeps): Hono<AppEnv> {
       tabId !== undefined ? { tabId } : {},
     );
     return c.json(shot);
+  });
+
+  // The actions the panel's own controls need: the address bar's go, the back and forward
+  // buttons, the reload. The agent reaches the same ones through the tool.
+  app.post("/tabs/:tab/scroll", async (c) => {
+    const body = await jsonBody(c);
+    const amount = optInt(body, "amount");
+    const tabId = tabIdOf(c, body);
+    const request: BrowserActRequest = {
+      action: "scroll",
+      ...(amount !== undefined ? { amount } : {}),
+      ...(tabId !== undefined ? { tabId } : {}),
+    };
+    return c.json(await service().act(request));
+  });
+
+  app.post("/tabs/:tab/press", async (c) => {
+    const body = await jsonBody(c);
+    const key = requiredString(body, "key");
+    const acceptDialogs = optBool(body, "acceptDialogs");
+    const tabId = tabIdOf(c, body);
+    const request: BrowserActRequest = {
+      action: "press",
+      key,
+      ...(acceptDialogs !== undefined ? { acceptDialogs } : {}),
+      ...(tabId !== undefined ? { tabId } : {}),
+    };
+    return c.json(await service().act(request));
+  });
+
+  app.post("/tabs/:tab/back", async (c) => {
+    const body = await jsonBody(c);
+    const tabId = tabIdOf(c, body);
+    return c.json(
+      await service().act({ action: "back", ...(tabId !== undefined ? { tabId } : {}) }),
+    );
+  });
+
+  app.post("/tabs/:tab/forward", async (c) => {
+    const body = await jsonBody(c);
+    const tabId = tabIdOf(c, body);
+    return c.json(
+      await service().act({ action: "forward", ...(tabId !== undefined ? { tabId } : {}) }),
+    );
+  });
+
+  app.post("/tabs/:tab/reload", async (c) => {
+    const body = await jsonBody(c);
+    const tabId = tabIdOf(c, body);
+    return c.json(
+      await service().act({ action: "reload", ...(tabId !== undefined ? { tabId } : {}) }),
+    );
   });
 
   return app;

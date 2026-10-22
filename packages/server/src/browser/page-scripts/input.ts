@@ -70,3 +70,51 @@ if (!el || el === document.body || el === document.documentElement) return false
 el.dispatchEvent(new Event('input', { bubbles: true }));
 el.dispatchEvent(new Event('change', { bubbles: true }));
 return true;`;
+
+/**
+ * Where the page is scrolled to, after scrolling.
+ *
+ * The agent needs to know whether the scroll moved anything: a page that is already at the
+ * bottom and is asked to scroll down does not move, and a model that is told "scrolled to
+ * the bottom" when nothing happened will keep asking.
+ */
+export function scrollScript(amount: number): string {
+  return String.raw`const before = { x: window.scrollX, y: window.scrollY };
+const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+const maxX = Math.max(0, document.documentElement.scrollWidth - window.innerWidth);
+const wantY = before.y + ${JSON.stringify(amount)};
+const targetY = Math.min(maxY, Math.max(0, wantY));
+window.scrollTo({ top: targetY, left: before.x, behavior: 'instant' });
+await new Promise((resolve) => setTimeout(resolve, 50));
+return {
+  moved: window.scrollY !== before.y || window.scrollX !== before.x,
+  x: window.scrollX,
+  y: window.scrollY,
+  atBottom: maxY === 0 || window.scrollY >= maxY - 1,
+  atTop: window.scrollY <= 1,
+  height: document.documentElement.scrollHeight,
+  viewport: window.innerHeight,
+};`;
+}
+
+/**
+ * Chooses an option in a `<select>`, and says what the select holds afterwards.
+ *
+ * The `change` event is dispatched as well: a select whose handler listens for it — which
+ * is most of them — would otherwise keep the old value.
+ */
+export function selectScript(selector: string, value: string): string {
+  return String.raw`const sel = ${JSON.stringify(selector)};
+const want = ${JSON.stringify(value)};
+const el = document.querySelector(sel);
+if (!el) throw new Error('No element matches ' + sel);
+if (el.tagName !== 'SELECT') throw new Error('The element matching ' + sel + ' is not a <select>');
+const byValue = [...el.options].find((o) => o.value === want);
+const byText = [...el.options].find((o) => (o.textContent || '').trim() === want);
+const option = byValue ?? byText;
+if (!option) throw new Error('The <select> matching ' + sel + ' has no option "' + want + '"');
+el.value = option.value;
+el.dispatchEvent(new Event('input', { bubbles: true }));
+el.dispatchEvent(new Event('change', { bubbles: true }));
+return { value: el.value, label: (option.textContent || '').trim() };`;
+}

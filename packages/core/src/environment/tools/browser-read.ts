@@ -43,7 +43,6 @@ function renderTabLine(tab: BrowserTab, activeTabId: number | null): string {
   const crashed = tab.crashed !== undefined ? ` [crashed: ${tab.crashed}]` : "";
   return `${mark}${tab.id} ${title} | ${tab.url}${tab.loading ? " (loading)" : ""}${crashed}`;
 }
-
 /**
  * Renders a status as the tool's text output. The backend is named on every call because the
  * tool does not choose it: which browser an agent drives is the user's setting, and a model that
@@ -66,6 +65,12 @@ export function renderBrowserStatus(status: BrowserStatus): string {
     lines.push('  (none open — open one with action="open")');
   } else {
     for (const tab of status.tabs) lines.push(`  ${renderTabLine(tab, status.activeTabId)}`);
+  }
+  // The tab the user is looking at is named apart: the agent drives the ACTIVE tab, and a
+  // model that does not know which one the user is watching may act on a page the user has
+  // moved on from — or be surprised that the page it is reading is not the one on screen.
+  if (status.onScreenTabId !== undefined && status.onScreenTabId !== status.activeTabId) {
+    lines.push(`The user is looking at tab ${status.onScreenTabId}.`);
   }
   return lines.join("\n");
 }

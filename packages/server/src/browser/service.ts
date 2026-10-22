@@ -25,6 +25,7 @@ import type {
   BrowserTab,
 } from "@prismshadow/jiumate-core/interfaces";
 import { HttpError } from "../http/errors.js";
+import { resolveAddress } from "@prismshadow/jiumate-core/browser";
 import { BrowserActions } from "./actions.js";
 import type { ActionTiming } from "./actions.js";
 import { BrowserDriver } from "./driver.js";
@@ -260,17 +261,23 @@ export class BrowserService implements BrowserPort {
     }
     if (options.tabId !== undefined) {
       const tab = this.resolveTab(options.tabId);
-      await this.actions.navigate(tab.id, url);
+      // The same rules the address bar uses: a bare host gets a scheme, and words become
+      // a search. A model that says "open the local dev server" should not have to spell
+      // out the URL, and neither should a person typing into the address bar.
+      await this.actions.navigate(tab.id, resolveAddress(url));
       this.tabs.activate(tab.id);
       return this.status();
     }
+    const resolved = resolveAddress(url);
     if (this.link.capabilities.createsTabs) {
-      await this.link.request({ op: "open-tab", url, activate: true });
+      await this.link.request({ op: "open-tab", url: resolved, activate: true });
     } else {
       // The far side cannot create tabs (the Web App's `<webview>` does): the request is
       // recorded and answered when that tab claims it.
-      this.tabs.requestOpen(url, { activate: true });
-      await this.link.request({ op: "open-tab", url, activate: true }).catch(() => undefined);
+      this.tabs.requestOpen(resolved, { activate: true });
+      await this.link
+        .request({ op: "open-tab", url: resolved, activate: true })
+        .catch(() => undefined);
       // A window has to learn there is something to open.
       this.announce();
     }
@@ -331,6 +338,49 @@ export class BrowserService implements BrowserPort {
           throw new HttpError(422, "invalid_request", "An exec needs a script.");
         }
         return this.guardedExec(tab, request.script, request.acceptDialogs === true);
+      }
+      case "scroll": {
+        // A scroll of nothing is still a scroll: the page's position is the answer, and a
+        // model that is told where the page is can decide whether to keep going.
+        const amount = request.amount ?? 600;
+        return this.actions.scroll(tab.id, amount);
+      }
+      case "press": {
+        if (request.key === undefined || request.key.trim() === "") {
+          throw new HttpError(422, "invalid_request", "Pressing needs a key.");
+        }
+        return this.actions.press(tab.id, request.key.trim(), request.acceptDialogs === true);
+      }
+      case "select": {
+        if (request.selector === undefined || request.selector === "") {
+          throw new HttpError(422, "invalid_request", "A select needs a selector.");
+        }
+        if (request.value === undefined || request.value === "") {
+          throw new HttpError(422, "invalid_request", "A select needs a value to choose.");
+        }
+        return this.actions.select(tab.id, request.selector, request.value);
+      }
+      case "back": {
+        await this.driver.cdp(tab.id, "Page.goBack").catch(() => undefined);
+        return { status: "success", tabId: tab.id };
+      }
+      case "forward": {
+        await this.driver.cdp(tab.id, "Page.goForward").catch(() => undefined);
+        return { status: "success", tabId: tab.id };
+      }
+      case "reload": {
+        await this.driver.cdp(tab.id, "Page.reload").catch(() => undefined);
+        return { status: "success", tabId: tab.id };
+      }
+      case "navigate": {
+        if (request.url === undefined || request.url.trim() === "") {
+          throw new HttpError(422, "invalid_request", "A navigation needs a URL.");
+        }
+        // The same rules the address bar uses: a bare host gets a scheme, and words become
+        // a search. A model that says "search for X" should not have to spell out the URL.
+        const url = resolveAddress(request.url.trim());
+        await this.actions.navigate(tab.id, url);
+        return { status: "success", tabId: tab.id };
       }
     }
   }

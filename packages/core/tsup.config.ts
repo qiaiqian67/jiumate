@@ -21,6 +21,10 @@ export default defineConfig({
     "src/state/model-catalog.ts",
     // Hot-update kernel: zero-dependency subpath so web can bundle it directly.
     "src/kernel/index.ts",
+    // The agent browser's shared vocabulary: the rules about addresses that both the user
+    // (in the address bar) and the agent (in the tool) need, so the two can never disagree
+    // about what a string means.
+    "src/browser/index.ts",
   ],
   format: ["esm"],
   target: "node24",

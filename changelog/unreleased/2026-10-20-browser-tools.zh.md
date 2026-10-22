@@ -38,9 +38,18 @@
 
 被认领的请求立刻离开待认领列表；而第二个窗口认领同一个请求会被告知它是重复的——它创建的元素会被移除，因为服务器不知道的标签页是用户回不去的页面。
 
+## 一套关于地址的规则
+
+用户在地址栏里打字，和智能体说"打开那个开发服务器"，说的是同一件事——所以只有一套规则，两边都走它：裸域名会补上协议（公网名用 https，回环地址和 IP 用 http），而词句变成一次网页搜索。智能体不必把 URL 拼全，而两边永远不会对同一个字符串有不同的理解。
+
+## 智能体不只会点击和输入
+
+`browser_act` 新增 `scroll`、`press`、`select`、`navigate`、`back`、`forward` 和 `reload`。滚动会回答页面最终到了哪里——动了没有、是不是到底了、页面多高——因为一个被告知"已滚到底"却其实没动的模型会一直问下去。按键是按人的键盘那样发出的，所以只接受可信事件的表单也会接受它。`<select>` 既可以按值选，也可以按用户看得见的文字选。
+
 ## 兼容性
 
 - 内置工具集新增两条，因此推进了内核：`KERNEL_VERSION` 现为 `2026-10-20`，工具页此前的默认 hash 移入 `KERNEL_SUPERSEDED_TAB_HASHES`。`tools.builtin` 仍是上一版默认的 Agent 会推进到新版；被用户改过的则保留自己的行。
+- 浏览器工具的动作集后来又长了一轮（`scroll` / `press` / `select` / `navigate` / `back` / `forward` / `reload`，以及 `url` 学会地址栏的规则），同一天复用同一个版本号，工具页此前的默认 hash 同样移入 `KERNEL_SUPERSEDED_TAB_HASHES`。
 - 除此之外，既有 Agent 落盘的 `tools.builtin` 列表按原样冻结，与所有新增内置工具一样：本次变更之前创建的 Agent，需要手工把这两条加进它的 `system_config.yaml` 才会拿到它们。
 - 主窗口的 `webPreferences` 新增了 `webviewTag: true`。它并没有扩大窗口能加载什么——每个 `<webview>` 仍要过 `will-attach-webview`，在本应用自己的浏览器分区之外一律被拒——只是允许 guest 挂载的位置。
 - server 新增一个子路径导出（`@prismshadow/jiumate-server/browser`），承载 shell 与运行时之间的线路类型。

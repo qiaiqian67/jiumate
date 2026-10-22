@@ -17,6 +17,7 @@
 import { partialToolCallOutput } from "../../omnimessage/index.js";
 import type { OmniMessage } from "../../omnimessage/index.js";
 import type {
+  BrowserActRequest,
   BrowserExecResult,
   BrowserPort,
   ToolDefinitionConfig,
@@ -116,14 +117,38 @@ export function createBrowserActTool(
         yield delta(`Missing required argument "script" for ${definition.name} action="exec".`);
         return { stopReason: "fatal" };
       }
+      if (action === "press" && (typeof args["key"] !== "string" || args["key"].trim() === "")) {
+        yield delta(`Missing required argument "key" for ${definition.name} action="press".`);
+        return { stopReason: "fatal" };
+      }
+      if (action === "select") {
+        if (typeof args["selector"] !== "string" || args["selector"].trim() === "") {
+          yield delta(
+            `Missing required argument "selector" for ${definition.name} action="select".`,
+          );
+          return { stopReason: "fatal" };
+        }
+        if (typeof args["value"] !== "string" || args["value"] === "") {
+          yield delta(`Missing required argument "value" for ${definition.name} action="select".`);
+          return { stopReason: "fatal" };
+        }
+      }
+      if (action === "navigate" && (typeof args["url"] !== "string" || args["url"].trim() === "")) {
+        yield delta(`Missing required argument "url" for ${definition.name} action="navigate".`);
+        return { stopReason: "fatal" };
+      }
 
       try {
         const result = await port.act({
-          action: action as "click" | "type" | "exec",
+          action: action as BrowserActRequest["action"],
           tabId: typeof args["tab_id"] === "number" ? args["tab_id"] : undefined,
           selector: typeof args["selector"] === "string" ? args["selector"].trim() : undefined,
           text: typeof args["text"] === "string" ? args["text"] : undefined,
           script: typeof args["script"] === "string" ? args["script"] : undefined,
+          key: typeof args["key"] === "string" ? args["key"].trim() : undefined,
+          value: typeof args["value"] === "string" ? args["value"] : undefined,
+          url: typeof args["url"] === "string" ? args["url"].trim() : undefined,
+          amount: typeof args["amount"] === "number" ? args["amount"] : undefined,
           acceptDialogs: args["accept_dialogs"] === true,
         });
         yield delta(renderBrowserExecResult(result));

@@ -1015,7 +1015,8 @@ function defaultBuiltinTools(): ToolDefinitionConfig[] {
           },
           url: {
             type: "string",
-            description: 'The URL to navigate to. Required for action="open".',
+            description:
+              'The URL to navigate to. A bare host gets a scheme and words become a search, so "example.com" and "weather in Beijing" both work. Required for action="open".',
           },
           tab_id: {
             type: "number",
@@ -1060,14 +1061,27 @@ function defaultBuiltinTools(): ToolDefinitionConfig[] {
         properties: {
           action: {
             type: "string",
-            enum: ["click", "type", "exec"],
+            enum: [
+              "click",
+              "type",
+              "exec",
+              "scroll",
+              "press",
+              "select",
+              "back",
+              "forward",
+              "reload",
+              "navigate",
+            ],
             description:
-              'What to do: "click" an element, "type" text, or "exec" script in the page.',
+              'What to do: "click" an element, "type" text, "exec" script in the page, ' +
+              '"scroll" the page, "press" a key, "select" an option in a dropdown, "navigate" ' +
+              'to a URL, or "back" / "forward" / "reload" in the page\'s history.',
           },
           selector: {
             type: "string",
             description:
-              'CSS selector of the element to click, or the text to match. Required for action="click".',
+              'CSS selector of the element to click, or the text to match. Required for action="click" and action="select".',
           },
           text: {
             type: "string",
@@ -1077,6 +1091,26 @@ function defaultBuiltinTools(): ToolDefinitionConfig[] {
             type: "string",
             description:
               'JavaScript to run in the page. Required for action="exec". Return exactly the value you need, as compact JSON — the page is left as it was unless the script changes it.',
+          },
+          key: {
+            type: "string",
+            description:
+              'The key to press: "Enter", "Tab", "Escape", "Backspace", "ArrowDown", "ArrowUp", "PageDown", or a single character. Required for action="press".',
+          },
+          value: {
+            type: "string",
+            description:
+              'The option to choose in a <select>, by its value or by the text shown. Required for action="select".',
+          },
+          url: {
+            type: "string",
+            description:
+              'The address to go to. A bare host gets a scheme and words become a search, so "example.com" and "weather in Beijing" both work. Required for action="navigate".',
+          },
+          amount: {
+            type: "number",
+            description:
+              'How far to scroll, in pixels; negative scrolls up. Defaults to about a screen. For action="scroll".',
           },
           tab_id: {
             type: "number",

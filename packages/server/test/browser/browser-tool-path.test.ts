@@ -176,4 +176,70 @@ describe("the agent's path through the browser", () => {
     expect(result.stopReason).toBe("fatal");
     expect(result.text).toMatch(/no tab|not open/i);
   });
+
+  it("scrolls the page, and says where it ended up", async () => {
+    // The position is the answer: a model told "scrolled to the bottom" when nothing moved
+    // would keep asking, and one told the page's height can decide for itself.
+    const link = new FakeLink();
+    link.show(tab(1));
+    link.cdp = (_tabId, method, params) => {
+      if (method !== "Runtime.evaluate") return {};
+      return evaluated({
+        moved: true,
+        x: 0,
+        y: 600,
+        atBottom: true,
+        atTop: false,
+        height: 2400,
+        viewport: 800,
+      });
+    };
+    const tool = actTool(link);
+    const result = await run(tool, { action: "scroll", amount: 600 });
+    expect(result.stopReason).toBeUndefined();
+    expect(result.text).toContain("atBottom");
+  });
+
+  it("presses a key", async () => {
+    const link = new FakeLink();
+    link.show(tab(1));
+    const tool = actTool(link);
+    const result = await run(tool, { action: "press", key: "Enter" });
+    expect(result.stopReason).toBeUndefined();
+    expect(result.text).toContain("Enter");
+  });
+
+  it("chooses an option in a dropdown", async () => {
+    const link = new FakeLink();
+    link.show(tab(1));
+    link.cdp = (_tabId, method) => {
+      if (method !== "Runtime.evaluate") return {};
+      return evaluated({ value: "us", label: "United States" });
+    };
+    const tool = actTool(link);
+    const result = await run(tool, { action: "select", selector: "#country", value: "us" });
+    expect(result.stopReason).toBeUndefined();
+    expect(result.text).toContain("United States");
+  });
+
+  it("navigates, and takes a bare host or a search for what it is given", async () => {
+    const link = new FakeLink();
+    link.show(tab(1));
+    const tool = actTool(link);
+    const result = await run(tool, { action: "navigate", url: "localhost:3000" });
+    expect(result.stopReason).toBeUndefined();
+    // The address the page was sent to is the bare host with a scheme — the same rule the
+    // address bar uses.
+    const navigated = link.commands.find((c) => c.op === "cdp");
+    expect(navigated).toBeTruthy();
+  });
+
+  it("says what is missing rather than failing obscurely", async () => {
+    const link = new FakeLink();
+    link.show(tab(1));
+    const tool = actTool(link);
+    const result = await run(tool, { action: "press" });
+    expect(result.stopReason).toBe("fatal");
+    expect(result.text).toContain("key");
+  });
 });

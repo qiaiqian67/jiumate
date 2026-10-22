@@ -46,6 +46,11 @@
       "types": "./dist/kernel/index.d.ts",
       "import": "./dist/kernel/index.js",
       "default": "./dist/kernel/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser/index.d.ts",
+      "import": "./dist/browser/index.js",
+      "default": "./dist/browser/index.js"
     }
   },
   "main": "./dist/index.js",

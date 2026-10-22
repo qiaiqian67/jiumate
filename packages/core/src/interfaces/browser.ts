@@ -63,6 +63,11 @@ export interface BrowserTab {
   canGoBack: boolean;
   canGoForward: boolean;
   /**
+   * The page's own icon, as a data URL (the shell reads it off the page). Absent when the
+   * page has none, or when the far side does not report one.
+   */
+  favicon?: string;
+  /**
    * Present while the page's renderer is gone, with the shell's reason (`crashed`, `oom`, …): an
    * action on such a tab fails until the page is reloaded.
    */
@@ -164,7 +169,17 @@ export interface BrowserScreenshot {
 
 /** Which tab an action applies to, and what it does. */
 export interface BrowserActRequest {
-  action: "click" | "type" | "exec";
+  action:
+    | "click"
+    | "type"
+    | "exec"
+    | "scroll"
+    | "press"
+    | "select"
+    | "back"
+    | "forward"
+    | "reload"
+    | "navigate";
   /** Defaults to the active tab. */
   tabId?: number;
   /** click: the CSS selector to click, or the text to match. */
@@ -173,6 +188,14 @@ export interface BrowserActRequest {
   text?: string;
   /** exec: the script to run in the page; its return value comes back as `value`. */
   script?: string;
+  /** press: the key to press — `Enter`, `Tab`, `Escape`, `ArrowDown`, or a single character. */
+  key?: string;
+  /** select: the option's value (or its text) to choose. */
+  value?: string;
+  /** navigate: the address to go to. */
+  url?: string;
+  /** scroll: how far to scroll, in pixels. Negative scrolls up. */
+  amount?: number;
   /** Whether the page's alert/confirm/prompt dialogs are accepted rather than dismissed. */
   acceptDialogs?: boolean;
 }

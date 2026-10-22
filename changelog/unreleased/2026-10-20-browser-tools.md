@@ -69,12 +69,33 @@ A claimed request leaves the pending list at once, and a second window claiming 
 told it made a duplicate — the element it made is removed, because a tab the server does not
 know about is a page the user cannot get back to.
 
+## One set of rules about addresses
+
+The user typing in the address bar and the agent saying "open the dev server" mean the same
+thing by the same string, so there is one set of rules and both go through it: a bare host gets
+a scheme (https for a public name, http for a loopback or IP address), and words become a web
+search. The agent does not have to spell out a URL, and the two can never disagree about what
+a string means.
+
+## The agent can do more than click and type
+
+`browser_act` grew `scroll`, `press`, `select`, `navigate`, `back`, `forward` and `reload`. A
+scroll answers with where the page ended up — whether it moved, whether it is at the bottom,
+how tall it is — because a model told "scrolled to the bottom" when nothing moved would keep
+asking. A key is dispatched as a person's keyboard would, so a form that only accepts trusted
+events accepts it. A `<select>` is chosen by its value or by the text the user reads on it.
+
+
 ## Compatibility
 
 - The built-in tool set gained two entries, so the kernel was advanced: `KERNEL_VERSION` is now
   `2026-10-20` and the tools tab's previous default hash moved into
   `KERNEL_SUPERSEDED_TAB_HASHES`. An Agent whose `tools.builtin` list is still the previous
   default advances to the new one; one the user edited keeps its own rows.
+- The browser's tools grew a second round (`scroll` / `press` / `select` / `navigate` / `back` /
+  `forward` / `reload`, and the `url` argument learning the address bar's rules), reusing the
+  same version the same day; the tools tab's previous default hash moved into
+  `KERNEL_SUPERSEDED_TAB_HASHES` the same way.
 - An existing Agent's persisted `tools.builtin` list is otherwise frozen as written, as for every
   newly added built-in tool: an Agent created before this change needs the two entries
   hand-added to its `system_config.yaml` to get them.
