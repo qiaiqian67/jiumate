@@ -393,6 +393,27 @@ describe("a far side that has not said hello yet", () => {
     expect(status.available).toBe(false);
     expect(status.reason).toBe("not_desktop");
   });
+
+  it("remembers the tab the user is looking at, and says so in the state", async () => {
+    // The tab the user is looking at is the panel's business, not the agent's: the agent
+    // drives the active tab, and the user may be looking at another one. The server keeps
+    // it so a page that is not in front is not mistaken for a closed one.
+    const link = new FakeLink();
+    link.show(tab(1));
+    link.show(tab(2));
+    const svc = service(link, { timing: FAST });
+    svc.setOnScreen(2);
+    const status = await svc.status();
+    expect(status.onScreenTabId).toBe(2);
+    expect(status.activeTabId).not.toBe(2);
+  });
+
+  it("says nothing about the screen when no window is showing one", async () => {
+    const link = new FakeLink();
+    const svc = service(link, { timing: FAST });
+    svc.setOnScreen(null);
+    expect((await svc.status()).onScreenTabId).toBeUndefined();
+  });
 });
 
 describe("the push the panel listens to", () => {

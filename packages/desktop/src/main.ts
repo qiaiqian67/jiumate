@@ -88,6 +88,13 @@ app.setName(identity.name);
 // so their taskbar/toast identity never claims the installed app's.
 if (process.platform === "win32") app.setAppUserModelId(identity.appUserModelId);
 
+// A dev-only remote debugging port, so the app's own window can be inspected with a
+// browser's devtools (or a script) while it runs. Off unless the environment asks for it:
+// a debugging port open on a user's machine is a hole, and the env var is the only way in.
+if (process.env.JIUMATE_DEBUG_PORT !== undefined) {
+  app.commandLine.appendSwitch("remote-debugging-port", process.env.JIUMATE_DEBUG_PORT);
+}
+
 let win: BrowserWindow | null = null;
 /**
  * Tells the browser's shell that a window may host guests. It is set when the shell's relay

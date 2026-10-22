@@ -78,6 +78,12 @@ export interface BrowserStatus {
   tabs: BrowserTab[];
   activeTabId: number | null;
   /**
+   * The tab the user is looking at, when a window is showing one. It is the panel's
+   * business, not the agent's: the agent drives the active tab, and the user may be
+   * looking at another one.
+   */
+  onScreenTabId?: number;
+  /**
    * The open requests a window has yet to answer. A request is a page someone asked for
    * (the agent, or a popup inside a page) that only a page can create: the guest is hosted
    * in a `<webview>` element, and the Web App's browser panel is what makes one. Until it

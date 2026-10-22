@@ -44,6 +44,7 @@ import { DEFAULT_PARK_SIZE, placement, slotRect, type Rect } from "./browser-lay
 import { browserSlot } from "./browser-viewport";
 import { revealBrowserPanel } from "./browser-reveal";
 import { currentDockScope } from "../dock/dock-state";
+import { apiFetch } from "../../api/client";
 
 /** The layer the pages live in, created once and never re-parented. */
 let layer: HTMLElement | null = null;
@@ -212,6 +213,16 @@ export function BrowserRuntime() {
     if (requests.length === 0) return;
     revealBrowserPanel(currentDockScope());
   }, [requests]);
+
+  // Which page the user is looking at. The server keeps it, so a page that is not in front
+  // is not mistaken for a closed one, and so the strip in every window shows the same.
+  const onScreenTabId = guests.find((guest) => guest.tabId === activeTabId)?.tabId ?? null;
+  useEffect(() => {
+    void apiFetch<void>("/api/browser/tabs/on-screen", {
+      method: "POST",
+      body: { tabId: onScreenTabId },
+    }).catch(() => undefined);
+  }, [onScreenTabId]);
 
   if (target === null) return null;
 

@@ -1578,8 +1578,15 @@ export function ChatPage() {
    * The panel tabs' bodies. Keyed by Session where the view starts over per conversation
    * (agents / memory / trace); the Workspace browser instead re-binds through its props —
    * its own handled-once request guard is what the conversation-switch e2e covers.
+   *
+   * The browser is the one panel that is NOT the conversation's: the agent opens a page for
+   * the user, who may be on the draft page or on another conversation entirely, and the page
+   * has to appear wherever the browser's tab is. So it is rendered before the session check
+   * — otherwise the agent's page would have nowhere to appear until the user sent a
+   * message.
    */
   const renderPanel = (kind: PanelKind, active: boolean): ReactNode => {
+    if (kind === "browser") return <BrowserPanel active={active} />;
     if (!selected) return <EmptyState title={panelLabel(kind)} description={S.dock.draftEmpty} />;
     switch (kind) {
       case "agents":
@@ -1639,11 +1646,6 @@ export function ChatPage() {
         return (
           <MessagingPanel key={selected.sessionId} sessionId={selected.sessionId} active={active} />
         );
-      case "browser":
-        // The browser's pages belong to the browser, not to a conversation, so this panel is
-        // not keyed by the Session and stays mounted across a switch — a page the agent
-        // opened must not reload because the user read another conversation.
-        return <BrowserPanel active={active} />;
     }
   };
 

@@ -72,4 +72,27 @@ describe("the layer's rules", () => {
     expect(panel).not.toContain("<webview ");
     expect(runtime).toContain("<webview");
   });
+
+  it("the panel is shown even on the draft page, where there is no conversation yet", () => {
+    const page = read("features/chat/chat-page.tsx");
+    // The browser is not the conversation's: the agent opens a page for the user, who may
+    // be on the draft page or on another conversation entirely, and the page has to appear
+    // wherever the browser's tab is. Behind the session check, it would have nowhere to
+    // appear until the user sent a message.
+    const start = page.indexOf("const renderPanel");
+    expect(start).toBeGreaterThan(-1);
+    const body = page.slice(start);
+    const browserCase = body.indexOf('if (kind === "browser")');
+    const sessionCheck = body.indexOf("if (!selected) return");
+    expect(browserCase).toBeGreaterThan(-1);
+    expect(sessionCheck).toBeGreaterThan(-1);
+    expect(browserCase).toBeLessThan(sessionCheck);
+  });
+
+  it("the layer reports the tab it shows, so the server can tell", () => {
+    const runtime = read("features/browser/browser-runtime.tsx");
+    // The server keeps the tab the user is looking at, so a page that is not in front is
+    // not mistaken for a closed one.
+    expect(runtime).toContain("/api/browser/tabs/on-screen");
+  });
 });

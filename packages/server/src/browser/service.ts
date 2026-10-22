@@ -140,6 +140,9 @@ export class BrowserService implements BrowserPort {
       backends: [info],
       tabs: this.tabs.list(),
       activeTabId: this.tabs.active(),
+      // The tab the user is looking at. It is the panel's business, not the agent's: the
+      // agent drives the active tab, and the user may be looking at another one.
+      ...(this.onScreenTabId !== null ? { onScreenTabId: this.onScreenTabId } : {}),
       ...(opens.length > 0 ? { openRequests: opens } : {}),
     };
   }
@@ -357,7 +360,10 @@ export class BrowserService implements BrowserPort {
    * closed one.
    */
   setOnScreen(tabId: number | null): void {
+    if (this.onScreenTabId === tabId) return;
     this.onScreenTabId = tabId;
+    // The user is looking at a different tab now, and every window's strip should show it.
+    this.announce();
   }
 
   /** The tab the user is looking at, or null. */
