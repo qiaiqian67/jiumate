@@ -34,6 +34,8 @@ import {
   subscribeBrowserState,
 } from "./browser-list";
 import { BROWSER_VIEWPORT_ATTR, webviewForTab } from "./browser-viewport";
+import { ImportDialog } from "./browser-import-dialog";
+import { ClearDataDialog } from "./browser-clear-dialog";
 
 /** Whether this window can host guests at all: Electron defines `<webview>` only in the
  *  desktop app's main window. Everywhere else the browser is not offered. */
@@ -147,6 +149,9 @@ function TabEntry({
 export function BrowserPanel({ active }: { active: boolean }) {
   const { tabs, activeTabId, available } = useBrowserState();
   const [address, setAddress] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [clearOpen, setClearOpen] = useState(false);
 
   // The address bar shows the page on screen, until the user types something else. A person
   // expects the bar to follow the page; a model never sees it.
@@ -174,7 +179,7 @@ export function BrowserPanel({ active }: { active: boolean }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* The toolbar: back, forward, reload, and the address bar. */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-gray-200 px-2 py-1.5 dark:border-gray-700">
+      <div className="relative flex shrink-0 items-center gap-1 border-b border-gray-200 px-2 py-1.5 dark:border-gray-700">
         <button
           type="button"
           aria-label={S.browser.back}
@@ -230,6 +235,39 @@ export function BrowserPanel({ active }: { active: boolean }) {
         >
           {S.browser.go}
         </button>
+        <button
+          type="button"
+          aria-label={S.browser.more}
+          title={S.browser.more}
+          onClick={() => setMenuOpen((open) => !open)}
+          className="rounded px-1.5 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+        >
+          ⋯
+        </button>
+        {menuOpen && (
+          <div className="absolute right-2 top-9 z-30 w-48 rounded border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900">
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setImportOpen(true);
+              }}
+              className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              {S.browser.import}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setClearOpen(true);
+              }}
+              className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              {S.browser.clearData}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* The tab strip: one entry per page, and a + for a new one. */}
@@ -268,6 +306,9 @@ export function BrowserPanel({ active }: { active: boolean }) {
           <div {...{ [BROWSER_VIEWPORT_ATTR]: "true" }} className="absolute inset-0" />
         )}
       </div>
+
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
+      <ClearDataDialog open={clearOpen} onClose={() => setClearOpen(false)} />
     </div>
   );
 }

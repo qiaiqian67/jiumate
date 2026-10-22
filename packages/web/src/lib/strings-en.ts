@@ -113,6 +113,29 @@ export const en: Strings = {
     back: "Back",
     forward: "Forward",
     reload: "Reload",
+    /** The overflow menu's button. */
+    more: "More",
+    /** The overflow menu's import entry. */
+    import: "Import from a system browser",
+    /** The import dialog's title. */
+    importTitle: "Import from a system browser",
+    importHint:
+      "Bring a system browser's sign-ins over, so the agent can open the pages you are signed in to.",
+    /** What to import. */
+    importCookies: "Sign-ins (cookies)",
+    importHistory: "Browsing history",
+    /** The "only these sites" field. */
+    importDomains: "Only these sites (empty means all)",
+    importDomainsPlaceholder: "e.g. github.com, mail.google.com",
+    /** What the import brought. */
+    importDone: "Imported {cookies} sign-ins and {history} history entries",
+    importSkipped: "Skipped {count}",
+    importNone: "No system browser to import from was found",
+    importFailed: "The import failed",
+    /** The clear-data entry. */
+    clearData: "Clear browsing data",
+    clearDataHint:
+      "Clear this browser's sign-ins and caches. The sign-ins an import brought go too.",
   },
 
   dock: {

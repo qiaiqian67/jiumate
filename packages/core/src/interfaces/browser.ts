@@ -164,6 +164,77 @@ export interface BrowserScreenshot {
 }
 
 // ---------------------------------------------------------------------------
+// Importing what a system browser holds
+// ---------------------------------------------------------------------------
+
+/** A browser family an import can read from. */
+export type BrowserImportBrowser = "chrome" | "edge" | "brave" | "opera" | "vivaldi" | "firefox";
+
+/**
+ * A profile on this machine that holds something worth importing.
+ *
+ * The user picks one of these; the agent never does. An import reads a browser's private
+ * state, so it is the user's call which profile it comes from and what it brings.
+ */
+export interface BrowserImportSource {
+  /** Stable within a machine: the browser's id, the profile's directory name, and the root. */
+  id: string;
+  browser: BrowserImportBrowser;
+  /** The browser's name, for the dialog's grouping. */
+  browserName: string;
+  /** The profile's display name — Chrome's "Profile 1", Firefox's "Default". */
+  profileName: string;
+  /** Whether the profile has cookies to import. */
+  hasCookies: boolean;
+  /** Whether the profile has history to import. */
+  hasHistory: boolean;
+  /** The domains it holds cookies for, for the dialog to show what an import would bring. */
+  domains: string[];
+}
+
+/** What to import, and from where. */
+export interface BrowserImportRequest {
+  sourceId: string;
+  /** The sign-in cookies: what lets the agent open a page the user is signed in to. */
+  cookies: boolean;
+  /** The browsing history. */
+  history: boolean;
+  /** Only these domains' cookies; every site when absent. */
+  domains?: string[];
+}
+
+/** What an import brought, and what it could not. */
+export interface BrowserImportResult {
+  /** The cookies that were taken. */
+  cookies: number;
+  /** The history entries that were taken. */
+  history: number;
+  /** The rows that could not be read — encrypted under a key that was not released, expired, or
+   *  belonging to another context. Counts, never values. */
+  skipped: number;
+  /** What the user should know: a keychain refusal, a browser holding its store open. */
+  warnings: string[];
+}
+
+/**
+ * A cookie as the shell takes it (Electron's `CookiesSetDetails`).
+ *
+ * `domain` is set only for a domain cookie: giving a host-only cookie a domain would widen
+ * it to every subdomain of that host.
+ */
+export interface BrowserCookie {
+  url: string;
+  name: string;
+  value: string;
+  domain?: string;
+  path: string;
+  secure: boolean;
+  httpOnly: boolean;
+  expirationDate?: number;
+  sameSite: "no_restriction" | "lax" | "strict" | "unspecified";
+}
+
+// ---------------------------------------------------------------------------
 // The port
 // ---------------------------------------------------------------------------
 

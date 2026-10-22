@@ -18,6 +18,9 @@ import type {
   BrowserBackend,
   BrowserBackendInfo,
   BrowserExecResult,
+  BrowserImportRequest,
+  BrowserImportResult,
+  BrowserImportSource,
   BrowserPort,
   BrowserScanResult,
   BrowserScreenshot,
@@ -26,6 +29,9 @@ import type {
 } from "@prismshadow/jiumate-core/interfaces";
 import { HttpError } from "../http/errors.js";
 import { resolveAddress } from "@prismshadow/jiumate-core/browser";
+import { listImportSources, readCookies, readHistory } from "./import/index.js";
+import type { HistoryEntry } from "./import/history.js";
+import type { HistoryStore } from "./history-store.js";
 import { BrowserActions } from "./actions.js";
 import type { ActionTiming } from "./actions.js";
 import { BrowserDriver } from "./driver.js";
@@ -60,6 +66,13 @@ export interface BrowserServiceOptions {
    * so the strip does not lag behind the agent's page by a poll interval.
    */
   onChange?: (state: BrowserStatus) => void;
+  /**
+   * The browser's history: the pages a tab visits, and what an import brought in.
+   *
+   * Without one the history is not kept, and an import's history entries have nowhere to
+   * go — the cookies still land, because they go into the browser's own store.
+   */
+  history?: HistoryStore;
 }
 
 export class BrowserService implements BrowserPort {
@@ -78,6 +91,8 @@ export class BrowserService implements BrowserPort {
   private onScreenTabId: number | null = null;
   /** The push channel's callback, when the host gave one. */
   private readonly onChange: ((state: BrowserStatus) => void) | undefined;
+  /** The browser's history, when the host gave one. */
+  private readonly history: HistoryStore | undefined;
 
   constructor(opts: BrowserServiceOptions) {
     this.link = opts.link;
@@ -94,6 +109,7 @@ export class BrowserService implements BrowserPort {
     });
     this.scanMaxChars = opts.scanMaxChars;
     this.onChange = opts.onChange;
+    this.history = opts.history;
     this.link.onEvent((event) => this.onLinkEvent(event));
     this.link.onConnect(() => this.refresh());
     // The far side is only "connected" once it has answered a hello. Nobody else does that
@@ -183,10 +199,23 @@ export class BrowserService implements BrowserPort {
 
   private onLinkEvent(event: BrowserLinkEvent): void {
     switch (event.kind) {
-      case "tab":
+      case "tab": {
         this.tabs.upsert(event.tab);
+        // A page the user (or the agent) reached is history. It is recorded here, where the
+        // far side announces the page, rather than in the actions: a page the agent navigated
+        // to is history just as much as one the user clicked into.
+        if (event.tab.title !== "" && event.tab.loading === false) {
+          this.history?.record({
+            url: event.tab.url,
+            title: event.tab.title,
+            visitCount: 1,
+            lastVisitAt: Date.now(),
+            source: "builtin",
+          });
+        }
         this.announce();
         return;
+      }
       case "tab-closed":
         this.tabs.remove(event.tabId);
         this.announce();
@@ -443,6 +472,93 @@ export class BrowserService implements BrowserPort {
   /** The tab the user is looking at, or null. */
   onScreen(): number | null {
     return this.onScreenTabId;
+  }
+
+  /**
+   * The browser profiles on this machine that hold something worth importing.
+   *
+   * Reading them is the user's call, and the agent never makes it: an import reads a
+   * browser's private state, so the user picks the profile and what it brings.
+   */
+  listImportSources(): BrowserImportSource[] {
+    return listImportSources();
+  }
+
+  /**
+   * Imports what a system browser holds into the built-in browser's own store.
+   *
+   * The cookies are what matter: they are what lets the agent open a page the user is signed
+   * in to, which is the difference between a browser that can only read public pages and one
+   * that can do the work. The history is a convenience — the user browses on.
+   *
+   * Nothing is written to the system browser: the import only reads it, through a private
+   * copy of its stores.
+   */
+  async importFromSystemBrowser(request: BrowserImportRequest): Promise<BrowserImportResult> {
+    if (!this.link.capabilities.cookieStore) {
+      throw new HttpError(
+        409,
+        "browser_cannot_import",
+        "This browser has no store to import into.",
+      );
+    }
+    const sources = listImportSources();
+    const source = sources.find((s) => s.id === request.sourceId);
+    if (source === undefined) {
+      throw new HttpError(404, "import_source_not_found", "That browser profile is not here.");
+    }
+    const warnings: string[] = [];
+    let cookies = 0;
+    let history = 0;
+    let skipped = 0;
+
+    if (request.cookies) {
+      const read = await readCookies(source, {
+        ...(request.domains !== undefined ? { domains: request.domains } : {}),
+      });
+      cookies = read.cookies.length;
+      skipped += read.skipped;
+      warnings.push(...read.warnings);
+      if (read.cookies.length > 0) {
+        const written = (await this.link.request({
+          op: "set-cookies",
+          cookies: read.cookies,
+        })) as { written?: number };
+        cookies = written.written ?? cookies;
+      }
+    }
+    if (request.history) {
+      const read = await readHistory(source);
+      // The history has somewhere to go: without a store the entries would be read and
+      // dropped, which is worse than not offering the option at all.
+      history = this.history === undefined ? 0 : this.history.merge(read.entries);
+      warnings.push(...read.warnings);
+    }
+    // The store changed, so a page opened now carries the sign-in.
+    this.announce();
+    return { cookies, history, skipped, warnings };
+  }
+
+  /**
+   * Empties the browser's own store: the sign-ins, the caches, the storage.
+   *
+   * The user asks for it, and it is not something the agent can do — an agent that could
+   * clear the store could clear the sign-in the import just brought.
+   */
+  async clearData(storages: readonly string[] = ["cookies", "localstorage"]): Promise<void> {
+    if (!this.link.capabilities.cookieStore) {
+      throw new HttpError(409, "browser_cannot_import", "This browser has no store to clear.");
+    }
+    await this.link.request({ op: "clear-data", storages: [...storages] });
+    // The history goes with it: clearing browsing data and keeping the record of what was
+    // browsed would be half an answer.
+    this.history?.clear();
+    this.announce();
+  }
+
+  /** The browser's history, newest first. */
+  historyEntries(): HistoryEntry[] {
+    return this.history?.list() ?? [];
   }
 
   /**

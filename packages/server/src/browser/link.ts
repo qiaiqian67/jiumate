@@ -15,6 +15,7 @@
 import type {
   BrowserBackend,
   BrowserBackendCapabilities,
+  BrowserCookie,
   BrowserTab,
 } from "@prismshadow/jiumate-core/interfaces";
 import { HttpError } from "../http/errors.js";
@@ -47,7 +48,20 @@ export type BrowserCommand =
   /** Reply: `{}`. */
   | { op: "close-tab"; tabId: number }
   /** Reply: `{}`. */
-  | { op: "activate-tab"; tabId: number };
+  | { op: "activate-tab"; tabId: number }
+  /**
+   * Writes cookies into the browser's own store, so a page the user is signed in to opens
+   * signed in. The far side answers how many it took.
+   *
+   * The cookies are the shell's shape (Electron's `CookiesSetDetails`), and the far side is
+   * the only one that has a cookie store to write to: the server cannot reach it.
+   */
+  | { op: "set-cookies"; cookies: BrowserCookie[] }
+  /**
+   * Empties the browser's store. The user asks for it; there is no agent-side verb for it,
+   * because it throws away the sign-ins the import brought.
+   */
+  | { op: "clear-data"; storages: string[] };
 
 /** An event the far side relays back. */
 export type BrowserLinkEvent =

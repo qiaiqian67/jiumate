@@ -100,6 +100,7 @@ import { TitleGenerator, TitleNotifier } from "./runtime/title-generator.js";
 import { AdminService } from "./services/admin-service.js";
 import { DesktopService } from "./services/desktop-service.js";
 import { BrowserService } from "./browser/service.js";
+import { HistoryStore } from "./browser/history-store.js";
 import { ShellLink } from "./browser/shell-link.js";
 import { BUILTIN_CAPABILITIES } from "./browser/link.js";
 import type { BrowserLink } from "./browser/link.js";
@@ -1051,6 +1052,9 @@ export function buildAppDeps(
       ? undefined
       : new BrowserService({
           link: browserLink,
+          // The browser's own history: the pages a tab visits, and what an import brings in.
+          // It lives in the data root, so it survives a restart and a hot swap.
+          history: new HistoryStore(config.root),
           // The browser's state is pushed to the window that shows it, so the strip does not
           // lag behind the agent's page by a poll interval. The browser belongs to the
           // desktop app's own account, which is the built-in admin — the same account the

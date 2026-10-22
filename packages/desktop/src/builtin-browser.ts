@@ -22,7 +22,7 @@
 import fs from "node:fs";
 import { BrowserWindow, Menu, app, clipboard, session } from "electron";
 import type { ContextMenuParams, MenuItemConstructorOptions, Session, WebContents } from "electron";
-import type { BrowserTab } from "@prismshadow/jiumate-core/interfaces";
+import type { BrowserCookie, BrowserTab } from "@prismshadow/jiumate-core/interfaces";
 import type {
   BrowserCommandMessage,
   BrowserEventMessage,
@@ -413,6 +413,43 @@ export function createBuiltinBrowserShell(opts: BuiltinBrowserShellOptions): Bui
     return {};
   }
 
+  /**
+   * Writes cookies into the browser's own store, so a page the user is signed in to opens
+   * signed in.
+   *
+   * The store is the partition's session, which is the one every guest shares — so the
+   * cookies reach every tab, and they survive the tab that was open when they arrived.
+   */
+  async function setCookies(
+    cookies: readonly BrowserCookie[],
+    partition?: string,
+  ): Promise<{ written: number }> {
+    const ses = browserSession(partition);
+    let written = 0;
+    for (const cookie of cookies) {
+      try {
+        await ses.cookies.set({
+          url: cookie.url,
+          name: cookie.name,
+          value: cookie.value,
+          ...(cookie.domain !== undefined ? { domain: cookie.domain } : {}),
+          path: cookie.path,
+          secure: cookie.secure,
+          httpOnly: cookie.httpOnly,
+          ...(cookie.expirationDate !== undefined
+            ? { expirationDate: cookie.expirationDate }
+            : {}),
+          sameSite: cookie.sameSite,
+        });
+        written++;
+      } catch {
+        // One cookie the store refuses (a malformed domain, a SameSite the store rejects) must
+        // not cost the other thousand.
+      }
+    }
+    return { written };
+  }
+
   async function run(command: Record<string, unknown>): Promise<unknown> {
     switch (command["op"]) {
       case "hello":
@@ -484,6 +521,20 @@ export function createBuiltinBrowserShell(opts: BuiltinBrowserShellOptions): Bui
           ? sent.filter((id): id is number => typeof id === "number")
           : [];
         return throttle(tabIds);
+      }
+      case "set-cookies": {
+        const sent = command["cookies"];
+        const cookies = Array.isArray(sent)
+          ? sent.filter((c): c is BrowserCookie => typeof c === "object" && c !== null)
+          : [];
+        return setCookies(cookies, command["partition"] as string | undefined);
+      }
+      case "clear-data": {
+        const sent = command["storages"];
+        const storages = Array.isArray(sent)
+          ? sent.filter((s): s is string => typeof s === "string")
+          : [];
+        return clearData(storages, command["partition"] as string | undefined);
       }
     }
     throw new Error("unknown_op");

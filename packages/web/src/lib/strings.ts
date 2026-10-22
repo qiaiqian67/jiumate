@@ -121,6 +121,27 @@ export const zh = {
     back: "后退",
     forward: "前进",
     reload: "重新加载",
+    /** The overflow menu's import entry. */
+    import: "从系统浏览器导入",
+    /** The overflow menu's button. */
+    more: "更多",
+    /** The import dialog's title. */
+    importTitle: "从系统浏览器导入",
+    importHint: "把系统浏览器的登录状态带进来，智能体就能打开你已登录的页面。",
+    /** A source that holds something to import. */
+    importCookies: "登录状态（Cookie）",
+    importHistory: "浏览历史",
+    /** The "only these sites" field. */
+    importDomains: "仅这些网站（留空表示全部）",
+    importDomainsPlaceholder: "例如：github.com, mail.google.com",
+    /** What the import brought. */
+    importDone: "已导入 {cookies} 条登录状态，{history} 条历史",
+    importSkipped: "跳过 {count} 条",
+    importNone: "没有找到可导入的系统浏览器",
+    importFailed: "导入失败",
+    /** The clear-data entry. */
+    clearData: "清除浏览数据",
+    clearDataHint: "清除此浏览器的登录状态与缓存。导入的登录状态也会一并清除。",
   },
 
   dock: {

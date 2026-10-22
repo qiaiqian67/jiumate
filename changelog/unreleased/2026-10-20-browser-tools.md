@@ -85,6 +85,28 @@ how tall it is — because a model told "scrolled to the bottom" when nothing mo
 asking. A key is dispatched as a person's keyboard would, so a form that only accepts trusted
 events accepts it. A `<select>` is chosen by its value or by the text the user reads on it.
 
+## Bringing the sign-ins over
+
+The built-in browser has a store of its own, and it starts empty. A user can bring the
+sign-ins of a system browser into it: the Chromium family's (Chrome, Edge, Brave, Opera,
+Vivaldi) and Firefox's.
+
+The import reads a profile's cookie store and its history, and never writes to the system
+browser — every store is read through a private copy, so a running browser that holds its
+file open does not have to be closed to be read (though on Windows it does, and the import
+says so). The cookies are decrypted with the platform's own key: the macOS Keychain, the
+Linux keyring, or Windows' DPAPI. Chrome's app-bound encryption (`v20`) is not a key
+anyone else holds, so those cookies stay behind and the import says how many.
+
+What the user gets for it is the difference between a browser that can only read public
+pages and one that can do the work: the sign-in is what opens the back office, the order
+page, the ticket system. The interface is the user's, and so is the decision — which
+profile, what it brings, which sites' cookies — because an import reads a browser's private
+state. The agent never makes any of those choices.
+
+The history lands in the browser's own file, and merges with what it already had: a
+hot swap means two stores can write the same file, and neither loses the other's visits.
+
 ## Waiting, instead of scanning
 
 `browser_act` grew `wait`: for an element to appear or vanish, for the page to stop

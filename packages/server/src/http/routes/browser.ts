@@ -88,6 +88,16 @@ function optInt(body: Body, key: string): number | undefined {
   return value;
 }
 
+/** A list of strings, when the body carries one; undefined when it carries none. */
+function optStringArray(body: Body, key: string): string[] | undefined {
+  const value = body[key];
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value)) {
+    throw new HttpError(400, "bad_request", `${key} must be a list of strings.`);
+  }
+  return value.filter((item): item is string => typeof item === "string");
+}
+
 /** `:tab` is a tab id, or `active` for the one the agent is using. */
 function tabIdOf(c: Context<AppEnv>, body: Body): number | undefined {
   const raw = c.req.param("tab") ?? optString(body, "tabId");
@@ -326,6 +336,42 @@ export function browserRoutes(deps: AppDeps): Hono<AppEnv> {
     return c.json(
       await service().act({ action: "reload", ...(tabId !== undefined ? { tabId } : {}) }),
     );
+  });
+
+  // The import: the user brings the sign-ins of a system browser over, so the agent can open
+  // the pages the user is signed in to. The user picks the profile and what it brings; the
+  // agent never does.
+  app.get("/import/sources", async (c) => {
+    return c.json({ sources: service().listImportSources() });
+  });
+
+  app.post("/import", async (c) => {
+    const body = await jsonBody(c);
+    const sourceId = requiredString(body, "sourceId");
+    const cookies = optBool(body, "cookies") === true;
+    const history = optBool(body, "history") === true;
+    const domains = optStringArray(body, "domains");
+    if (!cookies && !history) {
+      throw new HttpError(400, "bad_request", "Choose cookies, history, or both.");
+    }
+    const result = await service().importFromSystemBrowser({
+      sourceId,
+      cookies,
+      history,
+      ...(domains !== undefined ? { domains } : {}),
+    });
+    return c.json(result);
+  });
+
+  app.post("/clear-data", async (c) => {
+    const body = await jsonBody(c);
+    const storages = optStringArray(body, "storages") ?? ["cookies", "localstorage"];
+    await service().clearData(storages);
+    return c.json({ ok: true });
+  });
+
+  app.get("/history", async (c) => {
+    return c.json({ entries: service().historyEntries() });
   });
 
   return app;
