@@ -22,27 +22,30 @@
 // ---------------------------------------------------------------------------
 
 /** The browser an agent drives. */
-export type BrowserBackend = "builtin" | "chrome";
+export type BrowserBackend = "builtin" | "chrome" | "headless";
 
 /**
  * What a backend's link can do. The desktop shell cannot create tabs (the Web App's `<webview>`
  * does, and the server only asks) and throttles and measures its guests; the Chrome extension
- * creates, closes and focuses tabs itself and has no cookie store the server may touch.
+ * creates, closes and focuses tabs itself and has no cookie store the server may touch; the
+ * headless browser creates its own tabs and keeps its cookies in its own profile.
  */
 export interface BrowserBackendCapabilities {
-  /** `open`, `close` and focusing a named tab are answered here (chrome). */
+  /** `open`, `close` and focusing a named tab are answered here (chrome, headless). */
   createsTabs: boolean;
   /** `throttle` and the load measurements (builtin). */
   throttles: boolean;
-  /** `set_cookies` / `clear_data` (builtin). */
+  /** `set_cookies` / `clear_data` (builtin, headless). */
   cookieStore: boolean;
 }
 
 /**
  * Why the agent browser cannot be driven. Built-in: not under the desktop shell, a shell too old
- * to host it, or no app window to host a new tab.
+ * to host it, or no app window to host a new tab. Headless: no browser on this machine, or the
+ * one that is there could not be started.
  */
-export type BrowserUnavailableReason = "not_desktop" | "shell_unsupported" | "no_window";
+export type BrowserUnavailableReason =
+  "not_desktop" | "shell_unsupported" | "no_window" | "no_browser" | "browser_failed";
 
 /** One backend as the status action lists it for the model. */
 export interface BrowserBackendInfo {

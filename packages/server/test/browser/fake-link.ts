@@ -50,6 +50,10 @@ export class FakeLink implements BrowserLink {
     cookieStore: true,
   };
   connected = true;
+  /**
+   * Whether the browser can be driven. The fake can always be, unless a test says not.
+   */
+  canDrive = true;
   readonly tabs = new Map<number, BrowserTab>();
   readonly commands: BrowserCommand[] = [];
   /** Answers `cdp`; throw to make the far side refuse the command with that message. */

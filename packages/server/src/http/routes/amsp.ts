@@ -177,7 +177,8 @@ export function amspRoutes(deps: AppDeps): Hono {
 
     const body = await readJson(c);
     const prompt = optionalString(body, "prompt", { minLen: 1, label: "prompt" });
-    if (prompt === undefined) throw badRequest("prompt is required and must be a non-empty string.");
+    if (prompt === undefined)
+      throw badRequest("prompt is required and must be a non-empty string.");
 
     // Narrowing only. An explicit Workspace has to exist already, and omitting it falls back to
     // the Agent's setting — or, when that is empty too, to a fresh temporary one per run.

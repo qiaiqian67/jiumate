@@ -34,6 +34,7 @@ import {
   subscribeBrowserState,
 } from "./browser-list";
 import { BROWSER_VIEWPORT_ATTR, webviewForTab } from "./browser-viewport";
+import { useBrowserBackend } from "../../state/browser-backend";
 import { ImportDialog } from "./browser-import-dialog";
 import { ClearDataDialog } from "./browser-clear-dialog";
 
@@ -152,7 +153,7 @@ export function BrowserPanel({ active }: { active: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
-
+  const { backend } = useBrowserBackend();
   // The address bar shows the page on screen, until the user types something else. A person
   // expects the bar to follow the page; a model never sees it.
   const current = tabs.find((tab) => tab.id === activeTabId);
@@ -162,7 +163,12 @@ export function BrowserPanel({ active }: { active: boolean }) {
     setTyped(null);
   }, [activeTabId]);
 
-  if (!webviewSupported()) {
+  // The headless browser is the server's own: there is no `<webview>` to show its pages in,
+  // and no window for one. The panel is still the place the user sees what the agent is
+  // doing — as a list of pages, not as the pages themselves.
+  const headless = backend === "headless";
+
+  if (!webviewSupported() && !headless) {
     return <EmptyState title={S.browser.unavailable} description={S.browser.unavailableHint} />;
   }
   if (!available && tabs.length === 0) {
@@ -298,9 +304,14 @@ export function BrowserPanel({ active }: { active: boolean }) {
 
       {/* The slot the guest on screen is portaled into. It is always mounted — the runtime
           finds it by its attribute, and a slot that appears only when a guest does would
-          make the portal's target move. */}
+          make the portal's target move.
+
+          The headless browser has no guest to portal: its pages live in a browser the user
+          cannot see, so the panel shows what the agent is working on instead. */}
       <div className="relative min-h-0 flex-1">
-        {tabs.length === 0 ? (
+        {headless ? (
+          <HeadlessPageList tabs={tabs} activeTabId={activeTabId} />
+        ) : tabs.length === 0 ? (
           <EmptyState title={S.browser.empty} description={S.browser.emptyHint} />
         ) : (
           <div {...{ [BROWSER_VIEWPORT_ATTR]: "true" }} className="absolute inset-0" />
@@ -309,6 +320,57 @@ export function BrowserPanel({ active }: { active: boolean }) {
 
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
       <ClearDataDialog open={clearOpen} onClose={() => setClearOpen(false)} />
+    </div>
+  );
+}
+
+/**
+ * The pages the headless browser has open, as a list.
+ *
+ * The user cannot see the pages themselves — that is the point of the headless browser —
+ * so this is what they get instead: what the agent is working on, and where.
+ */
+function HeadlessPageList({
+  tabs,
+  activeTabId,
+}: {
+  tabs: BrowserTab[];
+  activeTabId: number | null;
+}) {
+  if (tabs.length === 0) {
+    return <EmptyState title={S.browser.empty} description={S.browser.emptyHint} />;
+  }
+  return (
+    <div className="flex h-full flex-col gap-1 overflow-y-auto p-3">
+      <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">{S.browser.headlessNotice}</p>
+      {tabs.map((tab) => (
+        <div
+          key={tab.id}
+          className={
+            tab.id === activeTabId
+              ? "flex items-center gap-2 rounded border border-blue-200 bg-blue-50 px-2 py-1.5 text-xs text-gray-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-gray-100"
+              : "flex items-center gap-2 rounded border border-gray-200 px-2 py-1.5 text-xs text-gray-600 dark:border-gray-800 dark:text-gray-300"
+          }
+        >
+          {tab.loading ? (
+            <span aria-label={S.common.loading} className="shrink-0 text-gray-400">
+              …
+            </span>
+          ) : (
+            <span aria-hidden className="shrink-0 text-gray-400">
+              ○
+            </span>
+          )}
+          <span className="min-w-0 flex-1 truncate">
+            {tabLabel(tab.title, tab.url) === ""
+              ? S.browser.untitled
+              : tabLabel(tab.title, tab.url)}
+          </span>
+          <span className="shrink-0 truncate text-[10px] text-gray-400">
+            {displayAddress(tab.url)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

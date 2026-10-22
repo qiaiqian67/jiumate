@@ -14,6 +14,7 @@ import type { Currency } from "../../state/theme";
 import { useChatFontSize } from "../../state/chat-font-size";
 import type { ChatFontSize } from "../../lib/chat-font-size";
 import { PrefRow } from "./setting-row";
+import { BrowserBackendRow } from "./browser-backend-row";
 import { TraceImportRow } from "./trace-import-row";
 
 export function GeneralSection() {
@@ -55,6 +56,7 @@ export function GeneralSection() {
           cols={3}
         />
       </PrefRow>
+      <BrowserBackendRow />
       <TraceImportRow />
     </div>
   );

@@ -85,6 +85,37 @@ how tall it is — because a model told "scrolled to the bottom" when nothing mo
 asking. A key is dispatched as a person's keyboard would, so a form that only accepts trusted
 events accepts it. A `<select>` is chosen by its value or by the text the user reads on it.
 
+## A browser of its own, for the server
+
+The built-in browser needs the desktop app: a `<webview>` is created by the Web App and
+hosted by the shell, so without the shell there is no browser at all. That is a poor answer
+for a server that runs on its own — the agent can read public pages and nothing else.
+
+So there is a third backend: a Chromium the **server** starts for itself, with its own
+profile, driven over its own debugger. The browser is a real one — the machine already has
+Chrome, Edge or Brave — so nothing is downloaded and nothing is installed. The profile
+lives in the data root, so the sign-ins an import brought survive a restart.
+
+What it is not: the built-in browser with the window taken away. The user cannot see its
+pages and cannot take a tab over — that is the trade, and the panel says so when it draws
+the list of pages the agent is working on.
+
+The choice is the user's, per user, and the fallback is deliberate: **a browser that works
+beats the one the user asked for not working.** A server with no shell falls back to the
+headless one; a machine with no Chromium falls back to the built-in one. The router picks
+per call, so the choice can change while the server runs.
+
+The browser starts when the agent opens a page, not when the app asks about it: a server
+that has never driven a page should not leave a browser running.
+
+Two things the implementation had to get right, and both were found by the tests:
+
+- a browser killed outright does not write its cookie store out, so the sign-ins would be
+  gone the next time it started. It is asked to close, and the kill is the fallback.
+- the browser's children hold the profile open even after its parent is gone, so the whole
+  tree is cleaned up — otherwise the profile cannot be removed and the next run cannot
+  start.
+
 ## Bringing the sign-ins over
 
 The built-in browser has a store of its own, and it starts empty. A user can bring the

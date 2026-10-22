@@ -142,6 +142,8 @@ export const zh = {
     /** The clear-data entry. */
     clearData: "清除浏览数据",
     clearDataHint: "清除此浏览器的登录状态与缓存。导入的登录状态也会一并清除。",
+    /** The headless browser's notice: its pages are not on the screen. */
+    headlessNotice: "无头浏览器的页面不在你的屏幕上显示。这里列出智能体正在处理的页面。",
   },
 
   dock: {
@@ -338,6 +340,16 @@ export const zh = {
     chatFontSmall: "小",
     chatFontMedium: "中",
     chatFontLarge: "大",
+    /** Which browser the agent drives. */
+    browserBackend: "智能体浏览器",
+    browserBackendInfo:
+      "智能体在哪个浏览器里工作。内置浏览器是你看得见的那个；无头浏览器是服务器自己开的，你看不见它，但不需要桌面应用。",
+    browserBuiltin: "内置",
+    browserBuiltinHint: "桌面应用里的浏览器。你能看到智能体打开的每个页面，也能随时接手。",
+    browserHeadless: "无头",
+    browserHeadlessHint: "服务器自己开的浏览器，不占用你的屏幕。没有桌面应用时也能用。",
+    browserChrome: "我的 Chrome",
+    browserChromeHint: "通过扩展接管你自己的 Chrome。尚未实现。",
     changePasswordInfo: "更改当前账号的登录密码。",
     accentNames: {
       neutral: "灰白",

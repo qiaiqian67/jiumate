@@ -41,16 +41,8 @@ import { APPROVAL_MODES } from "./sessions.js";
 // Re-exported rather than redefined: the Web App imports these from @prismshadow/jiumate-server/api,
 // so a second copy here would be a type the frontend's DTO is not assignable to — the mismatch
 // shows up as a compile error in the tab, pointing at this file rather than at the duplication.
-export type {
-  AgentApiKeyInfo,
-  AgentApiResponse,
-  AgentApiSettings,
-} from "../../api/types.js";
-import type {
-  AgentApiKeyInfo,
-  AgentApiResponse,
-  AgentApiSettings,
-} from "../../api/types.js";
+export type { AgentApiKeyInfo, AgentApiResponse, AgentApiSettings } from "../../api/types.js";
+import type { AgentApiKeyInfo, AgentApiResponse, AgentApiSettings } from "../../api/types.js";
 
 function keyInfo(row: AgentApiKeyRow): AgentApiKeyInfo {
   return {

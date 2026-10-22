@@ -32,10 +32,7 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { S } from "../../lib/strings";
-import {
-  resolveSettingsSection,
-  visibleSettingsSections,
-} from "../../lib/settings-sections";
+import { resolveSettingsSection, visibleSettingsSections } from "../../lib/settings-sections";
 import type { SettingsSectionKey } from "../../lib/settings-sections";
 import { settingsSectionInfo, settingsSectionLabel } from "../../lib/settings-labels";
 import { useAuth } from "../../state/auth";
@@ -115,26 +112,24 @@ export function SettingsPage() {
             check reads as a title. */}
         <h1 className="mb-4 flex min-w-0 items-center gap-1.5 text-xl font-semibold">
           {activeLabel}
-          {activeInfo !== undefined && (
-            <InfoPopover label={activeLabel}>{activeInfo}</InfoPopover>
-          )}
+          {activeInfo !== undefined && <InfoPopover label={activeLabel}>{activeInfo}</InfoPopover>}
         </h1>
 
         <section className="min-w-0">
-            {current === "projectManage" && <ProjectSections page="manage" />}
-            {current === "projectMembers" && <ProjectSections page="members" />}
-            {current === "projectDefaults" && <ProjectSections page="defaults" />}
-            {current === "projectSecurity" && <ProjectSections page="security" />}
-            {current === "general" && <GeneralSection />}
-            {current === "appearance" && <AppearanceSection />}
-            {current === "application" && <ApplicationSection />}
-            {current === "models" && <ModelsPane />}
-            {current === "logs" && <LogsSection />}
-            {current === "account" && <AccountSection />}
-            {current === "proxy" && <ProxySection />}
-            {current === "uploads" && <UploadsSection />}
-            {current === "users" && <AdminUsersSection />}
-          </section>
+          {current === "projectManage" && <ProjectSections page="manage" />}
+          {current === "projectMembers" && <ProjectSections page="members" />}
+          {current === "projectDefaults" && <ProjectSections page="defaults" />}
+          {current === "projectSecurity" && <ProjectSections page="security" />}
+          {current === "general" && <GeneralSection />}
+          {current === "appearance" && <AppearanceSection />}
+          {current === "application" && <ApplicationSection />}
+          {current === "models" && <ModelsPane />}
+          {current === "logs" && <LogsSection />}
+          {current === "account" && <AccountSection />}
+          {current === "proxy" && <ProxySection />}
+          {current === "uploads" && <UploadsSection />}
+          {current === "users" && <AdminUsersSection />}
+        </section>
       </div>
     </div>
   );

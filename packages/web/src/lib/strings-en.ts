@@ -136,6 +136,9 @@ export const en: Strings = {
     clearData: "Clear browsing data",
     clearDataHint:
       "Clear this browser's sign-ins and caches. The sign-ins an import brought go too.",
+    /** The headless browser's notice: its pages are not on the screen. */
+    headlessNotice:
+      "The headless browser's pages are not on your screen. Here is what the agent is working on.",
   },
 
   dock: {
@@ -334,6 +337,18 @@ export const en: Strings = {
     chatFontSmall: "Small",
     chatFontMedium: "Medium",
     chatFontLarge: "Large",
+    /** Which browser the agent drives. */
+    browserBackend: "Agent browser",
+    browserBackendInfo:
+      "Which browser the agent works in. The built-in one is the browser you can see; the headless one is the server's own, which you cannot see but which needs no desktop app.",
+    browserBuiltin: "Built-in",
+    browserBuiltinHint:
+      "The desktop app's browser. You see every page the agent opens, and you can take over.",
+    browserHeadless: "Headless",
+    browserHeadlessHint:
+      "A browser the server starts for itself. It takes none of your screen, and it works without the desktop app.",
+    browserChrome: "My Chrome",
+    browserChromeHint: "Takes over your own Chrome through an extension. Not implemented yet.",
     changePasswordInfo: "Change this account's sign-in password.",
     accentNames: {
       neutral: "Neutral",

@@ -46,17 +46,43 @@ describe("GET /api/browser/status", () => {
     }
   });
 
-  it("answers 503 browser_unavailable on a host with no browser surface", async () => {
-    // A server started on its own has no shell, and so no browser. That is a fact about the
-    // host, not a missing path, so it is 503 and not 404.
+  it("answers with the headless browser on a host with no desktop shell", async () => {
+    // A server started on its own has no shell — and so no built-in browser. But it has
+    // the headless one, which needs nothing but a Chromium on the machine. So the browser
+    // is there, and the status says which one it is.
     const t = await createTestApp();
     try {
       const admin = await loginAdmin(t.app);
       const res = await t.app.request("/api/browser/status", {
         headers: { cookie: admin.cookie },
       });
-      expect(res.status).toBe(503);
-      expect(((await res.json()) as ErrorBody).error.code).toBe("browser_unavailable");
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { backend: string; tabs: unknown[] };
+      expect(body.backend).toBe("headless");
+      // The browser has not started, because the agent has not driven a page: asking
+      // about it must not start one.
+      expect(body.tabs).toEqual([]);
+    } finally {
+      await t.cleanup();
+    }
+  });
+
+  it("reports a browser that is there but cannot be driven", async () => {
+    // The browser exists but is not answering — the shell is gone, or the headless browser
+    // could not start. The status says so, rather than the route failing: the caller can
+    // read the reason and the other backends.
+    const link = new FakeLink();
+    link.connected = false;
+    const t = await createTestApp({ browser: browser(link) });
+    try {
+      const admin = await loginAdmin(t.app);
+      const res = await t.app.request("/api/browser/status", {
+        headers: { cookie: admin.cookie },
+      });
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { available: boolean; reason?: string };
+      expect(body.available).toBe(false);
+      expect(body.reason).toBeDefined();
     } finally {
       await t.cleanup();
     }

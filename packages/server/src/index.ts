@@ -404,6 +404,13 @@ class JiuMateServer {
     // Disposing the host drains the App's effects (scheduler stop, manager hard-stop) and
     // sweeps the resource registry (live ptys).
     this.deps.hmr.dispose();
+    // The headless browser goes next, and it goes POLITELY: a browser killed outright does
+    // not write its cookie store out, so the sign-ins an import brought would be gone the
+    // next time it started.
+    await Promise.race([
+      this.deps.stopHeadlessBrowser?.() ?? Promise.resolve(),
+      new Promise<void>((resolve) => setTimeout(resolve, 5000).unref()),
+    ]);
     this.deps.channels.dispose();
     this.ipv6Loopback?.close();
     this.httpServer.close(() => {

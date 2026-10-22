@@ -19,6 +19,7 @@ import type {
   ToolCallPayload,
 } from "@prismshadow/jiumate-core/omnimessage";
 import type {
+  BrowserBackend,
   BrowserStatus,
   MCPServerConfig,
   ThinkingLevelName,
@@ -267,6 +268,15 @@ export interface DraftShortcut {
 export interface UiPrefs {
   theme?: "light" | "dark";
   lastProjectId?: string;
+  /**
+   * Which browser the agent drives: `builtin` (the desktop app's own, which the user sees),
+   * `headless` (a Chromium the server starts for itself), or `chrome` (the user's own, not
+   * implemented yet).
+   *
+   * The choice is per user: the browser is where their sign-ins live, and one user's choice
+   * must not change what another user's agent sees.
+   */
+  browserBackend?: BrowserBackend;
   /** Whether the "no API key configured" guide has already been shown: once ever (on first visit to the chat page). */
   credentialGuideSeen?: boolean;
   /** The initial-password notice banner (app layout) was permanently dismissed by the user. */

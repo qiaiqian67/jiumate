@@ -10,6 +10,7 @@ import { setCookie } from "hono/cookie";
 import type { MeResponse, PrefsResponse, UiPrefs } from "../../api/types.js";
 import { toUserInfo } from "../../auth/service.js";
 import { SESSION_COOKIE, cookieOptions } from "../../auth/middleware.js";
+import { isBrowserBackend } from "../../services/browser-backend.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import { readJson, requireString } from "../validate.js";
 import type { AppDeps } from "../../app.js";
@@ -124,6 +125,12 @@ export function meRoutes(deps: AppDeps): Hono<AppEnv> {
     // resolved: the built-in cases live in a package, so an unknown id is a legal selection.
     if (body.inspirationFavorites !== undefined) {
       body.inspirationFavorites = validateInspirationFavorites(body.inspirationFavorites);
+    }
+    // The browser the agent drives: an enum, so it is checked rather than stored as
+    // whatever the client sent. A value that is not a backend is dropped, and the user's
+    // default applies — the browser working matters more than which one it is.
+    if (body.browserBackend !== undefined && !isBrowserBackend(body.browserBackend)) {
+      delete body.browserBackend;
     }
     // Pet prefs (enablePet / activePetId / petWindowPosition) are validated the same
     // way as draftShortcuts — free-form JSON has no schema, so any user-authored

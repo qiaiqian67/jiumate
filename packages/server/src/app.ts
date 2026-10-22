@@ -100,8 +100,11 @@ import { TitleGenerator, TitleNotifier } from "./runtime/title-generator.js";
 import { AdminService } from "./services/admin-service.js";
 import { DesktopService } from "./services/desktop-service.js";
 import { BrowserService } from "./browser/service.js";
+import { BackendRouter } from "./browser/backend-router.js";
+import { HeadlessLink } from "./browser/headless/headless-link.js";
 import { HistoryStore } from "./browser/history-store.js";
 import { ShellLink } from "./browser/shell-link.js";
+import { resolveBackend } from "./services/browser-backend.js";
 import { BUILTIN_CAPABILITIES } from "./browser/link.js";
 import type { BrowserLink } from "./browser/link.js";
 import type { ShellPort as ShellPortLike } from "./browser/shell-link.js";
@@ -209,6 +212,20 @@ export interface AppDeps {
    * `ShellLink` has anywhere to listen.
    */
   browserLink?: (BrowserLink & { listen(port: ShellPortLike): void }) | null;
+  /**
+   * The router that picks the backend. The tools talk to this; it picks the built-in link
+   * or the headless one, per the user's choice.
+   */
+  browserRouter?: BrowserLink;
+  /**
+   * Stops the headless browser, gracefully.
+   *
+   * Separate from the router because the router does not know what a browser is: it picks
+   * one and talks to it. The shutdown path needs the browser itself, and it needs it to go
+   * **politely**: a browser killed outright does not write its cookie store out, so the
+   * sign-ins an import brought would be gone the next time it started.
+   */
+  stopHeadlessBrowser?: () => Promise<void>;
   db: DatabaseSync;
   sessionsRepo: SessionsRepo;
   prefsRepo: UiPrefsRepo;
@@ -1033,10 +1050,12 @@ export function buildAppDeps(
       channels.peek(userChannelKey(userId))?.publish({ type: "prefs_changed" }, "server_event"),
   });
 
-  // The agent browser for the `browser_read` / `browser_act` tools. It is null without a
-  // desktop shell (the shell owns the tabs), and then the tools say so themselves rather than
-  // failing — the same stance the pet control takes on a host with no pet surface.
-  const browserLink =
+  // The agent browser for the `browser_read` / `browser_act` tools. Which backend drives it
+  // is the user's choice, and the router picks one per call: the built-in browser when the
+  // desktop shell is there and the user asked for it, the headless one otherwise. So a
+  // server with no shell still has a browser — a browser of its own, that the user does not
+  // see.
+  const shellLink =
     overrides.browserLink !== undefined
       ? overrides.browserLink
       : caps.desktop
@@ -1046,27 +1065,47 @@ export function buildAppDeps(
             send: (msg) => caps.desktop?.sendBrowser(msg),
           })
         : null;
+  // The headless browser is one link, created once and kept: it holds a browser process,
+  // so making a new one per call would leave browsers behind.
+  let headlessLink: HeadlessLink | null = null;
+  const browserLink = new BackendRouter({
+    builtin: shellLink,
+    headless: () => {
+      if (headlessLink === null) {
+        headlessLink = new HeadlessLink({
+          root: config.root,
+          headless: true,
+          log: (line) => log(line),
+        });
+      }
+      return headlessLink;
+    },
+    chosen: () =>
+      resolveBackend(
+        prefsRepo.read(usersRepo.list().find((user) => user.isAdmin)?.userId ?? "").browserBackend,
+        caps.desktop !== null,
+      ),
+    hasDesktop: () => caps.desktop !== null,
+  });
   const browser =
     overrides.browser ??
-    (browserLink === null
-      ? undefined
-      : new BrowserService({
-          link: browserLink,
-          // The browser's own history: the pages a tab visits, and what an import brings in.
-          // It lives in the data root, so it survives a restart and a hot swap.
-          history: new HistoryStore(config.root),
-          // The browser's state is pushed to the window that shows it, so the strip does not
-          // lag behind the agent's page by a poll interval. The browser belongs to the
-          // desktop app's own account, which is the built-in admin — the same account the
-          // shell signs in as.
-          onChange: (state) => {
-            const owner = usersRepo.list().find((user) => user.isAdmin)?.userId;
-            if (owner === undefined) return;
-            channels
-              .peek(userChannelKey(owner))
-              ?.publish({ type: "browser_state", state }, "server_event");
-          },
-        }));
+    new BrowserService({
+      link: browserLink,
+      // The browser's own history: the pages a tab visits, and what an import brings in.
+      // It lives in the data root, so it survives a restart and a hot swap.
+      history: new HistoryStore(config.root),
+      // The browser's state is pushed to the window that shows it, so the strip does not
+      // lag behind the agent's page by a poll interval. The browser belongs to the
+      // desktop app's own account, which is the built-in admin — the same account the
+      // shell signs in as.
+      onChange: (state) => {
+        const owner = usersRepo.list().find((user) => user.isAdmin)?.userId;
+        if (owner === undefined) return;
+        channels
+          .peek(userChannelKey(owner))
+          ?.publish({ type: "browser_state", state }, "server_event");
+      },
+    });
 
   const recorder = new UsageRecorder(usageRepo, overrides.now ?? (() => new Date()));
   const errors = new ErrorRecorder(errorsRepo, overrides.now ?? (() => new Date()));
@@ -1301,7 +1340,13 @@ export function buildAppDeps(
         : caps.desktop
           ? new DesktopExportPort((msg) => caps.desktop?.sendExport(msg))
           : null,
-    browserLink,
+    browserLink: shellLink,
+    browserRouter: browserLink,
+    stopHeadlessBrowser: async () => {
+      const link = headlessLink;
+      headlessLink = null;
+      await link?.close();
+    },
     browser,
   };
 }

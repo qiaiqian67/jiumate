@@ -125,7 +125,9 @@ async function versionOfArchive(bytes: Buffer): Promise<string | null> {
     await writePluginArchive(stripSingleRootDir(unpackPluginArchive(bytes)), scratch);
     // One directory means one plugin; several would leave no single version to compare against, and
     // that case answers null too — do not upgrade.
-    const dirs = (await fs.readdir(scratch, { withFileTypes: true })).filter((d) => d.isDirectory());
+    const dirs = (await fs.readdir(scratch, { withFileTypes: true })).filter((d) =>
+      d.isDirectory(),
+    );
     if (dirs.length !== 1) return null;
     const manifest = JSON.parse(
       await fs.readFile(path.join(scratch, dirs[0]!.name, "plugin.json"), "utf8"),
@@ -271,7 +273,10 @@ async function readPluginName(dir: string): Promise<string> {
  * version, a skill directory that is not a skill — fails here, at the door, instead of being
  * reported as a successful import and then appearing in the library as half-empty.
  */
-async function copyIntoStore(deps: AppDeps, sourceDir: string): Promise<{ id: string; name: string }> {
+async function copyIntoStore(
+  deps: AppDeps,
+  sourceDir: string,
+): Promise<{ id: string; name: string }> {
   // Every path out of here is a 400 — the user's directory or their archive is not a plugin this
   // can install — so the translation is done once, here, rather than at each of the two call sites.
   try {
@@ -461,28 +466,29 @@ export function pluginImportRoutes(deps: AppDeps): Hono<AppEnv> {
   });
 
   /**
- * Import **every** plugin in a directory on this machine, in one press.
- *
- * **Adding a directory adds the directory's plugins, and nothing else.** A user who points at a
- * folder of plugins means "use these", not "use whichever one of these happens to sort first" — so
- * every plugin in it is imported, and the response lists them all rather than only the first.
- *
- * **Each one lands 待启用: installed on this machine, into no Agent.** That is the whole point of
- * separating this from `启用`: the copy is here, ready, and it costs nothing until an Agent is
- * actually pointed at it. A bulk import that quietly switched five plugins on for whichever Agent
- * happened to be selected would be a very large surprise from a very small action.
- *
- * **Per-plugin failures are reported, not thrown.** A folder of ten plugins where one has an
- * unreadable manifest should import nine and say which one did not — refusing all ten because of
- * one would make the button useless on any real collection.
- */
-app.post("/local/batch", async (c) => {
+   * Import **every** plugin in a directory on this machine, in one press.
+   *
+   * **Adding a directory adds the directory's plugins, and nothing else.** A user who points at a
+   * folder of plugins means "use these", not "use whichever one of these happens to sort first" — so
+   * every plugin in it is imported, and the response lists them all rather than only the first.
+   *
+   * **Each one lands 待启用: installed on this machine, into no Agent.** That is the whole point of
+   * separating this from `启用`: the copy is here, ready, and it costs nothing until an Agent is
+   * actually pointed at it. A bulk import that quietly switched five plugins on for whichever Agent
+   * happened to be selected would be a very large surprise from a very small action.
+   *
+   * **Per-plugin failures are reported, not thrown.** A folder of ten plugins where one has an
+   * unreadable manifest should import nine and say which one did not — refusing all ten because of
+   * one would make the button useless on any real collection.
+   */
+  app.post("/local/batch", async (c) => {
     const projectId = requireValidId(c, "projectId");
     deps.projectService.requireProjectAccess(c.var.user.userId, projectId);
     const dir = requireString(await readJson(c), "path", { minLen: 1, maxLen: 1024 });
     const resolved = path.resolve(dir);
     try {
-      if (!(await fs.stat(resolved)).isDirectory()) throw badRequest("That path is not a directory.");
+      if (!(await fs.stat(resolved)).isDirectory())
+        throw badRequest("That path is not a directory.");
     } catch (e) {
       if (e instanceof HttpError) throw e;
       throw badRequest(`No such directory: ${resolved}`);
@@ -490,7 +496,11 @@ app.post("/local/batch", async (c) => {
 
     // The directory itself may be a single plugin, or a folder holding several. Both are what the
     // user meant by "this directory", so both are accepted (the same rule the scanner follows).
-    const candidates = describeDiscovered({ name: path.basename(resolved), path: resolved, origin: "manual" });
+    const candidates = describeDiscovered({
+      name: path.basename(resolved),
+      path: resolved,
+      origin: "manual",
+    });
     const targets =
       candidates !== null
         ? [{ name: candidates.name, path: resolved }]
@@ -524,10 +534,7 @@ app.post("/local/batch", async (c) => {
       );
     }
 
-    return c.json(
-      { added, failed } satisfies PluginImportBatchResponse,
-      201,
-    );
+    return c.json({ added, failed } satisfies PluginImportBatchResponse, 201);
   });
 
   /** Import a plugin from a directory already on this machine. */
@@ -537,7 +544,8 @@ app.post("/local/batch", async (c) => {
     const dir = requireString(await readJson(c), "path", { minLen: 1, maxLen: 1024 });
     const resolved = path.resolve(dir);
     try {
-      if (!(await fs.stat(resolved)).isDirectory()) throw badRequest("That path is not a directory.");
+      if (!(await fs.stat(resolved)).isDirectory())
+        throw badRequest("That path is not a directory.");
     } catch (e) {
       if (e instanceof HttpError) throw e;
       throw badRequest(`No such directory: ${resolved}`);
@@ -592,7 +600,10 @@ app.post("/local/batch", async (c) => {
       sourceRepo: resolved.name,
       sourceBranch: resolved.branch,
     });
-    return c.json({ ...result, sourceUrl: resolved.archiveUrl } satisfies PluginImportUrlResponse, 201);
+    return c.json(
+      { ...result, sourceUrl: resolved.archiveUrl } satisfies PluginImportUrlResponse,
+      201,
+    );
   });
 
   /**
@@ -650,15 +661,18 @@ app.post("/local/batch", async (c) => {
     // No recorded source — a plugin added from a folder — so there is nothing to ask. `false` rather
     // than "up to date", which would be a claim we cannot support either way.
     if (!canUpgrade(provenance) || sourceUrl === undefined) {
-      return c.json({ id, upgraded: false, upgradable: false } satisfies PluginUpgradeResponse, 200);
+      return c.json(
+        { id, upgraded: false, upgradable: false } satisfies PluginUpgradeResponse,
+        200,
+      );
     }
 
     // The manifest holds the installed version, which is the thing a newer one is compared against.
     let installedVersion = "";
     try {
-      const manifest = JSON.parse(
-        await fs.readFile(path.join(dir, "manifest.json"), "utf8"),
-      ) as { version?: string };
+      const manifest = JSON.parse(await fs.readFile(path.join(dir, "manifest.json"), "utf8")) as {
+        version?: string;
+      };
       installedVersion = manifest.version ?? "";
     } catch {
       // No readable manifest: treat the version as unknown, which `isNewerVersion` treats as

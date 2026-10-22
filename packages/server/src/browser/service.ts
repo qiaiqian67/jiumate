@@ -281,7 +281,7 @@ export class BrowserService implements BrowserPort {
     options: { newTab?: boolean; tabId?: number } = {},
   ): Promise<BrowserStatus> {
     await this.ensureTabs();
-    if (!this.link.connected) {
+    if (!this.link.canDrive) {
       throw new HttpError(
         503,
         "browser_unavailable",

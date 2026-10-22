@@ -37,6 +37,11 @@ export default defineConfig({
     // pulling the full server bundle.
     "api/desktop-export": "src/api/desktop-export.ts",
     "browser/shell-link": "src/browser/shell-link.ts",
+    // "./browser/headless": the headless browser's link. The server starts a Chromium for
+    // itself and drives it over its own debugger; the desktop shell imports this to shut
+    // that browser down cleanly when the app quits (a browser killed outright does not write
+    // its cookie store out, and the sign-ins an import brought would be lost).
+    "browser/headless": "src/browser/headless/headless-link.ts",
     // "./extension": the surface extension PACKAGES compile against. Extensions live outside
     // this bundle entirely — they are configuration resolved from the installation,
     // not platform capability.

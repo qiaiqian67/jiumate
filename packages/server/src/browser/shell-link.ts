@@ -88,6 +88,14 @@ export class ShellLink implements BrowserLink {
   readonly backend: BrowserBackend;
   readonly capabilities: BrowserBackendCapabilities;
   connected = false;
+  /**
+   * Whether the shell's browser can be driven.
+   *
+   * The shell may not have started yet — the desktop app starts it and the port is wired
+   * later — so "not connected yet" is not "cannot be driven". The browser is reported as
+   * unavailable until the shell answers, but a call is not refused for that.
+   */
+  readonly canDrive = true;
 
   private readonly send: (message: BrowserCommandMessage) => void;
   private readonly timeoutMs: number;

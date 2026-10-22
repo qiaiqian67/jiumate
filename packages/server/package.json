@@ -61,6 +61,10 @@
     "./browser": {
       "types": "./dist/browser/shell-link.d.ts",
       "import": "./dist/browser/shell-link.js"
+    },
+    "./browser/headless": {
+      "types": "./dist/browser/headless.d.ts",
+      "import": "./dist/browser/headless.js"
     }
   },
   "main": "./dist/index.js",

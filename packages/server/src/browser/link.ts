@@ -136,8 +136,19 @@ export const CHROME_CAPABILITIES: BrowserBackendCapabilities = {
 export interface BrowserLink {
   readonly backend: BrowserBackend;
   readonly capabilities: BrowserBackendCapabilities;
-  /** Whether the far side has answered `hello` and is there now. */
+  /**
+   * Whether the far side has answered `hello` and is there now.
+   *
+   * A link that has not started yet may still be drivable: the headless browser starts on
+   * the first call that needs it. So "not connected" is not the same as "cannot be
+   * driven" — `canDrive` is the question that matters.
+   */
   readonly connected: boolean;
+  /**
+   * Whether this link can be driven at all — either it is running, or it will start when
+   * it is needed.
+   */
+  readonly canDrive: boolean;
   /** Sends one command and resolves with the far side's result. */
   request(command: BrowserCommand, timeoutMs?: number): Promise<unknown>;
   /**
