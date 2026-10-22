@@ -104,7 +104,6 @@ import { ShellLink } from "./browser/shell-link.js";
 import { BUILTIN_CAPABILITIES } from "./browser/link.js";
 import type { BrowserLink } from "./browser/link.js";
 import type { ShellPort as ShellPortLike } from "./browser/shell-link.js";
-import type { BrowserPort } from "@prismshadow/jiumate-core/interfaces";
 import { LifecycleService } from "./services/lifecycle-service.js";
 import { desktopRoutes, desktopUpdateRoutes } from "./http/routes/desktop.js";
 import { AgentConfigService } from "./services/agent-config-service.js";
@@ -153,6 +152,7 @@ import { adminSettingsRoutes } from "./http/routes/admin-settings.js";
 import type { ServerEvent } from "./api/types.js";
 import { meRoutes } from "./http/routes/me.js";
 import { petRoutes } from "./http/routes/pets.js";
+import { browserRoutes } from "./http/routes/browser.js";
 import { skinRoutes } from "./http/routes/skins.js";
 import { inspirationRoutes } from "./http/routes/inspirations.js";
 import { eventsRoutes, userChannelKey } from "./http/routes/events.js";
@@ -196,8 +196,12 @@ import { SERVER_PROXY_PREFIX, machinesProxy } from "./machines/proxy.js";
 
 export interface AppDeps {
   config: ServerConfig;
-  /** The agent browser for the `browser_read` / `browser_act` tools; absent without a browser surface. */
-  browser?: BrowserPort;
+  /**
+   * The agent browser for the `browser_read` / `browser_act` tools; absent without a browser
+   * surface. The server's own implementation, which is also a core `BrowserPort` — the tools
+   * only ever see that much, while the HTTP surface below uses the rest.
+   */
+  browser?: BrowserService;
   /**
    * The link to the desktop shell's browser; index.ts attaches the shell's message port to it
    * with `listen`. Null without a shell — the port is the desktop shell's own, so only a
@@ -296,7 +300,7 @@ export interface AppDeps {
 
 export interface BuildDepsOverrides {
   /** Test double: the agent browser for the `browser_read` / `browser_act` tools. */
-  browser?: BrowserPort;
+  browser?: BrowserService;
   /** Test double: the link to the desktop shell's browser (avoids a real shell message port). */
   browserLink?: (BrowserLink & { listen(port: ShellPortLike): void }) | null;
   /** Test double: session-manager's underlying loader (avoids the real LLM/SDK path). */
@@ -1398,6 +1402,9 @@ export function createApp(
   app.route("/api/pets", petRoutes(deps));
   app.route("/api/skins", skinRoutes(deps));
   app.route("/api/inspirations", inspirationRoutes(deps));
+  // The agent browser's surface. It is 503 on a host with no browser surface rather than
+  // absent: the browser is a feature of the host, not a missing path.
+  app.route("/api/browser", browserRoutes(deps));
   app.route("/api/version", versionRoutes(deps));
   app.route("/api/admin/users", adminUsersRoutes(deps));
   app.route("/api/admin/settings", adminSettingsRoutes(deps));

@@ -1,4 +1,4 @@
-﻿# Give an Agent a browser it can read and act on
+﻿# Let an Agent read and act on a page in the browser
 
 - **Date:** 2026-10-20
 - **Type:** feature
@@ -6,63 +6,66 @@
 
 [中文版](2026-10-20-browser-tools.zh.md)
 
-The agent browser existed only as a plugin skill that taught the model to shell out to
-`penguin browser` — a verb this repository's CLI does not provide. So there was no browser
-capability in the product at all, only instructions for using one somewhere else.
-
-Two built-in tools now drive it. `browser_read` reports the backend and the open tabs, opens a
-URL, closes a tab, scans a page as simplified HTML or plain text, and returns a screenshot as
-image content. `browser_act` clicks, types, and runs JavaScript in the page's own origin.
+Two built-in tools, `browser_read` and `browser_act`, drive the agent browser: the desktop app's
+built-in browser, or the user's own Chrome, whichever the user chose. `browser_read` reports the
+backend and the open tabs, opens a URL, closes a tab, scans a page as simplified HTML or as plain
+text, and returns a screenshot as image content in the same turn. `browser_act` clicks, types, and
+runs JavaScript in the page's own origin.
 
 ## Reading and acting are separate tools
 
-- `browser_read` is `r`: it changes nothing on the user's behalf.
-- `browser_act` is `rw`, so a click, a typed line or a script is approved first. A click can
+- `browser_read` is `r`. It changes nothing on the user's behalf, so it rides the approval flow
+  as a read.
+- `browser_act` is `rw`, so a click, a typed line, or a script goes through approval. A click can
   submit an order and a script can read `document.cookie`.
-- One tool with one permission would make the frequent read carry the weight of the rare
-  write. Split, a model that only wants to look at a page never enters the approval flow,
+- One tool with one permission would make the frequent read carry the weight of the rare write.
+  The split keeps a model that only wants to look at a page out of the approval flow entirely,
   while a click still asks.
 
 ## The screenshot comes back as the image itself
 
-It returns through `ToolResult.images`, so the model sees the page in the turn that asked for
-it. A screenshot written to disk and read afterwards costs a second tool call and a round trip
-for the same picture.
+`browser_read`'s `screenshot` returns through `ToolResult.images`, so the model sees the page in
+the turn that asked for it. A screenshot written to disk and read afterwards would cost a second
+tool call and a round trip for the same picture.
 
-## The backend is the user's choice, and every call says which
+## The backend is the user's choice, and every call says which one
 
-The tools never pick a backend, and every call reports the one in use: a model that assumed it
-was reading the built-in browser while reading another would draw the wrong conclusion from a
-page that looks the same either way. Tabs are shared with the user, who can watch and take over.
+Which browser an agent drives is a user setting, and neither tool picks one. Every call reports
+the backend, because a model that assumed it was reading the built-in browser when it was reading
+Chrome would draw the wrong conclusion from a page that looks the same either way. Tabs are shared
+with the user, who can watch and take over.
 
-## What a host provides, and what the code does not know
+## What a host provides
 
-The tools own no state and touch no disk — they call the `BrowserPort` their host injected, and
-a host with no browser surface reports that rather than failing. Under the server, one
-implementation backs a `BrowserLink` whose far side may be the desktop shell or the user's own
-Chrome: the difference is declared through `BrowserBackendCapabilities`, not discovered, so a
-second backend changes nothing above it.
-
-The desktop shell hosts the pages as `<webview>` guests in the main window and runs their CDP,
-which only the main process can do. It rides the same utilityProcess message port the updater
-and the PDF exporter use, each relay filtering its own frames by `type`.
+The tools own no state and touch no disk. They call the `BrowserPort` their host injected
+(`EnvironmentServices.browser`), and a host with no browser surface reports that rather than
+failing with an errno. What differs between backends is declared through
+`BrowserBackendCapabilities` rather than discovered, so the tools branch on it the same way the
+runtime does, and a second backend needs no change here.
 
 ## The exec guard
 
 `exec` runs script in a page the user is signed into, so while a script runs the tab's requests
-are intercepted and the ones leaving the page's origin are failed — enforced in the browser,
-not by reading the script, since a call hidden behind `new Image().src` would pass a source
-check and be stopped here all the same. A browser that cannot intercept is told so and refuses
-the script rather than running it unguarded.
+are intercepted and the ones leaving the page's origin are failed. It is enforced in the browser,
+not by reading the script: a call hidden behind `new Image().src` would pass a source check and
+be stopped here all the same. A browser that cannot intercept refuses the script rather than
+running it unguarded.
+
+## The surface the Web App's panel talks to
+
+The panel is a page in the app's window, and it is the only thing that can create a `<webview>`
+— the desktop shell hosts the guests but does not create them. So the browser's HTTP surface
+(`/api/browser`) is where an open request becomes a tab: the panel creates the element, learns the
+guest's id, and claims the request with it. A host with no browser surface answers 503
+`browser_unavailable` rather than 404: the browser is a feature of the host, not a missing path.
 
 ## Compatibility
 
 - The built-in tool set gained two entries, so the kernel was advanced: `KERNEL_VERSION` is now
   `2026-10-20` and the tools tab's previous default hash moved into
-  `KERNEL_SUPERSEDED_TAB_HASHES`.
-- The main window's `webPreferences` gained `webviewTag: true`. It does not widen what the
-  window can load — every `<webview>` still passes `will-attach-webview` and is refused outside
-  this app's own browser partition — only where a guest may attach.
-- The server gained one subpath export (`@prismshadow/jiumate-server/browser`), carrying the
-  wire types between the shell and the runtime.
+  `KERNEL_SUPERSEDED_TAB_HASHES`. An Agent whose `tools.builtin` list is still the previous
+  default advances to the new one; one the user edited keeps its own rows.
+- An existing Agent's persisted `tools.builtin` list is otherwise frozen as written, as for every
+  newly added built-in tool: an Agent created before this change needs the two entries
+  hand-added to its `system_config.yaml` to get them.
 - No data was migrated and no existing behaviour changed.

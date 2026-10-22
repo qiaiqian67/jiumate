@@ -66,6 +66,8 @@ export class BrowserService implements BrowserPort {
   private refreshed = false;
   /** The refresh under way, so concurrent callers wait for one answer rather than many. */
   private refreshing: Promise<void> | null = null;
+  /** The tab the user is looking at, or null when no window is showing one. */
+  private onScreenTabId: number | null = null;
 
   constructor(opts: BrowserServiceOptions) {
     this.link = opts.link;
@@ -271,6 +273,50 @@ export class BrowserService implements BrowserPort {
     const tab = this.resolveTab(options.tabId);
     this.tabs.activate(tab.id);
     return this.actions.screenshot(tab.id);
+  }
+
+  /**
+   * A tab the page created for an open request claims it. The first claim wins; a second
+   * window claiming the same request is told it is a duplicate, and the tab it made is
+   * closed by the window that made it.
+   */
+  claim(tabId: number, requestId: string): "claimed" | "duplicate" | "unknown" {
+    return this.tabs.claim(tabId, requestId);
+  }
+
+  /**
+   * The tab the user is looking at, or null when the window shows none. It is what the panel
+   * draws, and the server keeps it so a page that is not in front is not mistaken for a
+   * closed one.
+   */
+  setOnScreen(tabId: number | null): void {
+    this.onScreenTabId = tabId;
+  }
+
+  /** The tab the user is looking at, or null. */
+  onScreen(): number | null {
+    return this.onScreenTabId;
+  }
+
+  /**
+   * Focuses a tab: the user pressing a tab in the strip, or the agent naming one. The tab
+   * becomes the active one, so the browser the agent is using is the one on screen.
+   */
+  async activate(tabId?: number): Promise<BrowserStatus> {
+    await this.ensureTabs();
+    const tab = this.resolveTab(tabId);
+    this.tabs.activate(tab.id);
+    await this.link.request({ op: "activate-tab", tabId: tab.id }).catch(() => undefined);
+    return this.status();
+  }
+
+  /** Goes to a URL in a tab. */
+  async navigate(url: string, tabId?: number): Promise<BrowserStatus> {
+    await this.ensureTabs();
+    const tab = this.resolveTab(tabId);
+    this.tabs.activate(tab.id);
+    await this.actions.navigate(tab.id, url);
+    return this.status();
   }
 
   /**
