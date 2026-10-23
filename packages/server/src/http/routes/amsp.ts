@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The Agent API itself: `/amsp/v1/projects/:projectId/agents/:agentId/...`.
  *
  * This is the calling side. `/api/...` is the Web App's own surface — it authenticates the signed-in

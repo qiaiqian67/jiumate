@@ -1,4 +1,4 @@
-﻿// Generates dist/catalog.json (providers/models) and dist/themes.json (each theme's real token ramps)
+// Generates dist/catalog.json (providers/models) and dist/themes.json (each theme's real token ramps)
 // from the project's own core and skins packages.
 //
 // Both lists used to be hand-written in the renderer, which is how the installer ended up offering

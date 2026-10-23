@@ -1,4 +1,4 @@
-﻿/**
+/**
  * App assembly, both halves of it.
  *
  * The RUNTIME shell — `createRuntimeApp(deps)` — mounts the mechanism surface: the network

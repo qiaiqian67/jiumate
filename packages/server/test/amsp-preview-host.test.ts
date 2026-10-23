@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The Agent API answers on both loopback names.
  *
  * The preview host (the loopback counterpart of the App host) exists so that Agent-written preview
