@@ -1,4 +1,4 @@
-﻿/**
+/**
  * What happens to an Agent API key when the thing that owns it goes away.
  *
  * Both cases here were found by deleting a test account that had minted a key: the delete

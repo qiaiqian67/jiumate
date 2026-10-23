@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The Agent API's calling side: `/amsp/v1/...`.
  *
  * The refusal matrix matters more than the happy path: every wrong thing has to be refused
