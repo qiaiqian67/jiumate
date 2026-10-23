@@ -1,6 +1,6 @@
 {
   "name": "@prismshadow/jiumate-desktop",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "JiuMate desktop app: Electron shell running @prismshadow/jiumate-server as a utilityProcess, window on http://localhost (same-origin HTTP/SSE, no private IPC).",

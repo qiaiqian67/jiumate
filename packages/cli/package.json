@@ -1,6 +1,6 @@
 {
   "name": "@prismshadow/jiumate-cli",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "JiuMate CLI: interactive REPL and single-task runner over @prismshadow/jiumate-core.",
   "license": "Apache-2.0",

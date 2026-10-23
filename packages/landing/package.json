@@ -1,6 +1,6 @@
 {
   "name": "@prismshadow/jiumate-landing",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "JiuMate landing page (React + Vite + Tailwind CSS): multilingual, light/dark themes, benchmark showcase, and a local Markdown blog, deployed to GitHub Pages via GitHub Actions.",
