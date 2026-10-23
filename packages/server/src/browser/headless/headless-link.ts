@@ -31,6 +31,7 @@ import {
   type BrowserLinkEvent,
 } from "../link.js";
 import { CdpConnection, type CdpEvent } from "./cdp-connection.js";
+import { CookieJournal } from "./cookie-journal.js";
 import { launchChromium, resolveChromium, type Env } from "./chromium.js";
 
 /** The headless browser's capabilities: it creates its own tabs and keeps its own cookies. */
@@ -100,10 +101,19 @@ export class HeadlessLink implements BrowserLink {
   private readonly opts: HeadlessLinkOptions;
   /** Why the browser could not be driven, when it could not. */
   private failure: string | null = null;
+  /**
+   * The server's own record of the cookies the browser was given.
+   *
+   * Chrome writes its cookie store only when it closes, politely. A browser that is killed
+   * writes nothing, so the sign-ins would be gone. This record is written the moment a
+   * cookie is set, and put back into the browser when it starts.
+   */
+  private readonly journal: CookieJournal;
 
   constructor(opts: HeadlessLinkOptions) {
     this.opts = opts;
     this.log = opts.log ?? (() => undefined);
+    this.journal = new CookieJournal(opts.root, opts.browserId ?? "chrome");
   }
 
   get connected(): boolean {
@@ -241,6 +251,16 @@ export class HeadlessLink implements BrowserLink {
   }
 
   /**
+   * The browser process, when one is running.
+   *
+   * Exposed for the tests that need to kill it the way a crash does — the browser's own
+   * store is only written on a clean exit, and that is what the record is for.
+   */
+  get process(): ChildProcess | null {
+    return this.browser?.process ?? null;
+  }
+
+  /**
    * Whether the browser is running.
    *
    * The process may be gone while its children are not, and the children hold the profile
@@ -315,6 +335,9 @@ export class HeadlessLink implements BrowserLink {
     this.started = true;
     this.connection = await CdpConnection.connect(this.browser.endpoint, HANDSHAKE_TIMEOUT_MS);
     this.connection.onEvent((event) => this.onCdpEvent(event));
+    // The record is put back into the browser: a browser that was killed left its store
+    // empty, and the record is what the sign-ins are in.
+    await this.restoreCookies();
     this.log(`headless browser: started ${browser.name} on port ${this.browser.port}`);
   }
 
@@ -414,6 +437,9 @@ export class HeadlessLink implements BrowserLink {
   private async setCookies(cookies: readonly BrowserCookie[]): Promise<number> {
     const connection = this.connection;
     if (connection === null) throw new BrowserLinkError("closed", "The browser is not running.");
+    // The record goes down FIRST: Chrome writes its store only when it closes, and a
+    // browser that is killed writes nothing. The record is what survives that.
+    this.journal.add(cookies);
     let written = 0;
     for (const cookie of cookies) {
       try {
@@ -445,6 +471,49 @@ export class HeadlessLink implements BrowserLink {
     if (connection === null) return;
     await connection.send("Storage.clearCookies").catch(() => undefined);
     await connection.send("Network.clearBrowserCookies").catch(() => undefined);
+    // The record goes too: the user asked for the browser's data to be cleared, and a
+    // record that outlives that would put the sign-ins back at the next start.
+    this.journal.clear();
+  }
+
+  /**
+   * Puts the recorded cookies back into the browser.
+   *
+   * The browser's own store usually has them — it wrote them out when it closed. But a
+   * browser that was killed did not, and the record has them. So the record is written into
+   * the browser every time it starts: the browser's store is the live truth, and the
+   * record is what fills the gap a crash left.
+   */
+  private async restoreCookies(): Promise<void> {
+    const recorded = this.journal.list();
+    if (recorded.length === 0) return;
+    const connection = this.connection;
+    if (connection === null) return;
+    let restored = 0;
+    for (const cookie of recorded) {
+      try {
+        await connection.send("Storage.setCookies", {
+          cookies: [
+            {
+              name: cookie.name,
+              value: cookie.value,
+              domain: cookie.domain ?? hostOf(cookie.url),
+              path: cookie.path,
+              secure: cookie.secure,
+              httpOnly: cookie.httpOnly,
+              ...(cookie.expirationDate !== undefined ? { expires: cookie.expirationDate } : {}),
+              sameSite: sameSiteOf(cookie.sameSite),
+            },
+          ],
+        });
+        restored++;
+      } catch {
+        // A cookie the store refuses now is not a reason to skip the rest.
+      }
+    }
+    if (restored > 0) {
+      this.log(`headless browser: restored ${restored} cookies from the record`);
+    }
   }
 
   // -------------------------------------------------------------------------

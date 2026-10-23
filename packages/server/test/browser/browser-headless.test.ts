@@ -30,6 +30,68 @@ function freshRoot(): string {
 }
 
 /**
+ * The cookies a browser's own store holds, read through a copy.
+ *
+ * The browser holds the file open, so it is copied first — and the copy brings the
+ * write-ahead log, so a page the browser has not checkpointed yet is read too.
+ */
+function storedCookies(root: string): string[] {
+  const store = path.join(root, "browser", "chrome", "Default", "Network", "Cookies");
+  if (!fs.existsSync(store)) return [];
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-store-"));
+  try {
+    const copy = path.join(dir, "Cookies");
+    fs.copyFileSync(store, copy);
+    for (const suffix of ["-wal", "-shm"]) {
+      try {
+        fs.copyFileSync(store + suffix, copy + suffix);
+      } catch {
+        // No write-ahead log yet.
+      }
+    }
+    const db = new DatabaseSync(copy, { readOnly: true });
+    try {
+      return db
+        .prepare("SELECT name FROM cookies")
+        .all()
+        .map((row) => (row as { name: string }).name);
+    } finally {
+      db.close();
+    }
+  } catch {
+    return [];
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Opens a page and waits for it to load.
+ *
+ * A cookie is only visible to a page that has loaded: the browser has it, but the page
+ * has to have asked for it.
+ */
+async function openLoadedPage(link: HeadlessLink): Promise<{ tabId: number; cookie: string }> {
+  const opened = (await link.request({
+    op: "open-tab",
+    url: "https://example.com/",
+    activate: true,
+  })) as { tabId: number };
+  for (let i = 0; i < 60; i++) {
+    await new Promise((r) => setTimeout(r, 250));
+    const seen = (await link.request({
+      op: "cdp",
+      tabId: opened.tabId,
+      method: "Runtime.evaluate",
+      params: { expression: "document.cookie", returnByValue: true },
+    })) as { result?: { value?: unknown } };
+    const value = seen.result?.value;
+    if (typeof value === "string") return { tabId: opened.tabId, cookie: value };
+  }
+  return { tabId: opened.tabId, cookie: "" };
+}
+
+/**
  * Removes a profile directory, waiting for the browser to be gone first.
  *
  * The browser holds its profile open, so on Windows the directory cannot be removed until
@@ -192,6 +254,105 @@ describe("the headless browser", () => {
       }
     },
     120_000,
+  );
+
+  it.skipIf(skip !== null)(
+    "keeps the sign-ins through a crash, not just through a clean exit",
+    async () => {
+      // This is what the record is for. Chrome writes its cookie store only when it
+      // closes, politely: a browser that is killed writes nothing, and the sign-ins an
+      // import brought would be gone. The server's own record is what survives.
+      const root = freshRoot();
+      const first = new HeadlessLink({ root, headless: true });
+      try {
+        await first.request({ op: "open-tab", url: "https://example.com/", activate: true });
+        await first.request({
+          op: "set-cookies",
+          cookies: [
+            {
+              url: "https://example.com/",
+              name: "jiumate_crashed",
+              value: "crash-value",
+              path: "/",
+              secure: true,
+              httpOnly: false,
+              sameSite: "lax",
+            },
+          ],
+        });
+        // A hard kill: no goodbye, no flush, exactly what a crash looks like.
+        first.process?.kill("SIGKILL");
+        await new Promise((r) => setTimeout(r, 2000));
+      } finally {
+        first.dispose();
+      }
+
+      // The browser's own store is empty: it never got the chance to write.
+      const store = path.join(root, "browser", "chrome", "Default", "Network", "Cookies");
+      if (fs.existsSync(store)) {
+        const copy = path.join(root, "cookies-copy");
+        fs.copyFileSync(store, copy);
+        const db = new DatabaseSync(copy, { readOnly: true });
+        try {
+          const rows = db.prepare("SELECT name FROM cookies").all() as { name: string }[];
+          expect(rows.map((r) => r.name)).not.toContain("jiumate_crashed");
+        } finally {
+          db.close();
+        }
+      }
+
+      // But the record has it, and the next browser is given it back.
+      const second = new HeadlessLink({ root, headless: true });
+      try {
+        const page = await openLoadedPage(second);
+        expect(page.cookie).toContain("jiumate_crashed=crash-value");
+      } finally {
+        await second.close();
+        fs.rmSync(root, { recursive: true, force: true });
+      }
+    },
+    120_000,
+  );
+
+  it.skipIf(skip !== null)(
+    "survives many restarts",
+    async () => {
+      // The sign-ins have to still be there after the fifth restart, not only the second.
+      const root = freshRoot();
+      try {
+        for (let round = 0; round < 5; round++) {
+          const link = new HeadlessLink({ root, headless: true });
+          try {
+            if (round === 0) {
+              // The first round writes the cookie.
+              await link.request({ op: "open-tab", url: "https://example.com/", activate: true });
+              await link.request({
+                op: "set-cookies",
+                cookies: [
+                  {
+                    url: "https://example.com/",
+                    name: "jiumate_restarts",
+                    value: "restart-value",
+                    path: "/",
+                    secure: true,
+                    httpOnly: false,
+                    sameSite: "lax",
+                  },
+                ],
+              });
+            } else {
+              const page = await openLoadedPage(link);
+              expect(page.cookie).toContain("jiumate_restarts=restart-value");
+            }
+          } finally {
+            await link.close();
+          }
+        }
+      } finally {
+        fs.rmSync(root, { recursive: true, force: true });
+      }
+    },
+    180_000,
   );
 
   it("says so when the machine has no browser", async () => {

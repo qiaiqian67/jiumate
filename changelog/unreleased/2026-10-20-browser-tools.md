@@ -85,6 +85,19 @@ how tall it is — because a model told "scrolled to the bottom" when nothing mo
 asking. A key is dispatched as a person's keyboard would, so a form that only accepts trusted
 events accepts it. A `<select>` is chosen by its value or by the text the user reads on it.
 
+## The sign-ins survive a crash
+
+Chrome writes its cookie store only when it closes, politely. Two minutes of running leave
+the file untouched, and a browser that is killed — a crash, a power cut — writes nothing at
+all. The sign-ins an import brought would be gone, and the sign-ins are the user's: they
+took effort to bring over, and a server crash is no reason to lose them.
+
+So the server keeps its own record of the cookies it handed to the browser, written the
+moment they are set. The browser's store is the fast path; the record is the durable one,
+and it is put back into the browser every time the browser starts. Clearing the browser's
+data clears the record too — a sign-in the user asked to be gone must not come back from
+nowhere.
+
 ## A browser of its own, for the server
 
 The built-in browser needs the desktop app: a `<webview>` is created by the Web App and
