@@ -92,6 +92,13 @@ export class HeadlessLink implements BrowserLink {
   private readonly tabs = new Map<number, HeadlessTab>();
   private readonly tabIds = new Map<string, number>();
   private readonly sessions = new Map<string, number>();
+  /**
+   * The CDP events each tab relays, as the union of what every command asked for.
+   *
+   * The event set is additive, so the exec guard's request interception and the dialog
+   * watcher's dialogs do not take turns replacing each other's list.
+   */
+  private readonly relayed = new Map<number, Set<string>>();
   private nextTabId = 1;
   private activeTabId: number | null = null;
   private readonly listeners = new Set<(event: BrowserLinkEvent) => void>();
@@ -163,6 +170,17 @@ export class HeadlessLink implements BrowserLink {
         const sessionId = this.sessionOf(command.tabId);
         if (sessionId === undefined) {
           throw new BrowserLinkError("refused", "no_such_tab");
+        }
+        // The events the caller wants relayed for this tab. They are **additive**: the
+        // union of what every command asked for, so two features that each want an event
+        // (the exec guard's request interception, the dialog watcher's) do not take turns
+        // replacing each other's list.
+        for (const event of (command.events as string[] | undefined) ?? []) {
+          const relayed = this.relayed.get(command.tabId);
+          if (relayed !== undefined) relayed.add(event);
+        }
+        for (const event of (command.unrelayEvents as string[] | undefined) ?? []) {
+          this.relayed.get(command.tabId)?.delete(event);
         }
         return connection.send(command.method, command.params ?? {}, {
           sessionId,
@@ -368,6 +386,7 @@ export class HeadlessLink implements BrowserLink {
     this.tabs.set(id, tab);
     this.tabIds.set(created.targetId, id);
     this.sessions.set(attached.sessionId, id);
+    this.relayed.set(id, new Set());
     this.activeTabId = id;
     // The Page domain has to be on for the load events to come: a target that is attached
     // but not asked to report anything stays quiet, and a tab that never hears that the
@@ -393,6 +412,7 @@ export class HeadlessLink implements BrowserLink {
     this.tabs.delete(tabId);
     this.tabIds.delete(tab.targetId);
     this.sessions.delete(tab.sessionId);
+    this.relayed.delete(tabId);
     if (this.activeTabId === tabId) this.activeTabId = null;
     await this.connection
       ?.send("Target.closeTarget", { targetId: tab.targetId })
@@ -550,10 +570,21 @@ export class HeadlessLink implements BrowserLink {
         return;
       }
       case "Page.javascriptDialogOpening": {
-        // The dialogs are answered by the far side's own watcher; here the browser's default
-        // is to dismiss them, which is what a page that asks a question without an answer
-        // should get.
         if (tabId === undefined) return;
+        // The dialog is relayed to whoever asked for it — the action layer's watcher
+        // decides whether to accept or dismiss it. Only when nobody is watching does the
+        // browser's own default (dismiss) apply, because a page that asks a question
+        // without an answer should not block the agent forever.
+        const wanted = this.relayed.get(tabId);
+        if (wanted !== undefined && wanted.has(event.method)) {
+          this.emit({
+            kind: "cdp-event",
+            tabId,
+            method: event.method,
+            params: event.params,
+          });
+          return;
+        }
         void this.connection
           ?.send("Page.handleJavaScriptDialog", { accept: false }, { sessionId: event.sessionId })
           .catch(() => undefined);
@@ -571,6 +602,7 @@ export class HeadlessLink implements BrowserLink {
         if (id === undefined) return;
         this.tabs.delete(id);
         this.tabIds.delete(targetId);
+        this.relayed.delete(id);
         if (this.activeTabId === id) this.activeTabId = null;
         this.emit({ kind: "tab-closed", tabId: id });
         return;
@@ -589,6 +621,21 @@ export class HeadlessLink implements BrowserLink {
         const id = this.sessions.get(sessionId);
         if (id === undefined) return;
         this.sessions.delete(sessionId);
+        return;
+      }
+      default: {
+        // Everything else is relayed to whoever asked for it: the exec guard's request
+        // interception (`Fetch.requestPaused`) comes through here, and a feature that
+        // needs an event asks for it by name.
+        if (tabId === undefined) return;
+        const wanted = this.relayed.get(tabId);
+        if (wanted === undefined || !wanted.has(event.method)) return;
+        this.emit({
+          kind: "cdp-event",
+          tabId,
+          method: event.method,
+          params: event.params,
+        });
         return;
       }
     }
@@ -618,6 +665,7 @@ export class HeadlessLink implements BrowserLink {
     this.tabs.set(id, tab);
     this.tabIds.set(info.targetId, id);
     this.sessions.set(attached.sessionId, id);
+    this.relayed.set(id, new Set());
     await this.enableDomains(attached.sessionId);
     await this.syncTab(id);
     this.emit({ kind: "tab", tab: this.tabOf(tab) });

@@ -121,6 +121,14 @@ per call, so the choice can change while the server runs.
 The browser starts when the agent opens a page, not when the app asks about it: a server
 that has never driven a page should not leave a browser running.
 
+And it has the guard the built-in browser has. `exec` runs arbitrary script in a page the
+user is signed into; the script runs in the page's own origin, so it cannot read another
+origin's DOM — but it could *send* to one, carrying `document.cookie` away. So while a
+script runs, the tab's requests are intercepted and the ones that leave the page's origin
+are failed. That needs the browser to relay `Fetch.requestPaused`, and the first version of
+the headless browser did not — so a script there could have walked the user's sign-ins off
+the page. It relays now, and the guard is tested against a real browser.
+
 Two things the implementation had to get right, and both were found by the tests:
 
 - a browser killed outright does not write its cookie store out, so the sign-ins would be
