@@ -2,15 +2,20 @@
 
 - **Date:** 2026-10-20
 - **Type:** feature
-- **Scope:** `core`, `server`, `desktop`, `docs`
+- **Scope:** `core`, `server`, `desktop`, `web`, `docs`
 
 [中文版](2026-10-20-browser-tools.zh.md)
 
 Two built-in tools, `browser_read` and `browser_act`, drive the agent browser: the desktop app's
-built-in browser, or the user's own Chrome, whichever the user chose. `browser_read` reports the
-backend and the open tabs, opens a URL, closes a tab, scans a page as simplified HTML or as plain
-text, and returns a screenshot as image content in the same turn. `browser_act` clicks, types, and
-runs JavaScript in the page's own origin.
+built-in browser, a browser the server starts for itself, or the user's own Chrome — whichever the
+user chose. `browser_read` reports the backend and the open tabs, opens a URL, closes a tab, scans
+a page as simplified HTML or as plain text, and returns a screenshot as image content in the same
+turn. `browser_act` clicks, types, and runs JavaScript in the page's own origin — and does
+everything else a person does to a page: scrolls, presses keys, chooses from a dropdown, navigates,
+goes back, waits for something to appear, hovers, fills in a file.
+
+The browser starts empty, so a user can bring the sign-ins of a system browser into it: that is
+the difference between an agent that can only read public pages and one that can do the work.
 
 ## Reading and acting are separate tools
 
@@ -34,6 +39,11 @@ Which browser an agent drives is a user setting, and neither tool picks one. Eve
 the backend, because a model that assumed it was reading the built-in browser when it was reading
 Chrome would draw the wrong conclusion from a page that looks the same either way. Tabs are shared
 with the user, who can watch and take over.
+
+Three backends, and the choice falls back rather than fails: **a browser that works beats the one
+the user asked for not working.** A server with no desktop shell falls back to the headless one; a
+machine with no Chromium falls back to the built-in one. The router picks per call, so the choice
+can change while the server runs.
 
 ## What a host provides
 
@@ -186,13 +196,31 @@ file input was something the agent could not fill at all.
 - An existing Agent's persisted `tools.builtin` list is otherwise frozen as written, as for every
   newly added built-in tool: an Agent created before this change needs the two entries
   hand-added to its `system_config.yaml` to get them.
+- `BrowserBackend` gained a third member, `headless`, and `BrowserUnavailableReason` gained two
+  reasons (`no_browser`, `browser_failed`). A host that switches on a backend it does not
+  implement — the Chrome extension, which is not built yet — is not broken by this: the router
+  falls back to a backend that works, and says which one it used.
+- **A server with no desktop shell now answers 200 where it used to answer 503.** It has the
+  headless browser, so the browser is there: `GET /api/browser/status` reports
+  `backend: "headless"`. A host with no browser at all still answers 503
+  `browser_unavailable`, and a browser that is there but not answering is reported as
+  `available: false` with a reason.
+- The user's preferences gained one key, `browserBackend`. It is a free-form JSON column, so
+  nothing was migrated: a user who has not set it gets the default, which is the built-in
+  browser on the desktop and the headless one everywhere else. A value that is not a backend
+  is dropped on write and falls back to the default on read.
 - The main window's `webPreferences` gained `webviewTag: true`. It does not widen what the
   window can load — every `<webview>` still passes `will-attach-webview` and is refused outside
   this app's own browser partition — only where a guest may attach.
-- The server gained one subpath export (`@prismshadow/jiumate-server/browser`), carrying the
-  wire types between the shell and the runtime.
+- The server gained two subpath exports (`@prismshadow/jiumate-server/browser`, carrying the
+  wire types between the shell and the runtime, and
+  `@prismshadow/jiumate-server/browser/headless`, so the desktop shell can shut the headless
+  browser down cleanly — a browser killed outright does not write its cookie store out).
+- The server's browser routes gained four: `GET /api/browser/import/sources`,
+  `POST /api/browser/import`, `POST /api/browser/clear-data` and `GET /api/browser/history`.
 - The user channel gained one event (`browser_state`), carrying the browser's state to the
   window that shows it.
 - The Web App's dock gained a `browser` panel, offered only where Electron defines the
   `<webview>` element — the desktop app's main window.
-- No data was migrated and no existing behaviour changed.
+- The headless browser's profile and its cookie record live under the data root
+  (`browser/<name>/`). They are new files, and nothing else was moved or rewritten.

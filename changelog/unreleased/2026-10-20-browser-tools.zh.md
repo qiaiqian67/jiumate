@@ -2,11 +2,13 @@
 
 - **Date:** 2026-10-20
 - **Type:** feature
-- **Scope:** `core`, `server`, `desktop`, `docs`
+- **Scope:** `core`, `server`, `desktop`, `web`, `docs`
 
 [English](2026-10-20-browser-tools.md)
 
-两个内置工具 `browser_read` 与 `browser_act` 驱动 Agent 浏览器：桌面应用的内置浏览器，或用户自己的 Chrome，由用户选择。`browser_read` 报告后端与打开的标签页、打开 URL、关闭标签、把页面扫成简化 HTML 或纯文本，并在同一轮里把截图作为图像内容返回。`browser_act` 点击、输入，并在页面自身的源内运行 JavaScript。
+两个内置工具 `browser_read` 与 `browser_act` 驱动 Agent 浏览器：桌面应用的内置浏览器、服务器自己开的浏览器，或用户自己的 Chrome，由用户选择。`browser_read` 报告后端与打开的标签页、打开 URL、关闭标签、把页面扫成简化 HTML 或纯文本，并在同一轮里把截图作为图像内容返回。`browser_act` 点击、输入，并在页面自身的源内运行 JavaScript——也做人会做的其他事：滚动、按键、从下拉里选、导航、后退、等某个东西出现、悬停、往文件输入框里填文件。
+
+浏览器一开始是空的，所以用户可以把系统浏览器的登录状态搬进来：这就是"只能读公开页面"和"能干活"之间的差别。
 
 ## 读与写分成两个工具
 
@@ -21,6 +23,8 @@
 ## 后端由用户选，每次调用都说清是哪个
 
 智能体驱动哪个浏览器是用户的设置，两个工具都不挑。每次调用都报告后端，因为一个以为自己读的是内置浏览器、实际读的是 Chrome 的模型，会从长得一模一样的页面上得出错误的结论。标签页与用户共享，用户可以看着、也可以随时接管。
+
+三个后端，而选择会**降级**而不是失败：**能用的浏览器比用户点名却用不上的浏览器重要。** 没有桌面 shell 的服务器退回无头那个；机器上没有 Chromium 的退回内置那个。路由器每次调用都选一次，所以这个选择可以在服务器运行中改变。
 
 ## 宿主提供什么
 
@@ -77,6 +81,10 @@ Chrome 只在**自己关闭**的时候才写 cookie 库。跑着的时候两分�
 
 历史落在浏览器自己的文件里，并和已有的合并：热切换意味着两个存储可能写同一个文件，谁也不该丢掉对方的访问记录。
 
+## 智能体不只会点击和输入
+
+`browser_act` 新增 `scroll`、`press`、`select`、`navigate`、`back`、`forward` 和 `reload`。滚动会回答页面最终到了哪里——动了没有、是不是到底了、页面多高——因为一个被告知"已滚到底"却其实没动的模型会一直问下去。按键是按人的键盘那样发出的，所以只接受可信事件的表单也会接受它。`<select>` 既可以按值选，也可以按用户看得见的文字选。
+
 ## 等待，而不是反复扫描
 
 `browser_act` 新增 `wait`：等某个元素出现或消失、等页面不再变化、等加载结束。页面自己盯着自己，所以一次调用就把等待做完了，条件一成立立刻结束。
@@ -85,17 +93,17 @@ Chrome 只在**自己关闭**的时候才写 cookie 库。跑着的时候两分�
 
 `hover` 和 `upload` 也一起来了：很多组件只有悬停才显形，而文件输入框此前是 agent 根本填不了的东西。
 
-## 智能体不只会点击和输入
-
-`browser_act` 新增 `scroll`、`press`、`select`、`navigate`、`back`、`forward` 和 `reload`。滚动会回答页面最终到了哪里——动了没有、是不是到底了、页面多高——因为一个被告知"已滚到底"却其实没动的模型会一直问下去。按键是按人的键盘那样发出的，所以只接受可信事件的表单也会接受它。`<select>` 既可以按值选，也可以按用户看得见的文字选。
-
 ## 兼容性
 
 - 内置工具集新增两条，因此推进了内核：`KERNEL_VERSION` 现为 `2026-10-20`，工具页此前的默认 hash 移入 `KERNEL_SUPERSEDED_TAB_HASHES`。`tools.builtin` 仍是上一版默认的 Agent 会推进到新版；被用户改过的则保留自己的行。
 - 浏览器工具的动作集后来又长了一轮（`scroll` / `press` / `select` / `navigate` / `back` / `forward` / `reload`，以及 `url` 学会地址栏的规则），同一天复用同一个版本号，工具页此前的默认 hash 同样移入 `KERNEL_SUPERSEDED_TAB_HASHES`。
 - 除此之外，既有 Agent 落盘的 `tools.builtin` 列表按原样冻结，与所有新增内置工具一样：本次变更之前创建的 Agent，需要手工把这两条加进它的 `system_config.yaml` 才会拿到它们。
 - 主窗口的 `webPreferences` 新增了 `webviewTag: true`。它并没有扩大窗口能加载什么——每个 `<webview>` 仍要过 `will-attach-webview`，在本应用自己的浏览器分区之外一律被拒——只是允许 guest 挂载的位置。
-- server 新增一个子路径导出（`@prismshadow/jiumate-server/browser`），承载 shell 与运行时之间的线路类型。
+- `BrowserBackend` 多了一个成员 `headless`，`BrowserUnavailableReason` 多了两个原因（`no_browser`、`browser_failed`）。切到自己没实现的后端——Chrome 扩展，还没做——不会因此坏掉：路由器会退到一个能用的后端，并说清用的是哪个。
+- **没有桌面 shell 的服务器，现在原来回 503 的地方回 200。** 它有无头浏览器，所以浏览器是在的：`GET /api/browser/status` 报告 `backend: "headless"`。完全没有浏览器的宿主仍然回 503 `browser_unavailable`；浏览器在但不答应的，报告为 `available: false` 并带上原因。
+- 用户偏好新增一个键 `browserBackend`。那是一列自由格式的 JSON，所以没有迁移：没设置过的用户拿到默认值——桌面上是内置浏览器，别处是无头那个。不是后端的值在写入时被丢弃，读取时退回默认。
+- server 新增两个子路径导出（`@prismshadow/jiumate-server/browser`，承载 shell 与运行时之间的线路类型；以及 `@prismshadow/jiumate-server/browser/headless`，让桌面 shell 能干净地关掉无头浏览器——被直接杀掉的浏览器不会把 cookie 库写出来）。
+- server 的浏览器路由新增四条：`GET /api/browser/import/sources`、`POST /api/browser/import`、`POST /api/browser/clear-data`、`GET /api/browser/history`。
 - 用户频道新增一个事件（`browser_state`），把浏览器的状态送到显示它的窗口。
 - Web App 的 dock 新增一个 `browser` 面板，且只在 Electron 定义了 `<webview>` 元素的地方出现——桌面应用的主窗口。
-- 没有数据迁移，既有行为不变。
+- 无头浏览器的 profile 和它的 cookie 记录放在数据根下（`browser/<name>/`）。都是新文件，没有移动或改写别的东西。
