@@ -91,3 +91,27 @@ OpenAI. The artwork's name and content imply no such affiliation, and neither do
 here. Its sibling preset `preset-arina-hashimoto` is **not** bundled: that project excludes it from
 the MIT grant and from its own installers, and states that redistributing it requires an
 independent rights review.
+
+## AgentHub — `packages/agenthub/`
+
+Vendored into this repository as a first-party package (`@jiumate/agenthub`), so the
+model gateway this project depends on is no longer pulled from a package scope this
+project no longer owns.
+
+The source is AgentHub 0.4.15, taken verbatim from the upstream repository's `v0.4.15`
+tag — the `src_ts/` subtree, its `tsconfig.json` and its `package.json`. The changes made
+to it here are confined to the package's own metadata and documentation: the `name` field
+became `@jiumate/agenthub`, the `repository`, `bugs` and `homepage` fields point at this
+repository, the `author` field reads JiuMate, the upstream development-only dependencies
+and scripts (jest, eslint, tsx, supertest) were dropped, and two links inside the tracer
+and playground pages now point at the upstream repository rather than its former name. The
+TypeScript source under `src/` is unmodified.
+
+**License: Apache License 2.0**, the upstream project's license, reproduced in full at
+[`packages/agenthub/LICENSE`](packages/agenthub/LICENSE). The upstream copyright notice is
+retained in that file.
+
+Upstream source: <https://github.com/Prism-Shadow/model-message-stream-protocol> — the
+`v0.4.15` tag, `src_ts/` subtree. The upstream project is published on npm as
+`@prismshadow/agenthub` and is maintained by Yaowei Zheng; it remains the origin of this
+code and the place to send upstream fixes.

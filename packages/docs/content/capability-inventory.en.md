@@ -21,7 +21,7 @@ Inventory scope:
 |---|---|---|
 | Agent loop | Single-stream ReAct; **tools run in parallel**, approvals run serially; subagents max one level (`MAX_SUBAGENT_DEPTH = 1`) | `engine/context-engine.ts` |
 | Streaming output | The only output mode; `partial_*` increments in real time, segments finalize a full `model_msg` at end | `llm/generative-model.ts` |
-| LLM abstraction | All providers come through `@prismshadow/agenthub`; tool calling, vision, inline thinking, prompt caching, thinking level, fast mode all supported | `interfaces/llm.ts:137` |
+| LLM abstraction | All providers come through `@jiumate/agenthub`; tool calling, vision, inline thinking, prompt caching, thinking level, fast mode all supported | `interfaces/llm.ts:137` |
 | Retry classification | Only 4 classes are fatal (credentials, 4xx, fast-mode-unsupported, assembly failure); everything else is retryable; defaults `maxReconnects = 5`, `maxTurnAttempts = 20` | `context-engine.ts:427` |
 | Tool set | 9 built-in (read/write/edit/shell/input-shell/2× subagent/2× image); **no built-in web fetch / git / grep** | `environment/tools/registry.ts:37` |
 | OmniMessage protocol | 7 payload classes + 9 event classes; the bracket-marker form (`[tag]…[/tag]`) is authoritative; the angle-bracket form is supported indefinitely | `omnimessage/types.ts`, `markers/` |

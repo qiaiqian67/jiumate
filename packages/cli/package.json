@@ -42,7 +42,7 @@
     "@jiumate/use-bento-slides": "workspace:*",
     "@jiumate/use-firecrawl": "workspace:*",
     "@jiumate/use-claude-code": "workspace:*",
-    "@prismshadow/agenthub": "^0.4.9",
+    "@jiumate/agenthub": "workspace:*",
     "@jiumate/core": "workspace:*",
     "@jiumate/server": "workspace:*",
     "commander": "^13.0.0",

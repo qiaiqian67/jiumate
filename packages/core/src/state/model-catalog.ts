@@ -1635,7 +1635,7 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
     // image_url parts, in a prompt and in a tool result alike. Every other GLM id refuses
     // one outright ("GLM <id> does not support image inputs."), which is why the rest of
     // this group is vision-off. That forwarding is why core's dependency range floors
-    // @prismshadow/agenthub at 0.4.8.
+    // @jiumate/agenthub at 0.4.8.
     modelId: "glm-5.3-flash",
     displayName: "GLM-5.3 Flash",
     provider: "zhipu",

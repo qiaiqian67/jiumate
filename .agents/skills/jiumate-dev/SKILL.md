@@ -5,7 +5,7 @@ description: Use when developing JiuMate itself — changing packages/{core,serv
 
 # Developing JiuMate
 
-JiuMate is a TypeScript monorepo: an Agent SDK (`packages/core`), an HTTP server (`packages/server`), a Web App (`packages/web`), a CLI (`packages/cli`), an Electron shell (`packages/desktop`), the landing and docs sites, and the shipped plugin library — one npm package per plugin under the repo root's `plugins/`, with `packages/plugins` as the loader that depends on them all. It **consumes** LLM providers through `@prismshadow/agenthub` and implements no provider clients of its own.
+JiuMate is a TypeScript monorepo: an Agent SDK (`packages/core`), an HTTP server (`packages/server`), a Web App (`packages/web`), a CLI (`packages/cli`), an Electron shell (`packages/desktop`), the landing and docs sites, and the shipped plugin library — one npm package per plugin under the repo root's `plugins/`, with `packages/plugins` as the loader that depends on them all. It **consumes** LLM providers through `@jiumate/agenthub` and implements no provider clients of its own.
 
 ## Repo shape — read before your first edit
 

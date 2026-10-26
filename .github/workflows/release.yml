@@ -592,6 +592,7 @@ jobs:
           for dir in plugins/*/; do
             (cd "$dir" && npm version --no-git-tag-version --allow-same-version "$V")
           done
+          (cd packages/agenthub && npm version --no-git-tag-version --allow-same-version "$V")
           (cd packages/core && npm version --no-git-tag-version --allow-same-version "$V")
           (cd packages/server && npm version --no-git-tag-version --allow-same-version "$V")
           (cd packages/cli && npm version --no-git-tag-version --allow-same-version "$V")
@@ -637,7 +638,10 @@ jobs:
             fi
             pnpm --filter "$name" publish --access public --no-git-checks
           done
-          for pkg in core server cli; do
+          # agenthub is the model gateway core depends on, so it goes before core for the
+          # same reason the plugins do: a workspace:* dep is rewritten to a version, and a
+          # version that is not on the registry cannot be installed.
+          for pkg in agenthub core server cli; do
             name="@jiumate/$pkg"
             if [ -n "$(npm view "$name@$V" version 2>/dev/null || true)" ]; then
               echo "$name@$V already on the registry, skipping."

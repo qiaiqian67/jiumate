@@ -21,7 +21,7 @@ description: 平台每个 package 今天交付了什么、关键路径在哪里�
 |---|---|---|
 | Agent 循环 | 单流 ReAct,**并发执行 tool**,approval 串行;子代理最多一层(`MAX_SUBAGENT_DEPTH = 1`) | `engine/context-engine.ts` |
 | 流式输出 | 唯一的输出模式;`partial_*` 实时增量,segment 结束补完整 `model_msg` | `llm/generative-model.ts` |
-| LLM 抽象 | 通过 `@prismshadow/agenthub` 接入所有 provider;tool calling、vision、inline thinking、prompt caching、thinking level、fast mode 全部支持 | `interfaces/llm.ts:137` |
+| LLM 抽象 | 通过 `@jiumate/agenthub` 接入所有 provider;tool calling、vision、inline thinking、prompt caching、thinking level、fast mode 全部支持 | `interfaces/llm.ts:137` |
 | 重试分类 | 只有 4 类是 fatal(凭证、4xx、fast mode 不支持、装配失败),其余一律 retryable;默认 `maxReconnects = 5`、`maxTurnAttempts = 20` | `context-engine.ts:427` |
 | 工具集 | 9 个内置(读/写/编辑/shell/input-shell/2× subagent/2× image);**没有内置 web fetch / git / grep** | `environment/tools/registry.ts:37` |
 | OmniMessage 协议 | 7 类 payload + 9 类 event;方括号 marker 形式(`[tag]…[/tag]`)是权威写法,角括号形式无限期兼容 | `omnimessage/types.ts`、`markers/` |

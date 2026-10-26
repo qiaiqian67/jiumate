@@ -97,6 +97,7 @@ single data directory (`~/.jiumate/data`) and a single message protocol (OmniMes
 | ----------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------- |
 | [`packages/core`](../packages/core)       | `@jiumate/core`   | SDK & engine: ReAct loop, OmniMessage protocol, LLM/Environment interface contracts, Agent State, Trace |
 | [`packages/cli`](../packages/cli)         | `@jiumate/cli`    | The `jiumate` command: REPL, one-shot runs, model & vault config, service launcher                      |
+| [`packages/agenthub`](../packages/agenthub) | `@jiumate/agenthub` | The model gateway: one client for 1,000+ LLM providers, vendored from AgentHub 0.4.15 (see [third-party notices](../THIRD-PARTY-NOTICES.md)) |
 | [`packages/server`](../packages/server)   | `@jiumate/server` | Web backend: HTTP API + SSE streaming, multi-user auth, Project authorization, usage stats              |
 | [`packages/web`](../packages/web)         | `@jiumate/web`    | Web App: multi-session chat, Agent/skill/model management, Trace observability, evaluation center       |
 | [`plugins/*`](../plugins) | `@jiumate/<name>` | The built-in plugins, one npm package each: skills (software development, model development, agent development/tuning, …) and session hooks (goal mode, skill summaries); the loader lives in `packages/core` |

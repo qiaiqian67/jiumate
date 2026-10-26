@@ -11,8 +11,8 @@ const captured = vi.hoisted(() => ({
   fail: undefined as Error | undefined,
 }));
 
-vi.mock("@prismshadow/agenthub", async (importOriginal) => {
-  const mod = await importOriginal<typeof import("@prismshadow/agenthub")>();
+vi.mock("@jiumate/agenthub", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@jiumate/agenthub")>();
   class FakeAutoLLMClient {
     constructor(options: Record<string, unknown>) {
       captured.options.push(options);

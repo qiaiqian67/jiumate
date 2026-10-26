@@ -81,7 +81,7 @@
     "@jiumate/use-claude-code": "workspace:*",
     "@jiumate/use-firecrawl": "workspace:*",
     "@modelcontextprotocol/client": "^2.0.0",
-    "@prismshadow/agenthub": "^0.4.9",
+    "@jiumate/agenthub": "workspace:*",
     "arktype": "^2.2.3",
     "docx": "^9.7.1",
     "fast-xml-parser": "^5.11.1",

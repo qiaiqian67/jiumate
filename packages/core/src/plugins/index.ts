@@ -272,7 +272,13 @@ function pluginRoots(): Map<string, string> {
         `Plugin package ${dep} is declared in ${PKG_ROOT}/package.json but cannot be resolved: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
-    roots.set(dep.slice(PLUGIN_PKG_PREFIX.length), path.dirname(manifest));
+    const dir = path.dirname(manifest);
+    // The scope is shared with libraries that are not plugins — `@jiumate/core` and
+    // `@jiumate/agenthub` are dependencies too, and a plugin is told apart by its
+    // manifest, not by the scope its name happens to sit in. A package without one is
+    // a library, and treating it as a plugin would fail the whole load.
+    if (!fs.existsSync(path.join(dir, "plugin.json"))) continue;
+    roots.set(dep.slice(PLUGIN_PKG_PREFIX.length), dir);
   }
   for (const [name, dir] of localPluginRoots()) {
     // A locally added plugin may reuse a built-in's name. The local copy wins deliberately: the

@@ -61,7 +61,7 @@ import { ContextEngine, SUMMARY_RETRY_GUIDANCE } from "../src/engine/context-eng
 import { Session } from "../src/session.js";
 import type { CompactionSettings } from "../src/engine/context-engine.js";
 import { GenerativeModel } from "../src/llm/index.js";
-import type { UniConfig, UniEvent, UniMessage } from "@prismshadow/agenthub";
+import type { UniConfig, UniEvent, UniMessage } from "@jiumate/agenthub";
 import { Writer, readTrace, resumeTrace } from "../src/trace/index.js";
 
 // ---------------------------------------------------------------------------

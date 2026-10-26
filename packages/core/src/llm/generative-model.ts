@@ -32,7 +32,7 @@ import {
   ThinkingLevel,
   ToolCallArgumentParseError,
   UnsupportedParameterError,
-} from "@prismshadow/agenthub";
+} from "@jiumate/agenthub";
 import type {
   ContentItem,
   FinishReason,
@@ -41,7 +41,7 @@ import type {
   UniEvent,
   UniMessage,
   UsageMetadata,
-} from "@prismshadow/agenthub";
+} from "@jiumate/agenthub";
 
 import {
   addTokenCounts,
@@ -748,7 +748,7 @@ export function describeError(error: unknown): string {
 
 /**
  * Determines whether an error is an AgentHub / Provider "response delivered but unusable"
- * parse or validation error. Two shapes (@prismshadow/agenthub 0.4.x):
+ * parse or validation error. Two shapes (@jiumate/agenthub 0.4.x):
  *
  * - A raw `SyntaxError` from `JSON.parse` on a response body;
  * - AgentHub's own error classes: `ToolCallArgumentParseError` (streamed tool-call arguments
@@ -792,7 +792,7 @@ export function isMalformedJsonParseError(error: unknown): boolean {
  * usage_metadata|finish_reason"). This is not an auth/parameter failure but an incomplete LLM
  * Request, and should end `retryable` and be handed to the engine to reconnect and retry.
  * AgentHub doesn't provide an error type for this, so we match by message prefix
- * (verified against @prismshadow/agenthub 0.4.x), probing down the `cause` chain.
+ * (verified against @jiumate/agenthub 0.4.x), probing down the `cause` chain.
  */
 export function isIncompleteStreamError(error: unknown): boolean {
   if (error == null) return false;

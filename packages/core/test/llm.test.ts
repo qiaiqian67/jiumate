@@ -15,8 +15,8 @@ import {
   ThinkingLevel,
   ToolCallArgumentParseError,
   UnsupportedParameterError,
-} from "@prismshadow/agenthub";
-import type { UniConfig, UniEvent, UniMessage, UsageMetadata } from "@prismshadow/agenthub";
+} from "@jiumate/agenthub";
+import type { UniConfig, UniEvent, UniMessage, UsageMetadata } from "@jiumate/agenthub";
 import type { LLMOutcome, ThinkingLevelName } from "../src/interfaces/index.js";
 
 import {

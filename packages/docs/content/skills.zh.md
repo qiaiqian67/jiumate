@@ -103,7 +103,7 @@ Skill 采用「先索引、后正文」的设计：系统 Prompt 经 `{{SKILL_ME
 | | `editable-doc` | 把生成的 Markdown 文档按"可被人工接着改"的目标排版——原子分段、语义标题、围栏化的图与代码、不要大段连写 |
 | 软件开发 | `software-development` | 端到端的软件开发——两个 Skill：`software-engineering`（最小范围的调查、实现与验证）与 `web-design`（生成网页的 JiuMate 视觉规范） |
 | | `use-claude-code` | 经 SSH 在远程主机上运行 Claude Code——持久 expect 会话、headless `-p`、tmux 驱动的交互式 TUI 与多轮延续（不预装：需要时从库安装） |
-| AI 应用开发 | `agent-development` | 基于 JiuMate 的智能体开发——四个 Skill：`jiumate-sdk`（用 SDK 构建智能体/AI/RAG 应用）、`unified-llm-api`（经 `@prismshadow/agenthub` 调用模型 API）、`jiumate-config`（管理模型密钥、默认模型与 Vault 机密）、`jiumate-orchestration`（在 shell 里编排智能体、会话、成本与定时任务） |
+| AI 应用开发 | `agent-development` | 基于 JiuMate 的智能体开发——四个 Skill：`jiumate-sdk`（用 SDK 构建智能体/AI/RAG 应用）、`unified-llm-api`（经 `@jiumate/agenthub` 调用模型 API）、`jiumate-config`（管理模型密钥、默认模型与 Vault 机密）、`jiumate-orchestration`（在 shell 里编排智能体、会话、成本与定时任务） |
 | | `model-development` | 在自己的硬件上做模型开发——三个 Skill：`llamafactory`（微调）、`ollama`（运行本地模型）、`vllm`（以 OpenAI 兼容端点部署服务） |
 | | `skill-porting` | 从外部来源移植 Skill——插件市场、skills.sh 注册表、GitHub 仓库或本地目录——经审阅与规范化后装入 Agent |
 | | `agent-tuning` | 调优闭环的四个 Skill：`agent-initialization`（依据需求初始化 Agent）、`benchmark-design`（设计并校准能力 Benchmark）、`agent-evaluation`（隔离执行并评分单个 Case）、`agent-optimization`（根据测得结果改进 Agent） |

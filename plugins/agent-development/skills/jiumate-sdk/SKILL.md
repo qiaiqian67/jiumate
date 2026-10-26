@@ -124,7 +124,7 @@ Add an MCP server (`tools.mcpServers` in `system_config.yaml`) only when a CLI w
 
 ## RAG knowledge app
 
-The default recipe when the user wants an app that answers questions over a document set ("docs QA", "knowledge base", "chat with our docs", "become an expert on X"). The core contributes the agent loop only — retrieval is app code. Default to **lexical BM25**: no extra dependencies, no embedding credential, works offline. (Semantic upgrade: embed chunks via `@prismshadow/agenthub` — see the agenthub-models skill — and rank by cosine; only when an embedding-capable key is configured.)
+The default recipe when the user wants an app that answers questions over a document set ("docs QA", "knowledge base", "chat with our docs", "become an expert on X"). The core contributes the agent loop only — retrieval is app code. Default to **lexical BM25**: no extra dependencies, no embedding credential, works offline. (Semantic upgrade: embed chunks via `@jiumate/agenthub` — see the agenthub-models skill — and rank by cosine; only when an embedding-capable key is configured.)
 
 ```
 my-app/
