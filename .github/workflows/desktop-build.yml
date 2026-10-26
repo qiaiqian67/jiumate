@@ -137,7 +137,19 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm -r build
+      # The installer's `build` is the shipping path: it packs the Windows payload, which
+      # only the Windows job has. The other two platforms stage its UI instead — the same
+      # split the repository's own `build` script makes, and the reason it excludes the
+      # installer from the recursive build.
+      - name: Build (Linux and macOS)
+        if: runner.os != 'Windows'
+        run: |
+          pnpm -r --filter=!@jiumate/installer build
+          pnpm --dir packages/installer build:stage
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: pnpm -r build
 
       # Windows carries MinGit under resources/git so the packaged agent shell has the
       # same deterministic POSIX bash as the npm package (release.yml bundles the

@@ -189,6 +189,11 @@ export async function launchChromium(
     "--disable-background-timer-throttling",
     "--password-store=basic",
     "--use-mock-keychain",
+    // Chromium refuses to start as root unless the sandbox is off, and a CI runner runs
+    // the job as root inside a container. The sandbox is a defence against a web page
+    // escaping into the rest of the machine; the browser here only ever opens pages the
+    // agent was told to open, and the process is confined by the runner's own container.
+    ...(process.getuid?.() === 0 ? ["--no-sandbox"] : []),
     ...(options.headless === true ? ["--headless=new"] : []),
     ...(options.windowSize !== undefined ? [`--window-size=${options.windowSize}`] : []),
     "about:blank",
