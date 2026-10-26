@@ -9,7 +9,7 @@
  * mid-stream (opening tag written, closing tag not yet) therefore reads as plain text
  * rather than disappearing until the model closes the block.
  */
-import { extractSummary } from "@prismshadow/jiumate-core/markers";
+import { extractSummary } from "@jiumate/core/markers";
 import type { CompactionItem } from "./stream-model";
 
 export function compactionSummaryText(item: Pick<CompactionItem, "summaryText">): string {

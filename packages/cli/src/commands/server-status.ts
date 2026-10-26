@@ -9,7 +9,7 @@
  * Docs: /docs/cli § "jiumate server / jiumate web".
  */
 import path from "node:path";
-import { readMachineStatus } from "@prismshadow/jiumate-server/machine-status";
+import { readMachineStatus } from "@jiumate/server/machine-status";
 import type { Command } from "commander";
 import type { Messages } from "../i18n.js";
 import { resolveRootOption } from "../root-option.js";

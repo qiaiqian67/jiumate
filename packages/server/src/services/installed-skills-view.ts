@@ -24,7 +24,7 @@ import {
   readInstalls,
   type InstallsFile,
   type LibraryPlugin,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import fs from "node:fs/promises";
 import { toSkillItem } from "./plugin-library.js";
 

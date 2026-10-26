@@ -18,7 +18,7 @@
 <p align="center">1000+ Models · Multi-Platform · Apache 2.0 · Agent Self-Evolution</p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@prismshadow/jiumate-core"><img src="https://img.shields.io/npm/v/@prismshadow/jiumate-core" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@jiumate/core"><img src="https://img.shields.io/npm/v/@jiumate/core" alt="npm version" /></a>
   <a href="https://github.com/qiaiqian67/jiumate/actions/workflows/ci.yml"><img src="https://github.com/qiaiqian67/jiumate/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/qiaiqian67/jiumate/actions/workflows/pages.yml"><img src="https://github.com/qiaiqian67/jiumate/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0" /></a>
@@ -168,7 +168,7 @@ jiumate web        # start the service and open http://127.0.0.1:7364
 ### 📦 npm (any platform, Node >= 24)
 
 ```bash
-npm install -g @prismshadow/jiumate-cli
+npm install -g @jiumate/cli
 jiumate web        # start the service and open http://127.0.0.1:7364
 ```
 
@@ -215,7 +215,7 @@ jiumate server     # headless service (same API the Web App uses)
 ```
 
 ```ts
-import { createAgent, isCompleteModelMessage, userText } from "@prismshadow/jiumate-core";
+import { createAgent, isCompleteModelMessage, userText } from "@jiumate/core";
 
 const agent = await createAgent({ agentId: "default_agent" });
 const session = await agent.createSession({ workspaceDir: process.cwd() });
@@ -262,7 +262,7 @@ If you use JiuMate in your research, please cite:
 
 ```bibtex
 @software{jiumate2026,
-  author  = {{PrismShadow Team}},
+  author  = {{JiuMate Team}},
   title   = {JiuMate: Efficient Self-Improving Harness for Everyone},
   year    = {2026},
   url     = {https://github.com/qiaiqian67/jiumate},
@@ -272,6 +272,6 @@ If you use JiuMate in your research, please cite:
 
 ## License
 
-[Apache-2.0](LICENSE) © 2026 Prism Shadow
+[Apache-2.0](LICENSE) © 2026 JiuMate
 
-Built with ❤️ by [Yaowei Zheng](https://github.com/hiyouga) (author of [LlamaFactory](https://github.com/hiyouga/LlamaFactory)), the [PrismShadow AI Team](https://github.com/qiaiqian67), and [Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5).
+Built with ❤️ by [Yaowei Zheng](https://github.com/hiyouga) (author of [LlamaFactory](https://github.com/hiyouga/LlamaFactory)), the [JiuMate Team](https://github.com/qiaiqian67), and [Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5).

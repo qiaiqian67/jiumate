@@ -179,8 +179,8 @@ so Escape only acts on the topmost layer. A portal panel does not need to — ca
 ## Verify
 
 ```sh
-pnpm --filter @prismshadow/jiumate-web typecheck
-pnpm --filter @prismshadow/jiumate-web test
+pnpm --filter @jiumate/web typecheck
+pnpm --filter @jiumate/web test
 pnpm format && pnpm format:check
 ```
 

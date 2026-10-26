@@ -22,7 +22,7 @@ import {
   ATTACHED_IMAGE_PREFIX,
   matchAttachedFileLine,
   matchAttachedImageLine,
-} from "@prismshadow/jiumate-core/markers";
+} from "@jiumate/core/markers";
 
 export interface ParsedAttachments {
   /** Body text with restored attachment lines removed (unrecognized lines are kept). */

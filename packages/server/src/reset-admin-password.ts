@@ -3,7 +3,7 @@
  * so this does it from the machine that owns the data root (local filesystem access IS the
  * authorization). The account goes back to unclaimed and the next start prints a first-login
  * link, so no plaintext is produced for anyone to write down. Refuses while a server is live,
- * web.db being single-writer. Exported as `@prismshadow/jiumate-server/reset-admin-password`
+ * web.db being single-writer. Exported as `@jiumate/server/reset-admin-password`
  * so the CLI need not import the package entry, which starts listening.
  */
 import fs from "node:fs";

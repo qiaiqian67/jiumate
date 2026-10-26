@@ -1,16 +1,16 @@
 ---
 title: SDK
-description: 用 @prismshadow/jiumate-core 在自己的 TypeScript 程序里创建 Agent 与 Session。
+description: 用 @jiumate/core 在自己的 TypeScript 程序里创建 Agent 与 Session。
 ---
 
-`@prismshadow/jiumate-core` 就是 CLI 与 Server 内部使用的同一个引擎，可以直接嵌进自己的程序。
+`@jiumate/core` 就是 CLI 与 Server 内部使用的同一个引擎，可以直接嵌进自己的程序。
 
 ## 安装
 
 需要 Node.js >= 24：
 
 ```bash
-npm install @prismshadow/jiumate-core
+npm install @jiumate/core
 ```
 
 ## 配置模型
@@ -20,7 +20,7 @@ SDK 与其他两条路线读同一个数据目录 `~/.jiumate/data`，所以在[
 如果这台机器还没配过模型，最省事的方式是装上 CLI 配一次：
 
 ```bash
-npm install -g @prismshadow/jiumate-cli
+npm install -g @jiumate/cli
 jiumate config model add --provider deepseek --model-id deepseek-v4-flash-vision-exp --api-key sk-... --set-default
 ```
 
@@ -29,7 +29,7 @@ jiumate config model add --provider deepseek --model-id deepseek-v4-flash-vision
 ## 第一个程序
 
 ```ts
-import { createAgent, isCompleteModelMessage, userText } from "@prismshadow/jiumate-core";
+import { createAgent, isCompleteModelMessage, userText } from "@jiumate/core";
 
 const agent = await createAgent({ agentId: "default_agent" });
 const session = await agent.createSession({ workspaceDir: process.cwd() });

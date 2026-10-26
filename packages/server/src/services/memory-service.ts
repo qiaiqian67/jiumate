@@ -37,7 +37,7 @@ import {
   memoryScopeDir,
   parseMemoryFrontmatter,
   readWorkspaceMarker,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   MemoryFileInfo,
   MemoryFilesResponse,

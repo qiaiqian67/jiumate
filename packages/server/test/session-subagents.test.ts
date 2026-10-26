@@ -12,14 +12,14 @@
  *   - 404 for foreign/unknown sessions (the shared resolveSession semantics).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { toolCall, withOrigin } from "@prismshadow/jiumate-core";
+import { toolCall, withOrigin } from "@jiumate/core";
 import type {
   BackgroundSubagentInfo,
   OmniMessage,
   ApproveFn,
   SubagentMessageOptions,
   SubagentMessageOutcome,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import { ApprovalRegistry } from "../src/runtime/approvals.js";
 import type { ServerEvent, SubagentMessageResponse } from "../src/api/types.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";

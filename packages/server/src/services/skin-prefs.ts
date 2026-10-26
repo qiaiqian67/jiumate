@@ -16,7 +16,7 @@
  */
 import { HttpError } from "../http/errors.js";
 
-/** Longest a theme id may be. Matches the manifest-side limit in `@prismshadow/jiumate-skins`. */
+/** Longest a theme id may be. Matches the manifest-side limit in `@jiumate/skins`. */
 const SKIN_ID_LIMIT = 64;
 
 const SKIN_PREF_KEYS = ["activeTheme"] as const;

@@ -4,7 +4,7 @@
  * `/api/pets` installs over the presets. `fetch` is stubbed so no server runs.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PetPackage } from "@prismshadow/jiumate-pets";
+import type { PetPackage } from "@jiumate/pets";
 import {
   defaultBuiltinPet,
   findBuiltinPet,

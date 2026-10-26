@@ -17,8 +17,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { BUILTIN_THEMES } from "@prismshadow/jiumate-skins/presets";
-import { THEME_COLOR_KEYS, THEME_SURFACE_KEYS } from "@prismshadow/jiumate-skins";
+import { BUILTIN_THEMES } from "@jiumate/skins/presets";
+import { THEME_COLOR_KEYS, THEME_SURFACE_KEYS } from "@jiumate/skins";
 
 const PUBLIC_DIR = path.join(import.meta.dirname, "..", "public");
 const THEMES_DIR = path.join(PUBLIC_DIR, "themes");

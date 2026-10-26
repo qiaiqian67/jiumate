@@ -21,7 +21,7 @@
  * registry.
  */
 import type { DatabaseSync } from "node:sqlite";
-import type { Resources } from "@prismshadow/jiumate-core/kernel";
+import type { Resources } from "@jiumate/core/kernel";
 import type { ServerConfig } from "../config.js";
 import type { AuthRuntimeState } from "../auth/runtime-state.js";
 import { newAuthRuntimeState } from "../auth/runtime-state.js";

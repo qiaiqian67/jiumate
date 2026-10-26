@@ -11,7 +11,7 @@
 import { spawn } from "node:child_process";
 import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { atomicWriteFile } from "@prismshadow/jiumate-core";
+import { atomicWriteFile } from "@jiumate/core";
 import type { Language } from "./i18n.js";
 
 const BEGIN = "# >>> JiuMate JIUMATE_LANG >>>";

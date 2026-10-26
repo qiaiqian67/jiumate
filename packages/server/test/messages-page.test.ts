@@ -28,12 +28,12 @@ import {
   toolCall,
   toolCallOutput,
   userText,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import {
   buildBackgroundTaskDoneMessage,
   buildHandoffMessage,
-} from "@prismshadow/jiumate-core/markers";
-import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@prismshadow/jiumate-core";
+} from "@jiumate/core/markers";
+import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@jiumate/core";
 import { decodeCursor, encodeCursor } from "../src/services/message-window.js";
 import type { TraceService } from "../src/services/trace-service.js";
 import { makeTempRoot, makeTraceHarness, writeTraceFile } from "./helpers.js";

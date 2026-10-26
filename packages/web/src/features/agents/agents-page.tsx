@@ -25,7 +25,7 @@ import type {
   AgentCreateRequest,
   PluginItem,
   SkillMetadataItem,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

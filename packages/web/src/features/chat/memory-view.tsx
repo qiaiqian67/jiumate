@@ -13,7 +13,7 @@
  * duplicates the bridge-modal flows.
  */
 import { useEffect, useState } from "react";
-import type { SessionInfo } from "@prismshadow/jiumate-server/api";
+import type { SessionInfo } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { formatRelativeDate } from "../../lib/format";

@@ -1363,7 +1363,7 @@ export const zh = {
   /**
    * 广场（features/inspiration/*）：内置案例 + 管理员自建案例，按分类归档。
    * 内置案例的标题／描述／提示词不在这里——它们随案例本身放在
-   * `@prismshadow/jiumate-inspirations/presets` 的 title/titleZh 等字段里，这样管理员自建的
+   * `@jiumate/inspirations/presets` 的 title/titleZh 等字段里，这样管理员自建的
    * 案例与内置案例是同一种东西。这一组只放 chrome。
    */
   inspiration: {

@@ -17,7 +17,7 @@ import {
   listMachineSkills,
   listInstalledSkills,
   machineSkillsDir,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import { apiClient, createTestApp, provisionUser } from "./helpers.js";
 import type { TestApp } from "./helpers.js";
 import type {

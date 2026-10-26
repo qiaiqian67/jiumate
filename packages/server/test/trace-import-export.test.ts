@@ -8,7 +8,7 @@
  * endpoints. Import is owner-only, mirroring the Agent snapshot import.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { OmniMessage, SessionMetaPayload } from "@prismshadow/jiumate-core";
+import type { OmniMessage, SessionMetaPayload } from "@jiumate/core";
 import type {
   AgentTracesResponse,
   ProjectCreateResponse,

@@ -36,7 +36,7 @@
  */
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { THINKING_LEVEL_NAMES, userText } from "@prismshadow/jiumate-core";
+import { THINKING_LEVEL_NAMES, userText } from "@jiumate/core";
 import type { AppDeps } from "../../app.js";
 import { authorizeAgentApiCall } from "../../amsp/authenticate.js";
 import type { AgentApiGrant } from "../../amsp/authenticate.js";

@@ -10,7 +10,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
-import type { DirListResponse } from "@prismshadow/jiumate-server/api";
+import type { DirListResponse } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

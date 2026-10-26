@@ -12,7 +12,7 @@ description: 从进程入口到 HTTP 监听的组装顺序、各子系统的对�
 | 进入方式                              | 机制                                                                                                                                        |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | 直接运行                              | `node dist/index.js`（`server/package.json` 的 `start`）                                                                                    |
-| CLI（`jiumate server` / `jiumate web`）| 设好 `PORT`/`HOST` 环境变量后**同进程** `import("@prismshadow/jiumate-server")`，不 fork；`jiumate web` 额外轮询就绪后打开浏览器            |
+| CLI（`jiumate server` / `jiumate web`）| 设好 `PORT`/`HOST` 环境变量后**同进程** `import("@jiumate/server")`，不 fork；`jiumate web` 额外轮询就绪后打开浏览器            |
 | Desktop                               | `utilityProcess.fork` 拉起**独立** server 进程，经环境变量注入 `JIUMATE_HOME`、`PORT`、`JIUMATE_DESKTOP_TOKEN`、`JIUMATE_PORT_FILE`         |
 
 三种方式殊途同归：都以同一份环境变量驱动同一个模块。Server 自身的配置只来自环境变量（`server/src/config.ts`）；`system_config.yaml` 是 Agent 级状态，在 Session 运行时才被读取，与 server 启动无关。
@@ -102,7 +102,7 @@ platformImpl.create
 - **workflow 重名被拒绝**：`iface.workflow` 是一个 `set` 会抛错的注册表，名字的归属不会随 `extensions.json` 顺序改变。
 - **事件词汇表有类型且只有一处**：`ExtensionEvents` 把每个事件名映射到它的载荷——加一个事件，平台的 emit 端和所有 handler 同时获得类型。
 
-扩展契约（`Extension` / `ExtensionContext` / `ExtensionEvents` / `JiuMateInterface` / `JiuMateContext`）声明在 SDK 里，即 `@prismshadow/jiumate-core/extension`。`JiuMateContext` 与 `JiuMateInterface` 是开放的：harness 通过对该模块做声明合并，贡献自己拥有的成员——`terminals`——并从 `@prismshadow/jiumate-server/extension` 一并再导出。两个子路径都只产出类型。哪些扩展存在由部署的 `<root>/extensions.json` 决定，harness 自身不 import 任何扩展。
+扩展契约（`Extension` / `ExtensionContext` / `ExtensionEvents` / `JiuMateInterface` / `JiuMateContext`）声明在 SDK 里，即 `@jiumate/core/extension`。`JiuMateContext` 与 `JiuMateInterface` 是开放的：harness 通过对该模块做声明合并，贡献自己拥有的成员——`terminals`——并从 `@jiumate/server/extension` 一并再导出。两个子路径都只产出类型。哪些扩展存在由部署的 `<root>/extensions.json` 决定，harness 自身不 import 任何扩展。
 
 ## 子系统一览
 
@@ -111,7 +111,7 @@ platformImpl.create
 | 子系统               | 构建位置                                      | 对外表面                                                                                                     |
 | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | 配置                 | `config.ts` `resolveServerConfig`（②）        | `ServerConfig`；监听后唯一一次改写是回填真实端口                                                             |
-| 单实例锁             | `lock.ts`（③ 预检、⑨ 取锁）                   | 包子路径 `@prismshadow/jiumate-server/lock`；CLI 与 Desktop 用它做启动前探测                                 |
+| 单实例锁             | `lock.ts`（③ 预检、⑨ 取锁）                   | 包子路径 `@jiumate/server/lock`；CLI 与 Desktop 用它做启动前探测                                 |
 | 数据库               | `db/database.ts` `openDatabase`（⑤ 首步）     | `db/repos/*` 仓储类；WAL、外键、增量 `ensureColumn` 迁移                                                     |
 | 认证                 | `auth/service.ts`（⑤，运行时机制）            | `/api/auth/*`、cookie `authMiddleware`、终端 WS 升级的鉴权                                                   |
 | Project / Session    | `services/*`——**App 级**（平台 create 内组装）| `/api/projects/**`、`/api/sessions/**`（路由细目见 [Server API](/server-api)）                               |

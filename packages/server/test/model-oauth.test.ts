@@ -13,7 +13,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { APP_URL, presetModelEntries, providerInfo } from "@prismshadow/jiumate-core/model-catalog";
+import { APP_URL, presetModelEntries, providerInfo } from "@jiumate/core/model-catalog";
 import type {
   ModelOAuthCodeResponse,
   ModelOAuthStartResponse,

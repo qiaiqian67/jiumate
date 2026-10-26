@@ -4,8 +4,8 @@
  * instead of pulling a whole multi-MB file into memory.
  */
 import { open } from "node:fs/promises";
-import { parseTraceLines, readTraceTolerant } from "@prismshadow/jiumate-core";
-import type { OmniMessage } from "@prismshadow/jiumate-core";
+import { parseTraceLines, readTraceTolerant } from "@jiumate/core";
+import type { OmniMessage } from "@jiumate/core";
 
 /** Head window for Trace head reads: generous for a long system prompt, far below a whole multi-MB shard. */
 export const TRACE_HEAD_BYTES = 256 * 1024;

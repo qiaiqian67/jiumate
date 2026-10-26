@@ -30,8 +30,8 @@ Node must be >= 24. In each worktree, `pnpm install --frozen-lockfile` first.
 The full chain CI runs is `pnpm build`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `sh scripts/test-installer.sh`. **Do not reach for `pnpm test` by reflex** — it is nine packages and ~2500 tests, minutes per run, and for a docs-only diff it proves nothing the narrow run does not. Pick the narrowest evidence that would actually fail for this change's regression:
 
 ```sh
-pnpm --filter @prismshadow/jiumate-core exec vitest run test/model-catalog.test.ts   # one file, ~1s
-pnpm --filter @prismshadow/jiumate-web test                                          # one package
+pnpm --filter @jiumate/core exec vitest run test/model-catalog.test.ts   # one file, ~1s
+pnpm --filter @jiumate/web test                                          # one package
 ```
 
 | Changed | Run |

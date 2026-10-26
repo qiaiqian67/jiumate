@@ -14,8 +14,8 @@ import {
   tokenUsage,
   tracesDir,
   userText,
-} from "@prismshadow/jiumate-core";
-import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
+import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@jiumate/core";
 import type {
   MessagesResponse,
   ProjectCreateResponse,

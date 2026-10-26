@@ -6,7 +6,7 @@
  * Docs: /docs/cli § "Approval modes (--approve)"; /docs/tools § "Approval".
  */
 import { createInterface } from "node:readline";
-import type { ApprovalDecision, ApproveFn } from "@prismshadow/jiumate-core";
+import type { ApprovalDecision, ApproveFn } from "@jiumate/core";
 import { defaultMessages } from "./i18n.js";
 import type { Messages } from "./i18n.js";
 

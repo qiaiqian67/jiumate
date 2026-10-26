@@ -70,4 +70,4 @@ irm https://jiumate.ooo/install.ps1 | iex
 jiumate web
 ```
 
-也可以在 Node >= 24 环境 `npm install -g @prismshadow/jiumate-cli`——从这个版本起，还可以用 [Release 附件](https://github.com/qiaiqian67/jiumate/releases)完全离线安装。每项改动的完整细节见 [changelog/0.1.5](https://github.com/qiaiqian67/jiumate/tree/main/changelog/0.1.5)。
+也可以在 Node >= 24 环境 `npm install -g @jiumate/cli`——从这个版本起，还可以用 [Release 附件](https://github.com/qiaiqian67/jiumate/releases)完全离线安装。每项改动的完整细节见 [changelog/0.1.5](https://github.com/qiaiqian67/jiumate/tree/main/changelog/0.1.5)。

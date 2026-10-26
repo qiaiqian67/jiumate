@@ -11,7 +11,7 @@
  * Project provisioning at signup.
  */
 import fs from "node:fs/promises";
-import { DEFAULT_PROJECT_ID, projectDir, provisionProjectAgents } from "@prismshadow/jiumate-core";
+import { DEFAULT_PROJECT_ID, projectDir, provisionProjectAgents } from "@jiumate/core";
 import type { MemberInfo, ProjectRole, ProjectSummary } from "../api/types.js";
 import { HttpError } from "../http/errors.js";
 import type { AgentsRepo } from "../db/repos/agents.js";

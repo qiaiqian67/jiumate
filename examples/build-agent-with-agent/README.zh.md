@@ -37,7 +37,7 @@ jiumate config model add \
 
 ## 3. 运行示例
 
-从仓库根目录（先构建 workspace，好让 `@prismshadow/jiumate-core` 解析到它的 `dist/`）：
+从仓库根目录（先构建 workspace，好让 `@jiumate/core` 解析到它的 `dist/`）：
 
 ```bash
 pnpm install

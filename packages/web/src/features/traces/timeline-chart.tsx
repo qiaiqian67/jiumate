@@ -28,7 +28,7 @@ import type {
   TraceModelSegment,
   TraceOtherSpan,
   TraceToolSpan,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import { S } from "../../lib/strings";
 import { humanizeDuration } from "../../lib/format";
 import { packToolLanes, toolSpanBounds } from "./lane-packing";

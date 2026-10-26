@@ -28,7 +28,7 @@ import electronUpdater from "electron-updater";
 import type {
   DesktopUpdateStatus,
   DesktopUpdaterCommandMessage,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import { feedUrlOverride, updateSourceConfig, updateSupport } from "./update-support.js";
 import {
   feedLabel,

@@ -7,7 +7,7 @@
  * composes.
  */
 import { describe, expect, it } from "vitest";
-import { resolveModelEnv } from "@prismshadow/jiumate-core/model-catalog";
+import { resolveModelEnv } from "@jiumate/core/model-catalog";
 import { zh as ZH } from "../src/lib/strings";
 import { en as EN } from "../src/lib/strings-en";
 import { clientTypeAfterProviderChange, rowToEntry } from "../src/features/models/models-page";

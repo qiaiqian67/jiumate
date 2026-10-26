@@ -23,7 +23,7 @@ import type {
   UpdateJobPhase,
   UpdateJobStatus,
   VersionResponse,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import type { AccountMenuSession } from "./account-menu";
 import { offersClientUpdate } from "./desktop-update";
 import { updateCheckOutcome } from "./use-version-info";

@@ -4,7 +4,7 @@
  * `AgentCompanionPetService`: preset list + import + delete, with public spritesheet URLs
  * for presets and `/api/pets/:id/spritesheet` for user-installed packs.
  *
- * The preset table itself lives in `@prismshadow/jiumate-pets` rather than here, because
+ * The preset table itself lives in `@jiumate/pets` rather than here, because
  * the server needs the same ids: the `pet` tool has to be able to name the pets a user can
  * switch to, and presets are invisible to the server's on-disk catalog. Only the
  * web-bundle URL shape (`/pets/<folder>/spritesheet.<ext>`) is built here.
@@ -14,8 +14,8 @@ import {
   BUILTIN_PETS,
   DEFAULT_BUILTIN_PET_ID,
   findBuiltinPetPreset,
-} from "@prismshadow/jiumate-pets/presets";
-import type { PetPackage, SpriteVersionNumber } from "@prismshadow/jiumate-pets";
+} from "@jiumate/pets/presets";
+import type { PetPackage, SpriteVersionNumber } from "@jiumate/pets";
 
 export interface PetPackageWithPreview extends PetPackage {
   previewSrc: string;

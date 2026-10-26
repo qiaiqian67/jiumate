@@ -16,7 +16,7 @@
 # secrets are present. Windows release artifacts are Authenticode-signed through EVSign
 # during packaging so update metadata is generated from the final signed bytes. Unsigned
 # dry-run builds remain possible outside the release path.
-appId: com.prismshadow.jiumate
+appId: com.jiumate
 productName: JiuMate
 # Declaring the publish target is what makes electron-builder emit the update metadata
 # (latest.yml / latest-mac.yml / latest-linux.yml and the .blockmap files) next to the
@@ -49,7 +49,7 @@ files:
   - from: ../web/dist
     to: web-dist
 # The app's own metadata, which the workspace package.json cannot carry: deb and AppImage
-# derive package and executable names from `name`, where "@prismshadow/…" is invalid, and
+# derive package and executable names from `name`, where "@jiumate/…" is invalid, and
 # fpm refuses to build without a homepage. It does NOT decide the app data directory: the
 # shell calls app.setName() before anything reads userData, so that keeps the name
 # src/app-identity.ts chooses per form.
@@ -168,7 +168,7 @@ linux:
   # page name them accordingly.
   artifactName: jiumate-desktop-linux-${arch}.${ext}
   category: Development
-  maintainer: Prism Shadow <zheng@prismshadow.com>
+  maintainer: JiuMate <464823519@qq.com>
   # Pandoc binary for Linux (x64): same shape as the Windows entry, lands under
   # resources/pandoc/pandoc and is resolved by pandoc-path.ts.
   extraResources:

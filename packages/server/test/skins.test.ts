@@ -7,7 +7,7 @@
  *   - DELETE /api/skins/:slug              (removes the install; its asset then 404s)
  *   - PUT    /api/me/prefs                 (activeTheme, bounds enforced)
  *
- * The manifest/palette validation itself lives in `@prismshadow/jiumate-skins` and is covered
+ * The manifest/palette validation itself lives in `@jiumate/skins` and is covered
  * by its own unit suite; these tests pin the HTTP + prefs contract on top.
  */
 import fs from "node:fs/promises";

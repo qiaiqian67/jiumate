@@ -8,8 +8,8 @@
  * library types is withheld from the API until someone adds it here on purpose; skill bodies
  * and hook scripts never travel in a listing.
  */
-import { builtinPluginId, libraryPlugin, pluginNameOf } from "@prismshadow/jiumate-core";
-import type { HookManifest, LibraryPlugin, SkillMetadata } from "@prismshadow/jiumate-core";
+import { builtinPluginId, libraryPlugin, pluginNameOf } from "@jiumate/core";
+import type { HookManifest, LibraryPlugin, SkillMetadata } from "@jiumate/core";
 import type { HookItem, PluginItem, SkillMetadataItem } from "../api/types.js";
 import { HttpError } from "../http/errors.js";
 

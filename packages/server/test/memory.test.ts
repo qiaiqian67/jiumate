@@ -17,7 +17,7 @@ import {
   USER_SCOPE_KEY,
   memoryDir,
   memoryScopeDir,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   AgentConfigResponse,
   MemoryFileResponse,

@@ -11,8 +11,8 @@
  *   instead).
  * Docs: /docs/server-api § "Streaming (SSE)".
  */
-import type { OmniMessage } from "@prismshadow/jiumate-core/omnimessage";
-import type { ServerEvent } from "@prismshadow/jiumate-server/api";
+import type { OmniMessage } from "@jiumate/core/omnimessage";
+import type { ServerEvent } from "@jiumate/server/api";
 
 export interface StreamHandlers {
   /**

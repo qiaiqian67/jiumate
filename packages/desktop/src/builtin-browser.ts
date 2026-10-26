@@ -22,12 +22,12 @@
 import fs from "node:fs";
 import { BrowserWindow, Menu, app, clipboard, session } from "electron";
 import type { ContextMenuParams, MenuItemConstructorOptions, Session, WebContents } from "electron";
-import type { BrowserCookie, BrowserTab } from "@prismshadow/jiumate-core/interfaces";
+import type { BrowserCookie, BrowserTab } from "@jiumate/core/interfaces";
 import type {
   BrowserCommandMessage,
   BrowserEventMessage,
   BrowserReplyMessage,
-} from "@prismshadow/jiumate-server/browser";
+} from "@jiumate/server/browser";
 import { guestContextMenu, runGuestMenuAction } from "./builtin-browser-menu.js";
 import {
   BUILTIN_BROWSER_PARTITION,

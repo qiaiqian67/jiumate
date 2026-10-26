@@ -19,8 +19,8 @@
  */
 import path from "node:path";
 import type { Command } from "commander";
-import { buildInfo, resolveRoot } from "@prismshadow/jiumate-core";
-import { versionReport } from "@prismshadow/jiumate-server/version-report";
+import { buildInfo, resolveRoot } from "@jiumate/core";
+import { versionReport } from "@jiumate/server/version-report";
 import type { Messages } from "../i18n.js";
 
 export function registerVersionCommand(program: Command, t: Messages): void {

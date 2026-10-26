@@ -27,7 +27,7 @@
  * looking installed the moment anything else was installed or the server restarted.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { MachinesResponse } from "@prismshadow/jiumate-server/api";
+import type { MachinesResponse } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

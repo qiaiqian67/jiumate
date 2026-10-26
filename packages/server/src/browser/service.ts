@@ -26,9 +26,9 @@ import type {
   BrowserScreenshot,
   BrowserStatus,
   BrowserTab,
-} from "@prismshadow/jiumate-core/interfaces";
+} from "@jiumate/core/interfaces";
 import { HttpError } from "../http/errors.js";
-import { resolveAddress } from "@prismshadow/jiumate-core/browser";
+import { resolveAddress } from "@jiumate/core/browser";
 import { listImportSources, readCookies, readHistory } from "./import/index.js";
 import type { HistoryEntry } from "./import/history.js";
 import type { HistoryStore } from "./history-store.js";

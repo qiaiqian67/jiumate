@@ -16,7 +16,7 @@
  */
 import { useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
-import type { AgentSummary } from "@prismshadow/jiumate-server/api";
+import type { AgentSummary } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

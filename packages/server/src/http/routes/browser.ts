@@ -29,7 +29,7 @@ import type {
   BrowserScreenshot,
   BrowserStatus,
   BrowserTab,
-} from "@prismshadow/jiumate-core/interfaces";
+} from "@jiumate/core/interfaces";
 import { HttpError } from "../errors.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";

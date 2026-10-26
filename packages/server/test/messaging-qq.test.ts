@@ -17,8 +17,8 @@
  * loudly rather than pretending. No test opens a socket.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { approvalDecision, assistantText, toolCall } from "@prismshadow/jiumate-core";
-import type { ApproveFn, OmniMessage, TextPayload } from "@prismshadow/jiumate-core";
+import { approvalDecision, assistantText, toolCall } from "@jiumate/core";
+import type { ApproveFn, OmniMessage, TextPayload } from "@jiumate/core";
 import type {
   MessagingBindingsResponse,
   QQBindingResponse,

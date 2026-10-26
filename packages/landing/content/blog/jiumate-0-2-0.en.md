@@ -44,4 +44,4 @@ curl -fsSL https://jiumate.ooo/install.sh | sh
 jiumate web
 ```
 
-Windows (PowerShell): `irm https://jiumate.ooo/install.ps1 | iex` — or `npm install -g @prismshadow/jiumate-cli` with Node >= 24. Upgrading is re-running the installer, or `jiumate update` from 0.1.3+.
+Windows (PowerShell): `irm https://jiumate.ooo/install.ps1 | iex` — or `npm install -g @jiumate/cli` with Node >= 24. Upgrading is re-running the installer, or `jiumate update` from 0.1.3+.

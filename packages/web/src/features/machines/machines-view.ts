@@ -12,7 +12,7 @@
  * record rather than from the job: the job is one slot, so deriving it from there made an
  * installed machine vanish as soon as anything else was installed or the server restarted.
  */
-import type { MachineInfo, MachineJob, MachinesResponse } from "@prismshadow/jiumate-server/api";
+import type { MachineInfo, MachineJob, MachinesResponse } from "@jiumate/server/api";
 
 /** The finished job's verdict, in the shape the page renders. */
 export type MachineVerdict =

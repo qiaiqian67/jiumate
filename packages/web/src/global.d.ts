@@ -4,7 +4,7 @@
  * The Electron preload bridge exposes `window.pet` (frameless pet window
  * open/close/move/resize/savePosition). The TS-side augmentation mirrors the
  * `PetBridge` type from `packages/desktop/src/preload.ts`; the import
- * path is `@prismshadow/jiumate-desktop` if a build-time alias is wired,
+ * path is `@jiumate/desktop` if a build-time alias is wired,
  * otherwise we re-declare the surface here so the renderer compiles.
  */
 export {};

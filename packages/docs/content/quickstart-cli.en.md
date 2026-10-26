@@ -18,7 +18,7 @@ irm https://jiumate.ooo/install.ps1 | iex
 ```
 
 ```bash tab="npm (any platform)"
-npm install -g @prismshadow/jiumate-cli
+npm install -g @jiumate/cli
 ```
 
 Verify the install:
@@ -163,9 +163,9 @@ The data directory defaults to `~/.jiumate/data` (`%USERPROFILE%\.jiumate\data` 
 
 | Package | Description |
 | --- | --- |
-| `@prismshadow/jiumate-cli` | Command-line tool providing the `jiumate` command |
-| `@prismshadow/jiumate-core` | SDK for creating Agents and Sessions programmatically |
-| `@prismshadow/jiumate-server` | Web service, including the Web UI assets |
+| `@jiumate/cli` | Command-line tool providing the `jiumate` command |
+| `@jiumate/core` | SDK for creating Agents and Sessions programmatically |
+| `@jiumate/server` | Web service, including the Web UI assets |
 | `@jiumate/*` | The built-in plugins, one package each (skills and session hooks); core loads them |
 
 All packages are published under the Apache-2.0 license.

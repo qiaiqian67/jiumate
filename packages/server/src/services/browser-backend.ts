@@ -15,7 +15,7 @@
  * The default is `builtin` on the desktop and `headless` everywhere else: a server with no
  * shell has no built-in browser, and a browser is better than none.
  */
-import type { BrowserBackend } from "@prismshadow/jiumate-core/interfaces";
+import type { BrowserBackend } from "@jiumate/core/interfaces";
 
 /** The backends a user may pick. */
 export const BROWSER_BACKENDS: readonly BrowserBackend[] = ["builtin", "headless", "chrome"];

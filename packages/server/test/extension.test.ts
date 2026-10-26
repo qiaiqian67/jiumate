@@ -5,7 +5,7 @@
  * the boot a hot swap performs.
  */
 import { describe, expect, it, vi } from "vitest";
-import { boot, initialDoc } from "@prismshadow/jiumate-core/kernel";
+import { boot, initialDoc } from "@jiumate/core/kernel";
 import { HotResources } from "../src/hmr/resources.js";
 import { packagedPlatform } from "../src/hmr/platform.js";
 import { JIUMATE_FAMILY, RUNTIME_INTERFACES_RESOURCE_ID } from "../src/hmr/capabilities.js";

@@ -15,7 +15,7 @@ import { randomUUID } from "node:crypto";
 import type {
   BrowserBackend,
   BrowserBackendCapabilities,
-} from "@prismshadow/jiumate-core/interfaces";
+} from "@jiumate/core/interfaces";
 import { BrowserLinkError } from "./link.js";
 import type { BrowserCommand, BrowserLink, BrowserLinkEvent } from "./link.js";
 

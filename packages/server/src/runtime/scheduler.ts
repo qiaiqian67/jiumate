@@ -21,7 +21,7 @@
  */
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
-import { agentsDir, buildScheduledMessage, userText } from "@prismshadow/jiumate-core";
+import { agentsDir, buildScheduledMessage, userText } from "@jiumate/core";
 import type { ProjectsRepo } from "../db/repos/projects.js";
 import type { SchedulesRepo, ScheduleStateRow } from "../db/repos/schedules.js";
 import type { SessionsRepo } from "../db/repos/sessions.js";

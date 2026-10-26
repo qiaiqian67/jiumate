@@ -19,8 +19,8 @@ import {
   toolCallOutput,
   toolListReady,
   userText,
-} from "@prismshadow/jiumate-core";
-import type { OmniMessage, SessionMetaPayload, ToolDefinition } from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
+import type { OmniMessage, SessionMetaPayload, ToolDefinition } from "@jiumate/core";
 import {
   buildContextBreakdown,
   compactionThresholdFor,

@@ -370,10 +370,10 @@ How messages travel along these surfaces — and every ordering guarantee — is
 
 ## Builders and guards
 
-`@prismshadow/jiumate-core` exports all types, a builder per message kind (`builders.ts`: `userText`, `assistantText`, `toolCall`, `toolCallOutput`, `partialText`, `tokenUsage`, `withOrigin`, `emptyTokenCounts`, `addTokenCounts`, …) and runtime guards (`isCompleteModelMessage`, `isPartialPayload`, `isModelMessage`, `isEventMessage`, `isSessionMeta`):
+`@jiumate/core` exports all types, a builder per message kind (`builders.ts`: `userText`, `assistantText`, `toolCall`, `toolCallOutput`, `partialText`, `tokenUsage`, `withOrigin`, `emptyTokenCounts`, `addTokenCounts`, …) and runtime guards (`isCompleteModelMessage`, `isPartialPayload`, `isModelMessage`, `isEventMessage`, `isSessionMeta`):
 
 ```ts
-import { userText, isCompleteModelMessage } from "@prismshadow/jiumate-core";
+import { userText, isCompleteModelMessage } from "@jiumate/core";
 
 const prompt = userText("List the files in the current directory");
 // { timestamp: "…", type: "model_msg", payload: { type: "text", role: "user", text: "…" } }

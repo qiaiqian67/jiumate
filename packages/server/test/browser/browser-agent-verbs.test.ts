@@ -11,9 +11,9 @@ import {
   BROWSER_ACT_NAME,
   BROWSER_READ_NAME,
   BUILTIN_TOOL_FACTORIES,
-} from "@prismshadow/jiumate-core";
-import { defaultSystemConfig } from "@prismshadow/jiumate-core";
-import type { ToolDefinitionConfig } from "@prismshadow/jiumate-core/interfaces";
+} from "@jiumate/core";
+import { defaultSystemConfig } from "@jiumate/core";
+import type { ToolDefinitionConfig } from "@jiumate/core/interfaces";
 import { BrowserService } from "../../src/browser/service.js";
 import { FakeLink, evaluated, expressionOf, tab } from "./fake-link.js";
 

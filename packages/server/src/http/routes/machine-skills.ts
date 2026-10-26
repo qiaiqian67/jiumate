@@ -35,7 +35,7 @@ import {
   RepoUrlError,
   setMachineSkillEnabled,
   writeMachineSkill,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   MachineSkillAddResult,
   MachineSkillFromUrlResponse,

@@ -1,5 +1,5 @@
 {
-  "name": "@prismshadow/jiumate-installer",
+  "name": "@jiumate/installer",
   "version": "0.4.0",
   "private": true,
   "description": "The JiuMate installer. A small Electron app whose UI *is* the installer, wrapping a payload archive of the desktop build.",

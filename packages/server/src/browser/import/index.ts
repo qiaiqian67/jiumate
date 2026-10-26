@@ -20,7 +20,7 @@ import type {
   BrowserImportRequest,
   BrowserImportResult,
   BrowserImportSource,
-} from "@prismshadow/jiumate-core/interfaces";
+} from "@jiumate/core/interfaces";
 import { chromiumBrowser } from "./browsers.js";
 import { readChromiumCookies } from "./chromium-cookies.js";
 import { normalizeDomains } from "./cookie-rules.js";

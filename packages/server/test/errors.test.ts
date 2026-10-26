@@ -23,8 +23,8 @@ import {
   toolCall,
   toolCallOutput,
   withOrigin,
-} from "@prismshadow/jiumate-core";
-import type { OmniMessage, StopReason } from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
+import type { OmniMessage, StopReason } from "@jiumate/core";
 import type { ProjectCreateResponse, UsageErrorsPage, UsageResponse } from "../src/api/types.js";
 import { openDatabase } from "../src/db/database.js";
 import { ErrorsRepo } from "../src/db/repos/errors.js";

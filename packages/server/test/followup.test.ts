@@ -8,8 +8,8 @@
  * (The queued count on task_state events is covered by the session-manager unit tests.)
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { approvalDecision, assistantText, toolCall, userText } from "@prismshadow/jiumate-core";
-import type { ApproveFn, OmniMessage } from "@prismshadow/jiumate-core";
+import { approvalDecision, assistantText, toolCall, userText } from "@jiumate/core";
+import type { ApproveFn, OmniMessage } from "@jiumate/core";
 import type { TaskCreateResponse } from "../src/api/types.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RecallStore, RuntimeSession } from "../src/runtime/session-manager.js";

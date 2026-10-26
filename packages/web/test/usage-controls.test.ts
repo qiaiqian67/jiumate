@@ -11,7 +11,7 @@
  * after it.
  */
 import { describe, expect, it } from "vitest";
-import type { UsageSeriesPoint } from "@prismshadow/jiumate-server/api";
+import type { UsageSeriesPoint } from "@jiumate/server/api";
 import {
   bucketAxisLabel,
   bucketFullLabel,

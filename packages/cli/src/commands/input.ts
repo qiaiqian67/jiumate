@@ -28,7 +28,7 @@
  * Docs: /docs/cli § "jiumate input".
  */
 import type { Command } from "commander";
-import { isModelMessage, type OmniMessage } from "@prismshadow/jiumate-core";
+import { isModelMessage, type OmniMessage } from "@jiumate/core";
 import { StreamRenderer, dim } from "../render.js";
 import { parseDurationMs } from "../duration.js";
 import { promptApproval } from "../approval.js";

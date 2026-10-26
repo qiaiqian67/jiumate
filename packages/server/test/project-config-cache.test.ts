@@ -11,7 +11,7 @@ import {
   defaultProjectConfig,
   projectConfigPath,
   renderProjectConfigToml,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import { ProjectConfigService } from "../src/services/project-config-service.js";
 import { makeTempRoot } from "./helpers.js";
 

@@ -25,7 +25,7 @@ import {
   setPluginEnabled,
   libraryPlugin,
   loadPluginGroups,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   AgentHooksResponse,
   AgentPluginsInstallResponse,

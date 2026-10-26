@@ -480,8 +480,8 @@ export type ServerEvent =
 
 ## 类型导入
 
-全部 DTO 类型可从服务端包的子路径 `@prismshadow/jiumate-server/api` 以 type-only 方式导入：
+全部 DTO 类型可从服务端包的子路径 `@jiumate/server/api` 以 type-only 方式导入：
 
 ```ts
-import type { ServerEvent, SessionInfo } from "@prismshadow/jiumate-server/api";
+import type { ServerEvent, SessionInfo } from "@jiumate/server/api";
 ```

@@ -24,7 +24,7 @@ import type {
   PluginGroupItem,
   PluginItem,
   SkillMetadataItem,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

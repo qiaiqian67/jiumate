@@ -6,7 +6,7 @@
  * shell, and they get the headless one rather than an error.
  */
 import { describe, expect, it } from "vitest";
-import type { BrowserBackend } from "@prismshadow/jiumate-core/interfaces";
+import type { BrowserBackend } from "@jiumate/core/interfaces";
 import { BackendRouter } from "../../src/browser/backend-router.js";
 import type { BrowserCommand, BrowserLink, BrowserLinkEvent } from "../../src/browser/link.js";
 import {

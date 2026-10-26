@@ -13,7 +13,7 @@
  */
 import { useEffect, useRef } from "react";
 import { createStore, useStore } from "zustand";
-import type { UpdateJobStatus } from "@prismshadow/jiumate-server/api";
+import type { UpdateJobStatus } from "@jiumate/server/api";
 import * as api from "../api/endpoints";
 import { S } from "./strings";
 import { apiErrorText } from "./api-error";

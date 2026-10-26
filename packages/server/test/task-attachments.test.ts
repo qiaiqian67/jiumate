@@ -21,8 +21,8 @@ import {
   modelVisiblePath,
   parseHandoffMessage,
   scratchpadDir,
-} from "@prismshadow/jiumate-core";
-import type { OmniMessage } from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
+import type { OmniMessage } from "@jiumate/core";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";
 import { MAX_ATTACHMENT_COUNT } from "../src/services/attachment-limits.js";

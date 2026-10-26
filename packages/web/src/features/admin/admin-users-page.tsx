@@ -6,7 +6,7 @@
  * with a confirmation dialog.
  */
 import { useCallback, useEffect, useState } from "react";
-import type { UserInfo } from "@prismshadow/jiumate-server/api";
+import type { UserInfo } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

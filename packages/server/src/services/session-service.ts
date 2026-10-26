@@ -14,13 +14,13 @@
  * added to session-manager's active table (state idle).
  */
 import fs from "node:fs/promises";
-import { agentsDir, createAgent, isSessionMeta } from "@prismshadow/jiumate-core";
+import { agentsDir, createAgent, isSessionMeta } from "@jiumate/core";
 import type {
   BrowserPort,
   ControlEnvContext,
   PetControlPort,
   ProxyEnvPolicy,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   ApprovalMode,
   MessagingChannel,

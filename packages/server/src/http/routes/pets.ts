@@ -14,7 +14,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { Hono } from "hono";
-import { PetPackageError } from "@prismshadow/jiumate-pets";
+import { PetPackageError } from "@jiumate/pets";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";
 import { readJson } from "../validate.js";

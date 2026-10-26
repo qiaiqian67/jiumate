@@ -17,7 +17,7 @@
  * are read the same way instead of asking the eye to switch conventions between tabs.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
+import type { MCPServerConfig } from "@jiumate/core/interfaces";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

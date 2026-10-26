@@ -5,7 +5,7 @@ description: Use whenever the user wants to build an agent application — their
 
 # JiuMate Harness SDK
 
-`@prismshadow/jiumate-core` is the TypeScript SDK this agent itself runs on. Use it to build your own AI apps:
+`@jiumate/core` is the TypeScript SDK this agent itself runs on. Use it to build your own AI apps:
 
 - An **Agent** loads its state (prompts, tools, skills) from `<root>/<project_id>/agents/<agent_id>/`. Creating an Agent whose directory is empty initializes it with defaults.
 - A **Session** is one conversation of an Agent inside a **Workspace** directory.
@@ -44,10 +44,10 @@ If neither counted source yields a key, **stop immediately and ask the user to c
 ## Setup
 
 ```bash
-npm install @prismshadow/jiumate-core tsx
+npm install @jiumate/core tsx
 ```
 
-If the package is not on your npm registry (it is developed in the JiuMate monorepo and may not be published), develop inside a checkout of the JiuMate repo instead: add your app as a workspace package under `packages/`, depend on `"@prismshadow/jiumate-core": "workspace:*"`, then `pnpm install && pnpm build` at the repo root. Tell the user which route you took.
+If the package is not on your npm registry (it is developed in the JiuMate monorepo and may not be published), develop inside a checkout of the JiuMate repo instead: add your app as a workspace package under `packages/`, depend on `"@jiumate/core": "workspace:*"`, then `pnpm install && pnpm build` at the repo root. Tell the user which route you took.
 
 Configure a model for the app's data root, in this order — stop at the first that works:
 
@@ -67,7 +67,7 @@ The raw `run()` stream mixes model, event and session-meta payloads — always n
 ```ts
 import path from "node:path";
 import readline from "node:readline/promises";
-import { createAgent, isModelMessage, userText } from "@prismshadow/jiumate-core";
+import { createAgent, isModelMessage, userText } from "@jiumate/core";
 
 const agent = await createAgent({ root: path.join(import.meta.dirname, "jiumate_data") });
 const session = await agent.createSession({ workspaceDir: process.cwd() });
@@ -108,7 +108,7 @@ Modern models think before answering and accept images; the stream and the input
 **Images in.** Build image input with `imageUrlMessage` (a web URL or a base64 data URL) beside `userText` in the same `run` input:
 
 ```ts
-import { imageUrlMessage, userText } from "@prismshadow/jiumate-core";
+import { imageUrlMessage, userText } from "@jiumate/core";
 session.run([userText(question), ...images.map(imageUrlMessage)], { ... });
 ```
 
@@ -151,7 +151,7 @@ find corpus -type f ! -regex '.*\.\(md\|mdx\|txt\|html?\)$' -delete && rm -rf co
 ```ts
 import fs from "node:fs";
 import path from "node:path";
-import { createAgent } from "@prismshadow/jiumate-core";
+import { createAgent } from "@jiumate/core";
 
 const ROOT = import.meta.dirname;
 const walk = (d: string): string[] =>
@@ -248,7 +248,7 @@ export function search(index: Index, query: string, k = 6): Chunk[] {
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
-import { createAgent, isModelMessage, userText } from "@prismshadow/jiumate-core";
+import { createAgent, isModelMessage, userText } from "@jiumate/core";
 import { loadIndex, search } from "./rag.ts";
 
 const ROOT = import.meta.dirname;

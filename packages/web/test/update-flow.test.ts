@@ -12,7 +12,7 @@ import type {
   DesktopUpdateStatus,
   UpdateCheckResponse,
   UpdateJobStatus,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import {
   NO_LOCAL,
   clientFlow,

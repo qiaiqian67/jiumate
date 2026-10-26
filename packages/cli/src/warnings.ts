@@ -2,7 +2,7 @@
  * Drops one Node warning, and only that one.
  *
  * `commands/serve.ts` pulls in `commands/reset-password.ts`, which imports
- * `@prismshadow/jiumate-server/reset-admin-password` — that reaches `node:sqlite` while
+ * `@jiumate/server/reset-admin-password` — that reaches `node:sqlite` while
  * the module graph loads, so on a Node that still flags the builtin experimental every
  * `jiumate` invocation prints
  * `ExperimentalWarning: SQLite is an experimental feature ...`, including the ones whose

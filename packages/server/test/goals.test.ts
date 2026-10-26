@@ -14,8 +14,8 @@ import {
   imageUrlMessage,
   tokenUsage,
   userText,
-} from "@prismshadow/jiumate-core";
-import type { OmniMessage, TokenCounts } from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
+import type { OmniMessage, TokenCounts } from "@jiumate/core";
 import { openDatabase } from "../src/db/database.js";
 import { SessionsRepo } from "../src/db/repos/sessions.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";

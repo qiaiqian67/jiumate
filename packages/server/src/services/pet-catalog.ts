@@ -2,7 +2,7 @@
  * Pet catalog: list / import / delete Petdex pet packages on the host.
  *
  * Mirrors OpenBitFun's `services-core/src/pet_packages.rs`. The package
- * format itself lives in `@prismshadow/jiumate-pets`; this service adds the
+ * format itself lives in `@jiumate/pets`; this service adds the
  * host-side concerns: anchoring the catalog under the data root, hashing
  * source paths for receipts, surfacing diagnostic strings for the picker.
  *
@@ -38,7 +38,7 @@ import {
   type PetPackage,
   type PetReceipt,
   type SpriteVersionNumber,
-} from "@prismshadow/jiumate-pets";
+} from "@jiumate/pets";
 
 /** Maximum number of builtin presets the picker renders (a safety cap; mirrors `MAX_PACKAGES`). */
 export const MAX_BUILTIN_PRESETS = MAX_PACKAGES;

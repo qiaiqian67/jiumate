@@ -8,7 +8,7 @@
  * about whether there is anything to do, so every case above is replayed through both.
  */
 import { describe, expect, it } from "vitest";
-import type { ModelsResponse } from "@prismshadow/jiumate-server/api";
+import type { ModelsResponse } from "@jiumate/server/api";
 import { catalogDelta, syncRowsWithCatalog } from "../src/features/models/catalog-sync";
 import { presetUpdateTodo } from "../src/lib/todo-badges";
 import { noticeCounts } from "../src/lib/bulk-update";

@@ -46,8 +46,8 @@ import {
   renderProjectConfigToml,
   resolveModelEnv,
   userText,
-} from "@prismshadow/jiumate-core";
-import { providerInfo } from "@prismshadow/jiumate-core/model-catalog";
+} from "@jiumate/core";
+import { providerInfo } from "@jiumate/core/model-catalog";
 import type {
   CommandPolicyRule,
   LLMInterface,
@@ -56,7 +56,7 @@ import type {
   ModelRef,
   OmniMessage,
   ProjectConfig,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   ChatDefaultsDto,
   CommandPolicyDto,

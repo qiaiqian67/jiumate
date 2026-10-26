@@ -19,12 +19,12 @@ import {
   DEFAULT_BUILTIN_PET_ID,
   slugifyPetId,
   type PetPackage,
-} from "@prismshadow/jiumate-pets";
+} from "@jiumate/pets";
 import type {
   PetControlEntry,
   PetControlPort,
   PetControlSnapshot,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type { UiPrefsRepo } from "../db/repos/ui-prefs.js";
 import type { PetCatalogService } from "./pet-catalog.js";
 

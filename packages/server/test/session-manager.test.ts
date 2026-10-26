@@ -30,7 +30,7 @@ import {
   userSteeringText,
   userText,
   withOrigin,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   ApproveFn,
   GenerativeModelParameters,
@@ -38,7 +38,7 @@ import type {
   LLMOutcome,
   OmniMessage,
   TextPayload,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import { openDatabase } from "../src/db/database.js";
 import { HttpError } from "../src/http/errors.js";
 import { SessionsRepo } from "../src/db/repos/sessions.js";

@@ -34,7 +34,7 @@
  * Docs: /docs/cli § "jiumate schedule".
  */
 import type { Command } from "commander";
-import type { ScheduleItem, SchedulesResponse } from "@prismshadow/jiumate-server/api";
+import type { ScheduleItem, SchedulesResponse } from "@jiumate/server/api";
 import {
   resolveAgentId,
   resolveConnection,

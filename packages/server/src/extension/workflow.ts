@@ -1,6 +1,6 @@
 /**
  * Building the workflow instance view. The types are the SDK's contract
- * (`@prismshadow/jiumate-core/extension`); this is the harness's implementation of it.
+ * (`@jiumate/core/extension`); this is the harness's implementation of it.
  */
 import type { WorkflowFactory, WorkflowInstance, WorkflowInstances } from "./index.js";
 

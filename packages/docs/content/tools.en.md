@@ -185,7 +185,7 @@ On POSIX, Ctrl-C sends `SIGINT` to the session's process group, interrupting the
 
 `read_document` covers `.docx` / `.pdf` / `.xlsx` / `.pptx` / `.odt` / `.ods` / `.odp` and returns Markdown. It is a **built-in capability**: a model neither needs nor should install a converter or a library to open a document. Before it existed, `read_file` refused a .docx (it is a zip, so it contains NUL bytes) and the shell was the only remaining door — so a model went looking for `pip install` or a conda environment mid-task. The fix is not a prompt telling it not to; it is handing it the capability.
 
-The extraction itself lives in `packages/core/src/documents/` and is exported as a core subpath (`@prismshadow/jiumate-core/documents`) — the workspace preview runs the same code, and the server cannot reach into core's internals to do it.
+The extraction itself lives in `packages/core/src/documents/` and is exported as a core subpath (`@jiumate/core/documents`) — the workspace preview runs the same code, and the server cannot reach into core's internals to do it.
 
 Deliberate trade-offs:
 

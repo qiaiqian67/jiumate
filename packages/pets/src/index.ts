@@ -1,5 +1,5 @@
 /**
- * `@prismshadow/jiumate-pets` — Petdex pet package IO.
+ * `@jiumate/pets` — Petdex pet package IO.
  *
  * Mirrors OpenBitFun's `petdex-desktop-native/src/pet_packages.rs`. Hosts
  * provide a root path; every read/write is anchored to that root, with

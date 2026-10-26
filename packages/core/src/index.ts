@@ -1,5 +1,5 @@
 /**
- * @prismshadow/jiumate-core — public entry point for the JiuMate core SDK.
+ * @jiumate/core — public entry point for the JiuMate core SDK.
  *
  * Exports the OmniMessage protocol, the three interface contracts (Human/LLM/Environment),
  * and the runtime entry points for Agent / Session / context_engine along with their

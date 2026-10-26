@@ -62,4 +62,4 @@ curl -fsSL https://jiumate.ooo/install.sh | sh
 jiumate web
 ```
 
-Windows (PowerShell): `irm https://jiumate.ooo/install.ps1 | iex`; or with Node >= 24, `npm install -g @prismshadow/jiumate-cli`. Existing installs: `jiumate update`.
+Windows (PowerShell): `irm https://jiumate.ooo/install.ps1 | iex`; or with Node >= 24, `npm install -g @jiumate/cli`. Existing installs: `jiumate update`.

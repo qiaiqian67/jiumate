@@ -8,7 +8,7 @@
  * secret clearing, status poll) lives in the editor. There is no unbind action —
  * removing a credential is the secret field's clear checkbox.
  */
-import type { MessagingChannel } from "@prismshadow/jiumate-server/api";
+import type { MessagingChannel } from "@jiumate/server/api";
 import { S } from "../../lib/strings";
 import { Button } from "../../components/ui/button";
 import { Modal } from "../../components/ui/modal";

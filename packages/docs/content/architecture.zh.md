@@ -3,7 +3,7 @@ title: 架构总览
 description: 三接口边界、context_engine 与 OmniMessage 如何把 SDK、CLI、Server、Web 组织成一个系统。
 ---
 
-JiuMate 是一个 pnpm monorepo，核心是 `@prismshadow/jiumate-core` 中的执行引擎；CLI、Server 与 Web App 都只是这同一个引擎的不同「Human 实现」。
+JiuMate 是一个 pnpm monorepo，核心是 `@jiumate/core` 中的执行引擎；CLI、Server 与 Web App 都只是这同一个引擎的不同「Human 实现」。
 
 ## 分层结构
 

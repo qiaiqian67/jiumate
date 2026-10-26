@@ -10,7 +10,7 @@
  * partition's own recency order; folder rows are untouched.
  */
 import { describe, expect, it } from "vitest";
-import type { SessionInfo } from "@prismshadow/jiumate-server/api";
+import type { SessionInfo } from "@jiumate/server/api";
 import {
   loadPinnedSessions,
   pinnedSessionsKey,

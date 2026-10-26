@@ -18,7 +18,7 @@ import {
   userText,
   isCompleteModelMessage,
   type OmniMessage,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 
 /** Stream a Session run to stdout and collect the assistant's final text. */
 async function runToStdout(run: AsyncGenerator<OmniMessage>): Promise<string> {

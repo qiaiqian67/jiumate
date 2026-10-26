@@ -11,7 +11,7 @@
  *   is not an error: the call reports `{ reloaded: true }`.
  * - A script that throws is a PageScriptError carrying the page's own message.
  */
-import type { BrowserBackend } from "@prismshadow/jiumate-core/interfaces";
+import type { BrowserBackend } from "@jiumate/core/interfaces";
 import { HttpError } from "../http/errors.js";
 import { BrowserLinkError, browserLabel, tabReleasedError } from "./link.js";
 import type { BrowserLink } from "./link.js";

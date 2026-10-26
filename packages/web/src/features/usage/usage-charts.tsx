@@ -36,7 +36,7 @@
  * answers the pointer wherever it runs.
  */
 import { useState } from "react";
-import type { UsageGranularity, UsageSeriesPoint } from "@prismshadow/jiumate-server/api";
+import type { UsageGranularity, UsageSeriesPoint } from "@jiumate/server/api";
 import { S } from "../../lib/strings";
 import { formatPercent, humanizeTokens } from "../../lib/format";
 import { TOKEN_COLORS } from "../../lib/token-colors";

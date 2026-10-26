@@ -28,12 +28,12 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@prismshadow/jiumate-core/omnimessage";
+} from "@jiumate/core/omnimessage";
 import type {
   OmniMessage,
   SessionMetaPayload,
   TokenCounts,
-} from "@prismshadow/jiumate-core/omnimessage";
+} from "@jiumate/core/omnimessage";
 import {
   approvalKey,
   buildDedupIndex,

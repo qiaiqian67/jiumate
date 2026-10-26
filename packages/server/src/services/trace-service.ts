@@ -28,8 +28,8 @@ import {
   resumeTrace,
   scratchpadDir,
   tracesDir,
-} from "@prismshadow/jiumate-core";
-import type { CompactionMode, OmniMessage } from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
+import type { CompactionMode, OmniMessage } from "@jiumate/core";
 import type {
   AgentTraceSessionEntry,
   AgentTracesResponse,

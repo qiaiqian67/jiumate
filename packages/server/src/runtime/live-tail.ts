@@ -22,12 +22,12 @@
  * also closes the fragment (covers stop-less closures, e.g. interruption cleanup); the
  * whole session entry is dropped when the run ends (SessionManager.drive's finally).
  */
-import { isPartialPayload } from "@prismshadow/jiumate-core";
+import { isPartialPayload } from "@jiumate/core";
 import type {
   CompleteModelPayload,
   OmniMessage,
   PartialModelPayload,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 
 type PartialKind = PartialModelPayload["type"];
 

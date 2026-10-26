@@ -6,7 +6,7 @@
  *   jiumate web [--port <port>] [--host <host>] [--no-open]
  *
  * Both are entry points into the same service process: after setting PORT / HOST, it
- * dynamically imports `@prismshadow/jiumate-server` (whose entry point handles dotenv
+ * dynamically imports `@jiumate/server` (whose entry point handles dotenv
  * loading and graceful shutdown on its own), so the two never listen on separate ports
  * in parallel. Port/host priority: command-line option > existing environment variable
  * (including .env) > default 7364 / 127.0.0.1. `jiumate web` additionally polls until the
@@ -32,8 +32,8 @@ import {
   DEFAULT_SERVER_PORT,
   SERVER_RESTART_EXIT_CODE,
   resolveRoot,
-} from "@prismshadow/jiumate-core";
-import { liveServerLock } from "@prismshadow/jiumate-server/lock";
+} from "@jiumate/core";
+import { liveServerLock } from "@jiumate/server/lock";
 import type { Command } from "commander";
 import type { Messages, WebProbeFailureKind } from "../i18n.js";
 import { registerResetPasswordCommand } from "./reset-password.js";
@@ -110,7 +110,7 @@ export function cliEntryFor(argv1: string | undefined): string | null {
  * or null. The server itself re-checks on startup (the in-process backstop); checking
  * here keeps the friendly path — `jiumate server` refuses with the URL, `jiumate web`
  * simply opens the existing instance. Locks live per data root, so a second server on a
- * DIFFERENT root is untouched. See @prismshadow/jiumate-server/lock.
+ * DIFFERENT root is untouched. See @jiumate/server/lock.
  */
 async function existingInstanceUrl(): Promise<string | null> {
   const lock = await liveServerLock(resolveRoot());
@@ -193,7 +193,7 @@ async function startServer(
     supervise(cliEntry, host, port, t);
     return { host, port };
   }
-  await import("@prismshadow/jiumate-server");
+  await import("@jiumate/server");
   return { host, port };
 }
 

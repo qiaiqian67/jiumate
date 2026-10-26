@@ -15,7 +15,7 @@ import type {
   QQBindingInfo,
   TelegramBindingInfo,
   WeChatBindingInfo,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import {
   FEISHU_DEFAULT_DOMAIN,
   bindingsToForm,

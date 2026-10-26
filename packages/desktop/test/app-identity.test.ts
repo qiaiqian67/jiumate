@@ -36,7 +36,7 @@ describe("appIdentity", () => {
     expect(dev.appUserModelId).not.toBe(appIdentity(true).appUserModelId);
     expect(dev).toEqual({
       name: "JiuMate-Dev",
-      appUserModelId: "com.prismshadow.jiumate.dev",
+      appUserModelId: "com.jiumate.dev",
     });
   });
 });

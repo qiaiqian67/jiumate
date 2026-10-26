@@ -2,7 +2,7 @@
  * The extension contract: what an extension package compiles against.
  *
  * Types only — the host that drives them lives in whatever embeds this SDK (for the
- * harness, `@prismshadow/jiumate-server/extension`). An extension reaches this module with
+ * harness, `@jiumate/server/extension`). An extension reaches this module with
  * `import type`, so it carries no runtime dependency on either and stays a
  * self-contained library that happens to satisfy an interface.
  *

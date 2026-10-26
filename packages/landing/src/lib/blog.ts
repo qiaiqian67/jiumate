@@ -10,7 +10,7 @@ import type { Locale } from "../state/locale";
 export type BlogCategory = "news" | "practice" | "perspectives" | "changelog";
 
 /** Byline used when a post has no `author` frontmatter. */
-export const DEFAULT_AUTHOR = "Yaowei Zheng (PrismShadow AI)";
+export const DEFAULT_AUTHOR = "Yaowei Zheng (JiuMate)";
 
 export interface BlogPost {
   slug: string;

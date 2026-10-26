@@ -1,12 +1,12 @@
 {
-  "name": "@prismshadow/example-self-improving-agent",
+  "name": "@jiumate/example-self-improving-agent",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "tsx self-evolve-recursive.ts"
   },
   "dependencies": {
-    "@prismshadow/jiumate-core": "workspace:*"
+    "@jiumate/core": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.20.0"

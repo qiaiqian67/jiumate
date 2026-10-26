@@ -9,7 +9,7 @@
  * and the settings page cannot disagree about which browser is in use.
  */
 import { useCallback, useEffect, useState } from "react";
-import type { BrowserBackend, BrowserStatus } from "@prismshadow/jiumate-core/interfaces";
+import type { BrowserBackend, BrowserStatus } from "@jiumate/core/interfaces";
 import { apiFetch } from "../api/client";
 
 /** The backends a user may pick, in the order the settings row lists them. */

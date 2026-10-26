@@ -60,7 +60,7 @@ import {
   unpackPluginArchive,
   writePluginArchive,
   writeProvenance as writeProvenanceFile,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type { AppDeps } from "../../app.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import type {

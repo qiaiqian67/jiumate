@@ -13,8 +13,8 @@ import {
   schema,
   type,
   upgrade,
-} from "@prismshadow/jiumate-core/kernel";
-import type { Json } from "@prismshadow/jiumate-core/kernel";
+} from "@jiumate/core/kernel";
+import type { Json } from "@jiumate/core/kernel";
 import { HotResources } from "../src/hmr/resources.js";
 import { TerminalManager } from "../src/terminal/manager.js";
 import type { TerminalSession } from "../src/terminal/session.js";

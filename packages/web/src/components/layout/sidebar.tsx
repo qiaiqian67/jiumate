@@ -34,7 +34,7 @@ import type {
   SessionCategory,
   SessionCategoryCounts,
   SessionInfo,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { formatRelativeShort } from "../../lib/format";

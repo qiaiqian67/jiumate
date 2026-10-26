@@ -14,7 +14,7 @@
  * refresh — while a hidden tab fetches nothing. trace-refresh.ts states the rule exactly.
  */
 import { useEffect, useRef, useState } from "react";
-import type { SessionInfo } from "@prismshadow/jiumate-server/api";
+import type { SessionInfo } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

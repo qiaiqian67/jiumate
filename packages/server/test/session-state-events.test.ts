@@ -11,7 +11,7 @@
  * the frame with `toEqual` and would fail the moment an id appeared on it.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { assistantText } from "@prismshadow/jiumate-core";
+import { assistantText } from "@jiumate/core";
 import type { ServerEvent } from "../src/api/types.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import { userChannelKey } from "../src/http/routes/events.js";

@@ -19,7 +19,7 @@
 import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { WeChatBindingInfo, WeChatScanPollResponse } from "@prismshadow/jiumate-server/api";
+import type { WeChatBindingInfo, WeChatScanPollResponse } from "@jiumate/server/api";
 import { ApiError } from "../src/api/client";
 import { WeChatScanConnect, wechatScanStep } from "../src/features/messaging/wechat-scan-connect";
 import type { WeChatScanTally } from "../src/features/messaging/wechat-scan-connect";

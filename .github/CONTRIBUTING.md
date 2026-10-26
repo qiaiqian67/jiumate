@@ -95,10 +95,10 @@ single data directory (`~/.jiumate/data`) and a single message protocol (OmniMes
 
 | Package                                   | Name                          | Role                                                                                                    |
 | ----------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------- |
-| [`packages/core`](../packages/core)       | `@prismshadow/jiumate-core`   | SDK & engine: ReAct loop, OmniMessage protocol, LLM/Environment interface contracts, Agent State, Trace |
-| [`packages/cli`](../packages/cli)         | `@prismshadow/jiumate-cli`    | The `jiumate` command: REPL, one-shot runs, model & vault config, service launcher                      |
-| [`packages/server`](../packages/server)   | `@prismshadow/jiumate-server` | Web backend: HTTP API + SSE streaming, multi-user auth, Project authorization, usage stats              |
-| [`packages/web`](../packages/web)         | `@prismshadow/jiumate-web`    | Web App: multi-session chat, Agent/skill/model management, Trace observability, evaluation center       |
+| [`packages/core`](../packages/core)       | `@jiumate/core`   | SDK & engine: ReAct loop, OmniMessage protocol, LLM/Environment interface contracts, Agent State, Trace |
+| [`packages/cli`](../packages/cli)         | `@jiumate/cli`    | The `jiumate` command: REPL, one-shot runs, model & vault config, service launcher                      |
+| [`packages/server`](../packages/server)   | `@jiumate/server` | Web backend: HTTP API + SSE streaming, multi-user auth, Project authorization, usage stats              |
+| [`packages/web`](../packages/web)         | `@jiumate/web`    | Web App: multi-session chat, Agent/skill/model management, Trace observability, evaluation center       |
 | [`plugins/*`](../plugins) | `@jiumate/<name>` | The built-in plugins, one npm package each: skills (software development, model development, agent development/tuning, …) and session hooks (goal mode, skill summaries); the loader lives in `packages/core` |
 | [`packages/landing`](../packages/landing) | —                             | Product landing page (this repo's website)                                                              |
 | [`packages/docs`](../packages/docs)       | —                             | Documentation site (bilingual, deployed under `/docs/`)                                                 |
@@ -129,7 +129,7 @@ End-to-end suites (optional locally, slower):
 
 ```bash
 npx playwright install chromium                      # once
-pnpm --filter @prismshadow/jiumate-web test:e2e      # browser e2e against a mock LLM
+pnpm --filter @jiumate/web test:e2e      # browser e2e against a mock LLM
 pnpm test:e2e                                        # core live-model e2e, needs DEEPSEEK_API_KEY
 ```
 

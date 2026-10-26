@@ -46,7 +46,7 @@
  * draw a protocol-shaped error than the generic 401 or gateway HTML an anonymous request
  * often gets, so the fallback materially improves accuracy.
  */
-import { resolveModelEnv } from "@prismshadow/jiumate-core";
+import { resolveModelEnv } from "@jiumate/core";
 import type {
   ModelProtocolDetectResponse,
   ModelProtocolProbeDto,

@@ -3,7 +3,7 @@ title: Architecture
 description: How the three-interface boundary, the context_engine and OmniMessage organize the SDK, CLI, Server and Web App into one system.
 ---
 
-JiuMate is a pnpm monorepo whose center is the execution engine in `@prismshadow/jiumate-core`; the CLI, the Server and the Web App are just different "Human implementations" of that same engine.
+JiuMate is a pnpm monorepo whose center is the execution engine in `@jiumate/core`; the CLI, the Server and the Web App are just different "Human implementations" of that same engine.
 
 ## Layers
 

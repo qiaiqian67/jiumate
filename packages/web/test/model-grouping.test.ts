@@ -16,7 +16,7 @@ import {
   MODEL_PROVIDERS,
   catalogEntryFor,
   effectivePricing,
-} from "@prismshadow/jiumate-core/model-catalog";
+} from "@jiumate/core/model-catalog";
 import {
   discountedPrice,
   groupModelRows,

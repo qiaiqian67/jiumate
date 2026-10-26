@@ -2,7 +2,7 @@
  * Server process entry point: the whole startup lifecycle, as one ordered sequence.
  *
  * Importing this module STARTS the server — the CLI runs a server in its own process by
- * `await import("@prismshadow/jiumate-server")` and nothing else, so main() is invoked at
+ * `await import("@jiumate/server")` and nothing else, so main() is invoked at
  * module scope rather than exported.
  *
  * main() comes first in the file and is the sequence itself: each step is one JiuMateServer
@@ -19,7 +19,7 @@ import path from "node:path";
 import type { Server as HttpServer } from "node:http";
 import { config as loadDotenv } from "dotenv";
 import { serve } from "@hono/node-server";
-import { SERVER_RESTART_EXIT_CODE } from "@prismshadow/jiumate-core";
+import { SERVER_RESTART_EXIT_CODE } from "@jiumate/core";
 import { bootAppDeps, createRuntimeApp, type AppDeps } from "./app.js";
 import { ADMIN_USER_ID } from "./auth/service.js";
 import { resolveServerConfig, type ServerConfig } from "./config.js";

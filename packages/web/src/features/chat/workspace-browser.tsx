@@ -26,7 +26,7 @@ import {
 import type { ChangeEvent, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import { REHYPE_PLUGINS, REMARK_PLUGINS } from "../../lib/markdown-plugins";
-import type { SessionInfo, WorkspaceFilesResponse } from "@prismshadow/jiumate-server/api";
+import type { SessionInfo, WorkspaceFilesResponse } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { useAuth } from "../../state/auth";
@@ -66,7 +66,7 @@ const DocxSurface = lazy(() => import("./docx-surface"));
 import type { DocxSurfaceHandle } from "./docx-surface";
 import { DocumentPreviewView } from "./document-preview";
 import type { CellEditDraft } from "./document-preview";
-import type { DocumentPreview } from "@prismshadow/jiumate-core/documents";
+import type { DocumentPreview } from "@jiumate/core/documents";
 import { toneInk } from "../../lib/tone";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
 import { ICON_SIZE } from "../../lib/icon-scale";

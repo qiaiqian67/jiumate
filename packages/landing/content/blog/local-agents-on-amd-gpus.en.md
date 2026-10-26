@@ -2,11 +2,11 @@
 title: "A closer look at JiuMate — and running a self-improving agent locally on an AMD GPU"
 date: 2026-07-20
 category: practice
-author: Ning Zhang (AMD), Yuyang Gao (AMD), Yaowei Zheng (PrismShadow)
+author: Ning Zhang (AMD), Yuyang Gao (AMD), Yaowei Zheng (JiuMate)
 excerpt: What JiuMate actually is, the ideas behind its architecture, and a real end-to-end run — a local open-weight model on an AMD GPU that fails a scored task, then recursively improves itself from a middling score to near the ceiling by diagnosing and rewriting its own files, entirely on-device.
 ---
 
-*AMD × PrismShadow — by Ning Zhang, Yuyang Gao (AMD) and Yaowei Zheng (PrismShadow).*
+*AMD × JiuMate — by Ning Zhang, Yuyang Gao (AMD) and Yaowei Zheng (JiuMate).*
 
 If you are new to JiuMate, this post is a guided tour: what the project is, the ideas that shape its architecture, and — to make it concrete — a real run where a fully local open-weight model on an AMD GPU fails a scored task and then recursively improves itself from a middling score to near the ceiling by diagnosing and rewriting its own files, without a single byte leaving the machine.
 
@@ -46,7 +46,7 @@ One install gives you four layers that share one data directory and one message 
 └──────────────────────────────────────────────┘
 ```
 
-The center is the execution engine in `@prismshadow/jiumate-core`. The CLI, the Server, and the Web App are simply different "Human implementations" of that same engine. This single decision — one kernel, many front-ends — is what keeps the whole system coherent, and it comes from a small set of design tenets worth understanding on their own.
+The center is the execution engine in `@jiumate/core`. The CLI, the Server, and the Web App are simply different "Human implementations" of that same engine. This single decision — one kernel, many front-ends — is what keeps the whole system coherent, and it comes from a small set of design tenets worth understanding on their own.
 
 ### One protocol, three jobs — OmniMessage
 

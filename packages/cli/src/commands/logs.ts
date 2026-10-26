@@ -25,7 +25,7 @@ import {
 } from "../client.js";
 import { getSessionMessages, resolveSessionTarget } from "../server-session.js";
 import { SessionStream, nextFrameOrDeadline } from "../server-task.js";
-import type { OmniMessage } from "@prismshadow/jiumate-core";
+import type { OmniMessage } from "@jiumate/core";
 import type { Messages } from "../i18n.js";
 
 export function registerLogsCommand(program: Command, t: Messages): void {

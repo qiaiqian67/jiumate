@@ -10,7 +10,7 @@
  * means the shape is not one this parser understands, and the pet is skipped
  * rather than guessed at.
  */
-import type { SpriteVersionNumber } from "@prismshadow/jiumate-pets";
+import type { SpriteVersionNumber } from "@jiumate/pets";
 
 /** A definition is only accepted if it carries these two keys. */
 const REQUIRED_KEYS = ["assetRef:", "spriteVersionNumber:"] as const;

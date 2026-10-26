@@ -15,7 +15,7 @@
  *   - the session being viewed                → only while it runs; looking at it is what
  *                                               marks it read, so it never shows `completed`
  */
-import type { SessionInfo, SessionStatus } from "@prismshadow/jiumate-server/api";
+import type { SessionInfo, SessionStatus } from "@jiumate/server/api";
 import { isSessionUnread, type SessionSeenState } from "../../lib/session-seen";
 import { S } from "../../lib/strings";
 import type { ChatItem } from "../../lib/omni/stream-model";

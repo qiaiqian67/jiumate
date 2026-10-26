@@ -15,7 +15,7 @@ PowerShell 里一行命令：
 irm https://jiumate.ooo/install.ps1 | iex
 ```
 
-它会下载 `jiumate-win32-x64.zip`——内置官方 Windows Node 运行时，无需预装任何东西——校验 SHA256，用「先落地再替换」的方式解压安装（绝不触碰你的 `data\` 目录），并把 `jiumate` 加入用户 PATH：注册表值按原始类型读写，已有的 `%USERPROFILE%` 风格条目不会被展开破坏。稳定地址是一个「完整下载后才执行」的转发脚本，截断的流不可能装出半个产品。偏好 npm 的话，`npm install -g @prismshadow/jiumate-cli` 在任何 Node ≥ 24 的环境同样可用。
+它会下载 `jiumate-win32-x64.zip`——内置官方 Windows Node 运行时，无需预装任何东西——校验 SHA256，用「先落地再替换」的方式解压安装（绝不触碰你的 `data\` 目录），并把 `jiumate` 加入用户 PATH：注册表值按原始类型读写，已有的 `%USERPROFILE%` 风格条目不会被展开破坏。稳定地址是一个「完整下载后才执行」的转发脚本，截断的流不可能装出半个产品。偏好 npm 的话，`npm install -g @jiumate/cli` 在任何 Node ≥ 24 的环境同样可用。
 
 有意思的部分不在打包，而在智能体本身。过去每一次 `exec_command` 在 Windows 上都死于 `spawn bash ENOENT`——命令会话把 bash 写死了。现在命令会话按平台解析 shell：优先 Git-Bash（与 POSIX 取向的技能生态兼容性最好；解析到 Windows 系统目录的 `bash` 会被拒绝——那是 WSL 启动器，完全是另一个文件系统视图），其次 `pwsh`，再次 `powershell`，`JIUMATE_SHELL` 可随时覆盖。选定的 shell 会通过会话环境里新增的 `Shell:` 一行告知模型，让它在拿到 PowerShell 时写 PowerShell 语法，而不是对着空气输出 bash。
 
@@ -51,4 +51,4 @@ curl -fsSL https://jiumate.ooo/install.sh | sh
 irm https://jiumate.ooo/install.ps1 | iex
 ```
 
-或 `npm install -g @prismshadow/jiumate-cli`（Node ≥ 24）——请安装 0.1.4：0.1.3 的功能集与之相同，但未能发布到 npm。然后 `jiumate web`，在模型页配好密钥——给它一个目标。
+或 `npm install -g @jiumate/cli`（Node ≥ 24）——请安装 0.1.4：0.1.3 的功能集与之相同，但未能发布到 npm。然后 `jiumate web`，在模型页配好密钥——给它一个目标。

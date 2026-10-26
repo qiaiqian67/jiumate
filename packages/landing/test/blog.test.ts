@@ -87,7 +87,7 @@ describe("frontmatter mapping (author / pinned / category)", () => {
     expect(post?.authors).toEqual([
       "Ning Zhang (AMD)",
       "Yuyang Gao (AMD)",
-      "Yaowei Zheng (PrismShadow)",
+      "Yaowei Zheng (JiuMate)",
     ]);
     expect(post?.category).toBe("practice");
     expect(post?.pinned).toBe(false);

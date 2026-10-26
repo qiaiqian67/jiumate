@@ -17,7 +17,7 @@ import {
   VAULT_PLACEHOLDER,
   defaultSystemConfig,
   systemConfigPath,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   AgentConfigResponse,
   AgentKernelUpdateResponse,

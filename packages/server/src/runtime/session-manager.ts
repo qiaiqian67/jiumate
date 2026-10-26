@@ -39,7 +39,7 @@ import {
   parseUserSteeringText,
   tracesDir,
   userText,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   ApproveFn,
   BackgroundCommandInfo,
@@ -56,7 +56,7 @@ import type {
   SubagentMessageOutcome,
   TextPayload,
   ThinkingLevelName,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   PendingFollowUpInfo,
   PendingSteeringInfo,

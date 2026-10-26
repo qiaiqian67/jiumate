@@ -3,7 +3,7 @@
  * output item for item.
  */
 import { describe, expect, it } from "vitest";
-import type { TokenUsagePayload } from "@prismshadow/jiumate-core/omnimessage";
+import type { TokenUsagePayload } from "@jiumate/core/omnimessage";
 import {
   addLlmDuration,
   beginCompaction,

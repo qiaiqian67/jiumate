@@ -9,7 +9,7 @@
  *   - GET    /api/inspirations/:id/asset/:name (the cover, and nothing else)
  *   - PUT    /api/me/prefs                     (inspirationFavorites, bounds enforced)
  *
- * The manifest/coercion rules themselves live in `@prismshadow/jiumate-inspirations` and are
+ * The manifest/coercion rules themselves live in `@jiumate/inspirations` and are
  * covered by its own unit suite; these tests pin the HTTP contract and the merge on top — in
  * particular that an admin may shadow a built-in by writing its id, that the shadow replaces it in
  * the listing rather than appearing beside it, and that a non-admin cannot write at all.

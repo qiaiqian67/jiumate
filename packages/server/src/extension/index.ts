@@ -1,7 +1,7 @@
 /**
- * The harness's extension surface — the `@prismshadow/jiumate-server/extension` subpath.
+ * The harness's extension surface — the `@jiumate/server/extension` subpath.
  *
- * The contract itself lives in `@prismshadow/jiumate-core/extension`; what this module adds
+ * The contract itself lives in `@jiumate/core/extension`; what this module adds
  * is the harness's own members, contributed by AUGMENTING that contract rather than by
  * redeclaring it. Core names nothing it cannot reach, this layer names what it owns, and
  * an extension sees one `JiuMateContext` either way.
@@ -10,7 +10,7 @@
  */
 import type { TerminalManager } from "../terminal/manager.js";
 
-declare module "@prismshadow/jiumate-core/extension" {
+declare module "@jiumate/core/extension" {
   interface JiuMateContext {
     terminals: TerminalManager;
   }
@@ -27,4 +27,4 @@ export type {
   WorkflowFactory,
   WorkflowInstance,
   WorkflowInstances,
-} from "@prismshadow/jiumate-core/extension";
+} from "@jiumate/core/extension";

@@ -17,7 +17,7 @@
  * user can see.
  */
 import { useState } from "react";
-import type { SkillMetadataItem } from "@prismshadow/jiumate-server/api";
+import type { SkillMetadataItem } from "@jiumate/server/api";
 import { S } from "../../lib/strings";
 import { useLocale } from "../../state/locale";
 import { ICON_SIZE } from "../../lib/icon-scale";

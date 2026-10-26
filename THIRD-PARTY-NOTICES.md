@@ -7,7 +7,7 @@ licenses. This file records those, and how to obtain their source.
 Nothing listed here is source code of this repository. The programs below are downloaded by the
 release workflow (`.github/workflows/release.yml`) and placed alongside the application inside the
 release archives; the fonts are copied out of an npm dependency into the built web assets.
-Installing from npm (`@prismshadow/jiumate-cli`) bundles none of them.
+Installing from npm (`@jiumate/cli`) bundles none of them.
 
 What earns an entry is a third-party work redistributed **as its own file**. An npm package whose
 JavaScript is compiled and minified into the application bundle (React, Shiki, xterm.js, KaTeX's own

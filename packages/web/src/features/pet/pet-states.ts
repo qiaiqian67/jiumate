@@ -4,7 +4,7 @@
  * Mirrors `petdex/src/lib/pet-states.ts`. v1 atlases have 9 rows; v2 adds
  * rows 9-10 holding 16 look-direction frames (8 columns x 2 rows).
  */
-import type { SpriteVersionNumber } from "@prismshadow/jiumate-pets";
+import type { SpriteVersionNumber } from "@jiumate/pets";
 
 export interface SpriteAnimation {
   /** Number of frames in this row. */

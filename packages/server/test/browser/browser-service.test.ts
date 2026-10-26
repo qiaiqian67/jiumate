@@ -4,7 +4,7 @@
  * browser to do and what it makes of the answer.
  */
 import { describe, expect, it, vi } from "vitest";
-import type { BrowserStatus } from "@prismshadow/jiumate-core/interfaces";
+import type { BrowserStatus } from "@jiumate/core/interfaces";
 import { BrowserService, originOf } from "../../src/browser/service.js";
 import type { ActionTiming } from "./../../src/browser/actions.js";
 import { TabRegistry, UnknownTabError } from "../../src/browser/tabs.js";

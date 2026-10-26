@@ -1,8 +1,8 @@
 {
-  "name": "@prismshadow/jiumate-cli",
+  "name": "@jiumate/cli",
   "version": "0.4.0",
   "type": "module",
-  "description": "JiuMate CLI: interactive REPL and single-task runner over @prismshadow/jiumate-core.",
+  "description": "JiuMate CLI: interactive REPL and single-task runner over @jiumate/core.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -43,8 +43,8 @@
     "@jiumate/use-firecrawl": "workspace:*",
     "@jiumate/use-claude-code": "workspace:*",
     "@prismshadow/agenthub": "^0.4.9",
-    "@prismshadow/jiumate-core": "workspace:*",
-    "@prismshadow/jiumate-server": "workspace:*",
+    "@jiumate/core": "workspace:*",
+    "@jiumate/server": "workspace:*",
     "commander": "^13.0.0",
     "dotenv": "^17.0.0",
     "smol-toml": "^1.3.0",

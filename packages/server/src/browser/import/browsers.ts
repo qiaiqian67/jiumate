@@ -5,7 +5,7 @@
  * nothing here touches the filesystem.
  */
 import path from "node:path";
-import type { BrowserImportBrowser } from "@prismshadow/jiumate-core/interfaces";
+import type { BrowserImportBrowser } from "@jiumate/core/interfaces";
 import type { ImportEnv } from "./index.js";
 
 export type ChromiumBrowserId = Exclude<BrowserImportBrowser, "firefox">;

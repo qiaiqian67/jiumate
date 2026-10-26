@@ -24,8 +24,8 @@
  * minutes anyway, and no key exists until the exchange runs).
  */
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { APP_URL, providerInfo } from "@prismshadow/jiumate-core/model-catalog";
-import type { ModelProviderOAuth } from "@prismshadow/jiumate-core/model-catalog";
+import { APP_URL, providerInfo } from "@jiumate/core/model-catalog";
+import type { ModelProviderOAuth } from "@jiumate/core/model-catalog";
 import { HttpError } from "../http/errors.js";
 import { badRequest } from "../http/validate.js";
 

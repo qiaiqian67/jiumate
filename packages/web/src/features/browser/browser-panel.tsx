@@ -20,8 +20,8 @@
  * become a search, in both places, so the two can never disagree (core/browser/address.ts).
  */
 import { useEffect, useState, useSyncExternalStore } from "react";
-import type { BrowserStatus, BrowserTab } from "@prismshadow/jiumate-core/interfaces";
-import { displayAddress, resolveAddress, tabLabel } from "@prismshadow/jiumate-core/browser";
+import type { BrowserStatus, BrowserTab } from "@jiumate/core/interfaces";
+import { displayAddress, resolveAddress, tabLabel } from "@jiumate/core/browser";
 import { S } from "../../lib/strings";
 import { EmptyState } from "../../components/ui/empty-state";
 import { apiFetch } from "../../api/client";

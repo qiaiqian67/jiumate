@@ -49,7 +49,7 @@ import type {
   InstalledSkillsResponse,
   SkillCatalogItem,
   SkillMetadataItem,
-} from "@prismshadow/jiumate-server/api";
+} from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { InstalledSkillsView } from "./installed-skills-view";
 import { ApiError } from "../../api/client";

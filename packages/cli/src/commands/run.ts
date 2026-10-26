@@ -26,7 +26,7 @@
  * Docs: /docs/cli § "jiumate run".
  */
 import type { Command } from "commander";
-import { VERSION } from "@prismshadow/jiumate-core";
+import { VERSION } from "@jiumate/core";
 import { StreamRenderer, dim } from "../render.js";
 import { parseDurationMs } from "../duration.js";
 import { parseTokenBudget, UNLIMITED_BUDGET } from "../goal-command.js";

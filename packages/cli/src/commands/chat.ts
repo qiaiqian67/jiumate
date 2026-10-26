@@ -22,9 +22,9 @@
  */
 import { createInterface, type Interface } from "node:readline";
 import type { Command } from "commander";
-import { VERSION } from "@prismshadow/jiumate-core";
-import type { ApprovalDecision, OmniMessage, ToolCallPayload } from "@prismshadow/jiumate-core";
-import type { SessionInfo } from "@prismshadow/jiumate-server/api";
+import { VERSION } from "@jiumate/core";
+import type { ApprovalDecision, OmniMessage, ToolCallPayload } from "@jiumate/core";
+import type { SessionInfo } from "@jiumate/server/api";
 import { StreamRenderer, dim, renderHistory } from "../render.js";
 import { parseGoalCommand } from "../goal-command.js";
 import { parseThinkingCommand, resolveThinkingLevel } from "../thinking-command.js";

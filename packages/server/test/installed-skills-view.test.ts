@@ -16,7 +16,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { hooksDir, skillsDir, writeInstalls } from "@prismshadow/jiumate-core";
+import { hooksDir, skillsDir, writeInstalls } from "@jiumate/core";
 import { buildInstalledSkillsView } from "../src/services/installed-skills-view.js";
 
 describe("buildInstalledSkillsView", () => {

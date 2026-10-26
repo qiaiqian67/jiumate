@@ -52,7 +52,7 @@ import {
   setDefaultModel,
   setVaultEntry,
   setVisionModel,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import { parseApprovalAnswer } from "../approval.js";
 import { resolveRootOption } from "../root-option.js";
 import { getMessages, maskApiKey, type Messages } from "../i18n.js";

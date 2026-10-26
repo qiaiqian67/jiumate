@@ -3,7 +3,7 @@ title: Core Interfaces
 description: A top-down tour of the contracts — full LLMInterface and EnvironmentInterface signatures, inner types field by field, and every swappable seam.
 ---
 
-The context_engine depends on three interfaces: Human, LLM and Environment. All protocol conversion happens inside the implementations — the engine sees only [OmniMessage](/omni-message). This page goes top-down: the two big interface signatures and the Human boundary first, then each interface's inner types layer by layer. All types are exported by `@prismshadow/jiumate-core`; source: `packages/core/src/interfaces/` — `llm.ts` (what the model side needs), `environment.ts` (what the Environment side needs), `shared.ts` (the vocabulary both genuinely need), and `index.ts`, the barrel behind the `@prismshadow/jiumate-core/interfaces` subpath.
+The context_engine depends on three interfaces: Human, LLM and Environment. All protocol conversion happens inside the implementations — the engine sees only [OmniMessage](/omni-message). This page goes top-down: the two big interface signatures and the Human boundary first, then each interface's inner types layer by layer. All types are exported by `@jiumate/core`; source: `packages/core/src/interfaces/` — `llm.ts` (what the model side needs), `environment.ts` (what the Environment side needs), `shared.ts` (the vocabulary both genuinely need), and `index.ts`, the barrel behind the `@jiumate/core/interfaces` subpath.
 
 ## Overview
 

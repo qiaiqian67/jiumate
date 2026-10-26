@@ -54,7 +54,7 @@ import {
   isPartialPayload,
   parseBackgroundTaskDoneMessage,
   parseUserSteeringText,
-} from "@prismshadow/jiumate-core/omnimessage";
+} from "@jiumate/core/omnimessage";
 import type {
   ApprovalDecision,
   CompactionMode,
@@ -66,8 +66,8 @@ import type {
   SessionMetaPayload,
   StopReason,
   TokenUsagePayload,
-} from "@prismshadow/jiumate-core/omnimessage";
-import type { TracePosition } from "@prismshadow/jiumate-server/api";
+} from "@jiumate/core/omnimessage";
+import type { TracePosition } from "@jiumate/server/api";
 import {
   addLlmDuration,
   beginCompaction,

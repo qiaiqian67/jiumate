@@ -154,7 +154,7 @@ async function compileEntry(entry, outfile) {
     logLevel: "silent",
     banner: { js: ESM_CJS_BANNER },
     alias: {
-      "@prismshadow/jiumate-core/kernel": require.resolve("@prismshadow/jiumate-core/kernel"),
+      "@jiumate/core/kernel": require.resolve("@jiumate/core/kernel"),
     },
     // The pushed bundle lands under `<root>/hmr/store/`, outside any checkout, so its own
     // revision has to be inlined here or it can never be recovered: `jiumate version` from
@@ -238,7 +238,7 @@ async function main() {
     log("reusing the existing web dist");
   } else {
     log("building the web dist…");
-    execFileSync("pnpm", ["--filter", "@prismshadow/jiumate-web", "build"], {
+    execFileSync("pnpm", ["--filter", "@jiumate/web", "build"], {
       cwd: ROOT,
       stdio: "inherit",
     });

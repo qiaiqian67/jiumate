@@ -20,8 +20,8 @@ import {
   toolCall,
   toolCallOutput,
   userText,
-} from "@prismshadow/jiumate-core";
-import type { OmniMessage, SessionMetaPayload } from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
+import type { OmniMessage, SessionMetaPayload } from "@jiumate/core";
 import type { TraceService } from "../src/services/trace-service.js";
 import { makeTraceHarness } from "./helpers.js";
 

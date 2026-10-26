@@ -38,8 +38,8 @@ export interface AppIdentity {
 /** The identity for this form: release, or dev-suffixed so both can run side by side. */
 export function appIdentity(isPackaged: boolean): AppIdentity {
   return isPackaged
-    ? { name: "JiuMate", appUserModelId: "com.prismshadow.jiumate" }
-    : { name: "JiuMate-Dev", appUserModelId: "com.prismshadow.jiumate.dev" };
+    ? { name: "JiuMate", appUserModelId: "com.jiumate" }
+    : { name: "JiuMate-Dev", appUserModelId: "com.jiumate.dev" };
 }
 
 /**

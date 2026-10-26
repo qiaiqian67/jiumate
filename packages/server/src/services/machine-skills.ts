@@ -21,7 +21,7 @@ import {
   parseSkillFrontmatter,
   writeMachineSkill,
   type SkillFiles,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import { HttpError } from "../http/errors.js";
 import { skillTooLarge, MAX_FILE_BYTES } from "./skill-import-limits.js";
 

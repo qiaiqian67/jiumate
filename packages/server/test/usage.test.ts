@@ -7,8 +7,8 @@
  * series (aborted doesn't count as a model failure).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { sessionMeta, tokenUsage, withOrigin } from "@prismshadow/jiumate-core";
-import type { SessionMetaPayload, TokenCounts } from "@prismshadow/jiumate-core";
+import { sessionMeta, tokenUsage, withOrigin } from "@jiumate/core";
+import type { SessionMetaPayload, TokenCounts } from "@jiumate/core";
 import { ORIGIN_MODELS_MAX, UsageRecorder } from "../src/runtime/usage-recorder.js";
 import { ErrorsRepo } from "../src/db/repos/errors.js";
 import { UsageRepo } from "../src/db/repos/usage.js";

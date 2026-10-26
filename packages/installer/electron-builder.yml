@@ -8,7 +8,7 @@
 #
 # No publish target: this artifact is not distributed on its own. The desktop package's installers
 # remain what users download; this one is built separately and tested by hand.
-appId: com.prismshadow.jiumate.installer
+appId: com.jiumate.installer
 productName: JiuMate Installer
 directories:
   output: out

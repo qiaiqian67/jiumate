@@ -12,7 +12,7 @@ This page answers two questions: in what order does the process bring each subsy
 | Entry                                   | Mechanism                                                                                                                                        |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Direct                                  | `node dist/index.js` (`start` in `server/package.json`)                                                                                          |
-| CLI (`jiumate server` / `jiumate web`)  | Sets `PORT`/`HOST` env vars, then `import("@prismshadow/jiumate-server")` **in the same process** — no fork; `jiumate web` additionally polls for readiness and opens the browser |
+| CLI (`jiumate server` / `jiumate web`)  | Sets `PORT`/`HOST` env vars, then `import("@jiumate/server")` **in the same process** — no fork; `jiumate web` additionally polls for readiness and opens the browser |
 | Desktop                                 | `utilityProcess.fork` launches a **separate** server process, injecting `JIUMATE_HOME`, `PORT`, `JIUMATE_DESKTOP_TOKEN`, `JIUMATE_PORT_FILE` via env |
 
 All three converge: the same env vars drive the same module. The server's own configuration comes from environment variables only (`server/src/config.ts`); `system_config.yaml` is Agent-level state, read when a Session runs — it plays no part in server boot.
@@ -104,7 +104,7 @@ Several behavioral facts follow:
 - **A duplicate workflow name is refused**: `iface.workflow` is a registry whose `set` throws, so a name cannot change owner depending on `extensions.json` ordering.
 - **The event vocabulary is typed and lives in one place**: `ExtensionEvents` maps each name to its payload — adding an event types the platform's emit and every handler at once.
 
-The extension contract (`Extension` / `ExtensionContext` / `ExtensionEvents` / `JiuMateInterface` / `JiuMateContext`) is declared in the SDK, at `@prismshadow/jiumate-core/extension`. `JiuMateContext` and `JiuMateInterface` are open: the harness contributes the members it owns — `terminals` — by augmenting that module, and re-exports both halves from `@prismshadow/jiumate-server/extension`. Both subpaths emit types only. Which extensions exist is the deployment's `<root>/extensions.json`; the harness itself imports no extension.
+The extension contract (`Extension` / `ExtensionContext` / `ExtensionEvents` / `JiuMateInterface` / `JiuMateContext`) is declared in the SDK, at `@jiumate/core/extension`. `JiuMateContext` and `JiuMateInterface` are open: the harness contributes the members it owns — `terminals` — by augmenting that module, and re-exports both halves from `@jiumate/server/extension`. Both subpaths emit types only. Which extensions exist is the deployment's `<root>/extensions.json`; the harness itself imports no extension.
 
 ## Subsystem inventory
 
@@ -113,7 +113,7 @@ Each subsystem's construction site and external surface (step numbers refer to t
 | Subsystem            | Constructed                                      | External surface                                                                                              |
 | -------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | Config               | `config.ts` `resolveServerConfig` (②)            | `ServerConfig`; its only post-listen mutation writes back the real port                                         |
-| Single-instance lock | `lock.ts` (③ pre-check, ⑨ acquire)               | Package subpath `@prismshadow/jiumate-server/lock`; the CLI and Desktop use it for pre-launch probing           |
+| Single-instance lock | `lock.ts` (③ pre-check, ⑨ acquire)               | Package subpath `@jiumate/server/lock`; the CLI and Desktop use it for pre-launch probing           |
 | Database             | `db/database.ts` `openDatabase` (first step of ⑤)| Repo classes under `db/repos/*`; WAL, foreign keys, additive `ensureColumn` migrations                          |
 | Auth                 | `auth/service.ts` (⑤, runtime mechanism)          | `/api/auth/*`, the cookie `authMiddleware`, and authentication of terminal WS upgrades                          |
 | Project / Session    | `services/*` — **App-level** (assembled in create)| `/api/projects/**`, `/api/sessions/**` (route details in [Server API](/server-api))                             |

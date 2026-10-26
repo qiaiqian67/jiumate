@@ -14,8 +14,8 @@
  * The session lands in `<root>/cli-session.json` (0600) rather than a shell's history.
  * Docs: /docs/cli § "jiumate auth".
  */
-import { mintApiToken } from "@prismshadow/jiumate-server/auth-token";
-import { liveServerLock } from "@prismshadow/jiumate-server/lock";
+import { mintApiToken } from "@jiumate/server/auth-token";
+import { liveServerLock } from "@jiumate/server/lock";
 import type { Command } from "commander";
 import {
   call,

@@ -7,11 +7,11 @@
  * terminals-only there), with fake ptys standing in for delivered resources.
  */
 import { describe, expect, it, vi } from "vitest";
-import { boot, initialDoc, upgrade } from "@prismshadow/jiumate-core/kernel";
+import { boot, initialDoc, upgrade } from "@jiumate/core/kernel";
 import { HotResources } from "../src/hmr/resources.js";
 import { packagedPlatform } from "../src/hmr/platform.js";
 import type { PlatformApi } from "../src/hmr/platform.js";
-import type { Instance } from "@prismshadow/jiumate-core/kernel";
+import type { Instance } from "@jiumate/core/kernel";
 import { JIUMATE_FAMILY, RUNTIME_INTERFACES_RESOURCE_ID } from "../src/hmr/capabilities.js";
 import { TerminalManager } from "../src/terminal/manager.js";
 import type { TerminalSession } from "../src/terminal/session.js";

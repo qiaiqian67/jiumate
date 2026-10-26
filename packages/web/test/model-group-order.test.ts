@@ -14,7 +14,7 @@
  * the ordering algebra, and the catalog's own membership is model-catalog.test.ts's.
  */
 import { describe, expect, it } from "vitest";
-import { MODEL_PROVIDERS } from "@prismshadow/jiumate-core/model-catalog";
+import { MODEL_PROVIDERS } from "@jiumate/core/model-catalog";
 
 import {
   commitModelGroupOrder,

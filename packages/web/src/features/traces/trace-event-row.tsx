@@ -16,7 +16,7 @@ import { HOOK_ICON } from "../../components/ui/icons";
 import ReactMarkdown from "react-markdown";
 import { REHYPE_PLUGINS, REMARK_PLUGINS } from "../../lib/markdown-plugins";
 import { S } from "../../lib/strings";
-import type { OmniMessage } from "@prismshadow/jiumate-core/omnimessage";
+import type { OmniMessage } from "@jiumate/core/omnimessage";
 import { formatTime, humanizeTokens } from "../../lib/format";
 import { Badge, stopReasonTone } from "../../components/ui/badge";
 import { RequiredMark } from "../../components/ui/field";

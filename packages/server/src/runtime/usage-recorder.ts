@@ -13,8 +13,8 @@
  * The attribution key is always the paired reference `(provider, model_id)` (the same
  * model_id name across different vendors is attributed separately).
  */
-import { isEventMessage, isSessionMeta } from "@prismshadow/jiumate-core";
-import type { OmniMessage } from "@prismshadow/jiumate-core";
+import { isEventMessage, isSessionMeta } from "@jiumate/core";
+import type { OmniMessage } from "@jiumate/core";
 import { formatLocalDate } from "../internal/dates.js";
 import type { UsageRepo } from "../db/repos/usage.js";
 

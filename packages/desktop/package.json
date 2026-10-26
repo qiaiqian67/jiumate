@@ -1,9 +1,9 @@
 {
-  "name": "@prismshadow/jiumate-desktop",
+  "name": "@jiumate/desktop",
   "version": "0.4.0",
   "private": true,
   "type": "module",
-  "description": "JiuMate desktop app: Electron shell running @prismshadow/jiumate-server as a utilityProcess, window on http://localhost (same-origin HTTP/SSE, no private IPC).",
+  "description": "JiuMate desktop app: Electron shell running @jiumate/server as a utilityProcess, window on http://localhost (same-origin HTTP/SSE, no private IPC).",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsup && tsup --config tsup.preload.config.ts && node scripts/build-assets.mjs",
@@ -36,9 +36,9 @@
     "@jiumate/use-claude-code": "workspace:*"
   },
   "devDependencies": {
-    "@prismshadow/jiumate-cli": "workspace:*",
-    "@prismshadow/jiumate-core": "workspace:*",
-    "@prismshadow/jiumate-server": "workspace:*",
+    "@jiumate/cli": "workspace:*",
+    "@jiumate/core": "workspace:*",
+    "@jiumate/server": "workspace:*",
     "@types/node": "^24.0.0",
     "electron": "^43.2.0",
     "electron-builder": "^26.0.12",

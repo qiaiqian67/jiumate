@@ -1,10 +1,10 @@
 /**
  * The extension host: it owns activation, event delivery and disposal. Kept out of
- * ./index.ts so the published `@prismshadow/jiumate-server/extension` subpath stays types
+ * ./index.ts so the published `@jiumate/server/extension` subpath stays types
  * only — an extension package cannot take a runtime dependency on the harness even by
  * accident, which is what keeps it a self-contained library.
  */
-import type { Resources } from "@prismshadow/jiumate-core/kernel";
+import type { Resources } from "@jiumate/core/kernel";
 import type { Disposable, Extension, ExtensionEvents } from "./index.js";
 
 interface ActivatedPlugin {

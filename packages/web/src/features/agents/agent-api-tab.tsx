@@ -19,7 +19,7 @@
  * time that are all the server will ever give back.
  */
 import { useCallback, useEffect, useState } from "react";
-import type { AgentApiKeyInfo, AgentApiResponse, ApprovalMode } from "@prismshadow/jiumate-server/api";
+import type { AgentApiKeyInfo, AgentApiResponse, ApprovalMode } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

@@ -6,7 +6,7 @@
  * packages/core/test/markers.test.ts).
  */
 import { describe, expect, it } from "vitest";
-import type { AgentSummary } from "@prismshadow/jiumate-server/api";
+import type { AgentSummary } from "@jiumate/server/api";
 import {
   filterAgents,
   handoffMessage,

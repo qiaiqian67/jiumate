@@ -27,7 +27,7 @@ import {
   userText,
   isCompleteModelMessage,
   type OmniMessage,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 
 const AGENT_ID = "self-improve-demo";
 const PROJECT_ID = "default_project";

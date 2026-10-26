@@ -16,12 +16,12 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   PartialTextPayload,
   PartialToolCallOutputPayload,
   PartialToolCallPayload,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import { LiveTailTracker } from "../src/runtime/live-tail.js";
 
 const SID = "s1";

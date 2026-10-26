@@ -17,9 +17,9 @@
  * remote server is able to do.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
+import type { MCPServerConfig } from "@jiumate/core/interfaces";
 import * as api from "../../api/endpoints";
-import type { McpServerTestResponse } from "@prismshadow/jiumate-server/api";
+import type { McpServerTestResponse } from "@jiumate/server/api";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
 import { useProject } from "../../state/project";

@@ -14,8 +14,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { McpToolProvider, resolveMCPServer } from "@prismshadow/jiumate-core";
-import type { MCPServerConfig } from "@prismshadow/jiumate-core";
+import { McpToolProvider, resolveMCPServer } from "@jiumate/core";
+import type { MCPServerConfig } from "@jiumate/core";
 import type { McpServerTestResponse } from "../api/types.js";
 
 /** Ceiling on a single probe's connect budget (an entry may configure minutes; a request must not hang on it). */

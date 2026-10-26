@@ -18,7 +18,7 @@ describe("the address bar", () => {
     const panel = read("features/browser/browser-panel.tsx");
     // The agent's "open" and the user's address bar go through the same function, so
     // "example.com" means the same thing to both.
-    expect(panel).toContain('from "@prismshadow/jiumate-core/browser"');
+    expect(panel).toContain('from "@jiumate/core/browser"');
     expect(panel).toContain("resolveAddress");
     expect(panel).toContain("displayAddress");
   });

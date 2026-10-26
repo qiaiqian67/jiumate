@@ -40,7 +40,7 @@
  * hold. Keeping it a textarea also keeps the size cap visible.
  */
 import { useEffect, useId, useMemo, useState } from "react";
-import type { SkillMetadataItem } from "@prismshadow/jiumate-server/api";
+import type { SkillMetadataItem } from "@jiumate/server/api";
 import { Button } from "../../components/ui/button";
 import { Field, FieldHint, FieldLabel } from "../../components/ui/field";
 import { FormPicker } from "../../components/ui/form-picker";
@@ -72,7 +72,7 @@ import type {
   InspirationCase,
   InspirationCaseInput,
   InspirationKind,
-} from "@prismshadow/jiumate-inspirations";
+} from "@jiumate/inspirations";
 
 /**
  * The field caps, mirrored from the package's `constants.ts`.

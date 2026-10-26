@@ -7,8 +7,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createAgent, saveProjectConfig, sessionMeta, userText } from "@prismshadow/jiumate-core";
-import type { SessionMetaPayload } from "@prismshadow/jiumate-core";
+import { createAgent, saveProjectConfig, sessionMeta, userText } from "@jiumate/core";
+import type { SessionMetaPayload } from "@jiumate/core";
 import { createCoreSessionLoader } from "../src/runtime/session-manager.js";
 import { SessionSources } from "../src/runtime/session-sources.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";

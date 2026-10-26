@@ -16,7 +16,7 @@
  * cannot import the CLI package (the dependency runs the other way), hence the small
  * duplication. fetch and the clock are injectable so tests never touch the network.
  */
-import { BUILD_DATE, VERSION, compareVersions, normalizeVersion } from "@prismshadow/jiumate-core";
+import { BUILD_DATE, VERSION, compareVersions, normalizeVersion } from "@jiumate/core";
 import type { UpdateCheckResponse } from "../api/types.js";
 
 /** Repository the released artifacts come from (same slug as cli/update.ts's REPO_SLUG). */

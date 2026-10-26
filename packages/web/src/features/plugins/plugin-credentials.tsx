@@ -26,7 +26,7 @@
  * replace safe to use here.
  */
 import { useCallback, useEffect, useState } from "react";
-import type { VaultEntryInfo, VaultUpdateRequest } from "@prismshadow/jiumate-server/api";
+import type { VaultEntryInfo, VaultUpdateRequest } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

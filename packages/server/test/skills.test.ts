@@ -19,7 +19,7 @@ import {
   pluginsDir,
   librarySkill,
   loadPreinstalledPlugins,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   AgentCreateResponse,
   AgentsResponse,

@@ -6,7 +6,7 @@
  * root. Two copies of that rule is two chances for one of them to drift.
  */
 import path from "node:path";
-import { resolveRoot } from "@prismshadow/jiumate-core";
+import { resolveRoot } from "@jiumate/core";
 
 /** Data root: `--root` first (relative paths against cwd), else JIUMATE_HOME / ~/.jiumate/data. */
 export function resolveRootOption(root: string | undefined): string {

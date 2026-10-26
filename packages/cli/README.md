@@ -1,9 +1,9 @@
-# @prismshadow/jiumate-cli
+# @jiumate/cli
 
 The JiuMate command line. Installs the `jiumate` command: an interactive REPL, a one-shot task runner, model / vault configuration, and the launcher for the Web service.
 
 ```bash
-npm install -g @prismshadow/jiumate-cli   # requires Node >= 24
+npm install -g @jiumate/cli   # requires Node >= 24
 ```
 
 ```bash
@@ -31,9 +31,9 @@ Prefer a one-line install with a bundled Node runtime? See [Quickstart → CLI a
 
 ```bash
 pnpm jiumate <args>                              # run from source (repo root, via tsx)
-pnpm --filter @prismshadow/jiumate-cli build     # tsup → dist/index.js (the jiumate bin)
-pnpm --filter @prismshadow/jiumate-cli typecheck
-pnpm --filter @prismshadow/jiumate-cli test
+pnpm --filter @jiumate/cli build     # tsup → dist/index.js (the jiumate bin)
+pnpm --filter @jiumate/cli typecheck
+pnpm --filter @jiumate/cli test
 ```
 
 Part of [JiuMate](https://github.com/qiaiqian67/jiumate) · Apache-2.0

@@ -8,7 +8,7 @@
  * vault/schedules owner-only).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { LEGACY_SKILLS_SECTION, LEGACY_VAULT_SECTION } from "@prismshadow/jiumate-core";
+import { LEGACY_SKILLS_SECTION, LEGACY_VAULT_SECTION } from "@jiumate/core";
 import type {
   AgentConfigResponse,
   AgentSchedulesConfigDto,

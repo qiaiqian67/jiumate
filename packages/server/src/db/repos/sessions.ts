@@ -3,7 +3,7 @@
  * Session index, approval mode, and auto-generated title; Session-level routes use this to look up project ownership.
  */
 import type { DatabaseSync } from "node:sqlite";
-import type { ThinkingLevelName } from "@prismshadow/jiumate-core/interfaces";
+import type { ThinkingLevelName } from "@jiumate/core/interfaces";
 import type { ApprovalMode } from "../../api/types.js";
 
 export interface SessionRow {

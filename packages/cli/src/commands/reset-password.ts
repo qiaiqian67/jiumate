@@ -12,8 +12,8 @@
  * Docs: /docs/cli § "jiumate server / jiumate web".
  */
 import path from "node:path";
-import { resolveRoot } from "@prismshadow/jiumate-core";
-import { resetAdminPassword } from "@prismshadow/jiumate-server/reset-admin-password";
+import { resolveRoot } from "@jiumate/core";
+import { resetAdminPassword } from "@jiumate/server/reset-admin-password";
 import type { Command } from "commander";
 import type { Messages } from "../i18n.js";
 

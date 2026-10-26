@@ -24,14 +24,14 @@ import {
   approximateMessagesTokens,
   approximateTokens,
   effectiveMaxContextLength,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   OmniMessage,
   SessionMetaPayload,
   ToolCallOutputPayload,
   ToolCallPayload,
   ToolListReadyPayload,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type { SessionContextParts } from "../api/types.js";
 
 /** How many tools the ranking names before the tail is dropped. */

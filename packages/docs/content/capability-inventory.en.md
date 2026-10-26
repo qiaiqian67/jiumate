@@ -84,7 +84,7 @@ React 19 + Vite 7 + Tailwind 4.
 
 ## packages/cli
 
-`@prismshadow/jiumate-cli`.
+`@jiumate/cli`.
 
 28 subcommands across `auth`, `config`, `run`, `chat`, `ls`, `logs`, `input`, `agent`, `project`, `cost`, `schedule`, `server`, `web`, `update`, `version`. Persistent `node:readline` + bracketed-paste handling + `\` line continuation; `/exit`, `/clear`, `/compact`, `/goal[:budget]`, `/thinking`, `/verbose`. **Every read command supports `--json` for scripting; `--background` and `--timeout 0` for non-blocking usage.** Connection resolution: explicit `--server` env > live `<root>/server.lock` > auto-spawn background server. 401 auto-reloads `<root>/api-token`. **No tab completion, no history file, no OAuth/SSO.**
 

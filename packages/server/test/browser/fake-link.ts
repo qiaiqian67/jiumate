@@ -7,7 +7,7 @@ import type {
   BrowserBackend,
   BrowserBackendCapabilities,
   BrowserTab,
-} from "@prismshadow/jiumate-core/interfaces";
+} from "@jiumate/core/interfaces";
 import type { BrowserCommand, BrowserLink, BrowserLinkEvent } from "../../src/browser/link.js";
 import { BrowserLinkError } from "../../src/browser/link.js";
 

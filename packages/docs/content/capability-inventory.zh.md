@@ -84,7 +84,7 @@ React 19 + Vite 7 + Tailwind 4。
 
 ## packages/cli
 
-`@prismshadow/jiumate-cli`。
+`@jiumate/cli`。
 
 28 个子命令,涵盖 `auth`、`config`、`run`、`chat`、`ls`、`logs`、`input`、`agent`、`project`、`cost`、`schedule`、`server`、`web`、`update`、`version`。持久化 `node:readline` + bracketed-paste 处理 + `\` 续行;`/exit`、`/clear`、`/compact`、`/goal[:budget]`、`/thinking`、`/verbose`。**所有读命令支持 `--json` 用于脚本化;`--background` 与 `--timeout 0` 用于非阻塞用法。** 连接解析:显式 `--server` env > 活着的 `<root>/server.lock` > 自动 spawn 后台 server。401 自动重读 `<root>/api-token`。**没有 tab completion、没有历史文件、没有 OAuth/SSO。**
 

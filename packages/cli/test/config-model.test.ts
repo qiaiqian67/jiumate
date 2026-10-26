@@ -17,7 +17,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Command } from "commander";
 import { parse as parseToml } from "smol-toml";
-import { DEFAULT_PROJECT_ID, projectConfigPath } from "@prismshadow/jiumate-core";
+import { DEFAULT_PROJECT_ID, projectConfigPath } from "@jiumate/core";
 import { registerConfigCommand } from "../src/commands/config.js";
 import { getMessages } from "../src/i18n.js";
 

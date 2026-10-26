@@ -70,4 +70,4 @@ irm https://jiumate.ooo/install.ps1 | iex
 jiumate web
 ```
 
-Or `npm install -g @prismshadow/jiumate-cli` with Node >= 24 — and from this release, fully offline from the [Release assets](https://github.com/qiaiqian67/jiumate/releases). Full detail per change: [changelog/0.1.5](https://github.com/qiaiqian67/jiumate/tree/main/changelog/0.1.5).
+Or `npm install -g @jiumate/cli` with Node >= 24 — and from this release, fully offline from the [Release assets](https://github.com/qiaiqian67/jiumate/releases). Full detail per change: [changelog/0.1.5](https://github.com/qiaiqian67/jiumate/tree/main/changelog/0.1.5).

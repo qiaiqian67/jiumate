@@ -18,7 +18,7 @@
 <p align="center">1000+ 模型 · 多平台 · Apache 2.0 · Agent 自进化</p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@prismshadow/jiumate-core"><img src="https://img.shields.io/npm/v/@prismshadow/jiumate-core" alt="npm 版本" /></a>
+  <a href="https://www.npmjs.com/package/@jiumate/core"><img src="https://img.shields.io/npm/v/@jiumate/core" alt="npm 版本" /></a>
   <a href="https://github.com/qiaiqian67/jiumate/actions/workflows/ci.yml"><img src="https://github.com/qiaiqian67/jiumate/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/qiaiqian67/jiumate/actions/workflows/pages.yml"><img src="https://github.com/qiaiqian67/jiumate/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0" /></a>
@@ -168,7 +168,7 @@ jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ### 📦 npm（任意平台，需 Node >= 24）
 
 ```bash
-npm install -g @prismshadow/jiumate-cli
+npm install -g @jiumate/cli
 jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ```
 
@@ -215,7 +215,7 @@ jiumate server     # 无界面服务（与 Web 应用同一套 API）
 ```
 
 ```ts
-import { createAgent, isCompleteModelMessage, userText } from "@prismshadow/jiumate-core";
+import { createAgent, isCompleteModelMessage, userText } from "@jiumate/core";
 
 const agent = await createAgent({ agentId: "default_agent" });
 const session = await agent.createSession({ workspaceDir: process.cwd() });
@@ -262,7 +262,7 @@ pnpm dev                     # 服务端 + Web 一起启动（带前缀日志，
 
 ```bibtex
 @software{jiumate2026,
-  author  = {{PrismShadow Team}},
+  author  = {{JiuMate Team}},
   title   = {JiuMate: Efficient Self-Improving Harness for Everyone},
   year    = {2026},
   url     = {https://github.com/qiaiqian67/jiumate},
@@ -272,6 +272,6 @@ pnpm dev                     # 服务端 + Web 一起启动（带前缀日志，
 
 ## 协议
 
-[Apache-2.0](LICENSE) © 2026 Prism Shadow
+[Apache-2.0](LICENSE) © 2026 JiuMate
 
-由 [LlamaFactory](https://github.com/hiyouga/LlamaFactory) 作者 [Yaowei Zheng](https://github.com/hiyouga)、[PrismShadow AI Team](https://github.com/qiaiqian67) 与 [Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5) 共同用 ❤️ 构建。
+由 [LlamaFactory](https://github.com/hiyouga/LlamaFactory) 作者 [Yaowei Zheng](https://github.com/hiyouga)、[JiuMate Team](https://github.com/qiaiqian67) 与 [Fable 5](https://www.anthropic.com/news/claude-fable-5-mythos-5) 共同用 ❤️ 构建。

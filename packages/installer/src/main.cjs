@@ -113,7 +113,7 @@ app.whenReady().then(() => {
     app.quit()
     return
   }
-  app.setAppUserModelId("com.prismshadow.jiumate.installer")
+  app.setAppUserModelId("com.jiumate.installer")
   buildMeta()
   createWindow()
 })

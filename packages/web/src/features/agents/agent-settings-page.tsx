@@ -20,8 +20,8 @@ import type {
   AgentCompactionConfigDto,
   AgentKernelUpdateResponse,
   AgentModelConfigDto,
-} from "@prismshadow/jiumate-server/api";
-import type { ToolDefinitionConfig, ToolPermission } from "@prismshadow/jiumate-core/interfaces";
+} from "@jiumate/server/api";
+import type { ToolDefinitionConfig, ToolPermission } from "@jiumate/core/interfaces";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

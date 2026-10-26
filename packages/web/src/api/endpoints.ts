@@ -1,10 +1,10 @@
 /**
  * API endpoint wrappers: one function per API.
- * DTO types come from @prismshadow/jiumate-server/api (**type import only**, resolved via
+ * DTO types come from @jiumate/server/api (**type import only**, resolved via
  * tsconfig paths to the server contract file types.ts; must not be a value import — server
  * code must not enter the browser bundle).
  */
-import type { MCPServerConfig } from "@prismshadow/jiumate-core/interfaces";
+import type { MCPServerConfig } from "@jiumate/core/interfaces";
 import type {
   AdminPasswordResetRequest,
   AdminUserCreateRequest,
@@ -152,8 +152,8 @@ import type {
   VaultUpdateRequest,
   VersionResponse,
   WorkspaceFilesResponse,
-} from "@prismshadow/jiumate-server/api";
-import type { DocumentPreview } from "@prismshadow/jiumate-core/documents";
+} from "@jiumate/server/api";
+import type { DocumentPreview } from "@jiumate/core/documents";
 import { apiFetch, apiFetchWithMeta, postBinary } from "./client";
 // Auth & user -----------------------------------------------------------------
 

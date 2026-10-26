@@ -10,7 +10,7 @@ import { handoffMessage } from "../src/features/chat/agent-handoff";
 import {
   buildBackgroundTaskDoneMessage,
   buildScheduledMessage,
-} from "@prismshadow/jiumate-core/markers";
+} from "@jiumate/core/markers";
 import {
   buildInputHistory,
   caretOnFirstLine,

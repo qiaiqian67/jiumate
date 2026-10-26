@@ -23,7 +23,7 @@ import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
 import { useLocale } from "../../state/locale";
 import { getPluginFiles } from "../../api/endpoints";
-import type { PluginItem } from "@prismshadow/jiumate-server/api";
+import type { PluginItem } from "@jiumate/server/api";
 import { CodeBlock } from "../chat/code-block";
 import { Md } from "../chat/md";
 import { SkillTile } from "../skills/skill-icon-view";

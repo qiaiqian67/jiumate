@@ -32,7 +32,7 @@
  *
  * Pure logic module, no React dependency; driven by stream-model.ts.
  */
-import type { TokenUsagePayload } from "@prismshadow/jiumate-core/omnimessage";
+import type { TokenUsagePayload } from "@jiumate/core/omnimessage";
 import { computeTps, formatTps, humanizeTokens } from "../format";
 
 /** Token three buckets (cached input / uncached input / output). */

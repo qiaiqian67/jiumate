@@ -2,14 +2,14 @@
 title: "Implementing Agent Self-Improvement with JiuMate on an AMD GPU"
 date: 2026-07-22
 category: practice
-author: Yuyang Gao (AMD), Ning Zhang (AMD), Yaowei Zheng (PrismShadow)
+author: Yuyang Gao (AMD), Ning Zhang (AMD), Yaowei Zheng (JiuMate)
 excerpt: "A complete JiuMate self-improvement loop—from baseline evaluation and Trace analysis to Agent optimization and rollback—using a local Qwen3:8B model alongside the Fireworks API."
 description: "Learn how JiuMate combines Benchmarks, Traces, editable Agent State, Snapshots, and rollback in a dual-model experiment with local Qwen3:8B and the Fireworks API."
 ---
 
 
 
-*AMD × PrismShadow — Yuyang Gao and Ning Zhang (AMD), Yaowei Zheng (PrismShadow).*
+*AMD × JiuMate — Yuyang Gao and Ning Zhang (AMD), Yaowei Zheng (JiuMate).*
 
 [JiuMate](https://github.com/qiaiqian67/jiumate) is an open-source Agent Harness that brings model integrations, Agent configuration, workspace tools, Sessions, Traces, Skills, and Benchmarks into one runtime, with both a CLI and a Web UI. It can use hosted models as well as local models exposed through an OpenAI-compatible endpoint.
 

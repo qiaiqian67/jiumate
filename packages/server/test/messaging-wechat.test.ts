@@ -17,8 +17,8 @@
  * No test opens a socket.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { assistantText } from "@prismshadow/jiumate-core";
-import type { OmniMessage } from "@prismshadow/jiumate-core";
+import { assistantText } from "@jiumate/core";
+import type { OmniMessage } from "@jiumate/core";
 import type {
   MessagingBindingsResponse,
   WeChatBindingResponse,

@@ -1,5 +1,5 @@
 {
-  "name": "@prismshadow/jiumate-core",
+  "name": "@jiumate/core",
   "version": "0.4.0",
   "type": "module",
   "engines": {

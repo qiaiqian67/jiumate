@@ -3,7 +3,7 @@ title: CLI 参考
 description: jiumate 命令的子命令与选项完整参考。
 ---
 
-CLI 由 npm 包 `@prismshadow/jiumate-cli` 提供，命令为 `jiumate`。不带子命令执行 `jiumate` 时打印帮助；`-v, --version` 打印当前构建的单行身份，`jiumate version --json` 打印其完整信息。启动时自动加载工作目录下的 `.env`。
+CLI 由 npm 包 `@jiumate/cli` 提供，命令为 `jiumate`。不带子命令执行 `jiumate` 时打印帮助；`-v, --version` 打印当前构建的单行身份，`jiumate version --json` 打印其完整信息。启动时自动加载工作目录下的 `.env`。
 
 CLI 是服务端的瘦客户端：所有会话相关命令（`run`、`chat`、`ls`、`input`、`logs`、`agent`、`project`、`cost`、`schedule`）都向 JiuMate 服务端发 HTTP 请求并渲染回复——Task 在服务端执行，Session 记录在服务端索引里，Web App 能看到 CLI 创建的一切（反之亦然）。只有 `config` 仍直接编辑 Project 配置文件，`server` / `web` 则负责启动服务本身。
 
@@ -442,7 +442,7 @@ jiumate update             # 确认后升级到最新版
 | 安装方式 | 升级方式 |
 | --- | --- |
 | tarball（`install.sh`，默认 `~/.jiumate`） | 重新执行官方安装脚本，并保持原安装目录以及是否内置 Node 运行时 |
-| npm/pnpm/yarn/bun 全局安装 | 用该包管理器全局安装 `@prismshadow/jiumate-cli@<目标版本>`；无法确定包管理器时，只打印命令而不猜测 |
+| npm/pnpm/yarn/bun 全局安装 | 用该包管理器全局安装 `@jiumate/cli@<目标版本>`；无法确定包管理器时，只打印命令而不猜测 |
 | 源码检出 | 拒绝执行——请用 `git pull` 更新并重新构建 |
 
 不带 `-y` 时，命令会先打印它将要做什么——方式、目标版本与安装目录——再请求确认；当 stdin 不是终端时，它要求显式加 `--yes`，而不是卡在无人能回答的提示上。**数据目录不会被改动**：升级只替换 `bin`、`lib`、`web` 与 `node`。两条路径在 Windows 上都不做原地升级：安装脚本是 POSIX shell 脚本，而全局安装也无法由此驱动——Node 不会在没有 shell 的情况下执行 `npm`/`pnpm` 的 `.cmd` 包装脚本——因此命令会直接打印出应当由你自己执行的命令。

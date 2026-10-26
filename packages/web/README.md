@@ -1,4 +1,4 @@
-# @prismshadow/jiumate-web
+# @jiumate/web
 
 The JiuMate Web App — a React 19 + Vite + Tailwind CSS 4 SPA that renders the OmniMessage stream (same protocol and statistics as the CLI) and manages Agents, Skills, Models, usage and Traces. Feature tour: [Web App Guide](https://jiumate.ooo/docs/web-app).
 
@@ -16,7 +16,7 @@ src/
 └── features/       # chat / agents / plugins / skills / models / usage / traces / benchmark / admin
 ```
 
-DTO types are imported type-only from `@prismshadow/jiumate-server/api`; no server code enters the bundle. Rendering rules for streaming partials (start/delta/stop aggregation, complete-message replacement, origin-chain nesting into subagent cards) live in `lib/omni/stream-model.ts`, which is fully unit-tested.
+DTO types are imported type-only from `@jiumate/server/api`; no server code enters the bundle. Rendering rules for streaming partials (start/delta/stop aggregation, complete-message replacement, origin-chain nesting into subagent cards) live in `lib/omni/stream-model.ts`, which is fully unit-tested.
 
 ## Development
 
@@ -30,14 +30,14 @@ pnpm dev:web      # Vite dev server at 127.0.0.1:7365; /api proxied (SSE passes 
 The proxy target defaults to `http://127.0.0.1:7368` — the development backend, kept off the installed server's 7364 so the two can run at once (`PORT` moves both, `JIUMATE_API_PROXY` overrides the target outright). Auth is a same-origin HttpOnly cookie, so the proxy keeps everything same-origin.
 
 ```bash
-pnpm --filter @prismshadow/jiumate-web typecheck
-pnpm --filter @prismshadow/jiumate-web test        # vitest (pure logic)
-pnpm --filter @prismshadow/jiumate-web test:e2e    # Playwright against a mock LLM
-pnpm --filter @prismshadow/jiumate-web build       # vite build → dist/
+pnpm --filter @jiumate/web typecheck
+pnpm --filter @jiumate/web test        # vitest (pure logic)
+pnpm --filter @jiumate/web test:e2e    # Playwright against a mock LLM
+pnpm --filter @jiumate/web build       # vite build → dist/
 ```
 
 ## Production
 
-No separate static server needed: `@prismshadow/jiumate-server` auto-hosts `packages/web/dist` (or `JIUMATE_WEB_DIST`) with an SPA fallback — build the web app, start the server, done. The published npm packages bundle the built front end.
+No separate static server needed: `@jiumate/server` auto-hosts `packages/web/dist` (or `JIUMATE_WEB_DIST`) with an SPA fallback — build the web app, start the server, done. The published npm packages bundle the built front end.
 
 Part of [JiuMate](https://github.com/qiaiqian67/jiumate) · Apache-2.0

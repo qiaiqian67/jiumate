@@ -27,8 +27,8 @@ import {
   modelVisiblePath,
   scratchpadDir,
   toolCall,
-} from "@prismshadow/jiumate-core";
-import type { ApproveFn, OmniMessage } from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
+import type { ApproveFn, OmniMessage } from "@jiumate/core";
 import type {
   FeishuBindingResponse,
   MessagingBindingsResponse,

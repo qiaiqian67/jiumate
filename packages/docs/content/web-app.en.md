@@ -9,7 +9,7 @@ JiuMate ships with a ready-to-use Web App: multi-user login, streaming chat, Age
 
 ```text
 packages/web/src
-├── api/          # fetch wrapper · one function per API (DTOs type-only from @prismshadow/jiumate-server/api) · SSE wrapper
+├── api/          # fetch wrapper · one function per API (DTOs type-only from @jiumate/server/api) · SSE wrapper
 ├── state/        # auth / project / sessions / theme / locale contexts
 ├── lib/omni/     # OmniMessage stream → view-model reducer; connect-first + dedup stream controller
 ├── components/   # ui primitives (modal / drawer / select …) and the app layout

@@ -41,7 +41,7 @@ import {
   parseSkillFrontmatter,
   LEGACY_SKILL_NAMES,
   PLUGIN_NAME_PATTERN,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import { buildInstalledSkillsView } from "../../services/installed-skills-view.js";
 import type {
   AgentSkillsResponse,

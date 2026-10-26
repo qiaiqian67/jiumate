@@ -28,7 +28,7 @@ plugins/<plugin>/
 
 The plugin name is its directory name (`^[A-Za-z0-9_-]+$`); a plugin built around someone else's product carries a `use-` prefix (`use-firecrawl`), so the name says what it is for rather than claiming the product. Versions are compared by date, then by sequence number, so `2026-08-29.10` follows `2026-08-29.9`; the manifest's version is the version of everything the plugin ships. There is no other version scheme.
 
-Every plugin is its own npm package — `@jiumate/<name>`, `plugins/<name>/` in the repo. The loader lives in `@prismshadow/jiumate-core`: it reads the plugin names off the host package's dependency list and resolves each package through Node (the desktop app declares the same packages as dependencies, which its installer packs). At runtime the plugin files are the source of truth for library content, read on every call.
+Every plugin is its own npm package — `@jiumate/<name>`, `plugins/<name>/` in the repo. The loader lives in `@jiumate/core`: it reads the plugin names off the host package's dependency list and resolves each package through Node (the desktop app declares the same packages as dependencies, which its installer packs). At runtime the plugin files are the source of truth for library content, read on every call.
 
 ## Anatomy of a Skill
 

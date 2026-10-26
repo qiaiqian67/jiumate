@@ -38,12 +38,12 @@ import {
   saveAgentVault,
   systemConfigPath,
   THINKING_LEVEL_NAMES,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   MCPServerConfig,
   ThinkingLevelName,
   ToolDefinitionConfig,
-} from "@prismshadow/jiumate-core";
+} from "@jiumate/core";
 import type {
   AgentConfigDto,
   AgentConfigUpdateRequest,

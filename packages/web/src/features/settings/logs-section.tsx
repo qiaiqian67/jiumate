@@ -21,7 +21,7 @@
  * trade-off went the other way.
  */
 import { useEffect, useMemo, useState } from "react";
-import type { UsageErrors, UsageResponse } from "@prismshadow/jiumate-server/api";
+import type { UsageErrors, UsageResponse } from "@jiumate/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
