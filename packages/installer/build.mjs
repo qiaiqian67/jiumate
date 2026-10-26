@@ -194,14 +194,17 @@ for (const file of ["index.html", "renderer.js"]) {
 // not the project's icon at all.
 fs.copyFileSync(path.join(desktopPkg, "build", "icon.png"), path.join(dist, "icon.png"))
 
-const sevenZip = find7za()
-fs.copyFileSync(sevenZip, path.join(dist, "7za.exe"))
-
 if (stageOnly) {
   // The UI is staged and the payload is untouched: this run exists for `pnpm -r build`, and the
   // shipping `pack` re-runs without the flag and does the archiving below.
   console.log("[build] staged UI only (--stage-only); payload not repacked")
 } else {
+  // 7-Zip is bundled beside the payload, and it is a Windows program: the archive it makes
+  // is unpacked by the Windows installer. Staging does not archive anything, so it does not
+  // need the binary — and looking for it here would fail the stage on Linux and macOS,
+  // which have no 7za.exe to find.
+  const sevenZip = find7za()
+  fs.copyFileSync(sevenZip, path.join(dist, "7za.exe"))
   const expandedBytes = dirSize(unpacked)
   console.log(`[build] payload source: ${(expandedBytes / 1024 / 1024).toFixed(1)} MB`)
 

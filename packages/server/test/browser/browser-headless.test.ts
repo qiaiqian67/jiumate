@@ -207,6 +207,14 @@ describe("the headless browser", () => {
       const root = freshRoot();
       const first = new HeadlessLink({ root, headless: true });
       try {
+        // A page is opened first, the way a sign-in happens: a cookie set against an
+        // origin the browser has never visited is a cookie in a profile the browser has
+        // never written out.
+        const opened = (await first.request({
+          op: "open-tab",
+          url: "https://example.com/",
+          activate: true,
+        })) as { tabId: number };
         await first.request({
           op: "set-cookies",
           cookies: [
@@ -221,6 +229,7 @@ describe("the headless browser", () => {
             },
           ],
         });
+        await first.request({ op: "close-tab", tabId: opened.tabId });
       } finally {
         // The profile must SURVIVE this browser, so the root is not removed here — only the
         // browser is stopped, and stopped gracefully: a browser killed outright does not
@@ -235,6 +244,13 @@ describe("the headless browser", () => {
         // browser wrote when it closed — read through a copy, because the browser holds it
         // open.
         const store = path.join(root, "browser", "chrome", "Default", "Network", "Cookies");
+        // The browser has exited, but the store is written as it goes, so the file may
+        // appear a moment after the process is gone. Waiting for it is not a retry of the
+        // thing being tested: the thing being tested is that the profile survives, and
+        // the profile is on disk the moment the browser has flushed it.
+        for (let i = 0; i < 50 && !fs.existsSync(store); i++) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
         expect(fs.existsSync(store)).toBe(true);
         const copy = path.join(root, "cookies-copy");
         fs.copyFileSync(store, copy);
