@@ -91,10 +91,29 @@ is pushed:
    code. The whole release sits behind this.
 2. **The npm scope must exist and the packages must be published.** See above.
 3. **The Windows installer needs a signing key.** The desktop build wants the `EVSIGN_KEY`
-   secret; without it the installer build fails. Check `packages/desktop/electron-builder.yml`
-   for the signing identity it expects.
+   secret, and the release asks for signing on both platforms
+   (`require_windows_signing: true`, `require_macos_signing: true`), so a missing key
+   stops the release rather than shipping an unsigned installer. The signing identity the
+   build expects is in `packages/desktop/electron-builder.yml`. The EVSign client itself is
+   downloaded and signature-checked by the workflow — only the key is a secret.
 4. **The OSS mirror needs its environment configured.** The `mirror-oss` job wants
-   `ALIYUN_OIDC_PROVIDER_ARN` in the `oss-production` environment.
+   `ALIYUN_OIDC_PROVIDER_ARN`, `ALIYUN_ROLE_ARN`, `OSS_BUCKET`, `OSS_REGION`,
+   `OSS_ENDPOINT` and `OSS_PUBLIC_BASE_URL` as variables on the `oss-production`
+   environment.
+
+### The secrets and variables, in one place
+
+| Where | Name | Needed by |
+| --- | --- | --- |
+| `desktop-build` environment | `EVSIGN_KEY` | the Windows installer build |
+| `apple-signing` environment | `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, `APPLE_TEAM_ID` | the macOS matrix job |
+| `oss-production` environment | `ALIYUN_OIDC_PROVIDER_ARN`, `ALIYUN_ROLE_ARN`, `OSS_BUCKET`, `OSS_REGION`, `OSS_ENDPOINT`, `OSS_PUBLIC_BASE_URL` (variables) | the OSS mirror |
+| `npm` environment | nothing — the Trusted Publisher is configured on npmjs.com | the npm publish |
+
+The `npm` environment exists but holds no secrets: trusted publishing authenticates the
+runner through OIDC, so there is no token to store. An empty environment is correct, not a
+gap. The same is true of the `oss-production` environment's secrets — it authenticates
+through OIDC too, and what it needs are variables rather than secrets.
 
 ## Retrying
 
