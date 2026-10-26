@@ -150,6 +150,10 @@ issue：数据根目录以明文保存 Provider 凭据，而 issue 是公开且�
 
 提问与使用求助请去 [Discord](https://discord.gg/eFHKqqcU3D) 或微信群，不要发到 issue 区。
 
+## 发布
+
+发布流程——tag、npm 发布、Trusted Publisher 的配置，以及一次发布要成功必须先具备的四样东西——
+写在 [docs/RELEASING.md](../docs/RELEASING.md) 里。
 ## Pull Request
 
 - 从 `main` 拉分支；一个 PR 只聚焦一个主题。

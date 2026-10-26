@@ -177,6 +177,12 @@ in plain text, and an issue is public and permanent.
 Questions and usage help belong on [Discord](https://discord.gg/eFHKqqcU3D) or in the
 WeChat group, not in the issue tracker.
 
+## Releasing
+
+The release process — the tag, the npm publish, the Trusted Publisher configuration and the
+four things that have to be in place before a release can succeed — is written up in
+[docs/RELEASING.md](../docs/RELEASING.md).
+
 ## Pull requests
 
 - Branch from `main`; keep PRs focused on one topic.
