@@ -52,6 +52,12 @@ Two details matter:
   tree before it starts and restores it afterwards, so the stamp never reaches a commit. It
   refuses to run on a dirty tree rather than risk reverting work that was not its own.
 
+### The Trusted Publisher checklist
+
+npm has no API for Trusted Publishers — they are configured in the web interface, one
+package at a time. [docs/trusted-publisher-checklist.md](../docs/trusted-publisher-checklist.md)
+lists the 23 packages and the values to paste for each.
+
 After the bootstrap publish, the token has done its job and should be revoked.
 
 ### Configuring the Trusted Publisher
