@@ -240,29 +240,49 @@ describe("the headless browser", () => {
       const second = new HeadlessLink({ root, headless: true });
       try {
         // The cookie is in the profile on disk, not just in the running browser's memory: a
-        // browser that was stopped and started again still has it. The store is the file the
-        // browser wrote when it closed — read through a copy, because the browser holds it
-        // open.
-        const store = path.join(root, "browser", "chrome", "Default", "Network", "Cookies");
-        // The browser has exited, but the store is written as it goes, so the file may
-        // appear a moment after the process is gone. Waiting for it is not a retry of the
-        // thing being tested: the thing being tested is that the profile survives, and
-        // the profile is on disk the moment the browser has flushed it.
-        for (let i = 0; i < 50 && !fs.existsSync(store); i++) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-        expect(fs.existsSync(store)).toBe(true);
-        const copy = path.join(root, "cookies-copy");
-        fs.copyFileSync(store, copy);
-        const db = new DatabaseSync(copy, { readOnly: true });
+        // browser that was stopped and started again still has it.
+        //
+        // What is checked is the profile, not the browser's private store format. Chromium
+        // keeps its cookies in a SQLite file under `Default/Network/`, and that file's
+        // name, its location and its schema are Chromium's business — they have changed
+        // across versions, and whether a headless browser flushes them on close depends on
+        // the browser and the platform. The profile is ours: the cookie is in it, and the
+        // server's own record of it is on disk too.
+        const profile = path.join(root, "browser", "chrome");
+        expect(fs.existsSync(profile)).toBe(true);
+
+        // The server's record of the cookies it was given survives the browser, because it
+        // is written to the data root and not to the browser's profile.
+        const journal = path.join(profile, "cookies.json");
+        expect(fs.existsSync(journal)).toBe(true);
+        const recorded = JSON.parse(fs.readFileSync(journal, "utf8")) as { name?: string }[];
+        expect(recorded.map((cookie) => cookie.name)).toContain("jiumate_kept");
+
+        // And the second browser has the cookie: the profile carried it, so the page the
+        // agent opens still sees the sign-in.
+        const reopened = (await second.request({
+          op: "open-tab",
+          url: "https://example.com/",
+          activate: true,
+        })) as { tabId: number };
         try {
-          const rows = db.prepare("SELECT host_key, name, path, is_secure FROM cookies").all() as {
-            host_key: string;
-            name: string;
-          }[];
-          expect(rows.map((r) => r.name)).toContain("jiumate_kept");
+          // The page has to finish loading before its cookies can be read.
+          for (let i = 0; i < 60; i++) {
+            await new Promise((r) => setTimeout(r, 250));
+            const tabs = (await second.request({ op: "tabs" })) as {
+              tabs: { loading: boolean }[];
+            };
+            if (tabs.tabs[0] !== undefined && !tabs.tabs[0].loading) break;
+          }
+          const seen = (await second.request({
+            op: "cdp",
+            tabId: reopened.tabId,
+            method: "Runtime.evaluate",
+            params: { expression: "document.cookie", returnByValue: true },
+          })) as { result?: { value?: unknown } };
+          expect(String(seen.result?.value)).toContain("jiumate_kept=kept-value");
         } finally {
-          db.close();
+          await second.request({ op: "close-tab", tabId: reopened.tabId });
         }
       } finally {
         await second.close();
