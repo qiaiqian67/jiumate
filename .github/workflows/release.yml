@@ -602,9 +602,15 @@ jobs:
           (cd packages/cli && npm version --no-git-tag-version --allow-same-version "$V")
 
       # Dependency order: cli bundles core's dist (tsup noExternal), server/web need core's types;
-      # web is built here only to be copied into the server package below.
+      # web is built here only to be copied into the server package below. agenthub comes first
+      # because core imports it, and its types have to exist before core's own build resolves
+      # them — the same reason the plugins are built before core.
       - name: Build and test
         run: |
+          pnpm --filter @jiumate/agenthub build
+          pnpm --filter @jiumate/inspirations build
+          pnpm --filter @jiumate/pets build
+          pnpm --filter @jiumate/skins build
           pnpm --filter @jiumate/core build
           pnpm --filter @jiumate/server build
           pnpm --filter @jiumate/web build

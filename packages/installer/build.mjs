@@ -24,8 +24,6 @@ const dist = path.join(here, "dist")
 const payload = path.join(dist, "payload.7z")
 
 const pkg = JSON.parse(fs.readFileSync(path.join(here, "package.json"), "utf8"))
-const catalogSrc = path.join(here, "dist", "catalog.json")
-if (!fs.existsSync(catalogSrc)) throw new Error("dist/catalog.json missing; run gen-catalog.mjs first")
 
 function find7za() {
   const cacheRoot = path.join(process.env.LOCALAPPDATA || "", "electron-builder", "Cache")
@@ -177,7 +175,9 @@ if (!stageOnly) {
 }
 
 // dist is wiped first, then the catalog is generated into it — the other order deletes the file it
-// just wrote.
+// just wrote. The catalog is generated here rather than expected to be there: it describes the
+// models and themes this build is about to ship, so it cannot be a file that a previous build
+// left behind.
 fs.rmSync(dist, { recursive: true, force: true })
 fs.mkdirSync(path.join(dist, "renderer"), { recursive: true })
 
