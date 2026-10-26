@@ -39,8 +39,9 @@ sh scripts/bootstrap-npm-publish.sh 0.4.0
 The script does what the workflow's `publish-npm` job does — stamps the versions, builds
 every package, copies the LICENSE and the built web assets into the package directories —
 and then publishes each package with `pnpm publish`, in dependency order: the plugins
-first, then `agenthub`, then `core`, then `server`, then `cli`. A package whose dependency
-is not on the registry yet cannot be installed by anyone, so the order is not a preference.
+first, then `agenthub`, `inspirations`, `pets` and `skins`, then `core`, then `server`, then
+`cli`. A package whose dependency is not on the registry yet cannot be installed by
+anyone, so the order is not a preference.
 
 Two details matter:
 
