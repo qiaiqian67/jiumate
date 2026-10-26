@@ -56,7 +56,7 @@ Two details matter:
 
 npm has no API for Trusted Publishers — they are configured in the web interface, one
 package at a time. [docs/trusted-publisher-checklist.md](../docs/trusted-publisher-checklist.md)
-lists the 23 packages and the values to paste for each.
+lists the 26 packages and the values to paste for each.
 
 After the bootstrap publish, the token has done its job and should be revoked.
 

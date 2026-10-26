@@ -68,7 +68,7 @@ function publishPlan() {
 
   return [
     ...plugins,
-    ...["agenthub", "core", "server", "cli"].map((dir) => {
+    ...["agenthub", "inspirations", "pets", "skins", "core", "server", "cli"].map((dir) => {
       const pkg = readPackage(path.join(ROOT, "packages", dir, "package.json"));
       return { dir: path.join("packages", dir), name: pkg.name };
     }),
@@ -180,7 +180,15 @@ function withTokenConfig(token, body) {
  * workflow's "already on the registry, skipping" check work on a re-run.
  */
 function stampVersion(version) {
-  for (const dir of ["packages/agenthub", "packages/core", "packages/server", "packages/cli"]) {
+  for (const dir of [
+    "packages/agenthub",
+    "packages/inspirations",
+    "packages/pets",
+    "packages/skins",
+    "packages/core",
+    "packages/server",
+    "packages/cli",
+  ]) {
     const file = path.join(ROOT, dir, "package.json");
     const pkg = readPackage(file);
     if (pkg.version === version) continue;
@@ -207,7 +215,15 @@ function stampVersion(version) {
  */
 function copyAssets() {
   const license = fs.readFileSync(path.join(ROOT, "LICENSE"));
-  for (const dir of ["packages/agenthub", "packages/core", "packages/server", "packages/cli"]) {
+  for (const dir of [
+    "packages/agenthub",
+    "packages/inspirations",
+    "packages/pets",
+    "packages/skins",
+    "packages/core",
+    "packages/server",
+    "packages/cli",
+  ]) {
     fs.writeFileSync(path.join(ROOT, dir, "LICENSE"), license);
   }
   for (const entry of fs.readdirSync(path.join(ROOT, "plugins"), { withFileTypes: true })) {
@@ -230,7 +246,16 @@ function copyAssets() {
 
 /** Builds every package that gets published, in dependency order. */
 function buildAll() {
-  for (const name of ["agenthub", "core", "web", "server", "cli"]) {
+  for (const name of [
+    "agenthub",
+    "inspirations",
+    "pets",
+    "skins",
+    "core",
+    "web",
+    "server",
+    "cli",
+  ]) {
     run("pnpm", ["--filter", `${SCOPE}/${name}`, "build"]);
   }
 }

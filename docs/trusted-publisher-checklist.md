@@ -17,7 +17,7 @@ sh scripts/bootstrap-npm-publish.sh 0.4.0       # publish
 
 ## The packages
 
-23 packages, in the order they were published. The order matters only for the publish
+26 packages, in the order they were published. The order matters only for the publish
 itself; the configuration is the same for each.
 
 | # | Package |
@@ -42,9 +42,12 @@ itself; the configuration is the same for each.
 | 18 | `@jiumate/use-claude-code` |
 | 19 | `@jiumate/use-firecrawl` |
 | 20 | `@jiumate/agenthub` |
-| 21 | `@jiumate/core` |
-| 22 | `@jiumate/server` |
-| 23 | `@jiumate/cli` |
+| 21 | `@jiumate/inspirations` |
+| 22 | `@jiumate/pets` |
+| 23 | `@jiumate/skins` |
+| 24 | `@jiumate/core` |
+| 25 | `@jiumate/server` |
+| 26 | `@jiumate/cli` |
 
 ## What to type, for each one
 

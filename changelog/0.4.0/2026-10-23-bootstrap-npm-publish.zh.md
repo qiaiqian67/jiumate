@@ -10,7 +10,7 @@
 
 这一步原先只写在发布工作流的一段注释里，别处没有，于是很容易做错三件事：顺序有讲究（依赖还没发布的包，谁都装不上）、用 `npm publish` 而不是 `pnpm publish` 会发出一个根本装不上的包、而版本标记会改到不该提交进仓库的文件。
 
-`scripts/bootstrap-npm-publish.mjs` 就是这一步。它做的是工作流 `publish-npm` 作业做的同样的事——标记版本、构建每个包、把 LICENSE 与构建好的 web 资源拷进包目录——然后用 `pnpm publish` 按依赖顺序逐个发布：插件在前，然后 `agenthub`，再 `core`、`server`、`cli`。registry 上已有的版本会被跳过，所以一次中断的运行可以从断处继续。
+`scripts/bootstrap-npm-publish.mjs` 就是这一步。它做的是工作流 `publish-npm` 作业做的同样的事——标记版本、构建每个包、把 LICENSE 与构建好的 web 资源拷进包目录——然后用 `pnpm publish` 按依赖顺序逐个发布：插件在前，然后 `agenthub`、`inspirations`、`pets`、`skins`，再 `core`、`server`、`cli`。registry 上已有的版本会被跳过，所以一次中断的运行可以从断处继续。
 
 `scripts/bootstrap-npm-publish.sh` 是给 shell 用的包装。它在没有 token 时拒绝运行、在工作树不干净时拒绝运行，并在结束时撤销版本标记——标记是发布过程的产物，不是要提交的东西。
 

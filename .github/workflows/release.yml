@@ -592,7 +592,11 @@ jobs:
           for dir in plugins/*/; do
             (cd "$dir" && npm version --no-git-tag-version --allow-same-version "$V")
           done
-          (cd packages/agenthub && npm version --no-git-tag-version --allow-same-version "$V")
+          # agenthub, inspirations, pets and skins are libraries core and server depend on,
+          # so they carry the release version too.
+          for pkg in agenthub inspirations pets skins; do
+            (cd "packages/$pkg" && npm version --no-git-tag-version --allow-same-version "$V")
+          done
           (cd packages/core && npm version --no-git-tag-version --allow-same-version "$V")
           (cd packages/server && npm version --no-git-tag-version --allow-same-version "$V")
           (cd packages/cli && npm version --no-git-tag-version --allow-same-version "$V")
@@ -640,8 +644,11 @@ jobs:
           done
           # agenthub is the model gateway core depends on, so it goes before core for the
           # same reason the plugins do: a workspace:* dep is rewritten to a version, and a
-          # version that is not on the registry cannot be installed.
-          for pkg in agenthub core server cli; do
+          # version that is not on the registry cannot be installed. inspirations, pets and
+          # skins are libraries the server imports, and they go before it for the same
+          # reason — a published server whose dependency is not on the registry cannot be
+          # installed either.
+          for pkg in agenthub inspirations pets skins core server cli; do
             name="@jiumate/$pkg"
             if [ -n "$(npm view "$name@$V" version 2>/dev/null || true)" ]; then
               echo "$name@$V already on the registry, skipping."
