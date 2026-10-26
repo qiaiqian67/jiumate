@@ -3,7 +3,7 @@
 npm has no REST API for Trusted Publishers — they are configured in the web interface,
 one package at a time. This is the list of what to configure, with the values to paste.
 
-**The repository** — `qiaiqian67/linsight`
+**The repository** — `qiaiqian67/jiumate`
 **The workflow** — `.github/workflows/release.yml`
 **The environment** — `npm`
 

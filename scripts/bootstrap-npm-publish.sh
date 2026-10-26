@@ -83,5 +83,5 @@ fi
 
 echo
 echo "Next: configure each published package's Trusted Publisher on npmjs.com"
-echo "(organization: your npm account, repository: qiaiqian67/linsight,"
+echo "(organization: your npm account, repository: qiaiqian67/jiumate,"
 echo " workflow: release.yml, environment: npm), then revoke the one-off token."

@@ -32,7 +32,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qiaiqian67/linsight.git",
+    "url": "git+https://github.com/qiaiqian67/jiumate.git",
     "directory": "packages/agenthub"
   },
   "keywords": [
@@ -45,7 +45,7 @@
   "author": "JiuMate",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/qiaiqian67/linsight/issues"
+    "url": "https://github.com/qiaiqian67/jiumate/issues"
   },
-  "homepage": "https://github.com/qiaiqian67/linsight#readme"
+  "homepage": "https://github.com/qiaiqian67/jiumate#readme"
 }
