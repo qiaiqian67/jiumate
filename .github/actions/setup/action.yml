@@ -51,6 +51,18 @@ runs:
       shell: bash
       run: pnpm install --frozen-lockfile
 
+    # Playwright's browser binaries are not part of the npm package: `playwright-core`
+    # ships the driver, and the Chromium it drives has to be downloaded separately. Without
+    # this the login-figure tests fail at `browserType.launch` with "Executable doesn't
+    # exist", which reads like a broken test rather than a missing browser.
+    #
+    # Only Chromium is installed, and only its system dependencies — the tests drive
+    # Chromium and nothing else, and the full `playwright install` would pull Firefox
+    # and WebKit in for no reason.
+    - name: Install Chromium for Playwright
+      shell: bash
+      run: pnpm --filter @jadelau/web exec playwright install --with-deps chromium
+
     # Only the requested packages and their dependencies. A shard that tests core
     # alone does not pay for the desktop bundle, which is the slowest target here.
     # verify-deps-before-run is off because it wants a TTY it does not have on a runner.

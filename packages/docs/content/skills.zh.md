@@ -97,6 +97,8 @@ Skill 采用「先索引、后正文」的设计：系统 Prompt 经 `{{SKILL_ME
 | 办公效率 | `data-analysis` | 完成数据分析任务：有界的证据检视、显式的改答案决策、原生工件处理与最终输出核验 |
 | | `use-firecrawl` | 经 Firecrawl API 做网页搜索与抓取，输出干净的 markdown |
 | | `use-bento-slides` | 编写与编辑 Bento 演示文稿：单文件 `.bento.html`，文档即 JSON，素材映射到图表、morph 转场与状态页 |
+| | `a2ui` | 在回复里使用选项、表单、步骤、提示框、图表和小组件，并自带检查脚本 |
+| | `browser-automation` | 在内置浏览器或你的 Chrome 中读取页面、执行操作、提取数据 |
 | | `humanizer` | 剥除任意语言散文中的 AI 写作痕迹，改写为书籍、报刊与百科的语体（不预装：需要时从库安装） |
 | | `goal` | [目标模式](/goal-mode)背后的 stop hook：让会话持续朝目标工作，直到完成、受阻或 token 预算耗尽（预装） |
 | | `continual-learning` | 单个任务结束时轮次超过 30，就把该任务的浓缩摘录交给一个后台子会话，由它把值得沉淀的发现写进 Agent 的 Skill（不预装） |
@@ -107,6 +109,10 @@ Skill 采用「先索引、后正文」的设计：系统 Prompt 经 `{{SKILL_ME
 | | `model-development` | 在自己的硬件上做模型开发——三个 Skill：`llamafactory`（微调）、`ollama`（运行本地模型）、`vllm`（以 OpenAI 兼容端点部署服务） |
 | | `skill-porting` | 从外部来源移植 Skill——插件市场、skills.sh 注册表、GitHub 仓库或本地目录——经审阅与规范化后装入 Agent |
 | | `agent-tuning` | 调优闭环的四个 Skill：`agent-initialization`（依据需求初始化 Agent）、`benchmark-design`（设计并校准能力 Benchmark）、`agent-evaluation`（隔离执行并评分单个 Case）、`agent-optimization`（根据测得结果改进 Agent） |
+| | `ace-rsi-toolkit` | ACE RSI 工具包：从轨迹进化规则手册 |
+| | `ape-rsi-toolkit` | APE RSI 工具包：从示例归纳指令 |
+| | `awm-rsi-toolkit` | AWM RSI 工具包：从轨迹归纳工作流 |
+| | `opro-rsi-toolkit` | OPRO RSI 工具包：由分数优化指令 |
 
 ## 编写与优化
 

@@ -157,7 +157,8 @@ function Invoke-OnlineCase(
   [bool]$ShouldSucceed,
   [int]$ExpectedRequests,
   [string]$InstallerPath = "",
-  [string]$SpeedProbe = "0"
+  [string]$SpeedProbe = "0",
+  [string]$Source = "oss"
 ) {
   $Fixture.Mode = $Mode
   $Fixture.Requests.Clear()
@@ -165,6 +166,13 @@ function Invoke-OnlineCase(
   $Arguments = @{ InstallDir = $InstallDir }
   if ($Version) { $Arguments.Version = $Version }
   if (-not $InstallerPath) { $InstallerPath = $Installer }
+  # The source mode is pinned per case rather than inherited from the environment. These
+  # cases are about which source the installer picks — the OSS mirror, GitHub, or the
+  # speed probe's choice between them — and the installer's own default is not what is
+  # under test here. Leaving it to the environment meant a change to that default broke
+  # every case that did not set the variable itself, which is how this suite read as
+  # "the installer made two requests" when it had made the right two.
+  $env:JIUMATE_DOWNLOAD_SOURCE = $Source
   if ($SpeedProbe -eq "__unset") {
     Remove-Item Env:\JIUMATE_DOWNLOAD_SPEED_PROBE -ErrorAction SilentlyContinue
   } else {
@@ -314,13 +322,15 @@ try {
   Assert-True (-not (($stamped.Requests | Out-String) -match 'latest\.json')) `
     "stamped installer unexpectedly resolved latest metadata"
 
-  $stampedFallback = Invoke-OnlineCase "stamped-fallback" "primary-network" "" $true 3 $StampedInstaller
+  # "auto", not "oss": this case is about the fallback, and the fallback URL is only set
+  # in auto mode — the same-version GitHub copy is what the mirror failing over to.
+  $stampedFallback = Invoke-OnlineCase "stamped-fallback" "primary-network" "" $true 3 $StampedInstaller "0" "auto"
   Assert-True ($stampedFallback.Requests[0] -like "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/*") `
     "stamped installer did not try its own OSS release first"
   Assert-True ($stampedFallback.Requests[1] -like "https://github.com/*/releases/download/v0.0.0-test/jiumate-win32-x64.zip") `
     "stamped installer did not fall back to the same GitHub version"
 
-  $speedProbeGitHubFast = Invoke-OnlineCase "speed-probe-github-fast" "speed-probe-github-fast" "" $true 6 $StampedInstaller "1"
+  $speedProbeGitHubFast = Invoke-OnlineCase "speed-probe-github-fast" "speed-probe-github-fast" "" $true 6 $StampedInstaller "1" "auto"
   Assert-True (($speedProbeGitHubFast.Requests | Out-String) -match 'release-download-manifest\.tsv') `
     "speed probe did not request the release download manifest"
   Assert-True (($speedProbeGitHubFast.Requests | Out-String) -match 'probe-64k\.bin') `
@@ -330,33 +340,31 @@ try {
   Assert-True (-not (($speedProbeGitHubFast.Requests | Out-String) -match 'aliyuncs\.com/[^\r\n]*probe-1m\.bin')) `
     "speed probe spent the paid mirror's bandwidth even though GitHub already met the minimum"
 
-  $speedProbeDefaultOn = Invoke-OnlineCase "speed-probe-default-on" "speed-probe-github-fast" "" $true 6 $StampedInstaller "__unset"
+  $speedProbeDefaultOn = Invoke-OnlineCase "speed-probe-default-on" "speed-probe-github-fast" "" $true 6 $StampedInstaller "__unset" "auto"
   Assert-True ($speedProbeDefaultOn.Requests[-2] -like "https://github.com/*/releases/download/v0.0.0-test/jiumate-win32-x64.zip") `
     "speed probe was not enabled by default"
 
   # Below the minimum the mirror is measured too, which is the seventh request of these two cases.
-  $speedProbeOssFaster = Invoke-OnlineCase "speed-probe-oss-clearly-faster" "speed-probe-oss-clearly-faster" "" $true 7 $StampedInstaller "1"
+  $speedProbeOssFaster = Invoke-OnlineCase "speed-probe-oss-clearly-faster" "speed-probe-oss-clearly-faster" "" $true 7 $StampedInstaller "1" "auto"
   Assert-True (($speedProbeOssFaster.Requests | Out-String) -match 'aliyuncs\.com/[^\r\n]*probe-1m\.bin') `
     "speed probe did not measure the OSS mirror once GitHub was below the minimum speed"
   Assert-True ($speedProbeOssFaster.Requests[-2] -like "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/*/jiumate-win32-x64.zip") `
     "speed probe did not switch to OSS when it was clearly faster than a slow GitHub"
 
-  $speedProbeOssMarginal = Invoke-OnlineCase "speed-probe-oss-not-worth-switching" "speed-probe-oss-not-worth-switching" "" $true 7 $StampedInstaller "1"
+  $speedProbeOssMarginal = Invoke-OnlineCase "speed-probe-oss-not-worth-switching" "speed-probe-oss-not-worth-switching" "" $true 7 $StampedInstaller "1" "auto"
   Assert-True ($speedProbeOssMarginal.Requests[-2] -like "https://github.com/*/releases/download/v0.0.0-test/jiumate-win32-x64.zip") `
     "speed probe left GitHub even though OSS was not faster by the switch ratio"
 
-  $speedProbeMissing = Invoke-OnlineCase "speed-probe-missing-manifest" "speed-probe-missing-manifest" "" $true 4 $StampedInstaller "1"
+  $speedProbeMissing = Invoke-OnlineCase "speed-probe-missing-manifest" "speed-probe-missing-manifest" "" $true 4 $StampedInstaller "1" "auto"
   Assert-True (($speedProbeMissing.Output | Out-String) -match 'Download source test was inconclusive') `
     "missing speed probe manifest did not fall back to the compatible source policy"
 
-  $env:JIUMATE_DOWNLOAD_SOURCE = "github"
-  $stampedGitHub = Invoke-OnlineCase "stamped-github" "canonical" "" $true 2 $StampedInstaller
+  $stampedGitHub = Invoke-OnlineCase "stamped-github" "canonical" "" $true 2 $StampedInstaller "0" "github"
   Assert-True ($stampedGitHub.Requests[0] -like "https://github.com/*/releases/download/v0.0.0-test/jiumate-win32-x64.zip") `
     "stamped installer did not honor forced GitHub mode"
-  Remove-Item Env:\JIUMATE_DOWNLOAD_SOURCE
 
   $env:JIUMATE_DOWNLOAD_BASE_URL = "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test"
-  $override = Invoke-OnlineCase "download-base-override" "canonical" "" $true 2
+  $override = Invoke-OnlineCase "download-base-override" "canonical" "" $true 2 "" "0" "oss"
   Assert-True ($override.Requests[0] -eq "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/releases/v0.0.0-test/jiumate-win32-x64.zip") `
     "download base override did not request the configured asset directory"
   Assert-True (($override.Output | Out-String) -match 'OSS mirror') `
@@ -365,7 +373,7 @@ try {
     "download base override exposed the OSS URL in normal output"
 
   $env:JIUMATE_DOWNLOAD_FALLBACK_BASE_URL = "https://github.com/qiaiqian67/jiumate/releases/download/v0.0.0-test"
-  $fallback = Invoke-OnlineCase "download-fallback" "primary-network" "" $true 3
+  $fallback = Invoke-OnlineCase "download-fallback" "primary-network" "" $true 3 "" "0" "auto"
   Assert-True ($fallback.Requests[0] -like "https://jiumate-releases.oss-cn-beijing.aliyuncs.com/*") `
     "download fallback did not try the primary source first"
   Assert-True ($fallback.Requests[1] -like "https://github.com/*/jiumate-win32-x64.zip") `
@@ -376,7 +384,7 @@ try {
   Remove-Item Env:\JIUMATE_DOWNLOAD_BASE_URL
 
   $env:JIUMATE_DOWNLOAD_FALLBACK_BASE_URL = "https://example.invalid/releases/v0.0.0-test"
-  $fallbackWithoutBase = Invoke-OnlineCase "fallback-without-base" "primary-network" "" $true 3 $StampedInstaller
+  $fallbackWithoutBase = Invoke-OnlineCase "fallback-without-base" "primary-network" "" $true 3 $StampedInstaller "0" "auto"
   Assert-True (-not (($fallbackWithoutBase.Requests | Out-String) -match 'example\.invalid')) `
     "fallback without base should not override auto/source fallback"
   Assert-True (($fallbackWithoutBase.Requests | Out-String) -match 'github\.com/.*/releases/download/v0\.0\.0-test/jiumate-win32-x64\.zip') `
@@ -424,11 +432,11 @@ try {
 
   Remove-Item Env:\JIUMATE_ARCHIVE, Env:\JIUMATE_INSTALL_DIR, Env:\JIUMATE_DOWNLOAD_SOURCE, Env:\JIUMATE_DOWNLOAD_SPEED_PROBE, Env:\JIUMATE_VERSION -ErrorAction SilentlyContinue
 
-  Invoke-OnlineCase "outer-mismatch" "outer-sha-mismatch" "" $false 3 | Out-Null
-  Invoke-OnlineCase "inner-mismatch" "inner-sha-mismatch" "" $false 3 | Out-Null
-  Invoke-OnlineCase "latest-404" "404" "" $false 2 | Out-Null
-  Invoke-OnlineCase "pinned-network" "network" "v0.1.4" $false 2 | Out-Null
-  $pinned = Invoke-OnlineCase "pinned-legacy" "legacy" "v0.1.4" $true 2
+  Invoke-OnlineCase "outer-mismatch" "outer-sha-mismatch" "" $false 3 "" "0" "auto" | Out-Null
+  Invoke-OnlineCase "inner-mismatch" "inner-sha-mismatch" "" $false 3 "" "0" "auto" | Out-Null
+  Invoke-OnlineCase "latest-404" "404" "" $false 2 "" "0" "auto" | Out-Null
+  Invoke-OnlineCase "pinned-network" "network" "v0.1.4" $false 2 "" "0" "auto" | Out-Null
+  $pinned = Invoke-OnlineCase "pinned-legacy" "legacy" "v0.1.4" $true 2 "" "0" "auto"
   Assert-True ($pinned.Requests[0] -like "*/releases/v0.1.4/jiumate-win32-x64.zip") `
     "pinned legacy did not prefer the pinned OSS asset"
 

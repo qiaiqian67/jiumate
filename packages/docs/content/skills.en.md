@@ -97,6 +97,8 @@ The built-in plugins, by category (`PLUGIN_CATEGORIES` in `packages/core/src/plu
 | Office Productivity | `data-analysis` | Complete data-analysis tasks with bounded evidence inspection, explicit answer-changing decisions, native artifact handling and final output verification |
 | | `use-firecrawl` | Web search and page scraping into clean markdown via the Firecrawl API |
 | | `use-bento-slides` | Author and edit Bento presentations: single-file `.bento.html` decks whose document is JSON, mapping material to charts, morph transitions and state slides |
+| | `a2ui` | Choices, forms, steps, callouts, diagrams and widgets in replies, with a checker |
+| | `browser-automation` | Read pages, act and extract data in the built-in browser or your Chrome |
 | | `humanizer` | Strip AI-writing tells from prose in any language and rewrite it into the register of books, newspapers and encyclopedias (not preinstalled: install from the library when needed) |
 | | `goal` | The stop hook behind [goal mode](/goal-mode): keeps the session working toward an objective until it is complete, blocked, or out of token budget (preinstalled) |
 | | `continual-learning` | When a task ends after more than 30 turns, hands its condensed excerpt to a background subagent that folds the durable findings into the agent's skills (not preinstalled) |
@@ -107,6 +109,10 @@ The built-in plugins, by category (`PLUGIN_CATEGORIES` in `packages/core/src/plu
 | | `model-development` | Model development on your own hardware — three skills: `llamafactory` (fine-tune), `ollama` (run local models) and `vllm` (serve behind an OpenAI-compatible endpoint) |
 | | `skill-porting` | Port skills from external sources — plugin marketplaces, skills.sh registries, GitHub repos or local folders — into the agent after review and normalization |
 | | `agent-tuning` | The tuning loop as four skills: `agent-initialization` (set an agent up from a requirement), `benchmark-design` (design and calibrate a capability Benchmark), `agent-evaluation` (execute and score one isolated Case) and `agent-optimization` (improve the agent from measured results) |
+| | `ace-rsi-toolkit` | ACE RSI Toolkit: evolve a playbook from Traces |
+| | `ape-rsi-toolkit` | APE RSI Toolkit: induce an instruction from examples |
+| | `awm-rsi-toolkit` | AWM RSI Toolkit: induce workflows from trajectories |
+| | `opro-rsi-toolkit` | OPRO RSI Toolkit: optimize an instruction from scores |
 
 ## Writing and optimizing Skills
 
