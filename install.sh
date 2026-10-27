@@ -26,7 +26,7 @@
 #
 # The data dir (~/.jiumate/data) sits under the install home but is never touched by reinstall/upgrade (which only replace bin/lib/web/node).
 #
-# Docs: https://jiumate.ooo/docs/quickstart-cli
+# Docs: https://qiaiqian67.github.io/jiumate/docs/quickstart-cli
 set -eu
 
 REPO="https://github.com/qiaiqian67/jiumate"
@@ -39,12 +39,18 @@ INSTALL_DIR="${JIUMATE_INSTALL_DIR:-$HOME/.jiumate}"
 BIN_DIR="$HOME/.local/bin"
 UNIVERSAL=0
 ARCHIVE="${JIUMATE_ARCHIVE:-}"
-SOURCE_MODE="${JIUMATE_DOWNLOAD_SOURCE:-auto}"
+# The default download source.
+#
+# "github" rather than "auto": the Alibaba Cloud mirror is not published to any more, so
+# "auto" would spend a round trip discovering that. The mirror's code stays in place —
+# a deploy that has one sets JIUMATE_DOWNLOAD_SOURCE=auto and it is used again, with
+# GitHub as the fallback it always was.
+SOURCE_MODE="${JIUMATE_DOWNLOAD_SOURCE:-github}"
 DOWNLOAD_BASE_URL="${JIUMATE_DOWNLOAD_BASE_URL:-}"
 DOWNLOAD_FALLBACK_BASE_URL="${JIUMATE_DOWNLOAD_FALLBACK_BASE_URL:-}"
 DOWNLOAD_SPEED_PROBE="${JIUMATE_DOWNLOAD_SPEED_PROBE:-1}"
 # Auto-mode source selection, one rule shared by install.sh, install.ps1 and the download page on
-# jiumate.ooo (packages/landing/src/lib/download-source.ts):
+# qiaiqian67.github.io/jiumate (packages/landing/src/lib/download-source.ts):
 #
 #   1. Measure GitHub on the release's large probe file. At or above
 #      SPEED_PROBE_GITHUB_MIN_BYTES_PER_SECOND it wins outright and OSS is never touched.

@@ -72,14 +72,14 @@ Desktop builds are on the site for every platform. Windows builds are signed as 
 Linux and macOS install from the command line.
 
 ```sh
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
 Windows uses PowerShell.
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 jiumate web
 ```
 

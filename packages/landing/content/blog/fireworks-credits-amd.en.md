@@ -64,7 +64,7 @@ With the API key in hand, three steps:
 **1. Install and launch**
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web        # opens http://127.0.0.1:7364 (first login: admin, initial password printed on first start)
 ```
 
@@ -81,4 +81,4 @@ Head back to Chat and hand the Agent its first task — e.g. "Analyze data.csv a
 - [AMD AI Developer Program](https://developer.amd.com/ai-developer-program/)
 - [Official AMD Cloud Credits application video tutorial](https://www.youtube.com/watch?v=masSW53JkTY)
 - Application steps and screenshots are adapted from WhatGhost's guides ([中文](https://github.com/WhatGhost/whatghost_Notebooks/blob/main/other/AMD_AI_Developer_Program_Credits_%E7%94%B3%E8%AF%B7%E6%8C%87%E5%8D%97.md) / [English](https://github.com/WhatGhost/whatghost_Notebooks/blob/main/other/AMD_AI_Developer_Program_Credits_Application_Guide_EN.md)) — thanks to the original author
-- [JiuMate model configuration docs](https://jiumate.ooo/docs/models)
+- [JiuMate model configuration docs](https://qiaiqian67.github.io/jiumate/docs/models)

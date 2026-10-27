@@ -99,14 +99,14 @@ Benchmark 包含两个 Case：
 
 ### 获取 Fireworks API
 
-通过 AMD AI Developer Program，AMD 与 Fireworks AI 合作，为符合条件的开发者提供价值 50 美元的免费 Fireworks 额度。Fireworks 通过 OpenAI 兼容端点提供开源权重模型。可参阅 [Fireworks API 获取指南](https://jiumate.ooo/blog/fireworks-credits-amd)，了解额度兑换和 API Key 获取步骤。
+通过 AMD AI Developer Program，AMD 与 Fireworks AI 合作，为符合条件的开发者提供价值 50 美元的免费 Fireworks 额度。Fireworks 通过 OpenAI 兼容端点提供开源权重模型。可参阅 [Fireworks API 获取指南](https://qiaiqian67.github.io/jiumate/blog/fireworks-credits-amd)，了解额度兑换和 API Key 获取步骤。
 
 ### 在 Web UI 中注册模型
 
 安装并启动 JiuMate：
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
@@ -400,5 +400,5 @@ candidate 总分 <= reference 总分
 ## 参考资料
 
 - [JiuMate GitHub](https://github.com/qiaiqian67/jiumate)
-- [JiuMate 自我进化文档](https://jiumate.ooo/docs/self-improvement/)
-- [Fireworks API 免费额度兑换与 API Key 获取](https://jiumate.ooo/blog/fireworks-credits-amd)
+- [JiuMate 自我进化文档](https://qiaiqian67.github.io/jiumate/docs/self-improvement/)
+- [Fireworks API 免费额度兑换与 API Key 获取](https://qiaiqian67.github.io/jiumate/blog/fireworks-credits-amd)

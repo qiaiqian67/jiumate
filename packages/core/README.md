@@ -23,11 +23,11 @@ A single `run` drives a complete Task: streaming output, per-call approvals, con
 
 ## Documentation
 
-- [Architecture](https://jiumate.ooo/docs/architecture)
-- [The OmniMessage Protocol](https://jiumate.ooo/docs/omni-message)
-- [Core Interfaces](https://jiumate.ooo/docs/interfaces)
-- [The Agent Loop](https://jiumate.ooo/docs/agent-loop)
-- [Sessions & Traces](https://jiumate.ooo/docs/sessions-and-traces)
+- [Architecture](https://qiaiqian67.github.io/jiumate/docs/architecture)
+- [The OmniMessage Protocol](https://qiaiqian67.github.io/jiumate/docs/omni-message)
+- [Core Interfaces](https://qiaiqian67.github.io/jiumate/docs/interfaces)
+- [The Agent Loop](https://qiaiqian67.github.io/jiumate/docs/agent-loop)
+- [Sessions & Traces](https://qiaiqian67.github.io/jiumate/docs/sessions-and-traces)
 
 ## Development
 

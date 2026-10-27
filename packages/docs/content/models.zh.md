@@ -88,10 +88,10 @@ TokenDance 分组的条目记录该网关的牌价，并在有促销时记录折
 
 | 端点 | 请求头 | 取值 |
 | --- | --- | --- |
-| `openrouter.ai` | `HTTP-Referer` | `https://jiumate.ooo/` |
+| `openrouter.ai` | `HTTP-Referer` | `https://qiaiqian67.github.io/jiumate/` |
 | `openrouter.ai` | `X-OpenRouter-Title` | `JiuMate` |
 | `openrouter.ai` | `X-OpenRouter-Categories` | `cli-agent,personal-agent` |
-| `tokendance.space` | `X-App-URL` | `https://jiumate.ooo/` |
+| `tokendance.space` | `X-App-URL` | `https://qiaiqian67.github.io/jiumate/` |
 
 其余端点(所有直连厂商，以及不读归因头的网关)不会收到任何额外请求头。归因头只声明应用身份，不携带用户、Agent 或会话信息。
 

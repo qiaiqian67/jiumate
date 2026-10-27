@@ -1,5 +1,5 @@
 #!/bin/sh
-# https://jiumate.ooo/install.sh - JiuMate installer entry point.
+# <site>/install.sh - JiuMate installer entry point.
 #
 # GitHub Pages cannot serve HTTP redirects, so this thin forwarder IS the
 # stable install URL. It selects an immutable OSS release when that mirror is
@@ -8,14 +8,17 @@
 # does not lock the large payload source; the real versioned installer decides
 # that for its own release. Usage:
 #
-#   curl -fsSL https://jiumate.ooo/install.sh | sh
-#   curl -fsSL https://jiumate.ooo/install.sh | sh -s -- --universal
+#   curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
+#   curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh -s -- --universal
 #
 set -eu
 OSS_ORIGIN="https://jiumate-releases.oss-cn-beijing.aliyuncs.com"
 OSS_RELEASE_ROOT="$OSS_ORIGIN/releases"
 GITHUB_RELEASE_ROOT="https://github.com/qiaiqian67/jiumate/releases/download"
-SOURCE_MODE="${JIUMATE_DOWNLOAD_SOURCE:-auto}"
+# GitHub by default: the OSS mirror is not published to any more, so "auto" would
+# spend a round trip discovering that. The mirror's code stays in place for a deploy
+# that has one.
+SOURCE_MODE="${JIUMATE_DOWNLOAD_SOURCE:-github}"
 
 fail() {
   echo "error: $1" >&2

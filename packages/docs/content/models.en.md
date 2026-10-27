@@ -88,10 +88,10 @@ Some gateways read a request header that files a call under the app that made it
 
 | Endpoint | Header | Value |
 | --- | --- | --- |
-| `openrouter.ai` | `HTTP-Referer` | `https://jiumate.ooo/` |
+| `openrouter.ai` | `HTTP-Referer` | `https://qiaiqian67.github.io/jiumate/` |
 | `openrouter.ai` | `X-OpenRouter-Title` | `JiuMate` |
 | `openrouter.ai` | `X-OpenRouter-Categories` | `cli-agent,personal-agent` |
-| `tokendance.space` | `X-App-URL` | `https://jiumate.ooo/` |
+| `tokendance.space` | `X-App-URL` | `https://qiaiqian67.github.io/jiumate/` |
 
 Every other endpoint — every direct vendor, and every gateway that reads no such header — receives no extra headers at all. The headers state the app's identity only; they carry nothing about the user, the Agent or the Session.
 

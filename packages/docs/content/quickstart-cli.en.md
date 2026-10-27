@@ -10,11 +10,11 @@ One line installs `jiumate`; `jiumate web` then opens the same interface as the 
 Pick your platform. The first two bundle their own Node.js runtime; the npm route needs Node.js >= 24 already installed.
 
 ```bash tab="Linux / macOS"
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 ```
 
 ```powershell tab="Windows"
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 ```
 
 ```bash tab="npm (any platform)"
@@ -88,10 +88,10 @@ The script downloads the matching `jiumate-{linux,darwin}-{x64,arm64}.tar.gz` â€
 
 The stable entry point defaults to `JIUMATE_DOWNLOAD_SOURCE=auto`: it resolves the target through an immutable OSS release directory only after that release has been completely uploaded and verified, and falls back to the matching GitHub Release if the metadata is unavailable. Which source then serves the package is measured, not assumed. The installer times a probe file on GitHub and keeps GitHub whenever it reaches 256 KB/s; only below that does it measure the OSS mirror, and it switches only when the mirror is more than 1.5x faster â€” a mirror that is merely a little quicker is not worth its bandwidth bill, and a slow GitHub download still resumes. Set `JIUMATE_DOWNLOAD_SPEED_PROBE=0` to skip the measurement, or `JIUMATE_DOWNLOAD_SOURCE` to `oss` or `github` to force either source. Normal installer output names the source without printing the mirror's full URL.
 
-The `jiumate.ooo` stable entry resolves the current stable version each time it runs. A standalone script downloaded from a versioned GitHub or OSS Release is stamped with that Release tag and defaults to the same version, keeping the installer and package format matched; set `JIUMATE_VERSION` (or `--version` on POSIX) to override it explicitly. To pin a version on Windows, set the env var before running the installer:
+The `qiaiqian67.github.io/jiumate` stable entry resolves the current stable version each time it runs. A standalone script downloaded from a versioned GitHub or OSS Release is stamped with that Release tag and defaults to the same version, keeping the installer and package format matched; set `JIUMATE_VERSION` (or `--version` on POSIX) to override it explicitly. To pin a version on Windows, set the env var before running the installer:
 
 ```powershell
-$env:JIUMATE_VERSION = "vX.Y.Z"; irm https://jiumate.ooo/install.ps1 | iex
+$env:JIUMATE_VERSION = "vX.Y.Z"; irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 ```
 
 ### Offline install
@@ -136,7 +136,7 @@ After the build, run `pnpm jiumate <args>` inside the repo as the dev runner, or
 | Integrity check | Always on: online downloads are verified against the published `.sha256`, and bundle payloads against the checksum sealed inside the bundle |
 | Upgrade | Re-run the install script; files are swapped atomically |
 
-Script flags go after `sh -s --`, e.g. `curl -fsSL https://jiumate.ooo/install.sh | sh -s -- --universal`.
+Script flags go after `sh -s --`, e.g. `curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh -s -- --universal`.
 
 ### Windows specifics
 

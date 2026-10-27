@@ -2,7 +2,7 @@
 
 The JiuMate documentation site (React + Vite + Tailwind CSS 4). Its own package, sharing the landing page's visual language: bilingual pages (zh/en), light/dark themes, a sidebar + per-page table of contents, and a "Copy Markdown" button on every page.
 
-Live at <https://jiumate.ooo/docs/>.
+Live at <https://qiaiqian67.github.io/jiumate/docs/>.
 
 ## Content model
 

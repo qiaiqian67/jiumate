@@ -1,6 +1,6 @@
 # JiuMate one-line installer for Windows.
 #
-#   irm https://jiumate.ooo/install.ps1 | iex
+#   irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 #
 # Options:
 #   $env:JIUMATE_VERSION = "vX.Y.Z"     choose a version (same as -Version vX.Y.Z); a published Release
@@ -28,7 +28,7 @@
 # The data dir (%USERPROFILE%\.jiumate\data) sits under the install home but is never touched by
 # reinstall/upgrade (which only replace bin/lib/web/node/git). Upgrading = re-running this installer.
 #
-# Docs: https://jiumate.ooo/docs/quickstart-cli
+# Docs: https://qiaiqian67.github.io/jiumate/docs/quickstart-cli
 param(
   [string]$Version = "",
   [string]$InstallDir = "",
@@ -45,7 +45,7 @@ $GitHubReleaseRoot = "$Repo/releases/download"
 $GitHubLatestBase = "$Repo/releases/latest/download"
 $Asset = "jiumate-win32-x64.zip"
 # Auto-mode source selection, one rule shared by install.ps1, install.sh and the download page on
-# jiumate.ooo (packages/landing/src/lib/download-source.ts):
+# qiaiqian67.github.io/jiumate (packages/landing/src/lib/download-source.ts):
 #
 #   1. Measure GitHub on the release's large probe file. At or above
 #      $SpeedProbeGitHubMinBytesPerSecond it wins outright and OSS is never touched.
@@ -73,7 +73,7 @@ $PayloadName = "payload.zip"
 $EmbeddedReleaseVersion = "__JIUMATE_RELEASE_VERSION__"
 
 function Fail([string]$Message) {
-  # `throw` rather than `exit`: the jiumate.ooo forwarder runs this installer as an in-memory
+  # `throw` rather than `exit`: the qiaiqian67.github.io/jiumate forwarder runs this installer as an in-memory
   # script block (see packages/landing/public/install.ps1), where `exit` would terminate the
   # user's whole PowerShell session. `throw` aborts cleanly in both file and script-block runs.
   throw "error: $Message"
@@ -372,7 +372,11 @@ if (-not $DownloadBaseUrl) { $DownloadFallbackBaseUrl = "" }
 $SourceMode = if ($env:JIUMATE_DOWNLOAD_SOURCE) {
   $env:JIUMATE_DOWNLOAD_SOURCE.ToLowerInvariant()
 } else {
-  "auto"
+  # GitHub rather than "auto": the Alibaba Cloud mirror is not published to any more, so
+  # "auto" would spend a round trip discovering that. The mirror's code stays in place —
+  # a deploy that has one sets JIUMATE_DOWNLOAD_SOURCE=auto and it is used again, with
+  # GitHub as the fallback it always was.
+  "github"
 }
 $DownloadSpeedProbe = if ($env:JIUMATE_DOWNLOAD_SPEED_PROBE) {
   $env:JIUMATE_DOWNLOAD_SPEED_PROBE

@@ -2,10 +2,10 @@
  * Ends a bare URL at the last ASCII character.
  *
  * GFM's autolink-literal extension ends a bare URL at whitespace, then trims a short list of
- * trailing ASCII punctuation. Neither rule sees CJK: `见 https://jiumate.ooo，然后继续` is not
+ * trailing ASCII punctuation. Neither rule sees CJK: `见 https://qiaiqian67.github.io/jiumate，然后继续` is not
  * whitespace-separated after the host, so the comma and the clause after it are swallowed into the
  * href, which then 404s, and the sentence loses its punctuation to link styling. English is
- * unaffected — `see https://jiumate.ooo, then` already trims correctly — so this only ever fires on
+ * unaffected — `see https://qiaiqian67.github.io/jiumate, then` already trims correctly — so this only ever fires on
  * text GFM was not written for.
  *
  * A URL is ASCII by RFC 3986; anything outside it belongs percent-encoded. So the boundary is the

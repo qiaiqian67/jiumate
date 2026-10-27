@@ -26,9 +26,13 @@ const shell = readFileSync(join(dist, "index.html"), "utf8");
 // rather than silently shipping every route with the home page's canonical.
 const CANONICAL = /<link\s+rel="canonical"[^>]*>/;
 const OG_URL = /<meta\s+property="og:url"[^>]*>/;
+const OG_IMAGE = /<meta\s+property="og:image"[^>]*>/;
+const TWITTER_IMAGE = /<meta\s+name="twitter:image"[^>]*>/;
 for (const [name, pattern] of [
   ["canonical", CANONICAL],
   ["og:url", OG_URL],
+  ["og:image", OG_IMAGE],
+  ["twitter:image", TWITTER_IMAGE],
 ]) {
   if (!pattern.test(shell)) {
     throw new Error(`[postbuild] no ${name} tag in dist/index.html — index.html must declare one`);
@@ -38,9 +42,12 @@ for (const [name, pattern] of [
 /** The shell with its self-referencing URLs pointed at `route`. */
 function shellFor(route) {
   const url = absoluteUrl(route);
+  const image = absoluteUrl("/og-cover.png");
   return shell
     .replace(CANONICAL, `<link rel="canonical" href="${url}" />`)
-    .replace(OG_URL, `<meta property="og:url" content="${url}" />`);
+    .replace(OG_URL, `<meta property="og:url" content="${url}" />`)
+    .replace(OG_IMAGE, `<meta property="og:image" content="${image}" />`)
+    .replace(TWITTER_IMAGE, `<meta name="twitter:image" content="${image}" />`);
 }
 
 const routes = [...pageRoutes(), ...blogRoutes()];

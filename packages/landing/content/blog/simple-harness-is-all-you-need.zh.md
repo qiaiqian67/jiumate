@@ -47,7 +47,7 @@ Databricks 自己很谨慎，我们也该同样谨慎：他们明确说过，这
 
 在这份评测出现之前，我们就下了这个赌注，而且它写在源码里，不在宣传页上。下面每个数字都能在仓库里核对。
 
-**六个工具，而且完全没有文件工具。** JiuMate 内置[六个工具](https://jiumate.ooo/docs/tools)，任一会话实际只看到五个——两个图像工具按模型类别互斥。
+**六个工具，而且完全没有文件工具。** JiuMate 内置[六个工具](https://qiaiqian67.github.io/jiumate/docs/tools)，任一会话实际只看到五个——两个图像工具按模型类别互斥。
 
 | 工具 | 作用 |
 | --- | --- |
@@ -108,13 +108,13 @@ Databricks 自己很谨慎，我们也该同样谨慎：他们明确说过，这
 每一个答案，都是一个**按轮计费、贯穿整个任务生命周期**的成本项。
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
 ---
 
-- **读实现**：[工具与审批](https://jiumate.ooo/docs/tools) · [Agent Loop](https://jiumate.ooo/docs/agent-loop) · [Skills](https://jiumate.ooo/docs/skills)
+- **读实现**：[工具与审批](https://qiaiqian67.github.io/jiumate/docs/tools) · [Agent Loop](https://qiaiqian67.github.io/jiumate/docs/agent-loop) · [Skills](https://qiaiqian67.github.io/jiumate/docs/skills)
 - **来讨论**：[GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**：[Databricks — Benchmarking Coding Agents on Databricks' Multi-Million Line Codebase](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase) · [Pi (earendil-works/pi)](https://github.com/earendil-works/pi) · [SaladDay《Less is More》](https://x.com/Salad95238547/status/2079508549382644194)

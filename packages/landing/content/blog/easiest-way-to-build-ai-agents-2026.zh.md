@@ -71,7 +71,7 @@ LangChain 自己也把遗留的 chain、retriever 和 hub 模块挪进了独立�
 装一次，第一张表里的五行就都有了，而且共用同一份数据目录、同一套消息协议：
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web        # http://127.0.0.1:7364 — 首次登录：admin，初始密码见首次启动输出
 ```
 
@@ -118,7 +118,7 @@ JiuMate 把这些收进一次安装，然后**把优化循环交给 Agent 自己
 
 ---
 
-- **文档**：[快速开始](https://jiumate.ooo/docs/quickstart) · [Skills](https://jiumate.ooo/docs/skills) · [会话与 Trace](https://jiumate.ooo/docs/sessions-and-traces)
+- **文档**：[快速开始](https://qiaiqian67.github.io/jiumate/docs/quickstart) · [Skills](https://qiaiqian67.github.io/jiumate/docs/skills) · [会话与 Trace](https://qiaiqian67.github.io/jiumate/docs/sessions-and-traces)
 - **社区**：[GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**（数据均于 2026-07-22 核对）：[LangChain v1 发布说明](https://docs.langchain.com/oss/python/releases/langchain-v1) · [Langfuse](https://github.com/langfuse/langfuse) · [AutoGen README](https://github.com/microsoft/autogen) · [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/) · [Google ADK](https://adk.dev/) · [CrewAI](https://docs.crewai.com/en/quickstart) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/quickstart/) · [Dify LICENSE](https://github.com/langgenius/dify/blob/main/LICENSE) · [n8n LICENSE](https://github.com/n8n-io/n8n/blob/master/LICENSE.md) · [Anthropic, Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents)

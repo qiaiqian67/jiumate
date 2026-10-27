@@ -28,67 +28,67 @@ function plainText(markdown: string): string {
 
 describe("a bare URL ends at the last ASCII character", () => {
   it("stops before CJK punctuation, and the punctuation stays in the sentence", () => {
-    expect(firstLink("见 https://jiumate.ooo，然后继续")).toEqual([
-      "https://jiumate.ooo",
-      "https://jiumate.ooo",
+    expect(firstLink("见 https://qiaiqian67.github.io/jiumate，然后继续")).toEqual([
+      "https://qiaiqian67.github.io/jiumate",
+      "https://qiaiqian67.github.io/jiumate",
     ]);
-    expect(plainText("见 https://jiumate.ooo，然后继续")).toContain("，然后继续");
+    expect(plainText("见 https://qiaiqian67.github.io/jiumate，然后继续")).toContain("，然后继续");
   });
 
   it("stops before CJK text with no punctuation between", () => {
-    expect(firstLink("中文https://jiumate.ooo英文")).toEqual([
-      "https://jiumate.ooo",
-      "https://jiumate.ooo",
+    expect(firstLink("中文https://qiaiqian67.github.io/jiumate英文")).toEqual([
+      "https://qiaiqian67.github.io/jiumate",
+      "https://qiaiqian67.github.io/jiumate",
     ]);
-    expect(plainText("中文https://jiumate.ooo英文")).toContain("英文");
+    expect(plainText("中文https://qiaiqian67.github.io/jiumate英文")).toContain("英文");
   });
 
   it("stops before a full-width bracket after a path with a query", () => {
-    expect(firstLink("参考 https://jiumate.ooo/a/b?c=1（备注）")).toEqual([
-      "https://jiumate.ooo/a/b?c=1",
-      "https://jiumate.ooo/a/b?c=1",
+    expect(firstLink("参考 https://qiaiqian67.github.io/jiumate/a/b?c=1（备注）")).toEqual([
+      "https://qiaiqian67.github.io/jiumate/a/b?c=1",
+      "https://qiaiqian67.github.io/jiumate/a/b?c=1",
     ]);
   });
 
   it("stops before a full stop at the end of a sentence", () => {
-    expect(firstLink("见 https://jiumate.ooo。")).toEqual([
-      "https://jiumate.ooo",
-      "https://jiumate.ooo",
+    expect(firstLink("见 https://qiaiqian67.github.io/jiumate。")).toEqual([
+      "https://qiaiqian67.github.io/jiumate",
+      "https://qiaiqian67.github.io/jiumate",
     ]);
   });
 });
 
 describe("what must not change", () => {
   it("leaves English alone — GFM already ends those correctly", () => {
-    expect(firstLink("see https://jiumate.ooo, then")).toEqual([
-      "https://jiumate.ooo",
-      "https://jiumate.ooo",
+    expect(firstLink("see https://qiaiqian67.github.io/jiumate, then")).toEqual([
+      "https://qiaiqian67.github.io/jiumate",
+      "https://qiaiqian67.github.io/jiumate",
     ]);
-    expect(firstLink("docs at https://jiumate.ooo/docs work")).toEqual([
-      "https://jiumate.ooo/docs",
-      "https://jiumate.ooo/docs",
+    expect(firstLink("docs at https://qiaiqian67.github.io/jiumate/docs work")).toEqual([
+      "https://qiaiqian67.github.io/jiumate/docs",
+      "https://qiaiqian67.github.io/jiumate/docs",
     ]);
   });
 
   it("leaves an explicit link's CJK text alone", () => {
     // The trim applies to autolinks only; here the CJK *is* the link text the author wrote.
-    expect(firstLink("[中文文档](https://jiumate.ooo/docs)")).toEqual([
-      "https://jiumate.ooo/docs",
+    expect(firstLink("[中文文档](https://qiaiqian67.github.io/jiumate/docs)")).toEqual([
+      "https://qiaiqian67.github.io/jiumate/docs",
       "中文文档",
     ]);
   });
 
   it("leaves a percent-encoded path alone, CJK or not", () => {
-    expect(firstLink("见 https://jiumate.ooo/wiki/%E4%B8%AD%E6%96%87 完")).toEqual([
-      "https://jiumate.ooo/wiki/%E4%B8%AD%E6%96%87",
-      "https://jiumate.ooo/wiki/%E4%B8%AD%E6%96%87",
+    expect(firstLink("见 https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87 完")).toEqual([
+      "https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87",
+      "https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87",
     ]);
   });
 
   it("keeps a bare www. autolink working, prefix and all", () => {
-    expect(firstLink("见 www.jiumate.ooo，好")).toEqual([
-      "http://www.jiumate.ooo",
-      "www.jiumate.ooo",
+    expect(firstLink("见 www.qiaiqian67.github.io/jiumate，好")).toEqual([
+      "http://www.qiaiqian67.github.io/jiumate",
+      "www.qiaiqian67.github.io/jiumate",
     ]);
   });
 });

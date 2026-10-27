@@ -108,7 +108,7 @@ Responsibilities split by source of truth: the **SDK** owns protocol and executi
 (message parsing, the agent loop, tools), the **Server** owns the multi-user runtime
 (auth, SSE streaming, scheduled tasks), and the **file layer** under `~/.jiumate/data`
 owns everything editable and recorded (prompts, Skills, secrets, Traces). The full map
-is in [Architecture → Division of responsibilities](https://jiumate.ooo/docs/architecture).
+is in [Architecture → Division of responsibilities](https://qiaiqian67.github.io/jiumate/docs/architecture).
 
 ## Quality gates
 

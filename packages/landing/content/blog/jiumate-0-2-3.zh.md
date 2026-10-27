@@ -72,14 +72,14 @@ AgentHub 0.4.2 之后有三种通用协议客户端，OpenAI Responses、Anthrop
 Linux 和 macOS 用命令行装。
 
 ```sh
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
 Windows 用 PowerShell。
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 jiumate web
 ```
 

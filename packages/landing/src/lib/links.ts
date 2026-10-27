@@ -6,6 +6,13 @@ export const RELEASES_URL = `${REPO_URL}/releases`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 
 /**
+ * The address this site is served from. It is injected at build time (see the Vite
+ * config's `define`), so the same source builds for a custom domain or for the
+ * repository's GitHub Pages address without being edited.
+ */
+export const SITE_ORIGIN = __SITE_ORIGIN__;
+
+/**
  * Docs site: a sibling SPA deployed under the landing page's own base ("/<repo>/docs/",
  * see scripts/build-site.mjs). A plain href — it is a separate app, not a router route.
  * In local dev this resolves to "/docs/", which only exists in the assembled build.
@@ -14,16 +21,20 @@ export const DOCS_URL = `${import.meta.env.BASE_URL}docs/`;
 
 /**
  * One-line installer (Linux / macOS, x64 / arm64, bundled Node runtime).
- * jiumate.ooo/install.sh is this site's own public/install.sh — a thin forwarder
+ * <origin>/install.sh is this site's own public/install.sh — a thin forwarder
  * to the latest GitHub release installer (Pages cannot serve real redirects).
+ *
+ * The origin is the address the site is actually served from. It is read from the
+ * build, not written here, so the same source builds the site at a custom domain or
+ * at the repository's GitHub Pages address without being edited.
  */
-export const INSTALL_CMD = "curl -fsSL https://jiumate.ooo/install.sh | sh";
+export const INSTALL_CMD = `curl -fsSL ${SITE_ORIGIN}/install.sh | sh`;
 
 /**
  * One-line installer for Windows (PowerShell 5.1+, x64, bundled Node runtime).
- * jiumate.ooo/install.ps1 is public/install.ps1 — the same thin-forwarder design.
+ * <origin>/install.ps1 is public/install.ps1 — the same thin-forwarder design.
  */
-export const INSTALL_CMD_WINDOWS = "irm https://jiumate.ooo/install.ps1 | iex";
+export const INSTALL_CMD_WINDOWS = `irm ${SITE_ORIGIN}/install.ps1 | iex`;
 
 /**
  * Offline install commands, per OS tab of the install switcher. Each Release attaches one

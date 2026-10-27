@@ -4,11 +4,11 @@
  * block, so the language keeps driving highlighting and nothing about the code changes.
  *
  *     ```bash tab="Linux / macOS"
- *     curl -fsSL https://jiumate.ooo/install.sh | sh
+ *     curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
  *     ```
  *
  *     ```powershell tab="Windows"
- *     irm https://jiumate.ooo/install.ps1 | iex
+ *     irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
  *     ```
  *
  * The group becomes a `div.md-tabs` carrying its labels, in child order, as JSON on

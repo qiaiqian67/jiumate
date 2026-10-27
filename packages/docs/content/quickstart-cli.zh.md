@@ -10,11 +10,11 @@ description: 一行命令装出 jiumate，配置模型，用 jiumate web 打开�
 选择你的平台。前两种自带 Node.js 运行时；npm 方式需要本机已有 Node.js >= 24。
 
 ```bash tab="Linux / macOS"
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 ```
 
 ```powershell tab="Windows"
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 ```
 
 ```bash tab="npm（任意平台）"
@@ -88,10 +88,10 @@ jiumate chat
 
 稳定入口默认使用 `JIUMATE_DOWNLOAD_SOURCE=auto`：先经已完整上传并验证的 OSS 不可变版本目录确定目标版本，元数据不可用时回退到同一版本的 GitHub Release。至于由哪个源提供安装包，则由实测决定，而非预设：安装器先对 GitHub 上的测速文件计时，达到 256 KB/s 即保持 GitHub；只有低于该值时才测量 OSS 镜像，且仅当镜像快出 1.5 倍以上才切换——仅快一点的镜像不值得其带宽成本，而较慢的 GitHub 下载仍可续传。设置 `JIUMATE_DOWNLOAD_SPEED_PROBE=0` 可跳过测速，设置 `JIUMATE_DOWNLOAD_SOURCE` 为 `oss` 或 `github` 可强制指定来源。安装器只显示来源名称，不在常规输出中打印镜像的完整 URL。
 
-`jiumate.ooo` 稳定入口每次执行时都会解析当前稳定版本。从 GitHub 或 OSS 的版本化 Release 中直接下载的独立安装脚本会写入该 Release tag，并默认安装同一版本，确保安装器与安装包格式匹配；如需覆盖，可显式设置 `JIUMATE_VERSION`（POSIX 也可使用 `--version`）。Windows 上固定版本，在运行安装器前设置环境变量：
+`qiaiqian67.github.io/jiumate` 稳定入口每次执行时都会解析当前稳定版本。从 GitHub 或 OSS 的版本化 Release 中直接下载的独立安装脚本会写入该 Release tag，并默认安装同一版本，确保安装器与安装包格式匹配；如需覆盖，可显式设置 `JIUMATE_VERSION`（POSIX 也可使用 `--version`）。Windows 上固定版本，在运行安装器前设置环境变量：
 
 ```powershell
-$env:JIUMATE_VERSION = "vX.Y.Z"; irm https://jiumate.ooo/install.ps1 | iex
+$env:JIUMATE_VERSION = "vX.Y.Z"; irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 ```
 
 ### 离线安装
@@ -136,7 +136,7 @@ pnpm install && pnpm build
 | 完整性校验 | 始终进行：在线下载对照发布的 `.sha256` 校验，安装包负载对照包内封入的 checksum 校验 |
 | 升级 | 重新执行安装脚本即可，文件原子替换 |
 
-脚本参数写在 `sh -s --` 之后，例如 `curl -fsSL https://jiumate.ooo/install.sh | sh -s -- --universal`。
+脚本参数写在 `sh -s --` 之后，例如 `curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh -s -- --universal`。
 
 ### Windows 细节
 

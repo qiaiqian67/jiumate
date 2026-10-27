@@ -87,7 +87,7 @@ Token 与成本均为全套题目合计，不是单次均值。数据分析套�
 一行命令安装（Linux / macOS，x64 / arm64，内嵌 Node 运行时），然后启动 Web 界面：
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web        # 打开 http://127.0.0.1:7364（首次登录：admin，初始密码见首次启动输出）
 ```
 

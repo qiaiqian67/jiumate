@@ -197,7 +197,7 @@ jiumate config model add \
 
 不是每个人桌下都有一块 AMD GPU——而要试用这一切，你并不需要它。通过 AMD AI Developer Program，AMD 与 Fireworks AI 合作，向符合条件的开发者提供**价值 50 美元的免费 Fireworks 额度**。Fireworks 通过 OpenAI 兼容端点提供开源权重模型，因此——和上面的本地 Ollama 一样——把 JiuMate 指向它也只是一行配置的事。
 
-领取额度（审核通常需要 2–3 个工作日）可参阅 [Fireworks API 获取指南](https://jiumate.ooo/blog/fireworks-credits-amd)，了解额度兑换和 API Key 获取步骤。
+领取额度（审核通常需要 2–3 个工作日）可参阅 [Fireworks API 获取指南](https://qiaiqian67.github.io/jiumate/blog/fireworks-credits-amd)，了解额度兑换和 API Key 获取步骤。
 
 
 之后像接入任何其他端点一样把它接进 JiuMate：

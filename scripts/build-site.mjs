@@ -62,5 +62,22 @@ const sitemap = [
 ].join("\n");
 writeFileSync(join(landingDist, "sitemap.xml"), sitemap);
 
+// robots.txt goes in with the sitemap, for the same reason: the sitemap URL has to be
+// absolute and has to name the origin the site is served from. It is generated here
+// rather than shipped as a static file in public/, because a static file would carry
+// one origin forever while every other absolute URL follows SITE_ORIGIN.
+const robots = [
+  `# JiuMate — ${absoluteUrl("/")} (landing at the root, docs under /docs/).`,
+  "# Everything here is public; nothing needs to be kept out of an index.",
+  "User-agent: *",
+  "Allow: /",
+  "",
+  "# Absolute by spec, and per-origin anyway, so the origin is written here rather than",
+  "# shipped as a static file.",
+  `Sitemap: ${absoluteUrl("/sitemap.xml")}`,
+  "",
+].join("\n");
+writeFileSync(join(landingDist, "robots.txt"), robots);
+
 console.log(`\n[build-site] assembled site at ${landingDist} (docs under /docs/)`);
-console.log(`[build-site] wrote sitemap.xml (${routes.length} URLs)`);
+console.log(`[build-site] wrote sitemap.xml (${routes.length} URLs) and robots.txt`);

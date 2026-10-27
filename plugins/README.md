@@ -22,9 +22,9 @@ The four `*-rsi-toolkit` plugins are the self-improvement *methods*, each a port
 
 ## Documentation
 
-- [Skills & Plugins](https://jiumate.ooo/docs/skills)
-- [Goal Mode](https://jiumate.ooo/docs/goal-mode)
-- [Self-Improvement](https://jiumate.ooo/docs/self-improvement)
+- [Skills & Plugins](https://qiaiqian67.github.io/jiumate/docs/skills)
+- [Goal Mode](https://qiaiqian67.github.io/jiumate/docs/goal-mode)
+- [Self-Improvement](https://qiaiqian67.github.io/jiumate/docs/self-improvement)
 
 ## Development
 

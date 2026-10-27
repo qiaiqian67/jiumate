@@ -12,7 +12,7 @@ JiuMate 0.1.4 发布了。这个版本只有一个主题：harness 来到你工�
 PowerShell 里一行命令：
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 ```
 
 它会下载 `jiumate-win32-x64.zip`——内置官方 Windows Node 运行时，无需预装任何东西——校验 SHA256，用「先落地再替换」的方式解压安装（绝不触碰你的 `data\` 目录），并把 `jiumate` 加入用户 PATH：注册表值按原始类型读写，已有的 `%USERPROFILE%` 风格条目不会被展开破坏。稳定地址是一个「完整下载后才执行」的转发脚本，截断的流不可能装出半个产品。偏好 npm 的话，`npm install -g @jadelau/cli` 在任何 Node ≥ 24 的环境同样可用。
@@ -43,12 +43,12 @@ irm https://jiumate.ooo/install.ps1 | iex
 
 ```bash
 # Linux / macOS
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 ```
 
 ```powershell
 # Windows
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 ```
 
 或 `npm install -g @jadelau/cli`（Node ≥ 24）——请安装 0.1.4：0.1.3 的功能集与之相同，但未能发布到 npm。然后 `jiumate web`，在模型页配好密钥——给它一个目标。

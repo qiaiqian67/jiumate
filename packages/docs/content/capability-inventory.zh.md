@@ -117,6 +117,6 @@ Electron 43。三平台打包(mac / win / linux)。macOS Developer ID + notariza
 
 - **Landing**(`packages/landing`)—— 11 个 section,双语;Playwright 用 mock LLM 拍 12 张产品截图。
 - **Docs**(`packages/docs`)—— 24 个 slug × 2 语言 = 48 个文件;sidebar 4 段(start / guides / design / reference);Ctrl/Cmd+K 全文搜索、复制 Markdown 按钮;**没有版本切换、没有 auto-gen API 页、没有 RSS、没有 per-post og:image、没有分析。**
-- 都部署到 GitHub Pages 的自定义 apex `jiumate.ooo`。
+- 都部署到 GitHub Pages 的自定义 apex `qiaiqian67.github.io/jiumate`。
 
 CI 多 shard 多平台(`ci.yml`),`desktop-build.yml` 处理签名,`release.yml` 处理发版,`pages.yml` 部署公开站点。**没有 CODEOWNERS、没有 Dependabot、没有 gitleaks、没有 SBOM。** Apache-2.0 LICENSE + 发布时复制到每个包;SECURITY.md、CONTRIBUTING.md、ISSUE 模板、Discord 链接。

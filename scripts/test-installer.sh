@@ -18,7 +18,7 @@ fail_test() {
 }
 
 # The auto-mode rule lives in three implementations that cannot import from each other: the two
-# installers and the download page on jiumate.ooo. Nothing but this check keeps their constants in
+# installers and the download page on qiaiqian67.github.io/jiumate. Nothing but this check keeps their constants in
 # step, so a threshold edited in one place fails here instead of shipping three different rules.
 check_shared_constant() {
   csc_label="$1"
@@ -612,7 +612,7 @@ run_online_case pinned-legacy legacy v0.1.4 success 2
 grep -q "/releases/v0.1.4/$HOST_ASSET\$" "$WORK_DIR/pinned-legacy.log" \
   || fail_test "pinned legacy did not prefer the pinned OSS asset"
 
-# --- Stable jiumate.ooo forwarder: prefer a validated immutable OSS release, but fall back to
+# --- Stable qiaiqian67.github.io/jiumate forwarder: prefer a validated immutable OSS release, but fall back to
 #     GitHub when the metadata probe fails. The real installer uses a local fixture here so the
 #     test isolates bootstrap routing from bundle download behavior above. ---
 run_forwarder_case() {

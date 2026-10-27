@@ -40,8 +40,8 @@ The qianwenai groups move to the current lineup — qwen3.8-max and deepseek-v4-
 ## Install or upgrade
 
 ```sh
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
-Windows (PowerShell): `irm https://jiumate.ooo/install.ps1 | iex` — or `npm install -g @jadelau/cli` with Node >= 24. Upgrading is re-running the installer, or `jiumate update` from 0.1.3+.
+Windows (PowerShell): `irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex` — or `npm install -g @jadelau/cli` with Node >= 24. Upgrading is re-running the installer, or `jiumate update` from 0.1.3+.

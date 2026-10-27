@@ -61,7 +61,7 @@ Free models are a genuine way to experience the full harness — Workspaces, too
 ## Get it
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 

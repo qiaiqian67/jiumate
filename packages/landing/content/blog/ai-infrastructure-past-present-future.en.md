@@ -84,13 +84,13 @@ AI infrastructure did not need to be reinvented for agents — it was already te
 That is what our skills encode, on top of a shell, a two-phase process model for long jobs, and errors that come back as readable text.
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate run -m "Serve Qwen3.5-0.8B with Ollama and register it with JiuMate"
 ```
 
 ---
 
-- **Docs**: [Skills](https://jiumate.ooo/docs/skills) · [Tools & Approval](https://jiumate.ooo/docs/tools) · [Models & Providers](https://jiumate.ooo/docs/models)
+- **Docs**: [Skills](https://qiaiqian67.github.io/jiumate/docs/skills) · [Tools & Approval](https://qiaiqian67.github.io/jiumate/docs/tools) · [Models & Providers](https://qiaiqian67.github.io/jiumate/docs/models)
 - **Community**: [GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **Sources**: [vLLM](https://docs.vllm.ai/) · [Ollama](https://ollama.com/) · [LlamaFactory](https://github.com/hiyouga/LlamaFactory) · [Stripe, Can AI agents build real Stripe integrations?](https://stripe.com/blog/can-ai-agents-build-real-stripe-integrations) · [Anthropic, Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)

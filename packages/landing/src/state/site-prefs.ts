@@ -1,7 +1,7 @@
 /**
  * Preferences shared by the landing page and the docs site.
  *
- * The two are separate SPAs but ship to one origin (jiumate.ooo and jiumate.ooo/docs/),
+ * The two are separate SPAs but ship to one origin (qiaiqian67.github.io/jiumate and qiaiqian67.github.io/jiumate/docs/),
  * so a single localStorage key is all it takes for a language or theme choice to survive
  * the hop between them. They previously wrote `jiumate-landing.*` and `jiumate-docs.*`,
  * which is why picking dark mode on the landing page and clicking through to the docs

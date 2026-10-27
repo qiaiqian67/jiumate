@@ -120,7 +120,7 @@ const UNCLASSIFIED_ON_PURPOSE: Record<string, string> = {
  *
  * Block comments are stripped first, and a match must follow a quote or backtick: prose
  * names key PREFIXES (`jiumate.terminal.`), a family without its dot, and the product's own
- * domain in an example URL (`jiumate.ooo`), and none of those is a storage key.
+ * domain in an example URL (`qiaiqian67.github.io/jiumate`), and none of those is a storage key.
  */
 function storageKeysInSource(): Map<string, string> {
   const found = new Map<string, string>();

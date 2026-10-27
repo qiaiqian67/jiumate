@@ -117,6 +117,6 @@ Electron 43. Three-platform packaging (mac / win / linux). macOS Developer ID + 
 
 - **Landing** (`packages/landing`) — 11 sections, bilingual; Playwright uses a mock LLM to capture 12 product screenshots.
 - **Docs** (`packages/docs`) — 24 slugs × 2 languages = 48 files; four sidebar sections (start, guides, design, reference); Ctrl/Cmd+K full-text search, copy-Markdown button; **no version switcher, no auto-generated API page, no RSS, no per-post og:image, no analytics.**
-- Both deployed to GitHub Pages on the custom apex `jiumate.ooo`.
+- Both deployed to GitHub Pages on the custom apex `qiaiqian67.github.io/jiumate`.
 
 CI is multi-shard and multi-platform (`ci.yml`), with separate `desktop-build.yml` for signing and `release.yml` for publishing. `pages.yml` deploys the public sites. **No CODEOWNERS, no Dependabot, no `gitleaks`, no SBOM.** Apache-2.0 LICENSE plus per-package copy at publish. SECURITY.md, CONTRIBUTING.md, ISSUE templates, Discord link.

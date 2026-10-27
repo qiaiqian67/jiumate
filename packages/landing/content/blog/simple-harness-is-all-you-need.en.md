@@ -47,7 +47,7 @@ None of these are wrong ideas. They are unpriced ones.
 
 We made this bet before the benchmark existed, and it is visible in the source rather than the marketing. Every number below is checkable in the repo.
 
-**Six tools, and no file tools at all.** JiuMate ships [six built-in tools](https://jiumate.ooo/docs/tools); any session sees five, since the two image tools are mutually exclusive by model class.
+**Six tools, and no file tools at all.** JiuMate ships [six built-in tools](https://qiaiqian67.github.io/jiumate/docs/tools); any session sees five, since the two image tools are mutually exclusive by model class.
 
 | Tool | Purpose |
 | --- | --- |
@@ -103,13 +103,13 @@ If you are building agents, the audit is short. How many tools does your model s
 Every answer is a line item, charged on every turn, for the life of the task.
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
 ---
 
-- **Read the internals**: [Tools & Approval](https://jiumate.ooo/docs/tools) · [The Agent Loop](https://jiumate.ooo/docs/agent-loop) · [Skills](https://jiumate.ooo/docs/skills)
+- **Read the internals**: [Tools & Approval](https://qiaiqian67.github.io/jiumate/docs/tools) · [The Agent Loop](https://qiaiqian67.github.io/jiumate/docs/agent-loop) · [Skills](https://qiaiqian67.github.io/jiumate/docs/skills)
 - **Come argue with us**: [GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **Sources**: [Databricks — Benchmarking Coding Agents on Databricks' Multi-Million Line Codebase](https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase) · [Pi (earendil-works/pi)](https://github.com/earendil-works/pi) · [SaladDay, "Less is More"](https://x.com/Salad95238547/status/2079508549382644194)

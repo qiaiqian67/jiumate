@@ -19,13 +19,13 @@ jiumate chat --resume                                          # resume the late
 
 Tool calls go through an approval gate — `--approve allow-all` (default) `| deny-all | read-only | always-ask`. Data lives under `~/.jiumate/data` (`JIUMATE_HOME` or `--root` override); model credentials come from the Project config or provider env vars (e.g. `DEEPSEEK_API_KEY`).
 
-Prefer a one-line install with a bundled Node runtime? See [Quickstart → CLI and Web App](https://jiumate.ooo/docs/quickstart-cli).
+Prefer a one-line install with a bundled Node runtime? See [Quickstart → CLI and Web App](https://qiaiqian67.github.io/jiumate/docs/quickstart-cli).
 
 ## Documentation
 
-- [Quickstart](https://jiumate.ooo/docs/quickstart)
-- [CLI Reference](https://jiumate.ooo/docs/cli)
-- [Configuration Reference](https://jiumate.ooo/docs/configuration)
+- [Quickstart](https://qiaiqian67.github.io/jiumate/docs/quickstart)
+- [CLI Reference](https://qiaiqian67.github.io/jiumate/docs/cli)
+- [Configuration Reference](https://qiaiqian67.github.io/jiumate/docs/configuration)
 
 ## Development
 

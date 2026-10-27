@@ -59,14 +59,14 @@ composer 的 `@` 提及升级为 `/agent` 命令，两个切换命令（`/agent`
 ## 安装或升级
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
 Windows（PowerShell）：
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 jiumate web
 ```
 

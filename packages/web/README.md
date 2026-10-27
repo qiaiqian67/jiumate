@@ -1,6 +1,6 @@
 # @jadelau/web
 
-The JiuMate Web App — a React 19 + Vite + Tailwind CSS 4 SPA that renders the OmniMessage stream (same protocol and statistics as the CLI) and manages Agents, Skills, Models, usage and Traces. Feature tour: [Web App Guide](https://jiumate.ooo/docs/web-app).
+The JiuMate Web App — a React 19 + Vite + Tailwind CSS 4 SPA that renders the OmniMessage stream (same protocol and statistics as the CLI) and manages Agents, Skills, Models, usage and Traces. Feature tour: [Web App Guide](https://qiaiqian67.github.io/jiumate/docs/web-app).
 
 ## Layout
 

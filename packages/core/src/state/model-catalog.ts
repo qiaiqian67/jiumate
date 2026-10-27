@@ -1936,8 +1936,12 @@ export function modelHomepageUrl(provider: string, modelId: string): string | un
  * `APP_URL` is also the `app_url` a provider OAuth flow stamps onto the key it mints, which is
  * why it is exported: a stable app URL is required there, and a second copy would let the two
  * attributions drift apart.
+ *
+ * It is the project's repository rather than a marketing domain: it is an identifier that
+ * points at where the software is, it has to stay the same for every release so the gateways
+ * can tell one app from another, and it does not change when the site moves.
  */
-export const APP_URL = "https://jiumate.ooo/";
+export const APP_URL = "https://github.com/qiaiqian67/jiumate";
 const APP_TITLE = "JiuMate";
 /**
  * OpenRouter marketplace categories, comma-separated. OpenRouter accepts at most **two per

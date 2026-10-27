@@ -80,7 +80,7 @@ https://developer.amd.com.cn/login?source=2a6CMBw3K
 **1. 安装并启动**
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web        # 打开 http://127.0.0.1:7364（首次登录：admin，初始密码见首次启动输出）
 ```
 
@@ -96,4 +96,4 @@ jiumate web        # 打开 http://127.0.0.1:7364（首次登录：admin，初�
 
 - [AMD AI Developer Program 中国站](https://developer.amd.com.cn/login?source=2a6CMBw3K)
 - 申请步骤与截图整理自[AMD AI Developer Program 官方申请指南](https://acn658bi9o7j.feishu.cn/docx/T8VIdjkZXoqyDwxwNjacbcsYngd)，感谢原作者
-- [JiuMate 模型配置文档](https://jiumate.ooo/docs/models)
+- [JiuMate 模型配置文档](https://qiaiqian67.github.io/jiumate/docs/models)

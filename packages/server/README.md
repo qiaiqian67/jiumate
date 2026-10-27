@@ -11,7 +11,7 @@ The JiuMate Web backend — the Web implementation of the SDK's Human boundary. 
 - **Usage**: `token_usage` events are persisted row by row; costs are computed at query time from current per-model pricing.
 - **Terminals**: `src/terminal/` runs pty sessions server-side (node-pty) and feeds every byte into a headless xterm, so the daemon — not the browser — owns the screen. Control is JSON over HTTP (`/api/terminals`: list / create / capture / keys / kill; create accepts `cwd`, `name`, `cols`/`rows` and a `shell` override); the byte stream is a binary WebSocket at `/api/terminals/:id/stream` (`[opcode, slot, payload]`, output coalesced into ~5ms windows with an immediate leading flush). On attach the server renders the current grid back into an ANSI restore stream, so a reload or a second device rebuilds the exact screen — scrollback, colours, cursor and DEC input modes — while the shell keeps running the whole time. The web app surfaces this twice: an in-app dock (Ctrl+` , Codex-style) and the standalone `/terminal` page (`?id=` attaches an existing terminal — the dock's detach handoff — `?cwd=`/`?name=` parameterize a new one). Sessions run in-process (no forked terminal worker); this module is the only thing touching node-pty, which is where that split would go if load ever demands it.
 
-The full route tables and the SSE protocol are documented in the [Server API reference](https://jiumate.ooo/docs/server-api). DTO types are exported for type-only import via `@jadelau/server/api`.
+The full route tables and the SSE protocol are documented in the [Server API reference](https://qiaiqian67.github.io/jiumate/docs/server-api). DTO types are exported for type-only import via `@jadelau/server/api`.
 
 ## Environment
 

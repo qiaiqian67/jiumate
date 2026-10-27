@@ -17,11 +17,11 @@ Installers cover macOS (dmg, Apple silicon / Intel), Windows (NSIS) and Linux (A
 
 ## A download page, and desktop installers on the OSS mirror
 
-[jiumate.ooo/download](https://jiumate.ooo/download) is a classic software download page: one card per platform, your detected system badged, click to download. Buttons default to GitHub's static `releases/latest/download` links — made possible by the installers moving to version-less names — while the page resolves the OSS mirror's `latest.json` in the background and, on success, switches to the mirror's immutable per-version directory, showing the resolved version with a manual source toggle. Desktop installers are mirrored byte-for-byte to Alibaba Cloud OSS, just like the CLI bundles.
+[qiaiqian67.github.io/jiumate/download](https://qiaiqian67.github.io/jiumate/download) is a classic software download page: one card per platform, your detected system badged, click to download. Buttons default to GitHub's static `releases/latest/download` links — made possible by the installers moving to version-less names — while the page resolves the OSS mirror's `latest.json` in the background and, on success, switches to the mirror's immutable per-version directory, showing the resolved version with a manual source toggle. Desktop installers are mirrored byte-for-byte to Alibaba Cloud OSS, just like the CLI bundles.
 
 ## Install scripts and jiumate update pick their download source
 
-An `install.sh` / `install.ps1` saved from a Release page now follows the same policy as the jiumate.ooo forwarding layer: `JIUMATE_DOWNLOAD_SOURCE=auto|oss|github`, with `auto` preferring OSS and falling back to the same version on GitHub. Newly published installers embed their own Release tag, so however long you keep one around it downloads the matching version instead of silently following a future latest. `jiumate update` adopts the same contract: upgrades no longer start at GitHub — version discovery prefers the OSS `latest.json`, forced modes are strict, and failures are reported localized.
+An `install.sh` / `install.ps1` saved from a Release page now follows the same policy as the qiaiqian67.github.io/jiumate forwarding layer: `JIUMATE_DOWNLOAD_SOURCE=auto|oss|github`, with `auto` preferring OSS and falling back to the same version on GitHub. Newly published installers embed their own Release tag, so however long you keep one around it downloads the matching version instead of silently following a future latest. `jiumate update` adopts the same contract: upgrades no longer start at GitHub — version discovery prefers the OSS `latest.json`, forced modes are strict, and failures are reported localized.
 
 ## Compaction failures stop trapping sessions
 
@@ -41,13 +41,13 @@ The server's last two IO hotspots close: the 30-second scheduler tick and the sc
 
 ## Install or upgrade
 
-Desktop app: grab your platform's installer at [jiumate.ooo/download](https://jiumate.ooo/download).
+Desktop app: grab your platform's installer at [qiaiqian67.github.io/jiumate/download](https://qiaiqian67.github.io/jiumate/download).
 
 CLI / server:
 
 ```sh
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
-Windows (PowerShell): `irm https://jiumate.ooo/install.ps1 | iex`; or `npm install -g @jadelau/cli` with Node >= 24. Existing installs: just `jiumate update` — which, as of this release, rides the mirror too.
+Windows (PowerShell): `irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex`; or `npm install -g @jadelau/cli` with Node >= 24. Existing installs: just `jiumate update` — which, as of this release, rides the mirror too.

@@ -102,14 +102,14 @@ The local model runs through Ollama. Installing the AMD driver, ROCm, and Ollama
 
 ### Get Fireworks API Access
 
-Through the AMD AI Developer Program, AMD and Fireworks AI offer eligible developers USD 50 in complimentary Fireworks credits. Fireworks provides open-weight models through an OpenAI-compatible endpoint. See [Getting Fireworks API Access](https://jiumate.ooo/blog/fireworks-credits-amd) for instructions on redeeming the credits and generating an API key.
+Through the AMD AI Developer Program, AMD and Fireworks AI offer eligible developers USD 50 in complimentary Fireworks credits. Fireworks provides open-weight models through an OpenAI-compatible endpoint. See [Getting Fireworks API Access](https://qiaiqian67.github.io/jiumate/blog/fireworks-credits-amd) for instructions on redeeming the credits and generating an API key.
 
 ### Register the Models in the Web UI
 
 Install and start JiuMate:
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
@@ -427,5 +427,5 @@ This approach is especially useful for local models. Without preparing training 
 ## References
 
 - [JiuMate GitHub](https://github.com/qiaiqian67/jiumate)
-- [JiuMate Self-Improvement Documentation](https://jiumate.ooo/docs/self-improvement/)
-- [Fireworks API Credits and API Key Guide](https://jiumate.ooo/blog/fireworks-credits-amd)
+- [JiuMate Self-Improvement Documentation](https://qiaiqian67.github.io/jiumate/docs/self-improvement/)
+- [Fireworks API Credits and API Key Guide](https://qiaiqian67.github.io/jiumate/blog/fireworks-credits-amd)

@@ -7,7 +7,7 @@
 <p align="center"><strong>开源、本地的多 Agent 应用自动开发平台</strong><br />全自动<strong>创建</strong> · <strong>优化</strong> · <strong>部署</strong> AI 应用</p>
 
 <p align="center">
-  <a href="https://jiumate.ooo/download">
+  <a href="https://qiaiqian67.github.io/jiumate/download">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="assets/readme/download-zh-dark.svg" />
       <img src="assets/readme/download-zh-light.svg" alt="下载应用" height="44" />
@@ -26,9 +26,9 @@
 </p>
 
 <p align="center">
-  <a href="https://jiumate.ooo/"><img src="https://img.shields.io/badge/%E5%AE%98%E7%BD%91-jiumate.ooo-1f6feb?logo=googlechrome&logoColor=white" alt="官网" /></a>
-  <a href="https://jiumate.ooo/docs/"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-jiumate.ooo%2Fdocs-1f6feb?logo=readthedocs&logoColor=white" alt="文档" /></a>
-  <a href="https://jiumate.ooo/blog"><img src="https://img.shields.io/badge/%E5%8D%9A%E5%AE%A2-jiumate.ooo%2Fblog-1f6feb?logo=rss&logoColor=white" alt="博客" /></a>
+  <a href="https://qiaiqian67.github.io/jiumate/"><img src="https://img.shields.io/badge/%E5%AE%98%E7%BD%91-JiuMate-1f6feb?logo=googlechrome&logoColor=white" alt="官网" /></a>
+  <a href="https://qiaiqian67.github.io/jiumate/docs/"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-JiuMate-1f6feb?logo=readthedocs&logoColor=white" alt="文档" /></a>
+  <a href="https://qiaiqian67.github.io/jiumate/blog"><img src="https://img.shields.io/badge/%E5%8D%9A%E5%AE%A2-JiuMate-1f6feb?logo=rss&logoColor=white" alt="博客" /></a>
 </p>
 
 <p align="center">
@@ -83,7 +83,7 @@ https://github.com/user-attachments/assets/aec49ae9-b743-467b-b247-37bedfeaa36e
 
 ## 内置插件库
 
-开箱内置三类插件（[文档](https://jiumate.ooo/docs/skills)）——Skill，以及驱动目标模式与持续学习的会话钩子；Agent 也能编写并优化自己的 Skill：
+开箱内置三类插件（[文档](https://qiaiqian67.github.io/jiumate/docs/skills)）——Skill，以及驱动目标模式与持续学习的会话钩子；Agent 也能编写并优化自己的 Skill：
 
 | 分类        | 插件                                                                            |
 | ----------- | ------------------------------------------------------------------------------- |
@@ -130,7 +130,7 @@ https://github.com/user-attachments/assets/aec49ae9-b743-467b-b247-37bedfeaa36e
 
 完整的 Web 体验打包为独立应用：内嵌服务端，打开即已登录——无需终端、无登录页、也不用抄初始密码——并与 CLI 安装共用同一个 `~/.jiumate/data` 数据目录，两者可以混用（一个数据目录同一时刻只运行一个服务端；CLI 已启动实例时，应用会直接接入它）。
 
-从[下载页](https://jiumate.ooo/download)获取桌面端应用。下载页会自动选择可用的 OSS 加速源，安装包也附于每个 [GitHub Release](https://github.com/qiaiqian67/jiumate/releases)。
+从[下载页](https://qiaiqian67.github.io/jiumate/download)获取桌面端应用。下载页会自动选择可用的 OSS 加速源，安装包也附于每个 [GitHub Release](https://github.com/qiaiqian67/jiumate/releases)。
 
 | 平台          | 安装包                       |
 | ------------- | ---------------------------- |
@@ -154,14 +154,14 @@ chmod +x jiumate-desktop-linux-x86_64.AppImage
 ### 🐧🍎 Linux / macOS（在线安装）
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ```
 
 ### 🪟 Windows（在线安装，PowerShell）
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ```
 

@@ -9,12 +9,14 @@
       name="description"
       content="A zero-code CLI and Web UI for building AI agents, connected to 1,000+ models. Open source, local-first, and recursively self-improving."
     />
-    <!-- Self-referencing URLs for the home page: scripts/postbuild.mjs rewrites both per
+    <!-- Self-referencing URLs for the home page: scripts/postbuild.mjs rewrites them per
          route as it stamps out the blog shells, and drops the canonical from 404.html.
          Absolute because rel=canonical and Open Graph both ignore relative URLs, so
-         these name the production origin whatever BASE_PATH a build uses. -->
-    <link rel="canonical" href="https://jiumate.ooo/" />
-    <meta property="og:url" content="https://jiumate.ooo/" />
+         these name the production origin whatever BASE_PATH a build uses. The values
+         here are the fallback for a build that has no origin of its own; postbuild
+         rewrites them to the one the site is served from. -->
+    <link rel="canonical" href="https://qiaiqian67.github.io/jiumate/" />
+    <meta property="og:url" content="https://qiaiqian67.github.io/jiumate/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="JiuMate" />
     <meta property="og:title" content="JiuMate" />
@@ -22,7 +24,7 @@
       property="og:description"
       content="Efficient Self-Improving Harness for Everyone — open-source, local-first infrastructure that builds AI agents for you."
     />
-    <meta property="og:image" content="https://jiumate.ooo/og-cover.png" />
+    <meta property="og:image" content="https://qiaiqian67.github.io/jiumate/og-cover.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta
@@ -30,7 +32,7 @@
       content="JiuMate — Efficient Self-Improving Harness for Everyone"
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://jiumate.ooo/og-cover.png" />
+    <meta name="twitter:image" content="https://qiaiqian67.github.io/jiumate/og-cover.png" />
     <link rel="icon" type="image/svg+xml" href="./jiumate-logo.svg" />
     <title>JiuMate — Efficient Self-Improving Harness for Everyone</title>
     <!-- Apply the stored/system theme before first paint so the page doesn't flash the

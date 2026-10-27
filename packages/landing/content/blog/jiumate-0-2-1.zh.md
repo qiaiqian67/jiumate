@@ -17,11 +17,11 @@ JiuMate 0.2.1 发布了。主角是桌面端：不打开终端、不看登录页
 
 ## 下载页，以及镜像到 OSS 的桌面安装包
 
-[jiumate.ooo/download](https://jiumate.ooo/download) 是一张经典的软件下载页：每个平台一张卡片、检测到的系统打上标记、点击即下载。按钮默认指向 GitHub 的 `releases/latest/download` 静态直链——安装包改为无版本号命名，这类链接才成为可能——页面同时在后台解析 OSS 镜像的 `latest.json`，解析成功即切到镜像的不可变版本目录，并显示当前版本号，可手动切换来源。桌面安装包与 CLI 包一样逐字节镜像到阿里云 OSS。
+[qiaiqian67.github.io/jiumate/download](https://qiaiqian67.github.io/jiumate/download) 是一张经典的软件下载页：每个平台一张卡片、检测到的系统打上标记、点击即下载。按钮默认指向 GitHub 的 `releases/latest/download` 静态直链——安装包改为无版本号命名，这类链接才成为可能——页面同时在后台解析 OSS 镜像的 `latest.json`，解析成功即切到镜像的不可变版本目录，并显示当前版本号，可手动切换来源。桌面安装包与 CLI 包一样逐字节镜像到阿里云 OSS。
 
 ## 安装脚本与 jiumate update 自选下载源
 
-从 Release 页保存的 `install.sh` / `install.ps1` 现在与 jiumate.ooo 转发层同口径：`JIUMATE_DOWNLOAD_SOURCE=auto|oss|github`，`auto` 优先 OSS、同版本回退 GitHub；新发布的安装脚本内嵌自己的 Release tag，保存多久都下载与之匹配的版本，不再悄悄跟随未来的 latest。`jiumate update` 采用同一契约：升级不再从 GitHub 起步，版本发现优先走 OSS 的 `latest.json`，强制模式严格生效，失败信息本地化。
+从 Release 页保存的 `install.sh` / `install.ps1` 现在与 qiaiqian67.github.io/jiumate 转发层同口径：`JIUMATE_DOWNLOAD_SOURCE=auto|oss|github`，`auto` 优先 OSS、同版本回退 GitHub；新发布的安装脚本内嵌自己的 Release tag，保存多久都下载与之匹配的版本，不再悄悄跟随未来的 latest。`jiumate update` 采用同一契约：升级不再从 GitHub 起步，版本发现优先走 OSS 的 `latest.json`，强制模式严格生效，失败信息本地化。
 
 ## 压缩失败不再拖垮会话
 
@@ -41,13 +41,13 @@ JiuMate 0.2.1 发布了。主角是桌面端：不打开终端、不看登录页
 
 ## 安装或升级
 
-桌面端：前往 [jiumate.ooo/download](https://jiumate.ooo/download) 下载对应平台安装包。
+桌面端：前往 [qiaiqian67.github.io/jiumate/download](https://qiaiqian67.github.io/jiumate/download) 下载对应平台安装包。
 
 CLI / 服务端：
 
 ```sh
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
-Windows（PowerShell）：`irm https://jiumate.ooo/install.ps1 | iex`；或在 Node >= 24 下 `npm install -g @jadelau/cli`。已有安装直接 `jiumate update`——这一版起，它也走镜像了。
+Windows（PowerShell）：`irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex`；或在 Node >= 24 下 `npm install -g @jadelau/cli`。已有安装直接 `jiumate update`——这一版起，它也走镜像了。

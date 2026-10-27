@@ -53,13 +53,13 @@ The model catalog adds Thinking Machines Lab's Inkling on OpenRouter and Firewor
 
 ## Install or upgrade
 
-Desktop: grab your platform's installer at [jiumate.ooo/download](https://jiumate.ooo/download). As of this release the macOS builds are signed and notarized, so Gatekeeper opens them directly; Windows builds remain unsigned ("More info → Run anyway" past SmartScreen).
+Desktop: grab your platform's installer at [qiaiqian67.github.io/jiumate/download](https://qiaiqian67.github.io/jiumate/download). As of this release the macOS builds are signed and notarized, so Gatekeeper opens them directly; Windows builds remain unsigned ("More info → Run anyway" past SmartScreen).
 
 CLI / server:
 
 ```sh
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
-Windows (PowerShell): `irm https://jiumate.ooo/install.ps1 | iex`; or with Node >= 24, `npm install -g @jadelau/cli`. Existing installs: `jiumate update`.
+Windows (PowerShell): `irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex`; or with Node >= 24, `npm install -g @jadelau/cli`. Existing installs: `jiumate update`.

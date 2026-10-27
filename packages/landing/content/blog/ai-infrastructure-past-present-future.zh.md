@@ -84,13 +84,13 @@ Agent 能读 `nvidia-smi`，但没有标准办法去预留显存、排队等另�
 这就是我们的 Skills 写下来的东西。底下垫着的，是一个 shell、一套面向长任务的两阶段进程模型，以及以可读文本返回的错误。
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate run -m "用 Ollama 启动 Qwen3.5-0.8B 并注册到 JiuMate"
 ```
 
 ---
 
-- **文档**：[Skills](https://jiumate.ooo/docs/skills) · [工具与审批](https://jiumate.ooo/docs/tools) · [模型与供应商](https://jiumate.ooo/docs/models)
+- **文档**：[Skills](https://qiaiqian67.github.io/jiumate/docs/skills) · [工具与审批](https://qiaiqian67.github.io/jiumate/docs/tools) · [模型与供应商](https://qiaiqian67.github.io/jiumate/docs/models)
 - **社区**：[GitHub](https://github.com/qiaiqian67/jiumate) · [Discord](https://discord.gg/eFHKqqcU3D)
 
 **参考来源**：[vLLM](https://docs.vllm.ai/) · [Ollama](https://ollama.com/) · [LlamaFactory](https://github.com/hiyouga/LlamaFactory) · [Stripe, Can AI agents build real Stripe integrations?](https://stripe.com/blog/can-ai-agents-build-real-stripe-integrations) · [Anthropic, Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)

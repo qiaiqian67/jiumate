@@ -7,7 +7,7 @@ The full Web experience as a standalone application: it embeds the server and op
 
 ## Download and install
 
-Get the installer for your platform from the [download page](https://jiumate.ooo/download) (it serves the OSS-accelerated mirror when reachable); the same files are attached to every [GitHub Release](https://github.com/qiaiqian67/jiumate/releases).
+Get the installer for your platform from the [download page](https://qiaiqian67.github.io/jiumate/download) (it serves the OSS-accelerated mirror when reachable); the same files are attached to every [GitHub Release](https://github.com/qiaiqian67/jiumate/releases).
 
 | Platform | Installers |
 | --- | --- |

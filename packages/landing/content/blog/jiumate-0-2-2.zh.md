@@ -53,13 +53,13 @@ Web 应用这一个月的积累不少，拣要紧的说。对话头部的统计�
 
 ## 安装或升级
 
-桌面端：前往 [jiumate.ooo/download](https://jiumate.ooo/download) 下载对应平台安装包。本版起 macOS 安装包已签名并公证，Gatekeeper 直接放行；Windows 构建仍未签名，SmartScreen 里选「更多信息 → 仍要运行」。
+桌面端：前往 [qiaiqian67.github.io/jiumate/download](https://qiaiqian67.github.io/jiumate/download) 下载对应平台安装包。本版起 macOS 安装包已签名并公证，Gatekeeper 直接放行；Windows 构建仍未签名，SmartScreen 里选「更多信息 → 仍要运行」。
 
 CLI / 服务端：
 
 ```sh
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
-Windows（PowerShell）：`irm https://jiumate.ooo/install.ps1 | iex`；或在 Node >= 24 下 `npm install -g @jadelau/cli`。已有安装直接 `jiumate update`。
+Windows（PowerShell）：`irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex`；或在 Node >= 24 下 `npm install -g @jadelau/cli`。已有安装直接 `jiumate update`。

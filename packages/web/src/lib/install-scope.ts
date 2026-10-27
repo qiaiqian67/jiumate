@@ -84,7 +84,7 @@ export interface KeyRule {
  *   - `jiumate.chatRouteApplied.<field>` (features/chat/draft-view.tsx) is `sessionStorage`,
  *     not `localStorage`: it is scoped to one tab's history and dies with the tab, so it
  *     cannot outlive a data root.
- *   - `jiumate.ooo` (lib/remark-autolink-boundary.ts) is the product's domain inside an
+ *   - `qiaiqian67.github.io/jiumate` (lib/remark-autolink-boundary.ts) is the product's domain inside an
  *     example URL in a doc comment. It is not a storage key.
  */
 export const KEY_RULES: readonly KeyRule[] = [

@@ -1,4 +1,4 @@
-# https://jiumate.ooo/install.ps1 - JiuMate installer entry point for Windows.
+# https://qiaiqian67.github.io/jiumate/install.ps1 - JiuMate installer entry point for Windows.
 #
 # GitHub Pages cannot serve HTTP redirects, so this thin forwarder IS the
 # stable install URL. It selects an immutable OSS release when that mirror is
@@ -7,8 +7,8 @@
 # does not lock the large payload source; the real versioned installer decides
 # that for its own release. Usage:
 #
-#   irm https://jiumate.ooo/install.ps1 | iex
-#   & ([scriptblock]::Create((irm https://jiumate.ooo/install.ps1))) -Version v0.2.0
+#   irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
+#   & ([scriptblock]::Create((irm https://qiaiqian67.github.io/jiumate/install.ps1))) -Version v0.2.0
 #
 & {
   $ForwardedArgs = @($args)
@@ -48,7 +48,9 @@
     # .NET builds where the enum is immutable already default to TLS 1.2+.
   }
 
-  $SourceMode = if ($env:JIUMATE_DOWNLOAD_SOURCE) { $env:JIUMATE_DOWNLOAD_SOURCE.ToLowerInvariant() } else { "auto" }
+  # GitHub by default: the OSS mirror is not published to any more, so "auto" would spend
+  # a round trip discovering that. The mirror's code stays in place for a deploy that has one.
+  $SourceMode = if ($env:JIUMATE_DOWNLOAD_SOURCE) { $env:JIUMATE_DOWNLOAD_SOURCE.ToLowerInvariant() } else { "github" }
   if ($SourceMode -notin @("auto", "oss", "github")) {
     Fail "JIUMATE_DOWNLOAD_SOURCE must be auto, oss, or github"
   }

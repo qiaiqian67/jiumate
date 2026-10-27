@@ -87,7 +87,7 @@ Any OpenAI-protocol endpoint is supported: pick a preset above, or point a custo
 Install with one command (Linux / macOS, x64 / arm64, bundled Node runtime), then launch the Web UI:
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web        # opens http://127.0.0.1:7364 (first login: admin, initial password printed on first start)
 ```
 

@@ -59,14 +59,14 @@ On top of both, the Web App's draft page gained an end-to-end **agent tuning exa
 ## Install or upgrade
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
 Windows (PowerShell):
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 jiumate web
 ```
 

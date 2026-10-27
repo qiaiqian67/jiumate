@@ -4,8 +4,9 @@
 # - Pull requests touching either package only BUILD (validation) — no Pages
 #   configuration and no deploy, so PRs never fail on Pages availability.
 # - Pushes to main (and manual dispatch) build + deploy. The site is served from the
-#   custom apex domain https://jiumate.ooo/ (Settings -> Pages -> Custom domain), so
-#   BASE_PATH is "/" — assets resolve from the domain root, not a /<repo>/ subpath.
+#   repository's GitHub Pages address (https://qiaiqian67.github.io/jiumate/), so
+#   BASE_PATH is "/jiumate/" — assets resolve under the subpath, not at the domain root.
+#   A deploy with a domain of its own sets BASE_PATH to "/" and SITE_ORIGIN to it.
 # First-time setup: repository Settings -> Pages -> Source = "GitHub Actions".
 name: Deploy Site
 
@@ -54,7 +55,12 @@ jobs:
 
       - name: Build site (landing + docs, vite)
         env:
-          BASE_PATH: /
+          # The site is served from the repository's GitHub Pages address, so the assets
+          # resolve under the /jiumate/ subpath rather than at the domain root.
+          BASE_PATH: /jiumate/
+          # The host the site is served from. The deploy subpath is separate, because a
+          # domain is served from the root and GitHub Pages from a subpath.
+          SITE_ORIGIN: https://qiaiqian67.github.io
         run: pnpm build:site
 
       # Only the deploying runs need the Pages artifact (PRs stop at the build check).

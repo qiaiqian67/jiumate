@@ -12,7 +12,7 @@ JiuMate 0.1.4 is out, and the release has one theme: the harness meets you where
 One line in PowerShell:
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 ```
 
 That fetches `jiumate-win32-x64.zip` — the official Windows Node runtime bundled, so nothing needs to be preinstalled — verifies its SHA256, unpacks with a staged swap that never touches your `data\` directory, and puts `jiumate` on your user PATH (reading and writing the registry value with its kind preserved, so an existing `%USERPROFILE%`-style entry survives the edit). The stable URL is a forwarder that downloads fully before executing, so a truncated stream cannot half-install. Prefer npm? `npm install -g @jadelau/cli` works anywhere Node ≥ 24 does.
@@ -43,12 +43,12 @@ The same release makes an in-progress reply survive a page refresh — the serve
 
 ```bash
 # Linux / macOS
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 ```
 
 ```powershell
 # Windows
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 ```
 
 Or `npm install -g @jadelau/cli` with Node ≥ 24 — 0.1.4 is the version to install, since 0.1.3 carries the same feature set but never reached npm. Then run `jiumate web`, add a model key on the Models page — and state an objective.

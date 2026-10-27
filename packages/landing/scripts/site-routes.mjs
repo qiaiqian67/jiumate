@@ -11,15 +11,31 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** Production origin, no trailing slash. Override for a staging deploy. */
-export const SITE_ORIGIN = (process.env.SITE_ORIGIN ?? "https://jiumate.ooo").replace(/\/+$/, "");
+/**
+ * The host the site is served from, no trailing slash and no path.
+ *
+ * The default is GitHub Pages, because that is where the site is served when it has no
+ * domain of its own. A deploy with a domain sets SITE_ORIGIN to it.
+ *
+ * The origin is the host alone and the deploy subpath is BASE_PATH, because the two
+ * change independently: a domain is served from the root, GitHub Pages from a
+ * subpath. Anything that wants the whole address — the canonical URLs, the sitemap —
+ * joins the two.
+ */
+export const SITE_ORIGIN = (process.env.SITE_ORIGIN ?? "https://qiaiqian67.github.io").replace(
+  /\/+$/,
+  "",
+);
 
 /** Deploy subpath, no trailing slash ("" at the domain root, "/repo" under a Pages subpath). */
 export const BASE_PATH = (process.env.BASE_PATH ?? "/").replace(/\/+$/, "");
 
+/** The whole address the site is served from: the host and the subpath. */
+export const SITE_URL = `${SITE_ORIGIN}${BASE_PATH}`;
+
 /** Absolute URL for a site-root-relative route path. */
 export function absoluteUrl(route) {
-  return `${SITE_ORIGIN}${BASE_PATH}${route}`;
+  return `${SITE_URL}${route}`;
 }
 
 const HERE = dirname(fileURLToPath(import.meta.url));

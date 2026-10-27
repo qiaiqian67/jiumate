@@ -7,7 +7,7 @@
 <p align="center"><strong>Open-source, local-first multi-agent app development platform</strong><br />Fully automate <strong>building</strong> · <strong>optimizing</strong> · <strong>deploying</strong> AI applications</p>
 
 <p align="center">
-  <a href="https://jiumate.ooo/download">
+  <a href="https://qiaiqian67.github.io/jiumate/download">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="assets/readme/download-en-dark.svg" />
       <img src="assets/readme/download-en-light.svg" alt="Download App" height="44" />
@@ -26,9 +26,9 @@
 </p>
 
 <p align="center">
-  <a href="https://jiumate.ooo/"><img src="https://img.shields.io/badge/Website-jiumate.ooo-1f6feb?logo=googlechrome&logoColor=white" alt="Website" /></a>
-  <a href="https://jiumate.ooo/docs/"><img src="https://img.shields.io/badge/Docs-jiumate.ooo%2Fdocs-1f6feb?logo=readthedocs&logoColor=white" alt="Docs" /></a>
-  <a href="https://jiumate.ooo/blog"><img src="https://img.shields.io/badge/Blog-jiumate.ooo%2Fblog-1f6feb?logo=rss&logoColor=white" alt="Blog" /></a>
+  <a href="https://qiaiqian67.github.io/jiumate/"><img src="https://img.shields.io/badge/Website-JiuMate-1f6feb?logo=googlechrome&logoColor=white" alt="Website" /></a>
+  <a href="https://qiaiqian67.github.io/jiumate/docs/"><img src="https://img.shields.io/badge/Docs-JiuMate-1f6feb?logo=readthedocs&logoColor=white" alt="Docs" /></a>
+  <a href="https://qiaiqian67.github.io/jiumate/blog"><img src="https://img.shields.io/badge/Blog-JiuMate-1f6feb?logo=rss&logoColor=white" alt="Blog" /></a>
 </p>
 
 <p align="center">
@@ -83,7 +83,7 @@ https://github.com/user-attachments/assets/922d13a6-5ffc-4685-9a39-352f02f9afc0
 
 ## Built-in plugins
 
-Three plugin categories ship in the box ([docs](https://jiumate.ooo/docs/skills)) — skills, plus the session hooks that drive goal mode and continual learning; agents can also write and optimize their own skills:
+Three plugin categories ship in the box ([docs](https://qiaiqian67.github.io/jiumate/docs/skills)) — skills, plus the session hooks that drive goal mode and continual learning; agents can also write and optimize their own skills:
 
 | Category             | Plugins                                                                       |
 | -------------------- | ----------------------------------------------------------------------------- |
@@ -130,7 +130,7 @@ Start with the desktop app, or install the command line on a workstation or serv
 
 The full Web experience as a standalone application: it embeds the server and opens already signed in — no terminal, no login page, no initial password to copy. It works on the same `~/.jiumate/data` root as a CLI install, so the two can be used interchangeably (a data root only ever runs one server; if a CLI-started instance is already up, the app attaches to it).
 
-Download the desktop app from the [download page](https://jiumate.ooo/download). The page serves the OSS-accelerated mirror when it is reachable, and every installer is also attached to each [GitHub Release](https://github.com/qiaiqian67/jiumate/releases).
+Download the desktop app from the [download page](https://qiaiqian67.github.io/jiumate/download). The page serves the OSS-accelerated mirror when it is reachable, and every installer is also attached to each [GitHub Release](https://github.com/qiaiqian67/jiumate/releases).
 
 | Platform    | Installers                  |
 | ----------- | --------------------------- |
@@ -154,14 +154,14 @@ chmod +x jiumate-desktop-linux-x86_64.AppImage
 ### 🐧🍎 Linux / macOS (online install)
 
 ```bash
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web        # start the service and open http://127.0.0.1:7364
 ```
 
 ### 🪟 Windows (online install, PowerShell)
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 jiumate web        # start the service and open http://127.0.0.1:7364
 ```
 

@@ -1,7 +1,7 @@
 # Release: tag v* -> build the one-line install artifacts and publish a GitHub Release.
 # Releases are immutable: once published, assets can never be replaced. A tiny check-release
 # job therefore gates the release job on the tag's Release not existing yet — dispatching an
-# already-released tag skips the GitHub build/upload while still retrying the OSS mirror and npm publishing.
+# already-released tag skips the GitHub build/upload while still retrying the npm publishing.
 # Release jobs (the release job is gated on the existence check):
 # - release: build the monorepo -> pnpm deploy a production CLI dir -> assemble jiumate/ (bin + lib + web)
 #   -> one program payload per target (four platform payloads bundling the official Node runtime,
@@ -34,10 +34,11 @@
 #   that failed mid-chain can be re-run as-is after fixing the config.
 #   npm publishing lives here rather than a separate `on: release: published` workflow: the Release is created
 #   by this workflow's GITHUB_TOKEN, and GitHub won't trigger other workflows' release events from that.
-# - mirror-oss: download the exact GitHub Release assets, verify their checksums, then mirror the same bytes
-#   to immutable releases/<tag>/ keys in Alibaba Cloud OSS through GitHub OIDC. The GitHub Environment
-#   `oss-production` supplies the provider/role ARNs and OSS settings. latest.json is uploaded last and only
-#   when the tag is still GitHub's current latest Release. Manual retries also work after a Release exists.
+# - mirror-oss: the Alibaba Cloud OSS mirror is not part of this release. The GitHub Release is the
+#   only distribution point: the installers and the download manifest are uploaded to it, and
+#   install.sh downloads from it. The install script probes the OSS mirror first and falls back to
+#   GitHub when the mirror does not answer, so an absent mirror costs a slower download and
+#   nothing else.
 name: Release
 
 on:
@@ -61,7 +62,7 @@ env:
 
 jobs:
   # Skip the build/upload when the tag's Release already exists (immutable releases forbid
-  # replacing assets, so re-uploading can only fail; OSS mirroring and npm publishing are idempotent).
+  # replacing assets, so re-uploading can only fail; npm publishing is idempotent).
   check-release:
     runs-on: ubuntu-latest
     permissions:
@@ -90,12 +91,18 @@ jobs:
     with:
       ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
       tag: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-      require_macos_signing: true
-      require_windows_signing: true
+      # The installers are built unsigned. Signing needs an Apple Developer ID and a
+      # Windows EVSign account, and this release ships without either: the signing steps
+      # in the called workflow fall back to an unsigned build when they are not required,
+      # so the artifacts are published unverified and the OS says so when they run.
+      require_macos_signing: false
+      require_windows_signing: false
     # The signing secrets themselves live in the called workflow's matrix environments
     # (`apple-signing` for macOS, `desktop-build` for Windows) and resolve inside those
     # jobs; `inherit` additionally forwards repo-level secrets so the called workflow
-    # never sees a name shadowed to empty (the v0.2.2 failure mode).
+    # never sees a name shadowed to empty (the v0.2.2 failure mode). The environments are
+    # still declared so that signing can be turned on by filling the secrets in and
+    # setting the two flags above back to true, with no change to this file.
     secrets: inherit
 
   release:
@@ -414,98 +421,6 @@ jobs:
             desktop-artifacts/SHA256SUMS.desktop
             install.sh
             install.ps1
-
-  mirror-oss:
-    name: Mirror GitHub Release to Alibaba Cloud OSS
-    needs: [check-release, release]
-    if: >-
-      ${{ always() && needs.check-release.result == 'success' &&
-          (needs.release.result == 'success' || needs.release.result == 'skipped') }}
-    runs-on: ubuntu-latest
-    concurrency:
-      group: jiumate-oss-production
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      id-token: write
-    environment:
-      name: oss-production
-      url: ${{ vars.OSS_PUBLIC_BASE_URL }}
-    steps:
-      # On workflow_dispatch, use the selected branch's current mirror scripts while downloading
-      # the requested tag's immutable Release assets. A tag push naturally checks out that tag.
-      - uses: actions/checkout@v5
-
-      - name: Validate OSS environment configuration
-        env:
-          ALIYUN_OIDC_PROVIDER_ARN: ${{ vars.ALIYUN_OIDC_PROVIDER_ARN }}
-          ALIYUN_ROLE_ARN: ${{ vars.ALIYUN_ROLE_ARN }}
-          OSS_BUCKET: ${{ vars.OSS_BUCKET }}
-          OSS_REGION: ${{ vars.OSS_REGION }}
-          OSS_ENDPOINT: ${{ vars.OSS_ENDPOINT }}
-          OSS_PUBLIC_BASE_URL: ${{ vars.OSS_PUBLIC_BASE_URL }}
-        run: |
-          set -eu
-          for name in ALIYUN_OIDC_PROVIDER_ARN ALIYUN_ROLE_ARN OSS_BUCKET OSS_REGION OSS_ENDPOINT OSS_PUBLIC_BASE_URL; do
-            eval "value=\${$name:-}"
-            if [ -z "$value" ]; then
-              echo "error: $name is not configured in the oss-production environment" >&2
-              exit 1
-            fi
-          done
-
-      - name: Download and verify ossutil
-        run: |
-          sh scripts/install-ossutil.sh "$RUNNER_TEMP/ossutil-bin"
-          echo "$RUNNER_TEMP/ossutil-bin" >> "$GITHUB_PATH"
-
-      # Pinned v1 commit. audience must match the client ID configured on the Alibaba Cloud
-      # OIDC provider; this project deliberately uses `github-actions`.
-      - name: Exchange GitHub OIDC token for Alibaba Cloud credentials
-        id: aliyun
-        uses: aliyun/configure-aliyun-credentials-action@1e5248c8d5d93a8781ac344a68e19a43341e79e6
-        with:
-          oidc-provider-arn: ${{ vars.ALIYUN_OIDC_PROVIDER_ARN }}
-          role-to-assume: ${{ vars.ALIYUN_ROLE_ARN }}
-          role-session-name: jiumate-oss-${{ github.run_id }}
-          role-session-expiration: 1800
-          audience: github-actions
-
-      - name: Download exact GitHub Release assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-        run: |
-          mkdir -p release-assets
-          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
-          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir release-assets
-
-      - name: Determine whether the tag is the latest Release
-        id: latest
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-        run: |
-          LATEST_TAG="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)"
-          if [ "$TAG" = "$LATEST_TAG" ]; then
-            echo "update=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "update=false" >> "$GITHUB_OUTPUT"
-            echo "$TAG will be mirrored without replacing latest.json (current latest: $LATEST_TAG)."
-          fi
-
-      - name: Mirror and verify OSS objects
-        env:
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-          GH_TOKEN: ${{ github.token }}
-          OSS_ACCESS_KEY_ID: ${{ steps.aliyun.outputs['aliyun-access-key-id'] }}
-          OSS_ACCESS_KEY_SECRET: ${{ steps.aliyun.outputs['aliyun-access-key-secret'] }}
-          OSS_SESSION_TOKEN: ${{ steps.aliyun.outputs['aliyun-security-token'] }}
-          OSS_BUCKET: ${{ vars.OSS_BUCKET }}
-          OSS_REGION: ${{ vars.OSS_REGION }}
-          OSS_ENDPOINT: ${{ vars.OSS_ENDPOINT }}
-          OSS_PUBLIC_BASE_URL: ${{ vars.OSS_PUBLIC_BASE_URL }}
-        run: sh scripts/publish-release-to-oss.sh release-assets "$TAG" "${{ steps.latest.outputs.update }}"
 
   publish-npm:
     name: Publish npm packages
