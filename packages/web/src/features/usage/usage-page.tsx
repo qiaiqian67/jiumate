@@ -27,13 +27,13 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import type { ModelRefDto, UsageBucket, UsageResponse } from "@jiumate/server/api";
+import type { ModelRefDto, UsageBucket, UsageResponse } from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
 import { useDocumentTitle } from "../../lib/use-document-title";
 import { formatMoney, humanizeTokens } from "../../lib/format";
-import { catalogEntryFor } from "@jiumate/core/model-catalog";
+import { catalogEntryFor } from "@jadelau/core/model-catalog";
 import { agentDisplayName, useProject } from "../../state/project";
 import { useTheme } from "../../state/theme";
 import { Input } from "../../components/ui/input";

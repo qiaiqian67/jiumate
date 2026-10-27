@@ -11,7 +11,7 @@
  * stay inert.
  */
 import { describe, expect, it } from "vitest";
-import { MODEL_PROVIDERS } from "@jiumate/core/model-catalog";
+import { MODEL_PROVIDERS } from "@jadelau/core/model-catalog";
 import {
   defaultExpandedProviders,
   expandedGroupsKey,

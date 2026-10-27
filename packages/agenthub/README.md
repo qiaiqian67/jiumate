@@ -16,7 +16,7 @@ make test     # Run tests
 ### Basic Client Usage
 
 ```typescript
-import { AutoLLMClient } from "@jiumate/agenthub";
+import { AutoLLMClient } from "@jadelau/agenthub";
 
 process.env.OPENAI_API_KEY = "your-openai-api-key";
 
@@ -57,7 +57,7 @@ client.setHistory(history);
 Save and browse conversation history with a web interface:
 
 ```typescript
-import { Tracer } from "@jiumate/agenthub/integration/tracer";
+import { Tracer } from "@jadelau/agenthub/integration/tracer";
 
 // Create a tracer instance
 const tracer = new Tracer("./cache");
@@ -81,7 +81,7 @@ tracer.startWebServer("127.0.0.1", 25750);
 Interactive web interface for chatting with LLMs:
 
 ```typescript
-import { startPlaygroundServer } from "@jiumate/agenthub/integration/playground";
+import { startPlaygroundServer } from "@jadelau/agenthub/integration/playground";
 
 // Start the playground server
 startPlaygroundServer("127.0.0.1", 25751);

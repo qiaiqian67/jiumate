@@ -23,10 +23,10 @@ JiuMate 的能力围绕三个递进的概念展开——消息协议、SDK、技
 
 | 组件 | 包名 | 说明 |
 | --- | --- | --- |
-| SDK | `@jiumate/core` | 核心引擎：ReAct 循环、[OmniMessage 协议](/omni-message)、LLM 与 Environment [接口契约](/interfaces)、Agent State 与 Trace。 |
-| CLI | `@jiumate/cli` | 命令行 `jiumate`：交互式 REPL、单次任务运行、模型与 Vault 配置。 |
-| Server | `@jiumate/server` | Web 服务端：HTTP [API 与 SSE 流式通道](/server-api)、多用户认证、Project 授权、用量统计。 |
-| Web App | `@jiumate/web` | 浏览器界面：多 Session 对话、Agent 管理、技能库、模型配置、Trace 观测与评估中心。 |
+| SDK | `@jadelau/core` | 核心引擎：ReAct 循环、[OmniMessage 协议](/omni-message)、LLM 与 Environment [接口契约](/interfaces)、Agent State 与 Trace。 |
+| CLI | `@jadelau/cli` | 命令行 `jiumate`：交互式 REPL、单次任务运行、模型与 Vault 配置。 |
+| Server | `@jadelau/server` | Web 服务端：HTTP [API 与 SSE 流式通道](/server-api)、多用户认证、Project 授权、用量统计。 |
+| Web App | `@jadelau/web` | 浏览器界面：多 Session 对话、Agent 管理、技能库、模型配置、Trace 观测与评估中心。 |
 
 ## 设计信条
 

@@ -5,7 +5,7 @@ description: Use whenever the user wants to build an agent application — their
 
 # JiuMate Harness SDK
 
-`@jiumate/core` is the TypeScript SDK this agent itself runs on. Use it to build your own AI apps:
+`@jadelau/core` is the TypeScript SDK this agent itself runs on. Use it to build your own AI apps:
 
 - An **Agent** loads its state (prompts, tools, skills) from `<root>/<project_id>/agents/<agent_id>/`. Creating an Agent whose directory is empty initializes it with defaults.
 - A **Session** is one conversation of an Agent inside a **Workspace** directory.
@@ -44,10 +44,10 @@ If neither counted source yields a key, **stop immediately and ask the user to c
 ## Setup
 
 ```bash
-npm install @jiumate/core tsx
+npm install @jadelau/core tsx
 ```
 
-If the package is not on your npm registry (it is developed in the JiuMate monorepo and may not be published), develop inside a checkout of the JiuMate repo instead: add your app as a workspace package under `packages/`, depend on `"@jiumate/core": "workspace:*"`, then `pnpm install && pnpm build` at the repo root. Tell the user which route you took.
+If the package is not on your npm registry (it is developed in the JiuMate monorepo and may not be published), develop inside a checkout of the JiuMate repo instead: add your app as a workspace package under `packages/`, depend on `"@jadelau/core": "workspace:*"`, then `pnpm install && pnpm build` at the repo root. Tell the user which route you took.
 
 Configure a model for the app's data root, in this order — stop at the first that works:
 
@@ -67,7 +67,7 @@ The raw `run()` stream mixes model, event and session-meta payloads — always n
 ```ts
 import path from "node:path";
 import readline from "node:readline/promises";
-import { createAgent, isModelMessage, userText } from "@jiumate/core";
+import { createAgent, isModelMessage, userText } from "@jadelau/core";
 
 const agent = await createAgent({ root: path.join(import.meta.dirname, "jiumate_data") });
 const session = await agent.createSession({ workspaceDir: process.cwd() });
@@ -108,7 +108,7 @@ Modern models think before answering and accept images; the stream and the input
 **Images in.** Build image input with `imageUrlMessage` (a web URL or a base64 data URL) beside `userText` in the same `run` input:
 
 ```ts
-import { imageUrlMessage, userText } from "@jiumate/core";
+import { imageUrlMessage, userText } from "@jadelau/core";
 session.run([userText(question), ...images.map(imageUrlMessage)], { ... });
 ```
 
@@ -124,7 +124,7 @@ Add an MCP server (`tools.mcpServers` in `system_config.yaml`) only when a CLI w
 
 ## RAG knowledge app
 
-The default recipe when the user wants an app that answers questions over a document set ("docs QA", "knowledge base", "chat with our docs", "become an expert on X"). The core contributes the agent loop only — retrieval is app code. Default to **lexical BM25**: no extra dependencies, no embedding credential, works offline. (Semantic upgrade: embed chunks via `@jiumate/agenthub` — see the agenthub-models skill — and rank by cosine; only when an embedding-capable key is configured.)
+The default recipe when the user wants an app that answers questions over a document set ("docs QA", "knowledge base", "chat with our docs", "become an expert on X"). The core contributes the agent loop only — retrieval is app code. Default to **lexical BM25**: no extra dependencies, no embedding credential, works offline. (Semantic upgrade: embed chunks via `@jadelau/agenthub` — see the agenthub-models skill — and rank by cosine; only when an embedding-capable key is configured.)
 
 ```
 my-app/
@@ -151,7 +151,7 @@ find corpus -type f ! -regex '.*\.\(md\|mdx\|txt\|html?\)$' -delete && rm -rf co
 ```ts
 import fs from "node:fs";
 import path from "node:path";
-import { createAgent } from "@jiumate/core";
+import { createAgent } from "@jadelau/core";
 
 const ROOT = import.meta.dirname;
 const walk = (d: string): string[] =>
@@ -248,7 +248,7 @@ export function search(index: Index, query: string, k = 6): Chunk[] {
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
-import { createAgent, isModelMessage, userText } from "@jiumate/core";
+import { createAgent, isModelMessage, userText } from "@jadelau/core";
 import { loadIndex, search } from "./rag.ts";
 
 const ROOT = import.meta.dirname;

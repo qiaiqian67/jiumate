@@ -23,8 +23,8 @@ import {
   toolCall,
   toolCallOutput,
   withOrigin,
-} from "@jiumate/core";
-import type { OmniMessage, StopReason } from "@jiumate/core";
+} from "@jadelau/core";
+import type { OmniMessage, StopReason } from "@jadelau/core";
 import type { ProjectCreateResponse, UsageErrorsPage, UsageResponse } from "../src/api/types.js";
 import { openDatabase } from "../src/db/database.js";
 import { ErrorsRepo } from "../src/db/repos/errors.js";

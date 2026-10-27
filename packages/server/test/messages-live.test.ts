@@ -16,8 +16,8 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@jiumate/core";
-import type { ApproveFn, OmniMessage } from "@jiumate/core";
+} from "@jadelau/core";
+import type { ApproveFn, OmniMessage } from "@jadelau/core";
 import type { MessagesResponse } from "../src/api/types.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";

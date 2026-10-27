@@ -12,7 +12,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DEFAULT_SERVER_PORT, resolveRoot } from "@jiumate/core";
+import { DEFAULT_SERVER_PORT, resolveRoot } from "@jadelau/core";
 
 export interface ServerConfig {
   /** Local data root directory (shared with the SDK/CLI). */

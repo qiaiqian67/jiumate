@@ -17,7 +17,7 @@ import type {
   BrowserBackendCapabilities,
   BrowserCookie,
   BrowserTab,
-} from "@jiumate/core/interfaces";
+} from "@jadelau/core/interfaces";
 import { HttpError } from "../http/errors.js";
 
 /** One command sent to the far side. */

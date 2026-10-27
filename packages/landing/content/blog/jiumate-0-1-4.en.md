@@ -15,7 +15,7 @@ One line in PowerShell:
 irm https://jiumate.ooo/install.ps1 | iex
 ```
 
-That fetches `jiumate-win32-x64.zip` — the official Windows Node runtime bundled, so nothing needs to be preinstalled — verifies its SHA256, unpacks with a staged swap that never touches your `data\` directory, and puts `jiumate` on your user PATH (reading and writing the registry value with its kind preserved, so an existing `%USERPROFILE%`-style entry survives the edit). The stable URL is a forwarder that downloads fully before executing, so a truncated stream cannot half-install. Prefer npm? `npm install -g @jiumate/cli` works anywhere Node ≥ 24 does.
+That fetches `jiumate-win32-x64.zip` — the official Windows Node runtime bundled, so nothing needs to be preinstalled — verifies its SHA256, unpacks with a staged swap that never touches your `data\` directory, and puts `jiumate` on your user PATH (reading and writing the registry value with its kind preserved, so an existing `%USERPROFILE%`-style entry survives the edit). The stable URL is a forwarder that downloads fully before executing, so a truncated stream cannot half-install. Prefer npm? `npm install -g @jadelau/cli` works anywhere Node ≥ 24 does.
 
 The interesting part was not packaging but the agent itself. Every `exec_command` used to die on Windows with `spawn bash ENOENT`, because the command session hardcoded bash. Command sessions now resolve their shell per platform: Git-Bash first when present (best compatibility with the POSIX-oriented skill ecosystem — and a `bash` that resolves into the Windows system directory is rejected, because that is the WSL launcher, a different filesystem view entirely), then `pwsh`, then `powershell`, with `JIUMATE_SHELL` as the override. The chosen shell is announced to the model through a `Shell:` line in the session environment, so it writes PowerShell syntax when PowerShell is what it has, instead of emitting bash into the void.
 
@@ -51,4 +51,4 @@ curl -fsSL https://jiumate.ooo/install.sh | sh
 irm https://jiumate.ooo/install.ps1 | iex
 ```
 
-Or `npm install -g @jiumate/cli` with Node ≥ 24 — 0.1.4 is the version to install, since 0.1.3 carries the same feature set but never reached npm. Then run `jiumate web`, add a model key on the Models page — and state an objective.
+Or `npm install -g @jadelau/cli` with Node ≥ 24 — 0.1.4 is the version to install, since 0.1.3 carries the same feature set but never reached npm. Then run `jiumate web`, add a model key on the Models page — and state an objective.

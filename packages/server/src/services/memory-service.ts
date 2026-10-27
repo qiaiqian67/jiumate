@@ -37,7 +37,7 @@ import {
   memoryScopeDir,
   parseMemoryFrontmatter,
   readWorkspaceMarker,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   MemoryFileInfo,
   MemoryFilesResponse,

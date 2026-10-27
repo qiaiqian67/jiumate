@@ -1,11 +1,11 @@
-# @jiumate/core
+# @jadelau/core
 
 The JiuMate SDK and execution engine: the ReAct loop (`context_engine`), the OmniMessage protocol, the LLM / Environment interface contracts, Agent State and append-only Traces.
 
-The engine speaks only OmniMessage and delegates everything else through two swappable interfaces — `LLMInterface` (models, via the [`@jiumate/agenthub`](https://www.npmjs.com/package/@jiumate/agenthub) gateway) and `EnvironmentInterface` (tool execution). The SDK caller is the Human boundary: one entry point, `session.run`, streams the whole loop.
+The engine speaks only OmniMessage and delegates everything else through two swappable interfaces — `LLMInterface` (models, via the [`@jadelau/agenthub`](https://www.npmjs.com/package/@jadelau/agenthub) gateway) and `EnvironmentInterface` (tool execution). The SDK caller is the Human boundary: one entry point, `session.run`, streams the whole loop.
 
 ```ts
-import { createAgent, isCompleteModelMessage, userText } from "@jiumate/core";
+import { createAgent, isCompleteModelMessage, userText } from "@jadelau/core";
 
 const agent = await createAgent({ agentId: "default_agent" });
 const session = await agent.createSession({ workspaceDir: process.cwd() });
@@ -32,9 +32,9 @@ A single `run` drives a complete Task: streaming output, per-call approvals, con
 ## Development
 
 ```bash
-pnpm --filter @jiumate/core build       # tsup → dist/ (exports point at dist)
-pnpm --filter @jiumate/core typecheck
-pnpm --filter @jiumate/core test
+pnpm --filter @jadelau/core build       # tsup → dist/ (exports point at dist)
+pnpm --filter @jadelau/core typecheck
+pnpm --filter @jadelau/core test
 pnpm test:e2e                                       # live-model e2e (needs DEEPSEEK_API_KEY)
 ```
 

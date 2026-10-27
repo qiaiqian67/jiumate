@@ -24,14 +24,14 @@ import {
   approximateMessagesTokens,
   approximateTokens,
   effectiveMaxContextLength,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   OmniMessage,
   SessionMetaPayload,
   ToolCallOutputPayload,
   ToolCallPayload,
   ToolListReadyPayload,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type { SessionContextParts } from "../api/types.js";
 
 /** How many tools the ranking names before the tail is dropped. */

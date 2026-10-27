@@ -11,7 +11,7 @@
  * remove.
  */
 import { randomUUID } from "node:crypto";
-import type { BrowserTab } from "@jiumate/core/interfaces";
+import type { BrowserTab } from "@jadelau/core/interfaces";
 
 /** How long an unclaimed open request stays claimable. */
 const OPEN_REQUEST_TTL_MS = 60_000;

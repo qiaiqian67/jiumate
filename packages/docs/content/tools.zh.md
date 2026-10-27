@@ -182,7 +182,7 @@ POSIX 上 Ctrl-C 向会话进程组发送 `SIGINT`，中断前台命令。Window
 
 `read_document` 覆盖 `.docx` / `.pdf` / `.xlsx` / `.pptx` / `.odt` / `.ods` / `.odp`，返回 Markdown。它是**内置能力**：模型不需要、也不应该为了打开一个文档去安装转换器或库。在它出现之前，模型拿到一个 .docx 时 `read_file` 会拒绝（docx 是 zip，含 NUL 字节），Shell 成了唯一的门——于是它在任务中途去找 `pip install` 或 conda 环境。修法不是写一句提示让它别这么做，而是把能力交到它手上。
 
-抽取本身在 `packages/core/src/documents/`，并作为 core 的子路径导出（`@jiumate/core/documents`）——工作区预览用的是同一套代码，而 server 够不到 core 的内部文件。
+抽取本身在 `packages/core/src/documents/`，并作为 core 的子路径导出（`@jadelau/core/documents`）——工作区预览用的是同一套代码，而 server 够不到 core 的内部文件。
 
 几个刻意的取舍：
 

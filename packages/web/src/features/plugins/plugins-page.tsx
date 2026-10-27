@@ -1,5 +1,5 @@
 /**
- * Plugin library page: the built-in plugin library (loaded by core from the @jiumate/* packages), shown sectioned by category.
+ * Plugin library page: the built-in plugin library (loaded by core from the @jadelau/* packages), shown sectioned by category.
  * A plugin ships skills and/or a hook package (scripts the harness runs at the loop's hook
  * points, e.g. after every Task), and is installed on an Agent as a whole. Groups are
  * borderless — the group header (category name + plugin count, no icon) is collapsible,
@@ -49,7 +49,7 @@ import type {
   InstalledSkillsResponse,
   SkillCatalogItem,
   SkillMetadataItem,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { InstalledSkillsView } from "./installed-skills-view";
 import { ApiError } from "../../api/client";

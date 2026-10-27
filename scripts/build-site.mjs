@@ -4,7 +4,7 @@
  *
  *   BASE_PATH=/<repo>/ pnpm build:site     # CI (GitHub Pages project subpath)
  *   pnpm build:site                        # local (base "/")
- *   pnpm --filter @jiumate/landing preview   # serve the assembled tree
+ *   pnpm --filter @jadelau/landing preview   # serve the assembled tree
  *
  * Each package builds with its own BASE_PATH (landing: <base>, docs: <base>docs/),
  * then the docs dist is copied into the landing dist under docs/. The result is a
@@ -33,8 +33,8 @@ const run = (cmd, BASE_PATH) => {
   execSync(cmd, { cwd: root, stdio: "inherit", env: { ...process.env, BASE_PATH } });
 };
 
-run("pnpm --filter @jiumate/landing build", base);
-run("pnpm --filter @jiumate/docs build", `${base}docs/`);
+run("pnpm --filter @jadelau/landing build", base);
+run("pnpm --filter @jadelau/docs build", `${base}docs/`);
 
 const landingDist = join(root, "packages", "landing", "dist");
 const docsTarget = join(landingDist, "docs");

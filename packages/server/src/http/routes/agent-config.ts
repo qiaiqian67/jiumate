@@ -7,7 +7,7 @@
  * probe one MCP Server entry's reachability. Members can read and write (unrestricted).
  */
 import { Hono } from "hono";
-import type { MCPServerConfig } from "@jiumate/core";
+import type { MCPServerConfig } from "@jadelau/core";
 import type {
   AgentConfigResponse,
   AgentConfigUpdateRequest,

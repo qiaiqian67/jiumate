@@ -33,7 +33,7 @@ There is one today:
 
 - **`khroma`** — reported as `Unknown` because its package.json carries no license field; the repository states MIT. Pulled in transitively by mermaid (the web app's diagram renderer), so it is not a dependency anyone here chose directly.
 
-The first entry this gate ever produced was `@jiumate/use-guizang-ppt`, an optional plugin under AGPL-3.0. It was recorded rather than silently allowed, and then removed: the license is one this project has ruled out, and `use-bento-slides` (MIT) covers the same presentation use case.
+The first entry this gate ever produced was `@jadelau/use-guizang-ppt`, an optional plugin under AGPL-3.0. It was recorded rather than silently allowed, and then removed: the license is one this project has ruled out, and `use-bento-slides` (MIT) covers the same presentation use case.
 
 ## Conclusions already reached
 

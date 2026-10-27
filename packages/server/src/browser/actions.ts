@@ -12,7 +12,7 @@ import type {
   BrowserDialog,
   BrowserExecResult,
   BrowserScreenshot,
-} from "@jiumate/core/interfaces";
+} from "@jadelau/core/interfaces";
 import { HttpError } from "../http/errors.js";
 import { PageScriptError } from "./driver.js";
 import type { BrowserDriver, EvaluateOutcome } from "./driver.js";

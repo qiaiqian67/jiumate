@@ -8,7 +8,7 @@ import { buildPetTasks, petRunningPhase } from "../src/features/pet/pet-tasks";
 import { S } from "../src/lib/strings";
 import type { SessionSeenState } from "../src/lib/session-seen";
 import type { ChatItem } from "../src/lib/omni/stream-model";
-import type { SessionInfo } from "@jiumate/server/api";
+import type { SessionInfo } from "@jadelau/server/api";
 
 const LAST_ACTIVE = "2026-09-18T10:05:00.000Z";
 

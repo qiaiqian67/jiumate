@@ -21,7 +21,7 @@
  * this editor is not a bound at all. The numbers here drive the counters and the disabled states;
  * `test/user-shortcuts.test.ts` fails if the two copies drift apart.
  */
-import type { DraftShortcut } from "@jiumate/server/api";
+import type { DraftShortcut } from "@jadelau/server/api";
 
 /** A saved shortcut, as stored and as rendered. Re-exported from the API type so the two cannot drift. */
 export type UserShortcut = DraftShortcut;

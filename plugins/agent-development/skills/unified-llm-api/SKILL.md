@@ -1,20 +1,20 @@
 ---
 name: unified-llm-api
-description: Call model APIs through @jiumate/agenthub — streaming text generation, image generation, speech synthesis, embeddings and the supported-model registry with one client.
+description: Call model APIs through @jadelau/agenthub — streaming text generation, image generation, speech synthesis, embeddings and the supported-model registry with one client.
 ---
 
 # Unified LLM API (AgentHub)
 
-`@jiumate/agenthub` is a unified TypeScript client for model APIs: streaming text, image generation, speech synthesis and embeddings behind one entry point.
+`@jadelau/agenthub` is a unified TypeScript client for model APIs: streaming text, image generation, speech synthesis and embeddings behind one entry point.
 
 ```bash
-npm install @jiumate/agenthub
+npm install @jadelau/agenthub
 ```
 
 The main entry point is `AutoLLMClient`:
 
 ```ts
-import { AutoLLMClient } from "@jiumate/agenthub";
+import { AutoLLMClient } from "@jadelau/agenthub";
 
 const client = new AutoLLMClient({ model: "<model_id>", apiKey: "<key>", baseUrl: "<url>", clientType: "<type>" });
 ```
@@ -71,7 +71,7 @@ Use exact model ids. If an id is not in the table below and the user has not giv
 
 The image endpoint dropped its preview suffix: `gemini-3.1-flash-image-preview` is deprecated, use `gemini-3.1-flash-image`.
 
-`glm-5.3-flash` is the one GLM model that reads images (`@jiumate/agenthub` >= 0.4.8). The GLM client sends an `image_url` item as an `image_url` part, in a prompt and in a tool result alike, and both an HTTP(S) URL and a base64 data URL pass through unchanged. The version match is case-insensitive, so the gateway spellings `z-ai/glm-5.3-flash` and `zai-org/GLM-5.3-Flash` are recognised too. Every other GLM id refuses an image rather than dropping it — `GLM <id> does not support image inputs.` in a prompt, `GLM <id> does not support images in tool results.` in a tool result — and that includes `glm-5v-turbo`.
+`glm-5.3-flash` is the one GLM model that reads images (`@jadelau/agenthub` >= 0.4.8). The GLM client sends an `image_url` item as an `image_url` part, in a prompt and in a tool result alike, and both an HTTP(S) URL and a base64 data URL pass through unchanged. The version match is case-insensitive, so the gateway spellings `z-ai/glm-5.3-flash` and `zai-org/GLM-5.3-Flash` are recognised too. Every other GLM id refuses an image rather than dropping it — `GLM <id> does not support image inputs.` in a prompt, `GLM <id> does not support images in tool results.` in a tool result — and that includes `glm-5v-turbo`.
 
 Gateway model lists can be queried online:
 
@@ -85,7 +85,7 @@ curl --request GET --url https://api.siliconflow.cn/v1/models --header 'Authoriz
 `listSupportedModels(currency?)` returns the models AgentHub itself knows how to route, so ids, endpoints, modalities, context windows and prices can be read from the package instead of being hardcoded:
 
 ```ts
-import { listSupportedModels } from "@jiumate/agenthub";
+import { listSupportedModels } from "@jadelau/agenthub";
 
 for (const m of listSupportedModels()) {
   console.log(m.model, m.base_url, m.client, m.context_window, m.pricing?.prompt_tokens);
@@ -132,7 +132,7 @@ for await (const event of client.streamingResponseStateful({
 A config value the target client cannot honour throws `UnsupportedParameterError` (an `AgentHubError` carrying `client` and `parameter`) while building the request, before anything reaches the network:
 
 ```ts
-import { UnsupportedParameterError } from "@jiumate/agenthub";
+import { UnsupportedParameterError } from "@jadelau/agenthub";
 
 try {
   // ...

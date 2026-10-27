@@ -2,7 +2,7 @@
  * JiuMate plugin library: the built-in plugins and the loader that reads them (part
  * of core — hooks, skills and their loading all live in one SDK).
  *
- * A plugin is its own npm package (`@jiumate/<name>`, `plugins/<name>/` in the repo;
+ * A plugin is its own npm package (`@jadelau/<name>`, `plugins/<name>/` in the repo;
  * resolved through Node from the host package's dependency list — see pluginRoots): a
  * directory carrying a `plugin.json` manifest, an `icon.svg` beside it (every built-in plugin
  * ships one; it is the icon of everything the plugin ships), and any of two kinds of content:
@@ -242,11 +242,11 @@ function packageRoot(): string {
 }
 const PKG_ROOT = packageRoot();
 /** npm-name prefix of the per-plugin packages (the host package's dependencies name them). */
-const PLUGIN_PKG_PREFIX = "@jiumate/";
+const PLUGIN_PKG_PREFIX = "@jadelau/";
 
 /**
  * Where the plugin directories live, name → absolute root. Each plugin is its own npm package
- * (`@jiumate/<name>`, `plugins/<name>/` in the repo): the host package's `dependencies`
+ * (`@jadelau/<name>`, `plugins/<name>/` in the repo): the host package's `dependencies`
  * name them (core, the CLI, and the desktop app — whose packaged manifest keeps that field
  * and nothing else, so `devDependencies` would not survive into an installer), and each is
  * resolved through Node from this module's own location, so the lookup walks the same
@@ -273,8 +273,8 @@ function pluginRoots(): Map<string, string> {
       );
     }
     const dir = path.dirname(manifest);
-    // The scope is shared with libraries that are not plugins — `@jiumate/core` and
-    // `@jiumate/agenthub` are dependencies too, and a plugin is told apart by its
+    // The scope is shared with libraries that are not plugins — `@jadelau/core` and
+    // `@jadelau/agenthub` are dependencies too, and a plugin is told apart by its
     // manifest, not by the scope its name happens to sit in. A package without one is
     // a library, and treating it as a plugin would fail the whole load.
     if (!fs.existsSync(path.join(dir, "plugin.json"))) continue;
@@ -293,7 +293,7 @@ function pluginRoots(): Map<string, string> {
  * Plugins the user added on this machine: one directory per plugin under `<root>/plugins/`.
  *
  * **Read after the npm-resolved roots, so it can override them.** These are not npm packages — a
- * plugin from a URL, an uploaded zip or another Agent's tree has no `@jiumate/` package behind it —
+ * plugin from a URL, an uploaded zip or another Agent's tree has no `@jadelau/` package behind it —
  * and they are read fresh on every call like everything else here, so adding one takes effect on
  * the next request without a restart.
  *

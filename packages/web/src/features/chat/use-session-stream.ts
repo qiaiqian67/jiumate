@@ -22,7 +22,7 @@ import type {
   PendingSteeringInfo,
   SessionStatus,
   SubagentRuntimeInfo,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import { getGoal, getMe, getMessages } from "../../api/endpoints";
 import { openSessionStream } from "../../api/sse";
 import { createStreamController } from "../../lib/omni/stream-controller";

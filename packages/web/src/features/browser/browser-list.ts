@@ -12,7 +12,7 @@
  * The one thing this store does not own is the `<webview>` element. Only the page can create
  * one, and only the page knows which element shows which tab — see browser-guests.ts.
  */
-import type { BrowserStatus, BrowserTab } from "@jiumate/core/interfaces";
+import type { BrowserStatus, BrowserTab } from "@jadelau/core/interfaces";
 
 /** The tab the agent is using, or null when there is none. */
 let activeTabId: number | null = null;

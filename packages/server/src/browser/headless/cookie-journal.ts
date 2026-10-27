@@ -16,7 +16,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import type { BrowserCookie } from "@jiumate/core/interfaces";
+import type { BrowserCookie } from "@jadelau/core/interfaces";
 
 /** How many cookies the record keeps. The newest win. */
 export const JOURNAL_LIMIT = 5_000;

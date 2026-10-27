@@ -7,7 +7,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { scheduleDir } from "@jiumate/core";
+import { scheduleDir } from "@jadelau/core";
 import type { ProjectCreateResponse, ScheduleItem, SchedulesResponse } from "../src/api/types.js";
 import { apiClient, createTestApp, provisionUser } from "./helpers.js";
 import type { TestApp } from "./helpers.js";

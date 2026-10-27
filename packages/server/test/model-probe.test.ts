@@ -14,7 +14,7 @@ import {
   tokenUsage,
   toolCall,
   emptyTokenCounts,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import { isProbeContent, probeTps, probeVerdict } from "../src/services/project-config-service.js";
 
 describe("isProbeContent", () => {

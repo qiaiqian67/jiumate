@@ -6,7 +6,7 @@
 
 [English](2026-10-23-rename-npm-scope.md)
 
-这十一个要发布的包，名字里带着那个已经不再拥有它们的名字。`@prismshadow/jiumate-core` 现在是 `@jiumate/core`，`@prismshadow/jiumate-server` 现在是 `@jiumate/server`，cli、web、desktop、docs、inspirations、installer、landing、pets、skins 同理。十九个插件包本来就在 `@jiumate/*` 下，所以现在两套包待在一个作用域里，而不是两个。
+这十一个要发布的包，名字里带着那个已经不再拥有它们的名字。`@prismshadow/jiumate-core` 现在是 `@jadelau/core`，`@prismshadow/jiumate-server` 现在是 `@jadelau/server`，cli、web、desktop、docs、inspirations、installer、landing、pets、skins 同理。十九个插件包本来就在 `@jadelau/*` 下，所以现在两套包待在一个作用域里，而不是两个。
 
 这次改名走遍每一个"写下"包名而不只是"提到"包名的地方：每个 `package.json` 的 `name` 字段、源码里每一处 `import` 与 `type` 说明符、`workspace:*` 的依赖边、CI 与发布工作流里的 `pnpm --filter` 选择器、先走 `plugins/*/` 再走 `core`、`server`、`cli` 的 npm 发布循环，以及安装脚本里那行一行安装建议。
 
@@ -20,8 +20,8 @@ changelog 里提到这些名字的旧条目也保持原样。那些条目记录�
 
 ## 关于发布的一点说明
 
-`@jiumate/*` 这些名字在 registry 上是空闲的，这正是这次搬移成立的前提——但 Trusted Publisher 只能为一个已经存在于 registry 上的包配置，所以这十一个包每个都需要先 bootstrap 发布一次，发布工作流才能真正把它们发出去。`v0.4.0` 这个 tag 早于这次改名，所以它今天若跑起来，发的是旧名字；下一个 tag 带的是新名字。
+`@jadelau/*` 这些名字在 registry 上是空闲的，这正是这次搬移成立的前提——但 Trusted Publisher 只能为一个已经存在于 registry 上的包配置，所以这十一个包每个都需要先 bootstrap 发布一次，发布工作流才能真正把它们发出去。`v0.4.0` 这个 tag 早于这次改名，所以它今天若跑起来，发的是旧名字；下一个 tag 带的是新名字。
 
 ## 兼容性
 
-已发布的包名变了，所以 `npm install @prismshadow/jiumate-core` 不再解析，`@jiumate/core` 开始解析。旧名字从未发布过，因此没有任何装过它们的东西会坏——没有需要下架的版本，也没有需要标废弃的版本。仓库内部的 import 路径随包名一起改了，仓库之外没有源码受影响。
+已发布的包名变了，所以 `npm install @prismshadow/jiumate-core` 不再解析，`@jadelau/core` 开始解析。旧名字从未发布过，因此没有任何装过它们的东西会坏——没有需要下架的版本，也没有需要标废弃的版本。仓库内部的 import 路径随包名一起改了，仓库之外没有源码受影响。

@@ -6,7 +6,7 @@
  *
  * - **The caps are duplicated across packages on purpose** — the Web App's copy drives the
  *   counters, the server's copy is the enforcement — so the parity check reads the server module
- *   as text rather than importing it: `@jiumate/server` is a type-only dependency
+ *   as text rather than importing it: `@jadelau/server` is a type-only dependency
  *   here, and making it a runtime one to check three numbers would be a worse trade than a regex.
  * - **The draft picker's height must not move** when tabs are switched. The categories keep that by
  *   capping their rows (`inspiration-picker.tsx`); the user's folder cannot be capped by category,

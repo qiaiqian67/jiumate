@@ -20,9 +20,9 @@
  *      from — the path in the Markdown is the contract, and nothing in the renderer
  *      rewrites it (see the blog section of .agents/skills/jiumate-dev/SKILL.md).
  *
- * Prereqs: `pnpm --filter @jiumate/{skills,core,server,web} build` and
+ * Prereqs: `pnpm --filter @jadelau/{skills,core,server,web} build` and
  * Playwright's chromium. Run: `node scripts/capture-blog-shots.mjs` (or
- * `pnpm --filter @jiumate/landing blog-shots`).
+ * `pnpm --filter @jadelau/landing blog-shots`).
  */
 import { spawn } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";

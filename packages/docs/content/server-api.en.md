@@ -483,8 +483,8 @@ The order the bundled Web App uses:
 
 ## Type Imports
 
-All DTO types are importable type-only from the server package's `@jiumate/server/api` subpath:
+All DTO types are importable type-only from the server package's `@jadelau/server/api` subpath:
 
 ```ts
-import type { ServerEvent, SessionInfo } from "@jiumate/server/api";
+import type { ServerEvent, SessionInfo } from "@jadelau/server/api";
 ```

@@ -3,7 +3,7 @@
  * root itself, by whoever can read it, with no server needed and safely while one runs (the
  * same terms as `jiumate auth token`, which writes to this database live).
  *
- * Exported as `@jiumate/server/machine-status` for `jiumate server status`, which
+ * Exported as `@jadelau/server/machine-status` for `jiumate server status`, which
  * is how a CONTROLLER asks: it runs that one command over ssh and reads back JSON. The
  * question used to be asked in shell — `cat` the lock, `sed` the pid out of it, `kill -0`,
  * `cat` a second file for the id — which meant a parser on this side for a format with no

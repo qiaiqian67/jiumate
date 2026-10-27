@@ -19,8 +19,8 @@ import {
   toolCallOutput,
   toolListReady,
   userText,
-} from "@jiumate/core";
-import type { OmniMessage, SessionMetaPayload, ToolDefinition } from "@jiumate/core";
+} from "@jadelau/core";
+import type { OmniMessage, SessionMetaPayload, ToolDefinition } from "@jadelau/core";
 import {
   buildContextBreakdown,
   compactionThresholdFor,

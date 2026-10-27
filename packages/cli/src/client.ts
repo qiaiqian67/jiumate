@@ -23,8 +23,8 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { resolveRoot } from "@jiumate/core";
-import { liveServerLock } from "@jiumate/server/lock";
+import { resolveRoot } from "@jadelau/core";
+import { liveServerLock } from "@jadelau/server/lock";
 import type { Messages } from "./i18n.js";
 
 /** Session-id shape (core's convention); a full id needs no directory search. */

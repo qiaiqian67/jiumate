@@ -15,7 +15,7 @@
  * every mounted hook.
  */
 import { useEffect, useState } from "react";
-import type { UpdateCheckResponse, VersionResponse } from "@jiumate/server/api";
+import type { UpdateCheckResponse, VersionResponse } from "@jadelau/server/api";
 import * as api from "../api/endpoints";
 
 let versionCache: VersionResponse | null = null;

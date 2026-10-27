@@ -23,7 +23,7 @@ import type {
   UpdateJobPhase,
   UpdateJobStatus,
   VersionResponse,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import type { AccountMenuSession } from "./account-menu";
 import { offersClientUpdate } from "./desktop-update";
 import { updateCheckOutcome } from "./use-version-info";

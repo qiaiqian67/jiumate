@@ -39,8 +39,8 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
-import { agentsDir, isSessionMeta, tracesDir } from "@jiumate/core";
-import type { OmniMessage } from "@jiumate/core";
+import { agentsDir, isSessionMeta, tracesDir } from "@jadelau/core";
+import type { OmniMessage } from "@jadelau/core";
 import type { TraceFileRow, TraceSessionRow } from "../db/repos/trace-index.js";
 import { TraceIndexRepo } from "../db/repos/trace-index.js";
 import { cacheable, statMtime } from "../internal/mtime-gate.js";

@@ -28,12 +28,12 @@ import {
   toolCall,
   toolCallOutput,
   userText,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import {
   buildBackgroundTaskDoneMessage,
   buildHandoffMessage,
-} from "@jiumate/core/markers";
-import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@jiumate/core";
+} from "@jadelau/core/markers";
+import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@jadelau/core";
 import { decodeCursor, encodeCursor } from "../src/services/message-window.js";
 import type { TraceService } from "../src/services/trace-service.js";
 import { makeTempRoot, makeTraceHarness, writeTraceFile } from "./helpers.js";

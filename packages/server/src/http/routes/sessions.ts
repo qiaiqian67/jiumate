@@ -17,7 +17,7 @@ import {
   sessionScratchpadDir,
   stripLeadingMarkerBlocks,
   userText,
-} from "@jiumate/core";
+} from "@jadelau/core";
 // The documents subpath rather than the root entry: the root is the SDK surface every host
 // loads, and the extractors pull mammoth, pdf.js and a zip reader behind them. Nothing that
 // merely imports core should pay for them.
@@ -26,8 +26,8 @@ import {
   buildDocumentPreview,
   documentFormatOf,
   type CellEdit,
-} from "@jiumate/core/documents";
-import type { OmniMessage } from "@jiumate/core";
+} from "@jadelau/core/documents";
+import type { OmniMessage } from "@jadelau/core";
 import type {
   ApprovalMode,
   FilesStatResponse,

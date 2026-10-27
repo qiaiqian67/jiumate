@@ -7,7 +7,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { Hono } from "hono";
-import type { OmniMessage } from "@jiumate/core";
+import type { OmniMessage } from "@jadelau/core";
 import { bootAppDeps, createRuntimeApp } from "../src/app.js";
 import type { AppDeps, BuildDepsOverrides } from "../src/app.js";
 import { openDatabase } from "../src/db/database.js";

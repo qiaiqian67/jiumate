@@ -17,7 +17,7 @@
  */
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { THINKING_LEVEL_NAMES, resolveModelRef } from "@jiumate/core";
+import { THINKING_LEVEL_NAMES, resolveModelRef } from "@jadelau/core";
 import type { AppDeps } from "../../app.js";
 import type { ApprovalMode, ModelRefDto } from "../../api/types.js";
 import { requireHuman } from "../../auth/middleware.js";
@@ -38,7 +38,7 @@ import {
 } from "../validate.js";
 import { APPROVAL_MODES } from "./sessions.js";
 
-// Re-exported rather than redefined: the Web App imports these from @jiumate/server/api,
+// Re-exported rather than redefined: the Web App imports these from @jadelau/server/api,
 // so a second copy here would be a type the frontend's DTO is not assignable to — the mismatch
 // shows up as a compile error in the tab, pointing at this file rather than at the duplication.
 export type { AgentApiKeyInfo, AgentApiResponse, AgentApiSettings } from "../../api/types.js";

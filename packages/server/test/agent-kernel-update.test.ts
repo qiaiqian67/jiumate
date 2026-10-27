@@ -17,7 +17,7 @@ import {
   VAULT_PLACEHOLDER,
   defaultSystemConfig,
   systemConfigPath,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   AgentConfigResponse,
   AgentKernelUpdateResponse,

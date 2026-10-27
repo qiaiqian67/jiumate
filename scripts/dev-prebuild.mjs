@@ -223,10 +223,10 @@ try {
       // the packages that resolve to source (core's internals, the web app's own files) do not
       // belong in it. Anything added here must be a package whose `exports` point at `dist/`.
       const BUILT_PACKAGES = [
-        "@jiumate/core",
-        "@jiumate/inspirations",
-        "@jiumate/skins",
-        "@jiumate/pets",
+        "@jadelau/core",
+        "@jadelau/inspirations",
+        "@jadelau/skins",
+        "@jadelau/pets",
       ];
       let failed = null;
       for (const name of BUILT_PACKAGES) {

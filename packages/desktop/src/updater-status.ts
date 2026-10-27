@@ -31,7 +31,7 @@ import type {
   DesktopUpdateStatus,
   DesktopUpdaterCommandMessage,
   DesktopUpdaterStatusMessage,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 
 /** electron-updater's events, reduced to what the status needs. */
 export type UpdaterEvent =

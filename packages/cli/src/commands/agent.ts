@@ -11,7 +11,7 @@
  * Docs: /docs/cli § "jiumate agent".
  */
 import type { Command } from "commander";
-import type { AgentCreateResponse, AgentSummary } from "@jiumate/server/api";
+import type { AgentCreateResponse, AgentSummary } from "@jadelau/server/api";
 import { resolveConnection, resolveProjectId, ServerClient } from "../client.js";
 import { listAgents } from "../server-session.js";
 import { renderTable } from "../table.js";

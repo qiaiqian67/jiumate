@@ -58,7 +58,7 @@ $env:JIUMATE_HOME = "$HOME\.jiumate\amsp-test"
 开一个终端：
 
 ```bash
-pnpm --filter @jiumate/server dev
+pnpm --filter @jadelau/server dev
 ```
 
 它会打印监听端口（默认 7368）。
@@ -167,7 +167,7 @@ pnpm test
 ### 只跑 server 的
 
 ```bash
-pnpm --filter @jiumate/server test
+pnpm --filter @jadelau/server test
 ```
 
 ---

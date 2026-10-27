@@ -15,7 +15,7 @@
  * masked. Ours win on a collision.
  */
 import type { MachineApi } from "./machine-api.js";
-import type { ModelEntry, ModelRef } from "@jiumate/core";
+import type { ModelEntry, ModelRef } from "@jadelau/core";
 import type {
   ModelInfo,
   ModelRefDto,

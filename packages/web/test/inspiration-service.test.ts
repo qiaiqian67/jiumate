@@ -10,10 +10,10 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { builtinInspirationCatalog } from "@jiumate/inspirations/presets";
-import { TITLE_LIMIT as PACKAGE_TITLE_LIMIT } from "@jiumate/inspirations/schema";
+import { builtinInspirationCatalog } from "@jadelau/inspirations/presets";
+import { TITLE_LIMIT as PACKAGE_TITLE_LIMIT } from "@jadelau/inspirations/schema";
 import { S } from "../src/lib/strings";
-import type { InspirationCase, InspirationCategory } from "@jiumate/inspirations";
+import type { InspirationCase, InspirationCategory } from "@jadelau/inspirations";
 import {
   builtinCatalogView,
   categoryLabel,

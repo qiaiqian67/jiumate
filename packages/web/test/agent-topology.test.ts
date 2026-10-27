@@ -18,8 +18,8 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@jiumate/core/omnimessage";
-import type { OmniMessage, SessionMetaPayload } from "@jiumate/core/omnimessage";
+} from "@jadelau/core/omnimessage";
+import type { OmniMessage, SessionMetaPayload } from "@jadelau/core/omnimessage";
 import {
   agentIdFromStatePath,
   approvalKey,

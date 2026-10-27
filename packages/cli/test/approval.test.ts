@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Readable, Writable } from "node:stream";
-import { toolCall } from "@jiumate/core";
-import type { OmniMessage, ToolCallPayload } from "@jiumate/core";
+import { toolCall } from "@jadelau/core";
+import type { OmniMessage, ToolCallPayload } from "@jadelau/core";
 import { makeApprove, promptApproval, resolveApprovalMode } from "../src/approval.js";
 import { getMessages } from "../src/i18n.js";
 

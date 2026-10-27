@@ -16,12 +16,12 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   PartialTextPayload,
   PartialToolCallOutputPayload,
   PartialToolCallPayload,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import { LiveTailTracker } from "../src/runtime/live-tail.js";
 
 const SID = "s1";

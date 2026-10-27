@@ -15,7 +15,7 @@ import { randomUUID } from "node:crypto";
 import type {
   BrowserBackend,
   BrowserBackendCapabilities,
-} from "@jiumate/core/interfaces";
+} from "@jadelau/core/interfaces";
 import { BrowserLinkError } from "./link.js";
 import type { BrowserCommand, BrowserLink, BrowserLinkEvent } from "./link.js";
 

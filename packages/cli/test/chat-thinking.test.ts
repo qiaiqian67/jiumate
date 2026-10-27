@@ -13,7 +13,7 @@ import {
   partialToolCall,
   partialToolCallOutput,
   type OmniMessage,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import { registerChatCommand } from "../src/commands/chat.js";
 import { getMessages } from "../src/i18n.js";
 import { FakeServer } from "./fake-server.js";

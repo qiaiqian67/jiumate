@@ -15,8 +15,8 @@ import {
   ThinkingLevel,
   ToolCallArgumentParseError,
   UnsupportedParameterError,
-} from "@jiumate/agenthub";
-import type { UniConfig, UniEvent, UniMessage, UsageMetadata } from "@jiumate/agenthub";
+} from "@jadelau/agenthub";
+import type { UniConfig, UniEvent, UniMessage, UsageMetadata } from "@jadelau/agenthub";
 import type { LLMOutcome, ThinkingLevelName } from "../src/interfaces/index.js";
 
 import {

@@ -54,7 +54,7 @@ import {
 } from "./pet-activity";
 import { getPetLookDirection } from "./pet-look";
 import { resolvePetById } from "./pet-service";
-import type { PetPackage } from "@jiumate/pets";
+import type { PetPackage } from "@jadelau/pets";
 
 /** Pet footprint at scale 1. Mirrors `PET_WINDOW_BASE_*` in packages/desktop/src/pet-window.ts. */
 const PET_BASE_WIDTH = 96;

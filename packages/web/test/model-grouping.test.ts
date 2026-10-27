@@ -16,7 +16,7 @@ import {
   MODEL_PROVIDERS,
   catalogEntryFor,
   effectivePricing,
-} from "@jiumate/core/model-catalog";
+} from "@jadelau/core/model-catalog";
 import {
   discountedPrice,
   groupModelRows,

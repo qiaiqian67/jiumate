@@ -19,12 +19,12 @@ import {
   DEFAULT_BUILTIN_PET_ID,
   slugifyPetId,
   type PetPackage,
-} from "@jiumate/pets";
+} from "@jadelau/pets";
 import type {
   PetControlEntry,
   PetControlPort,
   PetControlSnapshot,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type { UiPrefsRepo } from "../db/repos/ui-prefs.js";
 import type { PetCatalogService } from "./pet-catalog.js";
 

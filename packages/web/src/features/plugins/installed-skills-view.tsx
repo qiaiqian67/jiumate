@@ -20,7 +20,7 @@
  * record.
  */
 import { useState } from "react";
-import type { InstalledPluginItem, InstalledSkillItem } from "@jiumate/server/api";
+import type { InstalledPluginItem, InstalledSkillItem } from "@jadelau/server/api";
 import type { RenamableSkill } from "../../api/endpoints";
 import * as api from "../../api/endpoints";
 import { apiErrorText } from "../../lib/api-error";

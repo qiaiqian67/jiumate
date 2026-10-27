@@ -7,7 +7,7 @@
  * row 10 covers 8-15, one column each. A v1 atlas has neither row, so the pet
  * simply keeps its animated idle row.
  */
-import type { SpriteVersionNumber } from "@jiumate/pets";
+import type { SpriteVersionNumber } from "@jadelau/pets";
 import { spriteRows } from "./pet-states";
 
 /** 360° / 22.5°, and also the number of cells the two look rows provide. */

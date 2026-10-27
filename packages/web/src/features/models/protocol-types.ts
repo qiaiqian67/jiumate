@@ -6,7 +6,7 @@
  * The probing itself is server-side (packages/server/src/services/protocol-detect.ts); these
  * only decide what the dialog shows and what is worth sending there.
  */
-import { providerInfo } from "@jiumate/core/model-catalog";
+import { providerInfo } from "@jadelau/core/model-catalog";
 
 /**
  * AgentHub's generic protocol client types, in detection order (custom / user-defined

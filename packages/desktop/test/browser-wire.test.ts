@@ -17,9 +17,9 @@
  * desktop package's own tests and by running the app.
  */
 import { describe, expect, it } from "vitest";
-import { ShellLink } from "@jiumate/server/browser";
+import { ShellLink } from "@jadelau/server/browser";
 import { isBrowserCommandMessage, parseBrowserCommand } from "../src/builtin-browser-rules.js";
-import type { BrowserTab } from "@jiumate/core/interfaces";
+import type { BrowserTab } from "@jadelau/core/interfaces";
 
 /** The shell's capabilities: it cannot create tabs (the Web App's `<webview>` does). */
 const BUILTIN_CAPABILITIES = {

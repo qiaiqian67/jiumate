@@ -11,7 +11,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import type { DatabaseSync } from "node:sqlite";
-import type { OmniMessage, SessionTitleResult } from "@jiumate/core";
+import type { OmniMessage, SessionTitleResult } from "@jadelau/core";
 import { openDatabase } from "../src/db/database.js";
 import { SessionsRepo } from "../src/db/repos/sessions.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";

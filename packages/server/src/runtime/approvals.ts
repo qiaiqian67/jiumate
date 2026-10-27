@@ -20,7 +20,7 @@ import type {
   ApproveFn,
   OmniMessage,
   ToolCallPayload,
-} from "@jiumate/core";
+} from "@jadelau/core";
 
 export interface PendingApproval {
   toolCall: OmniMessage<ToolCallPayload>;

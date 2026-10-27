@@ -5,7 +5,7 @@
  */
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { assistantText, partialText, type OmniMessage } from "@jiumate/core";
+import { assistantText, partialText, type OmniMessage } from "@jadelau/core";
 import { cli } from "../src/index.js";
 import { getMessages } from "../src/i18n.js";
 import { FakeServer } from "./fake-server.js";

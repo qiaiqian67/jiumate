@@ -144,7 +144,7 @@ jobs:
       - name: Build (Linux and macOS)
         if: runner.os != 'Windows'
         run: |
-          pnpm -r --filter=!@jiumate/installer build
+          pnpm -r --filter=!@jadelau/installer build
           pnpm --dir packages/installer build:stage
 
       - name: Build (Windows)

@@ -10,24 +10,24 @@
  *
  * The origin **marker blocks** these flows produce and render — `[handoff_from]`,
  * `[scheduled_task]`, `[model_switch_from]` — are defined in core's marker module
- * (`@jiumate/core/markers`) alongside every other message marker, and are
+ * (`@jadelau/core/markers`) alongside every other message marker, and are
  * re-exported below under this feature's existing names.
  */
-import { buildHandoffMessage, buildModelSwitchMessage } from "@jiumate/core/markers";
-import type { AgentSummary } from "@jiumate/server/api";
+import { buildHandoffMessage, buildModelSwitchMessage } from "@jadelau/core/markers";
+import type { AgentSummary } from "@jadelau/server/api";
 
 export {
   parseBackgroundTaskDoneMessage,
   parseHandoffMessage,
   parseModelSwitchMessage,
   parseScheduledMessage,
-} from "@jiumate/core/markers";
+} from "@jadelau/core/markers";
 export type {
   BackgroundTaskDone,
   HandoffOrigin,
   ModelSwitchOrigin,
   ScheduledOrigin,
-} from "@jiumate/core/markers";
+} from "@jadelau/core/markers";
 
 /** First message of an `/agent` handoff conversation (core's `[handoff_from]` origin block). */
 export const handoffMessage = buildHandoffMessage;

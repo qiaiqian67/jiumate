@@ -46,8 +46,8 @@ import {
   renderProjectConfigToml,
   resolveModelEnv,
   userText,
-} from "@jiumate/core";
-import { providerInfo } from "@jiumate/core/model-catalog";
+} from "@jadelau/core";
+import { providerInfo } from "@jadelau/core/model-catalog";
 import type {
   CommandPolicyRule,
   LLMInterface,
@@ -56,7 +56,7 @@ import type {
   ModelRef,
   OmniMessage,
   ProjectConfig,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   ChatDefaultsDto,
   CommandPolicyDto,

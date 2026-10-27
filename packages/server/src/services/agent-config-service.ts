@@ -38,12 +38,12 @@ import {
   saveAgentVault,
   systemConfigPath,
   THINKING_LEVEL_NAMES,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   MCPServerConfig,
   ThinkingLevelName,
   ToolDefinitionConfig,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   AgentConfigDto,
   AgentConfigUpdateRequest,

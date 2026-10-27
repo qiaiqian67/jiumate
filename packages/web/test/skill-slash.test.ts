@@ -15,7 +15,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import type { SkillMetadataItem } from "@jiumate/server/api";
+import type { SkillMetadataItem } from "@jadelau/server/api";
 import {
   filterSkills,
   localizedShortText,

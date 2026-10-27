@@ -33,7 +33,7 @@ MPL-2.0 虽属 copyleft 但在名单内：它的义务按**文件**附着，所�
 
 - **`khroma`**——报告为 `Unknown`，因为它的 package.json 没有 license 字段，仓库实际声明 MIT。由 mermaid 传递引入（Web 端的图表渲染器），并非有人直接选择的依赖。
 
-这道闸门产出的第一条记录是 `@jiumate/use-guizang-ppt`——一个 AGPL-3.0 的可选插件。它被记录在案而非静默放行，随后被移除：该协议是本项目明令排除的，而 `use-bento-slides`（MIT）覆盖了同样的演示文稿场景。
+这道闸门产出的第一条记录是 `@jadelau/use-guizang-ppt`——一个 AGPL-3.0 的可选插件。它被记录在案而非静默放行，随后被移除：该协议是本项目明令排除的，而 `use-bento-slides`（MIT）覆盖了同样的演示文稿场景。
 
 ## 已经确认的结论
 

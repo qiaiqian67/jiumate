@@ -15,7 +15,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ProjectCreateResponse } from "../src/api/types.js";
 import { ProjectConfigService } from "../src/services/project-config-service.js";
-import type { LLMInterface } from "@jiumate/core";
+import type { LLMInterface } from "@jadelau/core";
 import { apiClient, createTestApp, provisionUser } from "./helpers.js";
 import type { TestApp } from "./helpers.js";
 

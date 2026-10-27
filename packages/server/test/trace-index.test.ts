@@ -6,8 +6,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { sessionMeta, userText } from "@jiumate/core";
-import type { SessionMetaPayload } from "@jiumate/core";
+import { sessionMeta, userText } from "@jadelau/core";
+import type { SessionMetaPayload } from "@jadelau/core";
 import { makeTempRoot, makeTraceHarness, writeTraceFile } from "./helpers.js";
 
 const P = "project-i";

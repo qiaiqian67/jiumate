@@ -20,8 +20,8 @@ import {
   toolCall,
   toolCallOutput,
   userText,
-} from "@jiumate/core";
-import type { OmniMessage, SessionMetaPayload } from "@jiumate/core";
+} from "@jadelau/core";
+import type { OmniMessage, SessionMetaPayload } from "@jadelau/core";
 import type { TraceService } from "../src/services/trace-service.js";
 import { makeTraceHarness } from "./helpers.js";
 

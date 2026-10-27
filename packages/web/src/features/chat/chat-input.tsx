@@ -86,7 +86,7 @@ import type {
   SessionStatus,
   SkillMetadataItem,
   TaskInputPart,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import { S } from "../../lib/strings";
 import { formatBytes, humanizeTokens } from "../../lib/format";
 import { useLocale } from "../../state/locale";

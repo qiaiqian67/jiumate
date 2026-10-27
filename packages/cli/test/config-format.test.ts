@@ -6,7 +6,7 @@
  * inline; fully empty columns are omitted automatically.
  */
 import { describe, expect, it } from "vitest";
-import type { ProjectConfig } from "@jiumate/core";
+import type { ProjectConfig } from "@jadelau/core";
 import { formatModelRows } from "../src/commands/config.js";
 
 describe("formatModelRows", () => {

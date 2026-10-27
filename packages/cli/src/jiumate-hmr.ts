@@ -7,8 +7,8 @@
 import "./warnings.js";
 import "dotenv/config";
 import { pathToFileURL } from "node:url";
-import { resolveRoot } from "@jiumate/core";
-import { resolveCliBundlePath } from "@jiumate/server/hmr/manifest";
+import { resolveRoot } from "@jadelau/core";
+import { resolveCliBundlePath } from "@jadelau/server/hmr/manifest";
 
 export async function loadPushedCli(root: string): Promise<(argv: string[]) => Promise<number>> {
   const bundlePath = await resolveCliBundlePath(root);

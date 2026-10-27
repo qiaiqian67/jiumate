@@ -5,7 +5,7 @@
  * member-level authorization as PUT config; a non-member gets 404 without a write.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { defaultSystemConfig } from "@jiumate/core";
+import { defaultSystemConfig } from "@jadelau/core";
 import type { AgentConfigResponse, ProjectCreateResponse } from "../src/api/types.js";
 import { apiClient, createTestApp, provisionUser } from "./helpers.js";
 import type { TestApp } from "./helpers.js";

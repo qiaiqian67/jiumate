@@ -16,8 +16,8 @@
  *   never writes back to the Agent config.
  * - `/thinking` bare shows the Session's pinned level, else the Agent's configured level.
  */
-import { DEFAULT_CHAT_THINKING_LEVELS } from "@jiumate/core";
-import type { DefaultChatThinkingLevel, ThinkingLevelName } from "@jiumate/core";
+import { DEFAULT_CHAT_THINKING_LEVELS } from "@jadelau/core";
+import type { DefaultChatThinkingLevel, ThinkingLevelName } from "@jadelau/core";
 import type { Messages } from "./i18n.js";
 
 /** Parses one level token (trimmed, case-insensitive); null when it is not a selectable level. */

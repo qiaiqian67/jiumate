@@ -12,7 +12,7 @@ import type {
   MemberInfo,
   ModelRefDto,
   ModelsResponse,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

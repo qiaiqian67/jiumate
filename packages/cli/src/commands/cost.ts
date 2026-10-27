@@ -12,7 +12,7 @@
  * Docs: /docs/cli § "jiumate cost".
  */
 import type { Command } from "commander";
-import type { UsageResponse } from "@jiumate/server/api";
+import type { UsageResponse } from "@jadelau/server/api";
 import { humanizeTokens } from "../render.js";
 import { resolveConnection, resolveProjectId, ServerClient } from "../client.js";
 import { renderTable } from "../table.js";

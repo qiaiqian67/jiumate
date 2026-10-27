@@ -9,7 +9,7 @@
  *   - 404 for foreign/unknown sessions (the shared resolveSession semantics).
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { BackgroundCommandInfo, OmniMessage, ApproveFn } from "@jiumate/core";
+import type { BackgroundCommandInfo, OmniMessage, ApproveFn } from "@jadelau/core";
 import type { SessionProcessesResponse } from "../src/api/types.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";

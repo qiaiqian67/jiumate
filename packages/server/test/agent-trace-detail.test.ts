@@ -7,8 +7,8 @@
  * (projectId, agentId, sessionId), with access controlled via requireProjectAccess.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { requestBegin, requestEnd, sessionMeta, userText } from "@jiumate/core";
-import type { SessionMetaPayload } from "@jiumate/core";
+import { requestBegin, requestEnd, sessionMeta, userText } from "@jadelau/core";
+import type { SessionMetaPayload } from "@jadelau/core";
 import type {
   AgentTracesResponse,
   ProjectCreateResponse,

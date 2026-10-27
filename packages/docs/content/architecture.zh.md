@@ -3,7 +3,7 @@ title: 架构总览
 description: 三接口边界、context_engine 与 OmniMessage 如何把 SDK、CLI、Server、Web 组织成一个系统。
 ---
 
-JiuMate 是一个 pnpm monorepo，核心是 `@jiumate/core` 中的执行引擎；CLI、Server 与 Web App 都只是这同一个引擎的不同「Human 实现」。
+JiuMate 是一个 pnpm monorepo，核心是 `@jadelau/core` 中的执行引擎；CLI、Server 与 Web App 都只是这同一个引擎的不同「Human 实现」。
 
 ## 分层结构
 
@@ -50,7 +50,7 @@ JiuMate 是一个 pnpm monorepo，核心是 `@jiumate/core` 中的执行引擎�
 | ReAct 循环、补发、重连、压缩 | SDK | `core/src/engine/context-engine.ts`，见 [Agent 运行循环](/agent-loop) |
 | 审批机制(每个 tool_call 一次决策) | SDK | `ApproveFn`(`core/src/interfaces/shared.ts`)；具体模式由 CLI/Server 注入 |
 | 工具执行与统一收尾 | SDK | `core/src/environment/`，见[工具与审批](/tools) |
-| 模型接入(Provider 协议适配) | SDK → AgentHub | `core/src/llm/` + `@jiumate/agenthub`，见[模型与 Provider](/models) |
+| 模型接入(Provider 协议适配) | SDK → AgentHub | `core/src/llm/` + `@jadelau/agenthub`，见[模型与 Provider](/models) |
 | Trace 写入与 Session 恢复逻辑 | SDK | `core/src/trace/`(记录本体在文件层) |
 | Subagent 派生与消息回流 | SDK | `run_subagent` 工具 + `SubagentRunner` 注入 |
 | 多用户认证与 Project 授权 | Server | `server/src/auth/`、`server/src/services/project-service.ts` |
@@ -129,6 +129,6 @@ Server 额外维护一个 SQLite 索引库(用户、授权、用量统计)，但
 
 - **一个协议，三种职责**:OmniMessage 同时是 SDK 对外接口、Trace 落盘格式与引擎内部通货——「流出去的」「存下来的」「模型看到的」是同一种东西。
 - **错误收敛为消息**:LLM 与 Environment 从不向引擎抛异常；结果携带六值 `stop_reason`(`completed | failed | aborted | timeout | malformed | auth`)，除 `auth` 外的所有 LLM 侧状态都会触发引擎内重连（`failed / timeout / malformed`，至多 5 次、指数退避设上限）。`auth` 是唯一的终态类别：凭据被拒绝，重试不可能让它变对。重试 `failed` 是策略选择——该状态本身仍如实上报为 `failed`。
-- **薄模型层**:core 只定义 `LLMInterface`,Provider 适配全部下沉到 AgentHub(`@jiumate/agenthub`)，因此支持任意 OpenAI 兼容端点，见[模型与 Provider](/models)。
+- **薄模型层**:core 只定义 `LLMInterface`,Provider 适配全部下沉到 AgentHub(`@jadelau/agenthub`)，因此支持任意 OpenAI 兼容端点，见[模型与 Provider](/models)。
 
 源码入口：`packages/core/src/engine/context-engine.ts`、`packages/core/src/interfaces/`。

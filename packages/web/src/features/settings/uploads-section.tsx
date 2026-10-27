@@ -13,7 +13,7 @@
  * read the setting per request — so there is nothing to restart and nothing to warn about.
  */
 import { useEffect, useState } from "react";
-import type { ServerSettings } from "@jiumate/server/api";
+import type { ServerSettings } from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

@@ -10,7 +10,7 @@ import { handoffMessage } from "../src/features/chat/agent-handoff";
 import {
   buildBackgroundTaskDoneMessage,
   buildScheduledMessage,
-} from "@jiumate/core/markers";
+} from "@jadelau/core/markers";
 import {
   buildInputHistory,
   caretOnFirstLine,

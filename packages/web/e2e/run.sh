@@ -22,9 +22,9 @@ trap cleanup EXIT
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "== build core/server/web =="
   (cd "$ROOT" \
-    && pnpm --filter @jiumate/core build \
-    && pnpm --filter @jiumate/server build \
-    && pnpm --filter @jiumate/web build) || { echo "BUILD FAILED"; exit 1; }
+    && pnpm --filter @jadelau/core build \
+    && pnpm --filter @jadelau/server build \
+    && pnpm --filter @jadelau/web build) || { echo "BUILD FAILED"; exit 1; }
 fi
 
 echo "== start mock LLM =="

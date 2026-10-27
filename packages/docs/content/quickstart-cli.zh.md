@@ -18,7 +18,7 @@ irm https://jiumate.ooo/install.ps1 | iex
 ```
 
 ```bash tab="npm（任意平台）"
-npm install -g @jiumate/cli
+npm install -g @jadelau/cli
 ```
 
 安装完成后验证：
@@ -163,10 +163,10 @@ pnpm install && pnpm build
 
 | 包 | 说明 |
 | --- | --- |
-| `@jiumate/cli` | 命令行工具，提供 `jiumate` 命令 |
-| `@jiumate/core` | SDK，程序化创建 Agent 与 Session |
-| `@jiumate/server` | Web 服务，含 Web UI 静态资源 |
-| `@jiumate/*` | 内置插件，一插件一包（Skill 与会话钩子）；由 core 加载 |
+| `@jadelau/cli` | 命令行工具，提供 `jiumate` 命令 |
+| `@jadelau/core` | SDK，程序化创建 Agent 与 Session |
+| `@jadelau/server` | Web 服务，含 Web UI 静态资源 |
+| `@jadelau/*` | 内置插件，一插件一包（Skill 与会话钩子）；由 core 加载 |
 
 全部包以 Apache-2.0 协议发布。
 

@@ -14,8 +14,8 @@
  * being stored and silently skipped later.
  */
 import { Hono } from "hono";
-import { resolveMCPServer } from "@jiumate/core";
-import type { MCPServerConfig } from "@jiumate/core/interfaces";
+import { resolveMCPServer } from "@jadelau/core";
+import type { MCPServerConfig } from "@jadelau/core/interfaces";
 import type { McpServerTestResponse } from "../../api/types.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import { HttpError } from "../errors.js";

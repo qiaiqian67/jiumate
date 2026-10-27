@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Segmented } from "../../components/ui/segmented";
 import { S } from "../../lib/strings";
 import { useBrowserBackend } from "../../state/browser-backend";
-import type { BrowserBackend } from "@jiumate/core/interfaces";
+import type { BrowserBackend } from "@jadelau/core/interfaces";
 import { PrefRow } from "./setting-row";
 
 /** What each backend means, in the user's terms. */

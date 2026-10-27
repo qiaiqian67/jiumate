@@ -17,7 +17,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { UsageErrorItem, UsageErrors } from "@jiumate/server/api";
+import type { UsageErrorItem, UsageErrors } from "@jadelau/server/api";
 import {
   LogsPanel,
   clearableFilter,

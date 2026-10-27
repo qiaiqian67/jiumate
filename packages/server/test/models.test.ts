@@ -18,7 +18,7 @@ import {
   catalogEntryFor,
   effectivePricing,
   userText,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   ModelsResponse,
   ModelTestResponse,

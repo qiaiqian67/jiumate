@@ -21,7 +21,7 @@
  * The user cannot see this browser and cannot take a tab over. That is the trade: nothing
  * opens on their screen, and the agent works in a browser of its own.
  */
-import type { BrowserCookie, BrowserTab } from "@jiumate/core/interfaces";
+import type { BrowserCookie, BrowserTab } from "@jadelau/core/interfaces";
 import { spawnSync } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import {

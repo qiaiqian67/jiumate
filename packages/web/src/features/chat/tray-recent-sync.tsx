@@ -19,7 +19,7 @@ import { useNavigate } from "react-router";
 import { S } from "../../lib/strings";
 import { sessionCategory } from "../../lib/session-grouping";
 import { useSessions } from "../../state/sessions";
-import type { SessionInfo } from "@jiumate/server/api";
+import type { SessionInfo } from "@jadelau/server/api";
 
 /** Rows sent to the shell: enough for the menu, and a cap so a long history cannot bloat it. */
 const MAX_ROWS = 30;

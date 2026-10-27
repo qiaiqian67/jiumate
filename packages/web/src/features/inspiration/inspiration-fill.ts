@@ -49,7 +49,7 @@ import { useProject } from "../../state/project";
 import { DRAFT_SESSION_ID } from "../chat/chat-page";
 import { draftKey, loadDraft, saveDraft } from "../chat/draft-cache";
 import { parkActiveDraft } from "../chat/draft-sessions";
-import type { InspirationCase } from "@jiumate/inspirations";
+import type { InspirationCase } from "@jadelau/inspirations";
 
 export interface InspirationFill {
   /** The composer's new body text: the case's prompt, alone. */

@@ -22,12 +22,12 @@
  * also closes the fragment (covers stop-less closures, e.g. interruption cleanup); the
  * whole session entry is dropped when the run ends (SessionManager.drive's finally).
  */
-import { isPartialPayload } from "@jiumate/core";
+import { isPartialPayload } from "@jadelau/core";
 import type {
   CompleteModelPayload,
   OmniMessage,
   PartialModelPayload,
-} from "@jiumate/core";
+} from "@jadelau/core";
 
 type PartialKind = PartialModelPayload["type"];
 

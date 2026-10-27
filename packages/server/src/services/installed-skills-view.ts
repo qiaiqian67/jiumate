@@ -24,7 +24,7 @@ import {
   readInstalls,
   type InstallsFile,
   type LibraryPlugin,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import fs from "node:fs/promises";
 import { toSkillItem } from "./plugin-library.js";
 

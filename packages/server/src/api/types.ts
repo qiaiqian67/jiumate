@@ -17,16 +17,16 @@ import type {
   CompactionMode,
   OmniMessage,
   ToolCallPayload,
-} from "@jiumate/core/omnimessage";
+} from "@jadelau/core/omnimessage";
 import type {
   BrowserBackend,
   BrowserStatus,
   MCPServerConfig,
   ThinkingLevelName,
   ToolDefinitionConfig,
-} from "@jiumate/core/interfaces";
+} from "@jadelau/core/interfaces";
 // Build/harness identity is not an interface contract — it ships from the barrel (core's version-info.ts).
-import type { HarnessInfo, VersionReport } from "@jiumate/core";
+import type { HarnessInfo, VersionReport } from "@jadelau/core";
 
 // ---------------------------------------------------------------------------
 // General
@@ -3598,11 +3598,11 @@ export interface AgentPluginsInstallResponse {
 // Inspiration library
 // ---------------------------------------------------------------------------
 
-import type { InspirationCase, InspirationCategory } from "@jiumate/inspirations";
+import type { InspirationCase, InspirationCategory } from "@jadelau/inspirations";
 
 /**
  * The inspiration library's case and category types come from
- * `@jiumate/inspirations` — the same package the server stores them with and the
+ * `@jadelau/inspirations` — the same package the server stores them with and the
  * web app renders them from, so the wire shape has exactly one definition. Only the envelope is
  * declared here.
  */

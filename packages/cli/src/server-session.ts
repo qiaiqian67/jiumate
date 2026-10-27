@@ -1,6 +1,6 @@
 /**
  * Session/agent API helpers shared by the server-backed commands (run / chat / ls /
- * input / logs / schedule). DTO shapes come from `@jiumate/server/api`
+ * input / logs / schedule). DTO shapes come from `@jadelau/server/api`
  * (type-only — nothing of the server is loaded at runtime).
  */
 import path from "node:path";
@@ -12,8 +12,8 @@ import type {
   SessionInfo,
   SessionResponse,
   SessionsResponse,
-} from "@jiumate/server/api";
-import type { OmniMessage } from "@jiumate/core";
+} from "@jadelau/server/api";
+import type { OmniMessage } from "@jadelau/core";
 import { resolveSessionRef, ServerClient } from "./client.js";
 import { dim } from "./render.js";
 import type { Messages } from "./i18n.js";

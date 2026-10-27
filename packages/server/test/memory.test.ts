@@ -17,7 +17,7 @@ import {
   USER_SCOPE_KEY,
   memoryDir,
   memoryScopeDir,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   AgentConfigResponse,
   MemoryFileResponse,

@@ -14,7 +14,7 @@
  * what is on the server rather than what was typed at it.
  */
 import { useEffect, useState } from "react";
-import type { ServerSettings } from "@jiumate/server/api";
+import type { ServerSettings } from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

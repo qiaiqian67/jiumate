@@ -29,8 +29,8 @@
  *   the buffer replays on top — so the in-progress message survives a refresh
  *   with its streamed prefix intact and keeps streaming.
  */
-import { isEventMessage, isPartialPayload } from "@jiumate/core/omnimessage";
-import type { OmniMessage, ToolCallPayload } from "@jiumate/core/omnimessage";
+import { isEventMessage, isPartialPayload } from "@jadelau/core/omnimessage";
+import type { OmniMessage, ToolCallPayload } from "@jadelau/core/omnimessage";
 import type {
   GoalServerEvent,
   MessagesLiveTail,
@@ -40,7 +40,7 @@ import type {
   PendingSteeringInfo,
   ServerEvent,
   SessionStatus,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import {
   approvalKey,
   buildDedupIndex,

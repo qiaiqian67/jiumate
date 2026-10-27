@@ -13,7 +13,7 @@
 
 本次构建一运行，既有安装即停止工作，因为所有外部标识都移动了：
 
-- **包名。** `@prismshadow/linsight-{cli,core,desktop,docs,landing,server,web,inspirations,pets,skins}` → `@prismshadow/jiumate-{…}`；`@linsight/*` → `@jiumate/*`。任何仍列出旧名的 `package.json` 都会依赖解析失败。
+- **包名。** `@prismshadow/linsight-{cli,core,desktop,docs,landing,server,web,inspirations,pets,skins}` → `@prismshadow/jiumate-{…}`；`@linsight/*` → `@jadelau/*`。任何仍列出旧名的 `package.json` 都会依赖解析失败。
 - **CLI 二进制。** `linsight` / `linsight-hmr` → `jiumate` / `jiumate-hmr`。
 - **数据根。** `~/.linsight/{data,dev-data,…}` → `~/.jiumate/{…}`。既有安装必须搬移，或用 `JIUMATE_HOME` 指过去。
 - **环境变量。** `LINSIGHT_*` → `JIUMATE_*`，含 `LINSIGHT_HOME`、`LINSIGHT_API_TOKEN`、`LINSIGHT_PROJECT_ID`、`LINSIGHT_AGENT_ID`、`LINSIGHT_WEB_DIST`、`LINSIGHT_PREVIEW_ORIGIN`。

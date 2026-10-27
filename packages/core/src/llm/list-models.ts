@@ -14,7 +14,7 @@
  * and a missing credential surfaces as the SDK's own construction/request error — callers
  * collapse errors into their outcome shape, nothing is caught here.
  */
-import { AutoLLMClient } from "@jiumate/agenthub";
+import { AutoLLMClient } from "@jadelau/agenthub";
 
 /** One endpoint listing request: which protocol to speak, and the credential/URL to speak it with. */
 export interface ListEndpointModelsOptions {

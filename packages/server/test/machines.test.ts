@@ -278,7 +278,7 @@ describe("ssh / scp invocations", () => {
 });
 
 describe("resolvePushPlan", () => {
-  const manifest = JSON.stringify({ name: "@jiumate/cli", version: "0.2.4" });
+  const manifest = JSON.stringify({ name: "@jadelau/cli", version: "0.2.4" });
 
   it("tarball install: the base release, with no pushed state", () => {
     const work = fs.mkdtempSync(path.join(os.tmpdir(), "jiumate-plan-"));
@@ -331,7 +331,7 @@ describe("resolvePushPlan", () => {
       fs.mkdirSync(path.join(appDir, "dist"), { recursive: true });
       fs.writeFileSync(
         path.join(appDir, "package.json"),
-        JSON.stringify({ name: "@jiumate/desktop", version: "0.2.4" }),
+        JSON.stringify({ name: "@jadelau/desktop", version: "0.2.4" }),
       );
 
       const plan = resolvePushPlan(null, path.join(appDir, "dist", "server.js"));
@@ -348,7 +348,7 @@ describe("resolvePushPlan", () => {
       fs.mkdirSync(path.join(pkgDir, "dist"), { recursive: true });
       fs.writeFileSync(
         path.join(pkgDir, "package.json"),
-        JSON.stringify({ name: "@jiumate/desktop", version: "0.2.4" }),
+        JSON.stringify({ name: "@jadelau/desktop", version: "0.2.4" }),
       );
 
       expect(resolvePushPlan(null, path.join(pkgDir, "dist", "server.js"))).toBeNull();

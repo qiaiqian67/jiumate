@@ -13,8 +13,8 @@ import {
   schema,
   type,
   upgrade,
-} from "@jiumate/core/kernel";
-import type { Json } from "@jiumate/core/kernel";
+} from "@jadelau/core/kernel";
+import type { Json } from "@jadelau/core/kernel";
 import { HotResources } from "../src/hmr/resources.js";
 import { TerminalManager } from "../src/terminal/manager.js";
 import type { TerminalSession } from "../src/terminal/session.js";

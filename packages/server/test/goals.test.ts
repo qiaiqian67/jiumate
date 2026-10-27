@@ -14,8 +14,8 @@ import {
   imageUrlMessage,
   tokenUsage,
   userText,
-} from "@jiumate/core";
-import type { OmniMessage, TokenCounts } from "@jiumate/core";
+} from "@jadelau/core";
+import type { OmniMessage, TokenCounts } from "@jadelau/core";
 import { openDatabase } from "../src/db/database.js";
 import { SessionsRepo } from "../src/db/repos/sessions.js";
 import type { SessionRow } from "../src/db/repos/sessions.js";

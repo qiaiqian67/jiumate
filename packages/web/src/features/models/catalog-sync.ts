@@ -7,8 +7,8 @@
  * are kept untouched. Credentials are never touched: merged rows carry no apiKey input (the
  * PUT keeps the stored key) and existing rows keep their credential display state.
  */
-import { presetModelEntries } from "@jiumate/core/model-catalog";
-import type { ModelsResponse } from "@jiumate/server/api";
+import { presetModelEntries } from "@jadelau/core/model-catalog";
+import type { ModelsResponse } from "@jadelau/server/api";
 import type { RowState } from "./models-page";
 
 type PresetEntry = ReturnType<typeof presetModelEntries>[number];

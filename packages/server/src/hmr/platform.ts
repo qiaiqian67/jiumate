@@ -23,8 +23,8 @@
  * adding or changing an endpoint or a service needs no runtime change.
  */
 import type { WebSocket } from "ws";
-import type { Impl, Json, Park } from "@jiumate/core/kernel";
-import { defineIface, schema, type } from "@jiumate/core/kernel";
+import type { Impl, Json, Park } from "@jadelau/core/kernel";
+import { defineIface, schema, type } from "@jadelau/core/kernel";
 import type { PlatformBundle } from "../hmr/host.js";
 import { TerminalManager } from "../terminal/manager.js";
 import type { TerminalSession } from "../terminal/session.js";

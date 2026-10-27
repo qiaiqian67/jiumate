@@ -30,8 +30,8 @@ import {
   DEFAULT_SERVER_PORT,
   VERSION,
   loadProjectConfig,
-} from "@jiumate/core";
-import type { ProjectConfig } from "@jiumate/core";
+} from "@jadelau/core";
+import type { ProjectConfig } from "@jadelau/core";
 import type { MachineInfo, MachineJob, MachineServerStatus } from "../api/types.js";
 import { readServerLock } from "../lock.js";
 import { SESSION_COOKIE } from "../auth/middleware.js";

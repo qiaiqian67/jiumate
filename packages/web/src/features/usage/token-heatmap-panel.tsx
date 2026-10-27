@@ -13,7 +13,7 @@
  * almost nothing.
  */
 import { useEffect, useMemo, useState } from "react";
-import type { ModelRefDto } from "@jiumate/server/api";
+import type { ModelRefDto } from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { cacheHitRate, formatPercent, humanizeTokens } from "../../lib/format";

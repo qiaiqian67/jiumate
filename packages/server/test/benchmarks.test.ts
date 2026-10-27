@@ -12,7 +12,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { benchmarksDir } from "@jiumate/core";
+import { benchmarksDir } from "@jadelau/core";
 import type {
   BenchmarkCasesResponse,
   BenchmarksResponse,

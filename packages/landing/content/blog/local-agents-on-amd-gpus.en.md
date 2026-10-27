@@ -46,7 +46,7 @@ One install gives you four layers that share one data directory and one message 
 └──────────────────────────────────────────────┘
 ```
 
-The center is the execution engine in `@jiumate/core`. The CLI, the Server, and the Web App are simply different "Human implementations" of that same engine. This single decision — one kernel, many front-ends — is what keeps the whole system coherent, and it comes from a small set of design tenets worth understanding on their own.
+The center is the execution engine in `@jadelau/core`. The CLI, the Server, and the Web App are simply different "Human implementations" of that same engine. This single decision — one kernel, many front-ends — is what keeps the whole system coherent, and it comes from a small set of design tenets worth understanding on their own.
 
 ### One protocol, three jobs — OmniMessage
 

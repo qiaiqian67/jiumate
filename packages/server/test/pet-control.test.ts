@@ -9,7 +9,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_BUILTIN_PET_ID } from "@jiumate/pets";
+import { DEFAULT_BUILTIN_PET_ID } from "@jadelau/pets";
 import { PetCatalogService } from "../src/services/pet-catalog.js";
 import { PetControlService } from "../src/services/pet-control.js";
 import type { UiPrefsRepo } from "../src/db/repos/ui-prefs.js";

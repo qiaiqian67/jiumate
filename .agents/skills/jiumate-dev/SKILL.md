@@ -5,7 +5,7 @@ description: Use when developing JiuMate itself — changing packages/{core,serv
 
 # Developing JiuMate
 
-JiuMate is a TypeScript monorepo: an Agent SDK (`packages/core`), an HTTP server (`packages/server`), a Web App (`packages/web`), a CLI (`packages/cli`), an Electron shell (`packages/desktop`), the landing and docs sites, and the shipped plugin library — one npm package per plugin under the repo root's `plugins/`, with `packages/plugins` as the loader that depends on them all. It **consumes** LLM providers through `@jiumate/agenthub` and implements no provider clients of its own.
+JiuMate is a TypeScript monorepo: an Agent SDK (`packages/core`), an HTTP server (`packages/server`), a Web App (`packages/web`), a CLI (`packages/cli`), an Electron shell (`packages/desktop`), the landing and docs sites, and the shipped plugin library — one npm package per plugin under the repo root's `plugins/`, with `packages/plugins` as the loader that depends on them all. It **consumes** LLM providers through `@jadelau/agenthub` and implements no provider clients of its own.
 
 ## Repo shape — read before your first edit
 
@@ -30,8 +30,8 @@ Node must be >= 24. In each worktree, `pnpm install --frozen-lockfile` first.
 The full chain CI runs is `pnpm build`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `sh scripts/test-installer.sh`. **Do not reach for `pnpm test` by reflex** — it is nine packages and ~2500 tests, minutes per run, and for a docs-only diff it proves nothing the narrow run does not. Pick the narrowest evidence that would actually fail for this change's regression:
 
 ```sh
-pnpm --filter @jiumate/core exec vitest run test/model-catalog.test.ts   # one file, ~1s
-pnpm --filter @jiumate/web test                                          # one package
+pnpm --filter @jadelau/core exec vitest run test/model-catalog.test.ts   # one file, ~1s
+pnpm --filter @jadelau/web test                                          # one package
 ```
 
 | Changed | Run |

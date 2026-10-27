@@ -21,7 +21,7 @@ import { useEffect } from "react";
 import { createStore } from "zustand/vanilla";
 import { useStore } from "zustand/react";
 import * as api from "../../api/endpoints";
-import { INSPIRATION_ID_LIMIT, isInspirationSlug } from "@jiumate/inspirations/schema";
+import { INSPIRATION_ID_LIMIT, isInspirationSlug } from "@jadelau/inspirations/schema";
 
 /** The `ui_prefs` key the list is stored under. */
 export const FAVORITES_PREFS_KEY = "inspirationFavorites";

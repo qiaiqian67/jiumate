@@ -30,7 +30,7 @@ import {
   type PetPackage,
   type PetReceipt,
   type SpriteVersionNumber,
-} from "@jiumate/pets";
+} from "@jadelau/pets";
 import { openAsar } from "./asar.js";
 import { importFingerprint, type PetCatalogService } from "./pet-catalog.js";
 import { MAX_CODEX_DEFINITIONS, codexPetDefinitions } from "./pet-codex-definitions.js";

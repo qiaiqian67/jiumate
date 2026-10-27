@@ -2,7 +2,7 @@ import { defineConfig } from "tsup";
 import { buildGitDefine } from "../../scripts/build-git-stamp.mjs";
 
 export default defineConfig({
-  // Three entries on purpose, mirroring `@jiumate/pets`: `css` and `presets` are
+  // Three entries on purpose, mirroring `@jadelau/pets`: `css` and `presets` are
   // imported by the web app and must not drag in `io.ts`'s Node built-ins (fs / crypto / path)
   // through the barrel.
   entry: ["src/index.ts", "src/css.ts", "src/presets.ts"],

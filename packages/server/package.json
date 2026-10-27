@@ -1,8 +1,8 @@
 {
-  "name": "@jiumate/server",
+  "name": "@jadelau/server",
   "version": "0.4.0",
   "type": "module",
-  "description": "JiuMate web server: multi-user authentication and authorization, Session execution with SSE streaming, and usage accounting, built on @jiumate/core.",
+  "description": "JiuMate web server: multi-user authentication and authorization, Session execution with SSE streaming, and usage accounting, built on @jadelau/core.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -82,10 +82,10 @@
   "dependencies": {
     "@hono/node-server": "^2.0.5",
     "@larksuiteoapi/node-sdk": "^1.73.0",
-    "@jiumate/core": "workspace:*",
-    "@jiumate/inspirations": "workspace:*",
-    "@jiumate/pets": "workspace:*",
-    "@jiumate/skins": "workspace:*",
+    "@jadelau/core": "workspace:*",
+    "@jadelau/inspirations": "workspace:*",
+    "@jadelau/pets": "workspace:*",
+    "@jadelau/skins": "workspace:*",
     "@xterm/headless": "^5.5.0",
     "dotenv": "^17.0.0",
     "fflate": "^0.8.3",

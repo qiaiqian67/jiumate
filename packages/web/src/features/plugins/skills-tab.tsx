@@ -21,7 +21,7 @@
  * click through them.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { InstalledSkillItem } from "@jiumate/server/api";
+import type { InstalledSkillItem } from "@jadelau/server/api";
 import { S } from "../../lib/strings";
 import { useAuth } from "../../state/auth";
 import { useLocale } from "../../state/locale";

@@ -28,7 +28,7 @@ import electronUpdater from "electron-updater";
 import type {
   DesktopUpdateStatus,
   DesktopUpdaterCommandMessage,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import { feedUrlOverride, updateSourceConfig, updateSupport } from "./update-support.js";
 import {
   feedLabel,

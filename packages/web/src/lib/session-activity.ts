@@ -1,4 +1,4 @@
-import type { SessionInfo, SessionStatus } from "@jiumate/server/api";
+import type { SessionInfo, SessionStatus } from "@jadelau/server/api";
 import { isSessionUnread } from "./session-seen";
 import type { SessionSeenState } from "./session-seen";
 

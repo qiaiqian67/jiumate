@@ -27,8 +27,8 @@ import {
   modelVisiblePath,
   scratchpadDir,
   toolCall,
-} from "@jiumate/core";
-import type { ApproveFn, OmniMessage } from "@jiumate/core";
+} from "@jadelau/core";
+import type { ApproveFn, OmniMessage } from "@jadelau/core";
 import type {
   FeishuBindingResponse,
   MessagingBindingsResponse,

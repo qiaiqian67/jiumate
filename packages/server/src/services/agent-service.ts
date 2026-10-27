@@ -32,8 +32,8 @@ import {
   comparePluginVersions,
   loadLibraryPlugins,
   parseSkillFrontmatter,
-} from "@jiumate/core";
-import type { LibraryPlugin } from "@jiumate/core";
+} from "@jadelau/core";
+import type { LibraryPlugin } from "@jadelau/core";
 import type { AgentsRepo } from "../db/repos/agents.js";
 import { SEMANTIC_ID_PATTERN, SEMANTIC_ID_RULE } from "./ids.js";
 import type { AgentConfigService } from "./agent-config-service.js";

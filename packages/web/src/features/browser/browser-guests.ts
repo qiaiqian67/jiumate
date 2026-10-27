@@ -18,7 +18,7 @@
  *   created is then removed, because a tab the server does not know about is a page the
  *   user cannot get back to.
  */
-import type { BrowserTab } from "@jiumate/core/interfaces";
+import type { BrowserTab } from "@jadelau/core/interfaces";
 import { currentTabId, liveTabs, noteBrowserState } from "./browser-list";
 import { apiFetch } from "../../api/client";
 

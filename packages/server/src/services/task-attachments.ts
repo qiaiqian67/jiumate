@@ -10,7 +10,7 @@
  *
  * The line format and its placement are not defined here: they are shared with core's
  * `[attached image: …]` producer and the Web renderer that parses both
- * (`@jiumate/core/markers` → attachment-lines.ts, plus `appendAttachmentLines`),
+ * (`@jadelau/core/markers` → attachment-lines.ts, plus `appendAttachmentLines`),
  * so the two conventions cannot drift apart.
  */
 import fs from "node:fs/promises";
@@ -20,8 +20,8 @@ import {
   appendAttachmentLines,
   attachedFileLine,
   modelVisiblePath,
-} from "@jiumate/core";
-import type { OmniMessage } from "@jiumate/core";
+} from "@jadelau/core";
+import type { OmniMessage } from "@jadelau/core";
 import { HttpError } from "../http/errors.js";
 import { badRequest } from "../http/validate.js";
 import type { AttachmentLimits } from "./attachment-limits.js";

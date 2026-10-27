@@ -14,8 +14,8 @@
  * moment the defaults moved.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { assistantText } from "@jiumate/core";
-import type { OmniMessage } from "@jiumate/core";
+import { assistantText } from "@jadelau/core";
+import type { OmniMessage } from "@jadelau/core";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";
 import { bodyLimitBytes, MIN_ATTACHMENT_MB } from "../src/services/attachment-limits.js";

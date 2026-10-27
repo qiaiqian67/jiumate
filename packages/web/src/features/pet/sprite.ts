@@ -11,7 +11,7 @@
  * which reads as a still image. The cycle duration comes from the mood's CSS
  * class instead (see `styles.css`), matching OpenBitFun.
  */
-import type { SpriteVersionNumber } from "@jiumate/pets";
+import type { SpriteVersionNumber } from "@jadelau/pets";
 import { spriteAnimation, spriteRows } from "./pet-states";
 
 const SPRITE_COLUMNS = 8;

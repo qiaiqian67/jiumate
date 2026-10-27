@@ -14,7 +14,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { skillsDir, librarySkill } from "@jiumate/core";
+import { skillsDir, librarySkill } from "@jadelau/core";
 import type {
   AgentCreateResponse,
   AgentSkillsResponse,

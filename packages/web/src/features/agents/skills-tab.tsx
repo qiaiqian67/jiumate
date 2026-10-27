@@ -24,7 +24,7 @@ import type {
   PluginGroupItem,
   PluginItem,
   SkillMetadataItem,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

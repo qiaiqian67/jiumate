@@ -1,16 +1,16 @@
 ---
 title: SDK
-description: Create Agents and Sessions from your own TypeScript program with @jiumate/core.
+description: Create Agents and Sessions from your own TypeScript program with @jadelau/core.
 ---
 
-`@jiumate/core` is the same engine the CLI and the Server run inside, and it embeds directly into your own program.
+`@jadelau/core` is the same engine the CLI and the Server run inside, and it embeds directly into your own program.
 
 ## Install
 
 Requires Node.js >= 24:
 
 ```bash
-npm install @jiumate/core
+npm install @jadelau/core
 ```
 
 ## Configure a model
@@ -20,7 +20,7 @@ The SDK reads the same data root as the other two routes, `~/.jiumate/data`, so 
 If this machine has no model configured yet, the shortest path is to install the CLI and do it once:
 
 ```bash
-npm install -g @jiumate/cli
+npm install -g @jadelau/cli
 jiumate config model add --provider deepseek --model-id deepseek-v4-flash-vision-exp --api-key sk-... --set-default
 ```
 
@@ -29,7 +29,7 @@ You can also keep credentials off disk entirely: when a model entry has no inlin
 ## Your first program
 
 ```ts
-import { createAgent, isCompleteModelMessage, userText } from "@jiumate/core";
+import { createAgent, isCompleteModelMessage, userText } from "@jadelau/core";
 
 const agent = await createAgent({ agentId: "default_agent" });
 const session = await agent.createSession({ workspaceDir: process.cwd() });

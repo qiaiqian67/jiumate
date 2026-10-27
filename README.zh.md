@@ -18,7 +18,7 @@
 <p align="center">1000+ 模型 · 多平台 · Apache 2.0 · Agent 自进化</p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@jiumate/core"><img src="https://img.shields.io/npm/v/@jiumate/core" alt="npm 版本" /></a>
+  <a href="https://www.npmjs.com/package/@jadelau/core"><img src="https://img.shields.io/npm/v/@jadelau/core" alt="npm 版本" /></a>
   <a href="https://github.com/qiaiqian67/jiumate/actions/workflows/ci.yml"><img src="https://github.com/qiaiqian67/jiumate/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/qiaiqian67/jiumate/actions/workflows/pages.yml"><img src="https://github.com/qiaiqian67/jiumate/actions/workflows/pages.yml/badge.svg" alt="Deploy Site" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0" /></a>
@@ -168,7 +168,7 @@ jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ### 📦 npm（任意平台，需 Node >= 24）
 
 ```bash
-npm install -g @jiumate/cli
+npm install -g @jadelau/cli
 jiumate web        # 启动服务并打开 http://127.0.0.1:7364
 ```
 
@@ -215,7 +215,7 @@ jiumate server     # 无界面服务（与 Web 应用同一套 API）
 ```
 
 ```ts
-import { createAgent, isCompleteModelMessage, userText } from "@jiumate/core";
+import { createAgent, isCompleteModelMessage, userText } from "@jadelau/core";
 
 const agent = await createAgent({ agentId: "default_agent" });
 const session = await agent.createSession({ workspaceDir: process.cwd() });

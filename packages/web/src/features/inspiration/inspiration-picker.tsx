@@ -34,7 +34,7 @@ import { exampleRowClass } from "../chat/example-folder-row";
 import { SHORTCUTS_FOLDER_ID, ShortcutsFolder } from "../chat/shortcuts-folder";
 import { localizedCase } from "./inspiration-service";
 import { useInspirationCatalog } from "./inspiration-store";
-import type { InspirationCase } from "@jiumate/inspirations";
+import type { InspirationCase } from "@jadelau/inspirations";
 import type { Locale } from "../../state/locale";
 
 /** Most case rows one category tab shows before the "browse all" row. */

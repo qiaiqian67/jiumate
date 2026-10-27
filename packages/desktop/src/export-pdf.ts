@@ -28,7 +28,7 @@ import { BrowserWindow, app } from "electron";
 import type {
   DesktopExportRequest,
   DesktopExportResult,
-} from "@jiumate/server/desktop-export";
+} from "@jadelau/server/desktop-export";
 
 /** The slice of Electron's ParentPort this relay uses. Mirrors server/desktop-export-port.ts. */
 export interface ShellPort {

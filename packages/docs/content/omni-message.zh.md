@@ -360,10 +360,10 @@ Provider 专有的线上数据统一收拢在一个可选字段 `fidelity` 中�
 
 ## 构造与判别
 
-`@jiumate/core` 导出全部类型、每种消息的构造函数(`builders.ts`:`userText`、`assistantText`、`toolCall`、`toolCallOutput`、`partialText`、`tokenUsage`、`withOrigin`、`emptyTokenCounts`、`addTokenCounts` 等)与运行时判别函数(`isCompleteModelMessage`、`isPartialPayload`、`isModelMessage`、`isEventMessage`、`isSessionMeta`):
+`@jadelau/core` 导出全部类型、每种消息的构造函数(`builders.ts`:`userText`、`assistantText`、`toolCall`、`toolCallOutput`、`partialText`、`tokenUsage`、`withOrigin`、`emptyTokenCounts`、`addTokenCounts` 等)与运行时判别函数(`isCompleteModelMessage`、`isPartialPayload`、`isModelMessage`、`isEventMessage`、`isSessionMeta`):
 
 ```ts
-import { userText, isCompleteModelMessage } from "@jiumate/core";
+import { userText, isCompleteModelMessage } from "@jadelau/core";
 
 const prompt = userText("列出当前目录的文件");
 // { timestamp: "…", type: "model_msg", payload: { type: "text", role: "user", text: "…" } }

@@ -19,8 +19,8 @@ import {
   partialToolCall,
   partialToolCallOutput,
   withOrigin,
-} from "@jiumate/core";
-import type { MessageOrigin } from "@jiumate/core";
+} from "@jadelau/core";
+import type { MessageOrigin } from "@jadelau/core";
 import {
   StreamRenderer,
   formatAbort,
@@ -954,7 +954,7 @@ describe("StreamRenderer — nested (origin-tagged) subagent messages", () => {
 describe("renderHistory (resume)", () => {
   it("renders complete messages statically with interruption markers", async () => {
     const { renderHistory } = await import("../src/render.js");
-    const { userText } = await import("@jiumate/core");
+    const { userText } = await import("@jadelau/core");
     const { stream, text } = collector();
     renderHistory(
       [

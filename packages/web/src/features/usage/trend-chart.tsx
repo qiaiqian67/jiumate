@@ -18,7 +18,7 @@
  * skipped an interval.
  */
 import { useState } from "react";
-import type { UsageGranularity, UsageSeriesPoint } from "@jiumate/server/api";
+import type { UsageGranularity, UsageSeriesPoint } from "@jadelau/server/api";
 import { formatMoney } from "../../lib/format";
 import type { Currency } from "../../state/theme";
 import { makeGeom, linePath, areaPath } from "./chart-geom";

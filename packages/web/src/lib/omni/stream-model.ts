@@ -54,7 +54,7 @@ import {
   isPartialPayload,
   parseBackgroundTaskDoneMessage,
   parseUserSteeringText,
-} from "@jiumate/core/omnimessage";
+} from "@jadelau/core/omnimessage";
 import type {
   ApprovalDecision,
   CompactionMode,
@@ -66,8 +66,8 @@ import type {
   SessionMetaPayload,
   StopReason,
   TokenUsagePayload,
-} from "@jiumate/core/omnimessage";
-import type { TracePosition } from "@jiumate/server/api";
+} from "@jadelau/core/omnimessage";
+import type { TracePosition } from "@jadelau/server/api";
 import {
   addLlmDuration,
   beginCompaction,

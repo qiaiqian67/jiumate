@@ -1,4 +1,4 @@
-# @jiumate/landing
+# @jadelau/landing
 
 The JiuMate product landing page (React + Vite + Tailwind CSS 4): bilingual (zh/en), light/dark themes, the feature matrix and CONTRACT.md showcase, benchmark charts, Playwright-captured product screenshots, and a local-Markdown blog (product news / release notes).
 
@@ -7,13 +7,13 @@ It deploys to GitHub Pages together with the [docs site](../docs) as one artifac
 ## Development
 
 ```bash
-pnpm --filter @jiumate/landing dev        # http://127.0.0.1:7366
-pnpm --filter @jiumate/landing build      # dist/ (with 404.html SPA fallback + .nojekyll)
-pnpm --filter @jiumate/landing typecheck
-pnpm --filter @jiumate/landing test
+pnpm --filter @jadelau/landing dev        # http://127.0.0.1:7366
+pnpm --filter @jadelau/landing build      # dist/ (with 404.html SPA fallback + .nojekyll)
+pnpm --filter @jadelau/landing typecheck
+pnpm --filter @jadelau/landing test
 
 BASE_PATH=/ pnpm build:site                           # repo root: assemble landing + docs
-pnpm --filter @jiumate/landing preview    # serve the assembled tree
+pnpm --filter @jadelau/landing preview    # serve the assembled tree
 ```
 
 `BASE_PATH` controls the asset base (GitHub Pages project pages need `/<repo>/`; local default `/`). The `Docs` links resolve only in the assembled build — in plain `dev` they point at a path this dev server doesn't serve.
@@ -37,6 +37,6 @@ excerpt: One-line summary for the list page
 
 ## Screenshots
 
-`pnpm --filter @jiumate/landing shots` regenerates `src/assets/shots/`: the script ships a scripted mock LLM (speaking both Anthropic SSE and OpenAI chat-completions streams), boots the Web service on a temp data root, drives a real "build an Agent app" conversation (tools actually execute in the Workspace), then captures the chat page, its Trace panel (opened as a tab in the bottom dock) and the evaluation page per UI language (zh/en, separate users) and theme (light/dark) — 12 shots (`<page>-<lang>-<theme>.webp`, re-encoded to WebP in Chromium to keep sizes down). The landing page always shows the shot matching the visitor's language and theme. Prereqs: build skills/core/server/web first, and have Playwright Chromium installed.
+`pnpm --filter @jadelau/landing shots` regenerates `src/assets/shots/`: the script ships a scripted mock LLM (speaking both Anthropic SSE and OpenAI chat-completions streams), boots the Web service on a temp data root, drives a real "build an Agent app" conversation (tools actually execute in the Workspace), then captures the chat page, its Trace panel (opened as a tab in the bottom dock) and the evaluation page per UI language (zh/en, separate users) and theme (light/dark) — 12 shots (`<page>-<lang>-<theme>.webp`, re-encoded to WebP in Chromium to keep sizes down). The landing page always shows the shot matching the visitor's language and theme. Prereqs: build skills/core/server/web first, and have Playwright Chromium installed.
 
 Part of [JiuMate](https://github.com/qiaiqian67/jiumate) · Apache-2.0

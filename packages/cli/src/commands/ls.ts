@@ -13,7 +13,7 @@
  * Docs: /docs/cli § "jiumate ls".
  */
 import type { Command } from "commander";
-import type { SessionInfo } from "@jiumate/server/api";
+import type { SessionInfo } from "@jadelau/server/api";
 import {
   resolveAgentId,
   resolveConnection,

@@ -40,7 +40,7 @@ import type {
   ModelTestRequest,
   ModelUpdateEntry,
   ModelVisionDetectRequest,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";
@@ -74,8 +74,8 @@ import {
   modelHomepageUrl,
   providerInfo,
   resolveModelEnv,
-} from "@jiumate/core/model-catalog";
-import type { FastModeProtocol, ModelProviderInfo } from "@jiumate/core/model-catalog";
+} from "@jadelau/core/model-catalog";
+import type { FastModeProtocol, ModelProviderInfo } from "@jadelau/core/model-catalog";
 import {
   allGroupKeys,
   discountedPrice,

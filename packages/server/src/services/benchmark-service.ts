@@ -16,7 +16,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { parse as parseToml } from "smol-toml";
 import { parse as parseYaml } from "yaml";
-import { benchmarksDir } from "@jiumate/core";
+import { benchmarksDir } from "@jadelau/core";
 import type {
   BenchmarkCaseScore,
   BenchmarkCaseSummary,

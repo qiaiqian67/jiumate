@@ -12,7 +12,7 @@ import type {
   DesktopUpdateStatus,
   UpdateCheckResponse,
   UpdateJobStatus,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import {
   NO_LOCAL,
   clientFlow,

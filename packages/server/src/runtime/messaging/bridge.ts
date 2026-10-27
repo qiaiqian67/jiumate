@@ -70,8 +70,8 @@
  * is a bad place to receive a directory. What the caps drop is named in the chat rather
  * than dropped quietly.
  */
-import { imageUrlMessage, scratchpadDir, userText } from "@jiumate/core";
-import type { OmniMessage } from "@jiumate/core";
+import { imageUrlMessage, scratchpadDir, userText } from "@jadelau/core";
+import type { OmniMessage } from "@jadelau/core";
 import type { MessagingDeliveryError, MessagingRuntimeStatus } from "../../api/types.js";
 import type {
   MessagingBindingRow,

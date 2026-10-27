@@ -13,7 +13,7 @@ The project drops the `linsight` / `Linsight` / `LINSIGHT` brand and ships as **
 
 Existing installations stop working as soon as this build runs, because every external identifier moved:
 
-- **Package names.** `@prismshadow/linsight-{cli,core,desktop,docs,landing,server,web,inspirations,pets,skins}` → `@prismshadow/jiumate-{…}`; `@linsight/*` → `@jiumate/*`. Any `package.json` listing the old names fails dependency resolution.
+- **Package names.** `@prismshadow/linsight-{cli,core,desktop,docs,landing,server,web,inspirations,pets,skins}` → `@prismshadow/jiumate-{…}`; `@linsight/*` → `@jadelau/*`. Any `package.json` listing the old names fails dependency resolution.
 - **CLI binaries.** `linsight` / `linsight-hmr` → `jiumate` / `jiumate-hmr`.
 - **Data root.** `~/.linsight/{data,dev-data,…}` → `~/.jiumate/{…}`. An existing install must be moved, or pointed at with `JIUMATE_HOME`.
 - **Env vars.** `LINSIGHT_*` → `JIUMATE_*`, including `LINSIGHT_HOME`, `LINSIGHT_API_TOKEN`, `LINSIGHT_PROJECT_ID`, `LINSIGHT_AGENT_ID`, `LINSIGHT_WEB_DIST` and `LINSIGHT_PREVIEW_ORIGIN`.

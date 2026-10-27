@@ -21,8 +21,8 @@ import {
   catalogEntryFor,
   effectivePricing,
   offPeakAt,
-} from "@jiumate/core/model-catalog";
-import type { ModelProviderInfo } from "@jiumate/core/model-catalog";
+} from "@jadelau/core/model-catalog";
+import type { ModelProviderInfo } from "@jadelau/core/model-catalog";
 
 import { orderModelGroups } from "./model-group-order";
 

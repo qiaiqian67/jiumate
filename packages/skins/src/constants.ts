@@ -44,7 +44,7 @@ export const SKIN_SCHEMA = "jiumate.skin";
 /**
  * The `schema` value written before the rebrand, still accepted on read.
  *
- * The same reasoning as `INSPIRATION_SCHEMA_LEGACY` in `@jiumate/inspirations`, and
+ * The same reasoning as `INSPIRATION_SCHEMA_LEGACY` in `@jadelau/inspirations`, and
  * for the same reason: a theme installed under the old name keeps declaring it, and refusing that
  * makes the theme silently vanish from the picker with one line in the log as the only trace. A
  * name this build used to write is an older file of ours, not an invalid one — and unlike a

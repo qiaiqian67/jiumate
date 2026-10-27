@@ -3,7 +3,7 @@ title: Architecture
 description: How the three-interface boundary, the context_engine and OmniMessage organize the SDK, CLI, Server and Web App into one system.
 ---
 
-JiuMate is a pnpm monorepo whose center is the execution engine in `@jiumate/core`; the CLI, the Server and the Web App are just different "Human implementations" of that same engine.
+JiuMate is a pnpm monorepo whose center is the execution engine in `@jadelau/core`; the CLI, the Server and the Web App are just different "Human implementations" of that same engine.
 
 ## Layers
 
@@ -50,7 +50,7 @@ Item by item (design → owner → carrying file or module):
 | The ReAct loop, carry-over, reconnect, compaction | SDK | `core/src/engine/context-engine.ts` — see [The Agent Loop](/agent-loop) |
 | The approval mechanism (one decision per tool_call) | SDK | `ApproveFn` (`core/src/interfaces/shared.ts`); the concrete mode is injected by CLI/Server |
 | Tool execution and centralized close-out | SDK | `core/src/environment/` — see [Tools & Approval](/tools) |
-| Model access (provider protocol adaptation) | SDK → AgentHub | `core/src/llm/` + `@jiumate/agenthub` — see [Models & Providers](/models) |
+| Model access (provider protocol adaptation) | SDK → AgentHub | `core/src/llm/` + `@jadelau/agenthub` — see [Models & Providers](/models) |
 | Trace writing and Session-recovery logic | SDK | `core/src/trace/` (the records themselves live in the file layer) |
 | Subagent spawning and message forwarding | SDK | the `run_subagent` tool + the injected `SubagentRunner` |
 | Multi-user auth and Project authorization | Server | `server/src/auth/`, `server/src/services/project-service.ts` |
@@ -129,6 +129,6 @@ The Server keeps an additional SQLite index (users, authorization, usage stats) 
 
 - **One protocol, three jobs**: OmniMessage is simultaneously the SDK's external interface, the Trace on-disk format and the engine's internal currency — what streams, what is stored and what the model sees are the same thing.
 - **Errors converge into messages**: the LLM and Environment never throw into the engine; results carry a six-value `stop_reason` (`completed | failed | aborted | timeout | malformed | auth`), and every LLM-side status except `auth` triggers an in-run reconnect (`failed / timeout / malformed`, up to 5 times with an exponential-with-ceiling backoff). `auth` is the one terminal class: a rejected credential cannot be retried into working. Retrying `failed` is a policy choice — the status itself is still reported as `failed`.
-- **A thin model layer**: core defines only `LLMInterface`; provider adaptation lives entirely in AgentHub (`@jiumate/agenthub`), which is what makes any OpenAI-compatible endpoint reachable. See [Models & Providers](/models).
+- **A thin model layer**: core defines only `LLMInterface`; provider adaptation lives entirely in AgentHub (`@jadelau/agenthub`), which is what makes any OpenAI-compatible endpoint reachable. See [Models & Providers](/models).
 
 Source entry points: `packages/core/src/engine/context-engine.ts`, `packages/core/src/interfaces/`.

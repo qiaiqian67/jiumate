@@ -8,8 +8,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { stringify as stringifyToml } from "smol-toml";
-import { atomicWriteFile, resolveModelRef, scheduleDir } from "@jiumate/core";
-import type { ProjectConfig } from "@jiumate/core";
+import { atomicWriteFile, resolveModelRef, scheduleDir } from "@jadelau/core";
+import type { ProjectConfig } from "@jadelau/core";
 import { cacheable, statMtime } from "../internal/mtime-gate.js";
 import {
   parseScheduleFile,

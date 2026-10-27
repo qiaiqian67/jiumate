@@ -31,7 +31,7 @@ import {
   userText,
   isCompleteModelMessage,
   type OmniMessage,
-} from "@jiumate/core";
+} from "@jadelau/core";
 
 const AGENT_ID = "self-improve-demo";
 const PROJECT_ID = "default_project";

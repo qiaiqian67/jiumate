@@ -1,5 +1,5 @@
 {
-  "name": "@jiumate/editable-doc",
+  "name": "@jadelau/editable-doc",
   "version": "0.4.0",
   "description": "Format generated Markdown documents so a human can edit them in place afterwards — atomic sections, semantic headings, fenced diagrams and code, no mega paragraphs.",
   "license": "Apache-2.0",

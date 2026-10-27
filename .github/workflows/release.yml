@@ -16,11 +16,11 @@
 #   one version per tag, multiple versions coexist. Releases up to v0.1.5 shipped raw program
 #   archives under the same names plus *-offline wrappers; the installers keep accepting that
 #   legacy layout for pinned versions.
-# - publish-npm: publish the whole chain (the @jiumate/* plugin packages -> @jiumate/core
-#   -> @jiumate/server -> @jiumate/cli) to npm at the tag version.
+# - publish-npm: publish the whole chain (the @jadelau/* plugin packages -> @jadelau/core
+#   -> @jadelau/server -> @jadelau/cli) to npm at the tag version.
 #   core serves the jiumate-sdk Skill's `npm install`; server ships the built web assets inside
 #   the package (web-dist/, its default web dir falls back to it), so `npm install -g
-#   @jiumate/cli` alone yields a working `jiumate` incl. the Web UI (needs Node >= 24).
+#   @jadelau/cli` alone yields a working `jiumate` incl. the Web UI (needs Node >= 24).
 #   The publish flow mirrors AgentHub's publish.yml: OIDC trusted publishing (environment: npm +
 #   id-token: write, no token). A Trusted Publisher can only be configured in the settings page of a
 #   package that ALREADY EXISTS on the registry, so a brand-new package cannot be first-published by
@@ -204,7 +204,7 @@ jobs:
       # scripts/test-installer.sh pins.
       - name: Assemble jiumate/ (lib + web + bin)
         run: |
-          pnpm --config.node-linker=hoisted --filter @jiumate/cli --prod deploy "$PWD/out/jiumate/lib"
+          pnpm --config.node-linker=hoisted --filter @jadelau/cli --prod deploy "$PWD/out/jiumate/lib"
           cp -r packages/web/dist out/jiumate/web
           install -D -m 755 scripts/launchers/jiumate out/jiumate/bin/jiumate
 
@@ -517,7 +517,7 @@ jobs:
       contents: read
     environment:
       name: npm
-      url: https://www.npmjs.com/package/@jiumate/cli
+      url: https://www.npmjs.com/package/@jadelau/cli
     steps:
       - uses: actions/checkout@v5
         with:
@@ -607,17 +607,17 @@ jobs:
       # them — the same reason the plugins are built before core.
       - name: Build and test
         run: |
-          pnpm --filter @jiumate/agenthub build
-          pnpm --filter @jiumate/inspirations build
-          pnpm --filter @jiumate/pets build
-          pnpm --filter @jiumate/skins build
-          pnpm --filter @jiumate/core build
-          pnpm --filter @jiumate/server build
-          pnpm --filter @jiumate/web build
-          pnpm --filter @jiumate/cli build
-          pnpm --filter @jiumate/core test
-          pnpm --filter @jiumate/server test
-          pnpm --filter @jiumate/cli test
+          pnpm --filter @jadelau/agenthub build
+          pnpm --filter @jadelau/inspirations build
+          pnpm --filter @jadelau/pets build
+          pnpm --filter @jadelau/skins build
+          pnpm --filter @jadelau/core build
+          pnpm --filter @jadelau/server build
+          pnpm --filter @jadelau/web build
+          pnpm --filter @jadelau/cli build
+          pnpm --filter @jadelau/core test
+          pnpm --filter @jadelau/server test
+          pnpm --filter @jadelau/cli test
 
       # Copy LICENSE into the package dirs (the files allowlist includes it, so artifacts ship the license)
       # and the built web assets into the server package (web-dist/, in its files allowlist: an npm install
@@ -638,10 +638,10 @@ jobs:
           done
           rm -rf packages/server/web-dist
           cp -r packages/web/dist packages/server/web-dist
-          # The @jiumate/* plugin packages go first: core declares them as workspace:*
+          # The @jadelau/* plugin packages go first: core declares them as workspace:*
           # deps, rewritten to their versions at publish time, so they must exist first.
           for dir in plugins/*/; do
-            name="@jiumate/$(basename "$dir")"
+            name="@jadelau/$(basename "$dir")"
             if [ -n "$(npm view "$name@$V" version 2>/dev/null || true)" ]; then
               echo "$name@$V already on the registry, skipping."
               continue
@@ -655,7 +655,7 @@ jobs:
           # reason — a published server whose dependency is not on the registry cannot be
           # installed either.
           for pkg in agenthub inspirations pets skins core server cli; do
-            name="@jiumate/$pkg"
+            name="@jadelau/$pkg"
             if [ -n "$(npm view "$name@$V" version 2>/dev/null || true)" ]; then
               echo "$name@$V already on the registry, skipping."
               continue

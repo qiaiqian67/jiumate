@@ -6,8 +6,8 @@
  *     first; a buffer hit → replays events after it.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { approvalDecision, assistantText, toolCall, userText } from "@jiumate/core";
-import type { ApproveFn, OmniMessage } from "@jiumate/core";
+import { approvalDecision, assistantText, toolCall, userText } from "@jadelau/core";
+import type { ApproveFn, OmniMessage } from "@jadelau/core";
 import type { SessionRow } from "../src/db/repos/sessions.js";
 import type { RuntimeSession } from "../src/runtime/session-manager.js";
 import { apiClient, createTestApp, provisionUser, waitFor } from "./helpers.js";

@@ -11,7 +11,7 @@
  *    the user's own themes.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BUILTIN_THEMES } from "@jiumate/skins/presets";
+import { BUILTIN_THEMES } from "@jadelau/skins/presets";
 import {
   builtinThemes,
   deleteTheme,

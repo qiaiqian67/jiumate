@@ -19,7 +19,7 @@ import {
   pluginsDir,
   librarySkill,
   loadPreinstalledPlugins,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   AgentCreateResponse,
   AgentsResponse,

@@ -10,7 +10,7 @@
  * backend that is not there: a server with no shell still has the headless browser, and a
  * user who has not chosen anything still gets the one that is available.
  */
-import type { BrowserBackend } from "@jiumate/core/interfaces";
+import type { BrowserBackend } from "@jadelau/core/interfaces";
 import type { BrowserCommand, BrowserLink, BrowserLinkEvent } from "./link.js";
 import { BrowserLinkError } from "./link.js";
 

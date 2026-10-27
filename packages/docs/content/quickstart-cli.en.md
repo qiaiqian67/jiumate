@@ -18,7 +18,7 @@ irm https://jiumate.ooo/install.ps1 | iex
 ```
 
 ```bash tab="npm (any platform)"
-npm install -g @jiumate/cli
+npm install -g @jadelau/cli
 ```
 
 Verify the install:
@@ -163,10 +163,10 @@ The data directory defaults to `~/.jiumate/data` (`%USERPROFILE%\.jiumate\data` 
 
 | Package | Description |
 | --- | --- |
-| `@jiumate/cli` | Command-line tool providing the `jiumate` command |
-| `@jiumate/core` | SDK for creating Agents and Sessions programmatically |
-| `@jiumate/server` | Web service, including the Web UI assets |
-| `@jiumate/*` | The built-in plugins, one package each (skills and session hooks); core loads them |
+| `@jadelau/cli` | Command-line tool providing the `jiumate` command |
+| `@jadelau/core` | SDK for creating Agents and Sessions programmatically |
+| `@jadelau/server` | Web service, including the Web UI assets |
+| `@jadelau/*` | The built-in plugins, one package each (skills and session hooks); core loads them |
 
 All packages are published under the Apache-2.0 license.
 

@@ -186,7 +186,7 @@ function manifestFor(name, pkg, version) {
 function packageJsonFor(name, pkg) {
   const meta = pkg.penguin ?? {};
   const out = {
-    name: `@jiumate/${name}`,
+    name: `@jadelau/${name}`,
     version: pkg.version,
     description: pkg.description,
   };

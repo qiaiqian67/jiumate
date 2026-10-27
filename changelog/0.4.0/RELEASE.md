@@ -21,7 +21,7 @@ jiumate web
 Or via npm (needs Node >= 24):
 
 ```sh
-npm install -g @jiumate/cli
+npm install -g @jadelau/cli
 ```
 
 ## Highlights
@@ -45,7 +45,7 @@ npm install -g @jiumate/cli
 - **A server with no desktop shell now answers 200 where it used to answer 503.** It has the headless browser, so the browser is there: `GET /api/browser/status` reports `backend: "headless"`. A host with no browser at all still answers 503 `browser_unavailable`, and a browser that is there but not answering is reported as `available: false` with a reason. See [`2026-10-20-browser-tools`](2026-10-20-browser-tools.md).
 - **The sidebar's page group is now 智能体 / 插件·技能 / 灵感库 / 词元图**, two entries left it for better homes, four surfaces were renamed, and the Token Map gained a year heatmap. Two preference defaults changed. See [`2026-09-20-nav-restructure-and-token-map-heatmap`](2026-09-20-nav-restructure-and-token-map-heatmap.md).
 - **The product's mark is now a vector brand asset**, and the Linsight → JiuMate rename reaches the npm packages, the plugins, the CLI bins, the data root, the env vars, the install URLs and every doc. See [`2026-09-28-rebrand-logo`](2026-09-28-rebrand-logo.md) and [`2026-09-28-rebrand-to-jiumate`](2026-09-28-rebrand-to-jiumate.md).
-- **The packages move to the `@jiumate` scope, and the model gateway comes into the repository.** Eleven published packages drop the name of the organisation that no longer owns them, and the last external dependency — the gateway core talks to every model through — is vendored as `@jiumate/agenthub` rather than pulled from a scope this project does not control. See [`2026-10-23-rename-npm-scope`](2026-10-23-rename-npm-scope.md) and [`2026-10-23-vendor-agenthub`](2026-10-23-vendor-agenthub.md).
+- **The packages move to the `@jiumate` scope, and the model gateway comes into the repository.** Eleven published packages drop the name of the organisation that no longer owns them, and the last external dependency — the gateway core talks to every model through — is vendored as `@jadelau/agenthub` rather than pulled from a scope this project does not control. See [`2026-10-23-rename-npm-scope`](2026-10-23-rename-npm-scope.md) and [`2026-10-23-vendor-agenthub`](2026-10-23-vendor-agenthub.md).
 - **The one manual publish a new npm package needs now has a script.** A Trusted Publisher can only be configured for a package that already exists on the registry, so the first publish of a new package cannot be done by the release workflow; `scripts/bootstrap-npm-publish.sh` does it, in dependency order, with the version stamp reverted afterwards. See [`2026-10-23-bootstrap-npm-publish`](2026-10-23-bootstrap-npm-publish.md).
 - **The agents list becomes a browsable grid** instead of full-width bands, and quick invoke reaches the composer. See [`2026-10-13-agents-grid`](2026-10-13-agents-grid.md) and [`2026-10-13-quick-invoke-reaches-composer`](2026-10-13-quick-invoke-reaches-composer.md).
 - **A locked file write is retried, and a run no longer burns minutes on a browser install.** See [`2026-09-20-fix-agent-write-lock-and-runaway-install`](2026-09-20-fix-agent-write-lock-and-runaway-install.md).

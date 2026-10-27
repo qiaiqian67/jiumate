@@ -46,7 +46,7 @@ const MARKERS: ReadonlyArray<{ marker: string; name: string; message: string }> 
   {
     marker: "cannot run your package manager for you",
     name: "windowsGlobalInstall",
-    message: en.windowsGlobalInstall("npm install -g @jiumate/cli@1.2.3"),
+    message: en.windowsGlobalInstall("npm install -g @jadelau/cli@1.2.3"),
   },
 ];
 

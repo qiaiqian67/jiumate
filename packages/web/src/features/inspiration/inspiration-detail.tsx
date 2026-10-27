@@ -34,7 +34,7 @@ import { ICON_SIZE } from "../../lib/icon-scale";
 import { S } from "../../lib/strings";
 import { kindLabel, localizedCase } from "./inspiration-service";
 import type { InspirationCatalogView } from "./inspiration-service";
-import type { InspirationCase } from "@jiumate/inspirations";
+import type { InspirationCase } from "@jadelau/inspirations";
 import type { Locale } from "../../state/locale";
 
 /** One `label: value` line of the requirement list. */

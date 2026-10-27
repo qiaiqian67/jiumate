@@ -15,7 +15,7 @@ import type {
   QQBindingInfo,
   TelegramBindingInfo,
   WeChatBindingInfo,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import {
   FEISHU_DEFAULT_DOMAIN,
   bindingsToForm,

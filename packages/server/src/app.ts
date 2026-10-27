@@ -143,8 +143,8 @@ import {
 } from "./services/preview-token.js";
 import type { PreviewTokenSigner } from "./services/preview-token.js";
 
-import { setPluginStoreRoot } from "@jiumate/core";
-import type { ControlEnvContext, ProxyEnvPolicy } from "@jiumate/core";
+import { setPluginStoreRoot } from "@jadelau/core";
+import type { ControlEnvContext, ProxyEnvPolicy } from "@jadelau/core";
 import { declined } from "./hmr/hono-seam.js";
 import { AgentsRepo } from "./db/repos/agents.js";
 import { MembersRepo } from "./db/repos/members.js";

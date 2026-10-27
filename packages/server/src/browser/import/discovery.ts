@@ -11,7 +11,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import type { BrowserImportSource } from "@jiumate/core/interfaces";
+import type { BrowserImportSource } from "@jadelau/core/interfaces";
 import {
   CHROMIUM_BROWSERS,
   chromiumRoots,

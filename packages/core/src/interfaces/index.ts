@@ -3,7 +3,7 @@
  * `./llm.ts` (the model request), `./environment.ts` (tool execution and the environment's
  * management plane), `./browser.ts` (the agent browser its tools drive), and
  * `./shared.ts` (the vocabulary both genuinely need). This barrel is
- * the published `@jiumate/core/interfaces` entry and re-exports all of them, so
+ * the published `@jadelau/core/interfaces` entry and re-exports all of them, so
  * every existing import path keeps working.
  *
  * `context_engine` only handles OmniMessage: the content crossing all three boundaries is

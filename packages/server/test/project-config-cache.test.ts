@@ -11,7 +11,7 @@ import {
   defaultProjectConfig,
   projectConfigPath,
   renderProjectConfigToml,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import { ProjectConfigService } from "../src/services/project-config-service.js";
 import { makeTempRoot } from "./helpers.js";
 

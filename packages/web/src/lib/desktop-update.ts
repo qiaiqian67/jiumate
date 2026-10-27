@@ -4,7 +4,7 @@
  * use-desktop-update.ts owns the polling and the armed watch; these keep the decisions
  * pure (vitest runs node-only here, so nothing renders — same split as account-menu.ts).
  */
-import type { DesktopUpdateStatus } from "@jiumate/server/api";
+import type { DesktopUpdateStatus } from "@jadelau/server/api";
 import type { AccountMenuSession } from "./account-menu";
 
 /**

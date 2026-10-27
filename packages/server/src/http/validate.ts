@@ -7,7 +7,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { Context } from "hono";
-import { isValidId } from "@jiumate/core";
+import { isValidId } from "@jadelau/core";
 import { HttpError } from "./errors.js";
 
 export function badRequest(message: string): HttpError {

@@ -1,13 +1,13 @@
 /**
  * The whole CLI as a plain function: commander commands over
- * @jiumate/core, returning an exit code.
+ * @jadelau/core, returning an exit code.
  *
  * Built twice: into this package's `jiumate` binary (jiumate.ts), and — as the CLI
  * artifact pushed to POST /api/hmr/upgrade — into the bundle `jiumate-hmr` loads from
  * the HMR store instead (see scripts/deploy.mjs).
  */
 import { Command, CommanderError } from "commander";
-import { buildInfo } from "@jiumate/core";
+import { buildInfo } from "@jadelau/core";
 import { registerAuthCommand } from "./commands/auth.js";
 import { registerConfigCommand } from "./commands/config.js";
 import { registerRunCommand } from "./commands/run.js";

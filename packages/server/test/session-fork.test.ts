@@ -14,8 +14,8 @@ import {
   tokenUsage,
   tracesDir,
   userText,
-} from "@jiumate/core";
-import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@jiumate/core";
+} from "@jadelau/core";
+import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@jadelau/core";
 import type {
   MessagesResponse,
   ProjectCreateResponse,

@@ -6,7 +6,7 @@
 
 [中文版](2026-10-23-rename-npm-scope.zh.md)
 
-The eleven published packages carried the name of the organisation that no longer owns them. `@prismshadow/jiumate-core` is now `@jiumate/core`; `@prismshadow/jiumate-server` is `@jiumate/server`; the same for cli, web, desktop, docs, inspirations, installer, landing, pets and skins. The nineteen plugin packages were already on `@jiumate/*`, so the two sets now sit in one scope instead of two.
+The eleven published packages carried the name of the organisation that no longer owns them. `@prismshadow/jiumate-core` is now `@jadelau/core`; `@prismshadow/jiumate-server` is `@jadelau/server`; the same for cli, web, desktop, docs, inspirations, installer, landing, pets and skins. The nineteen plugin packages were already on `@jadelau/*`, so the two sets now sit in one scope instead of two.
 
 The rename reaches everywhere a package name is written rather than merely mentioned: the `name` field in each `package.json`, every `import` and `type` specifier across the source, the `workspace:*` dependency edges, the `pnpm --filter` selectors in CI and in the release workflow, the npm publish loop that walks `plugins/*/` before `core`, `server` and `cli`, and the install scripts' one-line install advice.
 
@@ -20,8 +20,8 @@ The changelog keeps the old names in the entries that mention them. Those entrie
 
 ## A note on the release
 
-The `@jiumate/*` names are free on the registry, which is why the move is possible at all — but a Trusted Publisher can only be configured for a package that already exists there, so each of the eleven needs a bootstrap publish before the release workflow can publish it for real. The v0.4.0 tag predates this rename, so it would publish under the old names if it ran today; the next tag carries the new ones.
+The `@jadelau/*` names are free on the registry, which is why the move is possible at all — but a Trusted Publisher can only be configured for a package that already exists there, so each of the eleven needs a bootstrap publish before the release workflow can publish it for real. The v0.4.0 tag predates this rename, so it would publish under the old names if it ran today; the next tag carries the new ones.
 
 ## Compatibility
 
-The published package names change, so `npm install @prismshadow/jiumate-core` stops resolving and `@jiumate/core` starts. The old names were never published, so nothing that installed them breaks — there is nothing to unpublish and no version to deprecate. Import paths inside the repository changed with the names, and no source outside the repository is affected.
+The published package names change, so `npm install @prismshadow/jiumate-core` stops resolving and `@jadelau/core` starts. The old names were never published, so nothing that installed them breaks — there is nothing to unpublish and no version to deprecate. Import paths inside the repository changed with the names, and no source outside the repository is affected.

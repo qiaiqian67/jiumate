@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { resolvePetSpriteSrc } from "./pet-service";
 import { getPetLookFrame } from "./pet-look";
 import { getPetSpriteStyle } from "./sprite";
-import type { PetPackage } from "@jiumate/pets";
+import type { PetPackage } from "@jadelau/pets";
 
 export type PetMood = "rest" | "analyzing" | "waiting" | "working" | "hover" | "dragging";
 export type PetAction = "jumping" | "waving" | "failed" | null;

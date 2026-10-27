@@ -35,7 +35,7 @@ import {
   RepoUrlError,
   setMachineSkillEnabled,
   writeMachineSkill,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   MachineSkillAddResult,
   MachineSkillFromUrlResponse,

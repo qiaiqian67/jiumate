@@ -27,7 +27,7 @@ import type { ReactNode } from "react";
 import * as api from "../api/endpoints";
 import { subscribePrefsChanged } from "../features/pet/prefs-events";
 import { applyTheme, themeOwnsAccent } from "../features/skin/skin-runtime";
-import { DEFAULT_SKIN_SURFACE_ALPHA } from "@jiumate/skins/css";
+import { DEFAULT_SKIN_SURFACE_ALPHA } from "@jadelau/skins/css";
 import { SKIN_BOOTSTRAP_VERSION, writeSkinBootstrap } from "../features/skin/skin-bootstrap";
 import { builtinThemes, listThemes, resolveThemeIn } from "../features/skin/skin-service";
 import type { ThemeDescriptor } from "../features/skin/skin-service";

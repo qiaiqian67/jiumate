@@ -19,8 +19,8 @@
  * The catalog itself — where a theme comes from and what it is called — lives in
  * `skin-service.ts`; this module only knows how to put one on screen.
  */
-import { ownsAccent, renderSkinCss, renderWallpaperCss } from "@jiumate/skins/css";
-import type { SkinRenderInput } from "@jiumate/skins/css";
+import { ownsAccent, renderSkinCss, renderWallpaperCss } from "@jadelau/skins/css";
+import type { SkinRenderInput } from "@jadelau/skins/css";
 import type { ThemeDescriptor } from "./skin-service";
 
 /** Id of the single `<style>` element holding the active theme's ramp and artwork. */

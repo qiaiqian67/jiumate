@@ -35,7 +35,7 @@ import { ICON_SIZE } from "../../lib/icon-scale";
 import { S } from "../../lib/strings";
 import { PENCIL_ICON, TRASH_ICON } from "../../components/ui/session-row-menu";
 import { coverUrl, isEditable, kindLabel, localizedCase } from "./inspiration-service";
-import type { InspirationCase } from "@jiumate/inspirations";
+import type { InspirationCase } from "@jadelau/inspirations";
 import type { Locale } from "../../state/locale";
 
 /**

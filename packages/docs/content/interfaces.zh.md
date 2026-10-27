@@ -3,7 +3,7 @@ title: 接口契约
 description: 自顶向下的接口全览：LLMInterface 与 EnvironmentInterface 的完整签名、内层类型逐字段定义，以及每一处可替换的扩展点。
 ---
 
-context_engine 依赖三个接口：Human、LLM、Environment。协议转换全部发生在接口实现内部——引擎只见 [OmniMessage](/omni-message)。本页自顶向下：先给出两大接口的完整签名与 Human 边界，再逐层展开每个接口的内部类型。类型全部由 `@jiumate/core` 导出，源码见 `packages/core/src/interfaces/`——`llm.ts`(模型侧所需)、`environment.ts`(Environment 侧所需)、`shared.ts`(两侧确实共用的词汇)，以及 `index.ts`：`@jiumate/core/interfaces` 子路径背后的 barrel。
+context_engine 依赖三个接口：Human、LLM、Environment。协议转换全部发生在接口实现内部——引擎只见 [OmniMessage](/omni-message)。本页自顶向下：先给出两大接口的完整签名与 Human 边界，再逐层展开每个接口的内部类型。类型全部由 `@jadelau/core` 导出，源码见 `packages/core/src/interfaces/`——`llm.ts`(模型侧所需)、`environment.ts`(Environment 侧所需)、`shared.ts`(两侧确实共用的词汇)，以及 `index.ts`：`@jadelau/core/interfaces` 子路径背后的 barrel。
 
 ## 总览
 
@@ -110,7 +110,7 @@ interface GenerativeModelConfig {
 
 ### 内置实现：GenerativeModel
 
-`GenerativeModel`(`packages/core/src/llm/generative-model.ts`)把契约落到模型网关 `@jiumate/agenthub` 的 `AutoLLMClient` 上：
+`GenerativeModel`(`packages/core/src/llm/generative-model.ts`)把契约落到模型网关 `@jadelau/agenthub` 的 `AutoLLMClient` 上：
 
 - 网关**有状态**地维护会话历史，每轮只接收新消息；恢复 Session 时经一次性的 `setHistory` 重放已提交历史；
 - 内部的 `EventTranslator` 把网关流式事件翻译为 `partial_*` 分片 + 完整消息，逐条原样保留不透明的 `fidelity` 保真负载；分段与网关自身的聚合一致——thinking 块由其 fidelity 负载闭合，连续相同的 fidelity 归为同一块(OpenAI 兼容客户端给每条增量盖同一个 `{ reasoning_field }`，不能因此切块)，text 段遇到不同的 `fidelity.phase` 即切分、遇到 `fidelity.signature` 即闭合，合并时 fidelity 键累积；完整消息按 thinking → text → tool_call 顺序落盘；

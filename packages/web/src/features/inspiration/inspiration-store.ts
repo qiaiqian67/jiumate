@@ -34,7 +34,7 @@ import {
   updateInspirationCategory,
 } from "./inspiration-service";
 import type { InspirationCatalogView } from "./inspiration-service";
-import type { InspirationCase, InspirationCategory } from "@jiumate/inspirations";
+import type { InspirationCase, InspirationCategory } from "@jadelau/inspirations";
 
 /** Where the shared catalog is in its life: painting the built-ins, or holding the server's list. */
 export type CatalogStatus = "builtin" | "ready" | "failed";

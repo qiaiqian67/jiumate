@@ -8,7 +8,7 @@
  *                                          petWindowScale, legacy companion* keys stripped,
  *                                          bounds enforced)
  *
- * The manifest/image validation itself lives in `@jiumate/pets` and is
+ * The manifest/image validation itself lives in `@jadelau/pets` and is
  * covered by its own unit suite; these tests pin the HTTP + prefs contract on top.
  */
 import fs from "node:fs/promises";

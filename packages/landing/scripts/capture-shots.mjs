@@ -11,7 +11,7 @@
  * src/assets/shots/ as <page>-<lang>-<theme>.webp (12 files, re-encoded to WebP
  * inside Chromium to keep the repo small).
  *
- * Prereqs: `pnpm --filter @jiumate/{skills,core,server,web} build` and
+ * Prereqs: `pnpm --filter @jadelau/{skills,core,server,web} build` and
  * Playwright's chromium. Run: `node scripts/capture-shots.mjs`.
  */
 import http from "node:http";
@@ -52,7 +52,7 @@ cat > claude-code-expert/package.json <<'EOF'
   "private": true,
   "type": "module",
   "scripts": { "start": "tsx src/rag.ts" },
-  "dependencies": { "@jiumate/core": "^0.1.0", "tsx": "^4" }
+  "dependencies": { "@jadelau/core": "^0.1.0", "tsx": "^4" }
 }
 EOF
 cat > claude-code-expert/src/rag.ts <<'EOF'
@@ -60,7 +60,7 @@ cat > claude-code-expert/src/rag.ts <<'EOF'
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
-import { createAgent, isModelMessage, userText } from "@jiumate/core";
+import { createAgent, isModelMessage, userText } from "@jadelau/core";
 
 const walk = (d) =>
   fs.readdirSync(d, { withFileTypes: true }).flatMap((e) =>

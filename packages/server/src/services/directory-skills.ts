@@ -22,8 +22,8 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
-import { parseSkillFrontmatter, PLUGIN_NAME_PATTERN } from "@jiumate/core";
-import type { SkillMetadata } from "@jiumate/core";
+import { parseSkillFrontmatter, PLUGIN_NAME_PATTERN } from "@jadelau/core";
+import type { SkillMetadata } from "@jadelau/core";
 import { HttpError } from "../http/errors.js";
 import {
   MAX_ARCHIVE_FILES,

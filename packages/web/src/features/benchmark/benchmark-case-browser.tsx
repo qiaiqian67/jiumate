@@ -4,7 +4,7 @@ import type {
   CaseMaterial,
   WorkspaceFileEntry,
   WorkspaceFilesResponse,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import { REHYPE_PLUGINS, REMARK_PLUGINS } from "../../lib/markdown-plugins";

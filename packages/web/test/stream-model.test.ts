@@ -28,12 +28,12 @@ import {
   toolCallOutput,
   userText,
   withOrigin,
-} from "@jiumate/core/omnimessage";
+} from "@jadelau/core/omnimessage";
 import type {
   OmniMessage,
   SessionMetaPayload,
   TokenCounts,
-} from "@jiumate/core/omnimessage";
+} from "@jadelau/core/omnimessage";
 import {
   approvalKey,
   buildDedupIndex,

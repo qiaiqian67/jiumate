@@ -3,7 +3,7 @@ title: CLI Reference
 description: Complete reference for the jiumate command, its subcommands, and options.
 ---
 
-The CLI ships as the npm package `@jiumate/cli`; the command is `jiumate`. Running bare `jiumate` prints help; `-v, --version` prints the running build's one-line identity, and `jiumate version --json` prints the whole of it. A `.env` file in the working directory is loaded automatically on startup.
+The CLI ships as the npm package `@jadelau/cli`; the command is `jiumate`. Running bare `jiumate` prints help; `-v, --version` prints the running build's one-line identity, and `jiumate version --json` prints the whole of it. A `.env` file in the working directory is loaded automatically on startup.
 
 The CLI is a thin client of the server: every session-facing command (`run`, `chat`, `ls`, `input`, `logs`, `agent`, `project`, `cost`, `schedule`) sends HTTP requests to a JiuMate server and renders the replies — tasks execute on the server, sessions live in its index, and the Web App sees everything the CLI creates (and vice versa). Only `config` still edits the Project's files directly, and `server` / `web` start the service itself.
 
@@ -442,7 +442,7 @@ Release discovery and tarball downloads honor `JIUMATE_DOWNLOAD_SOURCE=auto|oss|
 | Install kind | How it upgrades |
 | --- | --- |
 | Tarball (`install.sh`, default `~/.jiumate`) | Re-runs the official installer, preserving the install dir and whether the package bundles a Node runtime |
-| Global npm/pnpm/yarn/bun install | Runs that manager's global install of `@jiumate/cli@<target>`; if the manager cannot be identified, prints the command instead of guessing |
+| Global npm/pnpm/yarn/bun install | Runs that manager's global install of `@jadelau/cli@<target>`; if the manager cannot be identified, prints the command instead of guessing |
 | Source checkout | Refused — update it with `git pull` and a rebuild |
 
 Without `-y` the command prints exactly what it will do — mechanism, target version and install dir — and asks for confirmation; when stdin is not a terminal it requires `--yes` rather than waiting on a prompt nobody can answer. **The data root is never touched**: an upgrade only replaces `bin`, `lib`, `web` and `node`. Neither path upgrades in place on Windows: the installer is a POSIX shell script, and a global install cannot be driven from here because Node will not execute an `npm`/`pnpm` `.cmd` shim without a shell — so the command prints the exact command to run yourself instead.

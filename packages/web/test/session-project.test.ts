@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SessionInfo } from "@jiumate/server/api";
+import type { SessionInfo } from "@jadelau/server/api";
 import { sessionForProject, sessionProbeKey } from "../src/features/chat/session-project";
 
 const SESSION: SessionInfo = {

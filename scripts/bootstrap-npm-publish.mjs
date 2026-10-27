@@ -1,5 +1,5 @@
 /**
- * Bootstrap-publish the @jiumate/* packages to npm, once each, by hand.
+ * Bootstrap-publish the @jadelau/* packages to npm, once each, by hand.
  *
  * **Why this exists.** A Trusted Publisher can only be configured for a package that already
  * exists on the registry: npm's settings page lists the packages you can point a GitHub
@@ -41,7 +41,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
-const SCOPE = "@jiumate";
+const SCOPE = "@jadelau";
 
 /**
  * The packages to publish, in the order they must go out.
@@ -236,7 +236,7 @@ function copyAssets() {
   const webDist = path.join(ROOT, "packages", "web", "dist");
   if (!fs.existsSync(webDist)) {
     throw new Error(
-      "packages/web/dist is missing — build the web assets first (pnpm --filter @jiumate/web build).",
+      "packages/web/dist is missing — build the web assets first (pnpm --filter @jadelau/web build).",
     );
   }
   const target = path.join(ROOT, "packages", "server", "web-dist");

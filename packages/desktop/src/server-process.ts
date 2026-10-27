@@ -1,5 +1,5 @@
 /**
- * Embedded server lifecycle: forks @jiumate/server as an Electron
+ * Embedded server lifecycle: forks @jadelau/server as an Electron
  * utilityProcess (same Node runtime, isolated from the main process), learns the actual
  * port from the JIUMATE_PORT_FILE announcement, probes HTTP readiness, and stops the
  * server gracefully — shutdown endpoint first (the only graceful path on Windows, where
@@ -33,7 +33,7 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * The server bundle — forked by path. tsup emits @jiumate/server as one
+ * The server bundle — forked by path. tsup emits @jadelau/server as one
  * self-contained file in this package's dist/, so a source run and a packaged app fork the
  * same artifact from the same app-path-relative location (asar is off, see
  * electron-builder.yml, so it is a plain file either way).

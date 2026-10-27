@@ -39,7 +39,7 @@ import {
   parseUserSteeringText,
   tracesDir,
   userText,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   ApproveFn,
   BackgroundCommandInfo,
@@ -56,7 +56,7 @@ import type {
   SubagentMessageOutcome,
   TextPayload,
   ThinkingLevelName,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   PendingFollowUpInfo,
   PendingSteeringInfo,

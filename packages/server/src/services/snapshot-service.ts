@@ -22,7 +22,7 @@ import {
   agentVaultPath,
   snapshotsDir,
   systemConfigPath,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import { HttpError } from "../http/errors.js";
 import { badRequest } from "../http/validate.js";
 

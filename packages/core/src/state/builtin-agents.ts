@@ -1,5 +1,5 @@
 /**
- * Preset content for builtin Agents; the plugin library lives in @jiumate/plugins
+ * Preset content for builtin Agents; the plugin library lives in @jadelau/plugins
  * (the library files are read live when building the preset).
  *
  * - Every Project comes with a single builtin Agent: `default_agent` (the General Agent, the

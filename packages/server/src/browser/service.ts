@@ -26,9 +26,9 @@ import type {
   BrowserScreenshot,
   BrowserStatus,
   BrowserTab,
-} from "@jiumate/core/interfaces";
+} from "@jadelau/core/interfaces";
 import { HttpError } from "../http/errors.js";
-import { resolveAddress } from "@jiumate/core/browser";
+import { resolveAddress } from "@jadelau/core/browser";
 import { listImportSources, readCookies, readHistory } from "./import/index.js";
 import type { HistoryEntry } from "./import/history.js";
 import type { HistoryStore } from "./history-store.js";

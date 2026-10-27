@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { MessagingChannel } from "@jiumate/server/api";
+import type { MessagingChannel } from "@jadelau/server/api";
 import {
   MessagingBindingBody,
   MessagingBindingHelp,

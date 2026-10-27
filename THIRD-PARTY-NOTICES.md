@@ -7,7 +7,7 @@ licenses. This file records those, and how to obtain their source.
 Nothing listed here is source code of this repository. The programs below are downloaded by the
 release workflow (`.github/workflows/release.yml`) and placed alongside the application inside the
 release archives; the fonts are copied out of an npm dependency into the built web assets.
-Installing from npm (`@jiumate/cli`) bundles none of them.
+Installing from npm (`@jadelau/cli`) bundles none of them.
 
 What earns an entry is a third-party work redistributed **as its own file**. An npm package whose
 JavaScript is compiled and minified into the application bundle (React, Shiki, xterm.js, KaTeX's own
@@ -94,14 +94,14 @@ independent rights review.
 
 ## AgentHub — `packages/agenthub/`
 
-Vendored into this repository as a first-party package (`@jiumate/agenthub`), so the
+Vendored into this repository as a first-party package (`@jadelau/agenthub`), so the
 model gateway this project depends on is no longer pulled from a package scope this
 project no longer owns.
 
 The source is AgentHub 0.4.15, taken verbatim from the upstream repository's `v0.4.15`
 tag — the `src_ts/` subtree, its `tsconfig.json` and its `package.json`. The changes made
 to it here are confined to the package's own metadata and documentation: the `name` field
-became `@jiumate/agenthub`, the `repository`, `bugs` and `homepage` fields point at this
+became `@jadelau/agenthub`, the `repository`, `bugs` and `homepage` fields point at this
 repository, the `author` field reads JiuMate, the upstream development-only dependencies
 and scripts (jest, eslint, tsx, supertest) were dropped, and two links inside the tracer
 and playground pages now point at the upstream repository rather than its former name. The

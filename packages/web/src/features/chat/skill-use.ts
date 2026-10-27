@@ -4,13 +4,13 @@
  *
  * The `[use_skills]` marker block itself is **not** defined here: it is a globally agreed
  * format shared by the frontend, the backend and the core prompt template, so its producer
- * and parser live in core's marker module (`@jiumate/core/markers`) and are
+ * and parser live in core's marker module (`@jadelau/core/markers`) and are
  * re-exported below for this feature's existing importers. What stays local is the UI-only
  * part: icon path, UI-language text selection, dropdown filtering and slash command items.
  */
-import type { SkillMetadataItem } from "@jiumate/server/api";
+import type { SkillMetadataItem } from "@jadelau/server/api";
 
-export { buildSkillsMessage, parseSkillsMessage } from "@jiumate/core/markers";
+export { buildSkillsMessage, parseSkillsMessage } from "@jadelau/core/markers";
 
 /** Book icon (24×24 line path): the mark of skills as a kind — the composer's skills button, the "using skills" banner, the agents page's skill count, and what a skill draws when it carries no plugin icon (skill-icon-view.tsx). */
 export const BOOK_ICON =

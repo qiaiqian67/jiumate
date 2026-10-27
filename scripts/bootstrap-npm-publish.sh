@@ -1,5 +1,5 @@
 #!/bin/sh
-# Bootstrap-publish the @jiumate/* packages to npm, once each, by hand.
+# Bootstrap-publish the @jadelau/* packages to npm, once each, by hand.
 #
 # A Trusted Publisher can only be configured for a package that already exists on the
 # registry, so a brand-new package cannot be first-published by the release workflow: that

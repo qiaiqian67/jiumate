@@ -1,7 +1,7 @@
 /**
  * Skin catalog: list / import / delete JiuMate skin packages on the host.
  *
- * The package format itself lives in `@jiumate/skins`; this service adds the
+ * The package format itself lives in `@jadelau/skins`; this service adds the
  * host-side concerns: anchoring the catalog under the data root, hashing source paths for
  * receipts, and reading the asset bytes a fingerprint has to cover.
  *
@@ -10,7 +10,7 @@
  *   <root>/skins/<slug>/<asset-filename>            (background and/or preview)
  *   <root>/skins/<slug>/.jiumate-skin-receipt.json (after an import)
  *
- * Builtin presets live in the web bundle (see `@jiumate/skins/presets`) and are
+ * Builtin presets live in the web bundle (see `@jadelau/skins/presets`) and are
  * merged with this catalog by the picker, the same way the pet picker merges its presets.
  *
  * ## Two source formats, one publish path
@@ -46,7 +46,7 @@ import {
   type SkinPackage,
   type SkinReceipt,
   type ZipEntry,
-} from "@jiumate/skins";
+} from "@jadelau/skins";
 
 /** Diagnostic codes — stable strings the picker can render without surprises. */
 export type SkinDiagnostic = string;

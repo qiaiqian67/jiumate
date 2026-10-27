@@ -7,7 +7,7 @@ import type {
   BrowserBackend,
   BrowserBackendCapabilities,
   BrowserTab,
-} from "@jiumate/core/interfaces";
+} from "@jadelau/core/interfaces";
 import type { BrowserCommand, BrowserLink, BrowserLinkEvent } from "../../src/browser/link.js";
 import { BrowserLinkError } from "../../src/browser/link.js";
 

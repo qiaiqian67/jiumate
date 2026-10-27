@@ -9,7 +9,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { VERSION } from "@jiumate/core";
+import { VERSION } from "@jadelau/core";
 import { versionReport } from "../src/version-report.js";
 import type {
   RestartResponse,

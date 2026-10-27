@@ -29,7 +29,7 @@ import type {
   BrowserScreenshot,
   BrowserStatus,
   BrowserTab,
-} from "@jiumate/core/interfaces";
+} from "@jadelau/core/interfaces";
 import { HttpError } from "../errors.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import type { AppDeps } from "../../app.js";

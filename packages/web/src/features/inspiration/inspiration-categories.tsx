@@ -31,7 +31,7 @@ import { S } from "../../lib/strings";
 import { useLocale } from "../../state/locale";
 import { removeInspirationCategory, saveInspirationCategory } from "./inspiration-store";
 import type { InspirationCatalogView } from "./inspiration-service";
-import type { InspirationCategory } from "@jiumate/inspirations";
+import type { InspirationCategory } from "@jadelau/inspirations";
 
 /** A category being edited: an id means an existing one, an empty id means a new one. */
 interface CategoryDraft {

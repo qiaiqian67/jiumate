@@ -12,7 +12,7 @@
  * same call on every platform this runs on.
  * Docs: /docs/cli § "jiumate server / jiumate web".
  */
-import { liveServerLock, readServerLock } from "@jiumate/server/lock";
+import { liveServerLock, readServerLock } from "@jadelau/server/lock";
 import type { Command } from "commander";
 import type { Messages } from "../i18n.js";
 import { resolveRootOption } from "../root-option.js";

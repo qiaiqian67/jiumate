@@ -21,7 +21,7 @@ description: 平台每个 package 今天交付了什么、关键路径在哪里�
 |---|---|---|
 | Agent 循环 | 单流 ReAct,**并发执行 tool**,approval 串行;子代理最多一层(`MAX_SUBAGENT_DEPTH = 1`) | `engine/context-engine.ts` |
 | 流式输出 | 唯一的输出模式;`partial_*` 实时增量,segment 结束补完整 `model_msg` | `llm/generative-model.ts` |
-| LLM 抽象 | 通过 `@jiumate/agenthub` 接入所有 provider;tool calling、vision、inline thinking、prompt caching、thinking level、fast mode 全部支持 | `interfaces/llm.ts:137` |
+| LLM 抽象 | 通过 `@jadelau/agenthub` 接入所有 provider;tool calling、vision、inline thinking、prompt caching、thinking level、fast mode 全部支持 | `interfaces/llm.ts:137` |
 | 重试分类 | 只有 4 类是 fatal(凭证、4xx、fast mode 不支持、装配失败),其余一律 retryable;默认 `maxReconnects = 5`、`maxTurnAttempts = 20` | `context-engine.ts:427` |
 | 工具集 | 9 个内置(读/写/编辑/shell/input-shell/2× subagent/2× image);**没有内置 web fetch / git / grep** | `environment/tools/registry.ts:37` |
 | OmniMessage 协议 | 7 类 payload + 9 类 event;方括号 marker 形式(`[tag]…[/tag]`)是权威写法,角括号形式无限期兼容 | `omnimessage/types.ts`、`markers/` |
@@ -84,7 +84,7 @@ React 19 + Vite 7 + Tailwind 4。
 
 ## packages/cli
 
-`@jiumate/cli`。
+`@jadelau/cli`。
 
 28 个子命令,涵盖 `auth`、`config`、`run`、`chat`、`ls`、`logs`、`input`、`agent`、`project`、`cost`、`schedule`、`server`、`web`、`update`、`version`。持久化 `node:readline` + bracketed-paste 处理 + `\` 续行;`/exit`、`/clear`、`/compact`、`/goal[:budget]`、`/thinking`、`/verbose`。**所有读命令支持 `--json` 用于脚本化;`--background` 与 `--timeout 0` 用于非阻塞用法。** 连接解析:显式 `--server` env > 活着的 `<root>/server.lock` > 自动 spawn 后台 server。401 自动重读 `<root>/api-token`。**没有 tab completion、没有历史文件、没有 OAuth/SSO。**
 
@@ -93,18 +93,18 @@ React 19 + Vite 7 + Tailwind 4。
 12 个:
 
 ```
-@jiumate/agent-development   4 skills   LLM/config/orchestration/SDK
-@jiumate/agent-tuning        4 skills   init/benchmark/eval/optimize
-@jiumate/continual-learning  1 hook     stop:提炼 30-turn 之后的发现成 skill
-@jiumate/data-analysis       1 skill
-@jiumate/goal                2 hooks    user_prompt + stop:`/goal` 后端
-@jiumate/humanizer           1 skill    3-layer 去 AI 痕迹
-@jiumate/model-development   3 skills   llamafactory / ollama / vllm
-@jiumate/skill-porting       1 skill    从外部生态安装 skill
-@jiumate/software-development 2 skills  SE 工作流 + 设计语言
-@jiumate/use-bento-slides    1 skill    .bento.html 幻灯片
-@jiumate/use-claude-code     1 skill    远程 SSH 跑 Claude Code
-@jiumate/use-firecrawl       1 skill    搜索 / 抓取
+@jadelau/agent-development   4 skills   LLM/config/orchestration/SDK
+@jadelau/agent-tuning        4 skills   init/benchmark/eval/optimize
+@jadelau/continual-learning  1 hook     stop:提炼 30-turn 之后的发现成 skill
+@jadelau/data-analysis       1 skill
+@jadelau/goal                2 hooks    user_prompt + stop:`/goal` 后端
+@jadelau/humanizer           1 skill    3-layer 去 AI 痕迹
+@jadelau/model-development   3 skills   llamafactory / ollama / vllm
+@jadelau/skill-porting       1 skill    从外部生态安装 skill
+@jadelau/software-development 2 skills  SE 工作流 + 设计语言
+@jadelau/use-bento-slides    1 skill    .bento.html 幻灯片
+@jadelau/use-claude-code     1 skill    远程 SSH 跑 Claude Code
+@jadelau/use-firecrawl       1 skill    搜索 / 抓取
 ```
 
 没有任何插件**新增 tool** —— 全部靠 Skill(LLM 侧)与 Hook(子进程侧)扩展行为。**没有脚手架 / 生成器**(`pnpm create-plugin` 不存在)。

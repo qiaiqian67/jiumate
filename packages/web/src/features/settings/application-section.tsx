@@ -27,7 +27,7 @@ import type {
 import { getPetSpriteStyle } from "../pet/sprite";
 import { PET_SCALE_CHOICES, usePetStore } from "../pet/pet-store";
 import { PetPet } from "../pet/pet-pet";
-import type { PetPackage } from "@jiumate/pets";
+import type { PetPackage } from "@jadelau/pets";
 
 /** Label for a size choice. Read at render time so a locale switch is picked up. */
 function petSizeText(scale: number): string {

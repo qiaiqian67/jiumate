@@ -11,7 +11,7 @@
  *   concatenates per-Agent server responses, so its order isn't globally chronological.
  */
 import { describe, expect, it } from "vitest";
-import type { SessionCategoryCounts, SessionInfo } from "@jiumate/server/api";
+import type { SessionCategoryCounts, SessionInfo } from "@jadelau/server/api";
 import {
   SIDEBAR_PAGE_SIZE,
   TEMP_WORKSPACE_GROUP_KEY,

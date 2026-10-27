@@ -79,12 +79,12 @@ userData 目录随其名称一并搬家，Chromium 配置文件也跟着走，�
 
 | 包                                        | 名称                          | 职责                                                                        |
 | ----------------------------------------- | ----------------------------- | --------------------------------------------------------------------------- |
-| [`packages/core`](../packages/core)       | `@jiumate/core`   | SDK 与引擎：ReAct 循环、OmniMessage 协议、LLM/Environment 接口契约、Agent State、Trace |
-| [`packages/cli`](../packages/cli)         | `@jiumate/cli`    | `jiumate` 命令：REPL、单次运行、模型与 vault 配置、服务启动器               |
-| [`packages/agenthub`](../packages/agenthub) | `@jiumate/agenthub` | 模型网关：一个客户端接入 1000+ 个 LLM 供应商，vendor 自 AgentHub 0.4.15（见[第三方声明](../THIRD-PARTY-NOTICES.md)） |
-| [`packages/server`](../packages/server)   | `@jiumate/server` | Web 后端：HTTP API + SSE 流式传输、多用户认证、Project 鉴权、用量统计       |
-| [`packages/web`](../packages/web)         | `@jiumate/web`    | Web App：多会话聊天，Agent/Skill/模型管理，Trace 可观测性，评测中心         |
-| [`plugins/*`](../plugins) | `@jiumate/<name>` | 内置插件，一插件一 npm 包：Skill（软件开发、模型开发、Agent 开发/调优……）与会话钩子（目标模式、技能沉淀）；loader 在 `packages/core` |
+| [`packages/core`](../packages/core)       | `@jadelau/core`   | SDK 与引擎：ReAct 循环、OmniMessage 协议、LLM/Environment 接口契约、Agent State、Trace |
+| [`packages/cli`](../packages/cli)         | `@jadelau/cli`    | `jiumate` 命令：REPL、单次运行、模型与 vault 配置、服务启动器               |
+| [`packages/agenthub`](../packages/agenthub) | `@jadelau/agenthub` | 模型网关：一个客户端接入 1000+ 个 LLM 供应商，vendor 自 AgentHub 0.4.15（见[第三方声明](../THIRD-PARTY-NOTICES.md)） |
+| [`packages/server`](../packages/server)   | `@jadelau/server` | Web 后端：HTTP API + SSE 流式传输、多用户认证、Project 鉴权、用量统计       |
+| [`packages/web`](../packages/web)         | `@jadelau/web`    | Web App：多会话聊天，Agent/Skill/模型管理，Trace 可观测性，评测中心         |
+| [`plugins/*`](../plugins) | `@jadelau/<name>` | 内置插件，一插件一 npm 包：Skill（软件开发、模型开发、Agent 开发/调优……）与会话钩子（目标模式、技能沉淀）；loader 在 `packages/core` |
 | [`packages/landing`](../packages/landing) | —                             | 产品落地页（本仓库的官网）                                                 |
 | [`packages/docs`](../packages/docs)       | —                             | 文档站（双语，部署在 `/docs/` 下）                                          |
 
@@ -112,7 +112,7 @@ Agent 读到的是同一个目录。
 
 ```bash
 npx playwright install chromium                      # 一次即可
-pnpm --filter @jiumate/web test:e2e      # 针对 mock LLM 的浏览器 e2e
+pnpm --filter @jadelau/web test:e2e      # 针对 mock LLM 的浏览器 e2e
 pnpm test:e2e                                        # core 的真实模型 e2e，需要 DEEPSEEK_API_KEY
 ```
 

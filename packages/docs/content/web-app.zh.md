@@ -9,7 +9,7 @@ JiuMate 自带一个开箱即用的 Web App：多用户登录、流式对话、A
 
 ```text
 packages/web/src
-├── api/          # fetch 封装 · 每个 API 一个函数(DTO type-only 来自 @jiumate/server/api)· SSE 封装
+├── api/          # fetch 封装 · 每个 API 一个函数(DTO type-only 来自 @jadelau/server/api)· SSE 封装
 ├── state/        # auth / project / sessions / theme / locale 五个 context
 ├── lib/omni/     # OmniMessage 流 → 渲染视图模型 reducer;连接先行 + 去重的流控制器
 ├── components/   # ui 原语(modal / drawer / select …)与应用布局

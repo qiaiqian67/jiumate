@@ -1,12 +1,12 @@
 {
-  "name": "@jiumate/example-build-agent-with-agent",
+  "name": "@jadelau/example-build-agent-with-agent",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "tsx build-agent.ts"
   },
   "dependencies": {
-    "@jiumate/core": "workspace:*"
+    "@jadelau/core": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.20.0"

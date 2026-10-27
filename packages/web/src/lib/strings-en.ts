@@ -1384,7 +1384,7 @@ export const en: Strings = {
   /**
    * Plaza (features/inspiration/*): the built-in cases plus the ones admins authored,
    * filed into categories. The built-in cases' own copy is NOT here — it travels with the case, as
-   * the `title`/`titleZh` fields in `@jiumate/inspirations/presets`, which is what lets
+   * the `title`/`titleZh` fields in `@jadelau/inspirations/presets`, which is what lets
    * an admin's case and a built-in one be the same kind of thing. This group carries the chrome.
    */
   inspiration: {

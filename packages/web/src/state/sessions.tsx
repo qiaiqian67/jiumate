@@ -31,7 +31,7 @@ import type {
   SessionCategoryCounts,
   SessionInfo,
   SessionStatus,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import { useStore } from "zustand/react";
 import { createStore } from "zustand/vanilla";
 import * as api from "../api/endpoints";

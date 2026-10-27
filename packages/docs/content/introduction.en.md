@@ -23,10 +23,10 @@ One install gives you four layers that share a single data directory and a singl
 
 | Component | Package | Description |
 | --- | --- | --- |
-| SDK | `@jiumate/core` | The core engine: ReAct loop, the [OmniMessage protocol](/omni-message), the LLM and Environment [interface contracts](/interfaces), Agent State and Trace. |
-| CLI | `@jiumate/cli` | The `jiumate` command: interactive REPL, one-shot task runs, model and Vault configuration. |
-| Server | `@jiumate/server` | The Web backend: HTTP [API and SSE streaming](/server-api), multi-user auth, Project authorization, usage statistics. |
-| Web App | `@jiumate/web` | The browser UI: multi-session chat, Agent management, skill library, model configuration, Trace observability and the evaluation center. |
+| SDK | `@jadelau/core` | The core engine: ReAct loop, the [OmniMessage protocol](/omni-message), the LLM and Environment [interface contracts](/interfaces), Agent State and Trace. |
+| CLI | `@jadelau/cli` | The `jiumate` command: interactive REPL, one-shot task runs, model and Vault configuration. |
+| Server | `@jadelau/server` | The Web backend: HTTP [API and SSE streaming](/server-api), multi-user auth, Project authorization, usage statistics. |
+| Web App | `@jadelau/web` | The browser UI: multi-session chat, Agent management, skill library, model configuration, Trace observability and the evaluation center. |
 
 ## Design tenets
 

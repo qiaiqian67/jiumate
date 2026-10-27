@@ -3,7 +3,7 @@ title: Core Interfaces
 description: A top-down tour of the contracts — full LLMInterface and EnvironmentInterface signatures, inner types field by field, and every swappable seam.
 ---
 
-The context_engine depends on three interfaces: Human, LLM and Environment. All protocol conversion happens inside the implementations — the engine sees only [OmniMessage](/omni-message). This page goes top-down: the two big interface signatures and the Human boundary first, then each interface's inner types layer by layer. All types are exported by `@jiumate/core`; source: `packages/core/src/interfaces/` — `llm.ts` (what the model side needs), `environment.ts` (what the Environment side needs), `shared.ts` (the vocabulary both genuinely need), and `index.ts`, the barrel behind the `@jiumate/core/interfaces` subpath.
+The context_engine depends on three interfaces: Human, LLM and Environment. All protocol conversion happens inside the implementations — the engine sees only [OmniMessage](/omni-message). This page goes top-down: the two big interface signatures and the Human boundary first, then each interface's inner types layer by layer. All types are exported by `@jadelau/core`; source: `packages/core/src/interfaces/` — `llm.ts` (what the model side needs), `environment.ts` (what the Environment side needs), `shared.ts` (the vocabulary both genuinely need), and `index.ts`, the barrel behind the `@jadelau/core/interfaces` subpath.
 
 ## Overview
 
@@ -110,7 +110,7 @@ interface GenerativeModelConfig {
 
 ### The built-in implementation: GenerativeModel
 
-`GenerativeModel` (`packages/core/src/llm/generative-model.ts`) grounds the contract on the `AutoLLMClient` of the `@jiumate/agenthub` model gateway:
+`GenerativeModel` (`packages/core/src/llm/generative-model.ts`) grounds the contract on the `AutoLLMClient` of the `@jadelau/agenthub` model gateway:
 
 - the gateway maintains conversation history **statefully**, receiving only new messages each turn; resuming a Session replays committed history through a one-time `setHistory`;
 - an internal `EventTranslator` translates gateway stream events into `partial_*` fragments plus complete messages, preserving each item's opaque `fidelity` payload verbatim; segmentation mirrors the gateway's own aggregation — a thinking block is closed by its fidelity payload and a run of equal fidelity stays one block (OpenAI-compatible clients stamp every delta with the same `{ reasoning_field }`, which must not split blocks), while a text segment splits on a differing `fidelity.phase` and closes on a `fidelity.signature`, fidelity keys accumulating on merge; complete messages settle in thinking → text → tool_call order;

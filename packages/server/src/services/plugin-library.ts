@@ -8,8 +8,8 @@
  * library types is withheld from the API until someone adds it here on purpose; skill bodies
  * and hook scripts never travel in a listing.
  */
-import { builtinPluginId, libraryPlugin, pluginNameOf } from "@jiumate/core";
-import type { HookManifest, LibraryPlugin, SkillMetadata } from "@jiumate/core";
+import { builtinPluginId, libraryPlugin, pluginNameOf } from "@jadelau/core";
+import type { HookManifest, LibraryPlugin, SkillMetadata } from "@jadelau/core";
 import type { HookItem, PluginItem, SkillMetadataItem } from "../api/types.js";
 import { HttpError } from "../http/errors.js";
 

@@ -10,7 +10,7 @@
  * list snapshot racing the live SSE flip briefly resurrects "running" and would
  * otherwise double-notify the same finish.
  */
-import type { SessionStatus } from "@jiumate/server/api";
+import type { SessionStatus } from "@jadelau/server/api";
 
 export interface ObservedSession {
   sessionId: string;

@@ -3,7 +3,7 @@
  *
  * Deliberately free of Node built-ins: the web app generates the `<style>` element for the
  * active skin in the browser, so this module is published as its own entry point
- * (`@jiumate/skins/css`) rather than through the barrel, which pulls in
+ * (`@jadelau/skins/css`) rather than through the barrel, which pulls in
  * `io.ts`'s fs / crypto / path.
  *
  * ## Why a theme is one attribute selector per reading
@@ -30,7 +30,7 @@ export { ALLOWED_TOKENS, ACCENT_OWNING_TOKENS, ownsAccent } from "./constants.js
 export { deriveRamps, SURFACE_ROLE_KEYS } from "./palette.js";
 export type { DerivedRamp, ThemeTokens } from "./palette.js";
 // Runtime constants the web app needs at render time. Re-exported here rather than reached
-// through the barrel, which is the Node entry: importing a *value* from `@jiumate/skins`
+// through the barrel, which is the Node entry: importing a *value* from `@jadelau/skins`
 // in the web bundle drags in fs / crypto / path and the whole module graph fails to resolve.
 export {
   DEFAULT_SKIN_BACKGROUND_DIM,

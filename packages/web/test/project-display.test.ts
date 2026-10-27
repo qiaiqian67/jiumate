@@ -12,7 +12,7 @@
  * importing the module for them pulls no DOM.
  */
 import { describe, expect, it } from "vitest";
-import type { ProjectSummary } from "@jiumate/server/api";
+import type { ProjectSummary } from "@jadelau/server/api";
 import { DEFAULT_PROJECT_ID, projectDisplayName, projectRoleLabel } from "../src/state/project";
 import { en } from "../src/lib/strings-en";
 import { zh } from "../src/lib/strings";

@@ -1,10 +1,10 @@
 /**
  * The web bundle must never import a *value* from a Node-only barrel.
  *
- * `@jiumate/skins` and `@jiumate/pets` publish their barrel as the
+ * `@jadelau/skins` and `@jadelau/pets` publish their barrel as the
  * Node entry point: it pulls in `io.ts`, and through it `node:fs` / `node:crypto` / `node:path`.
  * The web app is meant to reach the Node-free siblings instead (`/css`, `/presets`). The same goes
- * for `@jiumate/inspirations`, whose barrel adds `io.ts` and whose siblings are
+ * for `@jadelau/inspirations`, whose barrel adds `io.ts` and whose siblings are
  * `/presets` (the built-in catalog) and `/schema` (the types, the bounds and the id rule).
  *
  * Nothing else catches a mistake here. `tsc` is happy because the barrel really does export the
@@ -23,9 +23,9 @@ const WEB_SRC = path.join(import.meta.dirname, "..", "src");
 
 /** Barrels that are Node-only, and the sibling entry a browser-safe import should use. */
 const NODE_ONLY_BARRELS: Record<string, string> = {
-  "@jiumate/skins": "@jiumate/skins/css or /presets",
-  "@jiumate/pets": "@jiumate/pets/presets",
-  "@jiumate/inspirations": "@jiumate/inspirations/presets or /schema",
+  "@jadelau/skins": "@jadelau/skins/css or /presets",
+  "@jadelau/pets": "@jadelau/pets/presets",
+  "@jadelau/inspirations": "@jadelau/inspirations/presets or /schema",
 };
 
 const SPECIFIER_ALTERNATION = Object.keys(NODE_ONLY_BARRELS)
@@ -88,23 +88,23 @@ describe("the scanner", () => {
   it("catches a value import from a barrel", () => {
     expect(
       runtimeBarrelImportsIn(
-        `import { DEFAULT_SKIN_SURFACE_ALPHA } from "@jiumate/skins";`,
+        `import { DEFAULT_SKIN_SURFACE_ALPHA } from "@jadelau/skins";`,
       ),
     ).toHaveLength(1);
     expect(
-      runtimeBarrelImportsIn(`export { withAlpha } from "@jiumate/skins";`),
+      runtimeBarrelImportsIn(`export { withAlpha } from "@jadelau/skins";`),
     ).toHaveLength(1);
   });
 
   it("allows a type-only import, however it is spelled", () => {
     expect(
-      runtimeBarrelImportsIn(`import type { SkinMode } from "@jiumate/skins";`),
+      runtimeBarrelImportsIn(`import type { SkinMode } from "@jadelau/skins";`),
     ).toEqual([]);
     expect(
-      runtimeBarrelImportsIn(`import { type SkinMode } from "@jiumate/skins";`),
+      runtimeBarrelImportsIn(`import { type SkinMode } from "@jadelau/skins";`),
     ).toEqual([]);
     expect(
-      runtimeBarrelImportsIn(`import type SkinMode from "@jiumate/skins";`),
+      runtimeBarrelImportsIn(`import type SkinMode from "@jadelau/skins";`),
     ).toEqual([]);
   });
 
@@ -112,17 +112,17 @@ describe("the scanner", () => {
     // The shape that would otherwise hide behind a `type` in the same clause.
     expect(
       runtimeBarrelImportsIn(
-        `import { type SkinMode, renderSkinCss } from "@jiumate/skins";`,
+        `import { type SkinMode, renderSkinCss } from "@jadelau/skins";`,
       ),
     ).toHaveLength(1);
   });
 
   it("allows the Node-free sibling entries", () => {
     expect(
-      runtimeBarrelImportsIn(`import { withAlpha } from "@jiumate/skins/css";`),
+      runtimeBarrelImportsIn(`import { withAlpha } from "@jadelau/skins/css";`),
     ).toEqual([]);
     expect(
-      runtimeBarrelImportsIn(`import { BUILTIN_SKINS } from "@jiumate/skins/presets";`),
+      runtimeBarrelImportsIn(`import { BUILTIN_SKINS } from "@jadelau/skins/presets";`),
     ).toEqual([]);
   });
 
@@ -130,15 +130,15 @@ describe("the scanner", () => {
     // The regression this scanner shipped with: the lazy clause spanned statements, so a real
     // violation on the last line was reported against the value import at the top.
     const code = [
-      `import { BUILTIN_SKINS } from "@jiumate/skins/presets";`,
-      `import type { BuiltinSkinPreset } from "@jiumate/skins/presets";`,
-      `import type { SkinMode, SkinPackage } from "@jiumate/skins";`,
+      `import { BUILTIN_SKINS } from "@jadelau/skins/presets";`,
+      `import type { BuiltinSkinPreset } from "@jadelau/skins/presets";`,
+      `import type { SkinMode, SkinPackage } from "@jadelau/skins";`,
     ].join("\n");
     expect(runtimeBarrelImportsIn(code)).toEqual([]);
   });
 
   it("finds a violation written across several lines", () => {
-    const code = ["import {", "  renderSkinCss,", `} from "@jiumate/skins";`].join(
+    const code = ["import {", "  renderSkinCss,", `} from "@jadelau/skins";`].join(
       "\n",
     );
     expect(runtimeBarrelImportsIn(code)).toHaveLength(1);

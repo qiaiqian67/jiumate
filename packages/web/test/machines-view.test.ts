@@ -9,7 +9,7 @@
  * stop looking installed as soon as anything else was installed.
  */
 import { describe, expect, it } from "vitest";
-import type { MachineInfo, MachineJob, MachinesResponse } from "@jiumate/server/api";
+import type { MachineInfo, MachineJob, MachinesResponse } from "@jadelau/server/api";
 import {
   installButtonState,
   installedMachines,

@@ -21,7 +21,7 @@ Inventory scope:
 |---|---|---|
 | Agent loop | Single-stream ReAct; **tools run in parallel**, approvals run serially; subagents max one level (`MAX_SUBAGENT_DEPTH = 1`) | `engine/context-engine.ts` |
 | Streaming output | The only output mode; `partial_*` increments in real time, segments finalize a full `model_msg` at end | `llm/generative-model.ts` |
-| LLM abstraction | All providers come through `@jiumate/agenthub`; tool calling, vision, inline thinking, prompt caching, thinking level, fast mode all supported | `interfaces/llm.ts:137` |
+| LLM abstraction | All providers come through `@jadelau/agenthub`; tool calling, vision, inline thinking, prompt caching, thinking level, fast mode all supported | `interfaces/llm.ts:137` |
 | Retry classification | Only 4 classes are fatal (credentials, 4xx, fast-mode-unsupported, assembly failure); everything else is retryable; defaults `maxReconnects = 5`, `maxTurnAttempts = 20` | `context-engine.ts:427` |
 | Tool set | 9 built-in (read/write/edit/shell/input-shell/2× subagent/2× image); **no built-in web fetch / git / grep** | `environment/tools/registry.ts:37` |
 | OmniMessage protocol | 7 payload classes + 9 event classes; the bracket-marker form (`[tag]…[/tag]`) is authoritative; the angle-bracket form is supported indefinitely | `omnimessage/types.ts`, `markers/` |
@@ -84,7 +84,7 @@ React 19 + Vite 7 + Tailwind 4.
 
 ## packages/cli
 
-`@jiumate/cli`.
+`@jadelau/cli`.
 
 28 subcommands across `auth`, `config`, `run`, `chat`, `ls`, `logs`, `input`, `agent`, `project`, `cost`, `schedule`, `server`, `web`, `update`, `version`. Persistent `node:readline` + bracketed-paste handling + `\` line continuation; `/exit`, `/clear`, `/compact`, `/goal[:budget]`, `/thinking`, `/verbose`. **Every read command supports `--json` for scripting; `--background` and `--timeout 0` for non-blocking usage.** Connection resolution: explicit `--server` env > live `<root>/server.lock` > auto-spawn background server. 401 auto-reloads `<root>/api-token`. **No tab completion, no history file, no OAuth/SSO.**
 
@@ -93,18 +93,18 @@ React 19 + Vite 7 + Tailwind 4.
 12 shipped:
 
 ```
-@jiumate/agent-development   4 skills   LLM/config/orchestration/SDK
-@jiumate/agent-tuning        4 skills   init/benchmark/eval/optimize
-@jiumate/continual-learning  1 hook     stop: distil discoveries past 30 turns into a skill
-@jiumate/data-analysis       1 skill
-@jiumate/goal                2 hooks    user_prompt + stop: `/goal` backend
-@jiumate/humanizer           1 skill    3-layer AI-tell removal
-@jiumate/model-development   3 skills   llamafactory / ollama / vllm
-@jiumate/skill-porting       1 skill    install skills from external ecosystems
-@jiumate/software-development 2 skills  SE workflow + design language
-@jiumate/use-bento-slides    1 skill    .bento.html slides
-@jiumate/use-claude-code     1 skill    remote SSH Claude Code
-@jiumate/use-firecrawl       1 skill    search / scrape
+@jadelau/agent-development   4 skills   LLM/config/orchestration/SDK
+@jadelau/agent-tuning        4 skills   init/benchmark/eval/optimize
+@jadelau/continual-learning  1 hook     stop: distil discoveries past 30 turns into a skill
+@jadelau/data-analysis       1 skill
+@jadelau/goal                2 hooks    user_prompt + stop: `/goal` backend
+@jadelau/humanizer           1 skill    3-layer AI-tell removal
+@jadelau/model-development   3 skills   llamafactory / ollama / vllm
+@jadelau/skill-porting       1 skill    install skills from external ecosystems
+@jadelau/software-development 2 skills  SE workflow + design language
+@jadelau/use-bento-slides    1 skill    .bento.html slides
+@jadelau/use-claude-code     1 skill    remote SSH Claude Code
+@jadelau/use-firecrawl       1 skill    search / scrape
 ```
 
 No plugin **adds a tool** — they all extend behavior via Skill (LLM-side) and Hook (subprocess-side). **No scaffolder / generator** (`pnpm create-plugin` does not exist).

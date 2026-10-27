@@ -28,8 +28,8 @@ import {
   resumeTrace,
   scratchpadDir,
   tracesDir,
-} from "@jiumate/core";
-import type { CompactionMode, OmniMessage } from "@jiumate/core";
+} from "@jadelau/core";
+import type { CompactionMode, OmniMessage } from "@jadelau/core";
 import type {
   AgentTraceSessionEntry,
   AgentTracesResponse,

@@ -7,7 +7,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { systemConfigPath } from "@jiumate/core";
+import { systemConfigPath } from "@jadelau/core";
 import type { AgentConfigResponse, ProjectCreateResponse } from "../src/api/types.js";
 import { apiClient, createTestApp, provisionUser } from "./helpers.js";
 import type { TestApp } from "./helpers.js";

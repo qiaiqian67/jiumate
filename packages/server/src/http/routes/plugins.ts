@@ -25,7 +25,7 @@ import {
   setPluginEnabled,
   libraryPlugin,
   loadPluginGroups,
-} from "@jiumate/core";
+} from "@jadelau/core";
 import type {
   AgentHooksResponse,
   AgentPluginsInstallResponse,

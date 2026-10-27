@@ -28,7 +28,7 @@ import type {
   TraceModelSegment,
   TraceOtherSpan,
   TraceToolSpan,
-} from "@jiumate/server/api";
+} from "@jadelau/server/api";
 import { S } from "../../lib/strings";
 import { humanizeDuration } from "../../lib/format";
 import { packToolLanes, toolSpanBounds } from "./lane-packing";

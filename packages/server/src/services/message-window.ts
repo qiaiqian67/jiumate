@@ -36,13 +36,13 @@
  * prefix records (trace_files.page_stats) persist the carry so old shards are read at
  * most once ever; bump CACHE_VERSION whenever any rule in this file changes.
  */
-import { parseUserSteeringText } from "@jiumate/core";
+import { parseUserSteeringText } from "@jadelau/core";
 import {
   parseBackgroundTaskDoneMessage,
   parseHandoffMessage,
   parseModelSwitchMessage,
-} from "@jiumate/core/markers";
-import type { OmniMessage } from "@jiumate/core";
+} from "@jadelau/core/markers";
+import type { OmniMessage } from "@jadelau/core";
 
 /** Bump when any counting/boundary rule changes: cached page_stats records with an older version are recomputed. */
 export const CACHE_VERSION = 3;

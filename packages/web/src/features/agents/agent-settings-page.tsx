@@ -20,8 +20,8 @@ import type {
   AgentCompactionConfigDto,
   AgentKernelUpdateResponse,
   AgentModelConfigDto,
-} from "@jiumate/server/api";
-import type { ToolDefinitionConfig, ToolPermission } from "@jiumate/core/interfaces";
+} from "@jadelau/server/api";
+import type { ToolDefinitionConfig, ToolPermission } from "@jadelau/core/interfaces";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";
