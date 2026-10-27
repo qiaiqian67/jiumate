@@ -860,33 +860,43 @@ describe("skills api", () => {
     }
   });
 
-  it("archive: uncompressed limits — file count, per-file size, total size", async () => {
-    await createPlainAgent("zip_limit_agent");
-    const url = `${base("zip_limit_agent")}/archive`;
-    // > 200 files.
-    const many: Record<string, Uint8Array> = { "zip-skill/SKILL.md": strToU8(ZIP_SKILL_MD) };
-    for (let i = 0; i < 201; i++) many[`zip-skill/f${i}.txt`] = strToU8("x");
-    expect((await owner.post(url, { dataBase64: zipB64(many) })).status).toBe(400);
-    // Per-file > 5MB uncompressed (zeros compress tiny, so the wire stays small).
-    const big: Record<string, Uint8Array> = {
-      "zip-skill/SKILL.md": strToU8(ZIP_SKILL_MD),
-      "zip-skill/big.bin": new Uint8Array(MAX_FILE_BYTES + 1),
-    };
-    expect((await owner.post(url, { dataBase64: zipB64(big) })).status).toBe(400);
-    // Total > MAX_TOTAL_BYTES uncompressed across files that each stay under the per-file cap.
-    //
-    // Sized from the constant, not from a literal. A hand-written "5 × 4200KB to clear 20MB" is a
-    // second copy of the limit: when the total moved to 64MB the payload quietly fell back under
-    // it, the route accepted the archive, and this assertion failed as `expected 201 to be 400` —
-    // with nothing in the message pointing at the number that had moved.
-    const total: Record<string, Uint8Array> = { "zip-skill/SKILL.md": strToU8(ZIP_SKILL_MD) };
-    const partSize = Math.floor(MAX_FILE_BYTES * 0.9);
-    const parts = Math.ceil(MAX_TOTAL_BYTES / partSize) + 1;
-    for (let i = 0; i < parts; i++) {
-      total[`zip-skill/part${i}.bin`] = new Uint8Array(partSize);
-    }
-    expect((await owner.post(url, { dataBase64: zipB64(total) })).status).toBe(400);
-  });
+  // The archive limits are asserted against archives that are deliberately over them: 201
+  // files, a file over the per-file cap, and a set of files that together clear the total.
+  // Building and deflating that much data is the slow part, and it is slow on a shared
+  // runner rather than on a machine that is busy — the suite's 5s default is comfortable on
+  // a laptop and marginal on a macOS runner. The test's job is to check the limits, so it
+  // gets the time to build the thing it is checking; the assertions stay strict.
+  it(
+    "archive: uncompressed limits — file count, per-file size, total size",
+    { timeout: 30_000 },
+    async () => {
+      await createPlainAgent("zip_limit_agent");
+      const url = `${base("zip_limit_agent")}/archive`;
+      // > 200 files.
+      const many: Record<string, Uint8Array> = { "zip-skill/SKILL.md": strToU8(ZIP_SKILL_MD) };
+      for (let i = 0; i < 201; i++) many[`zip-skill/f${i}.txt`] = strToU8("x");
+      expect((await owner.post(url, { dataBase64: zipB64(many) })).status).toBe(400);
+      // Per-file > 5MB uncompressed (zeros compress tiny, so the wire stays small).
+      const big: Record<string, Uint8Array> = {
+        "zip-skill/SKILL.md": strToU8(ZIP_SKILL_MD),
+        "zip-skill/big.bin": new Uint8Array(MAX_FILE_BYTES + 1),
+      };
+      expect((await owner.post(url, { dataBase64: zipB64(big) })).status).toBe(400);
+      // Total > MAX_TOTAL_BYTES uncompressed across files that each stay under the per-file cap.
+      //
+      // Sized from the constant, not from a literal. A hand-written "5 × 4200KB to clear 20MB" is a
+      // second copy of the limit: when the total moved to 64MB the payload quietly fell back under
+      // it, the route accepted the archive, and this assertion failed as `expected 201 to be 400` —
+      // with nothing in the message pointing at the number that had moved.
+      const total: Record<string, Uint8Array> = { "zip-skill/SKILL.md": strToU8(ZIP_SKILL_MD) };
+      const partSize = Math.floor(MAX_FILE_BYTES * 0.9);
+      const parts = Math.ceil(MAX_TOTAL_BYTES / partSize) + 1;
+      for (let i = 0; i < parts; i++) {
+        total[`zip-skill/part${i}.bin`] = new Uint8Array(partSize);
+      }
+      expect((await owner.post(url, { dataBase64: zipB64(total) })).status).toBe(400);
+    },
+  );
 
   it("archive: already installed is 409 skill_exists; overwrite replaces the directory (stale files removed)", async () => {
     await createPlainAgent("zip_over_agent");
