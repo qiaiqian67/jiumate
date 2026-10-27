@@ -50,9 +50,9 @@ describe("mayAttachGuest", () => {
     expect(
       mayAttachGuest({ partition: BUILTIN_BROWSER_PARTITION, src: "https://example.test/" }),
     ).toBe(true);
-    expect(mayAttachGuest({ partition: BUILTIN_BROWSER_PARTITION, src: "file:///etc/passwd" })).toBe(
-      false,
-    );
+    expect(
+      mayAttachGuest({ partition: BUILTIN_BROWSER_PARTITION, src: "file:///etc/passwd" }),
+    ).toBe(false);
   });
 
   it("does not let a guest walk onto a local file later either", () => {
@@ -124,9 +124,9 @@ describe("focusGuestScript", () => {
 
 describe("pickFavicon", () => {
   it("prefers a PNG, which is what a tab strip has room for", () => {
-    expect(
-      pickFavicon([{ url: "https://a.test/i.svg" }, { url: "https://a.test/i.png" }]),
-    ).toBe("https://a.test/i.png");
+    expect(pickFavicon([{ url: "https://a.test/i.svg" }, { url: "https://a.test/i.png" }])).toBe(
+      "https://a.test/i.png",
+    );
   });
 
   it("falls back to whatever the document announced", () => {
@@ -175,9 +175,7 @@ describe("tabLoads", () => {
 describe("privateMemoryKB", () => {
   it("prefers what the platform reports privately", () => {
     // Windows' workingSetSize counts pages shared with other processes.
-    expect(
-      privateMemoryKB("win32", { privateBytes: 2048, workingSetSize: 8192 }, null),
-    ).toBe(2);
+    expect(privateMemoryKB("win32", { privateBytes: 2048, workingSetSize: 8192 }, null)).toBe(2);
     expect(privateMemoryKB("darwin", { workingSetSize: 4096 }, null)).toBe(4);
   });
 
@@ -192,7 +190,9 @@ describe("the command envelope", () => {
   it("only claims frames that carry its own type", () => {
     // The port carries the updater's and the exporter's frames too.
     expect(isBrowserCommandMessage({ type: "desktop-browser-command", id: "a" })).toBe(true);
-    expect(isBrowserCommandMessage({ type: "desktop-updater-command", action: "check" })).toBe(false);
+    expect(isBrowserCommandMessage({ type: "desktop-updater-command", action: "check" })).toBe(
+      false,
+    );
     expect(isBrowserCommandMessage(null)).toBe(false);
   });
 

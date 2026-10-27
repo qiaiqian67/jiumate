@@ -33,8 +33,7 @@ export function fixOpenrouterUsageMetadata(
     fixedUsageMetadata.response_tokens !== null &&
     fixedUsageMetadata.response_tokens < 0
   ) {
-    fixedUsageMetadata.response_tokens +=
-      fixedUsageMetadata.thoughts_tokens || 0;
+    fixedUsageMetadata.response_tokens += fixedUsageMetadata.thoughts_tokens || 0;
   }
 
   return fixedUsageMetadata;
@@ -80,10 +79,7 @@ export function imageDimensions(bytes: Buffer): ImageDimensions | null {
   }
 
   // GIF: the logical screen size follows the 6-byte signature
-  if (
-    bytes.length >= 10 &&
-    ["GIF87a", "GIF89a"].includes(bytes.toString("latin1", 0, 6))
-  ) {
+  if (bytes.length >= 10 && ["GIF87a", "GIF89a"].includes(bytes.toString("latin1", 0, 6))) {
     return { width: bytes.readUInt16LE(6), height: bytes.readUInt16LE(8) };
   }
 
@@ -94,12 +90,7 @@ export function imageDimensions(bytes: Buffer): ImageDimensions | null {
     bytes.toString("latin1", 8, 12) === "WEBP"
   ) {
     const chunk = bytes.toString("latin1", 12, 16);
-    if (
-      chunk === "VP8 " &&
-      bytes[23] === 0x9d &&
-      bytes[24] === 0x01 &&
-      bytes[25] === 0x2a
-    ) {
+    if (chunk === "VP8 " && bytes[23] === 0x9d && bytes[24] === 0x01 && bytes[25] === 0x2a) {
       // lossy: a 3-byte frame tag and the key frame start code precede the size,
       // whose top two bits are a scaling hint
       return {
@@ -138,11 +129,7 @@ export function imageDimensions(bytes: Buffer): ImageDimensions | null {
         offset += 1;
         continue;
       }
-      if (
-        marker === 0x01 ||
-        marker === 0xd8 ||
-        (marker >= 0xd0 && marker <= 0xd7)
-      ) {
+      if (marker === 0x01 || marker === 0xd8 || (marker >= 0xd0 && marker <= 0xd7)) {
         // TEM, SOI and RSTn stand alone, without a length
         offset += 2;
         continue;
@@ -152,11 +139,7 @@ export function imageDimensions(bytes: Buffer): ImageDimensions | null {
         return null;
       }
       const frameHeader =
-        marker >= 0xc0 &&
-        marker <= 0xcf &&
-        marker !== 0xc4 &&
-        marker !== 0xc8 &&
-        marker !== 0xcc;
+        marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
       if (frameHeader) {
         if (offset + 8 >= bytes.length) {
           return null;
@@ -281,12 +264,8 @@ export function exceedsOpenaiPatchLimit(imageUrl: string): boolean {
  * @param imageUrl - The image URL as it goes on the wire.
  * @returns `"high"` when the image needs it, otherwise undefined.
  */
-export function openaiImageDetail(
-  model: string,
-  imageUrl: string,
-): "high" | undefined {
-  return model.toLowerCase().includes("gpt-5.6") &&
-    exceedsOpenaiPatchLimit(imageUrl)
+export function openaiImageDetail(model: string, imageUrl: string): "high" | undefined {
+  return model.toLowerCase().includes("gpt-5.6") && exceedsOpenaiPatchLimit(imageUrl)
     ? "high"
     : undefined;
 }

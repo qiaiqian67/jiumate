@@ -116,9 +116,7 @@ export class Claude5Client extends LLMClient {
     } else if (this._use_bedrock) {
       const response = await fetch(url, { signal });
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch image: ${response.status} ${response.statusText}`,
-        );
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
       }
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -245,9 +243,7 @@ export class Claude5Client extends LLMClient {
       // carrying display but no output_config is accepted on 4.6 through 5 (verified
       // live 2026-09-03). NONE omits the block, so the request lands on that default.
       claudeConfig.thinking = claudeConfig.thinking ?? { type: "adaptive" };
-      claudeConfig.thinking.display = config.thinking_summary
-        ? "summarized"
-        : "omitted";
+      claudeConfig.thinking.display = config.thinking_summary ? "summarized" : "omitted";
     }
 
     if (config.tools !== undefined) {
@@ -319,9 +315,7 @@ export class Claude5Client extends LLMClient {
           contentBlocks.push({ type: "text", text: item.text });
         } else if (item.type === "image_url") {
           const imageUrl = item.image_url;
-          contentBlocks.push(
-            await this._convertImageUrlToSource(imageUrl, signal),
-          );
+          contentBlocks.push(await this._convertImageUrlToSource(imageUrl, signal));
         } else if (item.type === "thinking") {
           if (item.thinking === REDACTED_THINKING) {
             contentBlocks.push({
@@ -352,9 +346,7 @@ export class Claude5Client extends LLMClient {
 
           if (item.images) {
             for (const imageUrl of item.images) {
-              toolResult.push(
-                await this._convertImageUrlToSource(imageUrl, signal),
-              );
+              toolResult.push(await this._convertImageUrlToSource(imageUrl, signal));
             }
           }
 
@@ -380,9 +372,7 @@ export class Claude5Client extends LLMClient {
   /**
    * Transform Claude model output to universal event format.
    */
-  transformModelOutputToUniEvent(
-    modelOutput: BetaRawMessageStreamEvent,
-  ): UniEvent {
+  transformModelOutputToUniEvent(modelOutput: BetaRawMessageStreamEvent): UniEvent {
     let eventType: EventType | null = null;
     const contentItems: PartialContentItem[] = [];
     let usageMetadata: UsageMetadata | null = null;
@@ -433,8 +423,7 @@ export class Claude5Client extends LLMClient {
       eventType = "start";
       const message = modelOutput.message;
       if (message.usage) {
-        const cacheCreationTokens =
-          message.usage.cache_creation_input_tokens || 0;
+        const cacheCreationTokens = message.usage.cache_creation_input_tokens || 0;
         usageMetadata = {
           cached_tokens: message.usage.cache_read_input_tokens,
           prompt_tokens: message.usage.input_tokens + cacheCreationTokens,
@@ -467,15 +456,11 @@ export class Claude5Client extends LLMClient {
       }
     } else if (claudeEventType === "message_stop") {
       eventType = "stop";
-    } else if (
-      ["text", "thinking", "signature", "input_json", "ping"].includes(
-        claudeEventType,
-      )
-    ) {
+    } else if (["text", "thinking", "signature", "input_json", "ping"].includes(claudeEventType)) {
       // the SDK drops the "ping" heartbeat at the SSE layer; it reaches here only
       // from gateways that relabel it onto another event
       eventType = "unused";
-        } else if (isDebugEnabled()) {
+    } else if (isDebugEnabled()) {
       throw new Error(`Unknown output: ${JSON.stringify(modelOutput)}`);
     } else {
       // a gateway injects its own events (heartbeats, cost tickers) into the stream, and
@@ -509,20 +494,13 @@ export class Claude5Client extends LLMClient {
     // Add cache_control to last user message's last item if enabled
     // TODO: remove after bedrock supports cache_control in config
     if (this._use_bedrock) {
-      const promptCaching =
-        options.config.prompt_caching || PromptCaching.ENABLE;
-      if (
-        promptCaching !== PromptCaching.DISABLE &&
-        claudeMessages.length > 0
-      ) {
+      const promptCaching = options.config.prompt_caching || PromptCaching.ENABLE;
+      if (promptCaching !== PromptCaching.DISABLE && claudeMessages.length > 0) {
         try {
           const reversedMessages = [...claudeMessages].reverse();
-          const lastUserMessage = reversedMessages.find(
-            (x) => x.role === "user",
-          );
+          const lastUserMessage = reversedMessages.find((x) => x.role === "user");
           if (lastUserMessage && Array.isArray(lastUserMessage.content)) {
-            const lastContentItem =
-              lastUserMessage.content[lastUserMessage.content.length - 1];
+            const lastContentItem = lastUserMessage.content[lastUserMessage.content.length - 1];
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (lastContentItem as any).cache_control = {
               type: "ephemeral",
@@ -578,8 +556,7 @@ export class Claude5Client extends LLMClient {
       } else if (uniEvent.event_type === "delta") {
         for (const item of uniEvent.content_items) {
           if (item.type === "partial_tool_call") {
-            partialToolCall.arguments =
-              (partialToolCall.arguments || "") + item.arguments;
+            partialToolCall.arguments = (partialToolCall.arguments || "") + item.arguments;
           }
         }
 

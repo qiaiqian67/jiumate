@@ -35,10 +35,7 @@ const src = (p: string) =>
   readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), p), "utf8");
 
 /** 每档对应的本地化字段名（chat 前缀，与外观页的 fontSmall/fontMedium/fontLarge 区分）。 */
-const labelKey: Record<
-  ChatFontSize,
-  "chatFontSmall" | "chatFontMedium" | "chatFontLarge"
-> = {
+const labelKey: Record<ChatFontSize, "chatFontSmall" | "chatFontMedium" | "chatFontLarge"> = {
   small: "chatFontSmall",
   medium: "chatFontMedium",
   large: "chatFontLarge",
@@ -150,7 +147,10 @@ describe("applyChatFontSize", () => {
     // 缩放代码块是错的：等宽源码在 18px 下会换行成难读的散文，而它是"内容"里的
     // "另一种东西"，读者放大正文不等于想放大代码。
     const css = src("../src/styles.css");
-    const mdBody = css.slice(css.indexOf(".md-body {"), css.indexOf("}", css.indexOf(".md-body {")));
+    const mdBody = css.slice(
+      css.indexOf(".md-body {"),
+      css.indexOf("}", css.indexOf(".md-body {")),
+    );
     expect(mdBody).not.toContain("pre");
   });
 });
@@ -197,9 +197,7 @@ describe("控件的位置", () => {
     expect(scope).toContain("jiumate.chatFontSize");
     expect(src("../src/state/theme.tsx")).toContain('"jiumate.fontScale"');
     // CSS 写入点不同：根字号 vs 自定义属性。
-    expect(src("../src/state/theme.tsx")).toContain(
-      "document.documentElement.style.fontSize",
-    );
+    expect(src("../src/state/theme.tsx")).toContain("document.documentElement.style.fontSize");
     expect(src("../src/state/chat-font-size.ts")).toContain("--chat-font-size");
   });
 
@@ -230,9 +228,7 @@ describe("偏好常驻", () => {
     // "改完设置 → 关掉设置 → 从别的入口进聊天"时，正文会退回 CSS 兜底的 16px，
     // 尽管 localStorage 里存着「大」。这条断言钉住常驻位置。
     expect(src("../src/app.tsx")).toContain("<ChatFontSizeScope />");
-    expect(src("../src/features/settings/general-section.tsx")).not.toContain(
-      "ChatFontSizeScope",
-    );
+    expect(src("../src/features/settings/general-section.tsx")).not.toContain("ChatFontSizeScope");
   });
 
   it("切档时既写存储也立刻生效", () => {

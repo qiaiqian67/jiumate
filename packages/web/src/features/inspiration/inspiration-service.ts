@@ -19,11 +19,7 @@
  * a server. The React layer (`inspiration-store.ts`) only holds the fetched list and calls these.
  */
 import { builtinInspirationCatalog } from "@jadelau/inspirations/presets";
-import type {
-  InspirationCase,
-  InspirationCategory,
-  InspirationKind,
-} from "@jadelau/inspirations";
+import type { InspirationCase, InspirationCategory, InspirationKind } from "@jadelau/inspirations";
 import { apiFetch } from "../../api/client";
 import { S } from "../../lib/strings";
 import { localizedText } from "../chat/skill-use";

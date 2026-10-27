@@ -68,11 +68,7 @@ import {
 } from "./inspiration-service";
 import type { InspirationCatalogView } from "./inspiration-service";
 import { fetchAgentToolNames, fetchSkillCatalog, saveInspirationCase } from "./inspiration-store";
-import type {
-  InspirationCase,
-  InspirationCaseInput,
-  InspirationKind,
-} from "@jadelau/inspirations";
+import type { InspirationCase, InspirationCaseInput, InspirationKind } from "@jadelau/inspirations";
 
 /**
  * The field caps, mirrored from the package's `constants.ts`.

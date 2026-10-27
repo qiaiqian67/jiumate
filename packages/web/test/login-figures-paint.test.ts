@@ -41,7 +41,11 @@ beforeAll(async () => {
   const first = bundled.outputFiles[0];
   if (first === undefined) throw new Error("esbuild produced no output");
   const mountJs = first.text;
-  const types: Record<string, string> = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript" };
+  const types: Record<string, string> = {
+    ".html": "text/html",
+    ".css": "text/css",
+    ".js": "text/javascript",
+  };
   server = createServer((req, res) => {
     const url = (req.url ?? "/").split("?")[0] ?? "/";
     if (url === "/mount.js") {
@@ -135,7 +139,11 @@ describe("面板上真的画出了四个小人", () => {
           const r = el.getBoundingClientRect();
           return { bg: getComputedStyle(el).backgroundColor, w: r.width, h: r.height };
         });
-      return { eyes: pick(".watch-eye"), pupils: pick(".watch-pupil"), mouths: pick(".watch-mouth") };
+      return {
+        eyes: pick(".watch-eye"),
+        pupils: pick(".watch-pupil"),
+        mouths: pick(".watch-mouth"),
+      };
     });
     expect(features.eyes).toHaveLength(8);
     for (const e of features.eyes) {

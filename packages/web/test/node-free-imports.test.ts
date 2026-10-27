@@ -87,40 +87,26 @@ function scanSourceTree(): { file: string; statement: string }[] {
 describe("the scanner", () => {
   it("catches a value import from a barrel", () => {
     expect(
-      runtimeBarrelImportsIn(
-        `import { DEFAULT_SKIN_SURFACE_ALPHA } from "@jadelau/skins";`,
-      ),
+      runtimeBarrelImportsIn(`import { DEFAULT_SKIN_SURFACE_ALPHA } from "@jadelau/skins";`),
     ).toHaveLength(1);
-    expect(
-      runtimeBarrelImportsIn(`export { withAlpha } from "@jadelau/skins";`),
-    ).toHaveLength(1);
+    expect(runtimeBarrelImportsIn(`export { withAlpha } from "@jadelau/skins";`)).toHaveLength(1);
   });
 
   it("allows a type-only import, however it is spelled", () => {
-    expect(
-      runtimeBarrelImportsIn(`import type { SkinMode } from "@jadelau/skins";`),
-    ).toEqual([]);
-    expect(
-      runtimeBarrelImportsIn(`import { type SkinMode } from "@jadelau/skins";`),
-    ).toEqual([]);
-    expect(
-      runtimeBarrelImportsIn(`import type SkinMode from "@jadelau/skins";`),
-    ).toEqual([]);
+    expect(runtimeBarrelImportsIn(`import type { SkinMode } from "@jadelau/skins";`)).toEqual([]);
+    expect(runtimeBarrelImportsIn(`import { type SkinMode } from "@jadelau/skins";`)).toEqual([]);
+    expect(runtimeBarrelImportsIn(`import type SkinMode from "@jadelau/skins";`)).toEqual([]);
   });
 
   it("catches a value smuggled alongside inline type specifiers", () => {
     // The shape that would otherwise hide behind a `type` in the same clause.
     expect(
-      runtimeBarrelImportsIn(
-        `import { type SkinMode, renderSkinCss } from "@jadelau/skins";`,
-      ),
+      runtimeBarrelImportsIn(`import { type SkinMode, renderSkinCss } from "@jadelau/skins";`),
     ).toHaveLength(1);
   });
 
   it("allows the Node-free sibling entries", () => {
-    expect(
-      runtimeBarrelImportsIn(`import { withAlpha } from "@jadelau/skins/css";`),
-    ).toEqual([]);
+    expect(runtimeBarrelImportsIn(`import { withAlpha } from "@jadelau/skins/css";`)).toEqual([]);
     expect(
       runtimeBarrelImportsIn(`import { BUILTIN_SKINS } from "@jadelau/skins/presets";`),
     ).toEqual([]);
@@ -138,9 +124,7 @@ describe("the scanner", () => {
   });
 
   it("finds a violation written across several lines", () => {
-    const code = ["import {", "  renderSkinCss,", `} from "@jadelau/skins";`].join(
-      "\n",
-    );
+    const code = ["import {", "  renderSkinCss,", `} from "@jadelau/skins";`].join("\n");
     expect(runtimeBarrelImportsIn(code)).toHaveLength(1);
   });
 });

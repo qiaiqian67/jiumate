@@ -20,11 +20,5 @@ export {
   UnsupportedOperationError,
   UnsupportedParameterError,
 } from "./errors";
-export {
-  listSupportedModels,
-  Currency,
-  Modality,
-  ModelPricing,
-  SupportedModel,
-} from "./registry";
+export { listSupportedModels, Currency, Modality, ModelPricing, SupportedModel } from "./registry";
 export * from "./types";

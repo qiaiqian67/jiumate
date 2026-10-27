@@ -79,10 +79,12 @@ describe("what must not change", () => {
   });
 
   it("leaves a percent-encoded path alone, CJK or not", () => {
-    expect(firstLink("见 https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87 完")).toEqual([
-      "https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87",
-      "https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87",
-    ]);
+    expect(firstLink("见 https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87 完")).toEqual(
+      [
+        "https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87",
+        "https://qiaiqian67.github.io/jiumate/wiki/%E4%B8%AD%E6%96%87",
+      ],
+    );
   });
 
   it("keeps a bare www. autolink working, prefix and all", () => {

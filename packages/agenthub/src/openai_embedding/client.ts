@@ -13,10 +13,7 @@
 // limitations under the License.
 
 import OpenAI from "openai";
-import type {
-  CreateEmbeddingResponse,
-  EmbeddingCreateParams,
-} from "openai/resources/embeddings";
+import type { CreateEmbeddingResponse, EmbeddingCreateParams } from "openai/resources/embeddings";
 import { LLMClient } from "../baseClient";
 import { UnsupportedParameterError } from "../errors";
 import { UniConfig, UniEvent, UniMessage } from "../types";
@@ -52,9 +49,7 @@ export class OpenaiEmbeddingClient extends LLMClient {
   /**
    * Transform universal configuration to OpenAI Embeddings configuration.
    */
-  transformUniConfigToModelConfig(
-    config: UniConfig,
-  ): Omit<EmbeddingCreateParams, "input"> {
+  transformUniConfigToModelConfig(config: UniConfig): Omit<EmbeddingCreateParams, "input"> {
     if (config.fast_mode) {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
@@ -94,9 +89,7 @@ export class OpenaiEmbeddingClient extends LLMClient {
   /**
    * Transform OpenAI Embeddings response to universal event format.
    */
-  transformModelOutputToUniEvent(
-    modelOutput: CreateEmbeddingResponse,
-  ): UniEvent {
+  transformModelOutputToUniEvent(modelOutput: CreateEmbeddingResponse): UniEvent {
     return {
       role: "assistant",
       event_type: "stop",

@@ -8,8 +8,6 @@
   "quick_start": {
     "prompt": "Reproduce APE (Automatic Prompt Engineer, Zhou et al. 2022) on the house-style brief task that ships with the `ape-rsi-toolkit` Skill: a fresh agent, a 6-case Benchmark, and the score before and after.",
     "prompt_zh": "在 `ape-rsi-toolkit` 技能自带的「公司格式简报」任务上复现 APE（Automatic Prompt Engineer，Zhou 等，2022）：新建一个 Agent、一套 6 题的 Benchmark，给我看优化前后的分数。",
-    "skills": [
-      "ape-rsi-toolkit"
-    ]
+    "skills": ["ape-rsi-toolkit"]
   }
 }

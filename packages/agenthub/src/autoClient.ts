@@ -94,10 +94,7 @@ export class AutoLLMClient extends LLMClient {
   private _clientClassForModel(clientType: string): LLMClientConstructor | null {
     // every Gemini generation shares the unified client ("gemini-3" also matches the
     // gemini-3.8/gemini-3.7/gemini-3.6/gemini-3.5-flash-lite client types)
-    if (
-      clientType.includes("gemini-3") ||
-      clientType.includes("gemini-embedding")
-    ) {
+    if (clientType.includes("gemini-3") || clientType.includes("gemini-embedding")) {
       return Gemini3_8Client;
     } else if (
       clientType.includes("claude") &&
@@ -137,15 +134,9 @@ export class AutoLLMClient extends LLMClient {
       return AntMessagesClient;
     } else if (clientType.includes("openai-responses")) {
       return OpenaiResponsesClient;
-    } else if (
-      clientType.includes("openai") &&
-      clientType.includes("embedding")
-    ) {
+    } else if (clientType.includes("openai") && clientType.includes("embedding")) {
       return OpenaiEmbeddingClient;
-    } else if (
-      clientType.includes("openai") &&
-      !clientType.includes("embedding")
-    ) {
+    } else if (clientType.includes("openai") && !clientType.includes("embedding")) {
       // openai-chat, plus bare "openai" as alias
       return OpenaiChatClient;
     } else {
@@ -186,10 +177,7 @@ export class AutoLLMClient extends LLMClient {
    * Delegate to underlying client's transformUniMessageToModelInput.
    */
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  transformUniMessageToModelInput(
-    messages: UniMessage[],
-    signal?: AbortSignal,
-  ): any {
+  transformUniMessageToModelInput(messages: UniMessage[], signal?: AbortSignal): any {
     return this._client.transformUniMessageToModelInput(messages, signal);
   }
   /* eslint-enable @typescript-eslint/no-explicit-any */

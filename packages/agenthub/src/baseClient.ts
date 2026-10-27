@@ -70,10 +70,7 @@ export abstract class LLMClient {
    * @param messages - List of universal message objects
    * @returns Model-specific input format (e.g., Gemini's Content list, OpenAI's messages array)
    */
-  abstract transformUniMessageToModelInput(
-    messages: UniMessage[],
-    signal?: AbortSignal,
-  ): any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  abstract transformUniMessageToModelInput(messages: UniMessage[], signal?: AbortSignal): any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   /**
    * Transform model output to universal event format.
@@ -143,10 +140,7 @@ export abstract class LLMClient {
           }
         } else if (item.type === "partial_tool_call") {
           // Skip partial_tool_call items - they should already be converted to tool_call
-        } else if (
-          item.type === "inline_data" &&
-          item.mime_type.startsWith("audio/")
-        ) {
+        } else if (item.type === "inline_data" && item.mime_type.startsWith("audio/")) {
           const lastItem = contentItems[contentItems.length - 1];
           // a spoken response streams as many small audio chunks; the message keeps the
           // whole utterance as one playable item
@@ -252,12 +246,7 @@ export abstract class LLMClient {
       const { Tracer } = await import("./integration/tracer");
       const assistantMessage = this.concatUniEventsToUniMessage(events);
       const tracer = new Tracer();
-      tracer.saveHistory(
-        this._model,
-        [...messages, assistantMessage],
-        config.trace_id,
-        config,
-      );
+      tracer.saveHistory(this._model, [...messages, assistantMessage], config.trace_id, config);
     }
   }
 
@@ -313,14 +302,10 @@ export abstract class LLMClient {
       throw new Error("Streaming response yielded no events");
     }
     if (lastEvent.usage_metadata === null) {
-      throw new Error(
-        `Last event must carry usage_metadata, got: ${JSON.stringify(lastEvent)}`,
-      );
+      throw new Error(`Last event must carry usage_metadata, got: ${JSON.stringify(lastEvent)}`);
     }
     if (lastEvent.finish_reason === null) {
-      throw new Error(
-        `Last event must carry finish_reason, got: ${JSON.stringify(lastEvent)}`,
-      );
+      throw new Error(`Last event must carry finish_reason, got: ${JSON.stringify(lastEvent)}`);
     }
   }
 
@@ -340,8 +325,7 @@ export abstract class LLMClient {
       ),
     );
     if (thinkingOnly) {
-      const finishReason =
-        events.length > 0 ? events[events.length - 1].finish_reason : null;
+      const finishReason = events.length > 0 ? events[events.length - 1].finish_reason : null;
       throw new EmptyResponseError({
         client: this.constructor.name,
         finishReason,

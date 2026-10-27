@@ -25,10 +25,7 @@
 import { app, dialog, net, shell } from "electron";
 import type { BrowserWindow } from "electron";
 import electronUpdater from "electron-updater";
-import type {
-  DesktopUpdateStatus,
-  DesktopUpdaterCommandMessage,
-} from "@jadelau/server/api";
+import type { DesktopUpdateStatus, DesktopUpdaterCommandMessage } from "@jadelau/server/api";
 import { feedUrlOverride, updateSourceConfig, updateSupport } from "./update-support.js";
 import {
   feedLabel,

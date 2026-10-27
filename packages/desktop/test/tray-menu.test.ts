@@ -99,7 +99,11 @@ describe("托盘菜单结构", () => {
   });
 
   it("英文环境下文案随之切换", () => {
-    const menu = buildTrayMenu({ rows: rows(9), labels: appTrayLabels("en-US"), petEnabled: false });
+    const menu = buildTrayMenu({
+      rows: rows(9),
+      labels: appTrayLabels("en-US"),
+      petEnabled: false,
+    });
     expect(item(menu[0])).toMatchObject({ label: "Recent" });
     expect(item(submenu(menu)!)).toMatchObject({ label: "More" });
     expect(menu.filter((m) => m.kind === "action").map((m) => item(m).id)).toEqual([

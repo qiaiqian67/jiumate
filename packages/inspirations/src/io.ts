@@ -580,7 +580,10 @@ export function sortCases(
 export async function writeInspirationCase(
   root: string,
   input: InspirationCaseInput,
-  meta: { createdBy: string | null; createdAt?: string | null; updatedAt: string },
+  // `updatedAt` is nullable because the manifest it is written to allows a case that has
+  // never been edited to carry no timestamp: the schema declares it `string | null`, and
+  // a preset is written with none.
+  meta: { createdBy: string | null; createdAt?: string | null; updatedAt: string | null },
 ): Promise<InspirationCase> {
   const normalized = coerceInspirationCaseInput(input, { expectedId: input.id });
   const dir = caseDir(root, normalized.id);

@@ -196,11 +196,7 @@ export function AgentApiTab({ agentId }: { agentId: string }) {
           row(
             S.agentApi.open,
             S.agentApi.openHint,
-            <Switch
-              checked={a.open}
-              disabled={busy}
-              onChange={(v) => void patch({ open: v })}
-            />,
+            <Switch checked={a.open} disabled={busy} onChange={(v) => void patch({ open: v })} />,
           )}
       </div>
 
@@ -258,7 +254,9 @@ export function AgentApiTab({ agentId }: { agentId: string }) {
               value={a.workspace ?? ""}
               placeholder={S.agentApi.workspacePlaceholder}
               disabled={busy}
-              onChange={(e) => void patch({ workspace: e.target.value === "" ? null : e.target.value })}
+              onChange={(e) =>
+                void patch({ workspace: e.target.value === "" ? null : e.target.value })
+              }
               className="w-56 text-xs"
             />,
           )}
@@ -346,7 +344,11 @@ export function AgentApiTab({ agentId }: { agentId: string }) {
 
       {/* The one-time reveal. Dismissal is the only exit: there is no "show again", because the
           server holds a digest and cannot reproduce it. */}
-      <Modal open={revealed !== null} onClose={() => setRevealed(null)} title={S.agentApi.keySecretLabel}>
+      <Modal
+        open={revealed !== null}
+        onClose={() => setRevealed(null)}
+        title={S.agentApi.keySecretLabel}
+      >
         <p className="text-xs text-amber-700 dark:text-amber-300">{S.agentApi.keySecretWarning}</p>
         <code className="mt-2 block break-all rounded-md bg-gray-100 px-3 py-2 font-mono text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200">
           {revealed}
@@ -360,9 +362,7 @@ export function AgentApiTab({ agentId }: { agentId: string }) {
 
       <ConfirmModal
         open={removingKey !== null}
-        title={
-          removingKey !== null ? S.agentApi.deleteKeyConfirmTitle(removingKey.name) : ""
-        }
+        title={removingKey !== null ? S.agentApi.deleteKeyConfirmTitle(removingKey.name) : ""}
         busy={busy}
         onClose={() => setRemovingKey(null)}
         onConfirm={() => void confirmDeleteKey()}

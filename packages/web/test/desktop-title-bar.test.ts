@@ -34,7 +34,7 @@ describe("桌面标题栏", () => {
     expect(css).toMatch(/\.jiumate-title-bar\s*\{[^}]*bg-gray-100/);
     expect(css).toMatch(/\.jiumate-title-bar\s*\{[^}]*dark:bg-gray-900/);
     // 侧栏自己继承的正是这个外层灰底。
-    expect(layoutSrc).toContain('bg-gray-100 dark:bg-gray-900');
+    expect(layoutSrc).toContain("bg-gray-100 dark:bg-gray-900");
   });
 
   it("只在桌面壳里渲染（浏览器有标签页标题栏）", () => {

@@ -16,11 +16,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
-import {
-  appendAttachmentLines,
-  attachedFileLine,
-  modelVisiblePath,
-} from "@jadelau/core";
+import { appendAttachmentLines, attachedFileLine, modelVisiblePath } from "@jadelau/core";
 import type { OmniMessage } from "@jadelau/core";
 import { HttpError } from "../http/errors.js";
 import { badRequest } from "../http/validate.js";

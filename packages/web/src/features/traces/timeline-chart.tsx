@@ -24,11 +24,7 @@
  */
 import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from "react";
-import type {
-  TraceModelSegment,
-  TraceOtherSpan,
-  TraceToolSpan,
-} from "@jadelau/server/api";
+import type { TraceModelSegment, TraceOtherSpan, TraceToolSpan } from "@jadelau/server/api";
 import { S } from "../../lib/strings";
 import { humanizeDuration } from "../../lib/format";
 import { packToolLanes, toolSpanBounds } from "./lane-packing";

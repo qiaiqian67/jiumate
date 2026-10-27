@@ -8,8 +8,6 @@
   "quick_start": {
     "prompt": "Use the `ace-rsi-toolkit` Skill to run ACE on an agent of this Project: ask me for the Test Agent and the published Benchmark to train on, initialize the playbook, run one epoch at the smoke budget, and report the baseline and final scores.",
     "prompt_zh": "使用 `ace-rsi-toolkit` 技能在本 Project 的一个智能体上运行 ACE：先问我被测智能体与用于训练的已发布 Benchmark，初始化规则手册，以冒烟预算跑一个 epoch，报告基线分与最终分。",
-    "skills": [
-      "ace-rsi-toolkit"
-    ]
+    "skills": ["ace-rsi-toolkit"]
   }
 }

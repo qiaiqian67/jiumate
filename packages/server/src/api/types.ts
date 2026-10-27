@@ -13,11 +13,7 @@
  * Docs: packages/docs/content/server-api.{zh,en}.md (site path /docs/server-api) is the
  * public route/SSE reference for this contract — keep it in sync when changing DTOs.
  */
-import type {
-  CompactionMode,
-  OmniMessage,
-  ToolCallPayload,
-} from "@jadelau/core/omnimessage";
+import type { CompactionMode, OmniMessage, ToolCallPayload } from "@jadelau/core/omnimessage";
 import type {
   BrowserBackend,
   BrowserStatus,

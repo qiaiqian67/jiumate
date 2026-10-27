@@ -169,7 +169,9 @@ describe("小人渲染后的实际尺寸", () => {
 
   it("瞳孔小于眼白，否则黑瞳盖满眼睛看不出是眼睛", () => {
     const eye = value("width", ".watch-eye");
-    const scale = Number(/transform: scale\(([\d.]+)\)/.exec(ruleOutsideKeyframes(".watch-pupil") ?? "")?.[1]);
+    const scale = Number(
+      /transform: scale\(([\d.]+)\)/.exec(ruleOutsideKeyframes(".watch-pupil") ?? "")?.[1],
+    );
     expect(scale).toBeGreaterThan(0);
     expect(scale).toBeLessThan(1);
     // 瞳孔填满眼白后缩到 scale —— 可见的黑就是 scale 那一块，必须明显小于眼白。
@@ -192,7 +194,9 @@ describe("小人渲染后的实际尺寸", () => {
     //
     // 注意：行程占眼白的比例**只由 scale 决定**，与眼白大小无关（都是 (1-scale)/2）。
     // 所以想加大行程只能减小 scale，而想同时让瞳孔看得见就得放大眼白——两者一起才行。
-    const scale = Number(/transform: scale\(([\d.]+)\)/.exec(ruleOutsideKeyframes(".watch-pupil") ?? "")?.[1]);
+    const scale = Number(
+      /transform: scale\(([\d.]+)\)/.exec(ruleOutsideKeyframes(".watch-pupil") ?? "")?.[1],
+    );
     expect(scale, "瞳孔要够大").toBeGreaterThanOrEqual(0.4);
     expect(scale, "但不能太大，否则没行程").toBeLessThanOrEqual(0.5);
     const eye = value("width", ".watch-eye");
@@ -216,7 +220,7 @@ describe("小人渲染后的实际尺寸", () => {
     // 幅度要够明显（约眼白的五分之一以上），3px 的瞳孔位移是不够看的。
     const awayBlock = css.split(".watch-eyes[data-look-away]")[1] ?? "";
     const away = Number(/translate: -([\d.]+)cqh/.exec(awayBlock)?.[1]);
-    expect(away * (PANEL_HEIGHT / 100) / value("width", ".watch-eye")).toBeGreaterThan(0.2);
+    expect((away * (PANEL_HEIGHT / 100)) / value("width", ".watch-eye")).toBeGreaterThan(0.2);
   });
 
   it("矮面板下仍然成立（笔记本 768px 高的屏幕）", () => {

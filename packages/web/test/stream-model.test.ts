@@ -29,11 +29,7 @@ import {
   userText,
   withOrigin,
 } from "@jadelau/core/omnimessage";
-import type {
-  OmniMessage,
-  SessionMetaPayload,
-  TokenCounts,
-} from "@jadelau/core/omnimessage";
+import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@jadelau/core/omnimessage";
 import {
   approvalKey,
   buildDedupIndex,

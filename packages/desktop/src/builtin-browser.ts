@@ -436,9 +436,7 @@ export function createBuiltinBrowserShell(opts: BuiltinBrowserShellOptions): Bui
           path: cookie.path,
           secure: cookie.secure,
           httpOnly: cookie.httpOnly,
-          ...(cookie.expirationDate !== undefined
-            ? { expirationDate: cookie.expirationDate }
-            : {}),
+          ...(cookie.expirationDate !== undefined ? { expirationDate: cookie.expirationDate } : {}),
           sameSite: cookie.sameSite,
         });
         written++;

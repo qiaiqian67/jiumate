@@ -206,7 +206,7 @@ describe("plugin import", () => {
     expect(names).toEqual([]);
   });
 
-it("imports the good plugins in a directory and reports the ones it could not", async () => {
+  it("imports the good plugins in a directory and reports the ones it could not", async () => {
     // One unreadable manifest must not take the other nine down with it — a folder of ten where
     // one is broken is a folder of nine usable plugins, and refusing all of them would make the
     // button useless on any real collection.
@@ -225,7 +225,7 @@ it("imports the good plugins in a directory and reports the ones it could not", 
     expect(libraryPlugin("good")).toBeDefined();
   });
 
-it("refuses a directory with no plugins in it, rather than reporting an empty success", async () => {
+  it("refuses a directory with no plugins in it, rather than reporting an empty success", async () => {
     // The user asked for their plugins and got none. A silent 200 with an empty list reads as a
     // bug; a 400 that says what a plugin needs does not.
     const empty = path.join(t.root, "nothing-here");
@@ -236,7 +236,7 @@ it("refuses a directory with no plugins in it, rather than reporting an empty su
     expect(res.status).toBe(400);
   });
 
-it("accepts a single plugin directory as a one-plugin collection", async () => {
+  it("accepts a single plugin directory as a one-plugin collection", async () => {
     // 「选哪个都行」: pointing at the plugin itself, or at a folder of them, means the same thing.
     const solo = makePlugin(path.join(t.root, "solo"), "solo-plugin");
     const res = await client.post(`/api/projects/${projectId}/plugins/import/local/batch`, {
@@ -248,7 +248,7 @@ it("accepts a single plugin directory as a one-plugin collection", async () => {
     ]);
   });
 
-it("deletes an added plugin from the machine and reports which Agents had it", async () => {
+  it("deletes an added plugin from the machine and reports which Agents had it", async () => {
     // 卸载 is machine-wide and irreversible, so the response names the affected Agents: that list
     // is what lets the client show a confirm the user can actually reason about, and it has to be
     // read *before* the delete or there is nothing left to read.

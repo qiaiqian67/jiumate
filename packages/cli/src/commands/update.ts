@@ -154,8 +154,7 @@ export function detectInstall(modulePath: string, runtime?: { electron: boolean 
 
   // …/node_modules/@jadelau/cli/…
   const nmIdx = parts.findIndex(
-    (seg, i) =>
-      seg === "node_modules" && parts[i + 1] === "@jadelau" && parts[i + 2] === "cli",
+    (seg, i) => seg === "node_modules" && parts[i + 1] === "@jadelau" && parts[i + 2] === "cli",
   );
   if (nmIdx >= 0) {
     return { kind: "npm", globalRoot: join(nmIdx + 1) };

@@ -52,18 +52,19 @@ var A2UI_LIMITS = {
   metricDetail: 60,
   prefix: 4,
   deltaLabel: 24,
-  history: { min: 2, max: 60 }
+  history: { min: 2, max: 60 },
 };
 var A2UI_SCORING = {
   l2PerWarning: 15,
   prosePerWarning: 5,
   l2Weight: 0.5,
   proseWeight: 0.5,
-  passTotal: 70
+  passTotal: 70,
 };
 
 // packages/core/src/a2ui/widgets.ts
-var INSTANT = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:[.,](\d{1,9}))?)?(Z|[+-]\d{2}(?::?\d{2})?)?)?$/;
+var INSTANT =
+  /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:[.,](\d{1,9}))?)?(Z|[+-]\d{2}(?::?\d{2})?)?)?$/;
 function dateExists(year, month, day) {
   const date = new Date(Date.UTC(year, month - 1, day));
   return date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
@@ -96,7 +97,7 @@ function parseA2uiInstant(text) {
 
 // packages/core/src/a2ui/catalog.ts
 var isObj = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
-var join = (path2, key) => path2 === "" ? key : `${path2}.${key}`;
+var join = (path2, key) => (path2 === "" ? key : `${path2}.${key}`);
 var length = (s) => [...s].length;
 var Issues = class {
   list = [];
@@ -138,14 +139,14 @@ function readString(is, obj, key, path2, rule) {
     is.error(
       "too_long",
       `\`${p}\` is ${n} characters; the limit is ${rule.max}. Shorten it or move the detail into the prose.`,
-      p
+      p,
     );
   }
   if (rule.pattern && !rule.pattern.test(value)) {
     is.error(
       "invalid_format",
       `\`${p}\` must match ${rule.pattern.source}${rule.patternHint ? ` (${rule.patternHint})` : ""}.`,
-      p
+      p,
     );
   }
   return value;
@@ -202,13 +203,13 @@ function readArray(is, obj, key, path2, rule) {
     is.error(
       "count_out_of_range",
       `\`${p}\` has ${value.length} ${rule.what}; allowed ${rule.min}\u2013${rule.max}. ${value.length < rule.min ? "Add more, or answer in prose." : "Cut to the realistic ones, or split into two turns."}`,
-      p
+      p,
     );
   } else if (rule.warn !== void 0 && rule.warnCode && value.length > rule.warn) {
     is.warn(
       rule.warnCode,
       `\`${p}\` has ${value.length} ${rule.what}; more than ${rule.warn} is hard to take in at a glance.${rule.warnHint ? ` ${rule.warnHint}` : ""}`,
-      p
+      p,
     );
   }
   return value;
@@ -225,7 +226,7 @@ function parseOptions(is, obj, key, path2) {
   const raw = readArray(is, obj, key, path2, {
     ...A2UI_LIMITS.options,
     warnCode: "too_many_options",
-    what: "options"
+    what: "options",
   });
   if (raw === void 0) return void 0;
   const p = join(path2, key);
@@ -241,7 +242,7 @@ function parseOptions(is, obj, key, path2) {
     const label = readString(is, item, "label", ip, { required: true, max: A2UI_LIMITS.label });
     const value = readString(is, item, "value", ip, { max: A2UI_LIMITS.value });
     const description = readString(is, item, "description", ip, {
-      max: A2UI_LIMITS.description
+      max: A2UI_LIMITS.description,
     });
     const rec = readBoolean(is, item, "recommended", ip);
     unknownFields(is, item, OPTION_FIELDS, ip, "an option");
@@ -251,7 +252,7 @@ function parseOptions(is, obj, key, path2) {
       is.warn(
         "option_label_long",
         `\`${ip}.label\` is longer than ${A2UI_LIMITS.labelWarn} characters; keep labels short and put the detail in \`description\`.`,
-        `${ip}.label`
+        `${ip}.label`,
       );
     }
     const seen = labels.get(label);
@@ -259,7 +260,7 @@ function parseOptions(is, obj, key, path2) {
       is.error(
         "duplicate_label",
         `\`${ip}.label\` repeats option ${seen + 1}'s label "${label}"; labels must be unique.`,
-        `${ip}.label`
+        `${ip}.label`,
       );
     } else {
       labels.set(label, i);
@@ -274,7 +275,7 @@ function parseOptions(is, obj, key, path2) {
     is.error(
       "multiple_recommended",
       `\`${p}\` marks ${recommended} options as recommended; at most one may be.`,
-      p
+      p,
     );
   }
   return options;
@@ -285,11 +286,11 @@ function parseChoice(is, obj) {
   const id = readString(is, obj, "id", "", {
     max: 32,
     pattern: A2UI_LIMITS.idPattern,
-    patternHint: ID_HINT
+    patternHint: ID_HINT,
   });
   const question = readString(is, obj, "question", "", {
     required: true,
-    max: A2UI_LIMITS.question
+    max: A2UI_LIMITS.question,
   });
   const options = parseOptions(is, obj, "options", "");
   const multiple = readBoolean(is, obj, "multiple", "");
@@ -313,7 +314,7 @@ var FIELD_FIELDS = [
   "max",
   "step",
   "unit",
-  "required"
+  "required",
 ];
 var NUMBER_ONLY = ["min", "max", "step", "unit"];
 var FORM_FIELDS = ["type", "id", "title", "fields", "submitLabel"];
@@ -326,7 +327,7 @@ function parseFormField(is, item, fp) {
     required: true,
     max: 32,
     pattern: A2UI_LIMITS.fieldIdPattern,
-    patternHint: "lower-case letters, digits or _, starting with a letter, at most 32"
+    patternHint: "lower-case letters, digits or _, starting with a letter, at most 32",
   });
   const label = readString(is, item, "label", fp, { required: true, max: A2UI_LIMITS.label });
   const kind = readEnum(is, item, "kind", fp, FIELD_KINDS);
@@ -337,7 +338,7 @@ function parseFormField(is, item, fp) {
       is.error(
         "options_required",
         `\`${fp}.options\` is required for kind "${kind}".`,
-        `${fp}.options`
+        `${fp}.options`,
       );
     } else {
       options = parseOptions(is, item, "options", fp);
@@ -346,7 +347,7 @@ function parseFormField(is, item, fp) {
     is.error(
       "options_forbidden",
       `\`${fp}.options\` is not allowed for kind "${kind}"; use kind "single" or "multiple" to offer options.`,
-      `${fp}.options`
+      `${fp}.options`,
     );
   }
   const placeholder = readString(is, item, "placeholder", fp, { max: A2UI_LIMITS.placeholder });
@@ -354,7 +355,7 @@ function parseFormField(is, item, fp) {
     is.warn(
       "ignored_field",
       `\`${fp}.placeholder\` has no effect on kind "${kind}"; it is ignored.`,
-      `${fp}.placeholder`
+      `${fp}.placeholder`,
     );
   }
   const min = readNumber(is, item, "min", fp);
@@ -367,7 +368,7 @@ function parseFormField(is, item, fp) {
         is.error(
           "number_only",
           `\`${fp}.${key}\` is only valid for kind "number"; remove it or change the kind.`,
-          `${fp}.${key}`
+          `${fp}.${key}`,
         );
       }
     }
@@ -395,13 +396,13 @@ function parseForm(is, obj) {
   const id = readString(is, obj, "id", "", {
     max: 32,
     pattern: A2UI_LIMITS.idPattern,
-    patternHint: ID_HINT
+    patternHint: ID_HINT,
   });
   const title = readString(is, obj, "title", "", { max: A2UI_LIMITS.title });
   const raw = readArray(is, obj, "fields", "", {
     ...A2UI_LIMITS.fields,
     warnCode: "form_too_many_fields",
-    what: "fields"
+    what: "fields",
   });
   const submitLabel = readString(is, obj, "submitLabel", "", { max: A2UI_LIMITS.submitLabel });
   unknownFields(is, obj, FORM_FIELDS, "", "a form");
@@ -416,7 +417,7 @@ function parseForm(is, obj) {
       is.error(
         "duplicate_id",
         `\`fields[${i}].id\` repeats field ${seen + 1}'s id "${field.id}"; ids must be unique.`,
-        `fields[${i}].id`
+        `fields[${i}].id`,
       );
     } else {
       ids.set(field.id, i);
@@ -436,7 +437,7 @@ function parseSteps(is, obj) {
   const raw = readArray(is, obj, "steps", "", {
     ...A2UI_LIMITS.steps,
     warnCode: "steps_too_many",
-    what: "steps"
+    what: "steps",
   });
   unknownFields(is, obj, STEPS_FIELDS, "", "a steps block");
   if (raw === void 0) return void 0;
@@ -490,13 +491,13 @@ function readInstant(is, obj, key, path2, required = false) {
   is.error(
     "invalid_datetime",
     `\`${p}\` is "${value}", not a date-time; write ISO 8601 such as 2026-10-04T14:05+08:00 (Z or an offset; without one it is the viewer's local time), or 2026-10-04 for local midnight.`,
-    p
+    p,
   );
   return void 0;
 }
 function readPercent(is, obj, key, path2) {
   const value = readNumber(is, obj, key, path2);
-  if (value === void 0 || value >= 0 && value <= 100) return value;
+  if (value === void 0 || (value >= 0 && value <= 100)) return value;
   const p = join(path2, key);
   is.error("range_invalid", `\`${p}\` is ${value}; a percentage is 0\u2013100. Fix the value.`, p);
   return void 0;
@@ -507,7 +508,7 @@ function checkHighLow(is, high, low, path2) {
   is.error(
     "range_invalid",
     `\`${p}\` ${high} is below \`${join(path2, "low")}\` ${low}; swap them or fix the values.`,
-    p
+    p,
   );
 }
 var WEATHER_CONDITIONS = [
@@ -521,7 +522,7 @@ var WEATHER_CONDITIONS = [
   "thunder",
   "snow",
   "sleet",
-  "wind"
+  "wind",
 ];
 var TEMP_UNITS = ["C", "F"];
 var WIND_UNITS = ["km/h", "m/s", "mph"];
@@ -547,7 +548,7 @@ var WEATHER_FIELDS = [
   "hourly",
   "daily",
   "asOf",
-  "source"
+  "source",
 ];
 function parseHour(is, item, hp) {
   if (!isObj(item)) {
@@ -555,11 +556,15 @@ function parseHour(is, item, hp) {
     return void 0;
   }
   const time = readString(is, item, "time", hp, { required: true, max: Number.POSITIVE_INFINITY });
-  if (time !== void 0 && !HOUR_TIME.test(time) && !(time.includes("T") && parseA2uiInstant(time) !== null)) {
+  if (
+    time !== void 0 &&
+    !HOUR_TIME.test(time) &&
+    !(time.includes("T") && parseA2uiInstant(time) !== null)
+  ) {
     is.error(
       "invalid_format",
       `\`${hp}.time\` must be HH:mm on the 24-hour clock, such as 14:00, or an ISO 8601 date-time such as 2026-10-04T14:00+08:00.`,
-      `${hp}.time`
+      `${hp}.time`,
     );
   }
   const temp = readNumber(is, item, "temp", hp, true);
@@ -579,7 +584,7 @@ function parseDay(is, item, dp) {
     is.error(
       "wrong_type",
       `\`${dp}\` must be an object with \`date\`, \`high\`, \`low\` and \`condition\`.`,
-      dp
+      dp,
     );
     return void 0;
   }
@@ -588,7 +593,7 @@ function parseDay(is, item, dp) {
     is.error(
       "invalid_format",
       `\`${dp}.date\` must be a date that exists, written YYYY-MM-DD, such as 2026-10-05.`,
-      `${dp}.date`
+      `${dp}.date`,
     );
   }
   const high = readNumber(is, item, "high", dp, true);
@@ -620,13 +625,13 @@ function parseWeather(is, obj) {
     is.error(
       "range_invalid",
       `\`windSpeed\` is ${windSpeed}; a speed is at least 0 \u2014 put the direction in \`windDirection\`.`,
-      "windSpeed"
+      "windSpeed",
     );
     windSpeed = void 0;
   }
   const windUnit = readEnum(is, obj, "windUnit", "", WIND_UNITS, false);
   const windDirection = readString(is, obj, "windDirection", "", {
-    max: A2UI_LIMITS.windDirection
+    max: A2UI_LIMITS.windDirection,
   });
   if (!present(obj.windSpeed)) {
     for (const key of ["windUnit", "windDirection"]) {
@@ -634,7 +639,7 @@ function parseWeather(is, obj) {
       is.warn(
         "ignored_field",
         `\`${key}\` without \`windSpeed\` has no effect; add the speed or remove it.`,
-        key
+        key,
       );
     }
   }
@@ -644,7 +649,7 @@ function parseWeather(is, obj) {
       ...A2UI_LIMITS.hourly,
       warnCode: "weather_hourly_long",
       warnHint: "Show the next 12 hours, or one entry every two hours.",
-      what: "hours"
+      what: "hours",
     });
     const list = [];
     raw?.forEach((item, i) => {
@@ -716,7 +721,7 @@ function parseZones(is, obj) {
       is.error(
         "invalid_timezone",
         `\`${zp}.zone\` "${zone}" is not a time zone; use an IANA name such as Asia/Shanghai, or local.`,
-        `${zp}.zone`
+        `${zp}.zone`,
       );
       return;
     }
@@ -725,7 +730,7 @@ function parseZones(is, obj) {
       is.error(
         "duplicate_zone",
         `\`${zp}.zone\` repeats zone ${first + 1} ("${zone}"); list each zone once.`,
-        `${zp}.zone`
+        `${zp}.zone`,
       );
     } else {
       seen.set(key, i);
@@ -758,7 +763,7 @@ function parseCountdown(is, obj) {
   const to = readInstant(is, obj, "to", "", true);
   const label = readString(is, obj, "label", "", {
     required: true,
-    max: A2UI_LIMITS.countdownLabel
+    max: A2UI_LIMITS.countdownLabel,
   });
   const doneLabel = readString(is, obj, "doneLabel", "", { max: A2UI_LIMITS.countdownLabel });
   const showTarget = readBoolean(is, obj, "showTarget", "");
@@ -788,7 +793,7 @@ var METRIC_FIELDS = [
   "detail",
   "delta",
   "deltaLabel",
-  "history"
+  "history",
 ];
 var METRICS_FIELDS = ["type", "title", "items", "asOf"];
 function readHistory(is, item, mp) {
@@ -812,7 +817,7 @@ function parseMetric(is, item, mp) {
   }
   const label = readString(is, item, "label", mp, {
     required: true,
-    max: A2UI_LIMITS.metricLabel
+    max: A2UI_LIMITS.metricLabel,
   });
   const value = readNumber(is, item, "value", mp, true);
   const max = readNumber(is, item, "max", mp);
@@ -835,13 +840,13 @@ function parseMetric(is, item, mp) {
       is.error(
         "missing_field",
         `\`${mp}.max\` is required for kind "${kind}"; add the whole the value is a part of.`,
-        `${mp}.max`
+        `${mp}.max`,
       );
     } else if (gauge === "ring" || gauge === "bar") {
       is.error(
         "missing_field",
         `\`${mp}.max\` is required for a ${gauge} gauge; add it, or set gauge "none".`,
-        `${mp}.max`
+        `${mp}.max`,
       );
     }
   }
@@ -849,14 +854,14 @@ function parseMetric(is, item, mp) {
     is.error(
       "range_invalid",
       `\`${mp}\`: max ${max} is not above min ${min ?? "0 (the default)"}; fix the range.`,
-      min !== void 0 ? `${mp}.min` : `${mp}.max`
+      min !== void 0 ? `${mp}.min` : `${mp}.max`,
     );
   }
   if (decimals !== void 0 && !(Number.isInteger(decimals) && decimals >= 0 && decimals <= 3)) {
     is.error(
       "range_invalid",
       `\`${mp}.decimals\` is ${decimals}; use a whole number from 0 to 3.`,
-      `${mp}.decimals`
+      `${mp}.decimals`,
     );
   }
   if (warn2 !== void 0 && danger !== void 0) {
@@ -866,13 +871,13 @@ function parseMetric(is, item, mp) {
       is.error(
         "range_invalid",
         `\`${mp}\`: warn ${warn2} is above danger ${danger}, but worse is "high"${why} \u2014 a higher value is worse, so warn must be at most danger. Swap them, or set worse to "low".`,
-        `${mp}.warn`
+        `${mp}.warn`,
       );
     } else if (direction === "low" && warn2 < danger) {
       is.error(
         "range_invalid",
         `\`${mp}\`: warn ${warn2} is below danger ${danger}, but worse is "low"${why} \u2014 a lower value is worse, so warn must be at least danger. Swap them, or set worse to "high".`,
-        `${mp}.warn`
+        `${mp}.warn`,
       );
     }
   }
@@ -880,7 +885,7 @@ function parseMetric(is, item, mp) {
     is.warn(
       "ignored_field",
       `\`${mp}.deltaLabel\` without \`delta\` has no effect; add the change or remove the label.`,
-      `${mp}.deltaLabel`
+      `${mp}.deltaLabel`,
     );
   }
   if (label === void 0 || value === void 0) return void 0;
@@ -907,7 +912,7 @@ function parseMetrics(is, obj) {
     ...A2UI_LIMITS.metrics,
     warnCode: "metrics_too_many",
     warnHint: "Keep the readings that matter and say the rest in a sentence.",
-    what: "items"
+    what: "items",
   });
   const asOf = readInstant(is, obj, "asOf", "");
   unknownFields(is, obj, METRICS_FIELDS, "", "a metrics block");
@@ -922,7 +927,7 @@ function parseMetrics(is, obj) {
       is.error(
         "duplicate_label",
         `\`items[${i}].label\` repeats item ${seen + 1}'s label "${metric.label}"; labels must be unique.`,
-        `items[${i}].label`
+        `items[${i}].label`,
       );
     } else {
       labels.set(metric.label, i);
@@ -992,8 +997,7 @@ function parseA2ui(source) {
       try {
         data = JSON.parse(lenient.text);
         recovered = true;
-      } catch {
-      }
+      } catch {}
     }
     if (!recovered) {
       const detail = err instanceof Error ? err.message : String(err);
@@ -1001,19 +1005,19 @@ function parseA2ui(source) {
         "invalid_json",
         `The block is not valid JSON (${detail}). Write one strict JSON object: double quotes, no comments, no trailing commas.`,
         void 0,
-        errorLine(err, text)
+        errorLine(err, text),
       );
       return { issues: is.list };
     }
     is.warn(
       "json_trailing_comma",
-      "A trailing comma was tolerated this time; strict JSON has none."
+      "A trailing comma was tolerated this time; strict JSON has none.",
     );
   }
   if (!isObj(data)) {
     is.error(
       "not_object",
-      "The block must be ONE JSON object \u2014 not an array, a string, or several objects."
+      "The block must be ONE JSON object \u2014 not an array, a string, or several objects.",
     );
     return { issues: is.list };
   }
@@ -1022,7 +1026,7 @@ function parseA2ui(source) {
     is.error(
       "missing_type",
       "`type` is required: one of choice, form, steps, callout, weather, clock, countdown, metrics.",
-      "type"
+      "type",
     );
     return { issues: is.list };
   }
@@ -1056,7 +1060,7 @@ function parseA2ui(source) {
       is.error(
         "unknown_type",
         `Unknown type "${type}"; the catalog has choice, form, steps, callout, weather, clock, countdown and metrics.`,
-        "type"
+        "type",
       );
       return { issues: is.list, type };
   }
@@ -1067,7 +1071,7 @@ function parseA2ui(source) {
 
 // packages/core/src/a2ui/fences.ts
 function splitLines(markdown) {
-  return markdown.split("\n").map((line) => line.endsWith("\r") ? line.slice(0, -1) : line);
+  return markdown.split("\n").map((line) => (line.endsWith("\r") ? line.slice(0, -1) : line));
 }
 var OPEN_FENCE = /^( {0,3})(`{3,}|~{3,})(.*)$/;
 var CLOSE_FENCE = /^ {0,3}(`{3,}|~{3,})\s*$/;
@@ -1093,7 +1097,7 @@ function scanFences(markdown) {
         startLine: i + 1,
         endLine: i + 1,
         closed: false,
-        body: []
+        body: [],
       };
       continue;
     }
@@ -1130,7 +1134,7 @@ function blocksFromFences(spans) {
       startLine: span.startLine,
       endLine: span.endLine,
       closed: span.closed,
-      info: span.info
+      info: span.info,
     });
   }
   return blocks;
@@ -1161,7 +1165,7 @@ var MERMAID_TYPES = [
   "quadrantChart",
   "xychart-beta",
   "requirementDiagram",
-  "C4Context"
+  "C4Context",
 ];
 var MERMAID_TYPE_SET = new Set(MERMAID_TYPES);
 var BRACKET_CHECKED = /* @__PURE__ */ new Set([
@@ -1170,13 +1174,13 @@ var BRACKET_CHECKED = /* @__PURE__ */ new Set([
   "stateDiagram",
   "stateDiagram-v2",
   "classDiagram",
-  "erDiagram"
+  "erDiagram",
 ]);
 var BRACES_PER_LINE = /* @__PURE__ */ new Set(["flowchart", "graph"]);
 var BRACES_PER_DOCUMENT = /* @__PURE__ */ new Set([
   "classDiagram",
   "stateDiagram",
-  "stateDiagram-v2"
+  "stateDiagram-v2",
 ]);
 var FORBIDDEN = [
   { re: /^click\s/i, what: "a click binding" },
@@ -1184,9 +1188,10 @@ var FORBIDDEN = [
   { re: /^callback\s/i, what: "a callback binding" },
   { re: /\bhref\s*[="]/i, what: "an href" },
   { re: /javascript:/i, what: "a javascript: URL" },
-  { re: /<script/i, what: "a script tag" }
+  { re: /<script/i, what: "a script tag" },
 ];
-var NOT_A_STATEMENT = /^(end|subgraph\b|style\b|classDef\b|linkStyle\b|direction\b|title\b|dateFormat\b|axisFormat\b|section\b|x-axis\b|y-axis\b|accTitle\b|accDescr\b)/;
+var NOT_A_STATEMENT =
+  /^(end|subgraph\b|style\b|classDef\b|linkStyle\b|direction\b|title\b|dateFormat\b|axisFormat\b|section\b|x-axis\b|y-axis\b|accTitle\b|accDescr\b)/;
 var issue = (level, code, message, line) => {
   const out = { level, code, message };
   if (line !== void 0) out.line = line;
@@ -1215,14 +1220,14 @@ function checkLineBalance(line, n, braces, issues) {
         "error",
         "mermaid_unbalanced",
         `Line ${n} has an odd number of double quotes; close the quoted label.`,
-        n
-      )
+        n,
+      ),
     );
     return { text };
   }
   const pairs = [
     ["(", ")"],
-    ["[", "]"]
+    ["[", "]"],
   ];
   if (braces) pairs.push(["{", "}"]);
   for (const [open, close] of pairs) {
@@ -1235,8 +1240,8 @@ function checkLineBalance(line, n, braces, issues) {
         "error",
         "mermaid_unbalanced",
         `Line ${n} has ${opens} "${open}" and ${closes} "${close}"; a label with brackets must be quoted, e.g. A["text (detail)"].`,
-        n
-      )
+        n,
+      ),
     );
   }
   return { text };
@@ -1258,8 +1263,8 @@ function checkMermaid(source) {
           "error",
           "mermaid_unbalanced",
           "The frontmatter opened with --- is never closed; add the closing --- or drop it.",
-          firstIdx + 1
-        )
+          firstIdx + 1,
+        ),
       );
       return issues;
     }
@@ -1271,8 +1276,8 @@ function checkMermaid(source) {
             "error",
             "mermaid_directive",
             `Frontmatter key \`${m[1]}\` is not allowed (only \`title\`); the app configures the diagram, not the model.`,
-            i + 1
-          )
+            i + 1,
+          ),
         );
       }
     }
@@ -1291,8 +1296,8 @@ function checkMermaid(source) {
           "error",
           "mermaid_directive",
           `Line ${n} carries an init directive (%%{ \u2026 }%%); remove it \u2014 the app sets the theme.`,
-          n
-        )
+          n,
+        ),
       );
       continue;
     }
@@ -1305,8 +1310,8 @@ function checkMermaid(source) {
             "error",
             "mermaid_unknown_type",
             `"${header}" is not a supported diagram; start with one of ${MERMAID_TYPES.join(", ")}.`,
-            n
-          )
+            n,
+          ),
         );
       }
       continue;
@@ -1318,8 +1323,8 @@ function checkMermaid(source) {
             "error",
             "mermaid_forbidden",
             `Line ${n} carries ${rule.what}; links, clicks and scripts are not rendered \u2014 describe the target in the prose instead.`,
-            n
-          )
+            n,
+          ),
         );
         break;
       }
@@ -1332,7 +1337,7 @@ function checkMermaid(source) {
   }
   if (header === void 0) {
     issues.push(
-      issue("error", "mermaid_empty", "The mermaid fence has no diagram header; write one.")
+      issue("error", "mermaid_empty", "The mermaid fence has no diagram header; write one."),
     );
     return issues;
   }
@@ -1342,8 +1347,8 @@ function checkMermaid(source) {
         "error",
         "mermaid_unbalanced",
         `The diagram opens ${braceBalance > 0 ? braceBalance + " more { than }" : -braceBalance + " more } than {"}; close every block.`,
-        lines.length
-      )
+        lines.length,
+      ),
     );
   }
   if (statements > A2UI_LIMITS.mermaid.statements || lines.length > A2UI_LIMITS.mermaid.lines) {
@@ -1351,8 +1356,8 @@ function checkMermaid(source) {
       issue(
         "warning",
         "mermaid_too_big",
-        `The diagram has ${statements} statements over ${lines.length} lines; more than ${A2UI_LIMITS.mermaid.statements} nodes or edges is hard to read \u2014 split it or show only the main path.`
-      )
+        `The diagram has ${statements} statements over ${lines.length} lines; more than ${A2UI_LIMITS.mermaid.statements} nodes or edges is hard to read \u2014 split it or show only the main path.`,
+      ),
     );
   }
   return issues;
@@ -1365,17 +1370,36 @@ var PROSE_LIMITS = {
   paragraphSentences: 5,
   /** A paragraph this long with no sentence break the splitter could find. */
   wallChars: 800,
-  listDepth: 2
+  listDepth: 2,
 };
 var A2UI_VAGUE_WORDS = {
   en: ["etc.", "and so on", "various", "appropriate", "appropriately", "stuff", "things"],
-  zh: ["\u7B49\u7B49", "\u4E4B\u7C7B", "\u76F8\u5173\u7684", "\u8FDB\u884C", "\u67D0\u79CD\u7A0B\u5EA6\u4E0A"]
+  zh: [
+    "\u7B49\u7B49",
+    "\u4E4B\u7C7B",
+    "\u76F8\u5173\u7684",
+    "\u8FDB\u884C",
+    "\u67D0\u79CD\u7A0B\u5EA6\u4E0A",
+  ],
 };
-var CJK = new RegExp("\\p{Script=Han}|\\p{Script=Hiragana}|\\p{Script=Katakana}|\\p{Script=Hangul}", "gu");
+var CJK = new RegExp(
+  "\\p{Script=Han}|\\p{Script=Hiragana}|\\p{Script=Katakana}|\\p{Script=Hangul}",
+  "gu",
+);
 var LATIN = new RegExp("\\p{Script=Latin}", "gu");
 var WORD = /[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu;
 function cleanInline(text) {
-  return text.replace(/`+[^`]*`+/g, " ").replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/<https?:\/\/[^>]*>/g, " ").replace(/https?:\/\/\S+/g, " ").replace(/<\/?[A-Za-z][^>]*>/g, " ").replace(/[*~]+/g, "").replace(/\b_+|_+\b/g, "").replace(/\s+/g, " ").trim();
+  return text
+    .replace(/`+[^`]*`+/g, " ")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/<https?:\/\/[^>]*>/g, " ")
+    .replace(/https?:\/\/\S+/g, " ")
+    .replace(/<\/?[A-Za-z][^>]*>/g, " ")
+    .replace(/[*~]+/g, "")
+    .replace(/\b_+|_+\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 var HEADING = /^\s{0,3}#{1,6}(\s|$)/;
 var TABLE_ROW = /^\s*\|/;
@@ -1418,7 +1442,12 @@ function proseParagraphs(markdown) {
       line = line.slice(0, open);
       inComment = true;
     }
-    if (line.trim() === "" || HEADING.test(line) || TABLE_ROW.test(line) || THEMATIC_BREAK.test(line)) {
+    if (
+      line.trim() === "" ||
+      HEADING.test(line) ||
+      TABLE_ROW.test(line) ||
+      THEMATIC_BREAK.test(line)
+    ) {
       flush();
       continue;
     }
@@ -1445,7 +1474,9 @@ function proseParagraphs(markdown) {
   return paragraphs;
 }
 function detectLang(markdown) {
-  const text = proseParagraphs(markdown).map((p) => p.text).join(" ");
+  const text = proseParagraphs(markdown)
+    .map((p) => p.text)
+    .join(" ");
   const cjk = text.match(CJK)?.length ?? 0;
   const latin = text.match(LATIN)?.length ?? 0;
   return cjk > 0 && cjk * 2 >= latin ? "zh" : "en";
@@ -1469,14 +1500,17 @@ function splitSentences(text, lang) {
     last = end;
   }
   if (last < text.length) raw.push({ text: text.slice(last), offset: last });
-  return raw.map((s) => {
-    const lead = s.text.length - s.text.trimStart().length;
-    return { text: s.text.trim(), offset: s.offset + lead };
-  }).filter((s) => /[\p{L}\p{N}]/u.test(s.text));
+  return raw
+    .map((s) => {
+      const lead = s.text.length - s.text.trimStart().length;
+      return { text: s.text.trim(), offset: s.offset + lead };
+    })
+    .filter((s) => /[\p{L}\p{N}]/u.test(s.text));
 }
 var countWords = (text) => (text.match(WORD) ?? []).length;
 var countChars = (text) => [...text.replace(/\s+/g, "")].length;
-var IRREGULAR_PARTICIPLES = "built|done|made|given|taken|written|seen|known|shown|sent|chosen|found|held|kept|left|lost|put|read|run|set|sold|told|thought|understood|cut|hit|met|paid|said|spent|won|caught|taught|brought|bought|begun|broken|driven|eaten|forgotten|frozen|hidden|spoken|stolen|drawn|grown|thrown|torn|led|fed|lit|split|spread|shut|forbidden|withdrawn|overridden|undone|rebuilt|rewritten|proven|beaten|bitten|woven|shaken|woken|sworn|bound|wound|struck|stuck|swung|hung|sung|flung|spun|bent|lent|meant|dealt|felt|learnt";
+var IRREGULAR_PARTICIPLES =
+  "built|done|made|given|taken|written|seen|known|shown|sent|chosen|found|held|kept|left|lost|put|read|run|set|sold|told|thought|understood|cut|hit|met|paid|said|spent|won|caught|taught|brought|bought|begun|broken|driven|eaten|forgotten|frozen|hidden|spoken|stolen|drawn|grown|thrown|torn|led|fed|lit|split|spread|shut|forbidden|withdrawn|overridden|undone|rebuilt|rewritten|proven|beaten|bitten|woven|shaken|woken|sworn|bound|wound|struck|stuck|swung|hung|sung|flung|spun|bent|lent|meant|dealt|felt|learnt";
 var PASSIVE_SOURCE = `\\b(?:am|is|are|was|were|be|been|being|get|gets|got|getting)\\s+(?:(?:not|always|often|usually|also|already|still|never|then|now|only|just|automatically|first|later|rarely|sometimes|typically|currently|normally|partially|fully|easily)\\s+)?(\\w{2,}ed|${IRREGULAR_PARTICIPLES})\\b`;
 var NOT_PARTICIPLES = /* @__PURE__ */ new Set([
   "indeed",
@@ -1516,7 +1550,7 @@ var NOT_PARTICIPLES = /* @__PURE__ */ new Set([
   "annoyed",
   "amazed",
   "delighted",
-  "frustrated"
+  "frustrated",
 ]);
 function passiveIn(sentence) {
   const re = new RegExp(PASSIVE_SOURCE, "gi");
@@ -1529,8 +1563,8 @@ var EN_VAGUE = A2UI_VAGUE_WORDS.en.map((word) => ({
   word,
   re: new RegExp(
     `\\b${word.replace(/\./g, "").replace(/ /g, "\\s+")}${word.endsWith(".") ? "\\b\\.?" : "(?!\\p{L})"}`,
-    "iu"
-  )
+    "iu",
+  ),
 }));
 function excerpt(text) {
   const chars = [...text];
@@ -1548,7 +1582,7 @@ var warn = (code, message, line) => ({
   level: "warning",
   code,
   message,
-  line
+  line,
 });
 function lintListDepth(markdown, issues) {
   const lines = splitLines(markdown);
@@ -1577,8 +1611,8 @@ function lintListDepth(markdown, issues) {
         warn(
           "deep_nesting",
           `A list nested ${stack.length} levels deep (line ${i + 1}); keep lists to ${PROSE_LIMITS.listDepth} levels, or split them into sections.`,
-          i + 1
-        )
+          i + 1,
+        ),
       );
     }
   }
@@ -1594,16 +1628,16 @@ function lintProse(markdown, opts = {}) {
         warn(
           "wall_of_text",
           `A paragraph of ${chars} characters with no sentence break the reader can rest on; split it into short sentences and paragraphs.`,
-          p.startLine
-        )
+          p.startLine,
+        ),
       );
     } else if (p.kind === "para" && sentences.length > PROSE_LIMITS.paragraphSentences) {
       issues.push(
         warn(
           "long_paragraph",
           `A paragraph of ${sentences.length} sentences (limit ${PROSE_LIMITS.paragraphSentences}); split it, or turn the items into a list.`,
-          p.startLine
-        )
+          p.startLine,
+        ),
       );
     }
     for (const s of sentences) {
@@ -1615,8 +1649,8 @@ function lintProse(markdown, opts = {}) {
             warn(
               "long_sentence",
               `A sentence of ${words} words (limit ${PROSE_LIMITS.enSentenceWords}): "${excerpt(s.text)}". Split it: one idea per sentence.`,
-              line
-            )
+              line,
+            ),
           );
         }
         const passive = passiveIn(s.text);
@@ -1625,8 +1659,8 @@ function lintProse(markdown, opts = {}) {
             warn(
               "passive_voice",
               `Passive voice ("${passive}") in: "${excerpt(s.text)}". Say who does it \u2014 use the active voice, or the imperative for an instruction.`,
-              line
-            )
+              line,
+            ),
           );
         }
         for (const { word, re } of EN_VAGUE) {
@@ -1635,8 +1669,8 @@ function lintProse(markdown, opts = {}) {
               warn(
                 "vague_word",
                 `Vague word "${word}" in: "${excerpt(s.text)}". Name the items or the exact action instead.`,
-                line
-              )
+                line,
+              ),
             );
           }
         }
@@ -1647,8 +1681,8 @@ function lintProse(markdown, opts = {}) {
             warn(
               "long_sentence",
               `A sentence of ${n} characters (limit ${PROSE_LIMITS.zhSentenceChars}): "${excerpt(s.text)}". Split it at the commas into full sentences.`,
-              line
-            )
+              line,
+            ),
           );
         }
         for (const word of A2UI_VAGUE_WORDS.zh) {
@@ -1657,8 +1691,8 @@ function lintProse(markdown, opts = {}) {
               warn(
                 "vague_word",
                 `Vague word "${word}" in: "${excerpt(s.text)}". Name the items or the exact action instead (\u300C\u8FDB\u884C\u5B89\u88C5\u300D\u2192\u300C\u5B89\u88C5\u300D).`,
-                line
-              )
+                line,
+              ),
             );
           }
         }
@@ -1691,7 +1725,7 @@ function checkReply(markdown, opts = {}) {
         level: "error",
         code: "unclosed_fence",
         message: `The ${block.fence} fence opened on line ${block.startLine} is never closed; add the closing fence line.`,
-        line: block.startLine
+        line: block.startLine,
       });
     }
     let relative;
@@ -1704,7 +1738,9 @@ function checkReply(markdown, opts = {}) {
       relative = checkMermaid(block.source);
     }
     for (const issue2 of relative) {
-      own.push(issue2.line !== void 0 ? { ...issue2, line: block.startLine + issue2.line } : issue2);
+      own.push(
+        issue2.line !== void 0 ? { ...issue2, line: block.startLine + issue2.line } : issue2,
+      );
     }
     for (const issue2 of own) {
       issues.push({ ...issue2, block: block.index, scope: issue2.level === "error" ? "l1" : "l2" });
@@ -1712,7 +1748,7 @@ function checkReply(markdown, opts = {}) {
     const entry2 = {
       index: block.index,
       fence: block.fence,
-      ok: own.every((issue2) => issue2.level !== "error")
+      ok: own.every((issue2) => issue2.level !== "error"),
     };
     if (type !== void 0) entry2.type = type;
     summary.push(entry2);
@@ -1724,7 +1760,7 @@ function checkReply(markdown, opts = {}) {
     if (line !== void 0) issue2.line = line;
     issues.push(issue2);
   };
-  const label = (index, fence) => fence === "mermaid" ? "mermaid" : typeOf.get(index) ?? "a2ui";
+  const label = (index, fence) => (fence === "mermaid" ? "mermaid" : (typeOf.get(index) ?? "a2ui"));
   const interactive = blocks.filter((b) => {
     const t = typeOf.get(b.index);
     return b.fence === "a2ui" && (t === "choice" || t === "form");
@@ -1732,7 +1768,7 @@ function checkReply(markdown, opts = {}) {
   if (interactive.length > 2 || blocks.length > 4) {
     l2(
       "ui_overuse",
-      `${blocks.length} blocks (${interactive.length} interactive) in one reply; keep to one or two blocks and at most two questions, or answer in prose.`
+      `${blocks.length} blocks (${interactive.length} interactive) in one reply; keep to one or two blocks and at most two questions, or answer in prose.`,
     );
   }
   for (const b of interactive) {
@@ -1741,7 +1777,7 @@ function checkReply(markdown, opts = {}) {
         "interactive_not_last",
         `Content follows the ${label(b.index, b.fence)} block that ends on line ${b.endLine}; a question ends the turn \u2014 move the block to the end, or drop what follows.`,
         b.index,
-        b.endLine
+        b.endLine,
       );
     }
   }
@@ -1753,40 +1789,49 @@ function checkReply(markdown, opts = {}) {
         "no_as_of",
         `The ${spec.type} block on line ${b.startLine} has no \`asOf\`; a snapshot says when it was taken \u2014 add the time the data was read (a script prints it).`,
         b.index,
-        b.startLine
+        b.startLine,
       );
     }
   }
   for (const b of blocks) {
     let i = b.startLine - 2;
     while (i >= 0 && (lines[i] ?? "").trim() === "") i--;
-    const above = i >= 0 ? lines[i] ?? "" : "";
-    const grounded = i >= 0 && !fenced.has(i + 1) && !HEADING2.test(above) && !TABLE_ROW2.test(above) && !THEMATIC_BREAK2.test(above) && !above.trimStart().startsWith("<!--");
+    const above = i >= 0 ? (lines[i] ?? "") : "";
+    const grounded =
+      i >= 0 &&
+      !fenced.has(i + 1) &&
+      !HEADING2.test(above) &&
+      !TABLE_ROW2.test(above) &&
+      !THEMATIC_BREAK2.test(above) &&
+      !above.trimStart().startsWith("<!--");
     if (!grounded) {
       l2(
         "ungrounded_block",
         `The ${label(b.index, b.fence)} block on line ${b.startLine} is not introduced; write one sentence before it that says what it is for.`,
         b.index,
-        b.startLine
+        b.startLine,
       );
     }
   }
   for (const issue2 of lintProse(markdown, { lang })) issues.push({ ...issue2, scope: "prose" });
   const errors = issues.filter((issue2) => issue2.level === "error").length;
   const l2Warnings = issues.filter(
-    (issue2) => issue2.level === "warning" && issue2.scope === "l2"
+    (issue2) => issue2.level === "warning" && issue2.scope === "l2",
   ).length;
   const proseWarnings = issues.filter((issue2) => issue2.scope === "prose").length;
   const l1Score = errors === 0 ? 100 : 0;
   const l2Score = Math.max(0, 100 - A2UI_SCORING.l2PerWarning * l2Warnings);
   const proseScore = Math.max(0, 100 - A2UI_SCORING.prosePerWarning * proseWarnings);
-  const total = errors > 0 ? 0 : Math.round(A2UI_SCORING.l2Weight * l2Score + A2UI_SCORING.proseWeight * proseScore);
+  const total =
+    errors > 0
+      ? 0
+      : Math.round(A2UI_SCORING.l2Weight * l2Score + A2UI_SCORING.proseWeight * proseScore);
   return {
     ok: errors === 0,
     blocks: summary,
     issues,
     score: { l1: l1Score, l2: l2Score, prose: proseScore, total },
-    lang
+    lang,
   };
 }
 
@@ -1800,7 +1845,7 @@ var A2UI_RUBRIC = {
     "Is the reply what a person would naturally say: short sentences, one instruction each, no filler?",
     "Can the reader take everything in at a glance: at most 5 options, 4 fields, 10 steps, one or two blocks?",
     "Did you keep UI out of a plain fact, a conversational turn or an emotional moment?",
-    "Is every number in a widget real \u2014 read by a script, a tool or the user, with its `asOf` time \u2014 and never invented or rounded into a guess?"
+    "Is every number in a widget real \u2014 read by a script, a tool or the user, with its `asOf` time \u2014 and never invented or rounded into a guess?",
   ],
   zh: [
     "\u6362\u6210\u7EAF\u6587\u672C\u662F\u5426\u540C\u6837\u6E05\u695A\uFF1F\u5982\u679C\u662F\uFF0C\u5220\u6389\u8FD9\u4E2A\u7EC4\u4EF6\u3002",
@@ -1810,8 +1855,8 @@ var A2UI_RUBRIC = {
     "\u8FD9\u6BB5\u56DE\u590D\u50CF\u4E0D\u50CF\u4E00\u4E2A\u4EBA\u81EA\u7136\u4F1A\u8BF4\u7684\u8BDD\uFF1A\u77ED\u53E5\u3001\u4E00\u53E5\u4E00\u4E2A\u6307\u4EE4\u3001\u6CA1\u6709\u5E9F\u8BDD\uFF1F",
     "\u8BFB\u8005\u80FD\u5426\u4E00\u773C\u770B\u5B8C\uFF1A\u9009\u9879\u4E0D\u8D85\u8FC7 5 \u4E2A\u3001\u5B57\u6BB5\u4E0D\u8D85\u8FC7 4 \u4E2A\u3001\u6B65\u9AA4\u4E0D\u8D85\u8FC7 10 \u6B65\u3001\u7EC4\u4EF6\u4E0D\u8D85\u8FC7\u4E00\u4E24\u4E2A\uFF1F",
     "\u5BF9\u4E8E\u4E00\u53E5\u8BDD\u7684\u4E8B\u5B9E\u3001\u95F2\u804A\u6216\u60C5\u7EEA\u6027\u7684\u5BF9\u8BDD\uFF0C\u662F\u5426\u6CA1\u6709\u4F7F\u7528\u7EC4\u4EF6\uFF1F",
-    "\u5C0F\u7EC4\u4EF6\u91CC\u7684\u6BCF\u4E2A\u6570\u5B57\u662F\u5426\u90FD\u662F\u771F\u5B9E\u7684\u2014\u2014\u6765\u81EA\u811A\u672C\u3001\u5DE5\u5177\u6216\u7528\u6237\uFF0C\u5E76\u5E26\u6709 `asOf` \u65F6\u95F4\u2014\u2014\u800C\u4E0D\u662F\u7F16\u9020\u6216\u731C\u6D4B\uFF1F"
-  ]
+    "\u5C0F\u7EC4\u4EF6\u91CC\u7684\u6BCF\u4E2A\u6570\u5B57\u662F\u5426\u90FD\u662F\u771F\u5B9E\u7684\u2014\u2014\u6765\u81EA\u811A\u672C\u3001\u5DE5\u5177\u6216\u7528\u6237\uFF0C\u5E76\u5E26\u6709 `asOf` \u65F6\u95F4\u2014\u2014\u800C\u4E0D\u662F\u7F16\u9020\u6216\u731C\u6D4B\uFF1F",
+  ],
 };
 
 // packages/core/src/a2ui/report.ts
@@ -1825,14 +1870,16 @@ function where(issue2) {
 }
 function formatReport(report, opts = {}) {
   const errors = report.issues.filter((issue2) => issue2.level === "error");
-  const l2 = report.issues.filter((issue2) => issue2.level === "warning" && issue2.scope !== "prose");
+  const l2 = report.issues.filter(
+    (issue2) => issue2.level === "warning" && issue2.scope !== "prose",
+  );
   const prose = report.issues.filter((issue2) => issue2.scope === "prose");
   const out = [
-    `a2ui check: ${plural(report.blocks.length, "block")}, ${plural(errors.length, "error")}, ${plural(l2.length + prose.length, "warning")} (lang ${report.lang})`
+    `a2ui check: ${plural(report.blocks.length, "block")}, ${plural(errors.length, "error")}, ${plural(l2.length + prose.length, "warning")} (lang ${report.lang})`,
   ];
   for (const block of report.blocks) {
     out.push(
-      `  block ${block.index}: ${block.fence}${block.type !== void 0 ? ` ${block.type}` : ""} \u2014 ${block.ok ? "ok" : "ERROR"}`
+      `  block ${block.index}: ${block.fence}${block.type !== void 0 ? ` ${block.type}` : ""} \u2014 ${block.ok ? "ok" : "ERROR"}`,
     );
   }
   if (report.blocks.length === 0) out.push("  no a2ui or mermaid blocks; prose rules only");
@@ -1845,7 +1892,12 @@ function formatReport(report, opts = {}) {
   section("warnings \u2014 blocks (L2):", l2);
   section("warnings \u2014 prose (STE):", prose);
   const s = report.score;
-  const verdict = errors.length > 0 ? "total is 0 while any error remains" : s.total < A2UI_SCORING.passTotal ? `below the ${A2UI_SCORING.passTotal} gate; fix the warnings that matter` : "pass";
+  const verdict =
+    errors.length > 0
+      ? "total is 0 while any error remains"
+      : s.total < A2UI_SCORING.passTotal
+        ? `below the ${A2UI_SCORING.passTotal} gate; fix the warnings that matter`
+        : "pass";
   out.push("", `score: L1 ${s.l1}  L2 ${s.l2}  prose ${s.prose}  total ${s.total}  (${verdict})`);
   if (opts.rubric) {
     out.push("", "self-review before sending:");
@@ -1880,7 +1932,7 @@ function runCli(argv, io) {
     } else if (arg === "--rubric") {
       rubric = true;
     } else if (arg === "--lang" || arg.startsWith("--lang=")) {
-      const value = arg === "--lang" ? argv[++i] ?? "" : arg.slice("--lang=".length);
+      const value = arg === "--lang" ? (argv[++i] ?? "") : arg.slice("--lang=".length);
       if (!LANGS.has(value)) {
         io.err(`--lang must be zh, en or auto (got "${value}")
 ${USAGE}`);
@@ -1925,10 +1977,7 @@ if (entry !== "" && entry === fileURLToPath(import.meta.url)) {
     stdinIsTTY: process.stdin.isTTY === true,
     readFile: (file) => readFileSync(file, "utf8"),
     out: (text) => console.log(text),
-    err: (text) => console.error(text)
+    err: (text) => console.error(text),
   });
 }
-export {
-  USAGE,
-  runCli
-};
+export { USAGE, runCli };

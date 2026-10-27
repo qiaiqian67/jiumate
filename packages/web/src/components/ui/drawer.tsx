@@ -45,11 +45,11 @@ export function Drawer({ open, side = "left", title, onClose, children, widthCla
         }`}
       >
         {title !== undefined && (
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
-          <span className="text-base font-semibold">{title}</span>
-          <CloseButton onClose={onClose} />
-        </div>
-      )}
+          <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
+            <span className="text-base font-semibold">{title}</span>
+            <CloseButton onClose={onClose} />
+          </div>
+        )}
         <div className="min-h-0 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
           {children}
         </div>

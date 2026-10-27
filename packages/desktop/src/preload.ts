@@ -101,7 +101,6 @@ function safeParseModel(encoded: string): unknown {
   }
 }
 
-
 /** Two-element screen position. Mirror of `petWindowPosition` in `UiPrefs`. */
 export interface FloatingPosition {
   x: number;
@@ -190,7 +189,6 @@ const titleBarApi = {
 contextBridge.exposeInMainWorld("titleBar", titleBarApi);
 
 export type TitleBarBridge = typeof titleBarApi;
-
 
 /** Content size the floating window should adopt (pet alone, or pet + bubble). */
 export interface FloatingSize {

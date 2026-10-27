@@ -20,11 +20,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { encode } from "uqr";
-import type {
-  MessagingBindingInfo,
-  QQBindingInfo,
-  QQScanPollResponse,
-} from "@jadelau/server/api";
+import type { MessagingBindingInfo, QQBindingInfo, QQScanPollResponse } from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { apiErrorText } from "../../lib/api-error";
 import { S } from "../../lib/strings";

@@ -20,10 +20,7 @@ import type {
   ChatCompletionCreateParamsStreaming,
 } from "openai/resources/chat/completions";
 import { LLMClient } from "../baseClient";
-import {
-  parseToolCallArguments,
-  UnsupportedParameterError,
-} from "../errors";
+import { parseToolCallArguments, UnsupportedParameterError } from "../errors";
 import {
   EventType,
   FinishReason,
@@ -58,10 +55,7 @@ export class KimiK3Client extends LLMClient {
     super();
     this._model = options.model;
     const key = options.apiKey || process.env.MOONSHOT_API_KEY || undefined;
-    const url =
-      options.baseUrl ||
-      process.env.MOONSHOT_BASE_URL ||
-      "https://api.moonshot.cn/v1";
+    const url = options.baseUrl || process.env.MOONSHOT_BASE_URL || "https://api.moonshot.cn/v1";
     this._client = new OpenAI({
       apiKey: key,
       baseURL: url,
@@ -90,19 +84,14 @@ export class KimiK3Client extends LLMClient {
   /**
    * Convert image URL to base64-encoded data URL.
    */
-  private async _convertImageUrlToBase64(
-    url: string,
-    signal?: AbortSignal,
-  ): Promise<string> {
+  private async _convertImageUrlToBase64(url: string, signal?: AbortSignal): Promise<string> {
     if (url.startsWith("data:")) {
       return url;
     }
 
     const response = await fetch(url, { signal });
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch image: ${response.status} ${response.statusText}`,
-      );
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
     }
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -134,9 +123,7 @@ export class KimiK3Client extends LLMClient {
    * K3 cannot disable reasoning, so NONE degrades to the lowest effort
    * instead of throwing.
    */
-  private _convertThinkingLevelToReasoningEffort(
-    thinkingLevel: ThinkingLevel,
-  ): string {
+  private _convertThinkingLevelToReasoningEffort(thinkingLevel: ThinkingLevel): string {
     const mapping: { [key: string]: string } = {
       [ThinkingLevel.NONE]: "low",
       [ThinkingLevel.LOW]: "low",
@@ -156,10 +143,7 @@ export class KimiK3Client extends LLMClient {
       return "auto";
     } else if (toolChoice === "none") {
       return "none";
-    } else if (
-      toolChoice === "required" &&
-      !this._model.toLowerCase().includes("k2.")
-    ) {
+    } else if (toolChoice === "required" && !this._model.toLowerCase().includes("k2.")) {
       return "required";
     } else {
       // the K2 generation rejects "required"; forcing a specific tool is
@@ -167,8 +151,7 @@ export class KimiK3Client extends LLMClient {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
         parameter: "tool_choice",
-        message:
-          "Kimi does not support this tool_choice ('required' needs Kimi K3).",
+        message: "Kimi does not support this tool_choice ('required' needs Kimi K3).",
       });
     }
   }
@@ -202,11 +185,13 @@ export class KimiK3Client extends LLMClient {
       // it; K3 uses reasoning_effort and cannot
       if (this._model.toLowerCase().includes("k2.")) {
         kimiConfig.extra_body = kimiConfig.extra_body || {};
-        kimiConfig.extra_body.thinking =
-          this._convertThinkingLevelToThinkingConfig(config.thinking_level);
+        kimiConfig.extra_body.thinking = this._convertThinkingLevelToThinkingConfig(
+          config.thinking_level,
+        );
       } else {
-        kimiConfig.reasoning_effort =
-          this._convertThinkingLevelToReasoningEffort(config.thinking_level);
+        kimiConfig.reasoning_effort = this._convertThinkingLevelToReasoningEffort(
+          config.thinking_level,
+        );
       }
     }
 
@@ -229,10 +214,7 @@ export class KimiK3Client extends LLMClient {
       });
     }
 
-    if (
-      config.prompt_caching !== undefined &&
-      config.prompt_caching !== PromptCaching.ENABLE
-    ) {
+    if (config.prompt_caching !== undefined && config.prompt_caching !== PromptCaching.ENABLE) {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
         parameter: "prompt_caching",
@@ -242,10 +224,7 @@ export class KimiK3Client extends LLMClient {
 
     // K3 context caching is automatic; the K2 generation keys its prompt
     // cache on trace_id
-    if (
-      config.trace_id !== undefined &&
-      this._model.toLowerCase().includes("k2.")
-    ) {
+    if (config.trace_id !== undefined && this._model.toLowerCase().includes("k2.")) {
       kimiConfig.prompt_cache_key = config.trace_id;
     }
 
@@ -276,10 +255,7 @@ export class KimiK3Client extends LLMClient {
         if (item.type === "text") {
           contentParts.push({ type: "text", text: item.text });
         } else if (item.type === "image_url") {
-          const base64Image = await this._convertImageUrlToBase64(
-            item.image_url,
-            signal,
-          );
+          const base64Image = await this._convertImageUrlToBase64(item.image_url, signal);
           contentParts.push({
             type: "image_url",
             image_url: { url: base64Image },
@@ -307,10 +283,7 @@ export class KimiK3Client extends LLMClient {
           // the one place every OpenAI-compatible server reads them.
           if (item.images && item.images.length > 0) {
             for (const imageUrl of item.images) {
-              const base64Image = await this._convertImageUrlToBase64(
-                imageUrl,
-                signal,
-              );
+              const base64Image = await this._convertImageUrlToBase64(imageUrl, signal);
               contentParts.push({
                 type: "image_url",
                 image_url: { url: base64Image },
@@ -326,9 +299,7 @@ export class KimiK3Client extends LLMClient {
             content: item.text,
           });
         } else {
-          throw new Error(
-            `Unknown item type: ${(item as { type: string }).type}`,
-          );
+          throw new Error(`Unknown item type: ${(item as { type: string }).type}`);
         }
       }
 
@@ -345,15 +316,9 @@ export class KimiK3Client extends LLMClient {
       if (thinking) {
         // send thinking back through the exact field the upstream produced (recorded
         // in the item fidelity); servers may reject the spelling they did not emit
-        if (
-          thinkingFields.size === 1 &&
-          thinkingFields.has("reasoning_content")
-        ) {
+        if (thinkingFields.size === 1 && thinkingFields.has("reasoning_content")) {
           message.reasoning_content = thinking;
-        } else if (
-          thinkingFields.size === 1 &&
-          thinkingFields.has("reasoning")
-        ) {
+        } else if (thinkingFields.size === 1 && thinkingFields.has("reasoning")) {
           message.reasoning = thinking;
         } else {
           message.reasoning_content = thinking; // vLLM & siliconflow compatibility
@@ -444,10 +409,8 @@ export class KimiK3Client extends LLMClient {
     if (modelOutput.usage) {
       eventType = eventType || "stop";
 
-      const cachedTokens =
-        modelOutput.usage.prompt_tokens_details?.cached_tokens || null;
-      const reasoningTokens =
-        modelOutput.usage.completion_tokens_details?.reasoning_tokens || null;
+      const cachedTokens = modelOutput.usage.prompt_tokens_details?.cached_tokens || null;
+      const reasoningTokens = modelOutput.usage.completion_tokens_details?.reasoning_tokens || null;
 
       const promptTokens =
         cachedTokens !== null
@@ -464,10 +427,7 @@ export class KimiK3Client extends LLMClient {
         thoughts_tokens: reasoningTokens,
         response_tokens: responseTokens,
       };
-      usageMetadata = fixOpenrouterUsageMetadata(
-        usageMetadata,
-        this._client.baseURL,
-      );
+      usageMetadata = fixOpenrouterUsageMetadata(usageMetadata, this._client.baseURL);
     }
 
     return {
@@ -523,10 +483,8 @@ export class KimiK3Client extends LLMClient {
     for await (const chunk of stream) {
       const event = this.transformModelOutputToUniEvent(chunk);
       // the finish reason and usage metadata should be accumulated
-      partialUsage.finish_reason =
-        event.finish_reason || partialUsage.finish_reason;
-      partialUsage.usage_metadata =
-        event.usage_metadata || partialUsage.usage_metadata;
+      partialUsage.finish_reason = event.finish_reason || partialUsage.finish_reason;
+      partialUsage.usage_metadata = event.usage_metadata || partialUsage.usage_metadata;
       if (event.event_type === "delta") {
         for (const item of event.content_items) {
           if (item.type === "partial_tool_call") {
@@ -562,8 +520,7 @@ export class KimiK3Client extends LLMClient {
               partialToolCall.tool_call_id = item.tool_call_id;
             } else {
               // update partial tool call
-              partialToolCall.arguments =
-                (partialToolCall.arguments || "") + item.arguments;
+              partialToolCall.arguments = (partialToolCall.arguments || "") + item.arguments;
             }
           }
         }

@@ -100,6 +100,9 @@ export function chatFontSizeVar(size: ChatFontSize): string {
  * Writes the custom property onto a document element. Takes the element rather than reaching
  * for `document` so tests can pass a stub and assert the exact declaration.
  */
-export function applyChatFontSize(size: ChatFontSize, el: { style: { setProperty(k: string, v: string): void } }): void {
+export function applyChatFontSize(
+  size: ChatFontSize,
+  el: { style: { setProperty(k: string, v: string): void } },
+): void {
   el.style.setProperty("--chat-font-size", chatFontSizeVar(size));
 }

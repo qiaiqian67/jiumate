@@ -167,10 +167,7 @@ export class OpenaiResponsesClient extends LLMClient {
       openaiConfig.service_tier = "priority";
     }
 
-    if (
-      config.prompt_caching !== undefined &&
-      config.prompt_caching !== PromptCaching.ENABLE
-    ) {
+    if (config.prompt_caching !== undefined && config.prompt_caching !== PromptCaching.ENABLE) {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
         parameter: "prompt_caching",
@@ -201,11 +198,7 @@ export class OpenaiResponsesClient extends LLMClient {
         // text collected so far is flushed first to keep the original order: a server that
         // merges a function call into the adjacent assistant message rejects a call whose
         // output does not follow it (DeepSeek answers "No tool output found for tool call")
-        if (
-          item.type !== "text" &&
-          item.type !== "image_url" &&
-          contentItems.length > 0
-        ) {
+        if (item.type !== "text" && item.type !== "image_url" && contentItems.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const entry: any = { role: msg.role, content: contentItems };
           if (lastPhase !== null) {
@@ -220,11 +213,7 @@ export class OpenaiResponsesClient extends LLMClient {
           const phase = item.fidelity?.phase;
           if (msg.role === "assistant" && phase) {
             // split different phases
-            if (
-              lastPhase !== null &&
-              lastPhase !== phase &&
-              contentItems.length > 0
-            ) {
+            if (lastPhase !== null && lastPhase !== phase && contentItems.length > 0) {
               inputList.push({
                 role: msg.role,
                 content: contentItems,
@@ -251,14 +240,10 @@ export class OpenaiResponsesClient extends LLMClient {
           const reasoning: any = { type: "reasoning", summary: [] };
           if (fidelity.channel === "summary") {
             if (item.thinking) {
-              reasoning.summary = [
-                { type: "summary_text", text: item.thinking },
-              ];
+              reasoning.summary = [{ type: "summary_text", text: item.thinking }];
             }
           } else if (item.thinking) {
-            reasoning.content = [
-              { type: "reasoning_text", text: item.thinking },
-            ];
+            reasoning.content = [{ type: "reasoning_text", text: item.thinking }];
           }
 
           for (const key of ["encrypted_content", "signature", "format"]) {
@@ -416,10 +401,8 @@ export class OpenaiResponsesClient extends LLMClient {
       }
       if (response.usage) {
         // some servers drop the detail blocks (e.g. MiniMax on truncation), so default to zero
-        const cachedTokens =
-          response.usage.input_tokens_details?.cached_tokens || 0;
-        const reasoningTokens =
-          response.usage.output_tokens_details?.reasoning_tokens || 0;
+        const cachedTokens = response.usage.input_tokens_details?.cached_tokens || 0;
+        const reasoningTokens = response.usage.output_tokens_details?.reasoning_tokens || 0;
 
         usageMetadata = {
           cached_tokens: cachedTokens,
@@ -470,10 +453,7 @@ export class OpenaiResponsesClient extends LLMClient {
     signal?: AbortSignal;
   }): AsyncGenerator<UniEvent> {
     const openaiConfig = this.transformUniConfigToModelConfig(options.config);
-    const inputList = this.transformUniMessageToModelInput(
-      options.messages,
-      options.signal,
-    );
+    const inputList = this.transformUniMessageToModelInput(options.messages, options.signal);
 
     // Calls still streaming, keyed by the item id their fragments carry (the call id when a
     // server sends none): a gateway may open several before closing any of them.
@@ -482,8 +462,7 @@ export class OpenaiResponsesClient extends LLMClient {
       { name: string; tool_call_id: string; arguments: string }
     >();
     let lastOpened = "";
-    const keyOf = (itemId?: string) =>
-      itemId && openToolCalls.has(itemId) ? itemId : lastOpened;
+    const keyOf = (itemId?: string) => (itemId && openToolCalls.has(itemId) ? itemId : lastOpened);
 
     const params: ResponseCreateParamsStreaming = {
       ...openaiConfig,
@@ -497,8 +476,7 @@ export class OpenaiResponsesClient extends LLMClient {
     for await (const event of stream) {
       const uniEvent = this.transformModelOutputToUniEvent(event);
       const fragments = uniEvent.content_items.filter(
-        (item): item is PartialToolCallContentItem =>
-          item.type === "partial_tool_call",
+        (item): item is PartialToolCallContentItem => item.type === "partial_tool_call",
       );
       if (uniEvent.event_type === "start") {
         for (const item of fragments) {

@@ -484,7 +484,13 @@ export function MembersSection({ projectId, isOwner }: { projectId: string; isOw
  * values are the confirmation); members see the values read-only. Mounted per dialog open
  * (the Modal unmounts its children when closed), so reopening always refetches.
  */
-export function ChatDefaultsSection({ projectId, isOwner }: { projectId: string; isOwner: boolean }) {
+export function ChatDefaultsSection({
+  projectId,
+  isOwner,
+}: {
+  projectId: string;
+  isOwner: boolean;
+}) {
   const { user } = useAuth();
   const { agents } = useProject();
   /** Saved block (null while loading); edit buffers below use "" for "not set". */
@@ -865,7 +871,13 @@ export function RuleEditor({
  * saved); members see the effective state read-only. The list dims AND disables while the
  * master switch is off, but Save stays live so the toggle itself can be saved.
  */
-export function SecurityPolicySection({ projectId, isOwner }: { projectId: string; isOwner: boolean }) {
+export function SecurityPolicySection({
+  projectId,
+  isOwner,
+}: {
+  projectId: string;
+  isOwner: boolean;
+}) {
   const [saved, setSaved] = useState<CommandPolicyDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

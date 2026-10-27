@@ -37,7 +37,7 @@ describe("外框：一整块灰底", () => {
   it("最外层容器铺满灰底", () => {
     // 导航与内容面板共用外层这一种灰色。少了它，两个区域各自填色，中间就多出一道接缝。
     // 外层是列布局：桌面壳的标题栏在最上，其下才是导航与内容（见 desktop-title-bar.tsx）。
-    expect(LAYOUT).toContain('bg-gray-100 dark:bg-gray-900');
+    expect(LAYOUT).toContain("bg-gray-100 dark:bg-gray-900");
     expect(LAYOUT).toMatch(/<div className="flex h-full flex-col bg-gray-100 dark:bg-gray-900">/);
   });
 

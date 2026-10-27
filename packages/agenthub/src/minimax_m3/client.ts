@@ -60,15 +60,12 @@ export class MiniMaxM3Client extends LLMClient {
     }
     this._client = new OpenAI({
       apiKey,
-      baseURL:
-        options.baseUrl || process.env.MINIMAX_BASE_URL || DEFAULT_BASE_URL,
+      baseURL: options.baseUrl || process.env.MINIMAX_BASE_URL || DEFAULT_BASE_URL,
       defaultHeaders: options.defaultHeaders,
     });
   }
 
-  private _convertThinkingLevelToEffort(
-    thinkingLevel: ThinkingLevel,
-  ): MiniMaxReasoningEffort {
+  private _convertThinkingLevelToEffort(thinkingLevel: ThinkingLevel): MiniMaxReasoningEffort {
     const mapping: Record<ThinkingLevel, MiniMaxReasoningEffort> = {
       [ThinkingLevel.NONE]: "none",
       [ThinkingLevel.LOW]: "low",
@@ -88,8 +85,7 @@ export class MiniMaxM3Client extends LLMClient {
     throw new UnsupportedParameterError({
       client: this.constructor.name,
       parameter: "tool_choice",
-      message:
-        "MiniMax Responses API does not support required or named tool selection.",
+      message: "MiniMax Responses API does not support required or named tool selection.",
     });
   }
 
@@ -114,8 +110,7 @@ export class MiniMaxM3Client extends LLMClient {
         throw new UnsupportedParameterError({
           client: this.constructor.name,
           parameter: "temperature",
-          message:
-            "MiniMax Responses API does not support temperatures outside the range 0 to 1.",
+          message: "MiniMax Responses API does not support temperatures outside the range 0 to 1.",
         });
       }
       minimaxConfig.temperature = config.temperature;
@@ -142,16 +137,14 @@ export class MiniMaxM3Client extends LLMClient {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
         parameter: "prompt_caching",
-        message:
-          "MiniMax Responses API does not support disabling its automatic prompt cache.",
+        message: "MiniMax Responses API does not support disabling its automatic prompt cache.",
       });
     }
     if (config.prompt_caching === PromptCaching.ENHANCE) {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
         parameter: "prompt_caching",
-        message:
-          "MiniMax Responses API does not support enhancing its automatic prompt cache.",
+        message: "MiniMax Responses API does not support enhancing its automatic prompt cache.",
       });
     }
 
@@ -173,11 +166,7 @@ export class MiniMaxM3Client extends LLMClient {
       for (const item of message.content_items) {
         // anything that is not message content becomes an input item of its own, so the
         // text collected so far is flushed first to keep the order the model produced
-        if (
-          item.type !== "text" &&
-          item.type !== "image_url" &&
-          contentItems.length > 0
-        ) {
+        if (item.type !== "text" && item.type !== "image_url" && contentItems.length > 0) {
           inputList.push({ role: message.role, content: contentItems });
           contentItems = [];
         }
@@ -194,9 +183,7 @@ export class MiniMaxM3Client extends LLMClient {
           // is recorded for it.
           inputList.push({
             type: "reasoning",
-            content: item.thinking
-              ? [{ type: "reasoning_text", text: item.thinking }]
-              : [],
+            content: item.thinking ? [{ type: "reasoning_text", text: item.thinking }] : [],
           });
         } else if (item.type === "tool_call") {
           inputList.push({
@@ -295,10 +282,8 @@ export class MiniMaxM3Client extends LLMClient {
 
       if (response.usage) {
         // MiniMax drops the detail blocks on truncated responses, so default them to zero.
-        const cachedTokens =
-          response.usage.input_tokens_details?.cached_tokens ?? 0;
-        const reasoningTokens =
-          response.usage.output_tokens_details?.reasoning_tokens ?? 0;
+        const cachedTokens = response.usage.input_tokens_details?.cached_tokens ?? 0;
+        const reasoningTokens = response.usage.output_tokens_details?.reasoning_tokens ?? 0;
         usageMetadata = {
           cached_tokens: cachedTokens,
           prompt_tokens: response.usage.input_tokens - cachedTokens,
@@ -350,8 +335,7 @@ export class MiniMaxM3Client extends LLMClient {
       { name: string; tool_call_id: string; arguments: string }
     >();
     let lastOpened = "";
-    const keyOf = (itemId?: string) =>
-      itemId && openToolCalls.has(itemId) ? itemId : lastOpened;
+    const keyOf = (itemId?: string) => (itemId && openToolCalls.has(itemId) ? itemId : lastOpened);
 
     // MiniMax accepts output_text assistant inputs and function tools without OpenAI's required
     // strict field, so narrow the compatibility cast to this boundary.
@@ -367,8 +351,7 @@ export class MiniMaxM3Client extends LLMClient {
     for await (const event of stream) {
       const uniEvent = this.transformModelOutputToUniEvent(event);
       const fragments = uniEvent.content_items.filter(
-        (item): item is PartialToolCallContentItem =>
-          item.type === "partial_tool_call",
+        (item): item is PartialToolCallContentItem => item.type === "partial_tool_call",
       );
       if (uniEvent.event_type === "start") {
         for (const item of fragments) {

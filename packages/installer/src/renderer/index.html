@@ -43,8 +43,9 @@
         background: transparent;
       }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
-          "PingFang SC", "Hiragino Sans GB", sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC",
+          "Hiragino Sans GB", sans-serif;
         color: var(--ink);
         -webkit-font-smoothing: antialiased;
         background: var(--surface);
@@ -411,9 +412,12 @@
       }
       select {
         appearance: none;
-        background-image: linear-gradient(45deg, transparent 50%, #b5b5b5 50%),
+        background-image:
+          linear-gradient(45deg, transparent 50%, #b5b5b5 50%),
           linear-gradient(135deg, #b5b5b5 50%, transparent 50%);
-        background-position: calc(100% - 19px) 20px, calc(100% - 14px) 20px;
+        background-position:
+          calc(100% - 19px) 20px,
+          calc(100% - 14px) 20px;
         background-size: 5px 5px;
         background-repeat: no-repeat;
         cursor: pointer;
@@ -661,10 +665,26 @@
       <img data-icon alt="" class="mark-img" />
       <div class="name" id="titleName">JiuMate</div>
       <button class="wbtn" id="btnMin" title="最小化">
-        <svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 12 12">
+          <path
+            d="M2 6h8"
+            stroke="currentColor"
+            stroke-width="1.3"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </svg>
       </button>
       <button class="wbtn close" id="btnClose" title="关闭">
-        <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 12 12">
+          <path
+            d="M3 3l6 6M9 3l-6 6"
+            stroke="currentColor"
+            stroke-width="1.3"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </svg>
       </button>
     </div>
 
@@ -707,11 +727,13 @@
         <div class="group">
           <div class="lbl" data-i18n="options">安装选项</div>
           <div class="check on" id="ckDesktop">
-            <div class="box">✓</div><span data-i18n="desktop">创建桌面快捷方式</span>
+            <div class="box">✓</div>
+            <span data-i18n="desktop">创建桌面快捷方式</span>
           </div>
           <div style="height: 14px"></div>
           <div class="check on" id="ckMenu">
-            <div class="box">✓</div><span data-i18n="startMenu">添加到开始菜单</span>
+            <div class="box">✓</div>
+            <span data-i18n="startMenu">添加到开始菜单</span>
           </div>
         </div>
       </div>
@@ -737,7 +759,9 @@
       <div class="steps" id="steps4"></div>
       <div class="scroll">
         <h1 data-i18n="modelTitle">连接模型</h1>
-        <div class="sub" data-i18n="modelSub">选择服务商并填写 API 密钥，也可以进入应用后配置。</div>
+        <div class="sub" data-i18n="modelSub">
+          选择服务商并填写 API 密钥，也可以进入应用后配置。
+        </div>
         <div class="row">
           <label class="f" data-i18n="provider">选择模型提供商</label>
           <select id="provider"></select>
@@ -763,7 +787,9 @@
             <input type="text" id="proxy" spellcheck="false" placeholder="http://127.0.0.1:7890" />
           </div>
         </div>
-        <button class="btn ghost" id="testConn" style="margin-top: 22px" data-i18n="test">测试连接</button>
+        <button class="btn ghost" id="testConn" style="margin-top: 22px" data-i18n="test">
+          测试连接
+        </button>
         <div id="testMsg"></div>
       </div>
       <div class="foot">
@@ -782,9 +808,11 @@
       </div>
       <div class="foot">
         <div class="check on" id="ckLaunch">
-            <div class="box">✓</div><span id="launchLabel">安装后启动 JiuMate</span>
-          </div>
-          <button class="btn" id="finish" data-i18n="done">完成</button>
+          <div class="box">✓</div>
+          <span id="launchLabel">安装后启动 JiuMate</span>
+        </div>
+        <button class="btn" id="finish" data-i18n="done">完成</button>
+      </div>
     </section>
 
     <!-- 6. uninstall -->
@@ -796,12 +824,20 @@
     <section class="page" id="p-uninstall">
       <div class="scroll">
         <h1 data-i18n="uninstallTitle">卸载 JiuMate</h1>
-        <div class="sub" data-i18n="uninstallSub">将移除应用文件与快捷方式。你的项目数据不会被删除。</div>
+        <div class="sub" data-i18n="uninstallSub">
+          将移除应用文件与快捷方式。你的项目数据不会被删除。
+        </div>
         <div class="group">
           <div class="lbl" data-i18n="uninstallItems">将要移除</div>
-          <div class="check on locked"><div class="box">✓</div><span data-i18n="uninstallApp">应用文件</span></div>
+          <div class="check on locked">
+            <div class="box">✓</div>
+            <span data-i18n="uninstallApp">应用文件</span>
+          </div>
           <div style="height: 10px"></div>
-          <div class="check on locked"><div class="box">✓</div><span data-i18n="uninstallLinks">快捷方式</span></div>
+          <div class="check on locked">
+            <div class="box">✓</div>
+            <span data-i18n="uninstallLinks">快捷方式</span>
+          </div>
           <div style="height: 10px"></div>
           <!--
             The one real choice on this page, and it is OFF by default.
@@ -812,12 +848,20 @@
             reinstall find the previous work still there, and that is the common case. Ticking this
             is how someone who wants a clean slate says so.
           -->
-          <div class="check danger" id="ckData"><div class="box">✓</div><span data-i18n="uninstallData">历史数据</span></div>
-          <div class="note" data-i18n="uninstallDataNote">默认保留。重新安装后会继续使用这些会话和项目。</div>
+          <div class="check danger" id="ckData">
+            <div class="box">✓</div>
+            <span data-i18n="uninstallData">历史数据</span>
+          </div>
+          <div class="note" data-i18n="uninstallDataNote">
+            默认保留。重新安装后会继续使用这些会话和项目。
+          </div>
         </div>
         <div class="sizes">
           <span><span data-i18n="reclaim">可释放</span>: <b id="uninstallSize">—</b></span>
-          <span id="uninstallDataSizeWrap" class="hidden"><span data-i18n="uninstallDataSize">用户数据</span>: <b id="uninstallDataSize">—</b></span>
+          <span id="uninstallDataSizeWrap" class="hidden"
+            ><span data-i18n="uninstallDataSize">用户数据</span>:
+            <b id="uninstallDataSize">—</b></span
+          >
         </div>
       </div>
       <div class="foot">
@@ -833,7 +877,9 @@
         <h1 data-i18n="uninstalling">正在卸载</h1>
         <div class="sub" id="unprogSub" data-i18n="unprogSub">请稍候，正在移除 JiuMate。</div>
         <div class="bar"><i id="unbarFill"></i></div>
-        <div class="bar2"><span id="unprogStage">正在移除文件</span><span id="unprogPct">0%</span></div>
+        <div class="bar2">
+          <span id="unprogStage">正在移除文件</span><span id="unprogPct">0%</span>
+        </div>
       </div>
     </section>
 
@@ -852,7 +898,9 @@
       <div class="prog">
         <img data-icon alt="" class="prog-icon" />
         <h1 data-i18n="uninstallDone">卸载完成</h1>
-        <div class="sub" id="undoneSub" data-i18n="uninstallDoneSub">JiuMate 已从这台电脑上移除。</div>
+        <div class="sub" id="undoneSub" data-i18n="uninstallDoneSub">
+          JiuMate 已从这台电脑上移除。
+        </div>
       </div>
       <div class="foot">
         <button class="link" id="undoneClose" data-i18n="close">关闭</button>
@@ -863,4 +911,3 @@
     <script src="renderer.js"></script>
   </body>
 </html>
-

@@ -207,8 +207,8 @@ describe("disclosure anchoring", () => {
     expect(
       orphansIn('<div><InfoPopover tone="warn">d</InfoPopover><Button>Delete</Button></div>'),
     ).toEqual([]);
-    expect(orphansIn('<div><InfoPopover>d</InfoPopover><Button>Delete</Button></div>')).toHaveLength(
-      1,
-    );
+    expect(
+      orphansIn("<div><InfoPopover>d</InfoPopover><Button>Delete</Button></div>"),
+    ).toHaveLength(1);
   });
 });

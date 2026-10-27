@@ -61,7 +61,10 @@ export function DesktopTitleBar() {
     const off = bridge.onMaximizeChanged((next) => setMaximized(next));
     // Read once on mount: the window may already be maximized before this subscribes (a user who
     // maximized it, then reloaded the page), and the event alone would not have fired yet.
-    void bridge.isMaximized().then(setMaximized).catch(() => undefined);
+    void bridge
+      .isMaximized()
+      .then(setMaximized)
+      .catch(() => undefined);
     return off;
   }, []);
 

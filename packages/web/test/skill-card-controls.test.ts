@@ -7,11 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { MachineSkill } from "../src/api/endpoints";
-import {
-  hasMachineSwitch,
-  hasUpgrade,
-  isMachineSkillOn,
-} from "../src/features/plugins/skills-tab";
+import { hasMachineSwitch, hasUpgrade, isMachineSkillOn } from "../src/features/plugins/skills-tab";
 
 const skill = (source?: MachineSkill["source"]): MachineSkill => ({
   name: "x",
@@ -62,8 +58,8 @@ describe("skill card machine controls", () => {
     // 必须与服务器同一条规则（不在关闭名单里即为开启），否则卡片会和运行时说的相反。
     expect(isMachineSkillOn(store, "from-url")).toBe(true);
     expect(isMachineSkillOn(new Map(), "anything")).toBe(true);
-    expect(isMachineSkillOn(new Map([["x", { ...skill(), enabled: false } as MachineSkill]]), "x")).toBe(
-      false,
-    );
+    expect(
+      isMachineSkillOn(new Map([["x", { ...skill(), enabled: false } as MachineSkill]]), "x"),
+    ).toBe(false);
   });
 });

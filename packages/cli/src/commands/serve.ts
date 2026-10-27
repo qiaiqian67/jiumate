@@ -28,11 +28,7 @@
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import path from "node:path";
-import {
-  DEFAULT_SERVER_PORT,
-  SERVER_RESTART_EXIT_CODE,
-  resolveRoot,
-} from "@jadelau/core";
+import { DEFAULT_SERVER_PORT, SERVER_RESTART_EXIT_CODE, resolveRoot } from "@jadelau/core";
 import { liveServerLock } from "@jadelau/server/lock";
 import type { Command } from "commander";
 import type { Messages, WebProbeFailureKind } from "../i18n.js";

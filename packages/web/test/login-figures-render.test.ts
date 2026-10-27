@@ -355,8 +355,12 @@ describe("登录页小人的实际渲染", () => {
       if (eye === null || eye === undefined) continue;
       expect(now.x, `第 ${i} 个人 瞳孔没越出眼白（左）`).toBeGreaterThanOrEqual(eye.x - 0.5);
       expect(now.y, `第 ${i} 个人 瞳孔没越出眼白（上）`).toBeGreaterThanOrEqual(eye.y - 0.5);
-      expect(now.x + now.w, `第 ${i} 个人 瞳孔没越出眼白（右）`).toBeLessThanOrEqual(eye.x + eye.w + 0.5);
-      expect(now.y + now.h, `第 ${i} 个人 瞳孔没越出眼白（下）`).toBeLessThanOrEqual(eye.y + eye.h + 0.5);
+      expect(now.x + now.w, `第 ${i} 个人 瞳孔没越出眼白（右）`).toBeLessThanOrEqual(
+        eye.x + eye.w + 0.5,
+      );
+      expect(now.y + now.h, `第 ${i} 个人 瞳孔没越出眼白（下）`).toBeLessThanOrEqual(
+        eye.y + eye.h + 0.5,
+      );
     }
   });
 

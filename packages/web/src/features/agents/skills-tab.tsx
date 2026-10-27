@@ -20,11 +20,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router";
-import type {
-  PluginGroupItem,
-  PluginItem,
-  SkillMetadataItem,
-} from "@jadelau/server/api";
+import type { PluginGroupItem, PluginItem, SkillMetadataItem } from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { ApiError } from "../../api/client";
 import { S } from "../../lib/strings";

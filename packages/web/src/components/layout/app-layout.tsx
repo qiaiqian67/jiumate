@@ -265,129 +265,127 @@ export function AppLayout() {
         {/* A row inside the frame: the title bar above is the frame's own top edge, so below it
             the sidebar and the content panel sit side by side on the same gray. */}
         <div className="flex min-h-0 flex-1">
-        {/* Desktop: single-column sidebar (collapsible to a narrow rail). No right border and
+          {/* Desktop: single-column sidebar (collapsible to a narrow rail). No right border and
             no fill of its own: the rail and the frame around the content pane share ONE
             gray (the outer wrapper above), so the pane's own edge is what separates them. */}
-        <aside
-          className={`hidden shrink-0 md:block ${
-            collapsed ? "w-12" : "w-64 lg:w-72"
-          }`}
-        >
-          {collapsed ? (
-            <CollapsedRail onExpand={toggleCollapsed} />
-          ) : (
-            <Sidebar onCollapse={toggleCollapsed} />
-          )}
-        </aside>
+          <aside className={`hidden shrink-0 md:block ${collapsed ? "w-12" : "w-64 lg:w-72"}`}>
+            {collapsed ? (
+              <CollapsedRail onExpand={toggleCollapsed} />
+            ) : (
+              <Sidebar onCollapse={toggleCollapsed} />
+            )}
+          </aside>
 
-        {/* Content column. Inset on all four sides at md+ (the rail sits flush to the left edge,
+          {/* Content column. Inset on all four sides at md+ (the rail sits flush to the left edge,
             sharing the frame's gray with its own background), so the main area reads as a
             white panel floating ON the gray frame. All four corners are rounded, not just the
             top-left: with the panel inset on every side, a square corner anywhere would sit
             against gray with nothing to explain it, and the one rounded corner read as an
             oversight rather than as a decision. The inset is md+ only: a phone has no room for
             a gutter, and its top bar already paints the same seam. */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white md:mt-2 md:mr-2 md:mb-2 md:rounded-lg dark:bg-gray-950">
-          {/* Mobile: top thin bar (hamburger + brand) */}
-          <header className="flex h-12 shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-2 md:hidden dark:border-gray-800 dark:bg-gray-950">
-            {/* The outermost menu on a phone: it carries a dot for EITHER trail, so its wording
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white md:mt-2 md:mr-2 md:mb-2 md:rounded-lg dark:bg-gray-950">
+            {/* Mobile: top thin bar (hamburger + brand) */}
+            <header className="flex h-12 shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-2 md:hidden dark:border-gray-800 dark:bg-gray-950">
+              {/* The outermost menu on a phone: it carries a dot for EITHER trail, so its wording
               is the combined one — naming one of two updates would point at the wrong trail.
               Both trails continue inside the drawer's sidebar (the Agents entry, the user
               row's update entry). */}
-            <button
-              type="button"
-              aria-label={
-                badges.note !== null ? `${S.chat.sessionList} · ${badges.note}` : S.chat.sessionList
-              }
-              {...(badges.note !== null ? { title: badges.note } : {})}
-              onClick={() => setDrawerOpen(true)}
-              className="relative flex h-9 w-9 items-center justify-center rounded-md text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                aria-hidden
+              <button
+                type="button"
+                aria-label={
+                  badges.note !== null
+                    ? `${S.chat.sessionList} · ${badges.note}`
+                    : S.chat.sessionList
+                }
+                {...(badges.note !== null ? { title: badges.note } : {})}
+                onClick={() => setDrawerOpen(true)}
+                className="relative flex h-9 w-9 items-center justify-center rounded-md text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
               >
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              {badges.any && <UpdateDot />}
-            </button>
-            <span className="text-sm font-semibold">{S.appName}</span>
-          </header>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                {badges.any && <UpdateDot />}
+              </button>
+              <span className="text-sm font-semibold">{S.appName}</span>
+            </header>
 
-          {/* Initial-password notice banner (seed/admin-set password): disappears once passwordIsInitial clears after a successful change.
+            {/* Initial-password notice banner (seed/admin-set password): disappears once passwordIsInitial clears after a successful change.
             Hidden in desktop mode — the seed password there is random and never shown, so "change it" is meaningless nagging.
             Permanently dismissible via the X on the right (per-user ui_prefs); only rendered once
             hydrated prefs confirm it was never dismissed, so it does not flash-then-vanish on load. */}
-          {passwordBannerRelevant && passwordBannerDismissed === false && (
-            <div
-              className={`relative flex shrink-0 items-center justify-center gap-3 border-b px-8 py-1.5 text-xs ${toneStrip.attention}`}
-            >
-              <span>{S.account.initialPasswordBanner}</span>
-              <button
-                type="button"
-                className="shrink-0 font-medium underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100"
-                onClick={() => setChangePasswordOpen(true)}
+            {passwordBannerRelevant && passwordBannerDismissed === false && (
+              <div
+                className={`relative flex shrink-0 items-center justify-center gap-3 border-b px-8 py-1.5 text-xs ${toneStrip.attention}`}
               >
-                {S.account.changeNow}
-              </button>
-              {/* Amber-toned twin of the shared CloseButton (same glyph + aria-label) — its hardcoded
+                <span>{S.account.initialPasswordBanner}</span>
+                <button
+                  type="button"
+                  className="shrink-0 font-medium underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100"
+                  onClick={() => setChangePasswordOpen(true)}
+                >
+                  {S.account.changeNow}
+                </button>
+                {/* Amber-toned twin of the shared CloseButton (same glyph + aria-label) — its hardcoded
                 gray colors would clash here. Flat: hover feedback is icon-color-only (no background
                 fill), same hover shades as the change-now link. Absolutely positioned at the right
                 edge: near-full-height hit area without growing the banner and without transform (see
                 the stacking-context note in the file header); the banner's symmetric px-8 keeps the
                 centered text clear. */}
-              <button
-                type="button"
-                aria-label={S.common.close}
-                title={S.common.close}
-                onClick={dismissPasswordBanner}
-                className="absolute inset-y-0.5 right-1.5 flex items-center rounded-md px-1 text-amber-500 transition-colors duration-150 hover:text-amber-950 dark:text-amber-400/70 dark:hover:text-amber-100"
-              >
-                <CloseIcon size={12} />
-              </button>
-            </div>
-          )}
+                <button
+                  type="button"
+                  aria-label={S.common.close}
+                  title={S.common.close}
+                  onClick={dismissPasswordBanner}
+                  className="absolute inset-y-0.5 right-1.5 flex items-center rounded-md px-1 text-amber-500 transition-colors duration-150 hover:text-amber-950 dark:text-amber-400/70 dark:hover:text-amber-100"
+                >
+                  <CloseIcon size={12} />
+                </button>
+              </div>
+            )}
 
-          <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
-            <Outlet />
-          </main>
-          {/* The docks themselves render inside the chat page (features/dock); the xterm
+            <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
+              <Outlet />
+            </main>
+            {/* The docks themselves render inside the chat page (features/dock); the xterm
             views live in this pool and are adopted into dock tab bodies by DOM handoff,
             so navigating between pages never reconnects a terminal. */}
-          <TerminalDockRuntime />
-          {/* The browser's pages, for the same reason and one more: a <webview> reloads its
+            <TerminalDockRuntime />
+            {/* The browser's pages, for the same reason and one more: a <webview> reloads its
             page whenever it is moved in the DOM, and the dock's bodies move constantly. So
             the guests live in this one layer, in creation order, and the dock panel is
             only the slot they are shown in. */}
-          <BrowserRuntime />
-        </div>
+            <BrowserRuntime />
+          </div>
 
-        {/* The software-update modal, opened from the sidebar's update row and the draft
+          {/* The software-update modal, opened from the sidebar's update row and the draft
           page's version badge alike; mounted here so it outlives both. */}
-        <UpdateModal />
-        <ChangePasswordDialog
-          open={changePasswordOpen}
-          onClose={() => setChangePasswordOpen(false)}
-        />
+          <UpdateModal />
+          <ChangePasswordDialog
+            open={changePasswordOpen}
+            onClose={() => setChangePasswordOpen(false)}
+          />
 
-        {/* Mobile: sidebar drawer. No `title` — the column carries its own top row (app name + close
+          {/* Mobile: sidebar drawer. No `title` — the column carries its own top row (app name + close
             button), and a header here as well put the name twice on one screen. The column is given
             `onClose` so its own row offers the way out; Escape and the scrim still close it
             regardless (see Drawer). */}
-        <Drawer open={drawerOpen} side="left" onClose={() => setDrawerOpen(false)}>
-          <div className="h-full bg-gray-50 dark:bg-gray-900">
-            <Sidebar
-              onNavigate={() => setDrawerOpen(false)}
-              onClose={() => setDrawerOpen(false)}
-            />
-          </div>
-        </Drawer>
+          <Drawer open={drawerOpen} side="left" onClose={() => setDrawerOpen(false)}>
+            <div className="h-full bg-gray-50 dark:bg-gray-900">
+              <Sidebar
+                onNavigate={() => setDrawerOpen(false)}
+                onClose={() => setDrawerOpen(false)}
+              />
+            </div>
+          </Drawer>
         </div>
       </div>
     </PetProvider>

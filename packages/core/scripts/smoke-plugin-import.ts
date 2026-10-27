@@ -81,7 +81,10 @@ function zipOfPlugin(name: string): Buffer {
 
 /** What the /local route does, minus the route. */
 async function importFromLocal(sourceDir: string, name: string): Promise<void> {
-  await writePluginArchive(walkFiles(sourceDir), path.join(localPluginsDir(root), localPluginId(name)));
+  await writePluginArchive(
+    walkFiles(sourceDir),
+    path.join(localPluginsDir(root), localPluginId(name)),
+  );
 }
 
 /** What the /archive route does: unpack, strip the wrapper, write. */

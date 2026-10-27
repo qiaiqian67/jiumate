@@ -34,6 +34,14 @@ import { pathToFileURL } from "node:url";
  * Bare `BSD` is the interesting entry. It is ambiguous between the 2-, 3- and 4-clause variants,
  * and the ambiguity is entirely inside the permissive family — every reading is a license this
  * project ships. The map cannot resolve which one a given package meant, and does not need to.
+ *
+ * `LicenseRef-GUST-Font-License` is the other one worth spelling out. It is not an SPDX
+ * identifier at all: it is a custom reference for the GUST Font License, which the font
+ * TeX Gyre Adventor ships under. Its operative terms are the LaTeX Project Public License
+ * 1.3c — or, at the reader's option, any later version — and LPPL is a permissive, source
+ * -disclosure license whose obligations attach to the font file rather than to the work that
+ * embeds it. A package that bundles it under Apache-2.0 for its own code is bundling
+ * permissive licenses on both sides.
  */
 const LEGACY_ALIASES = new Map([
   ["mit/x11", "mit"],
@@ -49,6 +57,7 @@ const LEGACY_ALIASES = new Map([
   ["apache license 2.0", "apache-2.0"],
   ["apache license, version 2.0", "apache-2.0"],
   ["isc license", "isc"],
+  ["licenseref-gust-font-license", "lppl-1.3c"],
 ]);
 
 /**
@@ -58,6 +67,11 @@ const LEGACY_ALIASES = new Map([
  * MPL-2.0 is here despite being copyleft: its obligations attach per file, so bundling an
  * unmodified dependency is fine. Modifying one of its files is not, which is a rule for a
  * reviewer rather than something this script can detect.
+ *
+ * OFL-1.1 and LPPL-1.3c are here for the font packages: both are permissive licenses whose
+ * obligations attach to the font file itself (OFL's are a naming and reserved-name clause;
+ * LPPL's are a source-disclosure clause), not to the work that embeds the font. Bundling
+ * an unmodified font under either is fine.
  */
 const ALLOWED = new Set([
   "0bsd",
@@ -69,9 +83,11 @@ const ALLOWED = new Set([
   "bsd-4-clause",
   "cc0-1.0",
   "isc",
+  "lppl-1.3c",
   "mit",
   "mit-0",
   "mpl-2.0",
+  "ofl-1.1",
   "openssl",
   "python-2.0",
   "unlicense",

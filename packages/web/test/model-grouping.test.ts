@@ -12,11 +12,7 @@
  * configured or on showAll.
  */
 import { describe, expect, it } from "vitest";
-import {
-  MODEL_PROVIDERS,
-  catalogEntryFor,
-  effectivePricing,
-} from "@jadelau/core/model-catalog";
+import { MODEL_PROVIDERS, catalogEntryFor, effectivePricing } from "@jadelau/core/model-catalog";
 import {
   discountedPrice,
   groupModelRows,

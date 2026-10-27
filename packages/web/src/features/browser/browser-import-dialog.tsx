@@ -11,10 +11,7 @@
  * page, the ticket system.
  */
 import { useEffect, useState } from "react";
-import type {
-  BrowserImportResult,
-  BrowserImportSource,
-} from "@jadelau/core/interfaces";
+import type { BrowserImportResult, BrowserImportSource } from "@jadelau/core/interfaces";
 import { Modal } from "../../components/ui/modal";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";

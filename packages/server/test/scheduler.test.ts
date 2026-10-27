@@ -10,12 +10,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  agentsDir,
-  projectConfigPath,
-  saveProjectConfig,
-  scheduleDir,
-} from "@jadelau/core";
+import { agentsDir, projectConfigPath, saveProjectConfig, scheduleDir } from "@jadelau/core";
 import { openDatabase } from "../src/db/database.js";
 import { ProjectsRepo } from "../src/db/repos/projects.js";
 import { SchedulesRepo } from "../src/db/repos/schedules.js";

@@ -41,9 +41,8 @@ describe("the agent api on the preview host", () => {
       (await owner.post(`/api/projects/${PROJECT_ID}/agents`, { agentId: AGENT_ID })).status,
     ).toBe(201);
     expect(
-      (
-        await owner.put(`/api/projects/${PROJECT_ID}/agents/${AGENT_ID}/api`, { enabled: true })
-      ).status,
+      (await owner.put(`/api/projects/${PROJECT_ID}/agents/${AGENT_ID}/api`, { enabled: true }))
+        .status,
     ).toBe(200);
     const minted = (await (
       await owner.post(`/api/projects/${PROJECT_ID}/agents/${AGENT_ID}/api/keys`, { name: "k" })

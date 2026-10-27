@@ -38,9 +38,7 @@ export class Tracer {
    * @param cacheDir - Directory to store conversation history files
    */
   constructor(cacheDir?: string) {
-    this.cacheDir = path.resolve(
-      cacheDir || process.env.AGENTHUB_CACHE_DIR || "cache",
-    );
+    this.cacheDir = path.resolve(cacheDir || process.env.AGENTHUB_CACHE_DIR || "cache");
     this._ensureDirectoryExists(this.cacheDir);
   }
 
@@ -199,10 +197,7 @@ export class Tracer {
    * @param item - inline_data content item
    * @returns Data URL string
    */
-  private _inlineDataUrl(item: {
-    mime_type?: string;
-    data?: Buffer | string;
-  }): string {
+  private _inlineDataUrl(item: { mime_type?: string; data?: Buffer | string }): string {
     const mimeType = item.mime_type || "application/octet-stream";
     let rawBytes = this._decodeInlineData(item);
     let normalizedMimeType = mimeType;
@@ -249,12 +244,7 @@ export class Tracer {
    * @param fileId - File identifier without extension (e.g., "agent1/00001")
    * @param config - The UniConfig used for this conversation
    */
-  saveHistory(
-    model: string,
-    history: UniMessage[],
-    fileId: string,
-    config: UniConfig,
-  ): void {
+  saveHistory(model: string, history: UniMessage[], fileId: string, config: UniConfig): void {
     const filePathBase = path.join(this.cacheDir, fileId);
     const dirPath = path.dirname(filePathBase);
     this._ensureDirectoryExists(dirPath);
@@ -353,10 +343,8 @@ export class Tracer {
           lines.push(`  Response Tokens: ${metadata.response_tokens}`);
         }
 
-        const inputTokens =
-          (metadata.cached_tokens || 0) + (metadata.prompt_tokens || 0);
-        const outputTokens =
-          (metadata.thoughts_tokens || 0) + (metadata.response_tokens || 0);
+        const inputTokens = (metadata.cached_tokens || 0) + (metadata.prompt_tokens || 0);
+        const outputTokens = (metadata.thoughts_tokens || 0) + (metadata.response_tokens || 0);
         const totalTokens = inputTokens + outputTokens;
         lines.push(`  Total Tokens: ${totalTokens}`);
       }
@@ -570,9 +558,7 @@ export class Tracer {
                   return {
                     key,
                     value:
-                      typeof value === "object"
-                        ? JSON.stringify(value, null, 2)
-                        : String(value),
+                      typeof value === "object" ? JSON.stringify(value, null, 2) : String(value),
                   };
                 }
               });
@@ -664,21 +650,13 @@ export class Tracer {
                   if (msg.usage_metadata) {
                     const parts = [];
                     if (msg.usage_metadata.cached_tokens)
-                      parts.push(
-                        `Cached: ${msg.usage_metadata.cached_tokens} tokens`,
-                      );
+                      parts.push(`Cached: ${msg.usage_metadata.cached_tokens} tokens`);
                     if (msg.usage_metadata.prompt_tokens)
-                      parts.push(
-                        `Prompt: ${msg.usage_metadata.prompt_tokens} tokens`,
-                      );
+                      parts.push(`Prompt: ${msg.usage_metadata.prompt_tokens} tokens`);
                     if (msg.usage_metadata.thoughts_tokens)
-                      parts.push(
-                        `Thoughts: ${msg.usage_metadata.thoughts_tokens} tokens`,
-                      );
+                      parts.push(`Thoughts: ${msg.usage_metadata.thoughts_tokens} tokens`);
                     if (msg.usage_metadata.response_tokens)
-                      parts.push(
-                        `Response: ${msg.usage_metadata.response_tokens} tokens`,
-                      );
+                      parts.push(`Response: ${msg.usage_metadata.response_tokens} tokens`);
 
                     // Calculate and show total tokens
                     const inputTokens =
@@ -698,8 +676,7 @@ export class Tracer {
                   metadataHtml += "</div>";
                 }
 
-                const roleClass =
-                  msg.role === "user" ? "text-blue-600" : "text-green-600";
+                const roleClass = msg.role === "user" ? "text-blue-600" : "text-green-600";
                 const roundNum = Math.floor(idx / 2) + 1;
                 const timestampHtml = msg.created_at
                   ? `<span class="text-xs text-gray-400">${this._formatTimestamp(msg.created_at)}</span>`
@@ -771,10 +748,7 @@ export class Tracer {
           .filter((entry) => entry.name !== ".DS_Store");
         const entryStats = new Map<string, fs.Stats>();
         for (const entry of entries) {
-          entryStats.set(
-            entry.name,
-            fs.statSync(path.join(fullPath, entry.name)),
-          );
+          entryStats.set(entry.name, fs.statSync(path.join(fullPath, entry.name)));
         }
         entries.sort((a: fs.Dirent, b: fs.Dirent) => {
           const aIsDir = a.isDirectory();
@@ -807,10 +781,7 @@ export class Tracer {
           return {
             name: entry.name,
             is_dir: isDir,
-            url: this._prefixUrl(
-              basePath,
-              "/" + relativePath.replace(/\\/g, "/"),
-            ),
+            url: this._prefixUrl(basePath, "/" + relativePath.replace(/\\/g, "/")),
             size,
             mtime,
           };
@@ -872,13 +843,7 @@ export class Tracer {
               .join("")
           : '<div class="p-8 text-center text-gray-500 italic">No files or directories found.</div>';
 
-        const html = DIRECTORY_TEMPLATE(
-          breadcrumb,
-          itemsHtml,
-          sortBy,
-          sortNameUrl,
-          sortMtimeUrl,
-        );
+        const html = DIRECTORY_TEMPLATE(breadcrumb, itemsHtml, sortBy, sortNameUrl, sortMtimeUrl);
 
         return res.send(html);
       } catch (error) {
@@ -939,10 +904,7 @@ export class Tracer {
    * @param history - Full message history array
    * @returns HTML string for the sidebar
    */
-  private _buildSidebarHtml(
-    totalRounds: number,
-    history: UniMessage[],
-  ): string {
+  private _buildSidebarHtml(totalRounds: number, history: UniMessage[]): string {
     let html = `<h3 class="font-semibold text-sm text-gray-900 mb-3">Rounds (${totalRounds})</h3>`;
 
     for (let roundIdx = 0; roundIdx < totalRounds; roundIdx++) {
@@ -954,9 +916,7 @@ export class Tracer {
         const currAssistant = history[assistantIdx];
         const prevAssistant = history[(roundIdx - 1) * 2 + 1];
         if (currAssistant?.created_at && prevAssistant?.created_at) {
-          const diffMs = Math.abs(
-            currAssistant.created_at - prevAssistant.created_at,
-          );
+          const diffMs = Math.abs(currAssistant.created_at - prevAssistant.created_at);
           tookHtml = `<span class="text-xs text-gray-400">(${diffMs} ms)</span>`;
         }
       }

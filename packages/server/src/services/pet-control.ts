@@ -14,17 +14,8 @@
  * that are already available, show or hide the window. Import and delete write to disk and
  * stay with the user in Settings.
  */
-import {
-  BUILTIN_PETS,
-  DEFAULT_BUILTIN_PET_ID,
-  slugifyPetId,
-  type PetPackage,
-} from "@jadelau/pets";
-import type {
-  PetControlEntry,
-  PetControlPort,
-  PetControlSnapshot,
-} from "@jadelau/core";
+import { BUILTIN_PETS, DEFAULT_BUILTIN_PET_ID, slugifyPetId, type PetPackage } from "@jadelau/pets";
+import type { PetControlEntry, PetControlPort, PetControlSnapshot } from "@jadelau/core";
 import type { UiPrefsRepo } from "../db/repos/ui-prefs.js";
 import type { PetCatalogService } from "./pet-catalog.js";
 

@@ -51,9 +51,10 @@ describe.skipIf(process.platform === "win32")(
     });
 
     it("npm global: npm's own prefix layout", () => {
-      expect(
-        detectInstall("/usr/local/lib/node_modules/@jadelau/cli/dist/index.js"),
-      ).toEqual({ kind: "npm", globalRoot: "/usr/local/lib/node_modules" });
+      expect(detectInstall("/usr/local/lib/node_modules/@jadelau/cli/dist/index.js")).toEqual({
+        kind: "npm",
+        globalRoot: "/usr/local/lib/node_modules",
+      });
     });
 
     it("npm global: pnpm's global store, through the .pnpm virtual dir", () => {

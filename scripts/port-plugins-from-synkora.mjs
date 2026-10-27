@@ -195,7 +195,9 @@ function packageJsonFor(name, pkg) {
   if (pkg.repository !== undefined) {
     // The upstream URL points at PenguinHarness; this repository is not that project, so the
     // directory is dropped rather than claiming a path that does not exist here.
-    const url = String(pkg.repository.url ?? "").replace(/^git\+/, "").replace(/\.git$/, "");
+    const url = String(pkg.repository.url ?? "")
+      .replace(/^git\+/, "")
+      .replace(/\.git$/, "");
     out.repository = { type: "git", url, directory: `plugins/${name}` };
   }
   // `plugin.json` is this repository's manifest and the source's `package.json` is being replaced
@@ -221,7 +223,8 @@ for (const name of PLUGINS) {
 
   if (dryRun) {
     const skills = fs.existsSync(path.join(from, "skills"))
-      ? fs.readdirSync(path.join(from, "skills"), { withFileTypes: true })
+      ? fs
+          .readdirSync(path.join(from, "skills"), { withFileTypes: true })
           .filter((e) => e.isDirectory())
           .map((e) => e.name)
       : [];
@@ -242,7 +245,8 @@ for (const name of PLUGINS) {
     }
   }
   for (const dir of ["skills", "hooks"]) {
-    if (fs.existsSync(path.join(from, dir))) copyTree(path.join(from, dir), path.join(to, dir), written);
+    if (fs.existsSync(path.join(from, dir)))
+      copyTree(path.join(from, dir), path.join(to, dir), written);
   }
 
   const skillDirs = fs.existsSync(path.join(from, "skills"))
@@ -252,21 +256,19 @@ for (const name of PLUGINS) {
         .map((e) => e.name)
     : [];
   const manifest = manifestFor(name, pkg, manifestVersion(from, skillDirs));
-  fs.writeFileSync(
-    path.join(to, "plugin.json"),
-    `${JSON.stringify(manifest, null, 2)}\n`,
-    "utf8",
-  );
+  fs.writeFileSync(path.join(to, "plugin.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
   fs.writeFileSync(
     path.join(to, "package.json"),
     `${JSON.stringify(packageJsonFor(name, pkg), null, 2)}\n`,
     "utf8",
   );
 
-  const skillCount = manifest && fs.existsSync(path.join(to, "skills"))
-    ? fs.readdirSync(path.join(to, "skills"), { withFileTypes: true }).filter((e) => e.isDirectory())
-        .length
-    : 0;
+  const skillCount =
+    manifest && fs.existsSync(path.join(to, "skills"))
+      ? fs
+          .readdirSync(path.join(to, "skills"), { withFileTypes: true })
+          .filter((e) => e.isDirectory()).length
+      : 0;
   console.log(
     `${name}: ${skillCount} skill(s), category=${manifest.category}, ` +
       `zh=${manifest.short_description_zh === undefined ? "no" : "yes"}, ` +

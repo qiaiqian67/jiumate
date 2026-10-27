@@ -67,9 +67,7 @@ function partFidelity(part: Part): { fidelity?: Fidelity } {
 /**
  * Read the thought signature recorded in an item's fidelity payload.
  */
-function itemThoughtSignature(item: {
-  fidelity?: Fidelity;
-}): string | undefined {
+function itemThoughtSignature(item: { fidelity?: Fidelity }): string | undefined {
   return item.fidelity?.signature;
 }
 
@@ -123,8 +121,7 @@ export class Gemini3_8Client extends LLMClient {
     const key = options.apiKey || process.env.GEMINI_API_KEY || undefined;
     const url = options.baseUrl || process.env.GEMINI_BASE_URL || undefined;
     // the Gemini SDK carries connection headers inside httpOptions rather than its own argument
-    const httpOptions: { baseUrl?: string; headers?: Record<string, string> } =
-      {};
+    const httpOptions: { baseUrl?: string; headers?: Record<string, string> } = {};
     if (url) {
       httpOptions.baseUrl = url;
     }
@@ -227,23 +224,12 @@ export class Gemini3_8Client extends LLMClient {
       // future pro models on the safe side (clamping a level the model
       // would have accepted costs a little accuracy, forwarding an
       // unsupported one is a 400).
-      return [
-        GeminiThinkingLevel.LOW,
-        GeminiThinkingLevel.MEDIUM,
-        GeminiThinkingLevel.HIGH,
-      ];
+      return [GeminiThinkingLevel.LOW, GeminiThinkingLevel.MEDIUM, GeminiThinkingLevel.HIGH];
     }
-    if (
-      this._model.includes("gemini-3.7") ||
-      this._model.includes("gemini-3.8")
-    ) {
+    if (this._model.includes("gemini-3.7") || this._model.includes("gemini-3.8")) {
       // Both generations reject "minimal" with a 400 (3.7 verified live 2026-08-13;
       // 3.8 documented at ai.google.dev/gemini-api/docs/latest-model).
-      return [
-        GeminiThinkingLevel.LOW,
-        GeminiThinkingLevel.MEDIUM,
-        GeminiThinkingLevel.HIGH,
-      ];
+      return [GeminiThinkingLevel.LOW, GeminiThinkingLevel.MEDIUM, GeminiThinkingLevel.HIGH];
     }
     return Gemini3_8Client.GEMINI_LEVEL_ORDER;
   }
@@ -298,9 +284,7 @@ export class Gemini3_8Client extends LLMClient {
   /**
    * Convert ToolChoice to Gemini's tool config.
    */
-  private _convertToolChoice(
-    toolChoice: ToolChoice,
-  ): FunctionCallingConfig | undefined {
+  private _convertToolChoice(toolChoice: ToolChoice): FunctionCallingConfig | undefined {
     if (Array.isArray(toolChoice)) {
       return {
         mode: "ANY",
@@ -329,9 +313,7 @@ export class Gemini3_8Client extends LLMClient {
   /**
    * Transform universal configuration to Gemini-specific configuration.
    */
-  transformUniConfigToModelConfig(
-    config: UniConfig,
-  ): GenerateContentConfig | undefined {
+  transformUniConfigToModelConfig(config: UniConfig): GenerateContentConfig | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const configParams: any = {};
 
@@ -353,10 +335,7 @@ export class Gemini3_8Client extends LLMClient {
       });
     }
 
-    if (
-      config.prompt_caching !== undefined &&
-      config.prompt_caching !== PromptCaching.ENABLE
-    ) {
+    if (config.prompt_caching !== undefined && config.prompt_caching !== PromptCaching.ENABLE) {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
         parameter: "prompt_caching",
@@ -389,9 +368,7 @@ export class Gemini3_8Client extends LLMClient {
       } else {
         const speakerVoiceConfigs = ttsConfig.map((speakerConfig) => {
           if (!speakerConfig.speaker) {
-            throw new Error(
-              "speaker is required when tts_config has 2 entries.",
-            );
+            throw new Error("speaker is required when tts_config has 2 entries.");
           }
 
           return {
@@ -480,10 +457,7 @@ export class Gemini3_8Client extends LLMClient {
           } as Part);
         } else if (item.type === "image_url") {
           const urlValue = item.image_url;
-          const imageData = await this._getImageBytesAndMimeType(
-            urlValue,
-            signal,
-          );
+          const imageData = await this._getImageBytesAndMimeType(urlValue, signal);
           parts.push({
             inlineData: {
               mimeType: imageData.mimeType,
@@ -518,9 +492,7 @@ export class Gemini3_8Client extends LLMClient {
           // Histories from before ids were stored carry the name as the tool_call_id;
           // replay those without an id, exactly as they arrived.
           const functionCall: FunctionCall = {
-            ...(item.tool_call_id !== item.name
-              ? { id: item.tool_call_id }
-              : {}),
+            ...(item.tool_call_id !== item.name ? { id: item.tool_call_id } : {}),
             name: item.name,
             args: item.arguments,
           };
@@ -539,10 +511,7 @@ export class Gemini3_8Client extends LLMClient {
 
           if (item.images) {
             for (const imageUrl of item.images) {
-              const imageData = await this._getImageBytesAndMimeType(
-                imageUrl,
-                signal,
-              );
+              const imageData = await this._getImageBytesAndMimeType(imageUrl, signal);
               multimodalParts.push({
                 inlineData: {
                   mimeType: imageData.mimeType,
@@ -552,13 +521,10 @@ export class Gemini3_8Client extends LLMClient {
             }
           }
 
-          const functionName =
-            callNames.get(item.tool_call_id) ?? item.tool_call_id;
+          const functionName = callNames.get(item.tool_call_id) ?? item.tool_call_id;
           parts.push({
             functionResponse: {
-              ...(item.tool_call_id !== functionName
-                ? { id: item.tool_call_id }
-                : {}),
+              ...(item.tool_call_id !== functionName ? { id: item.tool_call_id } : {}),
               name: functionName,
               response: toolResult,
               parts: multimodalParts.length > 0 ? multimodalParts : undefined,
@@ -589,18 +555,13 @@ export class Gemini3_8Client extends LLMClient {
   /**
    * Transform Gemini model output to universal event format.
    */
-  transformModelOutputToUniEvent(
-    modelOutput: GenerateContentResponse,
-  ): UniEvent {
+  transformModelOutputToUniEvent(modelOutput: GenerateContentResponse): UniEvent {
     let eventType: EventType = "delta";
     const contentItems: PartialContentItem[] = [];
     let usageMetadata: UsageMetadata | null = null;
     let finishReason: FinishReason | null = null;
 
-    if (
-      modelOutput.candidates?.length !== undefined &&
-      modelOutput.candidates?.length > 0
-    ) {
+    if (modelOutput.candidates?.length !== undefined && modelOutput.candidates?.length > 0) {
       const candidate = modelOutput.candidates?.[0];
       for (const part of candidate.content?.parts || []) {
         if (part.functionCall) {
@@ -658,22 +619,16 @@ export class Gemini3_8Client extends LLMClient {
       eventType = eventType || "delta"; // deal with separate usage data
 
       const promptTokens = modelOutput.usageMetadata.promptTokenCount || 0;
-      const cachedTokens =
-        modelOutput.usageMetadata.cachedContentTokenCount || 0;
+      const cachedTokens = modelOutput.usageMetadata.cachedContentTokenCount || 0;
       usageMetadata = {
-        cached_tokens:
-          modelOutput.usageMetadata.cachedContentTokenCount || null,
+        cached_tokens: modelOutput.usageMetadata.cachedContentTokenCount || null,
         prompt_tokens: promptTokens - cachedTokens,
         thoughts_tokens: modelOutput.usageMetadata.thoughtsTokenCount || null,
         response_tokens: modelOutput.usageMetadata.candidatesTokenCount || null,
       };
     }
 
-    if (
-      contentItems.length === 0 &&
-      usageMetadata === null &&
-      finishReason === null
-    ) {
+    if (contentItems.length === 0 && usageMetadata === null && finishReason === null) {
       // nothing was read out of the chunk, so there is nothing to emit: a gateway
       // heartbeat looks like this, and so does any other chunk we take no value from
       eventType = "unused";
@@ -694,10 +649,7 @@ export class Gemini3_8Client extends LLMClient {
     signal?: AbortSignal;
   }): AsyncGenerator<UniEvent> {
     // Embed transformed messages and return them as a streaming event.
-    const contents = await this.transformUniMessageToModelInput(
-      options.messages,
-      options.signal,
-    );
+    const contents = await this.transformUniMessageToModelInput(options.messages, options.signal);
 
     const geminiConfig = this._withAbortSignal<EmbedContentConfig>(
       options.config.embedding_config?.dimensions != null
@@ -768,10 +720,7 @@ export class Gemini3_8Client extends LLMClient {
       this.transformUniConfigToModelConfig(options.config),
       options.signal,
     );
-    const contents = await this.transformUniMessageToModelInput(
-      messages,
-      options.signal,
-    );
+    const contents = await this.transformUniMessageToModelInput(messages, options.signal);
 
     const responseStream = await this._client.models.generateContentStream({
       model: this._model,

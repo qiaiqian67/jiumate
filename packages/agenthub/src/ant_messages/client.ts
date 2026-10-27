@@ -19,10 +19,7 @@ import {
 } from "@anthropic-ai/sdk/resources/beta/messages";
 import { Stream } from "@anthropic-ai/sdk/core/streaming";
 import { LLMClient } from "../baseClient";
-import {
-  parseToolCallArguments,
-  UnsupportedParameterError,
-} from "../errors";
+import { parseToolCallArguments, UnsupportedParameterError } from "../errors";
 import {
   EventType,
   FinishReason,
@@ -35,10 +32,7 @@ import {
   UniMessage,
   UsageMetadata,
 } from "../types";
-import {
-  fixOpenrouterUsageMetadata,
-  isDebugEnabled,
-} from "../utils";
+import { fixOpenrouterUsageMetadata, isDebugEnabled } from "../utils";
 
 const REDACTED_THINKING = "_REDACTED_THINKING";
 
@@ -176,10 +170,7 @@ export class AntMessagesClient extends LLMClient {
     }
 
     if (config.thinking_level !== undefined) {
-      Object.assign(
-        antConfig,
-        this._convertThinkingLevelToThinkingConfig(config.thinking_level),
-      );
+      Object.assign(antConfig, this._convertThinkingLevelToThinkingConfig(config.thinking_level));
     }
 
     if (config.thinking_summary !== undefined) {
@@ -189,9 +180,7 @@ export class AntMessagesClient extends LLMClient {
       // 2026-09-03) -- and thinking_level NONE disables thinking, leaving nothing to show.
       antConfig.thinking = antConfig.thinking ?? { type: "adaptive" };
       if (antConfig.thinking.type !== "disabled") {
-        antConfig.thinking.display = config.thinking_summary
-          ? "summarized"
-          : "omitted";
+        antConfig.thinking.display = config.thinking_summary ? "summarized" : "omitted";
       }
     }
 
@@ -217,10 +206,7 @@ export class AntMessagesClient extends LLMClient {
       antConfig.betas = ["fast-mode-2026-02-01"];
     }
 
-    if (
-      config.prompt_caching !== undefined &&
-      config.prompt_caching !== PromptCaching.ENABLE
-    ) {
+    if (config.prompt_caching !== undefined && config.prompt_caching !== PromptCaching.ENABLE) {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
         parameter: "prompt_caching",
@@ -309,9 +295,7 @@ export class AntMessagesClient extends LLMClient {
    *
    * NOTE: the Messages API always has only one content item per event.
    */
-  transformModelOutputToUniEvent(
-    modelOutput: BetaRawMessageStreamEvent,
-  ): UniEvent {
+  transformModelOutputToUniEvent(modelOutput: BetaRawMessageStreamEvent): UniEvent {
     let eventType: EventType | null = null;
     const contentItems: PartialContentItem[] = [];
     let usageMetadata: UsageMetadata | null = null;
@@ -362,8 +346,7 @@ export class AntMessagesClient extends LLMClient {
       eventType = "start";
       const message = modelOutput.message;
       if (message.usage) {
-        const cacheCreationTokens =
-          message.usage.cache_creation_input_tokens || 0;
+        const cacheCreationTokens = message.usage.cache_creation_input_tokens || 0;
         usageMetadata = {
           cached_tokens: message.usage.cache_read_input_tokens,
           prompt_tokens: message.usage.input_tokens + cacheCreationTokens,
@@ -404,15 +387,11 @@ export class AntMessagesClient extends LLMClient {
       }
     } else if (antEventType === "message_stop") {
       eventType = "stop";
-    } else if (
-      ["text", "thinking", "signature", "input_json", "ping"].includes(
-        antEventType,
-      )
-    ) {
+    } else if (["text", "thinking", "signature", "input_json", "ping"].includes(antEventType)) {
       // the SDK drops the "ping" heartbeat at the SSE layer; it reaches here only
       // from gateways that relabel it onto another event
       eventType = "unused";
-        } else if (isDebugEnabled()) {
+    } else if (isDebugEnabled()) {
       throw new Error(`Unknown output: ${JSON.stringify(modelOutput)}`);
     } else {
       // a gateway injects its own events (heartbeats, cost tickers) into the stream, and
@@ -438,10 +417,7 @@ export class AntMessagesClient extends LLMClient {
     signal?: AbortSignal;
   }): AsyncGenerator<UniEvent> {
     const antConfig = this.transformUniConfigToModelConfig(options.config);
-    const antMessages = this.transformUniMessageToModelInput(
-      options.messages,
-      options.signal,
-    );
+    const antMessages = this.transformUniMessageToModelInput(options.messages, options.signal);
 
     // Stream generate
     const partialToolCall: {
@@ -486,8 +462,7 @@ export class AntMessagesClient extends LLMClient {
       } else if (uniEvent.event_type === "delta") {
         for (const item of uniEvent.content_items) {
           if (item.type === "partial_tool_call") {
-            partialToolCall.arguments =
-              (partialToolCall.arguments || "") + item.arguments;
+            partialToolCall.arguments = (partialToolCall.arguments || "") + item.arguments;
           }
         }
 
@@ -537,10 +512,7 @@ export class AntMessagesClient extends LLMClient {
             role: "assistant",
             event_type: "stop",
             content_items: [],
-            usage_metadata: fixOpenrouterUsageMetadata(
-              usageMetadata,
-              this._client.baseURL,
-            ),
+            usage_metadata: fixOpenrouterUsageMetadata(usageMetadata, this._client.baseURL),
             finish_reason: uniEvent.finish_reason,
           };
           partialUsage.prompt_tokens = undefined;

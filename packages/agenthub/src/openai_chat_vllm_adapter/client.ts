@@ -82,17 +82,16 @@ const DEEPSEEK_V4_VISION_EXP_THINKING: ThinkingProfile = {
 // prefix the deployment gave it (Qwen/Qwen3.6-35B-A3B, deepseek-ai/DeepSeek-V4-Pro). The
 // first match wins, so a key that contains another must come first: deepseek-v4-flash is a
 // prefix of deepseek-v4-flash-vision-exp.
-const MODEL_THINKING_PROFILES: readonly (readonly [string, ThinkingProfile])[] =
-  [
-    ["qwen3.8-flash-next", QWEN3_8_THINKING],
-    ["qwen3.8-27b", QWEN3_8_THINKING],
-    ["qwen3.6-35b-a3b", QWEN3_THINKING],
-    ["qwen3.5-0.8b", QWEN3_THINKING],
-    ["qwen3.5-9b", QWEN3_THINKING],
-    ["deepseek-v4-flash-vision-exp", DEEPSEEK_V4_VISION_EXP_THINKING],
-    ["deepseek-v4-pro", DEEPSEEK_V4_PRO_FLASH_THINKING],
-    ["deepseek-v4-flash", DEEPSEEK_V4_PRO_FLASH_THINKING],
-  ];
+const MODEL_THINKING_PROFILES: readonly (readonly [string, ThinkingProfile])[] = [
+  ["qwen3.8-flash-next", QWEN3_8_THINKING],
+  ["qwen3.8-27b", QWEN3_8_THINKING],
+  ["qwen3.6-35b-a3b", QWEN3_THINKING],
+  ["qwen3.5-0.8b", QWEN3_THINKING],
+  ["qwen3.5-9b", QWEN3_THINKING],
+  ["deepseek-v4-flash-vision-exp", DEEPSEEK_V4_VISION_EXP_THINKING],
+  ["deepseek-v4-pro", DEEPSEEK_V4_PRO_FLASH_THINKING],
+  ["deepseek-v4-flash", DEEPSEEK_V4_PRO_FLASH_THINKING],
+];
 
 /** Models served through vLLM's OpenAI-compatible Chat Completions API. */
 export class OpenaiChatVllmAdapterClient extends OpenaiChatClient {
@@ -102,9 +101,7 @@ export class OpenaiChatVllmAdapterClient extends OpenaiChatClient {
    * A model outside the table falls back to Qwen3's enable_thinking, the most widespread
    * of the conventions and inert on a template that ignores the key.
    */
-  private _thinkingChatTemplateKwargs(
-    thinkingLevel: ThinkingLevel,
-  ): ChatTemplateKwargs {
+  private _thinkingChatTemplateKwargs(thinkingLevel: ThinkingLevel): ChatTemplateKwargs {
     const model = this._model.toLowerCase();
     for (const [name, profile] of MODEL_THINKING_PROFILES) {
       if (model.includes(name)) {
@@ -121,9 +118,7 @@ export class OpenaiChatVllmAdapterClient extends OpenaiChatClient {
     const vllmConfig = super.transformUniConfigToModelConfig(config);
 
     if (config.thinking_level !== undefined) {
-      const chatTemplateKwargs = this._thinkingChatTemplateKwargs(
-        config.thinking_level,
-      );
+      const chatTemplateKwargs = this._thinkingChatTemplateKwargs(config.thinking_level);
       if (Object.keys(chatTemplateKwargs).length > 0) {
         vllmConfig.chat_template_kwargs = chatTemplateKwargs;
       }

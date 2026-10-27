@@ -6,14 +6,7 @@
  * ordering contract and the runtime-capability version handshake (hmr/capabilities.ts).
  */
 import { describe, expect, it, vi } from "vitest";
-import {
-  boot,
-  defineIface,
-  initialDoc,
-  schema,
-  type,
-  upgrade,
-} from "@jadelau/core/kernel";
+import { boot, defineIface, initialDoc, schema, type, upgrade } from "@jadelau/core/kernel";
 import type { Json } from "@jadelau/core/kernel";
 import { HotResources } from "../src/hmr/resources.js";
 import { TerminalManager } from "../src/terminal/manager.js";

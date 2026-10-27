@@ -23,11 +23,7 @@
  * whole session entry is dropped when the run ends (SessionManager.drive's finally).
  */
 import { isPartialPayload } from "@jadelau/core";
-import type {
-  CompleteModelPayload,
-  OmniMessage,
-  PartialModelPayload,
-} from "@jadelau/core";
+import type { CompleteModelPayload, OmniMessage, PartialModelPayload } from "@jadelau/core";
 
 type PartialKind = PartialModelPayload["type"];
 

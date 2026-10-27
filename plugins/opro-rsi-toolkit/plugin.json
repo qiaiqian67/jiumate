@@ -8,8 +8,6 @@
   "quick_start": {
     "prompt": "Use the `opro-rsi-toolkit` Skill to reproduce OPRO on the precise-summary demo task that ships with it: create the Target agent `summary_writer` and the Benchmark `precise-summary`, measure the seed instruction, run 2 steps × 4 proposals, and report the baseline and best scores.",
     "prompt_zh": "使用 `opro-rsi-toolkit` 技能在它自带的「精确摘要」演示任务上复现 OPRO：创建 Target 智能体 `summary_writer` 与 Benchmark `precise-summary`，测量种子指令，跑 2 步 × 4 个提案，报告基线分与最佳分。",
-    "skills": [
-      "opro-rsi-toolkit"
-    ]
+    "skills": ["opro-rsi-toolkit"]
   }
 }

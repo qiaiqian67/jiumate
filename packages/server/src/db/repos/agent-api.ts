@@ -63,7 +63,9 @@ function settingsOf(r: Row): AgentApiRow {
     open: Number(r.open) === 1,
     approvalMode: r.approval_mode as ApprovalMode,
     model:
-      r.provider === null ? null : { provider: r.provider as string, modelId: r.model_id as string },
+      r.provider === null
+        ? null
+        : { provider: r.provider as string, modelId: r.model_id as string },
     thinkingLevel: (r.thinking_level as string | null) ?? null,
     workspace: (r.workspace as string | null) ?? null,
     maxConcurrentRuns: Number(r.max_concurrent_runs),

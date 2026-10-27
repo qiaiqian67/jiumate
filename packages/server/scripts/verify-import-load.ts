@@ -80,11 +80,19 @@ async function main() {
   // ② A Project to work in.
   let projectId = "default_project";
   const projects = await call("GET", "/api/projects");
-  if (projects.status === 200 && Array.isArray(projects.body?.projects) && projects.body.projects.length > 0) {
+  if (
+    projects.status === 200 &&
+    Array.isArray(projects.body?.projects) &&
+    projects.body.projects.length > 0
+  ) {
     projectId = projects.body.projects[0].projectId;
   } else {
-    const created = await call("POST", "/api/projects", { projectId: `${USERNAME}-verify`, name: "Verify" });
-    if (created.status !== 201) fail(`project create: ${created.status} ${JSON.stringify(created.body)}`);
+    const created = await call("POST", "/api/projects", {
+      projectId: `${USERNAME}-verify`,
+      name: "Verify",
+    });
+    if (created.status !== 201)
+      fail(`project create: ${created.status} ${JSON.stringify(created.body)}`);
     projectId = created.body.project.projectId;
   }
   ok(`using project ${projectId}`);
@@ -92,7 +100,11 @@ async function main() {
   // ③ An Agent to install into.
   const agents = await call("GET", `/api/projects/${projectId}/agents`);
   let agentId;
-  if (agents.status === 200 && Array.isArray(agents.body?.agents) && agents.body.agents.length > 0) {
+  if (
+    agents.status === 200 &&
+    Array.isArray(agents.body?.agents) &&
+    agents.body.agents.length > 0
+  ) {
     agentId = agents.body.agents[0].agentId;
   } else {
     const created = await call("POST", `/api/projects/${projectId}/agents`, {
@@ -111,9 +123,11 @@ async function main() {
     "GET",
     `/api/projects/${projectId}/plugins/import/discover?path=${encodeURIComponent(SOURCE)}`,
   );
-  if (discover.status !== 200) fail(`discover: ${discover.status} ${JSON.stringify(discover.body)}`);
+  if (discover.status !== 200)
+    fail(`discover: ${discover.status} ${JSON.stringify(discover.body)}`);
   const found = (discover.body.plugins ?? []).find((p) => p.name === "my-local-plugin");
-  if (!found) fail(`discover did not find my-local-plugin; got ${JSON.stringify(discover.body.plugins)}`);
+  if (!found)
+    fail(`discover did not find my-local-plugin; got ${JSON.stringify(discover.body.plugins)}`);
   ok(`discovered ${found.name} (${found.skills.length} skill(s)) from disk`);
 
   // ⑤ Import it.
@@ -140,7 +154,8 @@ async function main() {
   const installed = await call("POST", `/api/projects/${projectId}/agents/${agentId}/plugins`, {
     names: ["my-local-plugin"],
   });
-  if (installed.status !== 201) fail(`install: ${installed.status} ${JSON.stringify(installed.body)}`);
+  if (installed.status !== 201)
+    fail(`install: ${installed.status} ${JSON.stringify(installed.body)}`);
   ok(`installed into agent ${agentId}`);
 
   // ⑧ **The claim.** The Agent's skills are loaded from disk, with bodies, and the imported
@@ -162,7 +177,9 @@ async function main() {
   if (owned.status === 200) {
     // Entries are objects ({ id, … }), not strings — matched on the id so this works whichever
     // shape the endpoint settles on.
-    const plugins = (owned.body.plugins ?? []).map((p) => (typeof p === "string" ? p : p?.id ?? ""));
+    const plugins = (owned.body.plugins ?? []).map((p) =>
+      typeof p === "string" ? p : (p?.id ?? ""),
+    );
     const record = plugins.find((p) => p.includes("my-local-plugin"));
     if (record) ok(`install record names the plugin: ${record}`);
   }
@@ -171,10 +188,14 @@ async function main() {
   //     claims that are easiest to conflate and most damaging to get wrong: a disable that deleted
   //     files would make 启用 non-reversible, and a disable scoped to the machine would silently
   //     break every other Agent.
-  const off = await call("POST", `/api/projects/${projectId}/agents/${agentId}/skills/plugins/enabled`, {
-    id,
-    enabled: false,
-  });
+  const off = await call(
+    "POST",
+    `/api/projects/${projectId}/agents/${agentId}/skills/plugins/enabled`,
+    {
+      id,
+      enabled: false,
+    },
+  );
   if (off.status !== 200) fail(`disable: ${off.status} ${JSON.stringify(off.body)}`);
   const afterOff = await call("GET", `/api/projects/${projectId}/agents/${agentId}/skills`);
   const offNames = (afterOff.body.skills ?? []).map((s) => s.name);
@@ -191,10 +212,14 @@ async function main() {
   if (!stillListed) fail("disabling removed the plugin from the library");
   ok("…but the plugin is still in the library, so 启用 can bring it back");
 
-  const on = await call("POST", `/api/projects/${projectId}/agents/${agentId}/skills/plugins/enabled`, {
-    id,
-    enabled: true,
-  });
+  const on = await call(
+    "POST",
+    `/api/projects/${projectId}/agents/${agentId}/skills/plugins/enabled`,
+    {
+      id,
+      enabled: true,
+    },
+  );
   if (on.status !== 200) fail(`re-enable: ${on.status} ${JSON.stringify(on.body)}`);
   const afterOn = await call("GET", `/api/projects/${projectId}/agents/${agentId}/skills`);
   const onNames = (afterOn.body.skills ?? []).map((s) => s.name);
@@ -208,7 +233,9 @@ async function main() {
   const upgrade = await call("POST", `/api/projects/${projectId}/plugins/import/${id}/upgrade`);
   if (upgrade.status !== 200) fail(`upgrade: ${upgrade.status} ${JSON.stringify(upgrade.body)}`);
   if (upgrade.body.upgradable !== false) {
-    fail(`a folder-sourced plugin should report upgradable:false, got ${JSON.stringify(upgrade.body)}`);
+    fail(
+      `a folder-sourced plugin should report upgradable:false, got ${JSON.stringify(upgrade.body)}`,
+    );
   }
   ok("upgrade on a folder-sourced plugin: upgradable:false (no source to check)");
 
@@ -228,7 +255,9 @@ async function main() {
   ok("uninstalled: gone from the library");
 
   console.log(checks.join("\n"));
-  console.log("\nPASS — add → enable → agent loads it → disable → re-enable → uninstall, end to end.");
+  console.log(
+    "\nPASS — add → enable → agent loads it → disable → re-enable → uninstall, end to end.",
+  );
 }
 
 await main();

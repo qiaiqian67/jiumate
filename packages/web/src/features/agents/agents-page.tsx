@@ -21,11 +21,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useLocation, useNavigate } from "react-router";
-import type {
-  AgentCreateRequest,
-  PluginItem,
-  SkillMetadataItem,
-} from "@jadelau/server/api";
+import type { AgentCreateRequest, PluginItem, SkillMetadataItem } from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { apiErrorText } from "../../lib/api-error";

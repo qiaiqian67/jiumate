@@ -7,7 +7,12 @@
  * the feature does not do what was asked for, and this file says so.
  */
 import { describe, expect, it } from "vitest";
-import { RepoUrlError, pluginNameFromRepo, resolveRepoUrl, looksLikeArchive } from "../src/state/index.js";
+import {
+  RepoUrlError,
+  pluginNameFromRepo,
+  resolveRepoUrl,
+  looksLikeArchive,
+} from "../src/state/index.js";
 
 /** Every form a user pastes for one repository, all of which must mean the same thing. */
 const BERD_FORMS = [
@@ -23,7 +28,9 @@ describe("resolveRepoUrl", () => {
     const resolved = BERD_FORMS.map((u) => resolveRepoUrl(u));
     const archives = new Set(resolved.map((r) => r.archiveUrl));
     expect(archives.size).toBe(1);
-    expect(resolved[0]!.archiveUrl).toBe("https://github.com/block/berd/archive/refs/heads/main.zip");
+    expect(resolved[0]!.archiveUrl).toBe(
+      "https://github.com/block/berd/archive/refs/heads/main.zip",
+    );
     for (const r of resolved) {
       expect(r.name).toBe("block/berd");
       expect(r.branch).toBe("main");
@@ -71,7 +78,9 @@ describe("resolveRepoUrl", () => {
       // A commit sha is not a branch: its archive lives under a different prefix, so treating it
       // as one would ask for a branch that cannot exist.
       const r = resolveRepoUrl(`https://github.com/block/berd/${tail}`);
-      expect(r.branch, `${tail} names no branch, so it should fall back to the default`).toBe("main");
+      expect(r.branch, `${tail} names no branch, so it should fall back to the default`).toBe(
+        "main",
+      );
       expect(r.archiveUrl).toBe("https://github.com/block/berd/archive/refs/heads/main.zip");
     }
   });

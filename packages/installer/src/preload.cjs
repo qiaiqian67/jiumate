@@ -1,9 +1,9 @@
-'use strict'
+"use strict";
 /**
  * The only surface the renderer gets. Every capability is an explicit, named channel — the
  * installer UI runs no Node and cannot reach the filesystem on its own.
  */
-const { contextBridge, ipcRenderer } = require("electron")
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("installer", {
   info: () => ipcRenderer.invoke("installer:info"),
@@ -21,7 +21,10 @@ contextBridge.exposeInMainWorld("installer", {
    * would need `img-src file:`, which is a wider grant than showing one known image. The bytes are
    * read in the main process because a preload with contextIsolation has no filesystem access.
    */
-  icon: () => ipcRenderer.invoke("installer:icon").then((b64) => (b64 ? `data:image/png;base64,${b64}` : null)),
+  icon: () =>
+    ipcRenderer
+      .invoke("installer:icon")
+      .then((b64) => (b64 ? `data:image/png;base64,${b64}` : null)),
   uninstall: () => ipcRenderer.invoke("installer:uninstall"),
   uninstallSize: () => ipcRenderer.invoke("installer:uninstallSize"),
   uninstallLang: () => ipcRenderer.invoke("installer:uninstallLang"),
@@ -30,8 +33,8 @@ contextBridge.exposeInMainWorld("installer", {
   minimize: () => ipcRenderer.invoke("installer:minimize"),
   close: () => ipcRenderer.invoke("installer:close"),
   onProgress: (cb) => {
-    const handler = (_e, payload) => cb(payload)
-    ipcRenderer.on("installer:progress", handler)
-    return () => ipcRenderer.removeListener("installer:progress", handler)
+    const handler = (_e, payload) => cb(payload);
+    ipcRenderer.on("installer:progress", handler);
+    return () => ipcRenderer.removeListener("installer:progress", handler);
   },
-})
+});

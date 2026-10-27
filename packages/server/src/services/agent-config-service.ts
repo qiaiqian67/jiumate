@@ -39,11 +39,7 @@ import {
   systemConfigPath,
   THINKING_LEVEL_NAMES,
 } from "@jadelau/core";
-import type {
-  MCPServerConfig,
-  ThinkingLevelName,
-  ToolDefinitionConfig,
-} from "@jadelau/core";
+import type { MCPServerConfig, ThinkingLevelName, ToolDefinitionConfig } from "@jadelau/core";
 import type {
   AgentConfigDto,
   AgentConfigUpdateRequest,

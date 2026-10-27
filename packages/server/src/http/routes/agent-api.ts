@@ -19,7 +19,13 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { THINKING_LEVEL_NAMES, resolveModelRef } from "@jadelau/core";
 import type { AppDeps } from "../../app.js";
-import type { ApprovalMode, ModelRefDto } from "../../api/types.js";
+import type {
+  AgentApiKeyInfo,
+  AgentApiResponse,
+  AgentApiSettings,
+  ApprovalMode,
+  ModelRefDto,
+} from "../../api/types.js";
 import { requireHuman } from "../../auth/middleware.js";
 import type { AppEnv } from "../../auth/middleware.js";
 import { mintAgentApiKey, DEFAULT_API_CONCURRENT_RUNS } from "../../amsp/keys.js";
@@ -41,8 +47,9 @@ import { APPROVAL_MODES } from "./sessions.js";
 // Re-exported rather than redefined: the Web App imports these from @jadelau/server/api,
 // so a second copy here would be a type the frontend's DTO is not assignable to — the mismatch
 // shows up as a compile error in the tab, pointing at this file rather than at the duplication.
-export type { AgentApiKeyInfo, AgentApiResponse, AgentApiSettings } from "../../api/types.js";
-import type { AgentApiKeyInfo, AgentApiResponse, AgentApiSettings } from "../../api/types.js";
+// Imported once and re-exported from the local binding: a second `import ... from` of the
+// same module in one file is what the import/no-duplicates rule is there to catch.
+export type { AgentApiKeyInfo, AgentApiResponse, AgentApiSettings };
 
 function keyInfo(row: AgentApiKeyRow): AgentApiKeyInfo {
   return {

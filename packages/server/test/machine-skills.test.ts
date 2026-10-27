@@ -13,11 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { zipSync, strToU8 } from "fflate";
-import {
-  listMachineSkills,
-  listInstalledSkills,
-  machineSkillsDir,
-} from "@jadelau/core";
+import { listMachineSkills, listInstalledSkills, machineSkillsDir } from "@jadelau/core";
 import { apiClient, createTestApp, provisionUser } from "./helpers.js";
 import type { TestApp } from "./helpers.js";
 import type {

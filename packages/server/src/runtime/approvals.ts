@@ -15,12 +15,7 @@
  * Docs: /docs/tools § "Approval".
  */
 import type { ApprovalMode } from "../api/types.js";
-import type {
-  ApprovalDecision,
-  ApproveFn,
-  OmniMessage,
-  ToolCallPayload,
-} from "@jadelau/core";
+import type { ApprovalDecision, ApproveFn, OmniMessage, ToolCallPayload } from "@jadelau/core";
 
 export interface PendingApproval {
   toolCall: OmniMessage<ToolCallPayload>;

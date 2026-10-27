@@ -89,7 +89,11 @@ jobs:
             build: "@jadelau/agenthub...,@jadelau/core..."
             tests: pnpm --filter @jadelau/core test
           - shard: server
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            # server... and not core...: server depends on pets, inspirations and skins,
+            # and the tests import them. Building core's tree leaves those three unbuilt,
+            # and the suite then fails to resolve @jadelau/pets before it runs a single
+            # test. The ellipsis pulls in every dependency of server, which is the point.
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server test
           - shard: web-cli
             build: "@jadelau/agenthub...,@jadelau/core...,@jadelau/web..."
@@ -150,7 +154,7 @@ jobs:
             tests: pnpm --filter @jadelau/core test
             smoke: false
           - shard: server
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server test
             smoke: false
           - shard: rest
@@ -192,13 +196,13 @@ jobs:
             build: "@jadelau/agenthub...,@jadelau/core..."
             tests: pnpm --filter @jadelau/core test
           - shard: server-1
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server exec vitest run --shard=1/3
           - shard: server-2
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server exec vitest run --shard=2/3
           - shard: server-3
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server exec vitest run --shard=3/3
           - shard: rest
             build: "@jadelau/agenthub...,@jadelau/desktop...,@jadelau/cli..."

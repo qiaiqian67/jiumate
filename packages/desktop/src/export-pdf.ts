@@ -25,10 +25,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { BrowserWindow, app } from "electron";
-import type {
-  DesktopExportRequest,
-  DesktopExportResult,
-} from "@jadelau/server/desktop-export";
+import type { DesktopExportRequest, DesktopExportResult } from "@jadelau/server/desktop-export";
 
 /** The slice of Electron's ParentPort this relay uses. Mirrors server/desktop-export-port.ts. */
 export interface ShellPort {

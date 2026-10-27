@@ -295,7 +295,7 @@ describe("项目设置的迁移", () => {
     // 项目设置的唯一入口是系统设置菜单里的「项目」分组。侧边栏用户菜单里曾经有一个，
     // 而两个入口讲同一件事只会让人不知道该去哪；现在那里只剩项目切换列表本身。
     const sidebar = read(SIDEBAR_FILE);
-    expect(sidebar).not.toContain('section=projectManage');
+    expect(sidebar).not.toContain("section=projectManage");
     expect(sidebar).not.toContain("S.project.settings");
     // 「新建项目」也不再是一个独立菜单项——它是项目页里的一个按钮。
     expect(sidebar).not.toContain("setCreateProjectOpen");

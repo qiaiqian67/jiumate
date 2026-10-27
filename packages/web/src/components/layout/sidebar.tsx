@@ -30,11 +30,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent as ReactDragEvent, ReactNode } from "react";
 import { NavLink, useMatch, useNavigate, useSearchParams } from "react-router";
-import type {
-  SessionCategory,
-  SessionCategoryCounts,
-  SessionInfo,
-} from "@jadelau/server/api";
+import type { SessionCategory, SessionCategoryCounts, SessionInfo } from "@jadelau/server/api";
 import * as api from "../../api/endpoints";
 import { S } from "../../lib/strings";
 import { formatRelativeShort } from "../../lib/format";
@@ -165,7 +161,11 @@ import { UpdateRow } from "../account/update-row";
 import { openUpdateModal } from "../../lib/use-update-flow";
 import { navNoteFor, useUpdateBadges } from "../../lib/use-update-badges";
 import { subscribeOpenSettings } from "../../lib/open-settings";
-import { settingsGroups, resolveSettingsSection, visibleSettingsSections } from "../../lib/settings-sections";
+import {
+  settingsGroups,
+  resolveSettingsSection,
+  visibleSettingsSections,
+} from "../../lib/settings-sections";
 import {
   SETTINGS_SECTION_ICONS,
   settingsGroupLabel,
@@ -529,7 +529,7 @@ export function Sidebar({
     setGroupCaps(new Map());
   };
 
-    /** Workspace groups (workspace mode): computed from the flat list, temp directories merged last, plus the manually-added Workspaces as empty groups on top (newest registration first). */
+  /** Workspace groups (workspace mode): computed from the flat list, temp directories merged last, plus the manually-added Workspaces as empty groups on top (newest registration first). */
   const workspaceGroups = useMemo(
     () => mergeRegisteredWorkspaces(groupSessionsByWorkspace(sessions), registeredWorkspaces),
     [sessions, registeredWorkspaces],
@@ -1580,64 +1580,69 @@ export function Sidebar({
                     list below them), and at the tighter rhythm the nine fills still touch into
                     something slab-like. */}
                 <div className="space-y-1">
-                {settingsSections
-                  .filter((s) => s.group === group)
-                  .map((s) => {
-                    const note = s.key === "logs" ? logsNote : null;
-                    // Whether this row is the open page. Resolved from the router HERE rather
-                    // than from NavLink's render-prop, because children-as-function is not a
-                    // shape NavLink accepts �?and the bar, the fill and the icon's ink must all
-                    // read from this ONE value, so they cannot drift apart.
-                    const active = openSection === s.key;
-                    return (
-                      <NavLink
-                        key={s.key}
-                        to={`/settings?section=${s.key}`}
-                        onClick={() => onNavigate?.()}
-                        {...(note !== null
-                          ? {
-                              title: note,
-                              "aria-label": `${settingsNameOf(s.key)} · ${note}`,
-                            }
-                          : {})}
-                        /* The fill comes from `active` �?OUR resolve �?and deliberately NOT from
+                  {settingsSections
+                    .filter((s) => s.group === group)
+                    .map((s) => {
+                      const note = s.key === "logs" ? logsNote : null;
+                      // Whether this row is the open page. Resolved from the router HERE rather
+                      // than from NavLink's render-prop, because children-as-function is not a
+                      // shape NavLink accepts �?and the bar, the fill and the icon's ink must all
+                      // read from this ONE value, so they cannot drift apart.
+                      const active = openSection === s.key;
+                      return (
+                        <NavLink
+                          key={s.key}
+                          to={`/settings?section=${s.key}`}
+                          onClick={() => onNavigate?.()}
+                          {...(note !== null
+                            ? {
+                                title: note,
+                                "aria-label": `${settingsNameOf(s.key)} · ${note}`,
+                              }
+                            : {})}
+                          /* The fill comes from `active` �?OUR resolve �?and deliberately NOT from
                            NavLink's own `isActive`. Every row's `to` is the same path
                            (`/settings?section=…`; react-router matches on path, not query), so
                            `isActive` is true for ALL NINE rows at once and would paint the whole
                            column grey. The query is what distinguishes them, and only
                            `resolveSettingsSection` reads it. */
-                        aria-current={active ? "page" : undefined}
-                        className={`relative flex items-center gap-2.5 overflow-hidden rounded-md px-2.5 py-2 text-sm transition-colors duration-150 ${
-                          active
-                            ? "bg-gray-200/70 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
-                        }`}
-                      >
-                        {/* The active bar: an absolutely-positioned pseudo-element so it sits
+                          aria-current={active ? "page" : undefined}
+                          className={`relative flex items-center gap-2.5 overflow-hidden rounded-md px-2.5 py-2 text-sm transition-colors duration-150 ${
+                            active
+                              ? "bg-gray-200/70 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
+                          }`}
+                        >
+                          {/* The active bar: an absolutely-positioned pseudo-element so it sits
                             flush against the row's rounded left edge (a border would be clipped
                             by the radius), with the row's `overflow-hidden` keeping it inside
                             the corners. */}
-                        <span
-                          aria-hidden
-                          className={`absolute inset-y-1.5 left-0 w-0.5 rounded-full transition-opacity duration-150 ${
-                            active ? "bg-gray-800 opacity-100 dark:bg-gray-100" : "opacity-0"
-                          }`}
-                        />
-                        <span
-                          aria-hidden
-                          className={`shrink-0 transition-colors duration-150 ${
-                            active ? "text-gray-800 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"
-                          }`}
-                        >
-                          <Icon d={SETTINGS_SECTION_ICONS[s.key]} size={16} />
-                        </span>
-                        <span className="min-w-0 truncate">{settingsNameOf(s.key)}</span>
-                        {note !== null && (
-                          <UpdateDot size="inline" position="right-2.5 top-1/2 -translate-y-1/2" />
-                        )}
-                      </NavLink>
-                    );
-                  })}
+                          <span
+                            aria-hidden
+                            className={`absolute inset-y-1.5 left-0 w-0.5 rounded-full transition-opacity duration-150 ${
+                              active ? "bg-gray-800 opacity-100 dark:bg-gray-100" : "opacity-0"
+                            }`}
+                          />
+                          <span
+                            aria-hidden
+                            className={`shrink-0 transition-colors duration-150 ${
+                              active
+                                ? "text-gray-800 dark:text-gray-100"
+                                : "text-gray-400 dark:text-gray-500"
+                            }`}
+                          >
+                            <Icon d={SETTINGS_SECTION_ICONS[s.key]} size={16} />
+                          </span>
+                          <span className="min-w-0 truncate">{settingsNameOf(s.key)}</span>
+                          {note !== null && (
+                            <UpdateDot
+                              size="inline"
+                              position="right-2.5 top-1/2 -translate-y-1/2"
+                            />
+                          )}
+                        </NavLink>
+                      );
+                    })}
                 </div>
               </div>
             ))}
@@ -1647,7 +1652,7 @@ export function Sidebar({
 
       {!settingsOpen && (
         <>
-      {/* New chat: the only pinned entry besides the Project switcher above and the user row
+          {/* New chat: the only pinned entry besides the Project switcher above and the user row
           below. No background fill, the same gray hover/active styling as the nav items,
           distinguished only by its position and font-medium; shows the same gray active state
           while on the draft page.
@@ -1655,24 +1660,24 @@ export function Sidebar({
           scroller: padding-top there belongs to the scrollable content and slides away with
           it, so a scrolled nav entry ended up flush against this pinned button, the two
           labels touching. Outside the scroller the 8px stays put at every scroll offset �?          the same text-to-text rhythm two adjacent nav rows have. */}
-      <div className="shrink-0 px-2 pb-2 pt-2">
-        <button
-          type="button"
-          onClick={() => newChat(defaultAgentId)}
-          className={`flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors duration-150 ${
-            activeSessionId === DRAFT_SESSION_ID
-              ? "bg-gray-200/70 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-              : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
-          }`}
-        >
-          <span className="text-gray-500 dark:text-gray-400">
-            <Icon d={NEW_CHAT_ICON} />
-          </span>
-          {S.chat.newSessionMenu}
-        </button>
-      </div>
+          <div className="shrink-0 px-2 pb-2 pt-2">
+            <button
+              type="button"
+              onClick={() => newChat(defaultAgentId)}
+              className={`flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors duration-150 ${
+                activeSessionId === DRAFT_SESSION_ID
+                  ? "bg-gray-200/70 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                  : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
+              }`}
+            >
+              <span className="text-gray-500 dark:text-gray-400">
+                <Icon d={NEW_CHAT_ICON} />
+              </span>
+              {S.chat.newSessionMenu}
+            </button>
+          </div>
 
-      {/* Scroll area: the page nav and the session list scroll together, so the nav rides up
+          {/* Scroll area: the page nav and the session list scroll together, so the nav rides up
           as the list is scrolled. It is the sidebar's only shrinkable block �?with the nav
           pinned, the column's fixed height (Project switcher + New chat + eight nav entries +
           user row �?412px) exceeded a short window, and the overflow, clipped by nothing,
@@ -1682,9 +1687,9 @@ export function Sidebar({
           initial containing block instead, rows past the fold would bypass this
           overflow-y-auto and stretch the **document**, so expanding "More" / a source
           folder made the whole page scroll (composer pushed up, blank space below). */}
-      <div className="relative min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-        <nav className="space-y-0.5">
-          {/* The page-nav entries, always expanded.
+          <div className="relative min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+            <nav className="space-y-0.5">
+              {/* The page-nav entries, always expanded.
               They used to sit behind a slim chevron strip that collapsed the group
               (智能�?�?词元) �?a whole row of vertical space spent on a control that saved
               about 150px, in a column whose only job on this screen is to be read. It is
@@ -1692,52 +1697,52 @@ export function Sidebar({
               slide machinery (grid-rows tween, inert-while-collapsed) went with it, which
               also removes the persisted `navCollapsed` preference and the nav-group-collapse
               module �?nothing else read either. */}
-          <div className="space-y-0.5">
-            {navItems.map((item) => {
-              /* Four nav entries sit on a badge trail �?Agents (an outdated kernel, fixed on
+              <div className="space-y-0.5">
+                {navItems.map((item) => {
+                  /* Four nav entries sit on a badge trail �?Agents (an outdated kernel, fixed on
                  the Agent settings page two clicks down), Skills, Models and the Cost Center
                  (each cleared on the page itself). The dot is anchored to the row, not to the
                  label text (where it would float over whatever follows the word): at the
                  row's right edge, on the same inset as its horizontal padding, and vertically
                  centred on the row rather than on the line of text. */
-              const note = navNoteFor(badges, item.to);
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => onNavigate?.()}
-                  {...(note !== null
-                    ? {
-                        // The row's own label is visible, so the tooltip only adds what
-                        // the dot means; the accessible name keeps that label as its
-                        // prefix. (The collapsed rail's icon-only twin has no visible
-                        // label, so its tooltip carries both.)
-                        title: note,
-                        "aria-label": `${item.label} · ${note}`,
+                  const note = navNoteFor(badges, item.to);
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => onNavigate?.()}
+                      {...(note !== null
+                        ? {
+                            // The row's own label is visible, so the tooltip only adds what
+                            // the dot means; the accessible name keeps that label as its
+                            // prefix. (The collapsed rail's icon-only twin has no visible
+                            // label, so its tooltip carries both.)
+                            title: note,
+                            "aria-label": `${item.label} · ${note}`,
+                          }
+                        : {})}
+                      className={({ isActive }) =>
+                        `relative flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors duration-150 ${
+                          isActive
+                            ? "bg-gray-200/70 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                            : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
+                        }`
                       }
-                    : {})}
-                  className={({ isActive }) =>
-                    `relative flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors duration-150 ${
-                      isActive
-                        ? "bg-gray-200/70 font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                        : "text-gray-600 hover:bg-gray-200/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/70 dark:hover:text-gray-200"
-                    }`
-                  }
-                >
-                  <span className="text-gray-500 dark:text-gray-400">
-                    <Icon d={item.icon} />
-                  </span>
-                  {item.label}
-                  {note !== null && (
-                    <UpdateDot size="inline" position="right-2.5 top-1/2 -translate-y-1/2" />
-                  )}
-                </NavLink>
-              );
-            })}
-          </div>
-        </nav>
+                    >
+                      <span className="text-gray-500 dark:text-gray-400">
+                        <Icon d={item.icon} />
+                      </span>
+                      {item.label}
+                      {note !== null && (
+                        <UpdateDot size="inline" position="right-2.5 top-1/2 -translate-y-1/2" />
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </nav>
 
-        {/* Section header: list label + right-aligned controls (icon + tooltip family):
+            {/* Section header: list label + right-aligned controls (icon + tooltip family):
             search, list settings (grouping + sort radios �?the old inline grouping
             toggle relocated into this menu), and the mode-dependent create button (the
             created object follows the grouping mode). The search is a mac-style
@@ -1746,135 +1751,135 @@ export function Sidebar({
             takes the full width and the field inside grows leftward over the label's
             place; the magnifier morphs from toggle button into the field's leading
             glyph. No ruled separator at this boundary �?see the nav toggle above. */}
-        <div
-          className={`mt-3 grid items-center px-1 pt-2 transition-[grid-template-columns] duration-200 ease-out ${
-            searchOpen ? "grid-cols-[0fr_1fr]" : "grid-cols-[1fr_1fr]"
-          }`}
-        >
-          <span
-            className={`min-w-0 overflow-hidden whitespace-nowrap px-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400 transition-opacity duration-200 dark:text-gray-500 ${
-              searchOpen ? "opacity-0" : "opacity-100"
-            }`}
-          >
-            {S.chat.sessionList}
-          </span>
-          <div className="flex min-w-0 items-center justify-end gap-0.5">
-            {searchOpen ? (
-              /* Expanded field: leading magnifier glyph + input + clear ×, one bordered
+            <div
+              className={`mt-3 grid items-center px-1 pt-2 transition-[grid-template-columns] duration-200 ease-out ${
+                searchOpen ? "grid-cols-[0fr_1fr]" : "grid-cols-[1fr_1fr]"
+              }`}
+            >
+              <span
+                className={`min-w-0 overflow-hidden whitespace-nowrap px-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400 transition-opacity duration-200 dark:text-gray-500 ${
+                  searchOpen ? "opacity-0" : "opacity-100"
+                }`}
+              >
+                {S.chat.sessionList}
+              </span>
+              <div className="flex min-w-0 items-center justify-end gap-0.5">
+                {searchOpen ? (
+                  /* Expanded field: leading magnifier glyph + input + clear ×, one bordered
                  box filling the row (its width rides the column tween). Esc and × both
                  collapse it and drop the filter. */
-              <div className="flex h-6 min-w-0 flex-1 items-center gap-1 rounded-md border border-gray-300 bg-white px-1.5 transition-colors duration-150 focus-within:border-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:focus-within:border-gray-500">
-                <span aria-hidden className="shrink-0 text-gray-400 dark:text-gray-500">
-                  <Icon d={SEARCH_ICON} size={12} />
-                </span>
-                <input
-                  autoFocus
-                  value={searchQuery}
-                  placeholder={S.chat.searchSessionsPlaceholder}
-                  aria-label={S.chat.searchSessions}
-                  {...noAutofill}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      e.stopPropagation();
-                      closeSearch();
-                    }
-                  }}
-                  className="min-w-0 flex-1 bg-transparent text-xs text-gray-700 placeholder:text-gray-400 focus:outline-none dark:text-gray-200 dark:placeholder:text-gray-500"
-                />
-                <button
-                  type="button"
-                  title={S.chat.searchClear}
-                  aria-label={S.chat.searchClear}
-                  onClick={closeSearch}
-                  className="flex h-4 w-4 shrink-0 items-center justify-center text-gray-400 transition-colors duration-150 hover:text-gray-700 dark:hover:text-gray-300"
+                  <div className="flex h-6 min-w-0 flex-1 items-center gap-1 rounded-md border border-gray-300 bg-white px-1.5 transition-colors duration-150 focus-within:border-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:focus-within:border-gray-500">
+                    <span aria-hidden className="shrink-0 text-gray-400 dark:text-gray-500">
+                      <Icon d={SEARCH_ICON} size={12} />
+                    </span>
+                    <input
+                      autoFocus
+                      value={searchQuery}
+                      placeholder={S.chat.searchSessionsPlaceholder}
+                      aria-label={S.chat.searchSessions}
+                      {...noAutofill}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          e.stopPropagation();
+                          closeSearch();
+                        }
+                      }}
+                      className="min-w-0 flex-1 bg-transparent text-xs text-gray-700 placeholder:text-gray-400 focus:outline-none dark:text-gray-200 dark:placeholder:text-gray-500"
+                    />
+                    <button
+                      type="button"
+                      title={S.chat.searchClear}
+                      aria-label={S.chat.searchClear}
+                      onClick={closeSearch}
+                      className="flex h-4 w-4 shrink-0 items-center justify-center text-gray-400 transition-colors duration-150 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
+                      <Icon d={CLOSE_ICON} size={11} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    title={S.chat.searchSessions}
+                    aria-label={S.chat.searchSessions}
+                    onClick={() => setSearchOpen(true)}
+                    className={headerControlClass(false)}
+                  >
+                    <Icon d={SEARCH_ICON} size={14} />
+                  </button>
+                )}
+                <Dropdown
+                  open={listSettingsOpen}
+                  setOpen={setListSettingsOpen}
+                  portal={{ direction: "down", align: "right" }}
+                  menuClass="w-40"
+                  button={
+                    <button
+                      type="button"
+                      title={S.chat.listSettings}
+                      aria-label={S.chat.listSettings}
+                      aria-haspopup="menu"
+                      aria-expanded={listSettingsOpen}
+                      onClick={() => setListSettingsOpen(!listSettingsOpen)}
+                      className={headerControlClass(listSettingsOpen)}
+                    >
+                      <Icon d={SLIDERS_ICON} size={14} />
+                    </button>
+                  }
                 >
-                  <Icon d={CLOSE_ICON} size={11} />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                title={S.chat.searchSessions}
-                aria-label={S.chat.searchSessions}
-                onClick={() => setSearchOpen(true)}
-                className={headerControlClass(false)}
-              >
-                <Icon d={SEARCH_ICON} size={14} />
-              </button>
-            )}
-            <Dropdown
-              open={listSettingsOpen}
-              setOpen={setListSettingsOpen}
-              portal={{ direction: "down", align: "right" }}
-              menuClass="w-40"
-              button={
-                <button
-                  type="button"
-                  title={S.chat.listSettings}
-                  aria-label={S.chat.listSettings}
-                  aria-haspopup="menu"
-                  aria-expanded={listSettingsOpen}
-                  onClick={() => setListSettingsOpen(!listSettingsOpen)}
-                  className={headerControlClass(listSettingsOpen)}
-                >
-                  <Icon d={SLIDERS_ICON} size={14} />
-                </button>
-              }
-            >
-              <p className={menuSectionClass}>{S.chat.groupModeSection}</p>
-              <MenuRadioRow
-                icon={GROUP_MODE_ICONS.workspace}
-                label={S.chat.groupByWorkspace}
-                checked={groupMode === "workspace"}
-                onSelect={() => {
-                  setGroupMode("workspace");
-                  setListSettingsOpen(false);
-                }}
-              />
-              <MenuRadioRow
-                icon={GROUP_MODE_ICONS.agent}
-                label={S.chat.groupByAgent}
-                checked={groupMode === "agent"}
-                onSelect={() => {
-                  setGroupMode("agent");
-                  setListSettingsOpen(false);
-                }}
-              />
-              <MenuRadioRow
-                icon={GROUP_MODE_ICONS.time}
-                label={S.chat.groupByTime}
-                checked={groupMode === "time"}
-                onSelect={() => {
-                  setGroupMode("time");
-                  setListSettingsOpen(false);
-                }}
-              />
-              <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
-              <p className={menuSectionClass}>{S.chat.sortModeSection}</p>
-              {/* Manual order is offered only where a drag can actually happen (see canDrag). */}
-              {canDrag && (
-                <MenuRadioRow
-                  icon={SORT_MODE_ICONS.manual}
-                  label={S.chat.sortManual}
-                  checked={sortMode === "manual"}
-                  onSelect={() => {
-                    setSortMode("manual");
-                    setListSettingsOpen(false);
-                  }}
-                />
-              )}
-              <MenuRadioRow
-                icon={SORT_MODE_ICONS.recent}
-                label={S.chat.sortRecent}
-                checked={sortMode === "recent"}
-                onSelect={() => {
-                  setSortMode("recent");
-                  setListSettingsOpen(false);
-                }}
-              />
-            </Dropdown>
-            {/* Mode-dependent create �?具体新建的对象按分组方式决定, the icon following
+                  <p className={menuSectionClass}>{S.chat.groupModeSection}</p>
+                  <MenuRadioRow
+                    icon={GROUP_MODE_ICONS.workspace}
+                    label={S.chat.groupByWorkspace}
+                    checked={groupMode === "workspace"}
+                    onSelect={() => {
+                      setGroupMode("workspace");
+                      setListSettingsOpen(false);
+                    }}
+                  />
+                  <MenuRadioRow
+                    icon={GROUP_MODE_ICONS.agent}
+                    label={S.chat.groupByAgent}
+                    checked={groupMode === "agent"}
+                    onSelect={() => {
+                      setGroupMode("agent");
+                      setListSettingsOpen(false);
+                    }}
+                  />
+                  <MenuRadioRow
+                    icon={GROUP_MODE_ICONS.time}
+                    label={S.chat.groupByTime}
+                    checked={groupMode === "time"}
+                    onSelect={() => {
+                      setGroupMode("time");
+                      setListSettingsOpen(false);
+                    }}
+                  />
+                  <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+                  <p className={menuSectionClass}>{S.chat.sortModeSection}</p>
+                  {/* Manual order is offered only where a drag can actually happen (see canDrag). */}
+                  {canDrag && (
+                    <MenuRadioRow
+                      icon={SORT_MODE_ICONS.manual}
+                      label={S.chat.sortManual}
+                      checked={sortMode === "manual"}
+                      onSelect={() => {
+                        setSortMode("manual");
+                        setListSettingsOpen(false);
+                      }}
+                    />
+                  )}
+                  <MenuRadioRow
+                    icon={SORT_MODE_ICONS.recent}
+                    label={S.chat.sortRecent}
+                    checked={sortMode === "recent"}
+                    onSelect={() => {
+                      setSortMode("recent");
+                      setListSettingsOpen(false);
+                    }}
+                  />
+                </Dropdown>
+                {/* Mode-dependent create �?具体新建的对象按分组方式决定, the icon following
                 suit (folder+ / robot+, a bottom-right plus badge on the entity's glyph):
                 agent grouping opens the Agents page's existing create dialog (route
                 state); workspace grouping opens the SAME directory-browse menu the
@@ -1882,329 +1887,338 @@ export function Sidebar({
                 workspace group immediately, Sessions or not. Time buckets are not
                 something to create into, so that mode starts a plain new conversation
                 and wears the compose glyph without a plus badge. */}
-            {newEntity === "agent" ? (
-              <button
-                type="button"
-                title={newEntityLabel}
-                aria-label={newEntityLabel}
-                onClick={() => {
-                  navigate("/agents", { state: { create: true } });
-                  onNavigate?.();
-                }}
-                className={headerControlClass(false)}
-              >
-                <AddBadgeIcon base={NAV_ICONS.agents} />
-              </button>
-            ) : newEntity === "chat" ? (
-              <button
-                type="button"
-                title={newEntityLabel}
-                aria-label={newEntityLabel}
-                onClick={() => newChat()}
-                className={headerControlClass(false)}
-              >
-                <Icon d={NEW_CHAT_ICON} size={ICON_SIZE.iconButton} />
-              </button>
-            ) : (
-              <WorkspaceSelect
-                // Remount per Project: the picker browses lazily and caches the listing
-                // for its lifetime, so a long-lived instance would show the PREVIOUS
-                // Project's directories after a switch — and register that path into the
-                // new Project's registry.
-                key={currentProjectId ?? "no-project"}
-                projectId={currentProjectId ?? ""}
-                workspace=""
-                onChange={addWorkspace}
-                // 近期使用 = 最近在里面聊过天的工作区（按各工作区最新会话的时间排序），没用过但已
-                // 注册的补在后面。不用注册顺序：那是**添加**顺序，而"近期"问的是**最近用过**
-                // ——先建 A 后建 B 却一直用 A 的话，注册顺序会把 B 排在前面。
-                recent={recentWorkspaces(sessions, registeredWorkspaces.map((e) => e.path))}
-                trigger={(open, toggle) => (
-                  // 触发器保持原来的 24x24 加号按钮（文件夹 + 右下角加号徽标），与同一条
-                  // 标题栏里的「新建智能体 / 新会话」完全一致。改的是它唤起的那个弹窗
-                  // （搜索 / 近期使用 / 打开本地文件夹），不是这个按钮本身。
+                {newEntity === "agent" ? (
                   <button
                     type="button"
                     title={newEntityLabel}
                     aria-label={newEntityLabel}
-                    aria-expanded={open}
-                    onClick={toggle}
-                    className={headerControlClass(open)}
+                    onClick={() => {
+                      navigate("/agents", { state: { create: true } });
+                      onNavigate?.();
+                    }}
+                    className={headerControlClass(false)}
                   >
-                    <AddBadgeIcon base={FOLDER_ICON} />
+                    <AddBadgeIcon base={NAV_ICONS.agents} />
                   </button>
+                ) : newEntity === "chat" ? (
+                  <button
+                    type="button"
+                    title={newEntityLabel}
+                    aria-label={newEntityLabel}
+                    onClick={() => newChat()}
+                    className={headerControlClass(false)}
+                  >
+                    <Icon d={NEW_CHAT_ICON} size={ICON_SIZE.iconButton} />
+                  </button>
+                ) : (
+                  <WorkspaceSelect
+                    // Remount per Project: the picker browses lazily and caches the listing
+                    // for its lifetime, so a long-lived instance would show the PREVIOUS
+                    // Project's directories after a switch — and register that path into the
+                    // new Project's registry.
+                    key={currentProjectId ?? "no-project"}
+                    projectId={currentProjectId ?? ""}
+                    workspace=""
+                    onChange={addWorkspace}
+                    // 近期使用 = 最近在里面聊过天的工作区（按各工作区最新会话的时间排序），没用过但已
+                    // 注册的补在后面。不用注册顺序：那是**添加**顺序，而"近期"问的是**最近用过**
+                    // ——先建 A 后建 B 却一直用 A 的话，注册顺序会把 B 排在前面。
+                    recent={recentWorkspaces(
+                      sessions,
+                      registeredWorkspaces.map((e) => e.path),
+                    )}
+                    trigger={(open, toggle) => (
+                      // 触发器保持原来的 24x24 加号按钮（文件夹 + 右下角加号徽标），与同一条
+                      // 标题栏里的「新建智能体 / 新会话」完全一致。改的是它唤起的那个弹窗
+                      // （搜索 / 近期使用 / 打开本地文件夹），不是这个按钮本身。
+                      <button
+                        type="button"
+                        title={newEntityLabel}
+                        aria-label={newEntityLabel}
+                        aria-expanded={open}
+                        onClick={toggle}
+                        className={headerControlClass(open)}
+                      >
+                        <AddBadgeIcon base={FOLDER_ICON} />
+                      </button>
+                    )}
+                  />
                 )}
-              />
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Parked draft conversations (unsent new chats, newest first): pinned above both
+            {/* Parked draft conversations (unsent new chats, newest first): pinned above both
             grouping modes �?they belong to no Agent or Workspace until sent. Hidden
             entirely while there are none; the search filter applies to their titles too. */}
-        {shownDrafts.length > 0 && (
-          <div className="pt-2.5">
-            <GroupHeader
-              open={searching || !collapsedGroups.has(DRAFTS_GROUP_KEY)}
-              onToggle={() => toggleGroup(DRAFTS_GROUP_KEY)}
-              icon={
-                <span className="shrink-0 text-gray-400 dark:text-gray-500">
-                  <Icon d={NEW_CHAT_ICON} size={ICON_SIZE.groupHeaderGlyph} />
-                </span>
-              }
-              label={S.chat.draftGroup}
-              uppercase
-              count={shownDrafts.length}
-            />
-            {(searching || !collapsedGroups.has(DRAFTS_GROUP_KEY)) && (
-              <ul className="space-y-0.5">
-                {shownDrafts.map((entry) => (
-                  <DraftRow
-                    key={entry.id}
-                    entry={entry}
-                    active={entry.id === activeSessionId}
-                    onOpen={() => go(`/chat/${entry.id}`)}
-                    onDelete={() => setDeletingDraft(entry)}
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {groupMode === "agent" ? (
-          loading && agents.length === 0 ? (
-            <SkeletonList rows={5} />
-          ) : (
-            // While searching: every group renders (paging bypassed), zero-match groups
-            // hide, and the rest are forced open �?a hit inside a collapsed group would
-            // look like a missing result.
-            groupsOnPage(orderedAgents).map((agent) => {
-              const groupRows = filterRows(byAgent.get(agent.agentId) ?? []);
-              if (searching && groupRows.length === 0) return null;
-              const parts = partitionSessions(groupRows);
-              const collapsed = !searching && collapsedGroups.has(agent.agentId);
-              const pinned = pinnedGroups.has(agent.agentId);
-              const drag = groupDragProps(agent.agentId, agentGroupSequence);
-              return (
-                <GroupBlock key={agent.agentId} dropEdge={drag.dropEdge}>
-                  {/* Group header: collapse toggle (Agent name) + pin + new chat + Agent settings; also the group's drag handle. */}
-                  <GroupHeader
-                    {...drag.header}
-                    open={!collapsed}
-                    onToggle={() => toggleGroup(agent.agentId)}
-                    icon={
-                      <AgentAvatar
-                        id={agent.agentId}
-                        name={agentDisplayName(agent)}
-                        size={18}
-                        className="shrink-0 rounded"
+            {shownDrafts.length > 0 && (
+              <div className="pt-2.5">
+                <GroupHeader
+                  open={searching || !collapsedGroups.has(DRAFTS_GROUP_KEY)}
+                  onToggle={() => toggleGroup(DRAFTS_GROUP_KEY)}
+                  icon={
+                    <span className="shrink-0 text-gray-400 dark:text-gray-500">
+                      <Icon d={NEW_CHAT_ICON} size={ICON_SIZE.groupHeaderGlyph} />
+                    </span>
+                  }
+                  label={S.chat.draftGroup}
+                  uppercase
+                  count={shownDrafts.length}
+                />
+                {(searching || !collapsedGroups.has(DRAFTS_GROUP_KEY)) && (
+                  <ul className="space-y-0.5">
+                    {shownDrafts.map((entry) => (
+                      <DraftRow
+                        key={entry.id}
+                        entry={entry}
+                        active={entry.id === activeSessionId}
+                        onOpen={() => go(`/chat/${entry.id}`)}
+                        onDelete={() => setDeletingDraft(entry)}
                       />
-                    }
-                    label={agentDisplayName(agent)}
-                    uppercase
-                    actions={
-                      <>
-                        <GroupPinButton pinned={pinned} onToggle={() => togglePin(agent.agentId)} />
-                        {/* New chat: enters draft state directly with this group's Agent (all options live on the draft input card) */}
-                        <button
-                          type="button"
-                          title={S.chat.newSessionMenu}
-                          aria-label={S.chat.newSessionMenu}
-                          onClick={() => newChat(agent.agentId)}
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                        >
-                          <Icon d="M12 5v14M5 12h14" size={ICON_SIZE.groupHeaderAction} />
-                        </button>
-                        <button
-                          type="button"
-                          title={S.agent.settings}
-                          onClick={() => go(`/agents/${agent.agentId}`)}
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                        >
-                          <Icon d={GEAR_ICON} size={ICON_SIZE.groupHeaderAction} />
-                        </button>
-                      </>
-                    }
-                  />
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
-                  {collapsed
-                    ? null
-                    : renderGroupBody(
-                        agent.agentId,
-                        parts,
-                        false,
-                        countsByAgent.get(agent.agentId),
-                        () => [agent.agentId],
-                      )}
-                </GroupBlock>
-              );
-            })
-          )
-        ) : null}
-        {groupMode === "agent" ? groupPagerRow() : null}
-        {groupMode !== "workspace" ? null : loading && sessions.length === 0 ? (
-          <SkeletonList rows={5} />
-        ) : orderedWorkspaceGroups.length === 0 && !searching ? (
-          <p className="px-2.5 pt-3 text-xs text-gray-400 dark:text-gray-600">
-            {S.chat.noSessions}
-          </p>
-        ) : (
-          // Same search treatment as agent mode: paging bypassed, zero-match groups hidden, the rest forced open.
-          groupsOnPage(orderedWorkspaceGroups).map((group) => {
-            const groupRows = filterRows(group.sessions);
-            if (searching && groupRows.length === 0) return null;
-            const parts = partitionSessions(groupRows);
-            const collapsed = !searching && collapsedGroups.has(group.key);
-            const pinned = pinnedGroups.has(group.key);
-            const drag = groupDragProps(group.key, workspaceGroupSequence);
-            /** This group's exact server share (per-Workspace fold) and its per-category fetch fan-out. */
-            const counts = workspaceGroupCounts.get(group.key);
-            const contributingAgents = [...new Set(group.sessions.map((s) => s.agentId))];
-            const agentsFor = (category: SessionCategory) => [
-              ...new Set([...(counts?.agents[category] ?? []), ...contributingAgents]),
-            ];
-            return (
-              <GroupBlock key={group.key} dropEdge={drag.dropEdge}>
-                {/* Group header: collapse toggle (folder icon + directory basename + count, full
+            {groupMode === "agent" ? (
+              loading && agents.length === 0 ? (
+                <SkeletonList rows={5} />
+              ) : (
+                // While searching: every group renders (paging bypassed), zero-match groups
+                // hide, and the rest are forced open �?a hit inside a collapsed group would
+                // look like a missing result.
+                groupsOnPage(orderedAgents).map((agent) => {
+                  const groupRows = filterRows(byAgent.get(agent.agentId) ?? []);
+                  if (searching && groupRows.length === 0) return null;
+                  const parts = partitionSessions(groupRows);
+                  const collapsed = !searching && collapsedGroups.has(agent.agentId);
+                  const pinned = pinnedGroups.has(agent.agentId);
+                  const drag = groupDragProps(agent.agentId, agentGroupSequence);
+                  return (
+                    <GroupBlock key={agent.agentId} dropEdge={drag.dropEdge}>
+                      {/* Group header: collapse toggle (Agent name) + pin + new chat + Agent settings; also the group's drag handle. */}
+                      <GroupHeader
+                        {...drag.header}
+                        open={!collapsed}
+                        onToggle={() => toggleGroup(agent.agentId)}
+                        icon={
+                          <AgentAvatar
+                            id={agent.agentId}
+                            name={agentDisplayName(agent)}
+                            size={18}
+                            className="shrink-0 rounded"
+                          />
+                        }
+                        label={agentDisplayName(agent)}
+                        uppercase
+                        actions={
+                          <>
+                            <GroupPinButton
+                              pinned={pinned}
+                              onToggle={() => togglePin(agent.agentId)}
+                            />
+                            {/* New chat: enters draft state directly with this group's Agent (all options live on the draft input card) */}
+                            <button
+                              type="button"
+                              title={S.chat.newSessionMenu}
+                              aria-label={S.chat.newSessionMenu}
+                              onClick={() => newChat(agent.agentId)}
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                            >
+                              <Icon d="M12 5v14M5 12h14" size={ICON_SIZE.groupHeaderAction} />
+                            </button>
+                            <button
+                              type="button"
+                              title={S.agent.settings}
+                              onClick={() => go(`/agents/${agent.agentId}`)}
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                            >
+                              <Icon d={GEAR_ICON} size={ICON_SIZE.groupHeaderAction} />
+                            </button>
+                          </>
+                        }
+                      />
+
+                      {collapsed
+                        ? null
+                        : renderGroupBody(
+                            agent.agentId,
+                            parts,
+                            false,
+                            countsByAgent.get(agent.agentId),
+                            () => [agent.agentId],
+                          )}
+                    </GroupBlock>
+                  );
+                })
+              )
+            ) : null}
+            {groupMode === "agent" ? groupPagerRow() : null}
+            {groupMode !== "workspace" ? null : loading && sessions.length === 0 ? (
+              <SkeletonList rows={5} />
+            ) : orderedWorkspaceGroups.length === 0 && !searching ? (
+              <p className="px-2.5 pt-3 text-xs text-gray-400 dark:text-gray-600">
+                {S.chat.noSessions}
+              </p>
+            ) : (
+              // Same search treatment as agent mode: paging bypassed, zero-match groups hidden, the rest forced open.
+              groupsOnPage(orderedWorkspaceGroups).map((group) => {
+                const groupRows = filterRows(group.sessions);
+                if (searching && groupRows.length === 0) return null;
+                const parts = partitionSessions(groupRows);
+                const collapsed = !searching && collapsedGroups.has(group.key);
+                const pinned = pinnedGroups.has(group.key);
+                const drag = groupDragProps(group.key, workspaceGroupSequence);
+                /** This group's exact server share (per-Workspace fold) and its per-category fetch fan-out. */
+                const counts = workspaceGroupCounts.get(group.key);
+                const contributingAgents = [...new Set(group.sessions.map((s) => s.agentId))];
+                const agentsFor = (category: SessionCategory) => [
+                  ...new Set([...(counts?.agents[category] ?? []), ...contributingAgents]),
+                ];
+                return (
+                  <GroupBlock key={group.key} dropEdge={drag.dropEdge}>
+                    {/* Group header: collapse toggle (folder icon + directory basename + count, full
                     path in the tooltip; the count = the group's active conversations only, exact
                     server share, loaded rows win a disagreement �?the folders never feed it) +
                     pin + new chat in this Workspace; also the group's drag handle. */}
-                <GroupHeader
-                  {...drag.header}
-                  open={!collapsed}
-                  onToggle={() => toggleGroup(group.key)}
-                  icon={
-                    /* Folder opens and closes with the group */
-                    <span className="shrink-0 text-gray-400 dark:text-gray-500">
-                      <Icon
-                        d={collapsed ? FOLDER_ICON : FOLDER_OPEN_ICON}
-                        size={ICON_SIZE.groupHeaderGlyph}
-                      />
-                    </span>
-                  }
-                  label={group.temp ? S.chat.tempWorkspaces : group.label}
-                  count={
-                    searching
-                      ? parts.active.length
-                      : Math.max(counts?.totals.active ?? 0, parts.active.length)
-                  }
-                  {...(group.fullPath !== null ? { title: group.fullPath } : {})}
-                  actions={
-                    <>
-                      <GroupPinButton pinned={pinned} onToggle={() => togglePin(group.key)} />
-                      {/* New chat in this Workspace: pre-fills the group's path in the draft ("" = temporary workspace); the Agent is the current one, falling back to default_agent */}
-                      <button
-                        type="button"
-                        title={S.chat.newSessionInWorkspace}
-                        aria-label={S.chat.newSessionInWorkspace}
-                        onClick={() => newChat(workspaceNewChatAgentId, group.fullPath ?? "")}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                      >
-                        <Icon d="M12 5v14M5 12h14" size={ICON_SIZE.groupHeaderAction} />
-                      </button>
-                      {/* Manually-added (registry-backed) Workspaces only: rename-alias /
+                    <GroupHeader
+                      {...drag.header}
+                      open={!collapsed}
+                      onToggle={() => toggleGroup(group.key)}
+                      icon={
+                        /* Folder opens and closes with the group */
+                        <span className="shrink-0 text-gray-400 dark:text-gray-500">
+                          <Icon
+                            d={collapsed ? FOLDER_ICON : FOLDER_OPEN_ICON}
+                            size={ICON_SIZE.groupHeaderGlyph}
+                          />
+                        </span>
+                      }
+                      label={group.temp ? S.chat.tempWorkspaces : group.label}
+                      count={
+                        searching
+                          ? parts.active.length
+                          : Math.max(counts?.totals.active ?? 0, parts.active.length)
+                      }
+                      {...(group.fullPath !== null ? { title: group.fullPath } : {})}
+                      actions={
+                        <>
+                          <GroupPinButton pinned={pinned} onToggle={() => togglePin(group.key)} />
+                          {/* New chat in this Workspace: pre-fills the group's path in the draft ("" = temporary workspace); the Agent is the current one, falling back to default_agent */}
+                          <button
+                            type="button"
+                            title={S.chat.newSessionInWorkspace}
+                            aria-label={S.chat.newSessionInWorkspace}
+                            onClick={() => newChat(workspaceNewChatAgentId, group.fullPath ?? "")}
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors duration-150 hover:bg-gray-200/70 hover:text-gray-800 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                          >
+                            <Icon d="M12 5v14M5 12h14" size={ICON_SIZE.groupHeaderAction} />
+                          </button>
+                          {/* Manually-added (registry-backed) Workspaces only: rename-alias /
                             remove-from-sidebar overflow, to the right of the "+" (session-
                             derived groups have no registry entry for these to act on). */}
-                      {registeredPaths.has(group.key) && (
-                        <GroupOverflowMenu
-                          onRename={() => openRenameWorkspace(group.key)}
-                          onDelete={() =>
-                            setDeletingWorkspace({ path: group.key, label: group.label })
-                          }
-                        />
-                      )}
-                    </>
-                  }
-                />
+                          {registeredPaths.has(group.key) && (
+                            <GroupOverflowMenu
+                              onRename={() => openRenameWorkspace(group.key)}
+                              onDelete={() =>
+                                setDeletingWorkspace({ path: group.key, label: group.label })
+                              }
+                            />
+                          )}
+                        </>
+                      }
+                    />
 
-                {/* A workspace group can span Agents: the group body fans folder loads and "More"
+                    {/* A workspace group can span Agents: the group body fans folder loads and "More"
                     out per category to the Agents whose share of THIS group is non-zero (plus the
                     Agents already contributing loaded rows) �?the active list and each folder
                     page independently. */}
-                {collapsed
-                  ? null
-                  : renderGroupBody(group.key, parts, true, counts?.totals, agentsFor)}
-              </GroupBlock>
-            );
-          })
-        )}
-        {groupMode === "workspace" ? groupPagerRow() : null}
+                    {collapsed
+                      ? null
+                      : renderGroupBody(group.key, parts, true, counts?.totals, agentsFor)}
+                  </GroupBlock>
+                );
+              })
+            )}
+            {groupMode === "workspace" ? groupPagerRow() : null}
 
-        {/* Time mode: last day / last month / earlier, bucketed on each conversation's last
+            {/* Time mode: last day / last month / earlier, bucketed on each conversation's last
             activity �?the same stamp the rows' compact timestamps and the recency sort read,
             so a row can never sit under a bucket its own timestamp contradicts. Empty buckets
             are dropped, and there are at most three, so this mode never paginates its groups.
             The buckets span every Agent and every Workspace: a bucket's "More" only reveals
             further loaded rows, while fetching the next page and reaching the Subagents /
             Scheduled / Archived rows happen once for the whole Project, below. */}
-        {groupMode !== "time" || timeParts === null ? null : loading && sessions.length === 0 ? (
-          <SkeletonList rows={5} />
-        ) : (
-          <>
-            {timeGroups.map((group) => {
-              const collapsed = !searching && collapsedGroups.has(group.key);
-              return (
-                <div key={group.key} className="pt-2.5">
-                  <GroupHeader
-                    open={!collapsed}
-                    onToggle={() => toggleGroup(group.key)}
-                    icon={
-                      <span className="shrink-0 text-gray-400 dark:text-gray-500">
-                        <Icon d={GROUP_MODE_ICONS.time} size={ICON_SIZE.groupHeaderGlyph} />
-                      </span>
-                    }
-                    label={S.chat.timeGroups[group.bucket]}
-                    uppercase
-                    count={group.sessions.length}
-                  />
-                  {collapsed
-                    ? null
-                    : renderGroupBody(
-                        group.key,
-                        bucketPartition(group.sessions),
-                        true,
-                        undefined,
-                        () => [],
-                      )}
-                </div>
-              );
-            })}
+            {groupMode !== "time" || timeParts === null ? null : loading &&
+              sessions.length === 0 ? (
+              <SkeletonList rows={5} />
+            ) : (
+              <>
+                {timeGroups.map((group) => {
+                  const collapsed = !searching && collapsedGroups.has(group.key);
+                  return (
+                    <div key={group.key} className="pt-2.5">
+                      <GroupHeader
+                        open={!collapsed}
+                        onToggle={() => toggleGroup(group.key)}
+                        icon={
+                          <span className="shrink-0 text-gray-400 dark:text-gray-500">
+                            <Icon d={GROUP_MODE_ICONS.time} size={ICON_SIZE.groupHeaderGlyph} />
+                          </span>
+                        }
+                        label={S.chat.timeGroups[group.bucket]}
+                        uppercase
+                        count={group.sessions.length}
+                      />
+                      {collapsed
+                        ? null
+                        : renderGroupBody(
+                            group.key,
+                            bucketPartition(group.sessions),
+                            true,
+                            undefined,
+                            () => [],
+                          )}
+                    </div>
+                  );
+                })}
 
-            {/* Empty only when the shared folders below are empty too (renderGroupBody's own
+                {/* Empty only when the shared folders below are empty too (renderGroupBody's own
                 rule): "no Sessions yet" over an "Archived (3)" row would contradict it. */}
-            {timeGroups.length === 0 && !searching && timeFolders.every((f) => f === null) && (
-              <p className="px-2.5 pt-3 text-xs text-gray-400 dark:text-gray-600">
-                {S.chat.noSessions}
-              </p>
+                {timeGroups.length === 0 && !searching && timeFolders.every((f) => f === null) && (
+                  <p className="px-2.5 pt-3 text-xs text-gray-400 dark:text-gray-600">
+                    {S.chat.noSessions}
+                  </p>
+                )}
+
+                {/* Whole-list paging: a fetched page lands in whichever bucket its rows' activity
+                puts them, so the row that pulls one belongs to the list, not to a bucket �?                and its label says "conversations" where a bucket's says "more". */}
+                {!searching &&
+                  timeParts.active.length < projectCounts.active &&
+                  timeMoreAgents.length > 0 && (
+                    <MoreRow
+                      label={S.chat.loadMoreSessions}
+                      ariaLabel={S.chat.loadMoreSessions}
+                      pending={pendingLoads.has(loadKey(TIME_FOLDERS_GROUP_KEY, "active"))}
+                      onClick={() =>
+                        trackedLoadMore(TIME_FOLDERS_GROUP_KEY, "active", timeMoreAgents)
+                      }
+                      className="mt-1"
+                    />
+                  )}
+
+                {/* The shared, Project-wide folders (see timeFolders). */}
+                <div className="pt-2.5">{timeFolders}</div>
+              </>
             )}
 
-            {/* Whole-list paging: a fetched page lands in whichever bucket its rows' activity
-                puts them, so the row that pulls one belongs to the list, not to a bucket �?                and its label says "conversations" where a bucket's says "more". */}
-            {!searching &&
-              timeParts.active.length < projectCounts.active &&
-              timeMoreAgents.length > 0 && (
-                <MoreRow
-                  label={S.chat.loadMoreSessions}
-                  ariaLabel={S.chat.loadMoreSessions}
-                  pending={pendingLoads.has(loadKey(TIME_FOLDERS_GROUP_KEY, "active"))}
-                  onClick={() => trackedLoadMore(TIME_FOLDERS_GROUP_KEY, "active", timeMoreAgents)}
-                  className="mt-1"
-                />
-              )}
-
-            {/* The shared, Project-wide folders (see timeFolders). */}
-            <div className="pt-2.5">{timeFolders}</div>
-          </>
-        )}
-
-        {/* Quiet no-match line: the search is live and nothing �?drafts included �?hit. */}
-        {searching && !hasSearchMatches && (
-          <p className="px-2.5 pt-3 text-xs text-gray-400 dark:text-gray-600">
-            {S.chat.searchNoMatches}
-          </p>
-        )}
-      </div>
+            {/* Quiet no-match line: the search is live and nothing �?drafts included �?hit. */}
+            {searching && !hasSearchMatches && (
+              <p className="px-2.5 pt-3 text-xs text-gray-400 dark:text-gray-600">
+                {S.chat.searchNoMatches}
+              </p>
+            )}
+          </div>
         </>
       )}
 

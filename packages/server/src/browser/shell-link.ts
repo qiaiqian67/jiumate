@@ -12,10 +12,7 @@
  * not know how — it sends a command and waits for the answer.
  */
 import { randomUUID } from "node:crypto";
-import type {
-  BrowserBackend,
-  BrowserBackendCapabilities,
-} from "@jadelau/core/interfaces";
+import type { BrowserBackend, BrowserBackendCapabilities } from "@jadelau/core/interfaces";
 import { BrowserLinkError } from "./link.js";
 import type { BrowserCommand, BrowserLink, BrowserLinkEvent } from "./link.js";
 

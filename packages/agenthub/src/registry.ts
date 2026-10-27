@@ -707,9 +707,7 @@ function convertPricing(pricing: ModelPricing, currency: Currency): ModelPricing
     prompt_tokens: round(pricing.prompt_tokens),
     thoughts_tokens: round(pricing.thoughts_tokens),
     response_tokens: round(pricing.response_tokens),
-    ...(pricing.cached_tokens !== undefined
-      ? { cached_tokens: round(pricing.cached_tokens) }
-      : {}),
+    ...(pricing.cached_tokens !== undefined ? { cached_tokens: round(pricing.cached_tokens) } : {}),
   };
 }
 

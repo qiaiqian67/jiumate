@@ -273,24 +273,26 @@ function Figure({
   return (
     <div
       className={`watch-figure absolute -translate-y-1/2 ${spec.key}`}
-      style={{
-        top: spec.top,
-        left: spec.left,
-        height: spec.height,
-        /*
-         * No font-size here on purpose. An earlier version set it to the height as a percentage
-         * and sized everything in `em`, which is wrong twice over: `font-size: 44%` resolves
-         * against the parent's inherited font size (about 16px), not against any height, so the em
-         * basis was ~7px and every dimension collapsed — the figures rendered as thin lines with no
-         * eyes or mouths. The stylesheet now uses `cqh` against the panel's container height,
-         * which is the unit that actually means what the numbers need to mean.
-         *
-         * The blink period is per figure (see FigureSpec.blink). Handed to CSS as a custom
-         * property rather than as an inline `animation` shorthand, so the keyframes in the
-         * stylesheet stay the single definition of what a blink is.
-         */
-        "--watch-blink": `${spec.blink}s`,
-      } as CSSProperties}
+      style={
+        {
+          top: spec.top,
+          left: spec.left,
+          height: spec.height,
+          /*
+           * No font-size here on purpose. An earlier version set it to the height as a percentage
+           * and sized everything in `em`, which is wrong twice over: `font-size: 44%` resolves
+           * against the parent's inherited font size (about 16px), not against any height, so the em
+           * basis was ~7px and every dimension collapsed — the figures rendered as thin lines with no
+           * eyes or mouths. The stylesheet now uses `cqh` against the panel's container height,
+           * which is the unit that actually means what the numbers need to mean.
+           *
+           * The blink period is per figure (see FigureSpec.blink). Handed to CSS as a custom
+           * property rather than as an inline `animation` shorthand, so the keyframes in the
+           * stylesheet stay the single definition of what a blink is.
+           */
+          "--watch-blink": `${spec.blink}s`,
+        } as CSSProperties
+      }
       // Set as attributes rather than class names so the CSS can key off the state itself; a
       // class would have to be recomputed here and could drift from what the panel knows.
       data-leaning={leaning || undefined}

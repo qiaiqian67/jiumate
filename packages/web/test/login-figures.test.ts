@@ -52,7 +52,9 @@ describe("小人的形体", () => {
     // 0.5 在 scale=0.62 时是超标的（0.31 > 0.19），几何测试抓到了——而当时这条断言拦下了
     // 正确的 0.55。断言了一个看起来合理却与几何无关的数，会挡住修复它自己该挡的东西。
     const travel = Number(/const PUPIL_TRAVEL = ([\d.]+)/.exec(FIGURES)?.[1]);
-    const scale = Number(/transform: scale\(([\d.]+)\)/.exec(CSS.split(".watch-pupil {")[1] ?? "")?.[1]);
+    const scale = Number(
+      /transform: scale\(([\d.]+)\)/.exec(CSS.split(".watch-pupil {")[1] ?? "")?.[1],
+    );
     expect(travel).toBeGreaterThan(0);
     expect(scale).toBeGreaterThan(0);
     // 行程不越界。
@@ -105,7 +107,9 @@ describe("小人的形体", () => {
 
   it("嘴巴张开时是圆的不是更高的方块", () => {
     // 只加高不圆化会读成"一条更粗的线"，不是张开的嘴。
-    expect(CSS).toMatch(/\.watch-mouth\[data-surprised\] \{[^}]*height: [\d.]+cqh;[^}]*border-radius: 50%/s);
+    expect(CSS).toMatch(
+      /\.watch-mouth\[data-surprised\] \{[^}]*height: [\d.]+cqh;[^}]*border-radius: 50%/s,
+    );
   });
 });
 
@@ -128,7 +132,7 @@ describe("三种反应", () => {
   });
 
   it("空提交 → 全体张嘴并站直", () => {
-    expect(PAGE).toContain("setStartled(userId.trim() === \"\" && password.trim() === \"\")");
+    expect(PAGE).toContain('setStartled(userId.trim() === "" && password.trim() === "")');
     expect(FIGURES).toContain("data-surprised={surprised || undefined}");
     // 惊讶时必须站直（只留 translateY），否则读成"摔倒"而不是"吃惊"。
     expect(CSS).toMatch(/\.watch-figure\[data-surprised\] \{[^}]*transform: translateY\(-50%\);/s);

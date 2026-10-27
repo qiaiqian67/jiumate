@@ -40,7 +40,7 @@ describe("reconcilePluginIds", () => {
   /** One install directory with a Skill in it. */
   async function writeInstall(rootDir: string, id: string, skills: string[], enabled?: boolean) {
     // `<root>/<project>/agents/<agent>/agent_state/plugins/<id>` — the layout `pluginsDir` builds.
-const dir = path.join(rootDir, "p1", "agents", agentId, "agent_state", "plugins", id);
+    const dir = path.join(rootDir, "p1", "agents", agentId, "agent_state", "plugins", id);
     for (const skill of skills) {
       await fs.mkdir(path.join(dir, "skills", skill), { recursive: true });
       await fs.writeFile(
@@ -135,7 +135,18 @@ const dir = path.join(rootDir, "p1", "agents", agentId, "agent_state", "plugins"
     await reconcilePluginIds(root, projectId, agentId);
 
     const body = await fs.readFile(
-      path.join(root, "p1", "agents", agentId, "agent_state", "plugins", localPluginId("thing"), "skills", "alpha", "SKILL.md"),
+      path.join(
+        root,
+        "p1",
+        "agents",
+        agentId,
+        "agent_state",
+        "plugins",
+        localPluginId("thing"),
+        "skills",
+        "alpha",
+        "SKILL.md",
+      ),
       "utf8",
     );
     expect(body).toContain("EDITED");

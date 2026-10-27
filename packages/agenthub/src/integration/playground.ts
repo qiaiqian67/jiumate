@@ -125,8 +125,7 @@ export function createChatApp(): Express {
     ) => {
       if (err.status === 413 || err.type === "entity.too.large") {
         return res.status(413).json({
-          error:
-            "Request body is too large. Please upload fewer or smaller images.",
+          error: "Request body is too large. Please upload fewer or smaller images.",
         });
       }
       next(err);
@@ -1537,10 +1536,7 @@ export function createChatApp(): Express {
  * @param host - Host address to bind to
  * @param port - Port number to listen on
  */
-export function startPlaygroundServer(
-  host: string = "127.0.0.1",
-  port: number = 25751,
-): void {
+export function startPlaygroundServer(host: string = "127.0.0.1", port: number = 25751): void {
   // the playground exists to show what a model and its endpoint actually send, so unknown
   // stream output fails loudly here unless the caller says otherwise
   process.env.AGENTHUB_DEBUG = process.env.AGENTHUB_DEBUG ?? "1";

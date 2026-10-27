@@ -15,12 +15,7 @@
  */
 import fs from "node:fs/promises";
 import { agentsDir, createAgent, isSessionMeta } from "@jadelau/core";
-import type {
-  BrowserPort,
-  ControlEnvContext,
-  PetControlPort,
-  ProxyEnvPolicy,
-} from "@jadelau/core";
+import type { BrowserPort, ControlEnvContext, PetControlPort, ProxyEnvPolicy } from "@jadelau/core";
 import type {
   ApprovalMode,
   MessagingChannel,

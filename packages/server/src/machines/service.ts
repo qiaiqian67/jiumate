@@ -25,12 +25,7 @@
  */
 import fs from "node:fs";
 import os from "node:os";
-import {
-  DEFAULT_PROJECT_ID,
-  DEFAULT_SERVER_PORT,
-  VERSION,
-  loadProjectConfig,
-} from "@jadelau/core";
+import { DEFAULT_PROJECT_ID, DEFAULT_SERVER_PORT, VERSION, loadProjectConfig } from "@jadelau/core";
 import type { ProjectConfig } from "@jadelau/core";
 import type { MachineInfo, MachineJob, MachineServerStatus } from "../api/types.js";
 import { readServerLock } from "../lock.js";

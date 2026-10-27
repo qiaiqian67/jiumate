@@ -35,8 +35,7 @@ import { usePortalPanel } from "./use-portal-panel";
  */
 const HELP_ICON =
   "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.6 9.3a2.5 2.5 0 0 1 4.9.8c0 1.7-2.5 2.5-2.5 2.5M12 16.8h.01";
-const WARN_ICON =
-  "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.6v5.2M12 16.4h.01";
+const WARN_ICON = "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.6v5.2M12 16.4h.01";
 
 const PANEL_WIDTH = 288; // w-72, the OptionMenu panel width
 

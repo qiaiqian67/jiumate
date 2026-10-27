@@ -5,7 +5,12 @@
  * DOM — the same decision the rest of `test/` makes (see vitest.config.ts).
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { loadCategories, loadFilings, saveFilings, scopedId } from "../src/features/plugins/extension-state";
+import {
+  loadCategories,
+  loadFilings,
+  saveFilings,
+  scopedId,
+} from "../src/features/plugins/extension-state";
 
 /** Minimal localStorage: the store is used synchronously and never enumerates keys. */
 const store = new Map<string, string>();

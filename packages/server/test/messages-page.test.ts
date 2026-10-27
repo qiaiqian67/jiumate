@@ -29,10 +29,7 @@ import {
   toolCallOutput,
   userText,
 } from "@jadelau/core";
-import {
-  buildBackgroundTaskDoneMessage,
-  buildHandoffMessage,
-} from "@jadelau/core/markers";
+import { buildBackgroundTaskDoneMessage, buildHandoffMessage } from "@jadelau/core/markers";
 import type { OmniMessage, SessionMetaPayload, TokenCounts } from "@jadelau/core";
 import { decodeCursor, encodeCursor } from "../src/services/message-window.js";
 import type { TraceService } from "../src/services/trace-service.js";

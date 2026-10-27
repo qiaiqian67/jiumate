@@ -184,10 +184,7 @@ describe("discoverPlugins", () => {
    * also finds whatever their own Agents have installed. Comparing the whole list would make these
    * tests pass in CI and fail on a laptop; this restricts the assertion to what the test created.
    */
-  function foundIn(
-    plugins: readonly { name: string }[],
-    ...expected: string[]
-  ): string[] {
+  function foundIn(plugins: readonly { name: string }[], ...expected: string[]): string[] {
     return plugins.map((p) => p.name).filter((n) => expected.includes(n));
   }
   /** A minimal plugin directory: a manifest with a version, and one skill. */
@@ -285,8 +282,8 @@ describe("discoverPlugins", () => {
     // A mistyped path is the common case, not an exceptional one.
     expect(() => discoverPlugins(path.join(tmp, "nope"))).not.toThrow();
     // Only asserted on the names this test owns: the real home directory is probed too.
-    expect(discoverPlugins(path.join(tmp, "nope")).plugins.filter((p) => p.origin === "manual")).toEqual(
-      [],
-    );
+    expect(
+      discoverPlugins(path.join(tmp, "nope")).plugins.filter((p) => p.origin === "manual"),
+    ).toEqual([]);
   });
 });

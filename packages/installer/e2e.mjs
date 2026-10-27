@@ -43,7 +43,13 @@ async function ev(expr) {
         const m = JSON.parse(e.data);
         if (m.id === 1) res(m.result?.result?.value);
       });
-      ws.send(JSON.stringify({ id: 1, method: "Runtime.evaluate", params: { expression: expr, returnByValue: true } }));
+      ws.send(
+        JSON.stringify({
+          id: 1,
+          method: "Runtime.evaluate",
+          params: { expression: expr, returnByValue: true },
+        }),
+      );
     });
     ws.close();
     return v;
@@ -61,18 +67,32 @@ async function waitForPage(sec = 40) {
 
 const dataBefore = count(dataRoot);
 console.log(`历史数据: ${dataBefore} 文件\n=== 安装 ===`);
-spawn(path.join(ROOT, "out", "win-unpacked", "JiuMate Installer.exe"), [`--remote-debugging-port=${PORT}`], { detached: true, stdio: "ignore" });
-if (!await waitForPage()) throw new Error("安装器未启动");
+spawn(
+  path.join(ROOT, "out", "win-unpacked", "JiuMate Installer.exe"),
+  [`--remote-debugging-port=${PORT}`],
+  { detached: true, stdio: "ignore" },
+);
+if (!(await waitForPage())) throw new Error("安装器未启动");
 await sleep(1200);
-await ev(`window.__r = 1; window.installer.start({ target: ${JSON.stringify(target)}, desktop: true, startMenu: true }).then(r => { window.__r = JSON.stringify(r) }); 1`);
-for (let i = 0; i < 200; i++) { const v = await ev("String(window.__r)"); if (v && v !== "1") break; await sleep(1000); }
+await ev(
+  `window.__r = 1; window.installer.start({ target: ${JSON.stringify(target)}, desktop: true, startMenu: true }).then(r => { window.__r = JSON.stringify(r) }); 1`,
+);
+for (let i = 0; i < 200; i++) {
+  const v = await ev("String(window.__r)");
+  if (v && v !== "1") break;
+  await sleep(1000);
+}
 console.log("安装:", await ev("String(window.__r)"));
 
 console.log("\n=== 卸载：第一次点击 ===");
 spawnSync("taskkill", ["/IM", "JiuMate Installer.exe", "/T", "/F"], { stdio: "ignore" });
 await sleep(2500);
-spawn(path.join(selfDir, "JiuMate Uninstaller.exe"), ["--uninstall", `--remote-debugging-port=${PORT}`], { detached: true, stdio: "ignore" });
-if (!await waitForPage()) throw new Error("卸载器未启动");
+spawn(
+  path.join(selfDir, "JiuMate Uninstaller.exe"),
+  ["--uninstall", `--remote-debugging-port=${PORT}`],
+  { detached: true, stdio: "ignore" },
+);
+if (!(await waitForPage())) throw new Error("卸载器未启动");
 await sleep(1500);
 await ev("document.getElementById('uninstallGo').click(); 1");
 await sleep(7000);
@@ -102,5 +122,8 @@ for (const f of logs) {
 console.log("=== 结果 ===");
 console.log("软件目录已删除:", gone ? "✓" : "✗ 仍有 " + count(target) + " 文件");
 console.log("历史数据:", count(dataRoot) === dataBefore ? "✓ 完好保留" : "✗ 变了");
-console.log("桌面快捷方式:", fs.existsSync(path.join(os.homedir(), "Desktop", "JiuMate.lnk")) ? "✗ 残留" : "✓ 已清");
+console.log(
+  "桌面快捷方式:",
+  fs.existsSync(path.join(os.homedir(), "Desktop", "JiuMate.lnk")) ? "✗ 残留" : "✓ 已清",
+);
 console.log("TEMP 残留:", tmpFiles(""));

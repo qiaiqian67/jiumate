@@ -22,7 +22,8 @@ import {
 const PET_WINDOW = { width: 96, height: 104 };
 const MENU = { width: 132, height: 58 };
 
-const place = (anchor: PetMenuAnchor, viewport = PET_WINDOW) => menuPlacement(anchor, MENU, viewport);
+const place = (anchor: PetMenuAnchor, viewport = PET_WINDOW) =>
+  menuPlacement(anchor, MENU, viewport);
 
 describe("宠物菜单定位", () => {
   it("窗口足够容纳菜单时，菜单完整落在窗口内", () => {

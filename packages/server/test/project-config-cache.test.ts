@@ -7,11 +7,7 @@
  */
 import fs from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  defaultProjectConfig,
-  projectConfigPath,
-  renderProjectConfigToml,
-} from "@jadelau/core";
+import { defaultProjectConfig, projectConfigPath, renderProjectConfigToml } from "@jadelau/core";
 import { ProjectConfigService } from "../src/services/project-config-service.js";
 import { makeTempRoot } from "./helpers.js";
 

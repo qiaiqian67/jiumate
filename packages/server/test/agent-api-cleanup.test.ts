@@ -38,13 +38,12 @@ describe("agent api rows follow what owns them", () => {
 
   /** Exposes the Agent and mints one key on it. */
   const expose = async (): Promise<void> => {
-    expect((await owner.post(`/api/projects/${PROJECT_ID}/agents`, { agentId: AGENT_ID })).status).toBe(
-      201,
-    );
     expect(
-      (
-        await owner.put(`/api/projects/${PROJECT_ID}/agents/${AGENT_ID}/api`, { enabled: true })
-      ).status,
+      (await owner.post(`/api/projects/${PROJECT_ID}/agents`, { agentId: AGENT_ID })).status,
+    ).toBe(201);
+    expect(
+      (await owner.put(`/api/projects/${PROJECT_ID}/agents/${AGENT_ID}/api`, { enabled: true }))
+        .status,
     ).toBe(200);
     const minted = (await (
       await owner.post(`/api/projects/${PROJECT_ID}/agents/${AGENT_ID}/api/keys`, { name: "k" })
@@ -75,9 +74,7 @@ describe("agent api rows follow what owns them", () => {
 
     expect(t.deps.agentApiRepo.findKeyByHash("x")).toBeNull();
     expect(
-      t.deps.agentApiRepo
-        .listKeys(PROJECT_ID, AGENT_ID)
-        .filter((k) => k.keyId === keyId).length,
+      t.deps.agentApiRepo.listKeys(PROJECT_ID, AGENT_ID).filter((k) => k.keyId === keyId).length,
     ).toBe(0);
   });
 });

@@ -65,11 +65,15 @@ describe("近期使用", () => {
     expect(SELECT).toContain("recent?: readonly string[]");
     expect(SELECT).not.toContain("loadWorkspaceRegistry");
     expect(SELECT).not.toContain("recentWorkspaces");
-    expect(SIDEBAR).toContain("recentWorkspaces(sessions, registeredWorkspaces.map");
+    // Whitespace-insensitive: the call is formatted across several lines, and what the
+    // test is about is which two arguments the sidebar passes, not how they are laid out.
+    expect(SIDEBAR.replace(/\s+/g, " ")).toContain(
+      "recentWorkspaces( sessions, registeredWorkspaces.map",
+    );
   });
 
   it("显示目录名，完整路径放在 title 里", () => {
-    expect(SELECT).toContain('title={path}');
+    expect(SELECT).toContain("title={path}");
     expect(SELECT).toContain('path.split("/").filter(Boolean).pop() ?? "/"');
   });
 
@@ -104,9 +108,7 @@ describe("打开本地文件夹", () => {
     // setOpen(false) 只能出现在 onChange 之后。
     const body = SELECT.slice(
       SELECT.indexOf("const openLocalFolder"),
-      SELECT.indexOf("const menu = (") === -1
-        ? SELECT.length
-        : SELECT.indexOf("const menu = ("),
+      SELECT.indexOf("const menu = (") === -1 ? SELECT.length : SELECT.indexOf("const menu = ("),
     );
     expect(body.indexOf("if (picked === null) return;")).toBeLessThan(
       body.indexOf("setOpen(false)"),
@@ -154,7 +156,11 @@ describe("近期使用：最近用过的，不是最近添加的", () => {
   it("按各工作区最新会话的时间排序", () => {
     // 注册顺序是**添加**顺序，和"最近用过"几乎总是不同：先建 A 后建 B 却一直用 A 时，
     // 注册顺序会把没用过的 B 排在前面。
-    expect(SIDEBAR).toContain("recentWorkspaces(sessions, registeredWorkspaces.map");
+    // Whitespace-insensitive: the call is formatted across several lines, and what the
+    // test is about is which two arguments the sidebar passes, not how they are laid out.
+    expect(SIDEBAR.replace(/\s+/g, " ")).toContain(
+      "recentWorkspaces( sessions, registeredWorkspaces.map",
+    );
     expect(SIDEBAR).not.toContain("recent={registeredWorkspaces.map((e) => e.path)}");
   });
 

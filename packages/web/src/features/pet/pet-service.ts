@@ -10,11 +10,7 @@
  * web-bundle URL shape (`/pets/<folder>/spritesheet.<ext>`) is built here.
  */
 import { apiFetch } from "../../api/client";
-import {
-  BUILTIN_PETS,
-  DEFAULT_BUILTIN_PET_ID,
-  findBuiltinPetPreset,
-} from "@jadelau/pets/presets";
+import { BUILTIN_PETS, DEFAULT_BUILTIN_PET_ID, findBuiltinPetPreset } from "@jadelau/pets/presets";
 import type { PetPackage, SpriteVersionNumber } from "@jadelau/pets";
 
 export interface PetPackageWithPreview extends PetPackage {

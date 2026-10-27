@@ -98,9 +98,7 @@ describe("registerWorkspacePicker", () => {
     registerWorkspacePicker();
     await invoke();
     // A `BrowserWindow` key would pin the dialog to one surface.
-    expect(Object.keys(showOpenDialog.mock.calls[0]![0] as object)).not.toContain(
-      "browserWindow",
-    );
+    expect(Object.keys(showOpenDialog.mock.calls[0]![0] as object)).not.toContain("browserWindow");
   });
 
   it("titles the dialog for a workspace, in the UI language", async () => {

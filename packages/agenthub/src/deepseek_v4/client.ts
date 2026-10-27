@@ -64,10 +64,7 @@ export class DeepSeekV4Client extends LLMClient {
     super();
     this._model = options.model;
     const key = options.apiKey || process.env.DEEPSEEK_API_KEY || undefined;
-    const url =
-      options.baseUrl ||
-      process.env.DEEPSEEK_BASE_URL ||
-      "https://api.deepseek.com";
+    const url = options.baseUrl || process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
     this._client = new OpenAI({
       apiKey: key,
       baseURL: url,
@@ -172,10 +169,7 @@ export class DeepSeekV4Client extends LLMClient {
       });
     }
 
-    if (
-      config.prompt_caching !== undefined &&
-      config.prompt_caching !== PromptCaching.ENABLE
-    ) {
+    if (config.prompt_caching !== undefined && config.prompt_caching !== PromptCaching.ENABLE) {
       throw new UnsupportedParameterError({
         client: this.constructor.name,
         parameter: "prompt_caching",
@@ -196,9 +190,7 @@ export class DeepSeekV4Client extends LLMClient {
     // a text-only model answers from a placeholder instead of failing
     // (llmsdk_docs/deepseek_v4/docs/responses-api.md), so an image is refused here rather
     // than silently dropped
-    const supportsImage = !TEXT_ONLY_MODELS.test(
-      this._model.toLowerCase().replace(/^.*\//, ""),
-    );
+    const supportsImage = !TEXT_ONLY_MODELS.test(this._model.toLowerCase().replace(/^.*\//, ""));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputList: any[] = [];
 
@@ -212,11 +204,7 @@ export class DeepSeekV4Client extends LLMClient {
         // merges a function call into the adjacent assistant message and answers a call
         // whose output does not follow it with "No tool output found for tool call"
         // (verified live 2026-08-21)
-        if (
-          item.type !== "text" &&
-          item.type !== "image_url" &&
-          contentItems.length > 0
-        ) {
+        if (item.type !== "text" && item.type !== "image_url" && contentItems.length > 0) {
           inputList.push({ role: msg.role, content: [...contentItems] });
           contentItems.length = 0;
         }
@@ -229,9 +217,7 @@ export class DeepSeekV4Client extends LLMClient {
           }
         } else if (item.type === "image_url") {
           if (!supportsImage) {
-            throw new Error(
-              `DeepSeek ${this._model} does not support image inputs.`,
-            );
+            throw new Error(`DeepSeek ${this._model} does not support image inputs.`);
           }
 
           contentItems.push({ type: "input_image", image_url: item.image_url });
@@ -241,9 +227,7 @@ export class DeepSeekV4Client extends LLMClient {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const reasoning: any = { type: "reasoning", summary: [] };
           if (item.thinking) {
-            reasoning.content = [
-              { type: "reasoning_text", text: item.thinking },
-            ];
+            reasoning.content = [{ type: "reasoning_text", text: item.thinking }];
           }
 
           inputList.push(reasoning);
@@ -265,9 +249,7 @@ export class DeepSeekV4Client extends LLMClient {
 
           if (item.images) {
             if (!supportsImage) {
-              throw new Error(
-                `DeepSeek ${this._model} does not support images in tool results.`,
-              );
+              throw new Error(`DeepSeek ${this._model} does not support images in tool results.`);
             }
 
             for (const imageUrl of item.images) {
@@ -364,10 +346,8 @@ export class DeepSeekV4Client extends LLMClient {
         finishReason = finishReasonMapping[response.status] || "unknown";
       }
       if (response.usage) {
-        const cachedTokens =
-          response.usage.input_tokens_details?.cached_tokens || 0;
-        const reasoningTokens =
-          response.usage.output_tokens_details?.reasoning_tokens || 0;
+        const cachedTokens = response.usage.input_tokens_details?.cached_tokens || 0;
+        const reasoningTokens = response.usage.output_tokens_details?.reasoning_tokens || 0;
 
         usageMetadata = {
           cached_tokens: cachedTokens,
@@ -416,10 +396,7 @@ export class DeepSeekV4Client extends LLMClient {
     signal?: AbortSignal;
   }): AsyncGenerator<UniEvent> {
     const deepseekConfig = this.transformUniConfigToModelConfig(options.config);
-    const inputList = this.transformUniMessageToModelInput(
-      options.messages,
-      options.signal,
-    );
+    const inputList = this.transformUniMessageToModelInput(options.messages, options.signal);
 
     // Calls still streaming, keyed by the item id their fragments carry (the call id when a
     // server sends none): a gateway may open several before closing any of them.
@@ -428,8 +405,7 @@ export class DeepSeekV4Client extends LLMClient {
       { name: string; tool_call_id: string; arguments: string }
     >();
     let lastOpened = "";
-    const keyOf = (itemId?: string) =>
-      itemId && openToolCalls.has(itemId) ? itemId : lastOpened;
+    const keyOf = (itemId?: string) => (itemId && openToolCalls.has(itemId) ? itemId : lastOpened);
 
     const params: ResponseCreateParamsStreaming = {
       ...deepseekConfig,
@@ -443,8 +419,7 @@ export class DeepSeekV4Client extends LLMClient {
     for await (const event of stream) {
       const uniEvent = this.transformModelOutputToUniEvent(event);
       const fragments = uniEvent.content_items.filter(
-        (item): item is PartialToolCallContentItem =>
-          item.type === "partial_tool_call",
+        (item): item is PartialToolCallContentItem => item.type === "partial_tool_call",
       );
       if (uniEvent.event_type === "start") {
         for (const item of fragments) {

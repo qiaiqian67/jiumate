@@ -197,9 +197,7 @@ function LegacyRenameBanner({
               key={item.from}
               className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-amber-900 dark:text-amber-200"
             >
-              <span className="min-w-0 flex-1">
-                {S.plugins.legacyBody(item.from, item.to)}
-              </span>
+              <span className="min-w-0 flex-1">{S.plugins.legacyBody(item.from, item.to)}</span>
               <Button
                 size="sm"
                 variant="secondary"

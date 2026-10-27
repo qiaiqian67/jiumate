@@ -87,7 +87,10 @@ const eyeShift = () =>
   page!.evaluate(() =>
     [...document.querySelectorAll(".watch-eyes")].map((el) => {
       const first = getComputedStyle(el).translate.split(" ")[0] ?? "";
-      return { x: first === "none" ? 0 : Number.parseFloat(first), lookAway: el.hasAttribute("data-look-away") };
+      return {
+        x: first === "none" ? 0 : Number.parseFloat(first),
+        lookAway: el.hasAttribute("data-look-away"),
+      };
     }),
   );
 
@@ -119,9 +122,10 @@ describe.skipIf(!built)("打包后的 Windows 客户端", () => {
       expect(e.x, `第 ${i} 组眼在失焦后未完全还原`).toBe(0);
     }
     // 密码仍在框里 —— 修复的关键就在这里。
-    expect(await page!.inputValue('input[autocomplete="current-password"]'), "失焦不应清空密码").toBe(
-      "hunter2",
-    );
+    expect(
+      await page!.inputValue('input[autocomplete="current-password"]'),
+      "失焦不应清空密码",
+    ).toBe("hunter2");
 
     const pupilX = () =>
       page!.evaluate(() => {

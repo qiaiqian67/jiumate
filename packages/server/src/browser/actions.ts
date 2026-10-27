@@ -8,11 +8,7 @@
  * happened. The page's dialogs are answered and reported, since one would block it; and a tab
  * runs one action at a time.
  */
-import type {
-  BrowserDialog,
-  BrowserExecResult,
-  BrowserScreenshot,
-} from "@jadelau/core/interfaces";
+import type { BrowserDialog, BrowserExecResult, BrowserScreenshot } from "@jadelau/core/interfaces";
 import { HttpError } from "../http/errors.js";
 import { PageScriptError } from "./driver.js";
 import type { BrowserDriver, EvaluateOutcome } from "./driver.js";

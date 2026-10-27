@@ -98,18 +98,28 @@ if (status === "") {
       const work = readFileSync(abs);
       const head = execFileSync("git", ["show", `HEAD:${file}`], { cwd: root, maxBuffer: 1 << 28 });
       if (work.equals(head)) {
-        console.log("      字节完全相同 —— 假修改（索引 stat 过期，或 core.autocrlf 与 .gitattributes 冲突）");
+        console.log(
+          "      字节完全相同 —— 假修改（索引 stat 过期，或 core.autocrlf 与 .gitattributes 冲突）",
+        );
         console.log(`      core.autocrlf=${git("config", "core.autocrlf").trim() || "(未设置)"}`);
       } else {
         const bom = (b) => b.length >= 3 && b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf;
         if (bom(head) !== bom(work)) {
-          console.log(`      仅字节序标记变化：提交时 ${bom(head) ? "有" : "无"} → 现在 ${bom(work) ? "有" : "无"}`);
+          console.log(
+            `      仅字节序标记变化：提交时 ${bom(head) ? "有" : "无"} → 现在 ${bom(work) ? "有" : "无"}`,
+          );
         } else {
           let i = 0;
           while (i < Math.min(work.length, head.length) && work[i] === head[i]) i++;
-          console.log(`      字节不同，首个差异在第 ${i} 字节（共 ${work.length} vs ${head.length}）`);
-          console.log(`      HEAD  …${JSON.stringify(head.subarray(Math.max(0, i - 10), i + 10).toString())}`);
-          console.log(`      工作区…${JSON.stringify(work.subarray(Math.max(0, i - 10), i + 10).toString())}`);
+          console.log(
+            `      字节不同，首个差异在第 ${i} 字节（共 ${work.length} vs ${head.length}）`,
+          );
+          console.log(
+            `      HEAD  …${JSON.stringify(head.subarray(Math.max(0, i - 10), i + 10).toString())}`,
+          );
+          console.log(
+            `      工作区…${JSON.stringify(work.subarray(Math.max(0, i - 10), i + 10).toString())}`,
+          );
         }
       }
     }
@@ -125,7 +135,9 @@ if (status === "") {
  * as a ref name when it appears as `A..B`. Passing it as a single `--since=` argument avoids that.
  */
 const branch = git("rev-parse", "--abbrev-ref", "HEAD").trim();
-const count = Number(git("rev-list", "--count", `--since=${from.toISOString()}`, "HEAD").trim() || "0");
+const count = Number(
+  git("rev-list", "--count", `--since=${from.toISOString()}`, "HEAD").trim() || "0",
+);
 if (count > 0) {
   console.log(`\n分支 ${branch} 上本次会话的提交：\n`);
   console.log(git("log", "--oneline", `--since=${from.toISOString()}`, "HEAD"));
