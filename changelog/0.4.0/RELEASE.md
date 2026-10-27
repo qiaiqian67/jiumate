@@ -2,19 +2,19 @@ JiuMate 0.4.0 — the release where the agent gets a browser, and the app stops 
 
 ## Install
 
-**Desktop app**: grab your platform's installer from [jiumate.ooo/download](https://jiumate.ooo/download) — the page measures both sources on every visit and keeps GitHub unless the OSS mirror is measurably faster, with a manual selector beside the result. The macOS builds are Developer ID signed and notarized and the Windows installers are Authenticode-signed, so neither platform needs a first-launch unblock.
+**Desktop app**: grab your platform's installer from [the download page](https://qiaiqian67.github.io/jiumate/download/) — the page measures the sources on every visit and keeps GitHub unless another source is measurably faster, with a manual selector beside the result. The installers are **not signed**: macOS and Windows will say the app is from an unidentified developer, and the first launch needs a right-click → Open on macOS and "More info" → Run anyway on Windows. The signing keys are not part of this release.
 
 CLI / server (Linux, macOS; bundled Node runtime):
 
 ```sh
-curl -fsSL https://jiumate.ooo/install.sh | sh
+curl -fsSL https://qiaiqian67.github.io/jiumate/install.sh | sh
 jiumate web
 ```
 
 Windows (PowerShell):
 
 ```powershell
-irm https://jiumate.ooo/install.ps1 | iex
+irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 jiumate web
 ```
 
