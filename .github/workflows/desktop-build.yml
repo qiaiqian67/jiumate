@@ -141,6 +141,10 @@ jobs:
       # only the Windows job has. The other two platforms stage its UI instead — the same
       # split the repository's own `build` script makes, and the reason it excludes the
       # installer from the recursive build.
+      #
+      # The Windows job excludes it for the same reason, and then builds it for real once
+      # electron-builder has produced the unpacked tree it packs: the recursive build runs
+      # before that tree exists, and the installer's build refuses a payload it cannot find.
       - name: Build (Linux and macOS)
         if: runner.os != 'Windows'
         run: |
@@ -149,7 +153,7 @@ jobs:
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
-        run: pnpm -r build
+        run: pnpm -r --filter=!@jadelau/installer build
 
       # Windows carries MinGit under resources/git so the packaged agent shell has the
       # same deterministic POSIX bash as the npm package (release.yml bundles the
@@ -315,6 +319,13 @@ jobs:
           EVSIGN_REQUIRE: ${{ runner.os == 'Windows' && inputs.require_windows_signing && 'true' || 'false' }}
           EVSIGN_KEY: ${{ runner.os == 'Windows' && secrets.EVSIGN_KEY || '' }}
         run: pnpm --dir packages/desktop exec electron-builder ${{ matrix.args }} --publish never ${{ runner.os == 'macOS' && inputs.require_macos_signing && '-c.mac.forceCodeSigning=true' || '' }}
+
+      # The installer's shipping build, now that the unpacked tree it packs exists. It
+      # was excluded from the recursive build above because that tree is electron-builder's
+      # to produce, and this is the step that turns it into the installer's payload.
+      - name: Build the installer payload
+        if: runner.os == 'Windows'
+        run: pnpm --dir packages/installer build
 
       - name: Verify Windows signing and update metadata
         if: runner.os == 'Windows'

@@ -67,6 +67,28 @@ describe("download-pandoc.mjs platform map", () => {
     expect(src).toContain("tar");
   });
 
+  it("extracts the macOS binary from the directory the macOS archive actually uses", async () => {
+    // The macOS archives root at `pandoc-3.5-arm64/` and `pandoc-3.5-x86_64/`, while the
+    // Windows and Linux ones root at `pandoc-3.5/`. Treating them as the same directory
+    // is what put the desktop build's Pandoc step on the floor: the declared path was not
+    // in the archive, and the build failed on a file that was there under another name.
+    const src = await fs.promises.readFile(SCRIPT, "utf8");
+    expect(src).toContain("pandoc-${PANDOC_VERSION}-arm64/bin/pandoc");
+    expect(src).toContain("pandoc-${PANDOC_VERSION}-x86_64/bin/pandoc");
+    // And the Windows and Linux paths stay on the plain versioned root.
+    expect(src).toContain("pandoc-${PANDOC_VERSION}/pandoc.exe");
+    expect(src).toContain("pandoc-${PANDOC_VERSION}/bin/pandoc");
+  });
+
+  it("falls back to the binary's actual location when the declared path is not there", async () => {
+    // A Pandoc release that renames its root directory should cost a warning, not a
+    // release: the desktop shell loses its DOCX conversion if Pandoc is missing, but
+    // the whole release is gone if the build refuses to continue.
+    const src = await fs.promises.readFile(SCRIPT, "utf8");
+    expect(src).toContain("findBinary(extractDir");
+    expect(src).toMatch(/is not in the archive/);
+  });
+
   it("pins a Pandoc version via env var with a sane default", () => {
     // PANDOC_VERSION must be overridable by CI (release bump) without editing the script.
     const src = fs.readFileSync(SCRIPT, "utf8");

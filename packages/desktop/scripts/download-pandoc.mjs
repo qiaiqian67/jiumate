@@ -35,13 +35,20 @@ const PLATFORMS = {
   },
   "darwin-arm64": {
     asset: `pandoc-${PANDOC_VERSION}-arm64-macOS.zip`,
-    binaryInArchive: `pandoc-${PANDOC_VERSION}/bin/pandoc`,
+    /**
+     * The macOS archives are named for the architecture, and they extract to a directory
+     * of that same name — `pandoc-3.5-arm64/bin/pandoc` — while the Windows and Linux
+     * archives extract to `pandoc-3.5/`. The two are not interchangeable, and a wrong
+     * root here means the staged binary is simply not there.
+     */
+    binaryInArchive: `pandoc-${PANDOC_VERSION}-arm64/bin/pandoc`,
     binaryOut: "pandoc",
     extract: (archive, dest) => extractZip(archive, dest),
   },
   "darwin-x64": {
     asset: `pandoc-${PANDOC_VERSION}-x86_64-macOS.zip`,
-    binaryInArchive: `pandoc-${PANDOC_VERSION}/bin/pandoc`,
+    /** As above: `pandoc-3.5-x86_64/bin/pandoc`, not `pandoc-3.5/bin/pandoc`. */
+    binaryInArchive: `pandoc-${PANDOC_VERSION}-x86_64/bin/pandoc`,
     binaryOut: "pandoc",
     extract: (archive, dest) => extractZip(archive, dest),
   },
@@ -71,6 +78,61 @@ function extractTarGz(archive, dest) {
 
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
+}
+
+/**
+ * Find the Pandoc binary inside an extracted archive, wherever the archive put it.
+ * The archives are laid out with a versioned root directory, and its name differs per
+ * platform — `pandoc-3.5/` on Windows and Linux, `pandoc-3.5-arm64/` and
+ * `pandoc-3.5-x86_64/` on macOS — so the declared path is a statement of intent that
+ * a Pandoc release can invalidate. This is the fallback: the deepest executable called
+ * `pandoc` or `pandoc.exe`, so a renamed root costs a warning rather than a release.
+ */
+function findBinary(extractDir, binaryOut) {
+  const wanted = binaryOut.toLowerCase();
+  let best;
+  const walk = (dir, depth) => {
+    if (depth > 6) return;
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full, depth + 1);
+      } else if (entry.name.toLowerCase() === wanted) {
+        // Prefer the shallowest match, and among those the one under a `bin` directory.
+        const score = depth * 10 + (path.basename(path.dirname(full)) === "bin" ? 0 : 1);
+        if (best === undefined || score < best.score) best = { full, score };
+      }
+    }
+  };
+  walk(extractDir, 0);
+  return best?.full;
+}
+
+/** The archive's entries, for the error message when no binary can be found at all. */
+function listExtracted(extractDir) {
+  const names = [];
+  const walk = (dir, depth) => {
+    if (depth > 3 || names.length > 20) return;
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const rel = path.relative(extractDir, path.join(dir, entry.name));
+      names.push(entry.isDirectory() ? `${rel}/` : rel);
+      if (entry.isDirectory()) walk(path.join(dir, entry.name), depth + 1);
+    }
+  };
+  walk(extractDir, 0);
+  return names.length === 0 ? "(nothing)" : names.join(", ");
 }
 
 /** Follow a single redirect: Pandoc's release URLs 302 to GitHub's S3-backed CDN. */
@@ -104,9 +166,26 @@ async function stageOne(platform) {
   const src = path.join(extractDir, cfg.binaryInArchive);
   const dst = path.join(outDir, cfg.binaryOut);
   if (!fs.existsSync(src)) {
-    throw new Error(`expected ${src} after extraction; check binaryInArchive mapping`);
+    // Pandoc names the root directory of its archives after the platform, and the two
+    // macOS builds do not use the same name as the Windows and Linux ones. When the
+    // declared path is not there, take the binary from wherever the archive put it
+    // rather than failing the build: a missing Pandoc costs the desktop shell its
+    // DOCX/EPUB conversion, while a wrong path here costs the whole release.
+    const found = findBinary(extractDir, cfg.binaryOut);
+    if (found === undefined) {
+      throw new Error(
+        `expected ${src} after extraction; check binaryInArchive mapping. ` +
+          `The archive contains: ${listExtracted(extractDir)}`,
+      );
+    }
+    console.log(
+      `[download-pandoc] ${platform}: ${cfg.binaryInArchive} is not in the archive; ` +
+        `using ${path.relative(extractDir, found)} instead.`,
+    );
+    fs.copyFileSync(found, dst);
+  } else {
+    fs.copyFileSync(src, dst);
   }
-  fs.copyFileSync(src, dst);
   fs.chmodSync(dst, 0o755);
 
   // Best-effort cleanup: the archive is ~150MB and the extract dir is bigger.
