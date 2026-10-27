@@ -18,11 +18,7 @@ irm https://qiaiqian67.github.io/jiumate/install.ps1 | iex
 jiumate web
 ```
 
-Or via npm (needs Node >= 24):
-
-```sh
-npm install -g @jadelau/cli
-```
+Or via npm (needs Node >= 24) — **not available yet**: the `@jadelau/*` packages are not on the registry, so this line does not work today. Install with the script above.
 
 ## Highlights
 
