@@ -11,66 +11,66 @@
  *  3. Write meta.json, because the window shows a size and a version and both must come from what
  *     actually shipped rather than from constants in the UI.
  */
-import { execFileSync } from "node:child_process"
-import fs from "node:fs"
-import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const here = path.dirname(fileURLToPath(import.meta.url))
-const repoRoot = path.resolve(here, "..", "..")
-const desktopPkg = path.join(repoRoot, "packages", "desktop")
-const unpacked = path.join(desktopPkg, "out", "win-unpacked")
-const dist = path.join(here, "dist")
-const payload = path.join(dist, "payload.7z")
+const here = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(here, "..", "..");
+const desktopPkg = path.join(repoRoot, "packages", "desktop");
+const unpacked = path.join(desktopPkg, "out", "win-unpacked");
+const dist = path.join(here, "dist");
+const payload = path.join(dist, "payload.7z");
 
-const pkg = JSON.parse(fs.readFileSync(path.join(here, "package.json"), "utf8"))
+const pkg = JSON.parse(fs.readFileSync(path.join(here, "package.json"), "utf8"));
 
 function find7za() {
-  const cacheRoot = path.join(process.env.LOCALAPPDATA || "", "electron-builder", "Cache")
-  const stack = [cacheRoot]
+  const cacheRoot = path.join(process.env.LOCALAPPDATA || "", "electron-builder", "Cache");
+  const stack = [cacheRoot];
   while (stack.length) {
-    const dir = stack.pop()
-    let entries
+    const dir = stack.pop();
+    let entries;
     try {
-      entries = fs.readdirSync(dir, { withFileTypes: true })
+      entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
-      continue
+      continue;
     }
     for (const e of entries) {
-      const full = path.join(dir, e.name)
-      if (e.isDirectory()) stack.push(full)
-      else if (e.name === "7za.exe") return full
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) stack.push(full);
+      else if (e.name === "7za.exe") return full;
     }
   }
   throw new Error(
     "7za.exe not found under the electron-builder cache. Run a desktop pack once (pnpm --dir packages/desktop pack:win) so electron-builder downloads it.",
-  )
+  );
 }
 
 function dirSize(dir) {
-  let total = 0
-  const stack = [dir]
+  let total = 0;
+  const stack = [dir];
   while (stack.length) {
-    const d = stack.pop()
-    let entries
+    const d = stack.pop();
+    let entries;
     try {
-      entries = fs.readdirSync(d, { withFileTypes: true })
+      entries = fs.readdirSync(d, { withFileTypes: true });
     } catch {
-      continue
+      continue;
     }
     for (const e of entries) {
-      const full = path.join(d, e.name)
-      if (e.isDirectory()) stack.push(full)
+      const full = path.join(d, e.name);
+      if (e.isDirectory()) stack.push(full);
       else {
         try {
-          total += fs.statSync(full).size
+          total += fs.statSync(full).size;
         } catch {
           // A file that vanished mid-walk is not worth failing the build over.
         }
       }
     }
   }
-  return total
+  return total;
 }
 
 /**
@@ -96,31 +96,36 @@ function dirSize(dir) {
  * An override exists for the case where someone genuinely needs the old payload.
  */
 function newestSourceMtime(dir) {
-  const stack = [dir]
-  let newest = 0
-  let newestFile = ""
+  const stack = [dir];
+  let newest = 0;
+  let newestFile = "";
   while (stack.length) {
-    const d = stack.pop()
-    let entries
+    const d = stack.pop();
+    let entries;
     try {
-      entries = fs.readdirSync(d, { withFileTypes: true })
+      entries = fs.readdirSync(d, { withFileTypes: true });
     } catch {
-      continue
+      continue;
     }
     for (const e of entries) {
       // Skip build output and dependencies: their timestamps move for reasons that have nothing to
       // do with the sources, and node_modules alone would always look newer than any artifact.
-      if (e.name === "node_modules" || e.name === "dist" || e.name === "out" || e.name === "build") {
-        continue
+      if (
+        e.name === "node_modules" ||
+        e.name === "dist" ||
+        e.name === "out" ||
+        e.name === "build"
+      ) {
+        continue;
       }
-      const full = path.join(d, e.name)
-      if (e.isDirectory()) stack.push(full)
+      const full = path.join(d, e.name);
+      if (e.isDirectory()) stack.push(full);
       else if (/\.(ts|tsx|mjs|cjs|js|json|css)$/.test(e.name)) {
         try {
-          const m = fs.statSync(full).mtimeMs
+          const m = fs.statSync(full).mtimeMs;
           if (m > newest) {
-            newest = m
-            newestFile = full
+            newest = m;
+            newestFile = full;
           }
         } catch {
           // A file that vanished mid-walk is not worth failing the build over.
@@ -128,7 +133,7 @@ function newestSourceMtime(dir) {
       }
     }
   }
-  return { newest, newestFile }
+  return { newest, newestFile };
 }
 
 /**
@@ -144,23 +149,23 @@ function newestSourceMtime(dir) {
  * `pnpm -r build` needs to do for this package. `pack` never passes the flag, so shipping always
  * goes through the check.
  */
-const stageOnly = process.argv.includes("--stage-only")
+const stageOnly = process.argv.includes("--stage-only");
 
 if (!fs.existsSync(unpacked) && !stageOnly) {
   throw new Error(
     `${unpacked} is missing. Build the desktop app first:\n  pnpm --dir packages/desktop build\n  pnpm --dir packages/desktop pack:win`,
-  )
+  );
 }
 
 // The payload is a directory, so compare against the oldest thing inside it that must have been
 // written during packing: the app directory itself. Using the directory's own mtime would miss an
 // artifact whose contents were refreshed without the top level changing.
 if (!stageOnly) {
-  const payloadMtime = fs.statSync(unpacked).mtimeMs
+  const payloadMtime = fs.statSync(unpacked).mtimeMs;
   for (const pkgDir of ["desktop", "core", "web"]) {
-    const { newest, newestFile } = newestSourceMtime(path.join(repoRoot, "packages", pkgDir))
+    const { newest, newestFile } = newestSourceMtime(path.join(repoRoot, "packages", pkgDir));
     if (newest > payloadMtime && !process.env.JIUMATE_ALLOW_STALE_PAYLOAD) {
-      const rel = path.relative(repoRoot, newestFile)
+      const rel = path.relative(repoRoot, newestFile);
       throw new Error(
         `The payload is older than the sources it is meant to contain.\n\n` +
           `  newest source: ${rel}\n` +
@@ -169,7 +174,7 @@ if (!stageOnly) {
           `  pnpm --dir packages/desktop build\n` +
           `  pnpm --dir packages/desktop pack:win\n\n` +
           `Set JIUMATE_ALLOW_STALE_PAYLOAD=1 only if you mean to ship the old payload.`,
-      )
+      );
     }
   }
 }
@@ -178,38 +183,38 @@ if (!stageOnly) {
 // just wrote. The catalog is generated here rather than expected to be there: it describes the
 // models and themes this build is about to ship, so it cannot be a file that a previous build
 // left behind.
-fs.rmSync(dist, { recursive: true, force: true })
-fs.mkdirSync(path.join(dist, "renderer"), { recursive: true })
+fs.rmSync(dist, { recursive: true, force: true });
+fs.mkdirSync(path.join(dist, "renderer"), { recursive: true });
 
-execFileSync(process.execPath, [path.join(here, "gen-catalog.mjs")], { stdio: "inherit" })
+execFileSync(process.execPath, [path.join(here, "gen-catalog.mjs")], { stdio: "inherit" });
 
 for (const file of ["main.cjs", "preload.cjs"]) {
-  fs.copyFileSync(path.join(here, "src", file), path.join(dist, file))
+  fs.copyFileSync(path.join(here, "src", file), path.join(dist, file));
 }
 for (const file of ["index.html", "renderer.js"]) {
-  fs.copyFileSync(path.join(here, "src", "renderer", file), path.join(dist, "renderer", file))
+  fs.copyFileSync(path.join(here, "src", "renderer", file), path.join(dist, "renderer", file));
 }
 // The project's own icon, copied into dist so it exists in both run modes. The title bar and the
 // two hero spots used to draw a CSS approximation and a hand-written SVG hexagon instead, which is
 // not the project's icon at all.
-fs.copyFileSync(path.join(desktopPkg, "build", "icon.png"), path.join(dist, "icon.png"))
+fs.copyFileSync(path.join(desktopPkg, "build", "icon.png"), path.join(dist, "icon.png"));
 
 if (stageOnly) {
   // The UI is staged and the payload is untouched: this run exists for `pnpm -r build`, and the
   // shipping `pack` re-runs without the flag and does the archiving below.
-  console.log("[build] staged UI only (--stage-only); payload not repacked")
+  console.log("[build] staged UI only (--stage-only); payload not repacked");
 } else {
   // 7-Zip is bundled beside the payload, and it is a Windows program: the archive it makes
   // is unpacked by the Windows installer. Staging does not archive anything, so it does not
   // need the binary — and looking for it here would fail the stage on Linux and macOS,
   // which have no 7za.exe to find.
-  const sevenZip = find7za()
-  fs.copyFileSync(sevenZip, path.join(dist, "7za.exe"))
-  const expandedBytes = dirSize(unpacked)
-  console.log(`[build] payload source: ${(expandedBytes / 1024 / 1024).toFixed(1)} MB`)
+  const sevenZip = find7za();
+  fs.copyFileSync(sevenZip, path.join(dist, "7za.exe"));
+  const expandedBytes = dirSize(unpacked);
+  console.log(`[build] payload source: ${(expandedBytes / 1024 / 1024).toFixed(1)} MB`);
 
-  if (fs.existsSync(payload)) fs.rmSync(payload)
-  console.log("[build] packing payload.7z ...")
+  if (fs.existsSync(payload)) fs.rmSync(payload);
+  console.log("[build] packing payload.7z ...");
   // `cd` into the folder rather than `-w`: 7za's -w sets the *working directory for the archive*,
   // not the source root, so passing it alongside "." pulled in the whole `out` directory and the
   // archive grew to 619 MB with an `out\win-unpacked\` prefix on every entry. Running from inside
@@ -217,10 +222,10 @@ if (stageOnly) {
   execFileSync(sevenZip, ["a", "-t7z", payload, ".", "-mx=3", "-bso0", "-bsp0"], {
     cwd: path.join(desktopPkg, "out", "win-unpacked"),
     stdio: ["ignore", "inherit", "inherit"],
-  })
+  });
 
-  const payloadBytes = fs.statSync(payload).size
-  console.log(`[build] payload.7z: ${(payloadBytes / 1024 / 1024).toFixed(1)} MB`)
+  const payloadBytes = fs.statSync(payload).size;
+  console.log(`[build] payload.7z: ${(payloadBytes / 1024 / 1024).toFixed(1)} MB`);
 
   fs.writeFileSync(
     path.join(dist, "meta.json"),
@@ -235,7 +240,7 @@ if (stageOnly) {
       null,
       2,
     ),
-  )
+  );
 }
 
-console.log("[build] done")
+console.log("[build] done");

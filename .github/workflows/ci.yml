@@ -154,7 +154,7 @@ jobs:
             tests: pnpm --filter @jadelau/core test
             smoke: false
           - shard: server
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server test
             smoke: false
           - shard: rest
@@ -196,13 +196,13 @@ jobs:
             build: "@jadelau/agenthub...,@jadelau/core..."
             tests: pnpm --filter @jadelau/core test
           - shard: server-1
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server exec vitest run --shard=1/3
           - shard: server-2
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server exec vitest run --shard=2/3
           - shard: server-3
-            build: "@jadelau/agenthub...,@jadelau/core..."
+            build: "@jadelau/server..."
             tests: pnpm --filter @jadelau/server exec vitest run --shard=3/3
           - shard: rest
             build: "@jadelau/agenthub...,@jadelau/desktop...,@jadelau/cli..."
