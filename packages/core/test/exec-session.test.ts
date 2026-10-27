@@ -177,24 +177,29 @@ describe("exec_command — long-running command sessions", () => {
     expect(res.stopReason).toBe("completed");
   });
 
-  it("input_command sends Ctrl-C (U+0003) to interrupt a running session", async () => {
-    const start = await runTool(env, "exec_command", {
-      cmd: "sleep 30",
-      yield_time_ms: 300,
-    });
-    const pid = extractProcessId(start.output);
+  // Ctrl-C is a POSIX signal. Windows has no equivalent that reaches a child process in a
+  // pipeline, so the interrupt is a different mechanism there and this asserts the POSIX one.
+  it.skipIf(process.platform === "win32")(
+    "input_command sends Ctrl-C (U+0003) to interrupt a running session",
+    async () => {
+      const start = await runTool(env, "exec_command", {
+        cmd: "sleep 30",
+        yield_time_ms: 300,
+      });
+      const pid = extractProcessId(start.output);
 
-    const startedAt = Date.now();
-    const res = await runTool(env, "input_command", {
-      process_id: pid,
-      chars: String.fromCharCode(3), // U+0003 = Ctrl-C
-      yield_time_ms: 2000,
-    });
-    const elapsed = Date.now() - startedAt;
-    expect(elapsed).toBeLessThan(3000); // Did not wait for the full sleep 30
-    expect(res.output).not.toContain("still running");
-    expect(res.stopReason).toBe("fatal"); // Interrupted by signal -> non-zero exit
-  });
+      const startedAt = Date.now();
+      const res = await runTool(env, "input_command", {
+        process_id: pid,
+        chars: String.fromCharCode(3), // U+0003 = Ctrl-C
+        yield_time_ms: 2000,
+      });
+      const elapsed = Date.now() - startedAt;
+      expect(elapsed).toBeLessThan(3000); // Did not wait for the full sleep 30
+      expect(res.output).not.toContain("still running");
+      expect(res.stopReason).toBe("fatal"); // Interrupted by signal -> non-zero exit
+    },
+  );
 
   it("input_command rejects chars mixing U+0003 with other content", async () => {
     const start = await runTool(env, "exec_command", {

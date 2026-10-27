@@ -347,9 +347,13 @@ describe("resolveShell — output encoding preamble", () => {
           windowsHide: true,
         }).stdout;
 
-      // Without the preamble this box produces the mojibake from the real session…
-      expect(run("")).toContain("Ŀ¼");
-      // …and with it, the characters the model needs to read.
+      // Without the preamble the text does not survive: on a Chinese console it comes back
+      // as the mojibake the real session sees, and on an English one it comes back as
+      // question marks. Which of the two it is depends on the console's code page, so the
+      // assertion is that the text is not readable rather than that it is unreadable in
+      // one particular way — a code page is a property of the machine, not of the code.
+      expect(run("")).not.toContain("目录: 数据来源");
+      // With it, the characters the model needs to read — whatever the code page was.
       expect(run(shell.preamble)).toContain("目录: 数据来源");
     },
   );

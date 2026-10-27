@@ -312,19 +312,25 @@ describe("exec_command run_in_background", () => {
     },
   );
 
-  it("the host's stop button still reports — as stopped, not as a signal failure", async () => {
-    const { env } = await makeEnv();
-    const events: BackgroundTaskDoneEvent[] = [];
-    env.setBackgroundTaskListener((e) => events.push(e));
-    const res = await runTool(env, "exec_command", { cmd: "sleep 30", run_in_background: true });
-    const id = extractProcessId(res.output);
-    // The user's stop from the Web App's process list: the conversation still hears about it
-    // — the dev server it started is down — it just must not hear "failed".
-    expect(env.killBackgroundCommand(id)).toBe(true);
-    await waitFor(() => events.length === 1);
-    expect(events[0]).toMatchObject({ id, status: "stopped" });
-    expect(env.killBackgroundCommand(id)).toBe(false);
-  });
+  // The stop is a POSIX process-group kill: the child has to be signalled, not terminated
+  // with a code, or the session cannot tell a stop from a failure. Windows terminates a
+  // process with an exit code, so the distinction this test draws is not there to draw.
+  it.skipIf(process.platform === "win32")(
+    "the host's stop button still reports — as stopped, not as a signal failure",
+    async () => {
+      const { env } = await makeEnv();
+      const events: BackgroundTaskDoneEvent[] = [];
+      env.setBackgroundTaskListener((e) => events.push(e));
+      const res = await runTool(env, "exec_command", { cmd: "sleep 30", run_in_background: true });
+      const id = extractProcessId(res.output);
+      // The user's stop from the Web App's process list: the conversation still hears about it
+      // — the dev server it started is down — it just must not hear "failed".
+      expect(env.killBackgroundCommand(id)).toBe(true);
+      await waitFor(() => events.length === 1);
+      expect(events[0]).toMatchObject({ id, status: "stopped" });
+      expect(env.killBackgroundCommand(id)).toBe(false);
+    },
+  );
 
   it("a harness-forced stop (capacity eviction, idle reap) reports stopped", async () => {
     // Those two paths kill through the registry rather than CommandSessionManager.kill, so

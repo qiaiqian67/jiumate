@@ -6,11 +6,16 @@ export const RELEASES_URL = `${REPO_URL}/releases`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 
 /**
- * The address this site is served from. It is injected at build time (see the Vite
- * config's `define`), so the same source builds for a custom domain or for the
- * repository's GitHub Pages address without being edited.
+ * The address this site is served from.
+ *
+ * It is read from the build rather than written here, so the same source builds the site
+ * for a custom domain or at the repository's GitHub Pages address without being edited.
+ * `VITE_SITE_ORIGIN` is a Vite environment variable, which means the build injects it
+ * and the test runner sees it too — a `define` would only be replaced in the build, and
+ * a module that imported this one would throw in the test.
  */
-export const SITE_ORIGIN = __SITE_ORIGIN__;
+export const SITE_ORIGIN =
+  import.meta.env.VITE_SITE_ORIGIN ?? "https://qiaiqian67.github.io/jiumate";
 
 /**
  * Docs site: a sibling SPA deployed under the landing page's own base ("/<repo>/docs/",

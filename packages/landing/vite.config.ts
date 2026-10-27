@@ -18,12 +18,16 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   base: process.env.BASE_PATH ?? "/",
+  // The whole address the site is served from: the host and the deploy subpath. The
+  // installer commands have to name the full address, because they are pasted into a
+  // shell where the site's own relative URLs do not resolve — and under GitHub Pages the
+  // subpath is part of that address, not just of the pages' own URLs.
+  //
+  // It goes in as VITE_SITE_ORIGIN rather than as a bare `define`, so that the test
+  // runner sees it too: a `define` is replaced only in the build, and a test importing
+  // a module that reads one would throw.
   define: {
-    // The whole address the site is served from: the host and the deploy subpath. The
-    // installer commands have to name the full address, because they are pasted into a
-    // shell where the site's own relative URLs do not resolve — and under GitHub Pages
-    // the subpath is part of that address, not just of the pages' own URLs.
-    __SITE_ORIGIN__: JSON.stringify(
+    "import.meta.env.VITE_SITE_ORIGIN": JSON.stringify(
       `${(process.env.SITE_ORIGIN ?? "https://qiaiqian67.github.io").replace(/\/+$/, "")}${(
         process.env.BASE_PATH ?? "/"
       ).replace(/\/+$/, "")}`,
