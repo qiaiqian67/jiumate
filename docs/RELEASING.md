@@ -71,7 +71,7 @@ trusted publisher**.
 | Package | the package itself (each package gets its own) |
 | Organization or user | your npm account |
 | Repository owner | `qiaiqian67` |
-| Repository name | `linsight` |
+| Repository name | `jiumate` |
 | Workflow filename | `release.yml` |
 | Environment name | `npm` |
 

@@ -336,7 +336,7 @@ function main() {
     console.log("     organization/user: your npm account");
     console.log("     package:           the package");
     console.log("     repository owner:  qiaiqian67");
-    console.log("     repository name:   linsight");
+    console.log("     repository name:   jiumate");
     console.log("     workflow filename:  release.yml");
     console.log("     environment name:   npm");
     console.log("  3. Revoke the one-off token.");
