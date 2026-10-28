@@ -231,9 +231,18 @@ export function BrowserRuntime() {
       {createPortal(
         guests.map((guest) => {
           const onScreen = guest.tabId !== null && guest.tabId === activeTabId;
-          const { frame, view } = placement(onScreen ? slot : null, onScreen, DEFAULT_PARK_SIZE);
+          // "On screen" is not enough: this window must also be SHOWING the page, i.e. the dock's
+          // browser panel must have left a slot for it. When the panel is closed (or the tab lives
+          // in another conversation's dock), `slot` is null while the tab is still the active one —
+          // and drawing the guest then put the parked rectangle (0,0 at a full 1280×800 desktop
+          // size, see browser-geometry) at z-index 30, pasting the page over the whole window
+          // instead of the dock. `slot !== null` is exactly "there is a place to put it"; without
+          // it the guest is parked BEHIND the app, which is where a page with no visible slot
+          // belongs (still mounted and composited, so the agent's screenshot keeps working).
+          const visible = onScreen && slot !== null;
+          const { frame, view } = placement(visible ? slot : null, visible, DEFAULT_PARK_SIZE);
           return (
-            <GuestFrame key={guest.key} guest={guest} frame={frame} view={view} shown={onScreen} />
+            <GuestFrame key={guest.key} guest={guest} frame={frame} view={view} shown={visible} />
           );
         }),
         target,

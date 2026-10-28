@@ -306,15 +306,27 @@ export function BrowserPanel({ active }: { active: boolean }) {
           finds it by its attribute, and a slot that appears only when a guest does would
           make the portal's target move.
 
+          Mounted even when there is no tab yet: the slot element is what browserSlot()
+          measures and what browser-layer.ts places the on-screen page over. If it only existed
+          once `tabs` was non-empty, a page whose tab had not reached the panel's state yet would
+          have no slot to sit in — and the layer would draw it at the top-left corner over the whole
+          app instead. The empty-state is an overlay on top; the slot is a transparent measurement
+          target with no pixels of its own.
+
           The headless browser has no guest to portal: its pages live in a browser the user
           cannot see, so the panel shows what the agent is working on instead. */}
       <div className="relative min-h-0 flex-1">
         {headless ? (
           <HeadlessPageList tabs={tabs} activeTabId={activeTabId} />
-        ) : tabs.length === 0 ? (
-          <EmptyState title={S.browser.empty} description={S.browser.emptyHint} />
         ) : (
-          <div {...{ [BROWSER_VIEWPORT_ATTR]: "true" }} className="absolute inset-0" />
+          <>
+            <div {...{ [BROWSER_VIEWPORT_ATTR]: "true" }} className="absolute inset-0" />
+            {tabs.length === 0 && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <EmptyState title={S.browser.empty} description={S.browser.emptyHint} />
+              </div>
+            )}
+          </>
         )}
       </div>
 

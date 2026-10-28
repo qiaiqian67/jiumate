@@ -145,6 +145,12 @@ export const KEY_RULES: readonly KeyRule[] = [
   },
   {
     kind: "exact",
+    key: "jiumate.setup.pending",
+    scope: "browser",
+    why: "One-shot latch set when the installer chose a theme (see desktop setup-import.ts seedStorage and state/theme.tsx readPrefs): on first launch it makes the app push that theme to the account's ui_prefs instead of adopting a stale activeTheme. Browser-scoped like the model latch beside it — it describes this install's first launch, not anything the server stores. A stale one only re-promotes the installer's original pick, the same bounded worst case.",
+  },
+  {
+    kind: "exact",
     key: "jiumate.currency",
     scope: "browser",
     why: "Display currency for prices; a formatting choice, prices are stored in USD either way.",
