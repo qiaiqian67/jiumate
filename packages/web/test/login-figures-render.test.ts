@@ -396,7 +396,8 @@ describe("登录页小人的实际渲染", () => {
         );
       }
     } finally {
-      await sheet.evaluate((el) => el.remove());
+      // The handle's element is typed as a Node, so it is narrowed before it is removed.
+      await sheet.evaluate((el) => (el as Element).remove());
     }
   });
 
