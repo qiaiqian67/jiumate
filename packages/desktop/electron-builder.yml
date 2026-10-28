@@ -125,7 +125,12 @@ win:
       - CN=RushRush Network Technology Ltd, O=RushRush Network Technology Ltd
       - RushRush Network Technology Ltd
   target:
-    - target: nsis
+    # `dir` only: Windows no longer ships a stock electron-builder installer. This target
+    # emits the unpacked tree (out/win-unpacked) and nothing else; @jadelau/installer packs
+    # that tree into jiumate-installer-<version>-portable.exe, whose UI *is* the installer
+    # (see packages/installer/electron-builder.yml). The stock NSIS installer is deliberately
+    # not built — its fixed Win32 dialogs are the thing the custom installer exists to replace.
+    - target: dir
       arch: [x64]
   # MinGit, downloaded by the CI job into build/minigit (empty for local non-Windows
   # builds, hence the committed .gitkeep — an extraResources source must always exist):
@@ -142,18 +147,12 @@ win:
       to: pandoc
       filter: ["**/*"]
 
-nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
-  # The installer UI: build/installer.nsh. Two things happen there, both read from the file
-  # itself rather than from this config — `customInstallMode` drops the "install for all users /
-  # for me" page by forcing per-user, and `customWelcomePage` + `customPageAfterChangeDir` add
-  # the first-run pages (language, prepare, model, appearance) that write %APPDATA%\JiuMate\setup.ini.
-  #
-  # `perMachine` is deliberately left false. Setting it true would also remove that page, but it
-  # installs machine-wide and demands elevation; this app is per-user throughout (app-identity.ts,
-  # cli-install.ts install into HKCU and the user profile).
-  include: build/installer.nsh
+# The `nsis:` block that used to live here configured the stock electron-builder installer's
+# first-run pages (build/installer.nsh: language, prepare, model, appearance). Windows no longer
+# targets nsis — see the `win.target` above — so this block is gone. The custom installer
+# (@jadelau/installer) draws those same pages itself, from its own renderer, and writes the same
+# %APPDATA%\JiuMate\setup.ini that setup-import.ts reads. installer.nsh and the nsis signExts
+# alongside it are now unused on Windows; the mac and linux targets below are unchanged.
 
 linux:
   # Pre-rendered freedesktop icon set (scripts/render-icon.mjs): a directory of NxN.png

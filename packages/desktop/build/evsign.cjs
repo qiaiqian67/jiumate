@@ -13,7 +13,9 @@ function isGitBundleExecutable(file) {
 
 function shouldSign(file) {
   const base = path.basename(file);
-  return SIGNED_BASENAMES.has(base) || base.endsWith(".__uninstaller.exe");
+  // The custom Windows installer (@jadelau/installer) is built as jiumate-installer-<version>-
+  // portable.exe; sign it with the same identity as the app it installs.
+  return SIGNED_BASENAMES.has(base) || base.endsWith(".__uninstaller.exe") || base.endsWith("-portable.exe");
 }
 
 function runEvsign(client, file, key) {

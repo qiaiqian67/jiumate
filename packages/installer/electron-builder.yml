@@ -59,6 +59,22 @@ win:
     - target: portable
   artifactName: jiumate-installer-${version}-portable.${ext}
   icon: ../desktop/build/icon.png
+  # Sign the portable installer with the same EVSign identity as the app it installs. Without
+  # this the outer exe — the first thing a user double-clicks — is the only unsigned byte in a
+  # signed release, and SmartScreen blocks it. The `sign` hook is desktop's evsign.cjs (shared,
+  # not copied): it already signs -portable.exe by basename.
+  signExts:
+    - jiumate-installer-*-portable.exe
+    - "!.exe"
+  signtoolOptions:
+    sign: ../desktop/build/evsign.cjs
+    signingHashAlgorithms:
+      - sha256
+    publisherName:
+      - "CN=NaisNet Technology Co., Ltd., O=NaisNet Technology Co., Ltd."
+      - "NaisNet Technology Co., Ltd."
+      - CN=RushRush Network Technology Ltd, O=RushRush Network Technology Ltd
+      - RushRush Network Technology Ltd
 
 # Only the two locales the installer can actually render. The default ships all 47 (~47 MB of .pak).
 electronLanguages:

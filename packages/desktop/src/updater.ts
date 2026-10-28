@@ -24,6 +24,11 @@
  */
 import { app, dialog, net, shell } from "electron";
 import type { BrowserWindow } from "electron";
+import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import electronUpdater from "electron-updater";
 import type { DesktopUpdateStatus, DesktopUpdaterCommandMessage } from "@jadelau/server/api";
 import { feedUrlOverride, updateSourceConfig, updateSupport } from "./update-support.js";
@@ -216,6 +221,230 @@ export function getUpdaterStatus(): DesktopUpdateStatus {
   return status;
 }
 
+// --- Windows: the installer is the updater ---------------------------------
+//
+// Windows ships `jiumate-installer-<version>-portable.exe` (@jadelau/installer), not a stock
+// electron-builder installer, so electron-updater — which only replaces the NSIS installer /
+// app bundle / AppImage forms it installed — cannot update it. The replacement is the
+// installer itself: check GitHub Releases for the newest tag, download the portable installer
+// for that tag, and run it. The installer extracts the new build over the existing one in the
+// same folder, so `%APPDATA%\JiuMate\setup.ini` and `~/.jiumate` data are untouched (an update
+// run reuses the chosen install location; it only rewrites setup.ini when the user walks the
+// setup pages again).
+//
+// The same UpdaterEvent fold drives the status relay, so the Web App modal and the account-menu
+// row behave the same on Windows as on macOS/Linux — only where the bytes come from differs.
+
+const WINDOWS_INSTALLER = process.platform === "win32";
+const RELEASES_LATEST_API = "https://api.github.com/repos/qiaiqian67/jiumate/releases/latest";
+
+interface GithubAsset {
+  name: string;
+  browser_download_url: string;
+  size: number;
+}
+interface GithubRelease {
+  tag_name?: string;
+  assets?: GithubAsset[];
+}
+
+/** Cached from the last successful check so the download step has the asset list. */
+let windowsRelease: GithubRelease | null = null;
+let windowsInstallerPath: string | null = null;
+let windowsDownloading = false;
+
+/** Parse "v1.2.3", "1.2.3", "1.2.3-4-gabc" into [major,minor,patch]; unparseable → [0,0,0]. */
+function parseVersion(v: string): [number, number, number] {
+  const m = /^v?(\d+)\.(\d+)\.(\d+)/.exec(v.trim());
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0];
+}
+
+function isNewer(remote: string, local: string): boolean {
+  const a = parseVersion(remote);
+  const b = parseVersion(local);
+  for (let i = 0; i < 3; i++) {
+    const x = a[i] ?? 0;
+    const y = b[i] ?? 0;
+    if (x !== y) return x > y;
+  }
+  return false;
+}
+
+function fetchRelease(): Promise<GithubRelease> {
+  return net
+    .fetch(RELEASES_LATEST_API, {
+      headers: { accept: "application/vnd.github+json", "user-agent": "JiuMate-Updater" },
+    })
+    .then(async (res) => {
+      if (!res.ok) throw new Error(`GitHub Releases responded ${res.status}`);
+      return (await res.json()) as GithubRelease;
+    });
+}
+
+/** Locate the portable installer asset for a tag in the release's asset list. */
+function installerAsset(release: GithubRelease, version: string): GithubAsset | null {
+  const wanted = `jiumate-installer-${version}-portable.exe`;
+  return release.assets?.find((a) => a.name === wanted) ?? null;
+}
+
+async function windowsCheck(isManual: boolean): Promise<void> {
+  if (windowsDownloading || windowsInstallerPath !== null) {
+    reannounceStatus();
+    return;
+  }
+  emitStatus({ kind: "checking" });
+  try {
+    const release = await fetchRelease();
+    windowsRelease = release;
+    const tag = release.tag_name ?? "";
+    const version = tag.replace(/^v/, "");
+    const local = app.getVersion();
+    log(`windows check: remote ${tag || "(none)"} local ${local}`);
+    if (version && isNewer(tag, local) && installerAsset(release, version) !== null) {
+      emitStatus({ kind: "available", version });
+      if (isManual) {
+        manualCheckInFlight = false;
+        await windowsPromptDownload(version);
+      }
+    } else {
+      windowsRelease = null;
+      emitStatus({ kind: "not-available" });
+      if (isManual) {
+        manualCheckInFlight = false;
+        await dialog.showMessageBox({
+          type: "info",
+          message: "JiuMate is up to date.",
+          detail: `Version ${local} is the latest release.`,
+          buttons: ["OK"],
+        });
+      }
+    }
+  } catch (err) {
+    emitStatus({ kind: "error", message: (err as Error).message });
+    if (isManual) {
+      manualCheckInFlight = false;
+      const r = await dialog.showMessageBox({
+        type: "error",
+        message: "Could not check for updates.",
+        detail: `${(err as Error).message}\n\nYou can always download the latest release manually.`,
+        buttons: ["Open Releases", "OK"],
+        defaultId: 1,
+        cancelId: 1,
+      });
+      if (r.response === 0) void shell.openExternal(RELEASES_URL);
+    }
+  }
+}
+
+async function windowsStartDownload(origin: "native" | "web"): Promise<void> {
+  if (
+    windowsDownloading ||
+    windowsInstallerPath !== null ||
+    status.state !== "available" ||
+    status.version === undefined
+  ) {
+    reannounceStatus();
+    return;
+  }
+  const version = status.version;
+  const release = windowsRelease ?? (await fetchRelease().catch(() => null));
+  if (release === null) {
+    emitStatus({ kind: "error", message: "The release listing is unavailable; try again." });
+    return;
+  }
+  const asset = installerAsset(release, version);
+  if (asset === null) {
+    emitStatus({ kind: "error", message: `No portable installer found for ${version}.` });
+    return;
+  }
+  nativeDownload = origin === "native";
+  emitStatus({ kind: "download-started", version });
+  windowsDownloading = true;
+  try {
+    const res = await net.fetch(asset.browser_download_url);
+    if (!res.ok || res.body === null) throw new Error(`Download failed: HTTP ${res.status}`);
+    const total = Number(res.headers.get("content-length") ?? asset.size) || 0;
+    const target = path.join(app.getPath("temp"), asset.name);
+    let received = 0;
+    const counter = new Transform({
+      transform(chunk: Buffer, _enc, cb) {
+        received += chunk.length;
+        if (total > 0) {
+          emitStatus({ kind: "progress", percent: Math.round((received / total) * 100) });
+        }
+        cb(null, chunk);
+      },
+    });
+    await pipeline(
+      Readable.fromWeb(res.body as Parameters<typeof Readable.fromWeb>[0]),
+      counter,
+      fs.createWriteStream(target),
+    );
+    windowsInstallerPath = target;
+    windowsRelease = null;
+    log(`windows download complete: ${target}`);
+    emitStatus({ kind: "downloaded", version });
+    if (nativeDownload) {
+      nativeDownload = false;
+      await windowsPromptRestart(version);
+    }
+  } catch (err) {
+    reportUpdaterError(err as Error, "download");
+  } finally {
+    windowsDownloading = false;
+  }
+}
+
+function windowsInstall(): void {
+  if (windowsInstallerPath === null) {
+    log("install requested with nothing downloaded (stale row); ignoring");
+    return;
+  }
+  log(`launching installer ${windowsInstallerPath}`);
+  try {
+    const child = spawn(windowsInstallerPath, [], { detached: true, stdio: "ignore" });
+    child.unref();
+  } catch (err) {
+    log(`could not launch installer: ${(err as Error).message}`);
+    return;
+  }
+  // The installer replaces the app in place; quitting now lets it overwrite the running files.
+  app.quit();
+}
+
+async function windowsPromptDownload(version: string): Promise<void> {
+  const r = await dialog.showMessageBox({
+    type: "info",
+    message: `Version ${version} is available.`,
+    detail:
+      "Download it now? JiuMate keeps running while it downloads, then opens the installer to finish.",
+    buttons: ["Download", "Later"],
+    defaultId: 0,
+    cancelId: 1,
+  });
+  if (r.response === 0) await windowsStartDownload("native");
+}
+
+async function windowsPromptRestart(version: string): Promise<void> {
+  const r = await dialog.showMessageBox({
+    type: "info",
+    message: `Version ${version} is ready to install.`,
+    detail:
+      "JiuMate will close and open the installer to finish updating. Running tasks will be interrupted.",
+    buttons: ["Install now", "Later"],
+    defaultId: 0,
+    cancelId: 1,
+  });
+  if (r.response === 0) windowsInstall();
+}
+
+function initWindowsInstaller(): void {
+  log("Windows installer-based updater");
+  emitStatus({ kind: "not-available" });
+  setTimeout(() => void windowsCheck(false), FIRST_CHECK_DELAY_MS).unref();
+  setInterval(() => void windowsCheck(false), CHECK_INTERVAL_MS).unref();
+}
+
 /** Subscribes to every status fold; returns the unsubscribe (main.ts drops it when the server child exits). */
 export function onUpdaterStatus(listener: (status: DesktopUpdateStatus) => void): () => void {
   statusListeners.add(listener);
@@ -231,6 +460,15 @@ export function onUpdaterStatus(listener: (status: DesktopUpdateStatus) => void)
  * offers the step in the `downloaded` state, so a stale frame is dropped here.
  */
 export function handleUpdaterCommand(action: DesktopUpdaterCommandMessage["action"]): void {
+  // Windows updates through the installer (see the Windows section above), not electron-updater.
+  // A relayed `check` here is the Web App modal's — quiet, outcomes render in the modal, so no
+  // dialogs: windowsCheck(false) only folds status.
+  if (WINDOWS_INSTALLER) {
+    if (action === "download") void windowsStartDownload("web");
+    else if (action === "install") windowsInstall();
+    else void windowsCheck(false);
+    return;
+  }
   if (action === "download") {
     void startDownload("web");
     return;
@@ -290,6 +528,13 @@ export function initUpdater(getWindow: () => BrowserWindow | null): void {
   if (!support.supported) {
     log(`disabled (${support.reason})`);
     emitStatus({ kind: "unsupported", reason: support.reason });
+    return;
+  }
+
+  // Windows updates through the installer, not electron-updater (which needs an NSIS installer
+  // this build no longer produces). initWindowsInstaller wires its own schedule and returns.
+  if (WINDOWS_INSTALLER) {
+    initWindowsInstaller();
     return;
   }
 
@@ -505,6 +750,15 @@ export async function checkForUpdatesManually(): Promise<void> {
         ? "This build does not update itself."
         : "Only the AppImage build updates itself on Linux. Update a package install with your package manager, or download the latest release manually.";
     await dialog.showMessageBox({ type: "info", message: "Updates are unavailable.", detail });
+    return;
+  }
+  // Windows: the installer is the updater (see the Windows section above).
+  if (WINDOWS_INSTALLER) {
+    if (windowsInstallerPath !== null && status.version !== undefined) {
+      await windowsPromptRestart(status.version);
+      return;
+    }
+    await windowsCheck(true);
     return;
   }
   if (downloadedVersion !== null) {
