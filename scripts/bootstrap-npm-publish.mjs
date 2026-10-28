@@ -125,11 +125,13 @@ function publishedVersion(name) {
 }
 
 /**
- * The stage id of a package's staged version, or null when it has none.
+ * The staged version of a package, or null when it has none.
  *
  * A staged version is one the registry is holding for a maintainer to approve. It is not
- * published yet, but it occupies the version number: publishing over it is refused, so the
- * only way past it is to approve what is there.
+ * published yet, but it occupies the version number: publishing over *that* version is
+ * refused, so the only way past it is to approve what is there. Publishing a *different*
+ * version alongside it is allowed — the staged one sits there until it is approved or
+ * expires.
  */
 function staged(name) {
   const out = capture("npm", ["stage", "list", "--json"]);
@@ -137,7 +139,7 @@ function staged(name) {
   try {
     const list = JSON.parse(out);
     const found = list.find((entry) => entry.packageName === name && entry.status === "staged");
-    return found?.id ?? null;
+    return found ?? null;
   } catch {
     return null;
   }
@@ -467,13 +469,16 @@ function main() {
       // version alongside it is what --force is for. The three staged packages are in
       // exactly this state — 0.0.0-stage, a placeholder — and 0.4.0 is a new version
       // rather than a replacement, so the bootstrap wants --force for them.
-      if (staged(item.name) !== null) {
-        // A staged version is already on the registry, waiting to be approved. Publishing
-        // over it is refused ("Cannot publish over previously staged version"), so the
-        // only way forward is to approve what is there.
+      // A staged version occupies its own version number: publishing over *that* number is
+      // refused ("Cannot publish over previously staged version"), so the only way past it
+      // is to approve what is there. A *different* version can be published alongside it,
+      // which is what --force is for — the staged one then sits there until it is approved
+      // or expires.
+      const stagedEntry = staged(item.name);
+      if (stagedEntry !== null && stagedEntry.version === version) {
         console.log(
           `\n${item.name}@${version} is staged and waiting for approval. ` +
-            `Approve it with: npm stage approve ${staged(item.name)}`,
+            `Approve it with: npm stage approve ${stagedEntry.id}`,
         );
         skipped.push(item.name);
         continue;
