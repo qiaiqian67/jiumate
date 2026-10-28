@@ -125,6 +125,25 @@ function publishedVersion(name) {
 }
 
 /**
+ * The stage id of a package's staged version, or null when it has none.
+ *
+ * A staged version is one the registry is holding for a maintainer to approve. It is not
+ * published yet, but it occupies the version number: publishing over it is refused, so the
+ * only way past it is to approve what is there.
+ */
+function staged(name) {
+  const out = capture("npm", ["stage", "list", "--json"]);
+  if (out === null) return null;
+  try {
+    const list = JSON.parse(out);
+    const found = list.find((entry) => entry.packageName === name && entry.status === "staged");
+    return found?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fails when the npm CLI is too old to publish with a token.
  *
  * npm 11.5.1 is the floor the release workflow asserts for OIDC trusted publishing, and a
@@ -224,9 +243,23 @@ function withTokenConfig(token, body) {
   fs.writeFileSync(tmp, `//registry.npmjs.org/:_authToken=${token}\n`, { mode: 0o600 });
   const previous = process.env.NPM_CONFIG_USERCONFIG;
   process.env.NPM_CONFIG_USERCONFIG = tmp;
+  // The server package carries the built web UI — about 35 MB — and the registry's default
+  // fetch timeout is short enough that the upload is cut off mid-flight on a slow
+  // connection. The failure it produces is a socket hang up, which reads like a network
+  // fault rather than a timeout, and it costs the whole run: the publish stops at the first
+  // one that fails. `pnpm publish` rejects npm's `--fetch-timeout` flag as an unknown
+  // option, so it is set the way pnpm reads it: in the environment, as npm_config_*.
+  const previousTimeout = process.env.npm_config_fetch_timeout;
+  const previousRetries = process.env.npm_config_fetch_retries;
+  process.env.npm_config_fetch_timeout = "600000";
+  process.env.npm_config_fetch_retries = "5";
   try {
     body();
   } finally {
+    if (previousTimeout === undefined) delete process.env.npm_config_fetch_timeout;
+    else process.env.npm_config_fetch_timeout = previousTimeout;
+    if (previousRetries === undefined) delete process.env.npm_config_fetch_retries;
+    else process.env.npm_config_fetch_retries = previousRetries;
     if (previous === undefined) delete process.env.NPM_CONFIG_USERCONFIG;
     else process.env.NPM_CONFIG_USERCONFIG = previous;
     fs.rmSync(tmp, { force: true });
@@ -434,6 +467,17 @@ function main() {
       // version alongside it is what --force is for. The three staged packages are in
       // exactly this state — 0.0.0-stage, a placeholder — and 0.4.0 is a new version
       // rather than a replacement, so the bootstrap wants --force for them.
+      if (staged(item.name) !== null) {
+        // A staged version is already on the registry, waiting to be approved. Publishing
+        // over it is refused ("Cannot publish over previously staged version"), so the
+        // only way forward is to approve what is there.
+        console.log(
+          `\n${item.name}@${version} is staged and waiting for approval. ` +
+            `Approve it with: npm stage approve ${staged(item.name)}`,
+        );
+        skipped.push(item.name);
+        continue;
+      }
       if (existing !== null && existing !== version && !options.force) {
         console.log(
           `\n${item.name} is already published at ${existing}. ` +
