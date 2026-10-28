@@ -332,13 +332,10 @@ function main() {
     console.log("Dry run — nothing was published.\n");
     console.log("Next steps when you are ready:");
     console.log("  1. node scripts/bootstrap-npm-publish.mjs --version " + version);
-    console.log("  2. On npmjs.com, add each published package's Trusted Publisher:");
-    console.log("     organization/user: your npm account");
-    console.log("     package:           the package");
-    console.log("     repository owner:  qiaiqian67");
-    console.log("     repository name:   jiumate");
-    console.log("     workflow filename:  release.yml");
-    console.log("     environment name:   npm");
+    console.log("  2. Configure the trusted publisher for every package:");
+    console.log("     node scripts/configure-npm-trust.mjs");
+    console.log("     (that is npm trust for each of the twenty-six packages, with the");
+    console.log("      workflow, repository and environment already filled in)");
     console.log("  3. Revoke the one-off token.");
     console.log("  4. Tag and push, and let the release workflow publish from then on.");
     return;
@@ -396,7 +393,8 @@ function main() {
   if (skipped.length) console.log(`  skipped:   ${skipped.join(", ")}`);
   if (failed.length) console.log(`  failed:    ${failed.join(", ")}`);
   if (published.length) {
-    console.log("\nNext: configure each published package's Trusted Publisher on npmjs.com,");
+    console.log("\nNext: configure the trusted publisher for each published package:");
+    console.log("  node scripts/configure-npm-trust.mjs");
     console.log("then revoke the one-off token.");
   }
   if (failed.length) process.exitCode = 1;
