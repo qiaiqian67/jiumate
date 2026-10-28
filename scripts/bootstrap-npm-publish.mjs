@@ -29,9 +29,18 @@
  *   node scripts/bootstrap-npm-publish.mjs --version 0.4.0 --dry-run  # prepare and show, publish nothing
  *   node scripts/bootstrap-npm-publish.mjs --version 0.4.0 --only core
  *
- * Requires an npm token with publish rights on the @jiumate scope, either in the
+ * Requires an npm token with publish rights on the @jadelau scope, either in the
  * environment (`NPM_TOKEN`) or in `~/.npmrc`. Revoke it once every package is on the
  * registry and the Trusted Publisher is configured.
+ *
+ * The account has two-factor authentication on, so the registry asks for a one-time
+ * password with each publish. The codes come from the environment — `NPM_OTP_1` through
+ * `NPM_OTP_99`, one per package, in order — because a code is worth nothing once it has
+ * been used, so they cannot be read in bulk. A run with no codes at all stops at the first
+ * publish, having changed nothing on the registry.
+ *
+ * The run can be repeated: a package already on the registry at this version is skipped, so
+ * giving one code and re-running the script walks the list forward one package at a time.
  */
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -146,6 +155,59 @@ function findToken() {
     const text = fs.readFileSync(npmrc, "utf8");
     if (text.includes("_authToken") || text.includes("//registry.npmjs.org/:_authToken"))
       return "~/.npmrc";
+  }
+  return null;
+}
+
+/**
+ * Publishes one package, with the one-time code the registry asks for.
+ *
+ * The registry asks for a one-time password because the account has two-factor
+ * authentication on and the token does not bypass it — which is the right way round, but it
+ * means the publish cannot be left to a non-interactive command: npm refuses with
+ * `ERR_PNPM_OTP_NON_INTERACTIVE` rather than prompting into a terminal nobody is watching.
+ *
+ * So the code comes from the environment, and it is read fresh for each publish, because
+ * npm invalidates it after use. A code that has been used once is worth nothing, so the
+ * value has to be replaced each time; `NPM_OTP_1` through `NPM_OTP_99` are read in order, so
+ * a run can be given a whole batch up front.
+ */
+function publish(name) {
+  const args = [
+    "--filter",
+    name,
+    "publish",
+    "--access",
+    "public",
+    "--no-git-checks",
+    "--tag",
+    "latest",
+  ];
+  const otp = nextOtp();
+  if (otp !== null) args.push("--otp", otp);
+  run("pnpm", args);
+}
+
+/**
+ * The one-time code for the next publish, or null when there is none to give.
+ *
+ * `NPM_OTP_1`…`NPM_OTP_99` are used in order — one per package — and `NPM_OTP` is the
+ * fallback for a single publish. The numbered form is the one that makes twenty-six
+ * publishes bearable: the codes are read from the authenticator in one go and handed over
+ * as a block.
+ */
+function nextOtp() {
+  for (let i = 1; i <= 99; i++) {
+    const value = process.env[`NPM_OTP_${i}`];
+    if (value === undefined || value.trim() === "") continue;
+    delete process.env[`NPM_OTP_${i}`];
+    console.log(`\n  (using NPM_OTP_${i})`);
+    return value.trim();
+  }
+  const single = process.env.NPM_OTP;
+  if (single !== undefined && single.trim() !== "") {
+    console.log("\n  (using NPM_OTP)");
+    return single.trim();
   }
   return null;
 }
@@ -277,13 +339,16 @@ function report(plan, version, token) {
 }
 
 function parseArgs(argv) {
-  const options = { version: null, dryRun: false, only: null, skipExisting: true };
+  const options = { version: null, dryRun: false, only: null, skipExisting: true, force: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--version" || arg === "-v") options.version = argv[++i];
     else if (arg === "--dry-run") options.dryRun = true;
     else if (arg === "--only") options.only = argv[++i];
-    else if (arg === "--force") options.skipExisting = false;
+    // --force means "publish alongside another version", not "republish this one": a
+    // package already on the registry at exactly this version is always skipped, so a
+    // re-run walks the list forward rather than colliding with itself.
+    else if (arg === "--force") options.force = true;
     else if (arg === "--help" || arg === "-h") options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -365,7 +430,11 @@ function main() {
         skipped.push(item.name);
         continue;
       }
-      if (existing !== null && !options.force) {
+      // A package already on the registry at a *different* version: publishing this
+      // version alongside it is what --force is for. The three staged packages are in
+      // exactly this state — 0.0.0-stage, a placeholder — and 0.4.0 is a new version
+      // rather than a replacement, so the bootstrap wants --force for them.
+      if (existing !== null && existing !== version && !options.force) {
         console.log(
           `\n${item.name} is already published at ${existing}. ` +
             `Publishing ${version} alongside it is what --force is for.`,
@@ -374,12 +443,30 @@ function main() {
         continue;
       }
       try {
-        run("pnpm", ["--filter", item.name, "publish", "--access", "public", "--no-git-checks"]);
+        publish(item.name);
         published.push(item.name);
       } catch (err) {
-        console.error(
-          `\n${item.name} failed to publish: ${err instanceof Error ? err.message : String(err)}`,
-        );
+        const message = err instanceof Error ? err.message : String(err);
+        // The registry's answer to a missing or wrong one-time password. It is the one
+        // failure the user can fix without changing anything, so it is worth saying what to
+        // do rather than leaving a stack of npm output.
+        if (/OTP|EOTP|one-time password|additional authentication/i.test(message)) {
+          console.error(
+            `\n${item.name} was not published: the registry wants a one-time password ` +
+              `and none was accepted.`,
+          );
+          console.error("Give the codes in the environment — one per package, in order:");
+          console.error(
+            "  NPM_OTP_1=<code> NPM_OTP_2=<code> … node scripts/bootstrap-npm-publish.mjs …",
+          );
+          console.error(
+            "A code is worth nothing once it has been used, so they cannot all be read at once:",
+          );
+          console.error("fetch one from your authenticator, use it, fetch the next.");
+          failed.push(item.name);
+          break;
+        }
+        console.error(`\n${item.name} failed to publish: ${message}`);
         failed.push(item.name);
         // A failure here usually means a dependency of this package is not on the registry
         // yet. Stop rather than publish a chain that cannot be installed.
