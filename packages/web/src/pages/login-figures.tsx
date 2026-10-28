@@ -142,6 +142,33 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
     return Array.from(panel.querySelectorAll<HTMLSpanElement>(".watch-pupil"));
   };
 
+  /**
+   * The white a pupil sits in, as it is drawn right now.
+   *
+   * The white is the pupil's parent, and its size is what the pupil has to stay inside. It is
+   * read live rather than computed from the panel's size because the white's *height* is not
+   * fixed: it animates, collapsing to a sliver while the figure blinks. A white measured once
+   * would be a white measured at some other moment than the one the pupil is drawn in.
+   */
+  const eyeOf = (pupil: HTMLSpanElement): DOMRect | null => {
+    const eye = pupil.parentElement;
+    if (eye === null || !eye.classList.contains("watch-eye")) return null;
+    return eye.getBoundingClientRect();
+  };
+
+  /**
+   * Keep an offset within the room available on that axis.
+   *
+   * The sign is preserved: a pupil that should go up still goes up, it just does not go further
+   * than the white allows.
+   */
+  const clamp = (offset: number, room: number): number => {
+    if (room === Infinity) return offset;
+    if (offset > room) return room;
+    if (offset < -room) return -room;
+    return offset;
+  };
+
   useEffect(() => {
     /*
      * Point every pupil at the pointer, or recentre it when there is no pointer.
@@ -174,10 +201,24 @@ export function WatchFigures({ usernameTyped, passwordTyped, surprised }: WatchF
         );
         const ux = dist === 0 ? 0 : dx / dist;
         const uy = dist === 0 ? 0 : dy / dist;
+        // Each axis gets its own room, because the white is not square and does not stay square:
+        // the eye's *height* collapses to a sliver while it blinks, and the room the pupil's centre
+        // has vertically collapses with it. The reach above is the pupil's travel — a distance, and
+        // a distance has no direction, so it is the same on both axes — but the room does: the
+        // pupil may move until its own edge meets the white's edge, which is half the difference
+        // between the two, on that axis. Clamping each axis to its own room is what keeps a
+        // blinking eye from showing a pupil hanging outside it.
+        //
+        // The eye is the parent's box, and the pupil fills it (the stylesheet's `inset: 0`) before
+        // it is scaled down, so the white's size is the pupil's unscaled size — recovered here from
+        // the scaled rect by the same factor the stylesheet scales by.
+        const white = eyeOf(pupil);
+        const roomX = white === null ? Infinity : Math.max(0, (white.width - box.width) / 2);
+        const roomY = white === null ? Infinity : Math.max(0, (white.height - box.height) / 2);
         // `translate`, not `transform`: the stylesheet's `transform: scale(0.45)` is what makes
         // the pupil visible inside its white, and writing `transform` here would replace it,
         // snapping every pupil to full size the moment the pointer moved.
-        pupil.style.translate = `${ux * reach}px ${uy * reach}px`;
+        pupil.style.translate = `${clamp(ux * reach, roomX)}px ${clamp(uy * reach, roomY)}px`;
       }
     };
 

@@ -20,6 +20,13 @@ posixOnly("the session", () => {
     logFile = path.join(stubBin, "calls.log");
     // Every invocation is logged; an alias containing "refused" dies the way a wrong key
     // does; anything else asked for `sh` becomes one — commands run locally, harmlessly.
+    //
+    // The shell is not just `/bin/sh`: the transport keeps ONE ssh session per machine and
+    // feeds commands to it as lines on stdin, each line a whole command followed by the
+    // printf that reports its exit code. So the stub reads stdin a line at a time, and
+    // records when it received a line and when that line's command finished. Those two
+    // stamps are what make it possible to say whether two commands ran *at the same time*,
+    // rather than how long they took — which is the machine's business, not the transport's.
     fs.writeFileSync(
       path.join(stubBin, "ssh"),
       `#!/bin/sh
@@ -39,7 +46,36 @@ exit 1
     process.env.PATH = originalPath;
     fs.rmSync(stubBin, { recursive: true, force: true });
   });
-  const spawns = () => fs.readFileSync(logFile, "utf8").trim().split("\n");
+  /** The commands the stub was asked to run, in order. */
+  const spawns = () =>
+    fs
+      .readFileSync(logFile, "utf8")
+      .trim()
+      .split("\n")
+      .filter((line) => line.length > 0);
+
+  /**
+   * Run a command that says when it started and when it finished.
+   *
+   * The times come from the machine running the command, not from the test's stopwatch: the
+   * test and the command need not even be on the same machine — the transport is what connects
+   * them — and what is being measured is when the *command* ran, not when the test noticed.
+   *
+   * The command prints its start, sleeps, and prints its end. The shell's `date` is the clock,
+   * and it is the same clock on both sides of the assertion because both commands run on the
+   * same machine: the stub runs them locally.
+   */
+  const stamp = async (
+    conn: ReturnType<typeof connectionTo>,
+    label: string,
+  ): Promise<{ start: number; end: number } | null> => {
+    const result = await conn.exec(`date +%s%3N; sleep 0.2; date +%s%3N; echo ${label}`);
+    const lines = result.stdout.trim().split("\n");
+    const start = Number(lines[0]);
+    const end = Number(lines[1]);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+    return { start, end };
+  };
 
   it("runs commands with their exit code, and an `exit` cannot end the session", async () => {
     const conn = connectionTo({ alias: "nas", user: "deploy" });
@@ -72,12 +108,40 @@ exit 1
 
     let started = Date.now();
     await Promise.all([conn.exec("sleep 0.2"), conn.exec("sleep 0.2")]);
+    // The same session, so the second command waits for the first: two sleeps of 200ms
+    // cannot have finished in less than that.
     expect(Date.now() - started).toBeGreaterThanOrEqual(380);
+    // And they did not overlap — one session runs one command at a time, which is the whole
+    // of what "one session however many ask" means. The commands say so themselves: the
+    // second one began after the first one had already finished.
+    const [first, second] = await Promise.all([stamp(conn, "one"), stamp(conn, "two")]);
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+    if (first === null || second === null) return;
+    expect(Math.max(first.start, second.start)).toBeGreaterThanOrEqual(
+      Math.min(first.end, second.end),
+    );
     // A different machine is a different session: those run side by side.
+    //
+    // "Side by side" is a statement about *overlap*, not about duration, and the difference
+    // matters on a loaded runner: starting two processes can take longer than the 200ms the
+    // commands sleep for, and then a parallel pair measures *slower* than a constant
+    // threshold would allow — the test then fails on how fast the runner starts processes
+    // while the behaviour it names is exactly right.
+    //
+    // So the timing is read off the commands themselves rather than off a stopwatch. Each
+    // command prints a timestamp when it starts and one when it ends, and the test compares
+    // the two intervals: the second command began before the first one finished, so they
+    // overlapped.
     const other = connectionTo({ alias: "build-box", user: "deploy" });
-    started = Date.now();
-    await Promise.all([conn.exec("sleep 0.2"), other.exec("sleep 0.2")]);
-    expect(Date.now() - started).toBeLessThan(380);
+    // Both at once: the two commands have to be in flight together for the overlap to mean
+    // anything.
+    const [nas, box] = await Promise.all([stamp(conn, "nas"), stamp(other, "box")]);
+    expect(nas).not.toBeNull();
+    expect(box).not.toBeNull();
+    if (nas === null || box === null) return;
+    // Overlap: the later start came before the earlier end.
+    expect(Math.max(nas.start, box.start)).toBeLessThan(Math.min(nas.end, box.end));
     expect(spawns()).toHaveLength(2);
   });
 

@@ -364,6 +364,42 @@ describe("登录页小人的实际渲染", () => {
     }
   });
 
+  it("眨眼时瞳孔也不越出眼白", async () => {
+    // The white's height collapses to a sliver while the figure blinks, and the pupil's travel
+    // comes from its width — which the blink does not change. So the room the pupil's centre has
+    // vertically shrinks while the distance it is asked to travel does not, and a pupil that
+    // would sit happily inside an open eye hangs outside a closed one.
+    //
+    // The blink is a CSS animation on a schedule, so waiting for it to happen means waiting for a
+    // period of 3.8s to 4.5s and then hoping to land inside its 80ms window. Instead the closed
+    // state is forced: the same height the keyframes use, held.
+    //
+    // The sheet is removed again before the test ends, because a sheet added here outlives the
+    // test that added it: the next one measures the layout, and a collapsed eye is a layout it
+    // did not ask for.
+    const sheet = await page.addStyleTag({
+      content: ".watch-eye{animation:none!important;height:0.17cqh!important}",
+    });
+    try {
+      const panel = (await panelBox())!;
+      await movePointerTo(panel.w * 0.2, panel.h * 0.2);
+      const after = await boxes();
+      for (const [i, fig] of after.entries()) {
+        const now = fig.pupil;
+        const eye = fig.eye;
+        if (now === null || now === undefined || eye === null || eye === undefined) continue;
+        expect(now.y, `第 ${i} 个人 眨眼时瞳孔没越出眼白（上）`).toBeGreaterThanOrEqual(
+          eye.y - 0.5,
+        );
+        expect(now.y + now.h, `第 ${i} 个人 眨眼时瞳孔没越出眼白（下）`).toBeLessThanOrEqual(
+          eye.y + eye.h + 0.5,
+        );
+      }
+    } finally {
+      await sheet.evaluate((el) => el.remove());
+    }
+  });
+
   it("面板变矮时构图仍然成立（笔记本屏幕）", async () => {
     await page.setViewportSize({ width: 1024, height: 420 });
     await page.waitForTimeout(150);
