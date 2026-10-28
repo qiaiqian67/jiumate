@@ -450,6 +450,24 @@ function setupSeedArg(): string[] {
   // JSON rather than `key=value` pairs: a value containing a space or a quote would otherwise be
   // split by the shell-style argument parsing this has to survive.
   if (Object.keys(seed).length > 0) args.push(`--jiumate-setup-seed=${JSON.stringify(seed)}`);
+
+  // Consume the file: read once, then remove it, so the answers apply on the first launch only.
+  // Without this the seed re-applied on every start (createWindow hands the same arguments each
+  // time), so a theme or language the user later changed in the app was silently reverted to the
+  // installer's choice on the next launch — and, together with theme.tsx promoting a seeded theme to
+  // the server, overridden there too. A reinstall rewrites setup.ini, so it still applies its own
+  // answers once. The uninstaller's language is moved to its own file first: it reads setup.ini
+  // before deleting the profile, and removing setup.ini here would otherwise drop it back to the
+  // system language.
+  try {
+    const userData = app.getPath("userData");
+    if (answers.lang) {
+      fs.writeFileSync(path.join(userData, "installer-lang"), answers.lang, "utf8");
+    }
+    fs.rmSync(path.join(userData, "setup.ini"), { force: true });
+  } catch (err) {
+    process.stdout.write(`[setup] could not consume setup.ini: ${String(err)}\n`);
+  }
   return args;
 }
 

@@ -64,6 +64,14 @@ const SKIN_DIM_KEY = "jiumate.theme.backgroundDim";
  * own artwork, and `appearance` says which shell it holds up under.
  */
 const THEME_KEY = "jiumate.theme";
+/**
+ * A one-shot marker the desktop installer seeds when the user picked a real theme during setup.
+ * The skin selection is the only appearance preference that also lives on the server (`ui_prefs`),
+ * and `readPrefs` treats the server as authoritative — so without this, the theme chosen in the
+ * installer is replaced the moment `/api/me/prefs` answers with the account's old (often null)
+ * `activeTheme`. See readPrefs.
+ */
+const SETUP_THEME_PENDING_KEY = "jiumate.setup.pending";
 const CURRENCY_KEY = "jiumate.currency";
 const TERMINAL_KEY = "jiumate.terminal.theme";
 
@@ -294,6 +302,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           const next = prefs.skinBackgroundDim ?? null;
           cacheOpacity(SKIN_DIM_KEY, next);
           setBackgroundDimState(next);
+        }
+        // The installer's theme is a first-launch seed that is not yet on the server. Push it to the
+        // account's `ui_prefs` instead of letting a stale `activeTheme` (commonly null, left by an
+        // earlier install sharing this machine's data root) overwrite it — otherwise a theme picked
+        // in the installer vanishes the instant /api/me/prefs answers. The marker is one-shot:
+        // removed here, so every later read adopts the server's value, including a later in-app
+        // change. `initialSkin` still holds the seeded id (cacheSkin was not called), so it is the
+        // value to promote. On success, re-assert it locally too, in case a read that raced this
+        // push adopted the stale server value first.
+        if (localStorage.getItem(SETUP_THEME_PENDING_KEY) === "1") {
+          localStorage.removeItem(SETUP_THEME_PENDING_KEY);
+          const seeded = initialSkin(THEME_KEY);
+          void api
+            .putPrefs({ activeTheme: seeded })
+            .then(() => {
+              cacheSkin(THEME_KEY, seeded);
+              setThemeState(seeded);
+            })
+            .catch(() => undefined);
+          return;
         }
         if ("activeTheme" in prefs) {
           const next = prefs.activeTheme ?? null;

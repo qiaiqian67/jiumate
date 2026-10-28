@@ -885,11 +885,20 @@ async function removeInstallFolder(dir, self, event, final) {
   return true;
 }
 ipcMain.handle("installer:uninstallLang", () => {
+  const dir = path.join(process.env.APPDATA || "", PRODUCT);
+  const pick = (lang) => (lang === "zh" || lang === "en" ? lang : "");
+  // `installer-lang` is written by the app on first launch, which consumes setup.ini (see the
+  // desktop package's setupSeedArg). setup.ini is the fallback for an install that has not run yet.
   try {
-    const ini = fs.readFileSync(path.join(process.env.APPDATA || "", PRODUCT, "setup.ini"), "utf8");
+    const lang = pick(fs.readFileSync(path.join(dir, "installer-lang"), "utf8").trim());
+    if (lang) return lang;
+  } catch {
+    // Not present yet; fall through to setup.ini.
+  }
+  try {
+    const ini = fs.readFileSync(path.join(dir, "setup.ini"), "utf8");
     const m = /^lang=(.+)$/m.exec(ini);
-    const lang = m ? m[1].trim() : "";
-    return lang === "zh" || lang === "en" ? lang : "";
+    return pick(m ? m[1].trim() : "");
   } catch {
     return "";
   }

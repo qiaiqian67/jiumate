@@ -116,7 +116,18 @@ export function seedStorage(answers: SetupAnswers): Record<string, string> {
   // The theme id, only when it is a real one. "system" means the built-in appearance, and
   // theme.tsx's `initialSkin` treats an absent key as exactly that — writing "system" would store an id
   // no theme matches.
-  if (answers.theme && answers.theme !== "system") seed["jiumate.theme"] = answers.theme;
+  if (answers.theme && answers.theme !== "system") {
+    seed["jiumate.theme"] = answers.theme;
+    // The theme choice is also seeded onto the SERVER on first launch, via this one-shot marker.
+    // localStorage alone is not enough: the skin selection is the one preference that also lives in
+    // the account's `ui_prefs`, which theme.tsx's `readPrefs` treats as authoritative — so a theme
+    // picked in the installer was replaced the instant `/api/me/prefs` answered, because that row's
+    // `activeTheme` (often null, left by an earlier install sharing this machine's data root) is
+    // "present" and got adopted over the seed. theme.tsx sees this marker and pushes the seeded id
+    // to the server instead of letting the stale value win. Only a real theme sets it: "system"
+    // means the built-in appearance, and should not clobber a theme the account already had.
+    seed["jiumate.setup.pending"] = "1";
+  }
   // The appearance mode is seeded on its own, NOT inside the theme branch above.
   //
   // It used to be nested there, which silently discarded the appearance whenever the theme was
