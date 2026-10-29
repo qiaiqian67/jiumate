@@ -29,8 +29,7 @@
  * Saving does a PUT full-table replace (models not present are deleted; an empty apiKey
  * means keep the existing value); only the owner can edit.
  */
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { DragEvent as ReactDragEvent, ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   CredentialInfo,
   ModelProtocolDetectRequest,
@@ -59,9 +58,7 @@ import { Segmented } from "../../components/ui/segmented";
 import { Select } from "../../components/ui/select";
 import { Switch } from "../../components/ui/switch";
 import { toastError, toastInfo, toastSuccess } from "../../components/ui/toast";
-import { Chevron } from "../../components/ui/chevron";
 import { GlyphIcon } from "../../components/ui/glyph-icon";
-import { KEY_ICON } from "../../components/ui/icons";
 import { ProviderLogo } from "../../components/ui/provider-logo";
 import { SkeletonList } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
@@ -79,20 +76,8 @@ import {
   resolveModelEnv,
 } from "@jadelau/core/model-catalog";
 import type { FastModeProtocol, ModelProviderInfo } from "@jadelau/core/model-catalog";
-import {
-  allGroupKeys,
-  discountedPrice,
-  groupModelRows,
-  hasConfiguredKey,
-  isFreeModel,
-  sameModelRef,
-  userProviderInfo,
-} from "./model-grouping";
-import {
-  commitModelGroupOrder,
-  loadModelGroupOrder,
-  saveModelGroupOrder,
-} from "./model-group-order";
+import { groupModelRows, hasConfiguredKey, sameModelRef, userProviderInfo } from "./model-grouping";
+import { loadModelGroupOrder } from "./model-group-order";
 import { protocolPathForModel } from "./protocol-path";
 import { ProtocolSuffixMenu } from "./protocol-suffix";
 import {
@@ -107,12 +92,7 @@ import {
   protocolSelectorValue,
 } from "./protocol-types";
 import type { ProtocolClientType } from "./protocol-types";
-import {
-  isGroupExpanded,
-  loadExpandedProviders,
-  saveExpandedProviders,
-  toggleExpandedProvider,
-} from "./model-group-expansion";
+import { loadExpandedProviders, saveExpandedProviders } from "./model-group-expansion";
 import { clearDraftModelRef } from "../chat/draft-cache";
 import { syncRowsWithCatalog } from "./catalog-sync";
 import { useUpdateBadges } from "../../lib/use-update-badges";
@@ -143,11 +123,6 @@ function trim4(v: number): string {
 }
 
 /** USD/million-token string -> display string in the selected currency (with symbol). */
-function displayPrice(usdStr: string, currency: Currency): string {
-  const n = Number(usdStr || "0");
-  const v = currency === "CNY" ? n * USD_TO_CNY : n;
-  return `${CURRENCY_SYMBOL[currency]}${trim4(v)}`;
-}
 
 /** USD storage string -> input string in the selected currency (for edit-form initialization; empty value passes through). */
 function usdToInput(usdStr: string, currency: Currency): string {
@@ -169,9 +144,6 @@ function inputToUsd(inputStr: string, currency: Currency): string {
 
 /** Group-header action glyphs (24x24 line paths): add, bulk key, external link, gauge for speed test. */
 const PLUS_ICON = "M12 5v14M5 12h14";
-/** Trash can (same drawing as the agent cards' delete action). */
-const TRASH_ICON =
-  "M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m3 0l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7m4 4v6m4-6v6";
 const EXTERNAL_LINK_ICON =
   "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3";
 /** Arrow entering a door: authorize with the provider and come back with a key. */
@@ -180,7 +152,6 @@ const SIGN_IN_ICON = "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15
 const EDIT_ICON = "M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z";
 
 /** Speed-test glyphs (24x24 line paths): gauge for the group action, clock = TTFT, zap = TPS. */
-const GAUGE_ICON = "M12 14l3.5-3.5M20.49 17A10 10 0 1 0 3.5 17";
 const CLOCK_ICON = "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 7v5l3.5 2";
 const ZAP_ICON = "M13 2 3 14h9l-1 8 10-12h-9l1-8Z";
 
@@ -405,35 +376,6 @@ export function keyStatusText(row: RowState): string {
 }
 
 /**
- * A counter that advances on every clock hour, for prices that change with the time of day.
- *
- * DeepSeek's off-peak rate starts and ends on the hour, and every window a catalog schedule can
- * express is hour-aligned, so waking once an hour is enough to keep a card honest — a page left
- * open at 08:59 would otherwise still be promising half price at 09:05. It re-aims at the next
- * hour each time rather than running on a fixed interval, so it neither drifts nor fires 60
- * times to catch one transition.
- */
-function useHourTick(): number {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    const schedule = (): void => {
-      const now = new Date();
-      const next = new Date(now);
-      next.setMinutes(0, 0, 0);
-      next.setHours(next.getHours() + 1);
-      timer = setTimeout(() => {
-        setTick((n) => n + 1);
-        schedule();
-      }, next.getTime() - now.getTime());
-    };
-    schedule();
-    return () => clearTimeout(timer);
-  }, []);
-  return tick;
-}
-
-/**
  * What to call a model in prose — its display name, or its upstream id when it has none.
  *
  * The blank test is `trim()`, not `!== undefined`: the display name is optional and the dialog
@@ -612,26 +554,6 @@ export function rowToEntry(row: RowState): ModelUpdateEntry {
 }
 
 /**
- * Private drag payload type of a provider-group reorder. Deliberately NOT the sidebar's
- * group MIME: the sidebar renders alongside this page, so one shared type would let a
- * group dragged out of the conversation list paint a drop line here (and vice versa) —
- * two unrelated orders that happen to be dragged the same way.
- */
-const MODEL_GROUP_DRAG_MIME = "application/x-jiumate-model-group";
-
-/**
- * Is the drag in flight one of our group reorders? `types` is readable during dragover
- * (unlike getData), so the payload authorizes the drop rather than React state alone:
- * without it, a `dragGroup` left behind by a header that unmounted mid-drag would make the
- * page swallow an unrelated drag, paint a phantom line, and commit on release.
- */
-const isModelGroupDrag = (e: ReactDragEvent): boolean =>
-  e.dataTransfer.types.includes(MODEL_GROUP_DRAG_MIME);
-
-/** Dragging a group needs a pointer that can drag — HTML5 drag-and-drop never fires from touch (the sidebar's query). */
-const DRAG_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
-
-/**
  * The routed page: the model library plus the chrome a page owns — the document title and the
  * full-height scroll container.
  *
@@ -709,21 +631,6 @@ export function ModelsPane() {
   useEffect(() => {
     setGroupOrder(loadModelGroupOrder(projectId));
   }, [projectId]);
-  /**
-   * Whether the reorder gesture is offered at all. A stored order still APPLIES without
-   * it: the arrangement is per Project and implicit, so there is nothing to degrade —
-   * a phone renders what its owner arranged at a desk.
-   */
-  const [canDrag, setCanDrag] = useState(() => window.matchMedia(DRAG_POINTER_QUERY).matches);
-  useEffect(() => {
-    const mq = window.matchMedia(DRAG_POINTER_QUERY);
-    const onChange = (e: MediaQueryListEvent) => setCanDrag(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  /** Group header being dragged (its provider id) and the live drop hint (target group + which edge). */
-  const [dragGroup, setDragGroup] = useState<string | null>(null);
-  const [groupDropHint, setGroupDropHint] = useState<{ key: string; after: boolean } | null>(null);
   /** Vendor group (provider id) currently having its API key configured in bulk. */
   const [groupKeyFor, setGroupKeyFor] = useState<string | null>(null);
   /** Vendor group (provider id) whose authorization dialog is open (groups that publish a key-minting flow only). */
@@ -740,15 +647,6 @@ export function ModelsPane() {
   // Currency follows the user setting (toggled in sidebar settings).
   const { currency } = useTheme();
 
-  /**
-   * Lifetime Token total per model, keyed by the paired reference. Fetched on its own rather
-   * than folded into the model list: it is telemetry hanging off a configuration page, and a
-   * stats failure must cost the figure, not the page — so the failure path just leaves the map
-   * empty and every card renders without its number.
-   */
-  const [usedTokens, setUsedTokens] = useState<Map<string, number>>(new Map());
-  const hourTick = useHourTick();
-
   const load = useCallback(async () => {
     if (!projectId) return;
     setRows(null);
@@ -764,16 +662,6 @@ export function ModelsPane() {
       setVisionModel(res.visionModel);
     } catch (e) {
       setLoadError(apiErrorText(e));
-    }
-    try {
-      const totals = await api.getUsageModelTotals(projectId);
-      setUsedTokens(
-        new Map(totals.totals.map((t) => [refMapKey(t.provider, t.modelId), t.tokens])),
-      );
-    } catch {
-      // Fail-soft, and deliberately silent: the page's job is configuring models, and a figure
-      // that could not be read is shown as absent rather than as an error the user cannot act on.
-      setUsedTokens(new Map());
     }
   }, [projectId]);
 
@@ -929,16 +817,8 @@ export function ModelsPane() {
       );
     }
   };
-  /**
-   * Every group the library could show, empty built-ins included — the sequence a drop is
-   * committed against, so a provider currently holding no models keeps its catalog place
-   * rather than arriving as a newcomer the day one is added to it.
-   */
-  const allKeys = useMemo(() => allGroupKeys(rows ?? []), [rows]);
   /** Env-fallback variables the server reported a value for: the only ones a key hint may promise. */
   const envKeysDetected = useMemo(() => detectedEnvKeys(rows ?? []), [rows]);
-  /** Non-empty search query: groups are filtered to matches and force-opened while it lasts. */
-  const searching = query.trim() !== "";
 
   /**
    * "Sync presets": merge the built-in catalog into the current table (union; the catalog
@@ -1044,100 +924,6 @@ export function ModelsPane() {
     editing !== null ? rows?.find((r) => sameModelRef(rowRef(r), editing)) : undefined;
 
   if (!projectId) return null;
-
-  /**
-   * Header toggles are inert while searching: every rendered group is force-opened (see
-   * isGroupExpanded), so a flip would change nothing visibly and only silently mutate the
-   * state restored once the query clears. Computed outside the state updater (sidebar
-   * toggleGroup convention): the persistence write is a side effect, and updaters must
-   * stay pure (double-invoked in StrictMode).
-   */
-  const toggleGroup = (id: string) => {
-    if (searching) return;
-    const next = toggleExpandedProvider(expanded, id);
-    setExpanded(next);
-    saveExpandedProviders(projectId, next);
-  };
-
-  /**
-   * Drag-reorder wiring of one group header. Returns the props the header row spreads and
-   * the edge a drop would land on, or nothing at all when the gesture is not offered:
-   * without a drag-capable pointer, and while a search query is active — the query filters
-   * the list to matches, so a drop there would commit an arrangement made against a subset
-   * the user is about to dismiss.
-   */
-  const groupDragProps = (key: string) => {
-    if (!canDrag || searching) {
-      return { header: {}, dropEdge: null as "above" | "below" | null };
-    }
-    const dragging = dragGroup;
-    /** Which half of the header the pointer is in — the edge the drop would land on. */
-    const edgeOf = (e: ReactDragEvent) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      return e.clientY - rect.top > rect.height / 2;
-    };
-    const acceptsDrop = dragging !== null && dragging !== key;
-    return {
-      header: {
-        draggable: true,
-        onDragStart: (e: ReactDragEvent) => {
-          // dragstart fires AT the source node, so target === currentTarget exactly when
-          // the header row itself is what the browser picked up. The row also carries the
-          // provider's external key link, which is natively draggable: a drag begun there
-          // is a link drag, and claiming it would overwrite the link's payload and effect
-          // and turn a release over any other header into a silent reorder.
-          if (e.target !== e.currentTarget) return;
-          e.dataTransfer.setData(MODEL_GROUP_DRAG_MIME, key);
-          e.dataTransfer.effectAllowed = "move" as const;
-          setDragGroup(key);
-        },
-        onDragEnd: () => {
-          setDragGroup(null);
-          setGroupDropHint(null);
-        },
-        onDragOver: (e: ReactDragEvent) => {
-          if (!acceptsDrop || !isModelGroupDrag(e)) return;
-          e.preventDefault();
-          // preventDefault alone only says "a drop may land here"; the effect still has to
-          // be one effectAllowed permits, or a modifier held during the drag resolves it to
-          // "none" and the drop event never fires.
-          e.dataTransfer.dropEffect = "move";
-          const after = edgeOf(e);
-          setGroupDropHint((prev) =>
-            prev?.key === key && prev.after === after ? prev : { key, after },
-          );
-        },
-        // dragleave also fires when the pointer merely crosses onto one of the header's OWN
-        // children — the collapse button spans most of the row, and up to five actions
-        // follow it — so clearing unconditionally strobes the indicator. relatedTarget is
-        // where the drag is going: still inside means nothing changed.
-        onDragLeave: (e: ReactDragEvent) => {
-          const to = e.relatedTarget;
-          if (to instanceof Node && e.currentTarget.contains(to)) return;
-          setGroupDropHint((prev) => (prev?.key === key ? null : prev));
-        },
-        onDrop: (e: ReactDragEvent) => {
-          if (!acceptsDrop || dragging === null || !isModelGroupDrag(e)) return;
-          e.preventDefault();
-          const next = commitModelGroupOrder(groupOrder, allKeys, dragging, key, edgeOf(e));
-          // commitModelGroupOrder hands back its input for a drop that moves nothing: no state
-          // update, and no freshly allocated identical array written to storage.
-          if (next !== groupOrder) {
-            setGroupOrder(next);
-            saveModelGroupOrder(projectId, next);
-          }
-          setDragGroup(null);
-          setGroupDropHint(null);
-        },
-      },
-      dropEdge:
-        acceptsDrop && groupDropHint?.key === key
-          ? groupDropHint.after
-            ? ("below" as const)
-            : ("above" as const)
-          : null,
-    };
-  };
 
   return (
     <div>
@@ -1332,6 +1118,19 @@ export function ModelsPane() {
                             {S.models.oauthKey}
                           </button>
                         )}
+                        <button
+                          type="button"
+                          disabled={speedRunning !== null}
+                          onClick={() => {
+                            setProviderMenuOpen(false);
+                            setSpeedFor(selectedGroup.provider.id);
+                          }}
+                          className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                        >
+                          {speedRunning === selectedGroup.provider.id
+                            ? S.models.speedPending
+                            : S.models.speedTest}
+                        </button>
                         {!MODEL_PROVIDERS.some((p) => p.id === selectedGroup.provider.id) && (
                           <button
                             type="button"
@@ -1434,8 +1233,8 @@ export function ModelsPane() {
                       </li>
                     )}
                     {providerModelRows.map((m) => (
-                      <li key={m.modelId} className="flex items-center gap-2 px-3 py-2">
-                        <span className="min-w-0 flex-1 truncate text-sm">{m.label}</span>
+                      <li key={m.modelId} className="flex items-center gap-2 px-3 py-2.5">
+                        <span className="min-w-0 max-w-[52%] truncate text-sm">{m.label}</span>
                         {m.contextWindow ? (
                           <span className="shrink-0 rounded border border-gray-200 px-1.5 text-[11px] leading-5 text-gray-500 dark:border-gray-700 dark:text-gray-400">
                             {humanizeTokens(m.contextWindow)}
@@ -1446,6 +1245,53 @@ export function ModelsPane() {
                             {S.models.visionBadge}
                           </span>
                         ) : null}
+                        {m.configured &&
+                          (() => {
+                            const speed = speedResults.get(
+                              refMapKey(selectedGroup.provider.id, m.modelId),
+                            );
+                            if (speed === undefined) return null;
+                            if (speed === "pending") {
+                              return (
+                                <span className="shrink-0 text-[11px] text-gray-400">
+                                  {S.models.speedPending}
+                                </span>
+                              );
+                            }
+                            if (!speed.ok) {
+                              return (
+                                <span
+                                  className="shrink-0 text-[11px] text-red-600 dark:text-red-400"
+                                  title={speed.message}
+                                >
+                                  {S.models.speedFailed}
+                                </span>
+                              );
+                            }
+                            return (
+                              <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-medium">
+                                {speed.ttftMs !== undefined && (
+                                  <span
+                                    className={`flex items-center gap-0.5 ${TONE_CLASS[ttftTone(speed.ttftMs)]}`}
+                                    title={S.models.ttftTitle}
+                                  >
+                                    <GlyphIcon d={CLOCK_ICON} size={11} />
+                                    {Math.round(speed.ttftMs)}ms
+                                  </span>
+                                )}
+                                {speed.tps !== undefined && (
+                                  <span
+                                    className={`flex items-center gap-0.5 ${TONE_CLASS[tpsTone(speed.tps)]}`}
+                                    title={S.models.tpsTitle}
+                                  >
+                                    <GlyphIcon d={ZAP_ICON} size={11} />
+                                    {speed.tps} tok/s
+                                  </span>
+                                )}
+                              </span>
+                            );
+                          })()}
+                        <span className="flex-1" />
                         {m.configured && (
                           <button
                             type="button"
@@ -1468,250 +1314,6 @@ export function ModelsPane() {
                   </ul>
                 </div>
               )}
-              {([] as typeof groups).map((group) => {
-                const open = isGroupExpanded(expanded, group.provider.id, searching);
-                const drag = groupDragProps(group.provider.id);
-                return (
-                  // The drop indicator is drawn against the WHOLE group, so "below" reads as
-                  // after this group and its model cards rather than between the header and
-                  // its own first card. It needs this wrapper to live in: the section clips
-                  // its children (overflow-hidden carries the expand/collapse transition).
-                  // Absolutely positioned, so it costs no layout width and cannot push the
-                  // header's up-to-five actions out of a narrow page.
-                  <div key={group.provider.id} className="relative">
-                    {drag.dropEdge !== null && (
-                      <div
-                        aria-hidden
-                        className={`pointer-events-none absolute inset-x-0 z-10 h-0.5 rounded-full bg-[var(--accent-bg)] ${
-                          drag.dropEdge === "above" ? "-top-1.5" : "-bottom-1.5"
-                        }`}
-                      />
-                    )}
-                    <section className="overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-                      {/* Group header: collapse button (logo + vendor name + count) + group-level
-                      actions on the right. Actions are separate elements because buttons can't
-                      nest. The row is a size container: the sidebar can narrow it while the
-                      viewport remains desktop-sized, so action labels must respond to this
-                      row's actual width rather than viewport breakpoints. Narrow rows never
-                      hide an action — each one keeps its icon (with aria-label + title) and
-                      only sheds its text label. The row is also the drag handle for
-                      reordering the group (groupDragProps). */}
-                      <div
-                        {...drag.header}
-                        className={`@container flex items-center gap-2 bg-gray-50 pr-2 transition-colors duration-150 hover:bg-gray-100 dark:bg-gray-900/60 dark:hover:bg-gray-800/60${canDrag && !searching ? " cursor-grab" : ""}`}
-                      >
-                        <button
-                          type="button"
-                          aria-expanded={open}
-                          onClick={() => toggleGroup(group.provider.id)}
-                          className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 text-left"
-                        >
-                          <ProviderLogo
-                            provider={group.provider.id}
-                            className="h-5 w-5 shrink-0 text-gray-700 dark:text-gray-300"
-                          />
-                          {/* The vendor name is the only thing in this row allowed to take the
-                            remaining space, and the only one that truncates. Giving it a
-                            minimum width is what made a narrow row overlap: the items beside
-                            it never shrink, so once their widths plus that floor exceeded the
-                            button, the whole group overflowed the box and ran under the
-                            actions. The floor is gone; what gives way instead is the two marks
-                            after it, which drop out on a narrow row (below, and the actions'
-                            labels do the same at @3xl). The name then always has the leftovers
-                            to itself and truncates inside them, so nothing can overlap. */}
-                          <span className="min-w-0 truncate text-sm font-semibold">
-                            {group.provider.label}
-                          </span>
-                          <span className="hidden shrink-0 whitespace-nowrap font-mono text-xs text-gray-400 @xl:inline">
-                            {S.models.modelCount(group.rows.length)}
-                          </span>
-                          {/* The recommendation rides the collapse bar itself, so it is read with
-                            the group's name rather than as a caption floating above the
-                            section. `shrink-0` keeps it whole: the vendor name beside it is
-                            the element allowed to truncate on a narrow page. */}
-                          {group.provider.recommended && (
-                            // Not a `Badge`: its `brand` tone is deliberately gray — neutral
-                            // emphasis outside the status vocabulary — and an endorsement is
-                            // neither a status nor neutral, which is the category tone.ts keeps
-                            // out on purpose. Unfilled, like the card marks below it: an outline
-                            // is enough to make it a pill, and a block of colour on the collapse
-                            // bar competes with the vendor name it is endorsing. It holds on
-                            // longer than the model count beside it and gives way before the
-                            // name does.
-                            //
-                            // Gold, and the darker end of it: `yellow-700` (#a16207) is the last
-                            // rung that still clears 4.5:1 against this bar's gray-50 — 11px bold
-                            // is not WCAG "large text", so the brighter golds above it are not
-                            // available in light mode. Dark mode takes yellow-400, the bright
-                            // gold, which clears it comfortably on this app's near-black. The
-                            // ring is the text's own hue at 40%, in both themes: a ring brighter
-                            // than the words it encloses reads as a highlighter, not as gold.
-                            <span className="hidden shrink-0 whitespace-nowrap rounded-full border border-yellow-700/40 px-2 py-0.5 text-[11px] font-semibold text-yellow-700 @lg:inline dark:border-yellow-400/40 dark:text-yellow-400">
-                              {S.models.recommendedGroup}
-                            </span>
-                          )}
-                        </button>
-                        {isOwner && (
-                          // Add-model entry point: present on every group header (including
-                          // custom), new models belong to that group. Narrow rows never hide a
-                          // group action — they drop its label and keep the icon (same pattern
-                          // for every action in this row), so the button stays reachable.
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="shrink-0"
-                            disabled={busy}
-                            aria-label={`${S.models.addToGroup} ${group.provider.label}`}
-                            title={S.models.addToGroup}
-                            onClick={() => setAddingTo(group.provider.id)}
-                          >
-                            <GlyphIcon d={PLUS_ICON} size={13} />
-                            <span className="hidden @3xl:inline">{S.models.addToGroup}</span>
-                          </Button>
-                        )}
-                        {isOwner && group.provider.oauth && (
-                          // Authorize-a-key action: rendered off the group's own catalog
-                          // descriptor, so a provider gains this button by publishing a flow
-                          // rather than by being named here. Same narrow-row rule as its
-                          // neighbours — the label goes, the icon and its names stay. It leads the
-                          // manual key action: where a group can mint a key, that is the shorter path.
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="shrink-0"
-                            disabled={busy}
-                            aria-label={`${S.models.oauthKey} ${group.provider.label}`}
-                            title={S.models.oauthKey}
-                            onClick={() => setOauthFor(group.provider.id)}
-                          >
-                            <GlyphIcon d={SIGN_IN_ICON} size={13} />
-                            <span className="hidden @3xl:inline">{S.models.oauthKey}</span>
-                          </Button>
-                        )}
-                        {isOwner && group.provider.id !== "custom" && (
-                          // Bulk key action: icon-only while this row is narrow, labeled from
-                          // @3xl up. The button itself never disappears — aria-label + title
-                          // carry the name while the visible label is dropped.
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="shrink-0"
-                            disabled={busy}
-                            aria-label={`${S.models.groupApiKey} ${group.provider.label}`}
-                            title={S.models.groupApiKey}
-                            onClick={() => setGroupKeyFor(group.provider.id)}
-                          >
-                            <GlyphIcon d={KEY_ICON} size={13} />
-                            <span className="hidden @3xl:inline">{S.models.groupApiKey}</span>
-                          </Button>
-                        )}
-                        {isOwner && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="shrink-0"
-                            disabled={busy || speedRunning !== null}
-                            aria-label={`${S.models.speedTest} ${group.provider.label}`}
-                            title={
-                              speedRunning === group.provider.id
-                                ? S.models.speedPending
-                                : S.models.speedTest
-                            }
-                            onClick={() => setSpeedFor(group.provider.id)}
-                          >
-                            <GlyphIcon d={GAUGE_ICON} size={13} />
-                            {/* Compact rows keep this accessible action icon-only. */}
-                            <span className="hidden @3xl:inline">
-                              {speedRunning === group.provider.id
-                                ? S.models.speedPending
-                                : S.models.speedTest}
-                            </span>
-                          </Button>
-                        )}
-                        {isOwner && !MODEL_PROVIDERS.some((p) => p.id === group.provider.id) && (
-                          // Whole-group delete, user-defined groups only: a built-in group is
-                          // catalog identity (its rows delete one by one), a user-defined group
-                          // exists solely through its rows and can go as a unit.
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="shrink-0"
-                            disabled={busy}
-                            aria-label={`${S.models.deleteGroup} ${group.provider.label}`}
-                            title={S.models.deleteGroup}
-                            onClick={() => setDeleteGroupFor(group.provider.id)}
-                          >
-                            <GlyphIcon d={TRASH_ICON} size={13} />
-                            <span className="hidden @3xl:inline">{S.models.deleteGroup}</span>
-                          </Button>
-                        )}
-                        {group.provider.apiKeyUrl && (
-                          // External link: its label is the last one admitted as space grows
-                          // (@4xl); below that it collapses to the external-link glyph with a
-                          // small padding bump for a usable touch target.
-                          <a
-                            href={group.provider.apiKeyUrl}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            aria-label={`${S.models.getApiKey} ${group.provider.label}`}
-                            title={S.models.getApiKey}
-                            className="inline-flex shrink-0 items-center whitespace-nowrap p-1 text-xs text-brand-600 underline-offset-2 hover:underline @4xl:p-0 dark:text-brand-300"
-                          >
-                            <GlyphIcon d={EXTERNAL_LINK_ICON} size={13} className="@4xl:hidden" />
-                            <span className="hidden @4xl:inline">{S.models.getApiKey} ↗</span>
-                          </a>
-                        )}
-                        {/* Collapse arrow sits at the far right of the header (after group actions); it too can be clicked to collapse. */}
-                        <button
-                          type="button"
-                          aria-expanded={open}
-                          aria-label={group.provider.label}
-                          onClick={() => toggleGroup(group.provider.id)}
-                          className="shrink-0 p-1.5"
-                        >
-                          <Chevron open={open} className="text-gray-400" />
-                        </button>
-                      </div>
-
-                      {/* Expand/collapse height transition: grid-template-rows tweens between
-                      0fr and 1fr, with the inner overflow-hidden handling clipping — pure
-                      CSS, no need to measure content height. Content stays in the DOM while
-                      collapsed (height is 0), so both directions animate. */}
-                      <div
-                        className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
-                      >
-                        {/* inert while collapsed: a card with zero height shouldn't still be Tab-focusable or clickable. */}
-                        <div className="overflow-hidden" inert={!open}>
-                          <div
-                            className={`grid grid-cols-1 gap-2 border-t border-gray-200 p-2.5 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-3 dark:border-gray-800 ${open ? "opacity-100" : "opacity-0"}`}
-                          >
-                            {group.rows.length === 0 ? (
-                              // An empty group only ever occurs for custom (always shown when there's no search query, to host the add entry point).
-                              <p className="col-span-full py-1 text-center text-xs text-gray-400 dark:text-gray-500">
-                                {S.models.groupEmptyHint}
-                              </p>
-                            ) : (
-                              group.rows.map((row) => (
-                                <ModelCard
-                                  key={`${row.provider}:${row.modelId}`}
-                                  row={row}
-                                  currency={currency}
-                                  isDefault={sameModelRef(rowRef(row), defaultModel)}
-                                  isVisionModel={sameModelRef(rowRef(row), visionModel)}
-                                  speed={speedResults.get(refMapKey(row.provider, row.modelId))}
-                                  usedTokens={usedTokens.get(refMapKey(row.provider, row.modelId))}
-                                  hourTick={hourTick}
-                                  onOpen={() => setEditing(rowRef(row))}
-                                />
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                );
-              })}
               {isOwner && query.trim() === "" && (
                 // "Add group" (user-defined group): hidden while searching (the group list itself is being filtered).
                 <button
@@ -2274,230 +1876,6 @@ const TAG_INK = {
   /** What it costs. */
   price: "text-amber-700 dark:text-amber-400",
 } as const;
-
-/**
- * Card: display name + lifetime Token spend + status badges; context / pricing / key status folded
- * into one line of small text; group speed-test results (TTFT / TPS, tone-colored) ride the
- * title row's right edge. The whole card is clickable (the model homepage link lives in the
- * config dialog).
- */
-function ModelCard({
-  row,
-  currency,
-  isDefault,
-  isVisionModel,
-  speed,
-  usedTokens,
-  hourTick,
-  onOpen,
-}: {
-  row: RowState;
-  currency: Currency;
-  isDefault: boolean;
-  isVisionModel: boolean;
-  speed?: SpeedResult | "pending";
-  /** Lifetime Tokens spent on this model; absent for a model that has never run. */
-  usedTokens?: number;
-  /** Bumped on the hour (see useHourTick): the cue to re-read a time-of-day price. */
-  hourTick: number;
-  onOpen: () => void;
-}) {
-  const priced = row.cacheRead || row.cacheWrite || row.output;
-  /**
-   * A promoted catalog row. `discountedPrice` returns nothing once the price has been edited
-   * away from the catalog's, and nothing for a row on a time-of-day schedule while it is inside
-   * its peak windows — at peak it is simply at list price, which is what is stored.
-   *
-   * `hourTick` is in the dependency list for that second case: a scheduled row's price changes
-   * on the hour with nobody touching the page, and a card left open would otherwise keep
-   * printing a rate that stopped applying.
-   */
-  const discount = useMemo(() => discountedPrice(row), [row, hourTick]);
-  // The buckets to print: what the seller bills right now. They differ from the stored numbers
-  // only for a scheduled discount, whose stored price is the peak one.
-  const shownPrice = discount
-    ? {
-        cacheRead: String(discount.billed.cacheRead),
-        cacheWrite: String(discount.billed.cacheWrite),
-        output: String(discount.billed.output),
-      }
-    : { cacheRead: row.cacheRead, cacheWrite: row.cacheWrite, output: row.output };
-  /**
-   * Every standing mark this row carries, in one horizontal row of its own.
-   *
-   * They had been sharing the title's line, where each was width the model's NAME had to give
-   * up — a long name truncated to make room for a mark that could have been read anywhere. A
-   * row of their own costs one line and gives the name the whole of the first.
-   *
-   * Order is fixed rather than by which happen to be true, so the eye can learn where to look:
-   * what this Project chose (default, vision proxy) before what the model is (vision, fast,
-   * free) before what it costs today (the discount).
-   */
-  const tags: Array<{ key: string; label: string; title?: string; className: string }> = [
-    ...(isDefault
-      ? [
-          {
-            key: "default",
-            label: S.models.default,
-            className: TAG_INK.status,
-          },
-        ]
-      : []),
-    ...(row.vision
-      ? [
-          {
-            key: "vision",
-            label: S.models.visionBadge,
-            className: TAG_INK.capability,
-          },
-        ]
-      : []),
-    ...(isVisionModel
-      ? [
-          {
-            key: "visionModel",
-            label: S.models.visionModelBadge,
-            className: TAG_INK.capability,
-          },
-        ]
-      : []),
-    ...(row.fastMode
-      ? [
-          {
-            key: "fastMode",
-            label: S.models.fastModeBadge,
-            className: TAG_INK.capability,
-          },
-        ]
-      : []),
-    ...(isFreeModel(row)
-      ? [
-          {
-            key: "free",
-            label: S.models.freeBadge,
-            className: TAG_INK.price,
-          },
-        ]
-      : []),
-    ...(discount
-      ? [
-          {
-            key: "discount",
-            label: S.models.discountBadge(discount.percent),
-            title: discount.scheduled
-              ? S.models.offPeakTitle(discount.percent)
-              : S.models.discountTitle(discount.percent),
-            className: TAG_INK.price,
-          },
-        ]
-      : []),
-  ];
-
-  const priceLine = (a: string, b: string, c: string): string =>
-    `${displayPrice(a, currency)} / ${displayPrice(b, currency)} / ${displayPrice(c, currency)}`;
-  const meta: ReactNode[] = [
-    row.contextWindow ? humanizeTokens(Number(row.contextWindow)) : null,
-    // Three prices (cache read / cache write / output); units are explained in the config dialog, not repeated on the card.
-    // One price, the one being billed right now. What the row would cost without the promotion
-    // answers no question a reader of this list is asking, and spending the meta line's width
-    // on it pushes out the figures that do.
-    priced ? (
-      <span>{priceLine(shownPrice.cacheRead, shownPrice.cacheWrite, shownPrice.output)}</span>
-    ) : null,
-    // Key status (see keyStatusText): the stored mask, a detected env fallback's mask, a plain
-    // "configured" for a key typed but not yet saved, or "not configured".
-    keyStatusText(row),
-  ].filter((v) => v !== null);
-
-  const speedBadges =
-    speed === "pending" ? (
-      <span className="shrink-0 text-[11px] text-gray-400">{S.models.speedPending}</span>
-    ) : speed ? (
-      speed.ok ? (
-        <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-medium">
-          {speed.ttftMs !== undefined && (
-            <span
-              className={`flex items-center gap-0.5 ${TONE_CLASS[ttftTone(speed.ttftMs)]}`}
-              title={S.models.ttftTitle}
-            >
-              <GlyphIcon d={CLOCK_ICON} size={11} />
-              {Math.round(speed.ttftMs)}ms
-            </span>
-          )}
-          {speed.tps !== undefined && (
-            <span
-              className={`flex items-center gap-0.5 ${TONE_CLASS[tpsTone(speed.tps)]}`}
-              title={S.models.tpsTitle}
-            >
-              <GlyphIcon d={ZAP_ICON} size={11} />
-              {speed.tps} tok/s
-            </span>
-          )}
-        </span>
-      ) : (
-        <span
-          className="shrink-0 text-[11px] font-medium text-red-600 dark:text-red-400"
-          title={speed.message}
-        >
-          {S.models.speedFailed}
-        </span>
-      )
-    ) : null;
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="flex w-full flex-col gap-1 rounded-md border border-gray-200 px-3 py-2.5 text-left transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800/40"
-    >
-      {/* 1. What the model is called — the name alone. The upstream id used to share this row,
-          but it is a detail you go looking for rather than one you scan by, and it is a click
-          away in the config dialog; the width it was taking now belongs to the name. */}
-      <span className="flex w-full min-w-0 items-baseline gap-2">
-        <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
-          {modelLabelOf(row.displayName, row.modelId)}
-        </span>
-        {/* What this model has spent over its whole life, on the row's right edge. Recessive by
-            design — grey and a size below the meta line: it is context for a name you are
-            scanning past, not a figure the page is about. A model that has never run shows
-            nothing rather than a zero, which would read as a measurement instead of an
-            absence. */}
-        {usedTokens !== undefined && usedTokens > 0 && (
-          <span
-            className="shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
-            title={S.models.usedTokensTitle}
-          >
-            {S.models.usedTokens(humanizeTokens(usedTokens))}
-          </span>
-        )}
-      </span>
-      {/* 2. Every standing mark, on one row of its own (see `tags`). The row is rendered even
-          when empty: most models carry no mark at all, and letting it collapse would leave the
-          grid ragged — cards in the same row of a two-column grid stretch to the tallest, so an
-          absent line shows up as uneven padding rather than as a shorter card. Its height is
-          the tags' own, so a card with marks and a card without are exactly as tall. */}
-      <span className="flex min-h-[17px] w-full flex-wrap items-center gap-1">
-        {tags.map((tag) => (
-          <span key={tag.key} title={tag.title} className={`${TAG_SHAPE} ${tag.className}`}>
-            {tag.label}
-          </span>
-        ))}
-      </span>
-      {/* 3. Meta line: the truncating text takes the flexible space; speed badges keep their own
-          non-shrinking slot on the right so the numbers never wrap or get pushed out. */}
-      <span className="flex w-full items-center gap-1.5">
-        <span className="min-w-0 flex-1 truncate text-[11px] text-gray-400 dark:text-gray-500">
-          {meta.map((part, i) => (
-            <Fragment key={i}>
-              {i > 0 && " · "}
-              {part}
-            </Fragment>
-          ))}
-        </span>
-        {speedBadges}
-      </span>
-    </button>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Config dialog (shared by editing an existing model / adding a custom model)
