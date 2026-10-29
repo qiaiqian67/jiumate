@@ -1104,6 +1104,13 @@ export const zh = {
     groupApiKeyHint: (n: number): string => `将写入该分组下全部 ${n} 个模型；留空不改动。`,
     getApiKey: "前往密钥管理",
     getModelIds: "获取模型 id",
+    /** Provider-level editor (master-detail right pane) labels. */
+    apiFormat: "API 格式",
+    modelList: "模型列表",
+    addProvider: "添加供应商",
+    modelsSubtitle: "管理自定义模型供应商，配置后可在聊天时选择使用。",
+    providerConfigHint: "以下配置作用于该供应商下的全部模型。",
+    protocolAuto: "自动",
     groupKeyApplied: (n: number): string => `已为 ${n} 个模型配置 API key`,
     // 供应商授权取 key（模型分组头部动作）：整个 PKCE 流程都在服务端跑，前端只拿到一个
     // 不透明的 flow id 和状态。

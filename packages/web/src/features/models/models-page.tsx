@@ -805,6 +805,28 @@ export function ModelsPane() {
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const selectedGroup =
     groups.find((g) => g.provider.id === selectedProviderId) ?? groups[0] ?? null;
+  /** Representative row for the selected provider's shared config (base URL / API format / key). */
+  const selectedRep = selectedGroup?.rows[0];
+  /**
+   * Provider-level editor fields (Base URL / API Key) are text: held locally so typing does not
+   * fire a full-table PUT per keystroke — committed on blur, applied to every row of the provider.
+   */
+  const [cfgBaseUrl, setCfgBaseUrl] = useState("");
+  const [cfgKey, setCfgKey] = useState("");
+  useEffect(() => {
+    setCfgBaseUrl(selectedRep?.baseUrl ?? "");
+    setCfgKey("");
+  }, [selectedGroup?.provider.id, selectedRep?.baseUrl]);
+  /** Write a provider-level field to every model of the selected provider (one table PUT). */
+  const applyProviderPatch = (patch: Partial<RowState>): void => {
+    if (!projectId || !rows || !selectedGroup) return;
+    const id = selectedGroup.provider.id;
+    void persist(
+      rows.map((r) => (r.provider === id ? { ...r, ...patch } : r)),
+      defaultModel,
+      visionModel,
+    );
+  };
   /**
    * Every group the library could show, empty built-ins included — the sequence a drop is
    * committed against, so a provider currently holding no models keeps its catalog place
@@ -1047,6 +1069,17 @@ export function ModelsPane() {
               {isOwner && (
                 <Button
                   size="sm"
+                  onClick={() => setAddGroupOpen(true)}
+                  disabled={busy || rows === null}
+                  title={S.models.addProvider}
+                >
+                  <GlyphIcon d={PLUS_ICON} size={13} />
+                  {S.models.addProvider}
+                </Button>
+              )}
+              {isOwner && (
+                <Button
+                  size="sm"
                   className="relative"
                   onClick={() => void syncPresets()}
                   disabled={busy || rows === null}
@@ -1137,6 +1170,94 @@ export function ModelsPane() {
             {/* Detail pane (right): the selected provider. Only one section renders, so the
                 page reads as list + editor rather than a long stack of every group. */}
             <div className="min-w-0 flex-1 space-y-3">
+              {/* Provider-level editor (right pane header): the selected provider's shared
+                  Base URL / API format / API key. Reading from the provider's representative
+                  row and writing back to every row of it in one PUT. */}
+              {selectedGroup && (
+                <div className="rounded-md border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
+                  <div className="mb-1 flex items-center gap-2">
+                    <ProviderLogo
+                      provider={selectedGroup.provider.id}
+                      className="h-5 w-5 shrink-0 text-gray-700 dark:text-gray-300"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                      {selectedGroup.provider.label}
+                    </span>
+                    {selectedGroup.provider.apiKeyUrl && (
+                      <a
+                        href={selectedGroup.provider.apiKeyUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="shrink-0 text-xs text-brand-600 underline-offset-2 hover:underline dark:text-brand-300"
+                      >
+                        {S.models.getApiKey} ↗
+                      </a>
+                    )}
+                  </div>
+                  <p className="mb-2 text-xs text-gray-400 dark:text-gray-500">
+                    {S.models.providerConfigHint}
+                  </p>
+                  <div className="space-y-3">
+                    <label className="block">
+                      <FieldLabel>{S.models.baseUrl}</FieldLabel>
+                      <Input
+                        size="sm"
+                        className="font-mono"
+                        value={cfgBaseUrl}
+                        disabled={!isOwner}
+                        placeholder={selectedGroup.provider.gatewayBaseUrl ?? "https://…"}
+                        onChange={(e) => setCfgBaseUrl(e.target.value)}
+                        onBlur={() => {
+                          if (cfgBaseUrl !== (selectedRep?.baseUrl ?? "")) {
+                            applyProviderPatch({ baseUrl: cfgBaseUrl });
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                        }}
+                      />
+                    </label>
+                    <label className="block">
+                      <FieldLabel>{S.models.apiFormat}</FieldLabel>
+                      <Select
+                        size="sm"
+                        value={selectedRep?.clientType ?? ""}
+                        disabled={!isOwner}
+                        onChange={(e) => applyProviderPatch({ clientType: e.target.value })}
+                      >
+                        <option value="">{S.models.protocolAuto}</option>
+                        {Object.entries(S.models.protocolNames).map(([val, label]) => (
+                          <option key={val} value={val}>
+                            {label}
+                          </option>
+                        ))}
+                      </Select>
+                    </label>
+                    <div className="block">
+                      <FieldLabel block={false}>{S.models.apiKey}</FieldLabel>
+                      <PasswordInput
+                        size="sm"
+                        className="font-mono"
+                        value={cfgKey}
+                        disabled={!isOwner}
+                        autoComplete="off"
+                        placeholder={
+                          selectedRep?.credential?.apiKeyMasked ??
+                          selectedRep?.envKeyMasked ??
+                          S.models.apiKeyKeepHint
+                        }
+                        onChange={(e) => setCfgKey(e.target.value)}
+                        onBlur={() => {
+                          if (cfgKey.trim() !== "") {
+                            applyProviderPatch({ apiKeyInput: cfgKey.trim(), clearApiKey: false });
+                            setCfgKey("");
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               {(selectedGroup ? [selectedGroup] : []).map((group) => {
                 const open = isGroupExpanded(expanded, group.provider.id, searching);
                 const drag = groupDragProps(group.provider.id);
