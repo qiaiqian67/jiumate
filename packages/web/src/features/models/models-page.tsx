@@ -67,11 +67,13 @@ import { SkeletonList } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
 import { formatDateTime, humanizeTokens } from "../../lib/format";
 import {
+  MODEL_CATALOG,
   MODEL_PROVIDERS,
   canonicalClientType,
   catalogEntryFor,
   fastModeProtocol,
   modelHomepageUrl,
+  presetModelEntries,
   providerInfo,
   resolveModelEnv,
 } from "@jadelau/core/model-catalog";
@@ -173,6 +175,8 @@ const EXTERNAL_LINK_ICON =
   "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3";
 /** Arrow entering a door: authorize with the provider and come back with a key. */
 const SIGN_IN_ICON = "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3";
+/** Pencil glyph — edit a model row. */
+const EDIT_ICON = "M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z";
 
 /** Speed-test glyphs (24x24 line paths): gauge for the group action, clock = TTFT, zap = TPS. */
 const GAUGE_ICON = "M12 14l3.5-3.5M20.49 17A10 10 0 1 0 3.5 17";
@@ -285,6 +289,34 @@ export interface RowState {
 /** The row's current paired reference (the config's unique key). */
 export function rowRef(row: Pick<RowState, "provider" | "modelId">): ModelRefDto {
   return { provider: row.provider, modelId: row.modelId };
+}
+
+/** One preset catalog entry, the shape presetModelEntries() returns. */
+export type PresetEntry = ReturnType<typeof presetModelEntries>[number];
+
+/**
+ * A brand-new RowState for a not-yet-configured catalog model (original: null → added on the
+ * next PUT). Mirrors catalog-sync's presetToRow; the per-provider model list's enable switch
+ * uses it to add a catalog model in one click.
+ */
+export function presetEntryToRow(p: PresetEntry): RowState {
+  return {
+    provider: p.provider,
+    modelId: p.model_id,
+    original: null,
+    vision: p.vision !== false,
+    contextWindow: p.context_window !== undefined ? String(p.context_window) : "",
+    maxTokens: "",
+    fastMode: false,
+    clientType: p.client_type ?? "",
+    cacheRead: p.pricing ? String(p.pricing.cache_read) : "",
+    cacheWrite: p.pricing ? String(p.pricing.cache_write) : "",
+    output: p.pricing ? String(p.pricing.output) : "",
+    baseUrl: p.base_url ?? "",
+    originalBaseUrl: "",
+    apiKeyInput: "",
+    clearApiKey: false,
+  };
 }
 
 /**
@@ -827,6 +859,73 @@ export function ModelsPane() {
       visionModel,
     );
   };
+  /** Catalog preset entries grouped by provider id, for the model list's enable switch. */
+  const presetByProvider = useMemo(() => {
+    const m = new Map<string, PresetEntry[]>();
+    for (const p of presetModelEntries()) {
+      const arr = m.get(p.provider) ?? [];
+      arr.push(p);
+      m.set(p.provider, arr);
+    }
+    return m;
+  }, []);
+  /**
+   * The selected provider's model list: every catalog model for it (configured or not), then
+   * any configured models the catalog doesn't carry (custom ids). `configured` is the saved row
+   * when the model is enabled, absent when it is only offered.
+   */
+  const providerModelRows = useMemo(() => {
+    type Mrow = {
+      modelId: string;
+      label: string;
+      contextWindow?: number;
+      vision: boolean;
+      configured?: RowState;
+    };
+    if (!selectedGroup) return [] as Mrow[];
+    const id = selectedGroup.provider.id;
+    const byId = new Map(selectedGroup.rows.map((r) => [r.modelId, r]));
+    const out: Mrow[] = [];
+    for (const m of MODEL_CATALOG) {
+      if (m.provider !== id) continue;
+      const row = byId.get(m.modelId);
+      out.push({
+        modelId: m.modelId,
+        label: m.displayName,
+        contextWindow: m.contextWindow,
+        vision: m.supportsVision || (row?.vision ?? false),
+        configured: row,
+      });
+      byId.delete(m.modelId);
+    }
+    for (const row of byId.values()) {
+      out.push({
+        modelId: row.modelId,
+        label: row.displayName?.trim() || row.modelId,
+        contextWindow: Number(row.contextWindow) || undefined,
+        vision: row.vision,
+        configured: row,
+      });
+    }
+    return out;
+  }, [selectedGroup]);
+  /** Enable (add from catalog) or disable (remove) one model of the selected provider. */
+  const toggleProviderModel = (modelId: string, next: boolean): void => {
+    if (!projectId || !rows || !selectedGroup) return;
+    const id = selectedGroup.provider.id;
+    const existing = rows.find((r) => r.provider === id && r.modelId === modelId);
+    if (next && !existing) {
+      const p = (presetByProvider.get(id) ?? []).find((e) => e.model_id === modelId);
+      if (!p) return;
+      void persist([...rows, presetEntryToRow(p)], defaultModel, visionModel);
+    } else if (!next && existing) {
+      void persist(
+        rows.filter((r) => !(r.provider === id && r.modelId === modelId)),
+        sameModelRef(rowRef(existing), defaultModel) ? undefined : defaultModel,
+        sameModelRef(rowRef(existing), visionModel) ? undefined : visionModel,
+      );
+    }
+  };
   /**
    * Every group the library could show, empty built-ins included — the sequence a drop is
    * committed against, so a provider currently holding no models keeps its catalog place
@@ -1258,7 +1357,64 @@ export function ModelsPane() {
                   </div>
                 </div>
               )}
-              {(selectedGroup ? [selectedGroup] : []).map((group) => {
+              {selectedGroup && (
+                <div className="overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                  <div className="flex items-center justify-between gap-2 border-b border-gray-200 px-3 py-2 dark:border-gray-800">
+                    <span className="text-sm font-semibold">{S.models.modelList}</span>
+                    {isOwner && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        onClick={() => setAddingTo(selectedGroup.provider.id)}
+                      >
+                        <GlyphIcon d={PLUS_ICON} size={13} />
+                        {S.models.addToGroup}
+                      </Button>
+                    )}
+                  </div>
+                  <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {providerModelRows.length === 0 && (
+                      <li className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">
+                        {S.models.groupEmptyHint}
+                      </li>
+                    )}
+                    {providerModelRows.map((m) => (
+                      <li key={m.modelId} className="flex items-center gap-2 px-3 py-2">
+                        <span className="min-w-0 flex-1 truncate text-sm">{m.label}</span>
+                        {m.contextWindow ? (
+                          <span className="shrink-0 rounded border border-gray-200 px-1.5 text-[11px] leading-5 text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                            {humanizeTokens(m.contextWindow)}
+                          </span>
+                        ) : null}
+                        {m.vision ? (
+                          <span className="shrink-0 rounded border border-gray-200 px-1.5 text-[11px] leading-5 text-emerald-700 dark:border-gray-700 dark:text-emerald-400">
+                            {S.models.visionBadge}
+                          </span>
+                        ) : null}
+                        {m.configured && (
+                          <button
+                            type="button"
+                            onClick={() => setEditing(rowRef(m.configured!))}
+                            disabled={!isOwner || busy}
+                            title={m.label}
+                            className="shrink-0 rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                          >
+                            <GlyphIcon d={EDIT_ICON} size={14} />
+                          </button>
+                        )}
+                        <Switch
+                          checked={m.configured !== undefined}
+                          disabled={!isOwner || busy}
+                          onChange={(on) => toggleProviderModel(m.modelId, on)}
+                          aria-label={m.label}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {([] as typeof groups).map((group) => {
                 const open = isGroupExpanded(expanded, group.provider.id, searching);
                 const drag = groupDragProps(group.provider.id);
                 return (
