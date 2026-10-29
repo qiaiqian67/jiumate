@@ -65,6 +65,7 @@ import { KEY_ICON } from "../../components/ui/icons";
 import { ProviderLogo } from "../../components/ui/provider-logo";
 import { SkeletonList } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
+import { Dropdown } from "../../components/ui/dropdown";
 import { formatDateTime, humanizeTokens } from "../../lib/format";
 import {
   MODEL_CATALOG,
@@ -845,6 +846,8 @@ export function ModelsPane() {
    */
   const [cfgBaseUrl, setCfgBaseUrl] = useState("");
   const [cfgKey, setCfgKey] = useState("");
+  /** The provider header's "…" menu (bulk key / OAuth / delete). */
+  const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   useEffect(() => {
     setCfgBaseUrl(selectedRep?.baseUrl ?? "");
     setCfgKey("");
@@ -1291,6 +1294,57 @@ export function ModelsPane() {
                       >
                         {S.models.getApiKey} ↗
                       </a>
+                    )}
+                    {isOwner && (
+                      <Dropdown
+                        open={providerMenuOpen}
+                        setOpen={setProviderMenuOpen}
+                        menuClass="right-0 top-full mt-1 w-40 origin-top-right"
+                        button={
+                          <button
+                            type="button"
+                            aria-label={selectedGroup.provider.label}
+                            className="shrink-0 rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                          >
+                            ⋯
+                          </button>
+                        }
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProviderMenuOpen(false);
+                            setGroupKeyFor(selectedGroup.provider.id);
+                          }}
+                          className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+                        >
+                          {S.models.groupApiKey}
+                        </button>
+                        {selectedGroup.provider.oauth && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProviderMenuOpen(false);
+                              setOauthFor(selectedGroup.provider.id);
+                            }}
+                            className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+                          >
+                            {S.models.oauthKey}
+                          </button>
+                        )}
+                        {!MODEL_PROVIDERS.some((p) => p.id === selectedGroup.provider.id) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProviderMenuOpen(false);
+                              setDeleteGroupFor(selectedGroup.provider.id);
+                            }}
+                            className="block w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-800"
+                          >
+                            {S.models.deleteGroup}
+                          </button>
+                        )}
+                      </Dropdown>
                     )}
                   </div>
                   <p className="mb-2 text-xs text-gray-400 dark:text-gray-500">
